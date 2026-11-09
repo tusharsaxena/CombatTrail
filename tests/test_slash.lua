@@ -96,6 +96,50 @@ test("slash: a feature verb refuses with the one line while disabled; settings v
     assertTrue(anyLine(M, "general.locked"), "get answers while disabled")
 end)
 
+-- slash-commands-§7 step 7: the suite pins the addon's choice per verb. Every feature verb refuses
+-- with exactly one line while disabled and writes nothing; `lane` and `ignore` decline the
+-- feature-verb SHOULD (HOST_LIVE_VERBS) and act normally. Under the `perf` hold alone a feature verb
+-- answers the capture line, never the disabled one.
+local FEATURE_VERBS = { "skin", "results", "hud", "lock", "unlock", "test", "sim", "purge", "probe" }
+
+test("slash: disabled, each feature verb answers one refusal line; lane and ignore still act", function()
+    local inst = T.load()
+    local NS, M = inst.NS, inst.mocks
+    NS.Slash:OnSlash("disable")
+    local refusal = NS.Slash:DisabledLine()
+    for _, verb in ipairs(FEATURE_VERBS) do
+        M.__resetPrinted()
+        NS.Slash:OnSlash(verb)
+        assertEqual(#M.__printed(), 1, verb .. ": " .. text(M))
+        assertTrue(M.__printed()[1]:find(refusal, 1, true) ~= nil, verb .. " answers the refusal line")
+    end
+    assertEqual(NS.GetSetting("general.locked"), false, "lock wrote nothing")
+    assertFalse(NS.IsTestMode(), "test wrote nothing")
+    for _, verb in ipairs({ "lane", "ignore" }) do
+        M.__resetPrinted()
+        NS.Slash:OnSlash(verb)
+        assertEqual(#M.__printed(), 1, verb .. ": " .. text(M))
+        assertTrue(M.__printed()[1]:find(refusal, 1, true) == nil, verb .. " is live while disabled")
+    end
+end)
+
+test("slash: under the perf hold alone a feature verb answers the capture line", function()
+    local inst = T.load()
+    local NS, M = inst.NS, inst.mocks
+    NS.Slash:OnSlash("disable")
+    NS.Slash:OnSlash("enable")
+    NS.lifecycle:Hold(NS.HOLD_PERF)
+    for _, verb in ipairs({ "lock", "test", "hud" }) do
+        M.__resetPrinted()
+        NS.Slash:OnSlash(verb)
+        assertEqual(#M.__printed(), 1, verb .. ": " .. text(M))
+        assertTrue(M.__printed()[1]:find("Not available during a performance capture.", 1, true) ~= nil, text(M))
+        assertTrue(M.__printed()[1]:find("is disabled", 1, true) == nil, "never the disabled line")
+    end
+    assertEqual(NS.GetSetting("general.locked"), false, "lock wrote nothing")
+    NS.lifecycle:Release(NS.HOLD_PERF)
+end)
+
 test("slash: lock and unlock write general.locked", function()
     local inst = T.load()
     local NS = inst.NS
