@@ -31,6 +31,7 @@ NS.Perf = lib:New({
     buckets = {
         { key = "laneCast" },        -- every UNIT_SPELLCAST_* a lane hears, in modules/LaneCasts.lua
         { key = "laneRender" },      -- each lane's OnUpdate frame and push, in modules/LaneRender.lua
+        { key = "probe" },           -- the armed probe's cast and combat events, in modules/Probe.lua
     },
     -- The latch the capture's suspended arm takes its `perf` hold on. suspend/resume are NOT passed:
     -- the latch's standDown/standUp (core/LifecycleSetup.lua) are the one teardown.

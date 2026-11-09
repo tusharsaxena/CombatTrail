@@ -21,6 +21,8 @@ local _, NS = ...
 --                                numeric-rule constructor
 --   Compat.PopupEditBox(dialog)  a StaticPopup's edit box: the GetEditBox method, then the editBox /
 --                                EditBox field
+--   Compat.BuildInfo()  Compat.ClientApis()   the probe's client line: GetBuildInfo, and whether the
+--                                secrets system and C_Spell's lookups exist (modules/Probe.lua)
 -- Every client global is read at CALL time, so a client (or the harness's mock) that adds the API
 -- later is seen.
 --
@@ -253,6 +255,33 @@ function Compat.InDelve()
     local party = C_PartyInfo
     if party and type(party.IsDelveInProgress) == "function" then return party.IsDelveInProgress() == true end
     return false
+end
+
+-- ---------------------------------------------------------------------------
+-- The client line of `/kct probe` (modules/Probe.lua)
+-- ---------------------------------------------------------------------------
+
+--- The client's version string, build number and interface number (GetBuildInfo), or nothing where
+--- the call is missing or raises.
+--- @return string|nil version, string|nil build, number|nil interface
+function Compat.BuildInfo()
+    local fn = GetBuildInfo
+    if type(fn) ~= "function" then return nil end
+    local ok, version, build, _, iface = pcall(fn)
+    if not ok then return nil end
+    return version, build, iface
+end
+
+--- Which of the version-variant APIs the probe reports this client carries: the secrets system
+--- (issecretvalue) and C_Spell's texture and info lookups.
+--- @return table { secrets = boolean, spellTexture = boolean, spellInfo = boolean }
+function Compat.ClientApis()
+    local spell = type(C_Spell) == "table" and C_Spell or nil
+    return {
+        secrets      = type(issecretvalue) == "function",
+        spellTexture = spell ~= nil and type(spell.GetSpellTexture) == "function",
+        spellInfo    = spell ~= nil and type(spell.GetSpellInfo) == "function",
+    }
 end
 
 -- ---------------------------------------------------------------------------

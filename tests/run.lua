@@ -8,6 +8,8 @@ package.path = root .. "/tests/?.lua;" .. package.path
 local Kit     = dofile(root .. "/tests/_kit/framework.lua")
 local Loader  = dofile(root .. "/tests/_kit/loader.lua")
 local mockmod = assert(loadfile(root .. "/tests/wow_mock.lua"))(root)
+-- The scripted C_DamageMeter, built on the kit's secret wrappers (`/kct probe` and the meter adapter).
+local MockMeter = dofile(root .. "/tests/mock_meter.lua")(Kit)
 
 Loader.addonName = "CombatTrail"
 
@@ -100,6 +102,7 @@ local SUITES = {
     "test_lane_anchor",
     "test_lane_visibility",
     "test_lanes_page",
+    "test_probe",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },
@@ -124,6 +127,7 @@ _G.CT_TEST = Kit.expose{
     isSecret         = Kit.isSecret,
     reveal           = Kit.reveal,
     installSecretValue = Kit.installSecretValue,
+    mockMeter        = MockMeter,
 }
 
 -- The diagnostics contract runs against THIS addon's dispatcher (debug-logging-§14).

@@ -42,6 +42,11 @@ local function build()
         return M.__unitNames[unit]
     end
 
+    -- A unit's GUID (`/kct probe` asks the meter for the player's and the pet's sources by GUID). The
+    -- scripted meter (tests/mock_meter.lua) answers its own player and pet GUIDs over this one.
+    M.__unitGUIDs = { player = "Player-1-00000001" }
+    M.UnitGUID = function(unit) return M.__unitGUIDs[unit] end
+
     -- C_Spell: a spell's icon is a made-up file id per plain ID (136000 + id), nil for anything else.
     -- A suite that hands a secret ID replaces GetSpellTexture with one that reveals it.
     M.C_Spell = {

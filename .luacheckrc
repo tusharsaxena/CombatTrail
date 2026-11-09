@@ -19,8 +19,8 @@ read_globals = {
     "C_Timer", "C_AddOns", "GetLocale",
     -- combat state: InCombatLockdown() gates secure writes; UnitAffectingCombat() drives display
     "InCombatLockdown", "UnitAffectingCombat",
-    -- units: the pet's presence and name (modules/LaneCasts.lua)
-    "UnitExists", "UnitName",
+    -- units: the pet's presence and name (modules/LaneCasts.lua), and the GUIDs `/kct probe` asks the meter by
+    "UnitExists", "UnitName", "UnitGUID",
     -- the lanes' visibility context (modules/LaneVisibility.lua)
     "IsMounted", "IsResting", "IsInInstance",
     -- Blizzard's Edit Mode callbacks, which show the lanes' edit overlay (modules/LaneAnchor.lua)
@@ -55,8 +55,12 @@ files["core/Compat.lua"] = {
         "C_Spell", "GetSpellTexture", "GetSpellInfo", "GetSpellBaseCooldown", "UnitSpellHaste",
         "C_PetBattles", "UnitInVehicle", "C_PartyInfo",
         "issecretvalue", "canaccessvalue", "issecrettable", "canaccesstable",
+        "GetBuildInfo",
     },
 }
+
+-- `/kct probe` reads the meter itself, for the report only (modules/Probe.lua's header says why).
+files["modules/Probe.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
 
 -- The context menus: the client's menu without the library.
 files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }

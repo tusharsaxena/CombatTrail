@@ -372,3 +372,13 @@ L["The %s already ignores %s."] = "The %s already ignores %s."
 L["The %s no longer ignores %s."] = "The %s no longer ignores %s."
 L["The %s does not ignore %s."] = "The %s does not ignore %s."
 L["The %s ignores its starting spells again."] = "The %s ignores its starting spells again."
+
+-- `/kct probe` (modules/Probe.lua)
+L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
+    "The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."
+L["The probe report is in the debug console (%d lines)."] = "The probe report is in the debug console (%d lines)."
+L["The probe watches your next fight. Fight for 20 seconds or more, then type %s."] =
+    "The probe watches your next fight. Fight for 20 seconds or more, then type %s."
+L["The probe stopped watching."] = "The probe stopped watching."
+L["The probe sampled your fight. Type %s to see the report."] = "The probe sampled your fight. Type %s to see the report."
+L["Usage: /kct probe, /kct probe start or /kct probe stop"] = "Usage: /kct probe, /kct probe start or /kct probe stop"
