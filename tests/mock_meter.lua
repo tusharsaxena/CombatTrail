@@ -6,7 +6,8 @@
 --
 -- What differs from DPS Race's: the client's full list of eight functions (GetSessionDurationSeconds
 -- and ResetAllCombatSessions join the six the adapter calls, as the kit's client_globals_live.lua and
--- the owner's Forever probe list them), and a session may carry the PET as a source of its own.
+-- the owner's Forever probe list them), a session may carry the PET as a source of its own, the
+-- EnemyDamageTaken view answers by type and by ID, and the Dps meter type answers by ID as well.
 --
 -- Loaded by tests/run.lua as `dofile(root .. "/tests/mock_meter.lua")(Kit)`, so the secrets are the
 -- kit's own wrappers (tests/_kit/secrets.lua): they raise on arithmetic, comparison between two
@@ -19,12 +20,14 @@
 --
 -- Controller:
 --   SetSession(id, { damage, dps, duration, spells = { {id, dmg, dps}, ... }, others = {...},
---                    pet = { damage, dps, spells = {...} } })
+--                    pet = { damage, dps, spells = {...} }, enemies = { {name, creatureID, damage}, ... } })
 --       adds or replaces a session and makes it Current. `spells` keep the order given. `others` are
 --       other sources in the session, each { guid, damage, dps }. `player = false` leaves the
 --       player out of the session entirely (combat with no damage of theirs). `pet` is the pet's own
 --       source, answered for the controller's pet GUID (SetPetGUID); absent, the pet's GUID answers
---       nil, as a client that folds the pet into its owner would.
+--       nil, as a client that folds the pet into its owner would. A nil `dps` (player, pet or
+--       spell) answers no amountPerSecond. `enemies` is the session's EnemyDamageTaken view, one
+--       source per enemy (name, sourceCreatureID, totalAmount), in the order given.
 --       The live client's shapes (DPS Race's smoke test, 2026-10-23), each opt-in per session:
 --         sourceDps = false   the player's source table carries no amountPerSecond
 --         rowDps = false      the player's row in combatSources carries no amountPerSecond either
@@ -41,7 +44,7 @@
 return function(Kit)
     local MockMeter = {}
 
-    local DAMAGE_DONE, DPS, OVERALL, CURRENT = 0, 1, 0, 1
+    local DAMAGE_DONE, DPS, ENEMY_TAKEN, OVERALL, CURRENT = 0, 1, 10, 0, 1
 
     local function newController()
         return {
@@ -119,6 +122,20 @@ return function(Kit)
                  amountPerSecond = s.sourceDps ~= false and w(s.dps) or nil }
     end
 
+    -- The EnemyDamageTaken view of a session: one source per enemy, { name, creatureID, damage }.
+    local function enemyTable(ctl, id)
+        local s = id and ctl.sessions[id]
+        if not s then return nil end
+        local w = wrapper(ctl, id)
+        local sources = {}
+        for i, e in ipairs(s.enemies or {}) do
+            sources[i] = { sourceGUID = w("Creature-0-1-2-3-" .. tostring(e.creatureID) .. "-" .. i),
+                           name = w(e.name), sourceCreatureID = w(e.creatureID), isLocalPlayer = w(false),
+                           totalAmount = w(e.damage), amountPerSecond = w(e.dps) }
+        end
+        return { combatSources = sources, durationSeconds = w(s.duration) }
+    end
+
     -- The Dps meter type's source for the player: totalAmount the damage, amountPerSecond the rate.
     local function dpsSourceTable(ctl, id, guid)
         local s = id and ctl.sessions[id]
@@ -158,16 +175,19 @@ return function(Kit)
         end
         function api.GetCombatSessionFromID(id, statType)
             record(ctl, "GetCombatSessionFromID", id, statType)
+            if statType == ENEMY_TAKEN then return enemyTable(ctl, id) end
             if statType ~= DAMAGE_DONE then return nil end
             return sessionTable(ctl, id)
         end
         function api.GetCombatSessionFromType(sessionType, statType)
             record(ctl, "GetCombatSessionFromType", sessionType, statType)
+            if statType == ENEMY_TAKEN then return enemyTable(ctl, currentFor(ctl, sessionType)) end
             if statType ~= DAMAGE_DONE then return nil end
             return sessionTable(ctl, currentFor(ctl, sessionType))
         end
         function api.GetCombatSessionSourceFromID(id, statType, guid, creatureID)
             record(ctl, "GetCombatSessionSourceFromID", id, statType, guid, creatureID)
+            if statType == DPS then return dpsSourceTable(ctl, id, guid) end
             if statType ~= DAMAGE_DONE then return nil end
             return sourceTable(ctl, id, guid)
         end
@@ -226,7 +246,7 @@ return function(Kit)
         mocks.C_DamageMeter = buildApi(ctl)
         mocks.Enum = mocks.Enum or {}
         mocks.Enum.DamageMeterType = { DamageDone = DAMAGE_DONE, Dps = DPS, DamageTaken = 7,
-                                       EnemyDamageTaken = 10 }
+                                       EnemyDamageTaken = ENEMY_TAKEN }
         mocks.Enum.DamageMeterSessionType = { Overall = OVERALL, Current = CURRENT, Expired = 2 }
         -- The player's and the pet's GUIDs are the controller's; any other unit is the base mock's
         -- answer, so a case can script a target alongside the meter.

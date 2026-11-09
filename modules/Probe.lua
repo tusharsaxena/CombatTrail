@@ -33,9 +33,11 @@ local _, NS = ...
 -- and timers, Resume registers again from the CURRENT armed flag. The verb is a feature verb, so the
 -- dispatcher refuses it while the addon is disabled.
 --
--- A SECOND CALLER OF C_DamageMeter. The meter adapter (plan Task 2.1) is the addon's reader of the
--- meter; this file reads it too, on purpose and only for the report, because the probe exists to
--- check the client the adapter is built on.
+-- THROUGH THE METER ADAPTER, RAW. modules/Meter.lua is the only file that names the client's meter;
+-- this file reaches it through NS.Meter.Api (the namespace, for the function list) and NS.Meter.Call
+-- (each function, pcall'd), and nothing else of the adapter's: the probe exists to check the client
+-- the adapter is built on, so it reads the raw shapes (each field's secrecy, the error a call
+-- raised, the pet's source beside the player's) that the adapter's reads deliberately fold away.
 
 local Probe = {}
 NS.Probe = Probe
@@ -99,16 +101,16 @@ end
 
 -- ── the meter, read safely ─────────────────────────────────────────────────────────────────────
 
---- C_DamageMeter[name](...) in pcall. Answers ok plus up to two results, or false plus the error
---- text ("missing" when the function is not there).
+--- The client meter's function `name` through NS.Meter.Call (pcall'd). Answers ok plus up to two
+--- results, or false plus the error text ("missing" when the function is not there).
 local function call(name, ...)
-    local api = C_DamageMeter
-    local fn = type(api) == "table" and api[name] or nil
-    if type(fn) ~= "function" then return false, "missing" end
-    local ok, a, b = pcall(fn, ...)
-    if not ok then return false, show(a) end
-    return true, a, b
+    local ok, a, b = NS.Meter.Call(name, ...)
+    if ok then return true, a, b end
+    if a == "unavailable" then return false, "missing" end
+    return false, show(b)
 end
+
+local function hasMeter() return NS.Meter.Api() ~= nil end
 
 local function enumValue(enumName, key, default)
     local e = Enum and Enum[enumName]
@@ -144,7 +146,7 @@ local function clientLines(out)
 end
 
 local function functionLines(out)
-    local api = C_DamageMeter
+    local api = NS.Meter.Api()
     local names, have = {}, {}
     if Secrets.CanAccessTable(api) then
         for k, v in pairs(api) do
@@ -355,7 +357,7 @@ end
 
 local function takeSample(tag)
     local line
-    if type(C_DamageMeter) ~= "table" then
+    if not hasMeter() then
         line = "no C_DamageMeter"
     else
         line = sourceSecrecy("player", UnitGUID("player"))
@@ -372,7 +374,7 @@ end
 function Probe.Report()
     local out = {}
     clientLines(out)
-    if type(C_DamageMeter) ~= "table" then
+    if not hasMeter() then
         out[#out + 1] = "C_DamageMeter: missing"
     else
         out[#out + 1] = "C_DamageMeter: present"
@@ -383,7 +385,7 @@ function Probe.Report()
         unitSourceLines(out)
         sessionLines(out)
     end
-    out[#out + 1] = "pet is separate source: " .. (type(C_DamageMeter) == "table" and petSplit() or "unknown (no meter)")
+    out[#out + 1] = "pet is separate source: " .. (hasMeter() and petSplit() or "unknown (no meter)")
     out[#out + 1] = "pace pet-fill anchor: " .. anchorCheck()
     sampleLines(out)
     return out

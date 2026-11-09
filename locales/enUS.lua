@@ -373,6 +373,10 @@ L["The %s no longer ignores %s."] = "The %s no longer ignores %s."
 L["The %s does not ignore %s."] = "The %s does not ignore %s."
 L["The %s ignores its starting spells again."] = "The %s ignores its starting spells again."
 
+-- The meter reader (modules/Meter.lua)
+L["Blizzard's damage meter is not available on this client."] =
+    "Blizzard's damage meter is not available on this client."
+
 -- `/kct probe` (modules/Probe.lua)
 L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
     "The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."

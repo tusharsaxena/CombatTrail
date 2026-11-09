@@ -59,8 +59,10 @@ files["core/Compat.lua"] = {
     },
 }
 
--- `/kct probe` reads the meter itself, for the report only (modules/Probe.lua's header says why).
-files["modules/Probe.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
+-- The meter reader is the only file that names C_DamageMeter (tests/test_meter.lua holds it to that).
+-- `/kct probe` reaches the meter through NS.Meter and reads the meter enums itself, for the report.
+files["modules/Meter.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
+files["modules/Probe.lua"] = { read_globals = { "Enum" } }
 
 -- The context menus: the client's menu without the library.
 files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }

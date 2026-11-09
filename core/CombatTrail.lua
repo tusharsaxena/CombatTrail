@@ -50,6 +50,9 @@ function NS.RegisterGameEvents()
     if NS.LaneVisibility then NS.LaneVisibility.Sync() end
     -- The lanes' frames, built and styled from the current settings (modules/LaneRender.lua).
     if NS.LaneRender then NS.LaneRender.Sync() end
+    -- The meter's session list, read once as the baseline a new fight's session is told apart from
+    -- (modules/Meter.lua). It registers nothing.
+    if NS.Meter then NS.Meter.Prime() end
 end
 
 -- ── Host handlers ───────────────────────────────────────────────────────────────────────────────

@@ -103,6 +103,7 @@ local SUITES = {
     "test_lane_visibility",
     "test_lanes_page",
     "test_probe",
+    "test_meter",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },
