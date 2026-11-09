@@ -6,13 +6,17 @@ local _, NS = ...
 --
 -- WHAT IS REGISTERED, BY FIGHT STATE (only what the state needs):
 --   idle              PLAYER_REGEN_DISABLED (a fight starts) and ENCOUNTER_START (an encounter that
---                     opens before the regen edge names the fight, or starts one while in combat)
+--                     opens before the regen edge names the fight, or starts one while in combat),
+--                     plus ENCOUNTER_END while an encounter is active (Fight.EncounterActive), so one
+--                     that ends with the player out of combat (dead, the raid fighting on) is heard
+--                     and does not name the next fight
 --   combat, settling  the same, plus PLAYER_REGEN_ENABLED, ENCOUNTER_END and the meter's three events
 --                     (DAMAGE_METER_COMBAT_SESSION_UPDATED, _CURRENT_SESSION_UPDATED, _RESET)
 --   stood down        nothing
 -- Fight calls Watchers.Sync() on every transition, so the set always follows the state. Sync moves
--- only the difference: an event in both sets stays registered, so the edge that is being dispatched
--- is never unregistered under itself. Every registration goes through NS.SafeRegisterEvent
+-- only the difference: an event in both sets stays registered, so a regen edge being dispatched is
+-- never unregistered under itself (an idle ENCOUNTER_END drops itself after its handler has run,
+-- which AceEvent's dispatch allows). Every registration goes through NS.SafeRegisterEvent
 -- (events-frames-taint-§1), so an event name a client does not know costs only itself and lands in
 -- NS.rejectedEvents. Never COMBAT_LOG_EVENT_UNFILTERED: it is protected for addons on both clients.
 --
@@ -32,6 +36,7 @@ NS.Watchers = Watchers
 local Perf = NS.Perf
 
 local IDLE_EVENTS = { "PLAYER_REGEN_DISABLED", "ENCOUNTER_START" }
+local IDLE_ENCOUNTER_EVENTS = { "PLAYER_REGEN_DISABLED", "ENCOUNTER_START", "ENCOUNTER_END" }
 local FIGHT_EVENTS = {
     "PLAYER_REGEN_DISABLED",
     "ENCOUNTER_START",
@@ -78,7 +83,9 @@ end
 -- The events the fight's state asks for, as a list.
 local function wanted()
     if NS.IsStoodDown() then return {} end
-    if NS.Fight.State() == NS.Fight.STATE.IDLE then return IDLE_EVENTS end
+    if NS.Fight.State() == NS.Fight.STATE.IDLE then
+        return NS.Fight.EncounterActive() and IDLE_ENCOUNTER_EVENTS or IDLE_EVENTS
+    end
     return FIGHT_EVENTS
 end
 

@@ -363,6 +363,13 @@ function Fight.Current()
     return cur
 end
 
+--- Whether an encounter is active (ENCOUNTER_START heard, its ENCOUNTER_END not yet). Watchers holds
+--- ENCOUNTER_END in idle while it is, so an encounter that ends with the player out of combat (dead,
+--- the raid fighting on) does not name the next fight.
+function Fight.EncounterActive()
+    return encounter ~= nil
+end
+
 -- ── inputs (modules/Watchers.lua) ───────────────────────────────────────────────────────────────
 
 --- PLAYER_REGEN_DISABLED: a new fight from IDLE; from SETTLING, the same fight within the grace,
@@ -432,8 +439,8 @@ function Fight.OnEncounterStart(t, encounterID, name, difficultyID, groupSize)
                   startT = t }
     debug("encounter %s started", tostring(encounter.id))
     if state == STATE.IDLE then
-        if UnitAffectingCombat("player") then begin(t) end
-        return
+        if UnitAffectingCombat("player") then return begin(t) end
+        return setState(STATE.IDLE)    -- the idle set now hears this encounter's end
     end
     if cur.encounter == nil then
         cur.encounter = encounter
@@ -447,6 +454,7 @@ function Fight.OnEncounterEnd(t, _, _, _, _, success)
     encounter.endT = t
     encounter.success = Secrets.PlainNumber(success) == 1
     encounter = nil
+    if state == STATE.IDLE then setState(STATE.IDLE) end
 end
 
 -- ── the lifecycle (core/LifecycleSetup.lua) ─────────────────────────────────────────────────────

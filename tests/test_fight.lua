@@ -359,6 +359,28 @@ test("fight: a wipe and a new pull of the same boss are two fights", function()
     assertEqual(#heard.started, 2, "a new encounter, a new fight")
 end)
 
+test("fight: an encounter that ends while idle (the player died out of it) names no later fight", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    at(inst, 9)
+    inst.mocks.__fire("ENCOUNTER_START", 2001, "Patchwerk", 15, 20)
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    leave(inst, 20)                       -- the player died; the raid fights on
+    settle(inst, 24.5)
+    assertEqual(NS.Fight.State(), "idle")
+    assertTrue(watched(inst):find("ENCOUNTER_END", 1, true) ~= nil, "idle hears the active encounter's end")
+    at(inst, 60)
+    inst.mocks.__fire("ENCOUNTER_END", 2001, "Patchwerk", 15, 20, 0)
+    assertEqual(watched(inst), "ENCOUNTER_START,PLAYER_REGEN_DISABLED", "the plain idle set again")
+    at(inst, 100)
+    meter.SetSession(2, SECOND)
+    enter(inst, 100)                      -- trash after the wipe
+    assertEqual(#heard.started, 2)
+    assertNil(NS.Fight.Current().encounter, "the ended encounter does not ride on")
+    assertEqual(heard.started[1].encounter.success, false)
+end)
+
 -- ── the meter going away ───────────────────────────────────────────────────────────────────────
 
 test("fight: meter reset mid-fight → lost", function()
