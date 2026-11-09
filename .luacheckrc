@@ -21,6 +21,10 @@ read_globals = {
     "InCombatLockdown", "UnitAffectingCombat",
     -- units: the pet's presence and name (modules/LaneCasts.lua)
     "UnitExists", "UnitName",
+    -- the lanes' visibility context (modules/LaneVisibility.lua)
+    "IsMounted", "IsResting", "IsInInstance",
+    -- Blizzard's Edit Mode callbacks, which show the lanes' edit overlay (modules/LaneAnchor.lua)
+    "EventRegistry",
     -- a lane icon's spell tooltip (modules/LaneRender.lua)
     "GameTooltip",
     -- the perf brackets' CPU clock (LibKa0s-Perf-1.0's Note takes milliseconds)
@@ -49,6 +53,7 @@ files["core/Compat.lua"] = {
         "C_ChatInfo", "SendChatMessage", "C_StringUtil",
         "C_SpecializationInfo", "GetSpecialization", "GetSpecializationInfo",
         "C_Spell", "GetSpellTexture", "GetSpellInfo", "GetSpellBaseCooldown", "UnitSpellHaste",
+        "C_PetBattles", "UnitInVehicle", "C_PartyInfo",
         "issecretvalue", "canaccessvalue", "issecrettable", "canaccesstable",
     },
 }

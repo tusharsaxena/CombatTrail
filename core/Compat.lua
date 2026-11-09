@@ -227,6 +227,35 @@ function Compat.SpellHaste()
 end
 
 -- ---------------------------------------------------------------------------
+-- The lanes' visibility context (modules/LaneVisibility.lua)
+-- ---------------------------------------------------------------------------
+
+--- Whether the player is in a pet battle. False where the client has no pet battles.
+--- @return boolean
+function Compat.InPetBattle()
+    local pb = C_PetBattles
+    if pb and type(pb.IsInBattle) == "function" then return pb.IsInBattle() == true end
+    return false
+end
+
+--- Whether the player rides a vehicle.
+--- @return boolean
+function Compat.InVehicle()
+    local fn = UnitInVehicle
+    if type(fn) == "function" then return fn("player") == true end
+    return false
+end
+
+--- Whether a delve is in progress. Delves are Retail-only (clients-§4): always false on WoW Forever.
+--- @return boolean
+function Compat.InDelve()
+    if not Compat.ForClient({ "retail" }) then return false end
+    local party = C_PartyInfo
+    if party and type(party.IsDelveInProgress) == "function" then return party.IsDelveInProgress() == true end
+    return false
+end
+
+-- ---------------------------------------------------------------------------
 -- Chat and number formatting
 -- ---------------------------------------------------------------------------
 

@@ -16,6 +16,21 @@ L["Ka0s Combat Trail"] = "Ka0s Combat Trail"
 L["You"] = "You"
 L["Pet"] = "Pet"
 
+-- The lanes' placement (modules/LaneAnchor.lua): the edit overlay's labels and the one-line notices
+L["Player lane"] = "Player lane"
+L["Pet lane"] = "Pet lane"
+L["%s: drag to move"] = "%s: drag to move"
+L["%s: docked, so it moves with the lane it follows"] = "%s: docked, so it moves with the lane it follows"
+L["%s: on its unit frame, so it moves with that frame"] = "%s: on its unit frame, so it moves with that frame"
+L["The Player and Pet lanes are docked to each other, so neither can dock. Both sit at their own place until one is undocked."] =
+    "The Player and Pet lanes are docked to each other, so neither can dock. Both sit at their own place until one is undocked."
+L["The %s cannot dock to a lane that is switched off, so it sits at its own place."] =
+    "The %s cannot dock to a lane that is switched off, so it sits at its own place."
+L["The %s cannot find its unit frame (%s), so it sits at its own place."] =
+    "The %s cannot find its unit frame (%s), so it sits at its own place."
+L["The %s cannot use the unit frame %s, so it sits at its own place."] =
+    "The %s cannot use the unit frame %s, so it sits at its own place."
+
 -- Key bindings (launcher-§6)
 L["Toggle DPS HUD"] = "Toggle DPS HUD"
 L["Toggle Results window"] = "Toggle Results window"

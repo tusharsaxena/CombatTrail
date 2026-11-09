@@ -66,6 +66,15 @@ local function build()
     M.__haste = 0
     M.UnitSpellHaste = function() return M.__haste end
 
+    -- The lanes' visibility rules (modules/LaneVisibility.lua): mounted, resting, in a vehicle, in a
+    -- pet battle, in a delve. Each answers a settable field, false until a test sets it.
+    M.__mounted, M.__resting, M.__inVehicle, M.__petBattle, M.__inDelve = false, false, false, false, false
+    M.IsMounted = function() return M.__mounted end
+    M.IsResting = function() return M.__resting end
+    M.UnitInVehicle = function(unit) return unit == "player" and M.__inVehicle end
+    M.C_PetBattles = { IsInBattle = function() return M.__petBattle end }
+    M.C_PartyInfo = { IsDelveInProgress = function() return M.__inDelve end }
+
     -- TOC metadata, read through LibKa0s-Env-1.0 (core/EnvSetup.lua).
     M.__toc = {
         Version = "0.1.0",

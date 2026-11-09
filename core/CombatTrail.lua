@@ -44,6 +44,10 @@ end
 function NS.RegisterGameEvents()
     -- The lanes' cast events, for the lanes switched on (modules/LaneCasts.lua).
     if NS.LaneCasts then NS.LaneCasts.Sync() end
+    -- The lanes' Edit Mode callbacks and their visibility rules' events (modules/LaneAnchor.lua,
+    -- modules/LaneVisibility.lua), before the frames that read both.
+    if NS.LaneAnchor then NS.LaneAnchor.Sync() end
+    if NS.LaneVisibility then NS.LaneVisibility.Sync() end
     -- The lanes' frames, built and styled from the current settings (modules/LaneRender.lua).
     if NS.LaneRender then NS.LaneRender.Sync() end
 end

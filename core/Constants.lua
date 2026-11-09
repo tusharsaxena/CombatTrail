@@ -22,6 +22,10 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 --                                    addon windows. A lane set to "HOST" (the unit-frame default) takes
 --                                    its host's strata instead (host-matched surfaces); its icons stay in
 --                                    the bounded band LEVEL.ICON_BAND above the lane, never a climbing count
+--   max(lane, MEDIUM)  CHROME        a lane's edit overlay (modules/LaneAnchor.lua), shown in Edit Mode
+--                                    and after /kct unlock: mouse-live chrome, so floored at MEDIUM over
+--                                    a LOW lane (frame-layering-§2), fixed and re-lifted after every
+--                                    strata the lane takes, at lane level + LEVEL.LANE_EDIT
 --   MEDIUM             HUD           the DPS HUD (modules/Hud.lua): the persistent display, a movable
 --                                    window, toplevel, so a click raises it among MEDIUM peers
 --   HIGH               WINDOW        the Results window (modules/Results.lua): the on-demand browser,
@@ -38,11 +42,13 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 -- A lane sits at its parent's level + LEVEL.LANE + the lane's own level offset (0-50). Its icons sit
 -- at lane level + 1 .. lane level + LEVEL.ICON_BAND, re-ordered inside that band on each push so the
 -- newest is on top (spec §4 Layering); an icon's border, glow and ✕ are regions of the icon, so they
--- take no level of their own. Levels inside a window (base W): chrome W+1, content W+2 .. W+8, the library resize grip W+10.
+-- take no level of their own. A lane on a unit frame with strata "HOST" takes the host's level as
+-- its base instead of its parent's. The lane's edit overlay sits at lane level + LEVEL.LANE_EDIT, over
+-- the whole icon band. Levels inside a window (base W): chrome W+1, content W+2 .. W+8, the library resize grip W+10.
 -- The Results detail pane sits at body + LEVEL.DETAIL, the damage chart's overlay at its plot +
 -- LEVEL.CHART_OVERLAY, and the Results window's dim cover under an open modal at W + LEVEL.COVER
 -- (the standard's popover band over a window's own content).
 C.LAYERS = {
-    STRATA = { LANE = "LOW", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG" },
-    LEVEL  = { LANE = 1, DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8 },
+    STRATA = { LANE = "LOW", CHROME = "MEDIUM", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG" },
+    LEVEL  = { LANE = 1, DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8, LANE_EDIT = 10 },
 }

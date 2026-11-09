@@ -209,6 +209,11 @@ NS.SKIN_TOKENS = {
     ["ct.danger.hover"]  = { default = GOLD, follow = "btn.hover" },
     -- The ✕ a lane draws over an interrupted or canceled cast (modules/LaneRender.lua).
     ["ct.lane.cross"] = { default = rgba(RED, 1), follow = "sem.statusBad" },
+    -- A lane's edit overlay in Edit Mode and after /kct unlock (modules/LaneAnchor.lua): an info-blue
+    -- wash with its edge, and its label.
+    ["ct.lane.edit.bg"]     = { default = { 0.25, 0.5, 1, 0.3 }, follow = "list.hover", skins = wash("sem.info", 0.3) },
+    ["ct.lane.edit.border"] = { default = { 0.25, 0.5, 1, 0.9 }, follow = "section.rule", skins = wash("sem.info", 0.9) },
+    ["ct.lane.edit.text"]   = { default = { 1, 1, 1, 1 }, follow = "text.body" },
     -- The other buttons' slots: a primary button's gold wash and edge (gold under the pointer too),
     -- and every style's disabled look, its box and label faded (fill x0.4, edge 0.25, label 0.4).
     ["ct.primary.bg"]        = { default = rgba(GOLD, 0.12), follow = "btnPrimary.bg" },

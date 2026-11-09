@@ -12,8 +12,9 @@ local _, NS = ...
 -- most, whatever arrives.
 --
 -- LAYERING (spec §4, frame-layering; LOAD-BEARING, the regression CastTrail's `level % 200` made):
---   * the lane sits on its configured strata (default LAYERS.STRATA.LANE, "LOW"; "HOST" takes its
---     parent's when the parent is not UIParent), at its parent's level + LEVEL.LANE + levelOffset;
+--   * the lane's strata and level are modules/LaneAnchor.lua's: its configured strata (default
+--     LAYERS.STRATA.LANE, "LOW"; "HOST" takes its host's), at its parent's (or host's) level +
+--     LEVEL.LANE + levelOffset;
 --   * its icons sit in the bounded band lane level + 1 .. lane level + LEVEL.ICON_BAND, re-ordered on
 --     every push so the newest is on top, never a counter that climbs;
 --   * an icon's border, glow, ✕ and texts are regions of the icon, so they take no level at all.
@@ -24,8 +25,9 @@ local _, NS = ...
 -- plain IDs. A base cooldown or a haste read in combat may come back secret: it is read through
 -- NS.Secrets, and a secret is neither used nor cached (the next read out of combat fills it).
 --
--- PLACEMENT is modules/LaneAnchor.lua's (plan Task 1.3) when it exists. Until then a lane sits at its
--- saved free point, and a docked lane under its host lane at `gap`.
+-- PLACEMENT is modules/LaneAnchor.lua's (free, docked or on a unit frame), and WHETHER A LANE SHOWS
+-- is modules/LaneVisibility.lua's: each Apply asks LaneVisibility.Decide and shows or hides the lane
+-- (ApplyVisibility). A hidden lane holds no icon and takes no push.
 --
 -- Stand-down (core/LifecycleSetup.lua) calls Suspend: every icon released, every lane hidden, no
 -- OnUpdate. Resume rebuilds from the CURRENT settings.
@@ -44,8 +46,6 @@ LaneRender.MAX_ICONS = 64
 
 local LANES = { "player", "pet" }
 local FRAME_NAMES = { player = "CombatTrailPlayerLane", pet = "CombatTrailPetLane" }
-local STRATA_OK = { BACKGROUND = true, LOW = true, MEDIUM = true, HIGH = true, DIALOG = true }
-local LEVEL_OFFSET_MAX = 50
 -- The Pet lane's label while there is no pet; the "now" line's width; the glow's reach.
 local LABEL_DIM = 0.5
 local NOW_WIDTH = 2
@@ -412,47 +412,11 @@ end
 
 -- ── the lane frame ─────────────────────────────────────────────────────────────────────────────
 
-local function strataFor(frame, cfg)
-    local s = cfg.strata
-    if s == "HOST" then
-        local parent = frame:GetParent()
-        if parent and parent ~= UIParent then return parent:GetFrameStrata() end
-        return LAYERS.STRATA.LANE
-    end
-    if STRATA_OK[s] then return s end
-    return LAYERS.STRATA.LANE
-end
-
-local function applyLayer(st, cfg)
-    local frame = st.frame
-    frame:SetFrameStrata(strataFor(frame, cfg))
-    local offset = math.floor(math.min(LEVEL_OFFSET_MAX, math.max(0, num(cfg.levelOffset, 0))))
-    local parent = frame:GetParent() or UIParent
-    frame:SetFrameLevel(parent:GetFrameLevel() + LAYERS.LEVEL.LANE + offset)
-end
-
--- The lane this one docks to, when that is allowed: another lane, switched on and built, that is
--- not itself docked back to this one.
-local function dockHost(laneKey, a)
-    local target = a.target
-    if target == laneKey or not lanes[target] or not enabledNow(target) then return nil end
-    local other = cfgOf(target)
-    local oa = other and other.anchor
-    if oa and oa.mode == "dock" and oa.target == laneKey then return nil end
-    return lanes[target].frame
-end
-
-local function place(st, cfg)
-    local anchor = NS.LaneAnchor
-    if anchor and anchor.Apply then return anchor.Apply(st.key) end
-    local frame, a = st.frame, cfg.anchor or {}
-    frame:ClearAllPoints()
-    local host = a.mode == "dock" and dockHost(st.key, a) or nil
-    if host then
-        frame:SetPoint(a.point or "TOP", host, a.relPoint or "BOTTOM", 0, -num(a.gap, 0))
-    else
-        frame:SetPoint(a.point or "CENTER", UIParent, a.relPoint or "CENTER", num(a.x, 0), num(a.y, 0))
-    end
+-- Whether a lane shows now, and its opacity (modules/LaneVisibility.lua).
+local function visibleNow(laneKey)
+    local V = NS.LaneVisibility
+    if not V then return true, 1 end
+    return V.Decide(laneKey)
 end
 
 local function build(laneKey)
@@ -506,17 +470,35 @@ function LaneRender.Apply(laneKey)
     local frame = st.frame
     frame:SetSize(Layout.LaneSize(cfg))
     frame:SetScale(math.max(0.1, num(cfg.scale, 1)))
-    applyLayer(st, cfg)
-    place(st, cfg)
+    -- The strata, the level and the point (modules/LaneAnchor.lua).
+    if NS.LaneAnchor then NS.LaneAnchor.Apply(laneKey) end
     applyBackground(st, cfg)
     applyTicks(st, cfg)
     applyLabel(st, cfg)
     local face = fontFace(cfg.labelFont)
     for _, f in ipairs(st.icons) do styleIcon(f, cfg, face) end
     restack(st)
-    layoutIcons(st, GetTime())
-    frame:Show()
-    arm(st)
+    LaneRender.ApplyVisibility(laneKey)
+    if frame:IsShown() then
+        layoutIcons(st, GetTime())
+        arm(st)
+    end
+end
+
+--- Show or hide a built lane, and set its opacity, as modules/LaneVisibility.lua decides. A lane
+--- that hides lets go of its icons.
+--- @param laneKey string
+function LaneRender.ApplyVisibility(laneKey)
+    local st = lanes[laneKey]
+    if not (st and st.cfg) or not enabledNow(laneKey) then return end
+    local shown, alpha = visibleNow(laneKey)
+    st.frame:SetAlpha(alpha)
+    if shown then
+        if not st.frame:IsShown() then st.frame:Show() end
+    elseif st.frame:IsShown() or #st.icons > 0 then
+        LaneRender.Clear(laneKey)
+        st.frame:Hide()
+    end
 end
 
 --- Every lane from the current settings (login, stand-up, a profile change).
@@ -557,6 +539,11 @@ function LaneRender.Push(laneKey, item)
         LaneRender.Apply(laneKey)
         st = lanes[laneKey]
         if not (st and st.cfg) then return end
+    end
+    -- A hidden lane takes no push, unless the cast itself changed the answer (the pull's first cast).
+    if not st.frame:IsShown() then
+        LaneRender.ApplyVisibility(laneKey)
+        if not st.frame:IsShown() then return end
     end
     local t0 = Perf.on and debugprofilestop()
     if not stackOnto(st, item) then
