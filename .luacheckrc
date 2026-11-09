@@ -19,6 +19,10 @@ read_globals = {
     "C_Timer", "C_AddOns", "GetLocale",
     -- combat state: InCombatLockdown() gates secure writes; UnitAffectingCombat() drives display
     "InCombatLockdown", "UnitAffectingCombat",
+    -- units: the pet's presence and name (modules/LaneCasts.lua)
+    "UnitExists", "UnitName",
+    -- the perf brackets' CPU clock (LibKa0s-Perf-1.0's Note takes milliseconds)
+    "debugprofilestop",
     -- settings panel plumbing (settings/)
     "Settings", "StaticPopup_Show",
 }
@@ -42,6 +46,7 @@ files["core/Compat.lua"] = {
         "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CAMELOT",
         "C_ChatInfo", "SendChatMessage", "C_StringUtil",
         "C_SpecializationInfo", "GetSpecialization", "GetSpecializationInfo",
+        "C_Spell", "GetSpellTexture",
         "issecretvalue", "canaccessvalue", "issecrettable", "canaccesstable",
     },
 }

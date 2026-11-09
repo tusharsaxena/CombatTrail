@@ -4,6 +4,58 @@ local _, NS = ...
 --
 -- The skeleton (plan Task 0.1): one sub-table per settings page, each filled by the task that builds
 -- its feature: `general` (Task 0.2), `lanes` (1.1), `hud` (3.1), `history` (2.5) and `results` (4.1).
+--
+-- LOAD-BEARING: reads NS.IGNORE_SEEDS (defaults/IgnoreSeeds.lua) and NS.Compat at FILE SCOPE.
+
+local function rgba(r, g, b, a) return { r = r, g = g, b = b, a = a } end
+
+-- Where a lane may show (spec §4, Visibility). Delves and arenas are Retail-only, so on WoW Forever
+-- the keys are ABSENT, not false (clients-§4): the Lanes page builds its rows from these keys.
+local function where()
+    local w = { world = true, dungeon = true, raid = true, bg = true }
+    if NS.Compat.ForClient({ "retail" }) then
+        w.delve, w.arena = true, true
+    end
+    return w
+end
+
+-- One lane's every setting (spec §4's table, tab by tab). The two lanes differ only where `over` says.
+local function lane(key, over)
+    local d = {
+        enabled   = true,
+        -- Size and position. direction "left": newest at the right edge, scrolling left (as CastTrail).
+        direction = "left", scale = 1, width = 480, seconds = 12, iconSize = 28, spacing = 0,
+        -- Anchoring: "free" | "dock" (to the other lane: target, gap) | "unit" (the lane's unit frame,
+        -- or `frameName` when set). strata "LOW" (or "HOST" = match the host in unit-frame mode),
+        -- levelOffset added to the strata's relative base (spec §4, Layering).
+        anchor    = { mode = "free", point = "CENTER", relPoint = "CENTER", x = 0, y = -200,
+                      target = key == "pet" and "player" or "pet", gap = 4, frameName = "" },
+        strata    = "LOW", levelOffset = 0,
+        -- Icons
+        border = true, borderColor = rgba(1, 0.82, 0, 0.9), borderSize = 1, zoom = 0.08,
+        markInterrupted = true, glowLongCD = true, glowMinCD = 29, glowColor = rgba(1, 0.82, 0, 1),
+        tooltip = true, showName = false, fade = 0.2, stack = false,
+        -- Background and border ("" texture = the skin's own)
+        background = true, bgTexture = "", bgColor = rgba(0, 0, 0, 0.35),
+        laneBorder = false, laneBorderTexture = "", laneBorderColor = rgba(0, 0, 0, 1), laneBorderSize = 1,
+        padding = 0,
+        -- Ticks and labels. tickSpacing "gcd15" (1.5 s) | "haste" (haste-adjusted GCD) | "1s".
+        ticks = true, tickSpacing = "gcd15", tickColor = rgba(1, 1, 1, 0.25), tickWidth = 1,
+        now = true, nowColor = rgba(1, 1, 1, 0.6),
+        -- labelText "" = the lane's own name (the pet's name on the Pet lane, modules/LaneCasts.lua).
+        label = true, labelText = NS.L["You"], labelFont = "", labelSize = 12, labelOutline = "OUTLINE",
+        labelColor = rgba(1, 1, 1, 1), labelPosition = "LEFT",
+        -- Visibility. show "always" | "combat" | "combatOrTarget" | "never".
+        visibility = { show = "always", hideAfter = 5, where = where(), hideMounted = true,
+                       hideVehicle = true, hidePetBattle = true, hideResting = false,
+                       alphaCombat = 1, alphaOOC = 1 },
+        -- Ignored spells: { [spellID] = true }, seeded per client; a seed the player removes is
+        -- stored as false, which AceDB keeps because it differs from the default.
+        ignore = NS.IgnoreSeedSet(key),
+    }
+    for k, v in pairs(over or {}) do d[k] = v end
+    return d
+end
 
 NS.defaults = {
     profile = {
@@ -16,8 +68,18 @@ NS.defaults = {
             hudInCombat = true,
             fontScale   = 1,
         },
-        -- The Player and Pet lanes, one block per lane (spec §4).
-        lanes = {},
+        -- The Player and Pet lanes, one block per lane (spec §4). The Pet lane docks under the Player
+        -- lane by default (the mockup), with its own colors and a smaller icon.
+        lanes = {
+            player = lane("player"),
+            pet    = lane("pet", {
+                iconSize    = 24,
+                anchor      = { mode = "dock", point = "TOP", relPoint = "BOTTOM", x = 0, y = -236,
+                                target = "player", gap = 4, frameName = "" },
+                borderColor = rgba(0.4, 1, 0.4, 0.9),
+                labelText   = "",
+            }),
+        },
         -- The live DPS HUD (spec §6).
         hud = {},
         -- The recording filters and retention (spec §5).

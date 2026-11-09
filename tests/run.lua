@@ -94,6 +94,7 @@ local SUITES = {
     "test_vendor_sync",
     "test_settings",
     "test_slash",
+    "test_lane_casts",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

@@ -42,6 +42,8 @@ end
 -- the lanes, the fight watchers and the HUD each register their own events for the state they are in
 -- (plan milestones 1 to 3), and add here only what the addon object itself must hear.
 function NS.RegisterGameEvents()
+    -- The lanes' cast events, for the lanes switched on (modules/LaneCasts.lua).
+    if NS.LaneCasts then NS.LaneCasts.Sync() end
 end
 
 -- ── Host handlers ───────────────────────────────────────────────────────────────────────────────

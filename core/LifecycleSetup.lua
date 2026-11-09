@@ -11,7 +11,7 @@ local L = NS.L
 -- that builds it: the lanes, the fight watchers, the HUD and the Results window (plan milestones 1 to
 -- 4). A module carries `Suspend` (nothing on screen, no timer, no registration) and `Resume` (rebuilt
 -- from CURRENT settings).
-local MODULES = {}
+local MODULES = { "LaneCasts" }
 
 --- Disabled means NOT RUNNING. Every registration goes -- not gated -- every timer is canceled, and
 --- every frame is hidden at the source of its show decision.

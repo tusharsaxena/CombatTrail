@@ -10,6 +10,10 @@ NS.MSG = {
     -- Sender: settings/Schema.lua (NS.AnnounceSettingsChanged: the write seam, and the profile
     -- callbacks' wholesale change). Payload: (path, value); ("profile", key) on a profile change.
     SETTINGS_CHANGED = "Ka0s_CombatTrail_SettingsChanged",
+    -- Sender: modules/LaneCasts.lua (one cast that a lane shows). Payload: (laneKey, item), laneKey
+    -- "player" | "pet", item { texture, spellID (nil when it arrived secret), t = GetTime(),
+    -- interrupted = bool }. The texture may itself be secret: it is only ever handed to SetTexture.
+    LANE_PUSH = "Ka0s_CombatTrail_LanePush",
 }
 
 local Bus = LibStub and LibStub("LibKa0s-Bus-1.0", true)

@@ -33,6 +33,28 @@ local function build()
     end
     installLayers(M)
 
+    -- Units beyond the base's player (modules/LaneCasts.lua reads the pet's name). A test sets
+    -- M.__unitExists.pet and M.__unitNames.pet; the player's name stays the capture context's.
+    M.__unitExists.pet = false
+    M.__unitNames = {}
+    M.UnitName = function(unit)
+        if unit == nil or unit == "player" then return M.__context.name end
+        return M.__unitNames[unit]
+    end
+
+    -- C_Spell: a spell's icon is a made-up file id per plain ID (136000 + id), nil for anything else.
+    -- A suite that hands a secret ID replaces GetSpellTexture with one that reveals it.
+    M.C_Spell = {
+        GetSpellTexture = function(id)
+            if type(id) == "number" then return 136000 + id end
+            return nil
+        end,
+        GetSpellName = function(id)
+            if type(id) == "number" then return "Spell " .. id end
+            return nil
+        end,
+    }
+
     -- TOC metadata, read through LibKa0s-Env-1.0 (core/EnvSetup.lua).
     M.__toc = {
         Version = "0.1.0",

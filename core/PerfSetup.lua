@@ -28,7 +28,9 @@ NS.Perf = lib:New({
     version   = NS.Version(),
     -- Declared in report order, each in the task that adds its real bracket: the lanes' cast event
     -- and OnUpdate, the fight watchers and the HUD's live read (plan milestones 1 to 3).
-    buckets = {},
+    buckets = {
+        { key = "laneCast" },        -- every UNIT_SPELLCAST_* a lane hears, in modules/LaneCasts.lua
+    },
     -- The latch the capture's suspended arm takes its `perf` hold on. suspend/resume are NOT passed:
     -- the latch's standDown/standUp (core/LifecycleSetup.lua) are the one teardown.
     lifecycle = NS.lifecycle,

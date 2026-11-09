@@ -13,6 +13,8 @@ local _, NS = ...
 --                                C_SpecializationInfo first, then the deprecated globals (both are
 --                                gone on WoW Forever, where the stubs answer nil)
 -- Hand-written ladders across clients and patches:
+--   Compat.SpellTexture(id)      C_Spell.GetSpellTexture, then the bare global; the id is passed through
+--                                untouched, so the caller runs it in pcall (it may be secret)
 --   Compat.CanAccessTable(t)     canaccesstable, then issecrettable, then "readable"
 --   Compat.ChatSender()          C_ChatInfo.SendChatMessage, then the bare global (deprecated 11.2.0)
 --   Compat.NewNumberFormatter()  C_StringUtil's abbreviated-number formatter constructor, then its
@@ -170,6 +172,26 @@ Compat.GetSpecialization = CompatLib and CompatLib.GetSpecialization or getSpeci
 --- The specialization's info for `index` (specID, name, description, icon, role, ...), or nil.
 --- @param index number
 Compat.GetSpecializationInfo = CompatLib and CompatLib.GetSpecializationInfo or getSpecializationInfoStub
+
+-- ---------------------------------------------------------------------------
+-- Spells
+-- ---------------------------------------------------------------------------
+
+--- The file id of a spell's icon, or nil (exactly one value; it may be secret). Hand-written rather
+--- than LibKa0s-Compat-1.0's GetSpellTexture: the library guards the identifier domain with type()
+--- first, and a cast lane is handed a spell ID that may be SECRET in combat (spec §4). The C side
+--- takes a secret identifier and answers a texture the lane only ever hands to SetTexture, so this
+--- passes the id through untouched, never testing it, and the caller runs it in pcall.
+--- @param id any
+--- @return number|nil
+function Compat.SpellTexture(id)
+    if id == nil then return nil end
+    local spell = C_Spell
+    if spell and spell.GetSpellTexture then return (spell.GetSpellTexture(id)) end
+    local bare = GetSpellTexture
+    if bare then return (bare(id)) end
+    return nil
+end
 
 -- ---------------------------------------------------------------------------
 -- Chat and number formatting

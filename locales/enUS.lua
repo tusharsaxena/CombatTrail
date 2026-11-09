@@ -12,6 +12,10 @@ NS.L = L
 -- Identity and chrome
 L["Ka0s Combat Trail"] = "Ka0s Combat Trail"
 
+-- The lanes' default labels (modules/LaneCasts.lua, defaults/Profile.lua)
+L["You"] = "You"
+L["Pet"] = "Pet"
+
 -- Key bindings (launcher-§6)
 L["Toggle DPS HUD"] = "Toggle DPS HUD"
 L["Toggle Results window"] = "Toggle Results window"
