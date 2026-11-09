@@ -1,0 +1,1314 @@
+#!/usr/bin/env bash
+#
+# run-automated-tests.sh — the Ka0s collection's consolidated automated-test runner.
+#
+# Runs the four out-of-game suites and records every result as one frozen bundle under
+# docs/automated-tests/<YYYYMMDD-HHMMSS>/, then rolls the run into docs/automated-tests/RESULTS.md.
+#
+#   lint        luacheck .                     GATING
+#   tests       lua tests/run.lua              GATING
+#   perf        lua tests/perf.lua             recorded — gates the TAG, never the run or the commit
+#   complexity  lizard -l lua -L 1500 -x ... . recorded — gates the TAG, never the run or the commit
+#               (measured over the sighted shadow, with function-count parity; kit revision 35)
+#
+# WHY perf AND complexity DO NOT GATE THE RUN OR THE COMMIT. `performance-§9`/`§10`: a threshold that
+# fails a run teaches everyone to reach for --no-verify, after which the gate protects nothing and the
+# habit remains. They are measured, recorded and diffed; a regression yields `amber`, not `red`. At
+# the TAG they DO gate — `automated-tests-§3` has the release command read this manifest and require
+# all four suites at `pass` plus zero functions above CCN 15, where a `skip` is NOT EVALUATED.
+#
+# A MISSING TOOL IS A SKIP, NOT A FAILURE. An absent luacheck/lizard/interpreter means the suite did
+# not run; it does not mean the addon is broken. Skips are recorded as skips so a green run that
+# actually measured nothing cannot read as a green run that measured everything.
+#
+# Usage, from the addon repo root:
+#
+#   tests/_kit/run-automated-tests.sh                          all four suites, writes a bundle
+#   tests/_kit/run-automated-tests.sh --suite lint --suite tests   a subset
+#   tests/_kit/run-automated-tests.sh --label pre-release       label the bundle
+#   tests/_kit/run-automated-tests.sh --no-bundle               print only, write nothing
+#   tests/_kit/run-automated-tests.sh --release 1.4.2           mark the bundle a release record
+#
+# --release IS REFUSED ON A DIRTY TREE, exit 2, before any suite runs. A release record does not
+# label a run, it IS the evidence for a version, and a working tree carrying uncommitted changes is
+# not a commit anyone can check out afterwards. Commit first, then run, then commit the record.
+#
+# EVERY RESULTS.md ROW NAMES THE COMMIT IT MEASURED and whether that tree was clean — the short sha
+# and the mark in the table, the full sha, the branch and the boolean in manifest.json. Figures with
+# no commit beside them can be read but not reproduced, not bisected and not attributed to the
+# change that moved them: on 2026-09-07 the newest bundle was behind the tree it was read against
+# in ten of ten repositories, AbsorbTracker's newest row recording 508 tests and 7997 NLOC on a tree
+# running 547 and 8903. Both cells are GENERATED here and neither is ever typed — the one authored
+# cell in RESULTS.md is the watch list's `Disposition` (`automated-tests-§4`). The columns arrive
+# with this revision, so the header widens ONCE: every row written before it is carried forward
+# reading `unknown`, never `clean`, because unknown is what the record holds about those runs.
+#
+# Exit code: 0 unless the verdict is `red` (a gating suite failed). --no-bundle keeps the same code,
+# so a pre-commit hook can call it without writing anything.
+#
+# VENDORED — do not edit this copy. It lives in the LibKa0s repo at testkit/ and is vendored
+# whole-folder to <Addon>/tests/_kit/. A local patch is overwritten by the next re-vendor, silently.
+
+set -uo pipefail
+
+# ── argument parsing ────────────────────────────────────────────────────────────────────────────
+SUITES=()
+LABEL=""
+RELEASE=""
+WRITE_BUNDLE=1
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --suite)      SUITES+=("$2"); shift 2 ;;
+        --label)      LABEL="$2"; shift 2 ;;
+        --release)    RELEASE="$2"; shift 2 ;;
+        --no-bundle)  WRITE_BUNDLE=0; shift ;;
+        # The range ENDS AT THE LAST COMMENT LINE of the header block above, and moves with it: a
+        # range left behind by an edit to that block prints a truncated paragraph as if it were the
+        # whole of --help, which is a help text that lies about itself.
+        -h|--help)    sed -n '2,49p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+        *) echo "unknown argument: $1" >&2; exit 2 ;;
+    esac
+done
+if [ ${#SUITES[@]} -eq 0 ]; then SUITES=(lint tests perf complexity); fi
+
+wants() { for s in "${SUITES[@]}"; do [ "$s" = "$1" ] && return 0; done; return 1; }
+
+# ── locate the addon ────────────────────────────────────────────────────────────────────────────
+TOC="$(ls -1 ./*.toc 2>/dev/null | head -1 || true)"
+if [ -n "$TOC" ]; then
+    ADDON="$(basename "$TOC" .toc)"
+    ADDON_VERSION="$(grep -i '^## Version:' "$TOC" 2>/dev/null | head -1 | sed 's/^## *[Vv]ersion: *//' | tr -d '\r' || true)"
+else
+    # An embeddable library has no .toc — it is loaded by its host's TOC, not its own, so the
+    # identity and version a .toc would carry have to come from somewhere else. Requiring one
+    # here locked the library that OWNS this kit out of running it, which is why two kit bugs
+    # survived five revisions: the kit's own repo could never execute its output path.
+    # Identity is the repo directory; version is the newest semver tag, which for a library is
+    # the only repo-wide number there is (its files carry per-file LibStub minors instead).
+    if [ ! -d .git ]; then
+        echo "no .toc here and no .git — run this from the addon or library repo root" >&2
+        exit 2
+    fi
+    ADDON="$(basename "$PWD")"
+    ADDON_VERSION="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' | tr -d '\r' || true)"
+fi
+[ -z "$ADDON_VERSION" ] && ADDON_VERSION="unknown"
+
+# LOCAL time, not UTC: a record is read by the person who ran it, and a folder name that
+# disagrees with their clock costs a mental conversion on every glance. startedAt keeps an
+# explicit UTC offset so the instant stays unambiguous once the record outlives the machine.
+STAMP="$(date +%Y%m%d-%H%M%S)"
+STARTED_AT="$(date +%Y-%m-%dT%H:%M:%S%:z)"
+OUT="docs/automated-tests/$STAMP"
+
+# ── the clock ───────────────────────────────────────────────────────────────────────────────────
+# Every duration in this record is MILLISECONDS, and every one of them used to be measured with
+# `date +%s` — whole seconds — then multiplied by 1000 on the way out. Two things followed. A suite
+# that took 300ms recorded `0`, indistinguishable from a suite that did not run. And a second
+# boundary crossed the wrong way (NTP step, DST-adjacent clock skew) recorded a NEGATIVE duration:
+# `-1000` and `-2000` are committed in five repos' manifests today. A duration that can be negative
+# is a duration nobody can read as a measurement.
+#
+# The source is resolved ONCE, here, and recorded in the manifest, so a run whose host could only
+# offer second granularity is self-describing instead of looking like an implausibly fast run.
+#
+# All timestamps in a run come from `now_ms`, without exception. Mixing units across the two
+# operands of a subtraction is the failure this block replaced: epoch-milliseconds minus
+# epoch-seconds is ~1.7e12, it is POSITIVE, and it therefore survives every "is it negative" check
+# while being wrong by a factor of a thousand.
+if printf '%s' "$(date +%s%3N 2>/dev/null || true)" | grep -qE '^[0-9]{13,}$'; then
+    TIMING_SOURCE="date +%s%3N"
+    now_ms() { date +%s%3N; }
+elif [ -n "${EPOCHREALTIME:-}" ]; then
+    # bash >= 5.0. Dynamic — it must be read on every call, which is why this reads the variable
+    # inside the function rather than capturing it. `1785110400.123456` with the locale's decimal
+    # separator; strip it and keep the leading 13 digits.
+    TIMING_SOURCE="EPOCHREALTIME"
+    now_ms() { local e="${EPOCHREALTIME/[.,]/}"; printf '%s' "${e:0:13}"; }
+else
+    TIMING_SOURCE="date +%s (second granularity)"
+    now_ms() { printf '%s' "$(( $(date +%s) * 1000 ))"; }
+fi
+
+# Elapsed milliseconds between two `now_ms` readings, CLAMPED AT ZERO. A backwards clock yields a
+# negative here; recording it would put a number in the trend line that cannot mean anything.
+elapsed_ms() { local d=$(( $2 - $1 )); [ "$d" -lt 0 ] && d=0; printf '%s' "$d"; }
+
+RUN_START=$(now_ms)
+
+# ── resource bounds (kit revision 23) ──────────────────────────────────────────────────────────
+# Every suite runs under a per-process address-space cap and a wall-clock timeout, with the same
+# variables and defaults framework.lua's guard reads, so one runaway tool fails its own suite instead
+# of taking the machine's memory. The Lua runs are guarded a second time by the kit itself, which
+# also bounds the process TREE; luacheck and lizard have no kit to load, and this is their only bound.
+bounded() {
+    (
+        [ "${KA0S_KIT_GUARD:-}" = "off" ] && exec "$@"
+        mb="${KA0S_KIT_PROC_MB:-2048}"
+        [ "$mb" -gt 0 ] 2>/dev/null && ulimit -v $(( mb * 1024 )) 2>/dev/null
+        secs="${KA0S_KIT_TIMEOUT_S:-900}"
+        if [ "$secs" -gt 0 ] 2>/dev/null && command -v timeout >/dev/null 2>&1; then
+            exec timeout --foreground -k 10 "$secs" "$@"
+        fi
+        exec "$@"
+    )
+}
+
+# ── interpreter + tool discovery ────────────────────────────────────────────────────────────────
+LUA=""
+for c in lua5.1 lua luajit; do command -v "$c" >/dev/null 2>&1 && { LUA="$c"; break; }; done
+LUA_VERSION=""
+[ -n "$LUA" ] && LUA_VERSION="$($LUA -v 2>&1 | head -1 | tr -d '\r')"
+LUACHECK_VERSION=""
+command -v luacheck >/dev/null 2>&1 && LUACHECK_VERSION="$(luacheck --version 2>/dev/null | head -1 | tr -d '\r')"
+NOCOLOR=""
+[ -n "$LUACHECK_VERSION" ] && luacheck --help 2>&1 | grep -q -- "--no-color" && NOCOLOR="--no-color"
+LIZARD_VERSION=""
+command -v lizard >/dev/null 2>&1 && LIZARD_VERSION="$(lizard --version 2>/dev/null | head -1 | tr -d '\r')"
+# The sighted shadow's builder and parity check, beside this script in every vendored copy.
+SIGHTED="$(cd "$(dirname "${BASH_SOURCE[0]}")" 2>/dev/null && pwd)/lizard_sighted.lua"
+
+GIT_SHA="$(git rev-parse HEAD 2>/dev/null || echo "")"
+GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")"
+GIT_DIRTY=false
+[ -n "$(git status --porcelain 2>/dev/null)" ] && GIT_DIRTY=true
+# The table carries the SHORT sha and the manifest carries the full one, which is what
+# `automated-tests-§4` asks for: a row is read by a person scanning a column, and an abbreviation
+# git itself chose stays unambiguous in this repo as the history grows. `git rev-parse --short`
+# honors core.abbrev and lengthens itself when it has to; the slice is the fallback for a git too
+# old to be asked, never the primary, because a fixed seven characters is a collision waiting for a
+# big enough repo.
+GIT_SHA_SHORT="$(git rev-parse --short HEAD 2>/dev/null || true)"
+[ -z "$GIT_SHA_SHORT" ] && GIT_SHA_SHORT="${GIT_SHA:0:7}"
+
+# A RELEASE RECORD IS REFUSED ON A DIRTY TREE. `--release X.Y.Z` does not label the run, it makes it
+# the evidence for that version: `automated-tests-§3`'s release gate and `/dev-copilot:bump-version`
+# read this manifest and nothing else when they decide whether the tag may be cut. A tree with
+# uncommitted changes is not a commit, so the `git.sha` recorded beside the claim names bytes that
+# are not the bytes that were measured, and nobody reading the record later can reconstruct what ran.
+#
+# That is history, not theory. This library has written seventy-three bundles, sixty-seven of them
+# release bundles; twenty-nine record `"dirty": true`, and twenty-eight of those twenty-nine are
+# releases — so all but one dirty run in the record claims to be a release; `20260903-161751` stamps `"release": "1.25.0"` at sha `895cdf4` on a tree that
+# cannot be checked out. Every one of them reads, to a trend line, exactly like a reproducible run.
+#
+# The refusal is here — before the suites, before the bundle directory is made — so it costs seconds
+# rather than a full battery. There is deliberately no override flag: an escape hatch on this gate
+# would be reached for on the one release where the gate matters. The fix is one commit.
+if [ -n "$RELEASE" ] && [ "$GIT_DIRTY" = true ]; then
+    {
+        echo "refusing --release $RELEASE: the working tree is dirty."
+        echo "  A release record names the commit its suites measured. Commit these, then re-run:"
+        git status --porcelain 2>/dev/null | sed 's/^/    /'
+    } >&2
+    exit 2
+fi
+
+# ── which perf skip reason applies (kit revision 26) ────────────────────────────────────────────
+# `automated-tests-§3` sanctions two reasons for a permanent perf `skip`, and the second MUST be
+# recorded when it applies: (1) the repo ships no `tests/perf.lua`, so there is nothing to run, and
+# (2) it holds a ratified `performance-§12` no-combat-path exemption. Through revision 25 this runner
+# knew only (1), so three addons that hold the exemption had it denied in every record they wrote,
+# and none of them could correct it: the kit may not be edited in place (`testing-§1`).
+#
+# The exemption is read out of the repo's own `## Documented deviations` register, in the two hosts
+# inventory.lua's `deviationRows` reads and in the same order: `docs/ARCHITECTURE.md` for an addon,
+# the root `CLAUDE.md` for a library. Only the table rows DIRECTLY under the heading count, ending at
+# the next heading of any level, so a census or any other table nested beneath it is never a row.
+#
+# THE RULE CELL MUST BE `performance-§12` EXACTLY, after the `normRule` reduction (lower case, no
+# backticks, no whitespace, no section sign). A substring match would read WhatGroup's row, keyed
+# `performance-§12 (the exemption is not claimed)`, as the exemption it disclaims.
+#
+# A REGISTER THIS CANNOT READ EXITS 2, before any suite and before the bundle directory exists. The
+# table must open with a header whose first cell is `Rule`, a `|---|` separator must follow, and every
+# row needs a cell after its Rule. A row MAY carry more cells than the header: a `|` inside a code
+# span splits a cell in markdown, several registers in the collection have one, and the rule is read
+# from the first cell alone. Guessing past anything else would record whichever reason the guess
+# happened to land on, as a fact about the repo.
+#
+# `KA0S_PERF_EXEMPT=1` is for a repo that has no register at all. Where a register exists it is the
+# record, and a flag that could outvote it would be a second, unreviewed place to ratify a deviation.
+register_scan() {   # $1 = file; prints: none | register | match | malformed<TAB>why
+    awk '
+        function norm(s) { s = tolower(s); gsub(/[` \t]/, "", s); gsub(/\302\247/, "", s); return s }
+        function cells(line, out,    body, n, i) {
+            body = line; gsub(/\\\|/, "\001", body)
+            sub(/^[ \t]*\|/, "", body); sub(/[ \t]*$/, "", body); sub(/\|$/, "", body)
+            n = split(body, out, "|")
+            for (i = 1; i <= n; i++) { sub(/^[ \t]+/, "", out[i]); sub(/[ \t]+$/, "", out[i]) }
+            return n
+        }
+        { sub(/\r$/, "") }
+        /^#+[ \t]/ {
+            t = $0; sub(/^#+[ \t]+/, "", t)
+            inside = (index(tolower(t), "documented deviations") > 0)
+            if (inside) { seen = 1; nrow = 0 }
+            next
+        }
+        inside && /^[ \t]*\|/ {
+            nrow++
+            n = cells($0, c)
+            if (nrow == 1) {
+                if (n < 2 || norm(c[1]) != "rule") bad = bad sprintf("line %d: the header does not open with a Rule cell; ", NR)
+                next
+            }
+            if (nrow == 2) {
+                for (i = 1; i <= n; i++) if (c[i] !~ /^:?-+:?$/) { bad = bad sprintf("line %d: no |---| separator under the header; ", NR); break }
+                next
+            }
+            if (n < 2) { bad = bad sprintf("line %d: a row with no cell after its Rule; ", NR); next }
+            if (norm(c[1]) == "performance-12") hit = 1
+        }
+        END {
+            if (!seen) print "none"
+            else if (bad != "") print "malformed\t" bad
+            else if (hit) print "match"
+            else print "register"
+        }' "$1" 2>/dev/null
+}
+PERF_EXEMPT_NOTE=""; PERF_EXEMPT_SRC=""
+if wants perf && [ ! -f tests/perf.lua ]; then
+    REGISTER_SEEN=0
+    for host in docs/ARCHITECTURE.md CLAUDE.md; do
+        [ -f "$host" ] || continue
+        verdict="$(register_scan "$host")"
+        case "$verdict" in
+            malformed*)
+                {
+                    echo "cannot read the ## Documented deviations register in $host: ${verdict#malformed?}"
+                    echo "  The perf skip reason is read from it (automated-tests-§3). Fix the table, then re-run."
+                } >&2
+                exit 2 ;;
+            match)
+                REGISTER_SEEN=1
+                if [ -z "$PERF_EXEMPT_NOTE" ]; then
+                    PERF_EXEMPT_NOTE="performance-§12 no-combat-path exemption (ratified; $host -> Documented deviations)"
+                    PERF_EXEMPT_SRC="the \`## Documented deviations\` register in \`$host\`"
+                fi ;;
+            register) REGISTER_SEEN=1 ;;
+        esac
+    done
+    if [ "$REGISTER_SEEN" -eq 0 ] && [ "${KA0S_PERF_EXEMPT:-}" = "1" ]; then
+        PERF_EXEMPT_NOTE="performance-§12 no-combat-path exemption (ratified; KA0S_PERF_EXEMPT=1)"
+        PERF_EXEMPT_SRC="\`KA0S_PERF_EXEMPT=1\`, this repo having no deviation register"
+    fi
+fi
+
+# ── is the record behind the tree? REPORT, NEVER FAIL ───────────────────────────────────────────
+# Read BEFORE this run's own directory is created, because afterwards the newest bundle is always
+# this one and the question cannot be asked again. `automated-tests-§4`: going stale between
+# releases is expected — §6 makes the release the checkpoint that refreshes the record — but
+# staleness is only legible AS staleness once the row names the commit it measured, and the cost of
+# it being illegible was ten of ten repositories reading a bundle that predated the tree it was
+# being read against.
+#
+# This reports and stops there. It is not a gate, it does not touch the verdict and it does not move
+# the exit code: the remedy is to run the battery, which is what the person invoking this script is
+# already doing. A check that failed here would fail on the one run that fixes it.
+STALE_NOTE=""
+PRIOR_BUNDLE="$(ls -1d docs/automated-tests/[0-9]*-[0-9]*/ 2>/dev/null | sed 's:/*$::' | sort | tail -1)"
+if [ -n "$PRIOR_BUNDLE" ] && [ -n "$GIT_SHA" ]; then
+    if [ -f "$PRIOR_BUNDLE/manifest.json" ]; then
+        PRIOR_SHA="$(sed -n 's/.*"git"[^}]*"sha"[[:space:]]*:[[:space:]]*"\([0-9a-fA-F]*\)".*/\1/p' "$PRIOR_BUNDLE/manifest.json" | head -1)"
+    else
+        PRIOR_SHA=""
+    fi
+    PRIOR_STAMP="$(basename "$PRIOR_BUNDLE")"
+    if [ -z "$PRIOR_SHA" ]; then
+        STALE_NOTE="newest bundle $PRIOR_STAMP records no commit — it predates kit revision 25, so what it measured cannot be identified"
+    elif [ "$PRIOR_SHA" = "$GIT_SHA" ]; then
+        STALE_NOTE="newest bundle $PRIOR_STAMP was measured at HEAD"
+    else
+        BEHIND="$(git rev-list --count "$PRIOR_SHA..HEAD" 2>/dev/null || true)"
+        if [ -n "$BEHIND" ] && [ "$BEHIND" != "0" ]; then
+            STALE_NOTE="newest bundle $PRIOR_STAMP measured ${PRIOR_SHA:0:7}, $BEHIND commit(s) behind HEAD — its figures describe a tree this one is no longer"
+        else
+            STALE_NOTE="newest bundle $PRIOR_STAMP measured ${PRIOR_SHA:0:7}, which is not an ancestor of HEAD — a different line of history"
+        fi
+    fi
+fi
+
+[ "$WRITE_BUNDLE" -eq 1 ] && mkdir -p "$OUT"
+
+# Per-suite state. status is pass|fail|skip; skip_reason explains a skip in the summary.
+declare -A ST DUR NOTE
+for s in lint tests perf complexity; do ST[$s]="notrun"; DUR[$s]=0; NOTE[$s]=""; done
+
+LINT_WARN=0; LINT_ERR=0; LINT_FILES=0
+TESTS_PASS=0; TESTS_FAIL=0; TESTS_SKIP=0; TESTS_TOTAL=0
+PERF_SCENARIOS=0; PERF_FAILED=0
+# The per-scenario table, verbatim from this run's own `tests/perf.lua` output, captured where the
+# measurement happens for the same reason the complexity rows are: a standing section that names
+# only a COUNT tells a reader that something was measured and nothing about what. The RESULTS.md
+# generator used to emit exactly that, consumers noticed the thinning, and one of them hand-patched
+# its own RESULTS.md to compensate -- which `automated-tests-§4` forbids (Disposition is the ONE
+# authored cell) and which the next re-vendor would revert anyway. Fixed at source.
+PERF_TABLE=""
+CCN_WARN=0; CCN_NLOC=0; CCN_FUNCS=0; CCN_AVG=0; CCN_MAX=0; CCN_BAND=0; CCN_OVER=0; CX_INVALID=0
+# The watch list's own rows, TAB-separated, in `lizard`'s own order. `automated-tests-§4` wants
+# the two tables generated from the run that measured them, so they are captured where the
+# measurement happens rather than re-derived from the counters afterwards.
+CCN_WARN_ROWS=""; CCN_BAND_ROWS=""; CCN_EXEMPT_ROWS=""
+CCN_BLIND=0; CCN_BLIND_ROWS=""; CCN_BLIND_NOTE=""
+# A lizard that raised (kit revision 41, LibKa0s#47) is its own bucket, never `blind`: the rows are
+# `path<TAB>exception` for each file whose solo retry raises, and the note leads the watch list.
+CCN_CRASHED=0; CCN_CRASHED_ROWS=""; CCN_CRASHED_NOTE=""
+CCN_AVG_NLOC=0; CCN_AVG_TOKEN=0; CCN_FUN_RT=0; CCN_NLOC_RT=0
+
+# Strip ANSI color before writing. luacheck and the harness color their output when they
+# think a terminal is attached, and the raw escapes ('\033[32m\033[1mOK') land verbatim in the
+# artifact — unreadable in an editor and noise in any diff between two runs. The parsers below
+# already strip for their own use; the stored evidence gets the same treatment.
+strip_ansi() { sed -e 's/\x1b\[[0-9;]*[a-zA-Z]//g' -e 's/\r$//'; }
+emit() { if [ "$WRITE_BUNDLE" -eq 1 ]; then strip_ansi > "$OUT/$1"; else cat > /dev/null; fi; }
+
+# ── lint ────────────────────────────────────────────────────────────────────────────────────────
+if wants lint; then
+    t0=$(now_ms)
+    if [ ! -f .luacheckrc ]; then
+        ST[lint]="skip"; NOTE[lint]="no .luacheckrc — lint is not part of this addon's battery"
+    elif [ -z "$LUACHECK_VERSION" ]; then
+        ST[lint]="skip"; NOTE[lint]="luacheck not on PATH — install: sudo luarocks install luacheck"
+    else
+        # $NOCOLOR is belt and braces with strip_ansi: where the flag exists nothing colors the
+        # output in the first place, and where it does not, strip_ansi still cleans it.
+        raw="$(bounded luacheck . $NOCOLOR 2>&1)"; rc=$?
+        printf '%s\n' "$raw" | emit lint.txt
+        line="$(printf '%s\n' "$raw" | sed 's/\x1b\[[0-9;]*m//g' | grep -E '^Total: ' | tail -1)"
+        LINT_WARN=$(printf '%s' "$line" | grep -oE '[0-9]+ warning' | grep -oE '[0-9]+' || echo 0)
+        LINT_ERR=$(printf '%s'  "$line" | grep -oE '[0-9]+ error'   | grep -oE '[0-9]+' || echo 0)
+        LINT_FILES=$(printf '%s' "$line" | grep -oE 'in [0-9]+ files' | grep -oE '[0-9]+' || echo 0)
+        [ -z "$LINT_WARN" ] && LINT_WARN=0; [ -z "$LINT_ERR" ] && LINT_ERR=0; [ -z "$LINT_FILES" ] && LINT_FILES=0
+        if [ "$rc" -eq 0 ]; then ST[lint]="pass"; else ST[lint]="fail"; fi
+    fi
+    DUR[lint]=$(elapsed_ms "$t0" "$(now_ms)")
+fi
+
+# ── tests ───────────────────────────────────────────────────────────────────────────────────────
+if wants tests; then
+    t0=$(now_ms)
+    if [ ! -f tests/run.lua ]; then
+        ST[tests]="skip"; NOTE[tests]="no tests/run.lua"
+    elif [ -z "$LUA" ]; then
+        ST[tests]="skip"; NOTE[tests]="no Lua 5.1 interpreter on PATH — the kit uses setfenv, which is 5.1-only"
+    else
+        raw="$(bounded $LUA tests/run.lua 2>&1)"; rc=$?
+        printf '%s\n' "$raw" | emit tests.txt
+        # Every summary shape this collection has printed: "N passed, N failed", the "N total"
+        # form that followed it, and the "N passed, N failed, N skipped, N total" framework.lua
+        # has printed since the skip status existed. Matching only the first silently recorded
+        # 0/0/0 for every addon using another — a green run reporting zero tests, which is the
+        # exact failure this runner exists to make impossible.
+        clean="$(printf '%s\n' "$raw" | sed 's/\x1b\[[0-9;]*m//g')"
+        line="$(printf '%s\n' "$clean" | grep -oE '[0-9]+ passed, [0-9]+ failed(, [0-9]+ skipped)?(, [0-9]+ total)?' | tail -1)"
+        if [ -n "$line" ]; then
+            # EACH FIGURE IS READ BY ITS LABEL, never by field position. The summary has grown a
+            # column twice, and the positional read broke silently on the way past both times:
+            # `awk '{print $5}'` meant "total" for `N passed, N failed, N total` and means
+            # "skipped" for the shape printed today — and while the regex above could not span
+            # `, N skipped` at all, field 5 read EMPTY and the total fell back to passed+failed.
+            # Either way the skipped cases were missing from the total, so a suite that skipped
+            # three cases recorded as a suite three cases smaller and the record said nothing.
+            num() { printf '%s' "$line" | grep -oE "[0-9]+ $1" | grep -oE '[0-9]+' | head -1; }
+            TESTS_PASS=$(num passed);  [ -z "$TESTS_PASS" ]  && TESTS_PASS=0
+            TESTS_FAIL=$(num failed);  [ -z "$TESTS_FAIL" ]  && TESTS_FAIL=0
+            TESTS_SKIP=$(num skipped); [ -z "$TESTS_SKIP" ]  && TESTS_SKIP=0
+            TESTS_TOTAL=$(num total)
+            [ -z "$TESTS_TOTAL" ] && TESTS_TOTAL=$(( TESTS_PASS + TESTS_FAIL + TESTS_SKIP ))
+        fi
+        if [ "$rc" -eq 0 ]; then ST[tests]="pass"; else ST[tests]="fail"; fi
+        # A zero-exit run whose count could not be read is NOT a pass. Reporting green off an
+        # unparsed summary is worse than reporting a failure, because it is believed.
+        if [ "${ST[tests]}" = "pass" ] && [ "$TESTS_TOTAL" -eq 0 ]; then
+            ST[tests]="skip"
+            NOTE[tests]="the harness exited 0 but its summary could not be parsed — count not recorded"
+        fi
+        # The generated inventory travels with the run it describes, so a bundle answers
+        # "which cases existed at this point" without a second checkout.
+        if [ "$WRITE_BUNDLE" -eq 1 ]; then
+            bounded $LUA tests/run.lua --list 2>/dev/null | strip_ansi > "$OUT/test-cases.md" \
+                || rm -f "$OUT/test-cases.md"
+        fi
+    fi
+    DUR[tests]=$(elapsed_ms "$t0" "$(now_ms)")
+fi
+
+# ── perf (recorded, never gating) ───────────────────────────────────────────────────────────────
+if wants perf; then
+    t0=$(now_ms)
+    if [ ! -f tests/perf.lua ] && [ -n "$PERF_EXEMPT_NOTE" ]; then
+        ST[perf]="skip"; NOTE[perf]="$PERF_EXEMPT_NOTE"
+    elif [ ! -f tests/perf.lua ]; then
+        ST[perf]="skip"; NOTE[perf]="no tests/perf.lua — this addon ships no offline scenarios"
+    elif [ -z "$LUA" ]; then
+        ST[perf]="skip"; NOTE[perf]="no Lua interpreter on PATH"
+    else
+        if [ "$WRITE_BUNDLE" -eq 1 ]; then
+            raw="$(bounded $LUA tests/perf.lua --out "$OUT/perf.json" ${LABEL:+--label "$LABEL"} 2>&1)"; rc=$?
+        else
+            raw="$(bounded $LUA tests/perf.lua ${LABEL:+--label "$LABEL"} 2>&1)"; rc=$?
+        fi
+        printf '%s\n' "$raw" | emit perf.txt
+        # The scenario table opens with a `scenario  iters  ms/iter ...` header and runs until the
+        # first blank line. Counting the header itself (or any `##`) is how this silently reported
+        # "1 scenario" for a six-row table, so the rows are counted structurally: five fields, with
+        # the iteration count numeric.
+        PERF_SCENARIOS=$(printf '%s\n' "$raw" | awk '
+            /^[[:space:]]*scenario[[:space:]]+iters/ { intable=1; next }
+            intable && NF==0 { intable=0 }
+            intable && NF==5 && $2 ~ /^[0-9]+$/ { n++ }
+            END { print n+0 }')
+        [ -z "$PERF_SCENARIOS" ] && PERF_SCENARIOS=0
+        # The same structural read, kept as a TABLE rather than a count. The header line supplies
+        # the column names, so a repo whose `tests/perf.lua` reports a different fifth column is
+        # rendered correctly without this script knowing what that column is -- nothing here is a
+        # hardcoded list, and there is no figure in it this run did not produce.
+        PERF_TABLE=$(printf '%s\n' "$raw" | awk '
+            /^[[:space:]]*scenario[[:space:]]+iters/ { intable=1; hdr=$0; next }
+            intable && NF==0 { intable=0 }
+            intable && NF==5 && $2 ~ /^[0-9]+$/ { rows[++n] = $0 }
+            END {
+                if (n == 0) exit
+                split(hdr, h, " ")
+                line = "|"; rule = "|"
+                for (i = 1; i <= 5; i++) { line = line " `" h[i] "` |"; rule = rule "---|" }
+                print line; print rule
+                for (r = 1; r <= n; r++) {
+                    split(rows[r], f, " ")
+                    out = "| `" f[1] "` |"
+                    for (i = 2; i <= 5; i++) out = out " " f[i] " |"
+                    print out
+                }
+            }')
+        if [ "$rc" -eq 0 ]; then ST[perf]="pass"; else ST[perf]="fail"; PERF_FAILED=1; fi
+    fi
+    DUR[perf]=$(elapsed_ms "$t0" "$(now_ms)")
+fi
+
+# ── complexity (recorded, never gating) ─────────────────────────────────────────────────────────
+if wants complexity; then
+    t0=$(now_ms)
+    if [ -z "$LIZARD_VERSION" ]; then
+        ST[complexity]="skip"; NOTE[complexity]="lizard not on PATH — install: pipx install lizard"
+    elif [ -z "$LUA" ] || [ ! -f "$SIGHTED" ] || ! CX_TMP="$(mktemp -d 2>/dev/null)"; then
+        ST[complexity]="skip"
+        NOTE[complexity]="the sighted shadow cannot be built (no Lua, no lizard_sighted.lua beside this runner, or no mktemp), and lizard alone is blind in Lua"
+    else
+        # THE SIGHTED SHADOW (kit revision 35, `automated-tests-§3`). lizard 1.24.0 loses whole
+        # functions over `#` and over the Ruby-like reader's it/class/module/begin/unless, and a
+        # lost function is never measured. Every file the command would read is copied, sanitized
+        # line for line (lizard_sighted.lua says how), into a temporary tree, and the command runs
+        # THERE, so complexity.txt's paths and line numbers are the real files'. The standard fixes
+        # the invocation itself (performance-§10): do not add flags, re-tune thresholds or narrow
+        # the path, because a locally "improved" command produces a report nothing can be diffed
+        # against. The two `-x` switches have nothing left to exclude in the shadow and stay anyway.
+        # `-L 1500` is part of that fixed command: length is layout-§1's file cap, so a warning is CCN.
+        find . -name '*.lua' -not -path './libs/*' -not -path './tests/_kit/*' | sed 's|^\./||' \
+            | LC_ALL=C sort > "$CX_TMP/files"
+        mkdir -p "$CX_TMP/src" && $LUA "$SIGHTED" shadow "$CX_TMP/src" < "$CX_TMP/files"
+        # STDERR STAYS OUT OF THE PARSE (kit revision 41, LibKa0s#46). Only the redirections differ
+        # from performance-§10's command. Under `2>&1` a deprecation warning landed after the footer
+        # and a traceback became the "footer", and five of its words were written into manifest.json.
+        raw="$(cd "$CX_TMP/src" && bounded lizard -l lua -L 1500 -x "./libs/*" -x "./tests/_kit/*" . 2>"$CX_TMP/lizard.err")" && cx_rc=0 || cx_rc=$?
+        # lizard's footer, whole, the line exactly two below its header, never the last line:
+        #   Total nloc  Avg.NLOC  AvgCCN  Avg.token  Fun Cnt  Warning cnt  Fun Rt  nloc Rt
+        # All eight are recorded. The averages and the two ratios are what make one run comparable
+        # to another across a change in size -- a total that rose because the addon grew is a
+        # different fact from an average that rose because it got denser, and only the second is a
+        # complexity signal. Dropping them meant the analysis could only ever report totals.
+        cx_footer() { printf '%s\n' "$raw" | awk '/^Total nloc/ {h=NR} h && NR==h+2 {print; exit}'; }
+        footer="$(cx_footer)"
+        # A RUN IS MEASURED only when lizard exited 0 or 1 (1.24.0 returns 1 on any warned run,
+        # lizard.py:1182-1184), the footer is eight numbers, and stderr holds no Traceback: a late
+        # raise can follow a good footer (lizard.py:1176-1177). Anything else is a crash or a bound
+        # (124 timeout, 137 killed), and a crash is `fail` with every figure 0, never a measurement:
+        # the `@` rows lizard streamed before raising would make CCN_MAX a partial max, and parity
+        # over a run with no per-file table names every file blind.
+        cx_valid() {
+            { [ "$cx_rc" -eq 0 ] || [ "$cx_rc" -eq 1 ]; } || return 1
+            printf '%s\n' "$footer" | awk '{ if (NF != 8) exit 1; for (i = 1; i <= 8; i++)
+                if ($i !~ /^-?[0-9]+(\.[0-9]+)?$/) exit 1 }' || return 1
+            ! grep -q 'Traceback' "$CX_TMP/lizard.err" 2>/dev/null
+        }
+        CX_INVALID=0
+        if ! cx_valid; then
+            CX_INVALID=1
+            if [ "$cx_rc" -ne 124 ] && [ "$cx_rc" -ne 137 ] && grep -q 'Traceback' "$CX_TMP/lizard.err" 2>/dev/null; then
+                cx_exc="$(awk 'NF {l=$0} END {print l}' "$CX_TMP/lizard.err" | tr -d '\r')"
+                # THE PER-FILE RETRY (LibKa0s#47): once per file, inside the shadow, with the same
+                # fixed flags and each run bounded, to name what raised. It never re-measures the
+                # rest: a tree with a crashing file is not measured, so every figure stays 0.
+                while IFS= read -r f; do
+                    (cd "$CX_TMP/src" && bounded lizard -l lua -L 1500 -x "./libs/*" -x "./tests/_kit/*" "$f" \
+                        >/dev/null 2>"$CX_TMP/solo.err") || true
+                    grep -q 'Traceback' "$CX_TMP/solo.err" 2>/dev/null && CCN_CRASHED_ROWS="$CCN_CRASHED_ROWS$f	$(
+                        awk 'NF {l=$0} END {print l}' "$CX_TMP/solo.err" | tr -d '\r')
+"
+                done < "$CX_TMP/files"
+                CCN_CRASHED=$(printf '%s' "$CCN_CRASHED_ROWS" | grep -c . || true)
+                if [ "${CCN_CRASHED:-0}" -gt 0 ]; then
+                    # The hoist hint is static: no detector names the shape (the owner's ruling).
+                    cx_hint="Hoist each function literal out of a for/while header into a local first"
+                    cx_hint="$cx_hint (the multi-line keyed table form makes lizard 1.24.0 raise)."
+                    CCN_CRASHED_NOTE="lizard raised on $CCN_CRASHED file(s): $(printf '%s' "$CCN_CRASHED_ROWS" \
+                        | awk -F '\t' '{ printf "%s%s (%s)", (NR > 1 ? ", " : ""), $1, $2 }'), so nothing was measured. $cx_hint"
+                else
+                    CCN_CRASHED=0
+                    CCN_CRASHED_NOTE="lizard raised on the whole tree; no single file reproduces it ($cx_exc), so nothing was measured."
+                fi
+                # The manifest's skipReason carries no per-file exception text: that lives in
+                # complexity.txt, the console and RESULTS.md, which read CCN_CRASHED_NOTE.
+                if [ "$CCN_CRASHED" -gt 0 ]; then
+                    NOTE[complexity]="lizard raised on $CCN_CRASHED file(s) (named in complexity.txt)"
+                else
+                    NOTE[complexity]="lizard raised on the whole tree; no single file reproduces it"
+                fi
+            else
+                NOTE[complexity]="lizard exited $cx_rc with no valid footer (bound: KA0S_KIT_TIMEOUT_S / KA0S_KIT_PROC_MB)"
+            fi
+        else
+            # PARITY: a file whose `function` tokens and listed functions differ is a file lizard was
+            # still blind in, through a spot the sanitizer does not know. Its functions went unmeasured,
+            # so complexity does not pass: `fail`, which blocks the tag and never the run or the commit.
+            printf '%s\n' "$raw" > "$CX_TMP/lizard.txt"
+            CCN_BLIND_ROWS="$(cd "$CX_TMP/src" && $LUA "$SIGHTED" parity "$CX_TMP/lizard.txt" < "$CX_TMP/files")"
+        fi
+        # complexity.txt is lizard's stdout; its stderr follows under a separator, so a traceback
+        # survives in the frozen bundle. Everything above reads lizard.err before the shadow goes.
+        cx_err="$(cat "$CX_TMP/lizard.err" 2>/dev/null)"
+        rm -rf "$CX_TMP"
+        { printf '%s\n' "$raw"; [ -n "$cx_err" ] && printf -- '--- lizard stderr ---\n%s\n' "$cx_err"
+          [ -n "$CCN_CRASHED_NOTE" ] && printf -- '--- lizard raised, per file ---\n%s\n%s' "$CCN_CRASHED_NOTE" "$CCN_CRASHED_ROWS"; } | emit complexity.txt
+        fld() { printf '%s' "$footer" | awk -v n="$1" '{v=$n} END{print (v ~ /^-?[0-9]+(\.[0-9]+)?$/) ? v : 0}'; }
+        CCN_NLOC=$(fld 1);      [ -z "$CCN_NLOC" ]      && CCN_NLOC=0
+        CCN_AVG_NLOC=$(fld 2);  [ -z "$CCN_AVG_NLOC" ]  && CCN_AVG_NLOC=0
+        CCN_AVG=$(fld 3);       [ -z "$CCN_AVG" ]       && CCN_AVG=0
+        CCN_AVG_TOKEN=$(fld 4); [ -z "$CCN_AVG_TOKEN" ] && CCN_AVG_TOKEN=0
+        CCN_FUNCS=$(fld 5);     [ -z "$CCN_FUNCS" ]     && CCN_FUNCS=0
+        CCN_WARN=$(fld 6);      [ -z "$CCN_WARN" ]      && CCN_WARN=0
+        CCN_FUN_RT=$(fld 7);    [ -z "$CCN_FUN_RT" ]    && CCN_FUN_RT=0
+        CCN_NLOC_RT=$(fld 8);   [ -z "$CCN_NLOC_RT" ]   && CCN_NLOC_RT=0
+        # Max CCN is measured over EVERY function, not over the warnings section. Reading it from
+        # the warnings block looked correct for as long as there was always a warned function to
+        # read it from, and reported 0 the moment an addon reached zero warnings — which is exactly
+        # when the number matters most. A trend column reading "36 -> 0" says complexity vanished
+        # when it means the field had no input. The main table's rows are
+        # `NLOC CCN token PARAM length name@start-end@path`, so column 2 of every row carrying an
+        # `@` is that function's CCN; the footer has no `@` and the same test skips it.
+        CCN_MAX=$(printf '%s\n' "$raw" | awk '/@/ && $2+0>m {m=$2+0} END{print m+0}')
+        [ "$CX_INVALID" -eq 1 ] && CCN_MAX=0
+        # THE WARNED FUNCTIONS THEMSELVES, not only how many there were. `automated-tests-§4` MUSTs
+        # a watch list naming each one, and until kit 15 the runner recorded the count and threw the
+        # names away — so ten repositories were asked for a table nothing produced and wrote it by
+        # hand, after which it went stale on the next run and stayed stale.
+        #
+        # The rows are read out of `lizard`'s own warnings block rather than re-filtered out of the
+        # main table on a CCN threshold: the block is what `lizard` decided to warn on, and it warns
+        # on length and parameter count too. Re-deriving the list from `$2 > 15` would silently drop
+        # a function warned for being 1200 lines long. The location field is `name@start-end@path`
+        # and is read as the LAST field, so a name carrying a space still lands whole.
+        #
+        # Location is the FILE, deliberately, and not the line range: `automated-tests-§4` carries a
+        # disposition forward while the entry is unchanged, and pinning the key to line numbers
+        # would blank every disposition in a file the moment anything above it grew a line — which
+        # is the re-arguing the boundary exists to stop.
+        CCN_WARN_ROWS="$(printf '%s\n' "$raw" | awk '
+            /^!!!!.*Warnings/            { inwarn = 1; next }
+            inwarn && /^Total nloc/      { inwarn = 0 }
+            inwarn && NF >= 6 && $NF ~ /@/ {
+                loc = $NF
+                i = index(loc, "@"); name = substr(loc, 1, i - 1); rest = substr(loc, i + 1)
+                j = index(rest, "@"); file = substr(rest, j + 1)
+                sub(/^\.\//, "", file)
+                print name "\t" $2 "\t" file
+            }')"
+        # layout-§1: 1000–1500 is the on-notice band, >1500 is a bug. The FILES are captured here
+        # for the same reason the functions are, and the two counters are derived from that one list
+        # so the table below the trend row and the numbers in the manifest can never disagree.
+        CCN_BAND_ROWS="$(find . -name '*.lua' -not -path './libs/*' -not -path './tests/_kit/*' \
+            -exec wc -l {} + 2>/dev/null | awk '
+                $2 != "total" && $1 + 0 >= 1000 {
+                    p = $2; sub(/^\.\//, "", p)
+                    print ($1 + 0 > 1500 ? "> 1500 (over cap)" : "1000–1500 (on notice)") "\t" p "\t" $1
+                }' | sort)"
+        # layout-§1's SECOND carve-out, generated non-shipping data (kit revision 31). The find
+        # above drops the vendored pair and nothing else, so a committed generated dump (Pretty
+        # Chat's 23,842-line `GlobalStrings/GlobalStrings.lua`) was listed as a breach in every run,
+        # which the AUTOMATED_TESTS.md playbook reads as the runner counting what the rule never
+        # bound (ATS-21). Which files are generated is a repository fact no path betrays, so it is
+        # not guessed here: the repo declares it once, as `Kit.layoutCap.exempt` in `tests/run.lua`,
+        # for the cap gate, and this asks that runner which candidates the set covers
+        # (`--layout-cap-exempt`, answered in framework.lua with the rule the cap gate calls). Only a
+        # line carrying the answer's marker and naming a candidate counts, so nothing the runner
+        # prints while it sets up can drop a row. No `tests/run.lua`, no interpreter, or no answer:
+        # nothing is left out, which errs toward listing a file rather than hiding one.
+        if [ -n "$CCN_BAND_ROWS" ] && [ -f tests/run.lua ] && [ -n "$LUA" ]; then
+            band_paths=()
+            while IFS="$(printf '\t')" read -r _ p _; do
+                [ -n "$p" ] && band_paths+=("$p")
+            done <<BANDPATHS
+$CCN_BAND_ROWS
+BANDPATHS
+            CCN_EXEMPT_ROWS="$(bounded $LUA tests/run.lua --layout-cap-exempt "${band_paths[@]}" \
+                2>/dev/null | tr -d '\r' | awk -F '\t' '
+                    NR == FNR { cand[$2] = 1; next }
+                    $1 == "layout-cap-exempt" && ($2 in cand) && !seen[$2]++ { print $2 }' \
+                    <(printf '%s\n' "$CCN_BAND_ROWS") - | LC_ALL=C sort)"
+            if [ -n "$CCN_EXEMPT_ROWS" ]; then
+                CCN_BAND_ROWS="$(awk -F '\t' 'NR == FNR { ex[$0] = 1; next } !($2 in ex)' \
+                    <(printf '%s\n' "$CCN_EXEMPT_ROWS") <(printf '%s\n' "$CCN_BAND_ROWS"))"
+            fi
+        fi
+        CCN_BAND=$(printf '%s' "$CCN_BAND_ROWS" | grep -c '^1000' || true)
+        CCN_OVER=$(printf '%s' "$CCN_BAND_ROWS" | grep -c '^> 1500' || true)
+        [ -z "$CCN_BAND" ] && CCN_BAND=0; [ -z "$CCN_OVER" ] && CCN_OVER=0
+        CCN_BLIND=$(printf '%s' "$CCN_BLIND_ROWS" | grep -c . || true)
+        ST[complexity]="pass"
+        if [ "$CX_INVALID" -eq 1 ] || [ "${CCN_CRASHED:-0}" -gt 0 ]; then
+            # Every figure 0 (manifest.json stays numeric); the console and the trend row say n/a.
+            ST[complexity]="fail"
+            CCN_WARN=0; CCN_NLOC=0; CCN_FUNCS=0; CCN_AVG=0; CCN_MAX=0
+            CCN_AVG_NLOC=0; CCN_AVG_TOKEN=0; CCN_FUN_RT=0; CCN_NLOC_RT=0; CCN_WARN_ROWS=""
+        elif [ "${CCN_BLIND:-0}" -gt 0 ]; then
+            ST[complexity]="fail"
+            CCN_BLIND_NOTE="lizard blind in $CCN_BLIND file(s): $(printf '%s\n' "$CCN_BLIND_ROWS" \
+                | awk -F '\t' '{ printf "%s`%s` (%s of %s functions listed)", (NR > 1 ? ", " : ""), $1, $3, $2 }')"
+        fi
+    fi
+    DUR[complexity]=$(elapsed_ms "$t0" "$(now_ms)")
+fi
+
+# ── verdict ─────────────────────────────────────────────────────────────────────────────────────
+# red   — a GATING suite failed (lint, tests)
+# amber — a gating suite was skipped, or a recorded suite failed its own deterministic assertions
+# green — gating suites passed and nothing was silently not-measured
+VERDICT="green"
+for s in lint tests; do
+    [ "${ST[$s]}" = "fail" ] && VERDICT="red"
+done
+if [ "$VERDICT" != "red" ]; then
+    for s in lint tests; do [ "${ST[$s]}" = "skip" ] && VERDICT="amber"; done
+    [ "${ST[perf]}" = "fail" ] && VERDICT="amber"
+    [ "${ST[complexity]}" = "fail" ] && VERDICT="amber"
+fi
+
+RUN_DURATION=$(elapsed_ms "$RUN_START" "$(now_ms)")
+
+# ── console summary ─────────────────────────────────────────────────────────────────────────────
+fmt() {
+    case "$1" in
+        lint)       printf '%s warnings / %s errors in %s files' "$LINT_WARN" "$LINT_ERR" "$LINT_FILES" ;;
+        tests)      printf '%s passed, %s failed, %s skipped, %s total' "$TESTS_PASS" "$TESTS_FAIL" "$TESTS_SKIP" "$TESTS_TOTAL" ;;
+        perf)       printf '%s scenarios' "$PERF_SCENARIOS" ;;
+        complexity) if [ "${CX_INVALID:-0}" -eq 1 ]; then
+                        printf 'n/a warnings (fun rate n/a), n/a NLOC / n/a funcs, avg NLOC n/a, avg CCN n/a (max n/a), avg tokens n/a'
+                    else printf '%s warnings (fun rate %s), %s NLOC / %s funcs, avg NLOC %s, avg CCN %s (max %s), avg tokens %s' \
+                        "$CCN_WARN" "$CCN_FUN_RT" "$CCN_NLOC" "$CCN_FUNCS" "$CCN_AVG_NLOC" "$CCN_AVG" "$CCN_MAX" "$CCN_AVG_TOKEN"; fi ;;
+    esac
+}
+echo "$ADDON $ADDON_VERSION — automated tests — $STAMP"
+for s in lint tests perf complexity; do
+    [ "${ST[$s]}" = "notrun" ] && continue
+    gate=""; { [ "$s" = "perf" ] || [ "$s" = "complexity" ]; } && gate=" (recorded, non-gating)"
+    if [ "${ST[$s]}" = "skip" ]; then
+        printf '  %-11s skip  — %s\n' "$s" "${NOTE[$s]}"
+    else
+        printf '  %-11s %-5s — %s%s\n' "$s" "${ST[$s]}" "$(fmt "$s")" "$gate"
+        [ "$s" = "complexity" ] && [ -n "$CCN_BLIND_NOTE" ] && printf '              %s\n' "$CCN_BLIND_NOTE"
+        [ "$s" = "complexity" ] && [ "${CX_INVALID:-0}" -eq 1 ] && printf '              %s\n' "${CCN_CRASHED_NOTE:-${NOTE[complexity]}}"
+    fi
+done
+echo "  verdict: $VERDICT"
+[ -n "$STALE_NOTE" ] && echo "  record:  $STALE_NOTE"
+
+# ── bundle ──────────────────────────────────────────────────────────────────────────────────────
+if [ "$WRITE_BUNDLE" -eq 1 ]; then
+    sj() { printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g'; }
+    suite_json() {
+        local s="$1" extra="$2"
+        printf '    "%s": { "status": "%s", "durationMs": %s%s%s }' \
+            "$s" "${ST[$s]}" "${DUR[$s]}" \
+            "$( [ -n "${NOTE[$s]}" ] && printf ', "skipReason": "%s"' "$(sj "${NOTE[$s]}")" )" \
+            "$extra"
+    }
+    {
+        printf '{\n'
+        printf '  "schema": 1,\n'
+        printf '  "addon": "%s",\n'          "$(sj "$ADDON")"
+        printf '  "addonVersion": "%s",\n'   "$(sj "$ADDON_VERSION")"
+        printf '  "run": "%s",\n'            "$STAMP"
+        printf '  "startedAt": "%s",\n'      "$STARTED_AT"
+        printf '  "durationMs": %s,\n'       "$RUN_DURATION"
+        printf '  "label": %s,\n'            "$( [ -n "$LABEL" ] && printf '"%s"' "$(sj "$LABEL")" || printf 'null' )"
+        printf '  "release": %s,\n'          "$( [ -n "$RELEASE" ] && printf '"%s"' "$(sj "$RELEASE")" || printf 'null' )"
+        printf '  "git": { "sha": "%s", "branch": "%s", "dirty": %s },\n' "$GIT_SHA" "$(sj "$GIT_BRANCH")" "$GIT_DIRTY"
+        # `timingSource` sits beside the tool versions because it is the same kind of fact: what this
+        # host was able to measure with. A bundle recorded on a host without millisecond granularity
+        # says so, rather than presenting rounded seconds as if they were milliseconds.
+        printf '  "host": { "lua": "%s", "luacheck": "%s", "lizard": "%s", "timingSource": "%s" },\n' \
+            "$(sj "$LUA_VERSION")" "$(sj "$LUACHECK_VERSION")" "$(sj "$LIZARD_VERSION")" "$(sj "$TIMING_SOURCE")"
+        # `gating` is a BOOLEAN and there are two checkpoints, so it could only ever describe one of
+        # them. It described the run, which made `"gating": false` on perf and complexity read as
+        # "these two gate nothing" — the same half-truth the RESULTS.md lead-in used to carry, in
+        # machine-readable form. `gates` names both checkpoints instead.
+        #
+        # NEITHER FIELD IS READ BY ANYTHING. `/dev-copilot:bump-version` evaluates the release gate
+        # from `suites.<name>.status` and `suites.complexity.warnings` — never from `gating` and
+        # never from `gates`. Both are descriptive, and `gates` is the honest description. The legacy
+        # boolean stays beside it for one revision so no reader breaks on the way past.
+        GATE_COMMIT='"gating": true, "gates": { "commit": true, "release": true }'
+        GATE_RECORD='"gating": false, "gates": { "commit": false, "release": true }'
+        printf '  "suites": {\n'
+        suite_json lint       ", \"warnings\": $LINT_WARN, \"errors\": $LINT_ERR, \"files\": $LINT_FILES, $GATE_COMMIT"; printf ',\n'
+        suite_json tests      ", \"passed\": $TESTS_PASS, \"failed\": $TESTS_FAIL, \"skipped\": $TESTS_SKIP, \"total\": $TESTS_TOTAL, $GATE_COMMIT"; printf ',\n'
+        suite_json perf       ", \"scenarios\": $PERF_SCENARIOS, $GATE_RECORD"; printf ',\n'
+        suite_json complexity ", \"warnings\": $CCN_WARN, \"maxCcn\": $CCN_MAX, \"nloc\": $CCN_NLOC, \"functions\": $CCN_FUNCS, \"avgCcn\": $CCN_AVG, \"avgNloc\": $CCN_AVG_NLOC, \"avgToken\": $CCN_AVG_TOKEN, \"warnFunRatio\": $CCN_FUN_RT, \"warnNlocRatio\": $CCN_NLOC_RT, \"bandFiles\": $CCN_BAND, \"overCapFiles\": $CCN_OVER, \"blindFiles\": $CCN_BLIND, \"crashedFiles\": $CCN_CRASHED, $GATE_RECORD"; printf '\n'
+        printf '  },\n'
+        printf '  "verdict": "%s"\n' "$VERDICT"
+        printf '}\n'
+    } > "$OUT/manifest.json"
+
+    # A suite that was not SELECTED renders as an em dash, not as its zeroed counters. A subset
+    # run whose row reads "0/0" for tests is indistinguishable from a full run that found no tests,
+    # and the trend line would carry that lie forever. `skip` (tool absent) stays distinct from
+    # `—` (not asked for): they are different facts about why a number is missing.
+    cell() {
+        [ "$1" = "complexity" ] && [ "${CX_INVALID:-0}" -eq 1 ] && { printf 'n/a'; return; }
+        case "${ST[$1]}" in
+            skip)   printf 'skip' ;;
+            notrun) printf '—' ;;
+            *)      printf '%s' "$2" ;;
+        esac
+    }
+    # THE VERSION CELL NAMES BOTH VERSIONS ON A RELEASE RUN. `--release X.Y.Z` is produced BEFORE
+    # the tag (automated-tests-§6), so the .toc still carries the version being replaced and a cell
+    # rendering `$ADDON_VERSION` alone records the run against the wrong release: LibKa0s's own
+    # RESULTS.md carries `Version 1.24.0` on a row whose manifest says `"release": "1.25.0"`, which
+    # is the trend line attributing a release's evidence to its predecessor.
+    VERSION_CELL="$ADDON_VERSION"
+    [ -n "$RELEASE" ] && VERSION_CELL="$ADDON_VERSION → $RELEASE"
+
+    # THE COMMIT AND THE TREE, READ FROM GIT AND NEVER TYPED. A dirty tree is not a commit, so the
+    # sha printed beside the figures names bytes that are not the bytes that were measured: the row
+    # is kept and MARKED, which makes it an experiment honestly labeled rather than the one row in
+    # the file nobody can check (`automated-tests-§4`). `--release` is refused on a dirty tree
+    # outright, above, so a marked row is never a release row. A run with no git to ask — an export,
+    # a tarball — records `unknown` in both cells, which is the same third fact the widened rows
+    # below carry and not a claim of cleanliness.
+    COMMIT_CELL="unknown"; TREE_CELL="unknown"
+    if [ -n "$GIT_SHA" ]; then
+        COMMIT_CELL="\`$GIT_SHA_SHORT\`"
+        if [ "$GIT_DIRTY" = true ]; then TREE_CELL="**dirty**"; else TREE_CELL="clean"; fi
+    fi
+
+    # The Tests cell is passed/skipped/total. The column name does not change — ten files' history
+    # depends on the header — but a two-part `passed/total` cell could not show a skip at all, and
+    # a skip is precisely the figure this run learned to read.
+    ROW="| [\`$STAMP\`]($STAMP/) | $COMMIT_CELL | $TREE_CELL | $VERSION_CELL | $(cell lint "$LINT_WARN/$LINT_ERR") | $(cell lint "$LINT_FILES") | $(cell tests "$TESTS_PASS/$TESTS_SKIP/$TESTS_TOTAL") | $(cell perf "${ST[perf]}") | $(cell complexity "$CCN_NLOC") | $(cell complexity "$CCN_FUNCS") | $(cell complexity "$CCN_AVG_NLOC") | $(cell complexity "$CCN_AVG") | $(cell complexity "$CCN_MAX") | $(cell complexity "$CCN_WARN") | **$VERDICT** |"
+
+    RESULTS="docs/automated-tests/RESULTS.md"
+    HEADER='| Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |'
+    RULE='|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|'
+    # The column set this one replaces, and the ONLY predecessor this script knows how to widen.
+    # Every repo in the collection carries exactly this header today, which is what makes a single
+    # widening enough; anything else is left alone and reported, below.
+    HEADER_R24='| Run | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |'
+
+    # A ROW PREDATING THE CELLS IS CARRIED FORWARD AS `unknown`, NEVER AS `clean`, and never
+    # reconstructed from git archaeology: the run stamp says when the bundle was written, not what
+    # was in the tree when the suites ran, and the difference between those two is the whole reason
+    # this column exists. `unknown` is a third fact — it is what the record actually holds about
+    # those runs — and it is the treatment `automated-tests-§4` already gives a skip and a
+    # not-selected. Splicing happens on the pipe boundaries rather than by rebuilding the row, so a
+    # figure containing anything this script did not anticipate rides through untouched.
+    widen_r24() {
+        awk '{
+            line = $0; sub(/\r$/, "", line)
+            n = split(line, f, "|")
+            if (n < 3) { print line; next }
+            out = f[1] "|" f[2] "| unknown | unknown |" f[3]
+            for (i = 4; i <= n; i++) out = out "|" f[i]
+            print out
+        }'
+    }
+
+    # ── the record, whole ───────────────────────────────────────────────────────────────────────
+    # WHAT THIS FILE IS AND WHO WRITES IT. `automated-tests-§4` MUSTs a complexity watch list and a
+    # standing section for each of the four suites; `documentation-§3` calls this file generated and
+    # never hand-edited. Until kit 15 the runner wrote one table row and a fixed lead-in and nothing
+    # else, so the two rules could not both be honored by anyone: the mandated narrative had no
+    # producer, and ten of ten repositories wrote it by hand and watched it go stale on the next run.
+    # MultiMeters' watch list read "None — lizard reports 0 warnings" directly above a table row
+    # recording 19; LibKa0s' own test-suite section read "499 cases" against a suite running 764.
+    #
+    # Everything below the table is now generated here, with EXACTLY ONE exception: the watch list's
+    # `Disposition` column, which is the owner's judgment and the one authored cell in the file. It
+    # is carried forward verbatim while its entry is unchanged and left BLANK when the entry is new,
+    # so a blank cell is the record saying something crossed and nobody has ruled on it yet
+    # (automated-tests-§4, *the one boundary*). A runner that invented a disposition, or dropped one
+    # that still applied, would destroy the only judgment this file carries.
+    #
+    # An owner who disagrees with a generated sentence fixes THIS SCRIPT, in LibKa0s, and takes it
+    # on the next re-vendor. A local edit to the vendored copy is reverted silently by that
+    # re-vendor and the record is stale again (testing-§1).
+
+    # Read the previous file BEFORE a byte is written: the dispositions live in it and are the only
+    # thing here that cannot be regenerated.
+    PREV_ROWS=""; PRIOR_FN=""; PRIOR_BAND=""; PRIOR_CX=""; PREV_CRLF=0
+    RESULTS_SHAPE="absent"; WIDENED=0
+    if [ -f "$RESULTS" ]; then
+        # `key1 TAB key2 TAB key3 TAB disposition`, one line per existing watch-list entry. The
+        # disposition is rejoined from every field past the key columns, so one containing a `|`
+        # survives the read.
+        prior_rows() {
+            awk -v want="$1" -v k1="$2" -v k2="$3" -v k3="$4" '
+                { line = $0; sub(/\r$/, "", line) }
+                line ~ /^#/ { insec = (index(line, want) == 1); next }
+                !insec || line !~ /^\|/ { next }
+                {
+                    n = split(line, f, "|")
+                    if (n < 6) next
+                    for (i = 1; i <= n; i++) gsub(/^[ \t]+|[ \t]+$/, "", f[i])
+                    if (f[2] == "Function" || f[2] == "Band" || f[2] ~ /^-+$/) next
+                    disp = f[5]
+                    for (i = 6; i < n; i++) disp = disp "|" f[i]
+                    gsub(/^[ \t]+|[ \t]+$/, "", disp)
+                    print f[k1] "\t" f[k2] "\t" f[k3] "\t" disp
+                }' "$RESULTS"
+        }
+        PRIOR_FN="$(prior_rows '### Functions' 2 4 3)"
+        PRIOR_BAND="$(prior_rows '### Files by' 2 3 4)"
+        PREV_ROWS="$(awk '{ line = $0; sub(/\r$/, "", line); if (line ~ /^\| \[`/) print line }' "$RESULTS")"
+        # The whole previous watch-list section, body only. A run that did not MEASURE complexity --
+        # `--suite lint`, or a host with no lizard -- must not replace the section with a placeholder:
+        # the dispositions in it are the one thing in this file that cannot be regenerated, and a
+        # subset run silently deleting them would be this script destroying the only judgment the
+        # record carries. It is carried through verbatim instead, still naming the run that measured
+        # it, which is what "Current as of" was always for.
+        PRIOR_CX="$(awk '
+            { line = $0; sub(/\r$/, "", line) }
+            line ~ /^## / { insec = (line == "## Complexity watch list"); next }
+            insec { print line }' "$RESULTS" | sed -e '/./,$!d' | awk '{ b[NR] = $0 } END { last = 0; for (i = 1; i <= NR; i++) if (b[i] != "") last = i; for (i = 1; i <= last; i++) print b[i] }')"
+        head -1 "$RESULTS" | grep -q $'\r' && PREV_CRLF=1
+
+        # WHICH COLUMN SET IS ON DISK. Three answers and three different actions: this one, append
+        # as always; the one revision 24 wrote, widen every preserved row and say so; anything else,
+        # touch nothing. Recreating a file whose columns this script does not recognize would drop
+        # every previous row, which is the one thing a trend line must never do — so the unknown
+        # case reports and leaves the file exactly as it found it, with the run still fully recorded
+        # in the bundle's manifest.json.
+        if grep -qF "$HEADER" "$RESULTS"; then
+            RESULTS_SHAPE="current"
+        elif grep -qF "$HEADER_R24" "$RESULTS"; then
+            RESULTS_SHAPE="widen"
+            if [ -n "$PREV_ROWS" ]; then
+                WIDENED="$(printf '%s\n' "$PREV_ROWS" | grep -c '^| \[`' || true)"
+                PREV_ROWS="$(printf '%s\n' "$PREV_ROWS" | widen_r24)"
+            fi
+        else
+            RESULTS_SHAPE="alien"
+        fi
+    fi
+
+    # A disposition is carried forward ONLY when its key is unambiguous on BOTH sides. Attaching one
+    # entry's ruling to a different entry is worse than leaving the cell blank: a blank cell asks for
+    # a decision, and a wrong one answers a question nobody asked.
+    #
+    # `automated-tests-§4`'s key is the function and its location, and location is the FILE — which
+    # is what the section's own table shape carries. Two warned functions can share both: MultiMeters
+    # has `Cell` twice in modules/Row.lua. Those fall back to the measured CCN as a third key, which
+    # is the right tie-break rather than a convenient one — an entry whose CCN moved is an entry that
+    # changed, and `automated-tests-§4` wants a fresh ruling on it anyway. A tie the CCN cannot break
+    # either leaves the cell blank.
+    carried() {   # $1 = prior blob, $2 = key1, $3 = key2, $4 = key3 or "" for any
+        printf '%s\n' "$1" | awk -F'\t' -v a="$2" -v b="$3" -v c="$4" '
+            $1 == a && $2 == b && (c == "" || $3 == c) { n++; d = $4 }
+            END { if (n == 1) print d }'
+    }
+    unique_in() {  # $1 = rows blob, $2..$3 = keys, $4..$5 = their fields, $6/$7 = optional third
+        printf '%s\n' "$1" | awk -F'\t' -v a="$2" -v b="$3" -v i="$4" -v j="$5" -v c="${6:-}" -v k="${7:-0}" '
+            $i == a && $j == b && (k == 0 || $k == c) { n++ } END { print (n == 1) ? "yes" : "no" }'
+    }
+
+    # AN EMPTY TABLE IS HEADED AND THEN SAYS `None.` (kit revision 30). `automated-tests-§4` asks
+    # for two tables with header rows, and the playbook's Step 3 asks for `None.` where a table
+    # would be empty: an empty watch list is a result, not a reason to drop the heading. Through
+    # revision 25 an empty set printed `None.` in place of the header, so the section changed shape
+    # the day a repo reached zero warnings; revisions 26 to 29 printed the header alone, a table
+    # with no rows that reads as unfinished (ATS-20 of the 2026-09-26 sweep). The blank line before
+    # `None.` is load-bearing: GitHub-flavored Markdown reads a pipe-less line straight under a
+    # table as one more row of it, and `prior_rows` skips any line that does not open with `|`, so
+    # the marker is never read back as an entry.
+    none_if_empty() {  # $1 = the rows blob the table was drawn from
+        printf '%s\n' "$1" | grep -q . || printf '\nNone.\n'
+    }
+
+    fn_table() {
+        # THE HEADER PRINTS UNCONDITIONALLY (kit revision 26), with `None.` under it when there
+        # is nothing to list (revision 30; see none_if_empty).
+        printf '| Function | CCN | Location | Disposition |\n|---|---|---|---|\n'
+        while IFS="$(printf '\t')" read -r name ccn file; do
+            [ -z "$name" ] && continue
+            disp=""
+            if [ "$(unique_in "$CCN_WARN_ROWS" "$name" "$file" 1 3)" = "yes" ]; then
+                disp="$(carried "$PRIOR_FN" "\`$name\`" "\`$file\`" "")"
+            elif [ "$(unique_in "$CCN_WARN_ROWS" "$name" "$file" 1 3 "$ccn" 2)" = "yes" ]; then
+                disp="$(carried "$PRIOR_FN" "\`$name\`" "\`$file\`" "$ccn")"
+            fi
+            printf '| `%s` | %s | `%s` | %s |\n' "$name" "$ccn" "$file" "$disp"
+        done <<FNROWS
+$CCN_WARN_ROWS
+FNROWS
+        none_if_empty "$CCN_WARN_ROWS"
+    }
+
+    band_table() {
+        # Headed when empty, with `None.` under it, for the reason fn_table gives.
+        printf '| Band | File | LOC | Disposition |\n|---|---|---|---|\n'
+        while IFS="$(printf '\t')" read -r band file loc; do
+            [ -z "$band" ] && continue
+            disp=""
+            [ "$(unique_in "$CCN_BAND_ROWS" "$band" "$file" 1 2)" = "yes" ] \
+                && disp="$(carried "$PRIOR_BAND" "$band" "\`$file\`" "")"
+            printf '| %s | `%s` | %s | %s |\n' "$band" "$file" "$loc" "$disp"
+        done <<BANDROWS
+$CCN_BAND_ROWS
+BANDROWS
+        none_if_empty "$CCN_BAND_ROWS"
+        # Said, not silent (kit revision 31): what the generated-data carve-out left out is named in
+        # prose under the table. The line opens with no `|`, so prior_rows never reads it back.
+        if [ -n "$CCN_EXEMPT_ROWS" ]; then
+            printf '\nLeft out as generated non-shipping data (`layout-§1`'"'"'s second carve-out, declared in\n'
+            printf '`Kit.layoutCap.exempt` in `tests/run.lua`, the set the cap gate reads): %s.\n' \
+                "$(printf '%s\n' "$CCN_EXEMPT_ROWS" | sed 's/.*/`&`/' | paste -sd, - | sed 's/,/, /g')"
+        fi
+    }
+
+    # The Tests cell of every existing row, newest first, reduced to its total — which is the last
+    # `/`-separated part in both the two-part and three-part shapes, so the trend reads across the
+    # column change rather than restarting at it.
+    # FIELD 8, not 6: `Commit` and `Tree` sit between `Run` and `Version`, and $PREV_ROWS has
+    # already been widened by the time this reads it, so every row here — this shape's and the
+    # widened predecessor's alike — carries Tests in the same field. Reducing the cell to its last
+    # `/`-separated part keeps the trend readable across the earlier `passed/total` shape too.
+    prev_totals() {
+        printf '%s\n' "$PREV_ROWS" | awk -F'|' 'NF >= 8 { c = $8; gsub(/[ \t]/, "", c); n = split(c, p, "/"); print p[n] }'
+    }
+
+    md_tests_section() {
+        printf '## Test suite\n\n'
+        case "${ST[tests]}" in
+            notrun) printf 'Not selected on this run, so this section reports nothing; read the newest row that carries a\nfigure.\n\n'; return ;;
+            skip)   printf '`tests` was **skipped** — %s. A skip is never a pass: the suite did not run, and nothing here\nsays this addon is covered.\n\n' "${NOTE[tests]}"; return ;;
+        esac
+        printf '**%s cases** — %s passed, %s failed, %s skipped. The generated inventory\n' "$TESTS_TOTAL" "$TESTS_PASS" "$TESTS_FAIL" "$TESTS_SKIP"
+        printf '[`%s/test-cases.md`](%s/test-cases.md) is the authority on which cases existed at this run;\n' "$STAMP" "$STAMP"
+        printf '`docs/test-cases.md` is that same list at HEAD.\n\n'
+        flat=1
+        while IFS= read -r t; do
+            [ "$t" = "$TESTS_TOTAL" ] || break
+            flat=$(( flat + 1 ))
+        done <<TOTALS
+$(prev_totals)
+TOTALS
+        prev_total="$(prev_totals | head -1)"
+        if [ -z "$PREV_ROWS" ]; then
+            printf 'This is the first recorded run, so there is no trend to read yet.\n\n'
+        elif [ "$flat" -ge 3 ]; then
+            printf 'The count has been **flat at %s across the last %s runs**. A suite that stopped growing while\nthe addon did is a coverage gap, and it is the one thing the table above cannot show.\n\n' "$TESTS_TOTAL" "$flat"
+        elif [ "$prev_total" = "$TESTS_TOTAL" ]; then
+            printf 'Unchanged from the previous run at %s cases.\n\n' "$TESTS_TOTAL"
+        else
+            printf 'Moved **%s → %s** since the previous run.\n\n' "$prev_total" "$TESTS_TOTAL"
+        fi
+        if [ "$TESTS_SKIP" -gt 0 ]; then
+            printf '**%s case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at\nthe release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).\n\n' "$TESTS_SKIP"
+        else
+            printf 'No case reported a `skip`, so passed and total agree and nothing in this row claims coverage\nthat was not exercised.\n\n'
+        fi
+    }
+
+    md_lint_section() {
+        printf '## Lint\n\n'
+        case "${ST[lint]}" in
+            notrun) printf 'Not selected on this run.\n\n'; return ;;
+            skip)   printf '`lint` was **skipped** — %s. A skip is not a clean run.\n\n' "${NOTE[lint]}"; return ;;
+        esac
+        printf '**%s warnings / %s errors over %s files** (`luacheck .`).\n\n' "$LINT_WARN" "$LINT_ERR" "$LINT_FILES"
+        # THE EXCLUSIONS ARE NAMED, NOT POINTED AT. The previous shape of this section told a
+        # reader that `.luacheckrc` "sets a multi-line `exclude_files`; read it there" the moment
+        # the declaration wrapped onto a second line -- which is every repo in the collection that
+        # excludes more than one path, and precisely the repos where the scope of a `0/0` is worth
+        # stating. A standing section that defers to another file for the one fact it exists to
+        # carry is a section a reader stops reading.
+        #
+        # Read out of `.luacheckrc` itself, whichever shape the declaration takes: the `sed` range
+        # runs from the `exclude_files` line to the first `}`, which is that same line when the
+        # declaration fits on one, and every quoted entry inside it is a path luacheck was actually
+        # told to skip. Nothing here is a hardcoded list -- a repo that adds an exclusion gets it
+        # named on the next run without this script being touched.
+        # A `sed` RANGE CANNOT DO THIS, which is why it is awk. `sed -n '/a/,/}/p' ` never ends a
+        # range on the line it began on, so the single-line form -- `exclude_files = { "tests/_kit/" }`,
+        # which is what most of the collection carries -- ran on past its own closing brace and
+        # swallowed the whole of `read_globals` after it. Every WoW API name in that list then came
+        # out as an "excluded path". Brace on the opening line ends the block here.
+        ex_block="$(awk '
+            !done && /exclude_files[[:space:]]*=/ { inblk = 1 }
+            inblk && !done { line = $0; sub(/--.*/, "", line); print line; if (/}/) { done = 1; inblk = 0 } }
+        ' .luacheckrc 2>/dev/null | tr -d '\r')"
+        ex_entries="$(printf '%s\n' "$ex_block" | tr "'" '"' | grep -o '"[^"]*"' \
+            | sed 's/^"/`/; s/"$/`/' | paste -sd ',' - | sed 's/,/, /g')"
+        # `grep -c` counts matching LINES, not matches. The single-line form --
+        # `exclude_files = { "libs/", "docs/audits/", ... }`, which most of the collection carries --
+        # is one line, so it reported "1 path(s)" beside a list of five: a generated figure
+        # contradicting the generated list in its own sentence, which is the defect this section was
+        # rewritten to remove. Count the MATCHES, out of the same extraction the list renders from.
+        ex_count="$(printf '%s\n' "$ex_block" | tr "'" '"' | grep -o '"[^"]*"' | wc -l | tr -d ' ')"
+        if [ -n "$ex_entries" ]; then
+            printf 'Read that figure with its scope attached: `.luacheckrc` excludes %s path(s) from it \342\200\224 %s \342\200\224\nso nothing under them is in the count above. A `0/0` that never moves is partly a statement about\nwhat was never looked at, which is why the exclusions are NAMED here on every run rather than left\nto whoever thinks to open `.luacheckrc`.\n\n' "$ex_count" "$ex_entries"
+        elif [ -z "$ex_block" ]; then
+            printf '`.luacheckrc` declares no `exclude_files`, so the figure covers every `.lua` that `luacheck`\nreaches from the repo root.\n\n'
+        else
+            printf '`.luacheckrc` declares an `exclude_files` this generator could not read as a list of quoted\npaths, so the scope of the figure above is whatever that declaration means; read it there. A `0/0`\nsays nothing about what was never looked at.\n\n'
+        fi
+    }
+
+    md_perf_section() {
+        printf '## Perf\n\n'
+        case "${ST[perf]}" in
+            notrun) printf 'Not selected on this run.\n\n'; return ;;
+            skip)
+                if [ ! -f tests/perf.lua ] && [ -n "$PERF_EXEMPT_NOTE" ]; then
+                    printf '**This repo holds a ratified `performance-§12` no-combat-path exemption, so `perf` is a\n'
+                    printf 'permanent `skip`** — the second of `automated-tests-§3`'"'"'s two sanctioned reasons, read by\n'
+                    printf 'this runner from %s. The exemption, and the sweep behind it, are in\n' "$PERF_EXEMPT_SRC"
+                    printf '`docs/performance.md`: this record carries no scenario table because the addon has no\n'
+                    printf 'combat path for one to measure, not because the question was never asked.\n\n'
+                elif [ ! -f tests/perf.lua ]; then
+                    printf '**This repo ships no `tests/perf.lua`, so `perf` is a permanent `skip`** — the first of\n'
+                    printf '`automated-tests-§3`'"'"'s two sanctioned reasons, *nothing to run*, rather than a ratified\n'
+                    printf '`performance-§12` no-combat-path exemption. The record is therefore **silent about runtime\n'
+                    printf 'cost**: nothing in this file says this addon is fast or cheap, only that the question was\n'
+                    printf 'never asked.\n\n'
+                else
+                    printf '`perf` was **skipped** — %s. That is a gap in this host'"'"'s tooling, not a standing fact about\nthe addon: install what is missing and re-run.\n\n' "${NOTE[perf]}"
+                fi
+                return ;;
+        esac
+        printf '**%s scenarios** from `tests/perf.lua`; the measurements are in\n' "$PERF_SCENARIOS"
+        printf '[`%s/perf.json`](%s/perf.json).\n\n' "$STAMP" "$STAMP"
+        # PER SCENARIO, BY NAME. A bare count says a measurement happened; it does not say which
+        # code path was measured, and it cannot say that the scenario a reader cares about is
+        # missing from the run -- which is the only way a perf record silently stops covering
+        # something. Every cell below is this run's own `tests/perf.lua` output, re-rendered and not
+        # re-derived, so a figure here can always be found verbatim in `perf.txt` beside it.
+        if [ -n "$PERF_TABLE" ]; then
+            printf '%s\n\n' "$PERF_TABLE"
+        else
+            printf 'This run'"'"'s `tests/perf.lua` printed no scenario table this generator could read, so the\nnames are in [`%s/perf.txt`](%s/perf.txt) rather than here.\n\n' "$STAMP" "$STAMP"
+        fi
+        printf '`perf` never fails a run and never blocks a commit — it is recorded, read and compared, not\nthresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).\n\n'
+    }
+
+    md_complexity_section() {
+        printf '## Complexity watch list\n\n'
+        # A crashed or bounded lizard measured nothing either (kit revision 41): its empty watch list
+        # must not replace the dispositions, so it carries the last measured section like a skip.
+        local cx_state="${ST[complexity]}"
+        [ "${CX_INVALID:-0}" -eq 1 ] && cx_state="crash"
+        case "$cx_state" in
+            notrun|skip|crash)
+                if [ "$cx_state" = "crash" ] && [ -n "$CCN_CRASHED_NOTE" ]; then
+                    printf '**Not measured — lizard raised** (`automated-tests-§3`): %s\n\n' "$CCN_CRASHED_NOTE"
+                    printf '`complexity` **did not measure** on this run, so it did not pass.\n'
+                elif [ "$cx_state" = "crash" ]; then
+                    printf '`complexity` **did not measure** on this run, so it did not pass — %s.\n' "${NOTE[complexity]}"
+                elif [ "$cx_state" = "skip" ]; then
+                    printf '`complexity` was **skipped** on this run — %s.\n' "${NOTE[complexity]}"
+                else
+                    printf '`complexity` was **not selected** on this run.\n'
+                fi
+                if [ -n "$PRIOR_CX" ]; then
+                    printf 'What follows is the watch list the last run that measured it wrote, carried through unchanged —\ndispositions included. Its own opening line names the run it belongs to.\n\n'
+                    printf '%s\n\n' "$PRIOR_CX"
+                else
+                    printf 'There is no earlier watch list in this file to carry through, so this addon has no complexity\nrecord yet. Run all four suites.\n\n'
+                fi
+                return ;;
+        esac
+        printf 'Current as of [`%s`](%s/) — **this run'"'"'s measurement, not its diff.** Max CCN **%s** across %s\n' "$STAMP" "$STAMP" "$CCN_MAX" "$CCN_FUNCS"
+        printf 'functions, **%s** of them warned on; %s file(s) in the 1000–1500 band and %s over the 1500 cap\n' "$CCN_WARN" "$CCN_BAND" "$CCN_OVER"
+        printf '(`layout-§1`).\n\n'
+        [ -n "$CCN_BLIND_NOTE" ] && printf '**Not sighted — complexity did not pass** (`automated-tests-§3`): %s. Those files'"'"'\nfunctions went unmeasured, so the figures below undercount them.\n\n' "$CCN_BLIND_NOTE"
+        printf 'Every row below is generated from this run'"'"'s own `lizard` output. **The `Disposition` column is\n'
+        printf 'the one authored cell in this file** (`automated-tests-§4`, *the one boundary*): it is carried\n'
+        printf 'forward verbatim while its entry is unchanged, and left **blank** when the entry is new — a blank\n'
+        printf 'cell is this file saying something crossed and nobody has ruled on it yet.\n\n'
+        printf '### Functions `lizard` warned on\n\n'
+        fn_table
+        printf '\n### Files by `layout-§1` band\n\n'
+        band_table
+        printf '\n`lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of\n'
+        printf '`t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN\n'
+        printf 'here usually means *this function defaults or guards a lot of fields* rather than *this function\n'
+        printf 'is tangled*, and the two want different fixes (`performance-§10`).\n\n'
+    }
+
+    if [ "$RESULTS_SHAPE" = "alien" ]; then
+        # The file exists and its header is neither this column set nor the one this script knows
+        # how to widen. Recreating it here would silently drop every previous row, which is the one
+        # thing a trend line must never do. Say so and leave the file alone; the run is still fully
+        # recorded in the bundle's manifest.json, and nothing above this line has been lost.
+        echo "  WARNING: $RESULTS carries a column set this runner cannot widen — not touching it." >&2
+        echo "           Expected either the current header or revision 24's. Migrate it by hand" >&2
+        echo "           and re-run, or this row is lost." >&2
+    else
+        # THE WHOLE FILE IS REWRITTEN, rows preserved, on every run. It used to be two code paths:
+        # an `awk` that inserted one row after the header, and a create-from-scratch branch reached
+        # only when the file was ABSENT or its header mismatched. Everything except the row lived in
+        # the second branch, so the corrected four-checkpoint lead-in — written to replace a
+        # two-sentence version that reads as "perf and complexity gate nothing", which is false at
+        # the release gate — could not reach a single existing repository. Ten files still carry the
+        # old text. Rewriting whole is what lets the generated prose move with the script that
+        # generates it, which is the entire point of generating it.
+        {
+            printf '# Automated test results\n\n'
+            printf '<!-- Regenerated whole by tests/_kit/run-automated-tests.sh on every run. -->\n'
+            printf '<!-- This file is OVERWRITTEN IN PLACE — the git history of this one path is the trend line. -->\n'
+            printf '<!-- Everything here is generated EXCEPT the watch list'"'"'s Disposition column. -->\n\n'
+            printf 'One row per run. The frozen evidence for each is in the dated folder beside this file;\n'
+            printf 'the analysis of a given run is its `ANALYSIS.md`.\n\n'
+            # THE LEAD-IN NAMES THE CHECKPOINT, PER SUITE. The old text — "perf and complexity are
+            # recorded and never fail a run" — is true and, standing alone, misleading: it reads as
+            # "these two gate nothing", while automated-tests-§3's release gate says otherwise. It
+            # was the sentence nine repos quoted back, and none of them wrote it. There are two
+            # checkpoints and a suite's answer differs between them, so both are stated here.
+            printf '**`lint` and `tests` gate the run and gate the commit** (`testing-§4`).\n'
+            printf '**`perf` and `complexity` never fail a run and never block a commit** — they are recorded,\n'
+            printf 'read and compared, not thresholded (`performance-§9`, `performance-§10`).\n\n'
+            printf '**The tag is gated on all four suites at `pass`, plus zero functions above CCN 15**\n'
+            printf '(`automated-tests-§3`, *The release gate*), evaluated by `/dev-copilot:bump-version` from the\n'
+            printf '`manifest.json` the release run writes — not by this script, whose exit code is unchanged.\n\n'
+            printf 'A `skip` is a suite that did not run at all. It is never a pass, and at the release gate it is\n'
+            printf '**NOT EVALUATED** rather than passed: install the tool and re-run. A `—` is a suite that was\n'
+            printf 'not selected, which is a different fact again.\n\n'
+            printf 'The **Tests** cell reads `passed/skipped/total`.\n\n'
+            # THE LEAD-IN EXPLAINS THE TWO CELLS BECAUSE THE COLUMN HEADS CANNOT. `clean` and
+            # `**dirty**` are a judgment about reproducibility, not a status light, and `unknown` is
+            # a third fact that a reader will otherwise round down to one of the other two — which
+            # is exactly the reading this column was added to prevent.
+            printf '**Commit** is the short sha the run measured and **Tree** is whether that tree was clean at the\n'
+            printf 'time. Both are read from git by the runner; neither is ever typed. A **dirty** row measured bytes\n'
+            printf 'that no sha can bring back, so it is kept as an experiment honestly labeled rather than dropped —\n'
+            printf 'and a release record is refused outright on a dirty tree, so no release row can be one.\n\n'
+            printf 'A row reading `unknown` in both cells was recorded before the runner emitted them. That is what\n'
+            printf 'the record holds about those runs — it is not `clean`, and it is not reconstructed from git\n'
+            printf 'archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).\n\n'
+            printf '%s\n' "$HEADER"
+            printf '%s\n' "$RULE"
+            printf '%s\n' "$ROW"
+            [ -n "$PREV_ROWS" ] && printf '%s\n' "$PREV_ROWS"
+            printf '\n'
+            md_tests_section
+            md_lint_section
+            md_perf_section
+            md_complexity_section
+        } > "$RESULTS.tmp" && mv "$RESULTS.tmp" "$RESULTS"
+        # The rewrite emits LF and `normalize_eol` below puts back whatever .gitattributes declares.
+        # In a repo that declares NOTHING it would do nothing at all, and a file that had been CRLF
+        # would silently become an all-lines diff — so the previous terminator is restored here for
+        # exactly that case, and only that case.
+        if [ "$PREV_CRLF" -eq 1 ] && [ "$(git check-attr eol -- "$RESULTS" 2>/dev/null | sed 's/.*: //')" = "unspecified" ]; then
+            awk '{ sub(/\r$/, ""); printf "%s\r\n", $0 }' "$RESULTS" > "$RESULTS.tmp" && mv "$RESULTS.tmp" "$RESULTS"
+        fi
+    fi
+
+    # ── line endings ────────────────────────────────────────────────────────────────────────────
+    # Everything above writes with a plain shell redirect, and a redirect bypasses git's
+    # clean/smudge filters entirely. In a repo pinned `* text=auto eol=crlf` — which is every
+    # client-bound repo in this collection, this library included — that lands LF on disk while
+    # .gitattributes says CRLF, so every run leaves a fresh crop of working-tree stragglers for a
+    # line-endings audit to report. `git add --renormalize` does not fix them: it rewrites the
+    # INDEX, and the index is already correct — LF is where LF belongs. Only the working tree is
+    # wrong, and `git status` is silent about it before AND after the commit, which is why this
+    # survived nine repos.
+    #
+    # ONE PASS AT THE END rather than a fix at each write site, for one reason that decides it:
+    # perf.json is not written by this script at all — `tests/perf.lua` writes it through `--out`
+    # (see the perf block above). Fixing the writers means reaching into eight addons' perf
+    # harnesses and still missing the next file a suite decides to drop in here. A pass over the
+    # finished directory covers every file however it got there.
+    #
+    # The declared terminator is READ FROM GIT, per path, never assumed: `git check-attr` is the
+    # only thing that knows what this repo pins, it answers correctly for a path that is untracked
+    # or does not exist yet, and it honors carve-outs like `*.sh text eol=lf`. An `unspecified`
+    # answer means the repo has declared nothing, and this then does nothing at all.
+    #
+    # It asks for `text` AS WELL AS `eol`, and NEVER `eol` alone (line-endings-§7). The `binary`
+    # macro expands to `-text` and says nothing at all about `eol` — so a path marked `binary` in a
+    # repo pinned `* text=auto eol=crlf` still answers `eol: crlf`, inherited from the pin, for a
+    # file git itself will never convert. `text: unset` IS the binary case, and it is the primary
+    # test here: skip first, before any byte is read. The NUL heuristic below stays as a second
+    # line of defense, but it cannot be the first — a binary format that happens to be NUL-free
+    # (ncnn `.param`, an ASCII-armored key, a truncated asset) walks straight through it and gets
+    # rewritten. This is the same correction §7 made to the audit's working-tree check and
+    # `dev-copilot/scripts/normalize-eol.sh` made to the Write/Edit hook; the three now agree.
+    #
+    # Rewrites are content-conditional (`cmp -s`), so in an LF-pinned repo — and on a second pass
+    # over a file that is already right — not one byte and not one mtime moves. The rewrite strips
+    # a trailing CR before adding the wanted terminator, so it is idempotent rather than doubling
+    # CRs on the RESULTS.md APPEND path, which already re-attaches the header's own terminator and
+    # is the one write site here that was never broken.
+    #
+    # A file carrying a NUL is left alone as well. Nothing in a bundle is binary today; both guards
+    # are there so that the day something is, this cannot corrupt it. A file whose last line has no
+    # trailing newline gains one — the one respect in which this is not "byte-identical apart from
+    # the terminators", and stated in the kit's API document rather than left to be discovered.
+    #
+    # `git check-attr text eol` emits the attributes in the order ASKED, two lines per path, so the
+    # loop reads them in pairs. Both reads are in the `while` condition: an odd or truncated stream
+    # ends the loop rather than shifting every later path onto the wrong attribute. The pairing is
+    # re-checked per iteration against the `: text: ` / `: eol: ` markers, and a pair that does not
+    # match is skipped rather than acted on — misreading which line is which is precisely how a
+    # binary would get rewritten again.
+    #
+    # The `while` runs in a pipeline subshell, so nothing it sets survives the loop. That costs
+    # nothing today because this needs no return state, but a later edit that tries to COUNT the
+    # rewritten files from inside it will silently read zero.
+    normalize_eol() {
+        command -v git >/dev/null 2>&1 || return 0
+        git check-attr text eol -- "$@" 2>/dev/null |
+        while IFS= read -r textline && IFS= read -r eolline; do
+            case "$textline" in *": text: "*) ;; *) continue ;; esac
+            case "$eolline"  in *": eol: "*)  ;; *) continue ;; esac
+            text="${textline##*: }"
+            want="${eolline##*: }"
+            path="${eolline%: eol: *}"
+            [ "$text" = "unset" ] && continue
+            { [ "$want" = "crlf" ] || [ "$want" = "lf" ]; } || continue
+            [ -f "$path" ] || continue
+            tr -d '\000' < "$path" | cmp -s - "$path" || continue
+            tmp="$path.eol.$$"
+            if [ "$want" = "crlf" ]; then
+                awk '{ sub(/\r$/, ""); printf "%s\r\n", $0 }' "$path" > "$tmp"
+            else
+                awk '{ sub(/\r$/, ""); printf "%s\n",   $0 }' "$path" > "$tmp"
+            fi
+            if cmp -s "$path" "$tmp"; then rm -f "$tmp"; else mv "$tmp" "$path"; fi
+        done
+    }
+    normalize_eol "$OUT"/* "$RESULTS"
+
+    echo "  bundle:  $OUT/"
+    echo "  results: $RESULTS"
+    # Said once, on the run that does it, because it is the run that changes the shape of a file
+    # whose git history is the trend line: the diff that follows moves every line, and a reader
+    # wants to have been told why before they open it.
+    [ "$RESULTS_SHAPE" = "widen" ] && \
+        echo "  widened: Commit and Tree added; $WIDENED earlier row(s) carried forward as unknown"
+fi
+
+[ "$VERDICT" = "red" ] && exit 1
+exit 0

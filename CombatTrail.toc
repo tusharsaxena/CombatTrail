@@ -1,0 +1,92 @@
+## Interface: 120105, 16001
+## Title: Ka0s Combat Trail
+## Notes: Your casts as a scrolling trail, a live DPS HUD on every fight, and a history of your fights.
+## Author: add1kted2ka0s
+## Version: 0.1.0
+## IconTexture: Interface\AddOns\CombatTrail\media\logos\combattrail.logo.128.tga
+## SavedVariables: CombatTrailDB, CombatTrailPerfDB
+## OptionalDeps: Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, EllesmereUI
+## DefaultState: enabled
+## Category-enUS: Combat
+## X-License: MIT
+## X-Standard: https://github.com/tusharsaxena/WowAddonStandards
+# X-Curse-Project-ID: not published on CurseForge yet
+
+# Libraries (must load first) -- vendored in libs/, .xml where the lib ships one, else .lua. The Ace3,
+# LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's, the set that loads on both
+# Retail and WoW Forever.
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\AceAddon-3.0\AceAddon-3.0.lua
+libs\AceEvent-3.0\AceEvent-3.0.lua
+libs\AceTimer-3.0\AceTimer-3.0.lua
+libs\AceDB-3.0\AceDB-3.0.lua
+libs\AceDBOptions-3.0\AceDBOptions-3.0.lua
+libs\AceConsole-3.0\AceConsole-3.0.lua
+libs\AceGUI-3.0\AceGUI-3.0.xml
+libs\AceConfig-3.0\AceConfig-3.0.xml
+# ONE line: the .xml is itself the file list (library-stack-§7). After Ace3.
+libs\LibKa0s\LibKa0s.xml
+libs\LibSharedMedia-3.0\lib.xml
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\lib.xml
+
+# Locales
+# LOAD-BEARING: creates NS.L, which core\LifecycleSetup.lua, core\DebugLogSetup.lua and
+# core\LauncherSetup.lua read at FILE SCOPE.
+locales\enUS.lua
+
+# Core -- dependency-correct order (layout-§1). Every LOAD-BEARING note says what resolves at load;
+# core\State.lua, core\Bus.lua, core\PoolSetup.lua and core\Database.lua are conventional and may
+# move within the group (nothing else in core\ reads them at FILE SCOPE).
+# LOAD-BEARING: publishes NS.PREFIX, NS.name, NS.BRAND, the slash words and the version fallback every
+# file below reads.
+core\Namespace.lua
+# LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at FILE SCOPE.
+core\MediaSetup.lua
+core\Constants.lua
+core\State.lua
+# LOAD-BEARING: resolves NS.version at FILE SCOPE (needs core\Namespace.lua's fallback), and
+# core\PerfSetup.lua calls NS.Version() at FILE SCOPE, so this precedes it.
+core\EnvSetup.lua
+# LOAD-BEARING: after NS.PREFIX, before anything that prints; publishes NS.Util.print, which
+# core\CombatTrail.lua reclaims at FILE SCOPE, and NS.LIBKA0S_MISSING, which the stubs below read.
+core\CoreSetup.lua
+# LOAD-BEARING: the LibKa0s-Skin-1.0 seam (skinning-§1). Registers the owner at FILE SCOPE (before
+# EllesmereUI dispatches its skins) and publishes NS.Skin and NS.DEFAULT_SKIN, which
+# defaults\Profile.lua reads at FILE SCOPE; every frame-building file reads NS.Skin, so it sits above
+# core\WidgetsSetup.lua and every module. Below core\CoreSetup.lua, whose NS.ApplySkin the degraded
+# facade's Shell calls and whose NS.Print the reload line uses (both at CALL time).
+core\SkinSetup.lua
+# LOAD-BEARING: the compat family's root (compat). Resolves LibKa0s-Compat-1.0 at FILE SCOPE and
+# publishes NS.Compat, whose guards core\Secrets.lua binds at FILE SCOPE; modules read it at CALL time.
+core\Compat.lua
+# LOAD-BEARING: after core\Compat.lua. Resolves LibKa0s-Sim-1.0 at FILE SCOPE and walks NS.Compat's
+# members into its seam there.
+core\SimSetup.lua
+# LOAD-BEARING: after core\Compat.lua (binds its guards at FILE SCOPE); publishes NS.Secrets, which
+# the meter reader captures at FILE SCOPE, so it sits before the modules.
+core\Secrets.lua
+core\Bus.lua
+core\PoolSetup.lua
+# Reads LibStub (LibKa0s-Widgets-1.0) at FILE SCOPE and NS.Icon at CALL time only.
+core\WidgetsSetup.lua
+# LOAD-BEARING: core\PerfSetup.lua hands NS.lifecycle to LibKa0s-Perf-1.0, which RAISES at :New
+# without it, so the latch is built first.
+core\LifecycleSetup.lua
+# LOAD-BEARING: before any module taking NS.Perf as a load-time upvalue.
+core\PerfSetup.lua
+# LOAD-BEARING: after core\Constants.lua (FONT_MONO), core\State.lua (the flag) and core\CoreSetup.lua
+# (the printer), before any NS.Debug call.
+core\DebugLogSetup.lua
+# LOAD-BEARING: reads NS.Constants.LOGO_128 and NS.L at FILE SCOPE (the library raises on a launcher
+# with no icon). Everything else it names is resolved at CALL time.
+core\LauncherSetup.lua
+# LOAD-BEARING: promotes NS to the AceAddon object and reclaims NS.Print from NS.Util.print at FILE
+# SCOPE, so it follows core\CoreSetup.lua.
+core\CombatTrail.lua
+core\Database.lua
+
+# Defaults (the only place a default is hardcoded -- savedvariables-§2)
+# LOAD-BEARING: reads NS.DEFAULT_SKIN (core\SkinSetup.lua) at FILE SCOPE.
+defaults\Profile.lua

@@ -1,0 +1,949 @@
+-- LibKa0s-Core-1.0 — the two seams every other module in this library sits on.
+--
+-- They have nothing to do with each other except that both are tiny, stateless, and shared by
+-- everything: the SECRET-SAFE SEAM (a value that WoW protects in combat survives tostring() and
+-- the `..` operator, and raises only inside table.concat — so every line an addon emits has to be
+-- rendered through a detector that probes the operation which actually rejects it), and the WINDOW
+-- CHROME SEAM (a debug console and a perf panel that draw their own lookalike backdrops drift
+-- apart one hex digit at a time; sharing the values makes a host's windows read as one addon).
+--
+-- Everything on the cross-module path is a stateless lib-level function. Only the chat printer is
+-- instance-shaped, and no printer is ever handed between modules: a stateless function that exists
+-- at minor 1 still exists at minor 9, which is what makes "a Core from any vendored copy works
+-- with a DebugLog from any other" true by construction rather than by discipline.
+--
+-- Depends on LibStub and nothing else, deliberately — no Ace3, so the lib is adoptable by addons
+-- that are not on the Ace substrate.
+
+-- Minor 12: lib.RaiseStaticPopups, the library half of frame-layering-§4's "a destructive
+-- confirmation is never buried by a window shown after it" (XS-08), called by the three tool windows.
+-- Minor 13: ApplySkin and MakeCloseButton paint through a skin owner's facade (LibKa0s-Skin-1.0,
+-- resolved at call time) when the caller names a registered owner; any other call is minor 12's.
+-- Minor 14: MakeResizable's `opts.owner`, a registered skin owner whose `icon.grip` tints the grip's
+-- art, live (LK-06b of Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS, ruling R-5);
+-- any other call is minor 13's.
+-- Minor 16 (SF1-L1 of Ka0sAddonsCommonTasks docs/2026-11-06-REVENDOR_LIBKA0S_V1_89): pixel edges, the
+-- one mechanism Widgets and the Skin major share; any other call is minor 15's.
+-- Minor 17 (FU-L2 of Ka0sAddonsCommonTasks docs/2026-11-06-FOLLOWUPS_V1_91): the pixel edges section
+-- moved, unchanged, to CorePixel.lua (layout-§1); no member and no behavior changes.
+local MAJOR, MINOR = "LibKa0s-Core-1.0", 17
+local lib = LibStub:NewLibrary(MAJOR, MINOR)
+if not lib then return end
+
+lib.MAJOR, lib.MINOR = MAJOR, MINOR
+
+-- Which version of each FILE in this major is actually live, so version skew is discoverable at
+-- runtime rather than by reading source. LibStub resolves one winner per major, but a major spanning
+-- several files can end up with files from different vendored copies — and with six addons each
+-- carrying their own copy, "which panel is attached to which probe?" is a question someone will need
+-- answered from in-game. Not reset on upgrade: a newer file writes its own key over the old value.
+-- Every file in this major MUST register here, and its number MUST rise on every released change to
+-- that file. See docs/releasing.md.
+lib.MODULES = lib.MODULES or {}
+lib.MODULES.Core = MINOR
+
+-- ── the secret-safe seam ───────────────────────────────────────────────────────────────────
+
+-- What an un-renderable value renders as. Exported rather than left as a literal so a host's tests,
+-- its documentation and this implementation cannot drift apart.
+lib.SECRET = "<secret>"
+
+-- Secret-value guard. In combat, WoW protects combat-sensitive returns (e.g.
+-- UnitGetTotalAbsorbs("player") and AbbreviateNumbers() of it) as "secret" values. A secret
+-- survives tostring() AND the `..` operator (which silently propagates the secretness) but RAISES
+-- `invalid value (secret) ... for 'concat'` the moment it reaches `table.concat`. Since every
+-- chat and debug line ends in a table.concat, an unguarded secret both spams a Lua error AND — when
+-- it happens inside a repeating repaint ticker — kills the ticker so the display freezes until
+-- /reload.
+--
+-- Detection MUST probe the operation that actually rejects a secret: `table.concat`, NOT `..`.
+-- `pcall(function() return v .. "" end)` reports a secret as *safe* (the operator doesn't raise),
+-- which is the bug that let a secret slip through. Concat a one-element table — exactly what the
+-- printers do downstream — so the probe fails on precisely what the real call fails on. A public
+-- `issecretvalue()` exists as of 12.0, but this pcall probe is kept as a version-agnostic detector
+-- that tests the exact operation (`table.concat`) that rejects a secret.
+local function probeConcat(v) return table.concat({ v }) end
+
+--- True when `v` can survive the table.concat every emitted line ends in.
+function lib.IsConcatSafe(v)
+  return (pcall(probeConcat, v))
+end
+
+--- Concat-safe stringifier for every line an addon emits. Ordinary values -> tostring(v); an
+--- un-concatenable (secret) value -> lib.SECRET, so the surrounding table.concat can never raise.
+--- nil and booleans are handled up front — table.concat also rejects a boolean element, but they
+--- are never secret, so they must not be masked. Real secrets are numbers/strings, which the concat
+--- probe catches. (A bare table would also probe unsafe and render as the sentinel, but no call
+--- site passes bare tables — every arg is a string/number log fragment.)
+function lib.SafeToString(v)
+  if v == nil then return "nil" end
+  if type(v) == "boolean" then return tostring(v) end
+  if lib.IsConcatSafe(v) then return tostring(v) end
+  return lib.SECRET
+end
+
+-- ── the window chrome seam ─────────────────────────────────────────────────────────────────
+
+-- The one skin every Ka0s window wears: a flat 1px BLACK outer edge with a 1px light-gray highlight
+-- synthesized just inside it (the "double edge") and a gold title. Until R4-SEP (Ka0sAddonsCommonTasks
+-- docs/2026-11-03-SMOKE_ROUND4, still minor 15) it also drew a gray divider under the title bar; no
+-- Ka0s window draws a line under its header now, so ApplySkin hides `frame.divider` (hideHeaderRule). Every color travels in the same table as the backdrop fields because they are one decision:
+-- a copy that took the backdrop but not the colors is exactly the drift this exists to prevent.
+-- WoW's backdrop system reads only the fields it knows, so the extra keys are inert when the table
+-- is handed to SetBackdrop.
+--
+-- WHY THESE VALUES, and not the 12px UI-Tooltip-Border this shipped with through v1.2.0: two hosts
+-- (BankLedger and LootHistory) had already arrived at this treatment independently for their own
+-- windows and passed `applySkin` to keep their consoles matching them, while the three hosts on the
+-- library default kept the tooltip border. Side by side, the five consoles did not read as one suite
+-- of addons — which is the entire thing a shared skin exists to deliver. The definition moved to
+-- where the majority of the surface already was. See standalone-windows in the Ka0s WoW Addon
+-- Standard, which now specifies these values normatively.
+lib.SKIN = {
+  bgFile = "Interface\\Buttons\\WHITE8x8",
+  -- A flat white texture TINTED black by `border` below, not border art: art at edgeSize 12 reads
+  -- as a soft brown frame, and the Ka0s window edge is a hard 1px line.
+  edgeFile = "Interface\\Buttons\\WHITE8x8",
+  edgeSize = 1,
+  insets = { left = 1, right = 1, top = 1, bottom = 1 },
+  bg = { 0.06, 0.06, 0.08, 0.92 },
+  border = { 0, 0, 0, 1 },
+  -- The three that used to be unexpressible. They are not backdrop fields — an inner-border child
+  -- frame, a FontString tint and a texture color are CALLS — which is why `ApplySkin` grew to make
+  -- them rather than the table growing to describe them.
+  innerBorder = { 0.24, 0.24, 0.27, 0.85 },
+  -- The rule color Ka0s Default's `divider` token equals. ApplySkin no longer draws it (R4-SEP): it is
+  -- kept for a host or a primitive that draws a body rule in it.
+  divider     = { 0.24, 0.24, 0.27, 0.85 },
+  title       = { 1.0, 0.82, 0.0 },
+}
+
+-- The accent that is not a backdrop field and not the inner border: a FontString tint. Described as
+-- data so the type-not-truthiness guard below exists exactly once. `n` is the argument COUNT. The
+-- divider was the second accent (a texture color, four components) until R4-SEP: the line under a
+-- title is gone from every window, so it is hidden, never colored (hideHeaderRule).
+local ACCENTS = {
+  { key = "title",   method = "SetTextColor",    n = 3 },
+}
+
+-- No line under a window's title (R4-SEP, the owner's "no separator line below header", every window
+-- of every addon, like the Skin Tester's showroom): a `frame.divider` texture, the convention this
+-- seam colored until now, is hidden on every call, whoever built it. Hidden rather than left
+-- unpainted, which would show the texture's own white. Same type-not-truthiness rule as below.
+local function hideHeaderRule(frame)
+  local d = frame.divider
+  if type(d) == "table" and type(d.Hide) == "function" then d:Hide() end
+end
+
+-- The backdrop proper: the table itself, then the two colors it carries. Guarded on the key being
+-- a table so a caller passing a plain WoW backdrop table (no `bg`, no `border`) gets a plain
+-- backdrop rather than a raise midway through building someone's window.
+local function applyBackdrop(frame, skin)
+  frame:SetBackdrop(skin)
+  if type(skin.bg) == "table" then
+    frame:SetBackdropColor(skin.bg[1], skin.bg[2], skin.bg[3], skin.bg[4])
+  end
+  if type(skin.border) == "table" then
+    frame:SetBackdropBorderColor(skin.border[1], skin.border[2], skin.border[3], skin.border[4])
+  end
+end
+
+-- The 1px inner highlight, inset one pixel on both axes so it sits INSIDE the black edge rather
+-- than on top of it. Built ONCE per frame and returned thereafter: ApplySkin is called again
+-- whenever a window is re-skinned, and a second child frame would stack a second line on the same
+-- pixel.
+--
+-- Decided on the TYPE of what the frame answered, never on its truthiness. A frame is a table with
+-- a metatable, and this library cannot assume what that metatable does with a key it has never
+-- heard of: a consumer's test mock answers EVERY key with a function, so `frame.innerBorder` read
+-- back truthy, `if not frame.innerBorder` never fired, and the tint below then indexed a function
+-- and raised — taking fourteen of that addon's cases down on the first re-vendor.
+local function ensureInnerBorder(frame, skin)
+  if type(frame.innerBorder) ~= "table" then
+    local inner = CreateFrame("Frame", nil, frame, "BackdropTemplate")
+    if type(inner) == "table" then
+      if inner.SetPoint then
+        inner:SetPoint("TOPLEFT", 1, -1)
+        inner:SetPoint("BOTTOMRIGHT", -1, 1)
+      end
+      if inner.SetBackdrop then
+        inner:SetBackdrop({ edgeFile = skin.edgeFile, edgeSize = 1 })
+      end
+      frame.innerBorder = inner
+    end
+  end
+  return frame.innerBorder
+end
+
+-- Synthesize the highlight if it is not there yet, then re-tint it on every call.
+local function applyInnerBorder(frame, skin)
+  if type(skin.innerBorder) ~= "table" or type(CreateFrame) ~= "function" then return end
+  local inner = ensureInnerBorder(frame, skin)
+  if type(inner) == "table" and type(inner.SetBackdropBorderColor) == "function" then
+    inner:SetBackdropBorderColor(skin.innerBorder[1], skin.innerBorder[2],
+      skin.innerBorder[3], skin.innerBorder[4])
+  end
+end
+
+-- The accent is optional on the FRAME, not just in the skin: a bare frame carries no title. Same type-not-truthiness rule as
+-- the inner border, for the same reason.
+local function applyAccents(frame, skin)
+  for _, a in ipairs(ACCENTS) do
+    local c, target = skin[a.key], frame[a.key]
+    if type(c) == "table" and type(target) == "table" and type(target[a.method]) == "function" then
+      target[a.method](target, unpack(c, 1, a.n))
+    end
+  end
+end
+
+-- ── the skin owner (minor 13) ───────────────────────────────────────────────────────────────
+--
+-- LibKa0s-Skin-1.0 floors on THIS major, so Core cannot floor on it: it is resolved at CALL time,
+-- exactly as MakeCloseButton resolves Media, and a client without it (or an older copy without
+-- `IsOwner`) answers nil here and every caller paints minor 12's way. A name counts as an owner
+-- only once that addon called `Skin:RegisterOwner`: every consumer already passes its folder name to
+-- MakeCloseButton, and the ones that never adopted skins must keep drawing exactly what they drew.
+
+--- The skin facade of `owner` when it is a registered skin owner, else nil. Internal: Widgets and
+--- the tool windows ask it the same question. Not host contract.
+function lib.__SkinFacade(owner)
+  if type(owner) ~= "string" or owner == "" or not LibStub then return nil end
+  local Skin = LibStub("LibKa0s-Skin-1.0", true)
+  if not (Skin and type(Skin.IsOwner) == "function" and type(Skin.For) == "function") then return nil end
+  if not Skin:IsOwner(owner) then return nil end
+  return Skin:For(owner)
+end
+
+--- Wear the skin. A no-op on a frame with no SetBackdrop — a frame created without the
+--- BackdropTemplate inherit is undecorated, not broken, and a missing skin is not worth erroring
+--- over in the middle of building someone's window.
+---
+--- `skin` is optional and defaults to `lib.SKIN`. It exists so a host that overrides the skin —
+--- DebugLog's descriptor `skin` field is the only one today — reaches THIS implementation rather
+--- than a second copy of the same five calls somewhere else, which is how a title tint ends up
+--- applied on one window and not its twin.
+---
+--- Every step past the backdrop is guarded on the key being present, so a caller passing a plain
+--- WoW backdrop table (no `bg`, no `innerBorder`, …) gets a plain backdrop rather than a raise
+--- midway through building a window that is not yet hidden or Esc-wired.
+---
+--- `owner` (minor 13) is optional: an addon folder name. When it names a REGISTERED skin owner
+--- (`LibKa0s-Skin-1.0`'s `IsOwner`) and `skin` is absent, the window is handed to that owner's
+--- facade after this paint (`S.Shell(frame)`), so it wears the owner's skin and repaints with it.
+--- Any other call, an unregistered name or a missing Skin major included, is minor 12's, call for
+--- call. A host's own `skin` table wins over the owner.
+function lib.ApplySkin(frame, skin, owner)
+  if not frame or not frame.SetBackdrop then return end
+  local S = skin == nil and lib.__SkinFacade(owner) or nil
+  skin = type(skin) == "table" and skin or lib.SKIN
+
+  applyBackdrop(frame, skin)
+  applyInnerBorder(frame, skin)
+  applyAccents(frame, skin)
+  hideHeaderRule(frame)
+  if S then S.Shell(frame) end
+end
+
+-- What the close control is drawn at, and how much of that slot the art fills. The slot is the
+-- click target, unchanged at 18 since minor 1 -- every window in the collection is laid out around
+-- it. The art is inset because a glyph that reaches its own edges reads far heavier than the title
+-- beside it; the icon set is drawn to be legible well below this.
+local CLOSE_SIZE = 18
+local CLOSE_ART  = 12
+
+-- Gray at rest, red under the pointer. The × has read this way since minor 1 and the texture keeps
+-- it: a close control is the one button in a window whose hover state should say "this one ends
+-- what you are looking at".
+local CLOSE_REST = { 0.7, 0.7, 0.72 }
+local CLOSE_HOT  = { 1, 0.3, 0.3 }
+
+--- The close control a Ka0s window closes with. Returns nil when CreateFrame is unavailable (a
+--- headless harness, or a load path with no UI), for the same reason ApplySkin degrades: a close
+--- button is worth doing without, not worth erroring over.
+---
+--- TWO LOOKS, AND WHICH ONE YOU GET DEPENDS ON WHETHER YOU SAY WHO YOU ARE. Pass `addonName` and it
+--- draws this collection's own `close` icon out of `LibKa0s-Media-1.0`; omit it and you get the
+--- multiplication sign this function has always drawn.
+---
+--- The argument exists because a texture path is absolute from `Interface\AddOns\` and this
+--- library is VENDORED -- there is no one path to it, and a copy cannot know which addon folder it
+--- was copied into. Core cannot ask Media for a path without being told the answer to that, and it
+--- must not guess: a wrong texture path draws nothing and raises nothing.
+---
+--- The × is therefore not a legacy spelling to be migrated away from. It is what a caller that
+--- passes no `addonName` gets and what a host without the Media module gets -- one code path, which
+--- is why there is no separate degraded branch to keep working. It is NOT what a host whose copy
+--- lacks the art gets: a host that passes its name but did not declare `close` on its
+--- `LibKa0s icons:` line gets a BLANK control, because `Media.Icon` answers a path and never checks
+--- that the file exists. That was so before pruning too: there never was a fallback for a missing
+--- file. Declare it (library-stack-§7's icon subset; docs/releasing.md's library-drawn table).
+---
+--- @param parent table
+--- @param onClick function
+--- @param addonName string  optional. The caller's own addon folder name, from its first vararg.
+---                          From minor 13 it is also the skin owner, when that addon registered
+---                          one with LibKa0s-Skin-1.0; an unregistered name draws as before.
+--- @return table|nil
+function lib.MakeCloseButton(parent, onClick, addonName)
+  if type(CreateFrame) ~= "function" then return nil end
+  local b = CreateFrame("Button", nil, parent)
+  b:SetSize(CLOSE_SIZE, CLOSE_SIZE)
+
+  -- Resolved at CALL time, not at load: Core is the first file in LibKa0s.xml and Media the second,
+  -- so a load-time lookup here would answer nil for the life of the session.
+  local media = addonName and LibStub and LibStub("LibKa0s-Media-1.0", true)
+  local path = media and media.Icon and media.Icon(addonName, "close")
+
+  if path then
+    local tex = b:CreateTexture(nil, "OVERLAY")
+    tex:SetPoint("CENTER")
+    tex:SetSize(CLOSE_ART, CLOSE_ART)
+    tex:SetTexture(path)
+    -- Tinted rather than recolored: the art ships WHITE precisely so a multiply lands on whatever
+    -- the caller wants, and here that is the same two colors the glyph has always used.
+    tex:SetVertexColor(CLOSE_REST[1], CLOSE_REST[2], CLOSE_REST[3])
+    b:SetScript("OnEnter", function() tex:SetVertexColor(CLOSE_HOT[1], CLOSE_HOT[2], CLOSE_HOT[3]) end)
+    b:SetScript("OnLeave", function() tex:SetVertexColor(CLOSE_REST[1], CLOSE_REST[2], CLOSE_REST[3]) end)
+    b.icon = tex
+  else
+    local fs = b:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    fs:SetPoint("CENTER")
+    fs:SetText("\195\151")  -- multiplication sign ×
+    fs:SetTextColor(CLOSE_REST[1], CLOSE_REST[2], CLOSE_REST[3])
+    b:SetScript("OnEnter", function() fs:SetTextColor(CLOSE_HOT[1], CLOSE_HOT[2], CLOSE_HOT[3]) end)
+    b:SetScript("OnLeave", function() fs:SetTextColor(CLOSE_REST[1], CLOSE_REST[2], CLOSE_REST[3]) end)
+    b.glyph = fs
+  end
+
+  -- Minor 13: a registered skin owner's close control takes its rest and hover colors from that
+  -- owner's skin (`close.rest` / `close.hot`), and follows a skin switch. Ka0s Default is the two
+  -- colors above. Any other name was answered above, unchanged.
+  local S = lib.__SkinFacade(addonName)
+  if S then S.CloseButton(b, { own = true }) end
+
+  b:SetScript("OnClick", onClick)
+  return b
+end
+
+--- Raise every Blizzard StaticPopup that is shown, so a tool window shown after a confirmation does
+--- not cover it (frame-layering-§4; XS-08). Public rather than file-local because three majors call
+--- it from their windows' OnShow (DebugLog's console, Perf's panel, Sim's panel), each guarded so an
+--- older Core without it raises nothing.
+---
+--- It only RAISES: it never shows, hides, re-stratas or SetToplevels a Blizzard frame (XS-21), and
+--- Raise on a StaticPopup is a C method on an unprotected frame. Each Raise is pcall'd, so a frame
+--- that refuses costs nothing but its own raise. A client without the StaticPopupN globals (or with
+--- something else under those names) raises nothing.
+---
+--- @return number  how many popups were raised
+function lib.RaiseStaticPopups()
+  local n = type(STATICPOPUP_NUMDIALOGS) == "number" and STATICPOPUP_NUMDIALOGS or 4
+  local raised = 0
+  for i = 1, n do
+    local p = _G["StaticPopup" .. i]
+    if type(p) == "table" and type(p.IsShown) == "function" and type(p.Raise) == "function"
+      and p:IsShown() and pcall(p.Raise, p) then
+      raised = raised + 1
+    end
+  end
+  return raised
+end
+
+-- ── the stored-color reader ────────────────────────────────────────────────────────────────
+
+-- Absence tested with `== nil` rather than `or`, and written ONCE rather than eight times. A stored
+-- `false` survives as false instead of being swallowed, and lizard counts every `or` short-circuit
+-- as a decision — so one named helper is one decision where the chain would be eight.
+local function pick(v, d)
+  if v == nil then return d end
+  return v
+end
+
+--- Read a stored color and return four NUMBERS, never a table.
+---
+--- The collection persists colors in BOTH shapes and neither can be retired without migrating
+--- users' SavedVariables, so a reader that handles both is permanent rather than transitional:
+---
+---   keyed       { r = , g = , b = , a = }   -- AbsorbTracker, KickCD, the Slash parser's output
+---   positional  { r,   g,   b,   a   }      -- what the Ka0s options color widget writes
+---
+--- Rules, in order:
+---   1. A non-table (nil included) yields the four defaults, unchanged.
+---   2. Any of c.r / c.g / c.b present means the KEYED shape wins for ALL FOUR channels — so a
+---      `{ r = 1 }` cannot silently borrow its green from c[2].
+---   3. Otherwise the positional shape.
+---   4. Each channel falls back INDEPENDENTLY, so a three-element color still gets its alpha.
+---
+--- The defaults are per-channel parameters and are deliberately NOT defaulted here: the call sites
+--- disagree today (0,0,0,1 for a chat echo, 1,1,1,1 for a swatch, a per-widget tint elsewhere), and
+--- inventing a house default would silently recolor one of them.
+function lib.RGBA(c, dr, dg, db, da)
+  if type(c) ~= "table" then return dr, dg, db, da end
+  if c.r ~= nil or c.g ~= nil or c.b ~= nil then
+    return pick(c.r, dr), pick(c.g, dg), pick(c.b, db), pick(c.a, da)
+  end
+  return pick(c[1], dr), pick(c[2], dg), pick(c[3], db), pick(c[4], da)
+end
+
+-- ── the class color, and the swatch it defers to ───────────────────────────────────────────
+--
+-- Every addon in the collection is growing a "use class color" companion beside every color
+-- swatch it draws (options-ui-§17), and each was about to answer the same three questions its own
+-- way. They ARE the same three questions, and answering them differently is how a collection stops
+-- reading as one author's work: a bar that keeps its alpha under a class color beside a border
+-- that does not.
+--
+-- Three implementations existed before this one and two of them disagreed about the SOURCE:
+-- AbsorbTracker read `C_ClassColor.GetClassColor`, PanelMaster and MultiMeters read
+-- `RAID_CLASS_COLORS`. PanelMaster's recorded argument wins, and it is not a coin toss --
+-- RAID_CLASS_COLORS is the table every other UI on the player's screen is already reading, so it
+-- is what the unit frames next to ours are showing. One source, here, once.
+
+--- Does `c` carry all three channels as numbers?
+---
+--- A palette entry that half-knows a class -- a table with a hex string and nothing else -- is not
+--- a color, and two thirds of one is worse than none.
+local function hasChannels(c)
+  return type(c) == "table"
+     and type(c.r) == "number" and type(c.g) == "number" and type(c.b) == "number"
+end
+
+-- The PLAYER's own class cannot change inside a session, so it is looked up once. NO OTHER UNIT IS
+-- EVER CACHED: target and focus change class every time the player retargets, and a per-unit cache
+-- would need invalidating on PLAYER_TARGET_CHANGED and PLAYER_FOCUS_CHANGED to save one table
+-- index. Cached on SUCCESS ONLY, which is what lets a class the client has not answered for yet
+-- resolve on the next read rather than being pinned nil for the session.
+local playerColor
+
+--- The class color for a unit, or NIL.
+---
+--- NIL IS AN ANSWER. An NPC, an unresolvable unit, a unit whose class the client has not answered
+--- for -- none of them is a color, and substituting one (white, gray, anything) invents a hue
+--- nobody chose, appearing only in the cases nobody tests. Every caller falls through to the
+--- stored swatch instead; see ResolveColor.
+---
+--- @param unit string|nil   a unit token; nil or omitted means the player
+--- @return number|nil r, number|nil g, number|nil b
+function lib.ClassColor(unit)
+  local isPlayer = (unit == nil or unit == "player")
+  if isPlayer and playerColor then
+    return playerColor.r, playerColor.g, playerColor.b
+  end
+  if type(UnitClass) ~= "function" then return nil end
+
+  -- pcall'd because the token is the CALLER'S: a unit string the client rejects raises rather than
+  -- answering nil, and one bad token must cost this color rather than the frame being repainted.
+  local ok, _, token = pcall(UnitClass, unit or "player")
+  if not ok or type(token) ~= "string" then return nil end
+
+  local c = type(RAID_CLASS_COLORS) == "table" and RAID_CLASS_COLORS[token] or nil
+  if not hasChannels(c) then return nil end
+  if isPlayer then playerColor = c end
+  return c.r, c.g, c.b
+end
+
+--- Forget the memoized player color. Suite seam, and the one thing a session cannot need.
+function lib.__ResetClassColor() playerColor = nil end
+
+--- Resolve a stored swatch through its class-color companion. Four numbers out, always.
+---
+--- Three rules, and all three were already unanimous across the three implementations this
+--- replaces -- written down in none of them, which is why they are stated here:
+---
+---   1. THE CONFIGURED ALPHA SURVIVES THE MODE. No class-color source carries an alpha, so the
+---      swatch's is always the one used -- which is also why the swatch is never disabled.
+---   2. AN UNRESOLVABLE CLASS FALLS THROUGH TO THE STORED SWATCH, never to a default color.
+---   3. The swatch is read under BOTH modes, so it is never grayed and never `disabledIf`
+---      (options-ui-§17, anti-patterns #74): setting the color before turning the mode on is the
+---      normal order of operations, and a disabled control makes it a two-visit job.
+---
+--- The stored value goes through lib.RGBA, so both persisted shapes -- keyed and positional --
+--- work here exactly as they do everywhere else in this collection. A host with a codec of its own
+--- may decode first; it does not have to.
+---
+--- @param stored table|nil  the stored swatch, keyed or positional
+--- @param on any            the companion checkbox's stored value
+--- @param unit string|nil   the unit the SURFACE DESCRIBES; nil means the player
+--- @return number r, number g, number b, number a
+function lib.ResolveColor(stored, on, unit)
+  local r, g, b, a = lib.RGBA(stored, 1, 1, 1, 1)
+  if not on then return r, g, b, a end
+  local cr, cg, cb = lib.ClassColor(unit)
+  if cr == nil then return r, g, b, a end
+  return cr, cg, cb, a
+end
+
+-- ── the pcalled event registration helper ──────────────────────────────────────────────────
+--
+-- The client RAISES `Attempt to register unknown event "<NAME>"` on a name it does not know, and a
+-- block of bare RegisterEvent calls loses every line after the one that raised: a single event
+-- retired by a patch takes an addon's whole enable path down (events-frames-taint-§1). These three
+-- are the collection's one helper for that, since minor 8.
+--
+-- The name is asked about BEFORE the target sees it, because the target's own answer lies for
+-- AceEvent: CallbackHandler stores the callback and only then asks the client's frame, and only
+-- for the event's FIRST registrant in a registry the whole client shares. The raise leaves that
+-- callback behind, so every later registrant -- the same target again, a second module, another
+-- addon -- gets a call that does not raise for a name the client never registered.
+--
+-- So: when `C_EventUtils.IsEventValid` exists and answers a boolean, that is the answer. Otherwise
+-- a private probe frame, made once, registers the name under pcall and unregisters it at once; a
+-- raw frame asks the client every time. A refused name is NEVER handed to the target. Only where
+-- neither is available (no CreateFrame: a load path with no UI) does the target's own pcall decide
+-- alone, and that rung inherits AceEvent's first-registrant blind spot. The target call is pcall'd
+-- on every rung all the same, so a raise for any other reason (a missing method name) rejects too.
+-- The helper never unregisters on the target: that would drop a live earlier registration.
+--
+-- The library keeps no registration state and prints nothing; the probe frame registers nothing
+-- between calls. `rejected` is the CALLER'S array, appended once per
+-- name, and the host decides where the player sees it ([Init], a debug verb). The call goes through
+-- `target.RegisterEvent`, whatever that is -- AceEvent's member, a Frame's, or a Bus tracking
+-- wrapper -- so a Bus-stamped target still records the registration for its replay.
+
+local probe  -- the private frame probeRefuses asks with; made on first need
+
+-- True when a raw frame of our own raises on `event`. False when there is no frame to ask with.
+local function probeRefuses(event)
+  if not probe then
+    if type(CreateFrame) ~= "function" then return false end
+    local ok, frame = pcall(CreateFrame, "Frame")
+    if not ok or type(frame) ~= "table" then return false end
+    probe = frame
+  end
+  if not pcall(probe.RegisterEvent, probe, event) then return true end
+  probe:UnregisterEvent(event)
+  return false
+end
+
+-- True when the client says `event` is not a name it knows: through IsEventValid when that answers
+-- a boolean, else through the probe frame. Absent both, the target's own pcall still gets its chance.
+local function clientRefuses(event)
+  local utils = C_EventUtils
+  if type(utils) == "table" and type(utils.IsEventValid) == "function" then
+    local ok, valid = pcall(utils.IsEventValid, event)
+    if ok and type(valid) == "boolean" then return not valid end
+  end
+  return probeRefuses(event)
+end
+
+-- Append `event` to the caller's list unless it is already there. A disable/enable cycle runs the
+-- same block twice, and a list that grew on every cycle would read as a new problem each time.
+local function noteRejected(rejected, event)
+  if type(rejected) ~= "table" then return end
+  for i = 1, #rejected do
+    if rejected[i] == event then return end
+  end
+  rejected[#rejected + 1] = event
+end
+
+-- The one body both members run: `method` is the target's RegisterEvent or RegisterUnitEvent.
+local function register(method, target, event, rejected, ...)
+  if clientRefuses(event) or not pcall(method, target, event, ...) then
+    noteRejected(rejected, event)
+    return false
+  end
+  return true
+end
+
+local function requireTarget(target, member)
+  if type(target) ~= "table" then
+    error(MAJOR .. ":" .. member .. " requires a target table - an AceEvent-embedded object or a frame", 3)
+  end
+end
+
+--- Register one event on `target` without letting an unknown name raise.
+---
+--- @param target table     an AceEvent-embedded object, a Bus target or a Frame
+--- @param event string
+--- @param handler any      passed through to target:RegisterEvent (a Frame ignores it)
+--- @param rejected table|nil  the caller's list; the name is appended once when refused
+--- @return boolean registered
+function lib.SafeRegisterEvent(target, event, handler, rejected)
+  requireTarget(target, "SafeRegisterEvent")
+  return register(target.RegisterEvent, target, event, rejected, handler)
+end
+
+--- Register one unit event on a frame without letting an unknown name raise. The unit tokens are
+--- passed through exactly as given (`unit1[, unit2]`).
+--- @return boolean registered
+function lib.SafeRegisterUnitEvent(frame, event, rejected, ...)
+  requireTarget(frame, "SafeRegisterUnitEvent")
+  return register(frame.RegisterUnitEvent, frame, event, rejected, ...)
+end
+
+--- Register every name in the array `events` on `target`, one refusal costing only itself.
+--- @return number how many registered
+function lib.SafeRegisterEvents(target, events, handler, rejected)
+  requireTarget(target, "SafeRegisterEvents")
+  local n = 0
+  for _, event in ipairs(type(events) == "table" and events or {}) do
+    if register(target.RegisterEvent, target, event, rejected, handler) then n = n + 1 end
+  end
+  return n
+end
+
+-- ── the resize grip ────────────────────────────────────────────────────────────────────────
+--
+-- Minor 9. The debug console, every Widgets.CopyWindow and the perf panel are resizable from a
+-- grip in the bottom-right corner, and all three reach it here: one grip, one set of bounds rules
+-- and one answer to the layout cache, rather than three. It is ADDITIVE and GUARDED from the
+-- caller's side: no module raises its Core floor for it, and each caller checks the member exists
+-- and keeps today's fixed window when it does not, because a floor raise would make DebugLog,
+-- Widgets and Perf absent in any host still carrying an older Core.lua (docs/releasing.md).
+--
+-- THE SIZE IS SESSION STATE, AND THE FRAME IS WHERE IT LIVES. Every window this serves is built
+-- once and kept, so a size the player drags to survives a hide and a show with nothing to restore
+-- it: this function never stores a size, and nothing reapplies the default on a later show. It is
+-- never written to SavedVariables (the standard forbids it: debug-logging-§1), and a /reload
+-- rebuilds each window at its default.
+--
+-- WHAT THE CLIENT'S LAYOUT CACHE DOES, AND WHAT THIS DOES ABOUT IT. The client keeps
+-- `layout-local.txt` for frames the player moved or sized: `StartMoving` and `StartSizing` both
+-- mark a frame USER-PLACED, and a named user-placed frame has its anchor and its size written to
+-- the cache at logout and put back when a frame of that name is created again. All three windows
+-- are named, and today's drag goes through `StartMoving` and never clears the flag, so a DRAGGED
+-- window is user-placed today. That is left exactly as it is: position behavior does not change.
+-- What must not happen is that a RESIZE makes a window user-placed that a drag had not, since that
+-- is the one route by which a size the player chose could reach the next session. So the grip
+-- reads `IsUserPlaced()` before `StartSizing` and puts that answer back after
+-- `StopMovingOrSizing`. A window only resized stays out of the cache; a window dragged as well is
+-- in it exactly as it is today. Each window's builder then sets its default size AFTER
+-- `CreateFrame` returns, so a size the cache put back at creation (the dragged case) is replaced
+-- by the default before the window is ever shown. What a headless suite cannot prove is when the
+-- client applies the cache; the in-game smoke check (resize, /reload, default size back) is the
+-- confirmation, dragged and undragged.
+
+local GRIP_SIZE = 16
+-- The client's own chat size grabber, which every player already reads as "drag here to resize".
+-- Stock art rather than a collection icon: it ships with every client, so it needs no addon folder
+-- to resolve (the reason Core.MakeCloseButton needs one) and cannot fail to draw.
+local GRIP_ART = {
+  normal    = "Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Up",
+  highlight = "Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Highlight",
+  pushed    = "Interface\\ChatFrame\\UI-ChatIM-SizeGrabber-Down",
+}
+-- How far above the window's own level the grip sits, so no content child covers it.
+local GRIP_LEVEL = 10
+-- The maximum when UIParent cannot say how big the screen is (a headless harness). A live client
+-- always can, so this bounds nothing a player ever sees.
+local FALLBACK_MAX = 4096
+
+-- A positive number, or nil. The frame API answers 0 before a first layout pass, and a headless
+-- stub may answer anything, so every size read goes through this.
+local function positive(v)
+  if type(v) == "number" and v > 0 then return v end
+  return nil
+end
+
+local function readSize(frame)
+  local w = type(frame.GetWidth) == "function" and positive(frame:GetWidth()) or nil
+  local h = type(frame.GetHeight) == "function" and positive(frame:GetHeight()) or nil
+  return w, h
+end
+
+-- The screen, which is the default maximum on both axes: a window may be sized up to the whole
+-- UI and no further, and SetClampedToScreen keeps it on it.
+local function screenSize()
+  local w, h
+  if type(UIParent) == "table" then w, h = readSize(UIParent) end
+  return w or FALLBACK_MAX, h or FALLBACK_MAX
+end
+
+--- The four bounds, from the options and the frame. `widthOnly` pins the height: min and max are
+--- both `minHeight`, or the frame's current height when no `minHeight` is given.
+local function resolveBounds(frame, opts)
+  local w, h = readSize(frame)
+  local sw, sh = screenSize()
+  local minW = positive(opts.minWidth) or w or 0
+  local minH = positive(opts.minHeight) or h or 0
+  local maxW = positive(opts.maxWidth) or math.max(sw, minW)
+  local maxH = positive(opts.maxHeight) or math.max(sh, minH)
+  if opts.widthOnly then maxH = minH end
+  return minW, minH, maxW, maxH
+end
+
+-- The Compat-style guard. `SetResizeBounds` replaced the `SetMinResize` / `SetMaxResize` pair in
+-- 10.0, and a frame answering neither is left unbounded rather than raised on.
+local function setBounds(frame, minW, minH, maxW, maxH)
+  if type(frame.SetResizeBounds) == "function" then
+    frame:SetResizeBounds(minW, minH, maxW, maxH)
+    return
+  end
+  if type(frame.SetMinResize) == "function" then frame:SetMinResize(minW, minH) end
+  if type(frame.SetMaxResize) == "function" then frame:SetMaxResize(maxW, maxH) end
+end
+
+-- A strict boolean, because the flag is put back verbatim and a stand-in that answers something
+-- else must not be written back as "placed".
+local function isUserPlaced(frame)
+  return type(frame.IsUserPlaced) == "function" and frame:IsUserPlaced() == true
+end
+
+-- `parent` is the frame the grip is drawn on: the sized frame itself, or a host's `gripParent`
+-- (an art frame laid over a clean anchor). Its parent, anchor and level come from there; what is
+-- sized is decided by wireGrip, never here.
+local function buildGrip(parent)
+  local grip = CreateFrame("Button", nil, parent)
+  grip:SetSize(GRIP_SIZE, GRIP_SIZE)
+  -- Inside the 1px edge, so the grip does not sit on top of the border it belongs to.
+  grip:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -1, 1)
+  local level = type(parent.GetFrameLevel) == "function" and parent:GetFrameLevel()
+  if type(level) == "number" then grip:SetFrameLevel(level + GRIP_LEVEL) end
+  grip:EnableMouse(true)
+  grip:SetNormalTexture(GRIP_ART.normal)
+  grip:SetHighlightTexture(GRIP_ART.highlight)
+  grip:SetPushedTexture(GRIP_ART.pushed)
+  grip:Show()
+  return grip
+end
+
+-- ── the grip's skin (minor 14) ──
+--
+-- The grip's three art textures, as the Button answers them. Only real textures: a frame that
+-- cannot answer one is left alone.
+local GRIP_GETTERS = { "GetNormalTexture", "GetHighlightTexture", "GetPushedTexture" }
+local function gripArt(grip)
+  local out = {}
+  for _, get in ipairs(GRIP_GETTERS) do
+    local fn = grip[get]
+    local tex = type(fn) == "function" and fn(grip) or nil
+    if type(tex) == "table" and type(tex.GetObjectType) == "function" and tex:GetObjectType() == "Texture"
+      and type(tex.SetVertexColor) == "function" then
+      out[#out + 1] = tex
+    end
+  end
+  return out
+end
+
+--- Paint the grip from the owner's `icon.grip`: a color desaturates the art and tints it, so the
+--- token's hue is what shows (the arrows' rule, SkinPaint's P.glyph); `false` (Ka0s Default, WoW
+--- Default) or a Skin major without the token draws the client's art as drawn. A grip this never
+--- tinted is not touched, so Ka0s Default's grip is minor 13's, call for call.
+local function paintGrip(grip, S)
+  local c = S.Token("icon.grip")
+  local tint = type(c) == "table"
+  if not tint and not grip.__gripTinted then return end
+  for _, tex in ipairs(gripArt(grip)) do
+    if type(tex.SetDesaturated) == "function" then tex:SetDesaturated(tint) end
+    if tint then tex:SetVertexColor(c[1], c[2], c[3]) else tex:SetVertexColor(1, 1, 1) end
+  end
+  grip.__gripTinted = tint or nil
+end
+
+--- A registered owner's grip: painted now and again after each of the owner's skin switches.
+local function skinGrip(grip, owner)
+  local S = lib.__SkinFacade(owner)
+  if not S then return end
+  paintGrip(grip, S)
+  if type(S.OnLooksChanged) == "function" then S.OnLooksChanged(function() paintGrip(grip, S) end) end
+end
+
+-- ── anchors kept through a drag (minor 15, #72) ──
+--
+-- StartSizing re-anchors a frame to the screen. A window anchored to UIParent wants that; a frame
+-- anchored to another frame (a cell, a parent) must not lose it, so those anchors are read before the
+-- drag and put back after it, with the size the drag made.
+local function savedAnchors(frame)
+  if type(frame.GetNumPoints) ~= "function" or type(frame.GetPoint) ~= "function" then return nil end
+  local n = frame:GetNumPoints()
+  if type(n) ~= "number" then return nil end
+  local out, onFrame = {}, false
+  for i = 1, n do
+    local point, rel, relPoint, x, y = frame:GetPoint(i)
+    if type(rel) == "table" and rel ~= UIParent then onFrame = true end
+    out[i] = { point, rel, relPoint, x, y }
+  end
+  return onFrame and out or nil
+end
+
+local function restoreAnchors(frame, anchors)
+  if not anchors or type(frame.SetPoint) ~= "function" or type(frame.ClearAllPoints) ~= "function" then return end
+  local w, h = readSize(frame)
+  frame:ClearAllPoints()
+  for _, a in ipairs(anchors) do frame:SetPoint(a[1], a[2], a[3], a[4], a[5]) end
+  if w and h and type(frame.SetSize) == "function" then frame:SetSize(w, h) end
+end
+
+-- The two mouse handlers. Sizing that never started (a right-click, a mouse-down `canResize`
+-- refused, or a mouse-up that arrives without a mouse-down) is not stopped, so a stray mouse-up
+-- cannot rewrite the user-placed flag, and runs neither `relayout` nor `onStop`. `canResize` is
+-- asked at every mouse-down and never at mouse-up: a drag already under way finishes even if the
+-- answer flips while it lasts.
+local function wireGrip(grip, frame, relayout, canResize, onStop)
+  local sizing, wasPlaced, anchors = false, false, nil
+  grip:SetScript("OnMouseDown", function(_, button)
+    if button ~= nil and button ~= "LeftButton" then return end
+    if canResize and not canResize(frame) then return end
+    wasPlaced = isUserPlaced(frame)
+    sizing = true
+    anchors = savedAnchors(frame)
+    frame:StartSizing("BOTTOMRIGHT")
+  end)
+  grip:SetScript("OnMouseUp", function()
+    if not sizing then return end
+    sizing = false
+    frame:StopMovingOrSizing()
+    if type(frame.SetUserPlaced) == "function" then frame:SetUserPlaced(wasPlaced) end
+    restoreAnchors(frame, anchors)
+    relayout(readSize(frame))
+    if onStop then onStop(readSize(frame)) end
+  end)
+end
+
+-- The three callbacks in `opts`, each nil unless it is a function: a value of the wrong type is
+-- ignored rather than raised on, the same rule for all three.
+local function callbacksOf(opts)
+  local function fn(v)
+    if type(v) == "function" then return v end
+    return nil
+  end
+  return fn(opts.onResize), fn(opts.canResize), fn(opts.onResizeStop)
+end
+
+--- Make `frame` resizable from a grip in its bottom-right corner. Answers the grip, also kept as
+--- `frame.resizeGrip`, or nil (and changes nothing) where there is no CreateFrame or the frame has
+--- no sizing API. Call it once, after the frame has its default size.
+---
+--- opts (all optional):
+---   minWidth, minHeight  number    the smallest the window may be; default its current size
+---   maxWidth, maxHeight  number    the largest; default the size of UIParent
+---   widthOnly            boolean   pin the height: min and max height are both `minHeight`, or
+---                                  the current height when no `minHeight` is given
+---   onResize             function  function(width, height), run on mouse-up after sizing and on
+---                                  every OnSizeChanged. Either argument may be nil where the
+---                                  frame cannot say; relayout from the frame when it matters.
+---                                  It runs every size tick: relayout here, never persist.
+---   canResize            function  (minor 10) function(frame) -> truthy|falsy, read fresh at every
+---                                  left mouse-down. Falsy refuses: nothing starts and the next
+---                                  mouse-up is inert. A drag under way finishes even if the answer
+---                                  flips. It never touches the grip's visibility.
+---   onResizeStop         function  (minor 10) function(width, height), run once per mouse-up that
+---                                  ends a sizing the grip started, after onResize. Never from
+---                                  OnSizeChanged. Persist geometry here.
+---   gripParent           table     (minor 10) the frame the grip is built on, anchored to and
+---                                  leveled from; default `frame`. Sizing, bounds, the user-placed
+---                                  flag and `frame.resizeGrip` stay on `frame`.
+---   owner                string    (minor 14) an addon folder name. When it names a REGISTERED
+---                                  skin owner (LibKa0s-Skin-1.0's `IsOwner`, resolved at call
+---                                  time) the grip's art takes that owner's `icon.grip`, and again
+---                                  after each of its skin switches: desaturated and tinted for a
+---                                  color, the client's art as drawn for `false` (Ka0s Default and
+---                                  WoW Default). A window's grip, so neither Ignore switch applies.
+---                                  Any other value draws minor 13's grip.
+---
+--- A value of the wrong type for any of these is ignored. None of the callbacks is pcall'd: one that
+--- raises is a host bug and reaches the error handler. The grip is shown once, at build, and the
+--- library never hides it; a host that hides a locked grip owns that, and canResize is the gate.
+---
+--- @param frame table
+--- @param opts table|nil
+--- @return table|nil grip
+function lib.MakeResizable(frame, opts)
+  if type(frame) ~= "table" or type(CreateFrame) ~= "function" then return nil end
+  if type(frame.SetResizable) ~= "function" or type(frame.StartSizing) ~= "function" then
+    return nil
+  end
+  opts = type(opts) == "table" and opts or {}
+  local onResize, canResize, onStop = callbacksOf(opts)
+  local gripParent = type(opts.gripParent) == "table" and opts.gripParent or frame
+  local function relayout(w, h)
+    if onResize then onResize(w, h) end
+  end
+
+  frame:SetResizable(true)
+  setBounds(frame, resolveBounds(frame, opts))
+
+  local grip = buildGrip(gripParent)
+  wireGrip(grip, frame, relayout, canResize, onStop)
+  skinGrip(grip, opts.owner)
+  -- Hooked, not set: a host may already own the window's OnSizeChanged.
+  if type(frame.HookScript) == "function" then
+    frame:HookScript("OnSizeChanged", function(_, w, h) relayout(w, h) end)
+  end
+  frame.resizeGrip = grip
+  return grip
+end
+
+-- ── the prefixed chat printer ──────────────────────────────────────────────────────────────
+
+--- Build a printer for one host.
+---
+--- Descriptor:
+---   prefix  string|function  required. The tag, VERBATIM — never synthesized from an abbreviation,
+---                            because the collection's tags differ in case, color and trailing
+---                            space. A function is re-read on EVERY call, which is what lets a host
+---                            whose prefix constant is defined in a file that loads later pass
+---                            `function() return NS.PREFIX end` instead of capturing nil forever.
+---   sep     string           optional, default " ". Separates the prefix from the body; a tag that
+---                            carries its own trailing space passes "".
+---   sink    function(line)   optional, default DEFAULT_CHAT_FRAME:AddMessage. Injectable because
+---                            hosts that route their chat through the global `print` capture at
+---                            exactly that seam in their headless harnesses.
+---
+--- The returned printer's methods are plain functions, not methods: a host does
+--- `local print = NS.Print` at file scope and calls it bare, so they must not need a self.
+function lib:New(d)
+  d = type(d) == "table" and d or {}
+
+  local prefix = d.prefix
+  local prefixIsFn = type(prefix) == "function"
+  if not prefixIsFn and type(prefix) ~= "string" then
+    error(MAJOR .. ":New requires descriptor.prefix — the tag verbatim, as a string or as a " ..
+      "function returning one", 2)
+  end
+
+  local sep = type(d.sep) == "string" and d.sep or " "
+  local sink = type(d.sink) == "function" and d.sink or nil
+
+  local printer = {}
+
+  -- The tag is resolved here rather than above so a function prefix answers with whatever the host
+  -- has set by now. A prefix that has not resolved yet emits the body alone: a line reading
+  -- "nil something happened" is worse than an untagged one, and this is the load-order window the
+  -- function form exists to survive.
+  local function emit(body)
+    -- Spelled out rather than folded into an `and`/`or`: a function prefix that answers nil would
+    -- fall through such a chain to the function value itself and concatenate as one.
+    local tag = prefix
+    if prefixIsFn then tag = prefix() end
+    local line = (tag == nil or tag == "") and body or (tag .. sep .. body)
+    if sink then
+      sink(line)
+    elseif DEFAULT_CHAT_FRAME then
+      DEFAULT_CHAT_FRAME:AddMessage(line)
+    end
+  end
+
+  --- Space-joined, prefix-tagged, secret-safe. Mirrors print()'s shape so a host's existing naked
+  --- print(...) call sites keep working once `print` is bound to this.
+  function printer.Print(...)
+    local n = select("#", ...)
+    local parts = {}
+    for i = 1, n do parts[i] = lib.SafeToString((select(i, ...))) end
+    emit(table.concat(parts, " "))
+  end
+
+  --- format() over pre-stringified arguments, so a secret reaching a %s slot renders as the
+  --- sentinel instead of raising on its way to the chat frame.
+  ---
+  --- pcall'd since minor 8, and the fallback is the point. SafeToString answers a STRING, so a
+  --- secret reaching a NUMERIC slot (`Format("%d rows", secret)`) hands "<secret>" to %d, and
+  --- string.format raises on it exactly as the unguarded secret would have. On failure the line
+  --- still lands: the format verbatim, then the stringified arguments, space-joined, the same
+  --- fallback LibKa0s-DebugLog-1.0's D.Debug uses. A satisfiable format is untouched.
+  function printer.Format(fmt, ...)
+    local n = select("#", ...)
+    local safeFmt = lib.SafeToString(fmt)
+    if n == 0 then emit(safeFmt) return end
+    local parts = {}
+    for i = 1, n do parts[i] = lib.SafeToString((select(i, ...))) end
+    local ok, out = pcall(string.format, safeFmt, unpack(parts))
+    if ok then
+      emit(out)
+    else
+      emit(safeFmt .. " " .. table.concat(parts, " "))
+    end
+  end
+
+  return printer
+end

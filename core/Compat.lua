@@ -1,0 +1,209 @@
+local _, NS = ...
+-- core/Compat.lua — the compat family's root and only file (compat): every version-variant client
+-- call the addon makes outside LibKa0s's majors, and every LibKa0s-Compat-1.0 member it consumes,
+-- behind NS.Compat. No other file names these APIs. The family has no other file.
+--
+-- Routed through LibKa0s-Compat-1.0 (library-stack-§7), each with its library-absent stub:
+--   Compat.IsRetail()  Compat.IsForever()  Compat.ClientKey()  Compat.ForClient(clients)
+--                                the client checks (clients-§3): the ONLY place this addon asks which
+--                                client it runs on; a per-client feature is declared with
+--                                `clients = { "retail" }` and answered by ForClient (clients-§4)
+--   Compat.IsSecret(v)  Compat.CanAccess(v)  Compat.IsSafeKey(v)   the three secret-value guards
+--   Compat.GetSpecialization()  Compat.GetSpecializationInfo(index)
+--                                C_SpecializationInfo first, then the deprecated globals (both are
+--                                gone on WoW Forever, where the stubs answer nil)
+-- Hand-written ladders across clients and patches:
+--   Compat.CanAccessTable(t)     canaccesstable, then issecrettable, then "readable"
+--   Compat.ChatSender()          C_ChatInfo.SendChatMessage, then the bare global (deprecated 11.2.0)
+--   Compat.NewNumberFormatter()  C_StringUtil's abbreviated-number formatter constructor, then its
+--                                numeric-rule constructor
+--   Compat.PopupEditBox(dialog)  a StaticPopup's edit box: the GetEditBox method, then the editBox /
+--                                EditBox field
+-- Every client global is read at CALL time, so a client (or the harness's mock) that adds the API
+-- later is seen.
+--
+-- THE GUARDS HAVE ONE CALLER. core/Secrets.lua binds them at FILE SCOPE (so this file loads first)
+-- and stays the only file that inspects a value that may be secret (spec §3): no other file reaches
+-- NS.Compat's guards.
+
+NS.Compat = NS.Compat or {}
+local Compat = NS.Compat
+
+local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
+
+-- ---------------------------------------------------------------------------
+-- The client: LibKa0s-Compat-1.0's, with the stub arm (clients-§3)
+-- ---------------------------------------------------------------------------
+--
+-- The stub re-implements the library's body: both project constants read BARE and at CALL time.
+-- WOW_PROJECT_CAMELOT is nil on Retail, so the nil guard is what keeps a client that defines neither
+-- constant from reading as Forever (nil == nil).
+
+local function isForeverStub()
+    return WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+end
+
+local function isRetailStub()
+    return WOW_PROJECT_MAINLINE ~= nil and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not isForeverStub()
+end
+
+local function clientKeyStub()
+    if isForeverStub() then return "forever" end
+    if isRetailStub() then return "retail" end
+    return nil
+end
+
+local CLIENT_TOKENS = { retail = true, forever = true, both = true }
+
+local function forClientStub(clients)
+    if clients == nil or clients == "both" then return true end
+    if type(clients) ~= "table" then error('ForClient: unknown client "' .. tostring(clients) .. '"', 2) end
+    for _, token in ipairs(clients) do
+        if not CLIENT_TOKENS[token] then error('ForClient: unknown client "' .. tostring(token) .. '"', 2) end
+    end
+    local key = clientKeyStub()
+    for _, token in ipairs(clients) do
+        if token == "both" or token == key then return true end
+    end
+    return false
+end
+
+--- Whether this is a WoW Forever client.
+--- @return boolean
+Compat.IsForever = CompatLib and CompatLib.IsForever or isForeverStub
+
+--- Whether this is a Retail client (the mainline project id and NOT Forever).
+--- @return boolean
+Compat.IsRetail = CompatLib and CompatLib.IsRetail or isRetailStub
+
+--- The client's key: "retail", "forever", or nil when the project constants say neither.
+--- @return string|nil
+Compat.ClientKey = CompatLib and CompatLib.ClientKey or clientKeyStub
+
+--- Whether a `clients` declaration (nil, "both", or an array of "retail" / "forever" / "both")
+--- includes this client. An unknown token raises.
+--- @param clients nil|string|string[]
+--- @return boolean
+Compat.ForClient = CompatLib and CompatLib.ForClient or forClientStub
+
+-- ---------------------------------------------------------------------------
+-- The secret guards: LibKa0s-Compat-1.0's, with the stub arm
+-- ---------------------------------------------------------------------------
+--
+-- THE GUARD ARM is a deliberate, documented duplication (LibKa0s docs/api/Compat/version-1-docs.md,
+-- "Guards: the stub re-implements the body"). "The library is missing" is not "the client has no
+-- secrets system": a stub answering IsSecret -> false on a 12.x client would send a secret into a
+-- comparison mid-pull, on exactly the degraded path the stub exists to survive. The client globals
+-- are read BARE and at CALL time, as the library reads them, so the harness's mock reaches both arms.
+
+local function isSecretStub(v)
+    local fn = issecretvalue
+    if not fn then return false end
+    return fn(v) and true or false
+end
+
+local function canAccessStub(v)
+    local fn = canaccessvalue
+    if fn then return fn(v) and true or false end
+    return not isSecretStub(v)
+end
+
+local function isSafeKeyStub(v)
+    if isSecretStub(v) then return false end
+    return v ~= nil
+end
+
+--- Whether `v` is a secret value. False on a client without the secrets system.
+--- @param v any
+--- @return boolean
+Compat.IsSecret = CompatLib and CompatLib.IsSecret or isSecretStub
+
+--- Whether this context may look at `v`. A plain value always answers true.
+--- @param v any
+--- @return boolean
+Compat.CanAccess = CompatLib and CompatLib.CanAccess or canAccessStub
+
+--- Whether `v` may be a table KEY right now (not secret, not nil).
+--- @param v any
+--- @return boolean
+Compat.IsSafeKey = CompatLib and CompatLib.IsSafeKey or isSafeKeyStub
+
+--- Whether this context may read the CONTENTS of table `t` (the caller has checked it is a table).
+--- No LibKa0s major carries it. Without either client global every table is readable.
+--- @param t table
+--- @return boolean
+function Compat.CanAccessTable(t)
+    local can = canaccesstable
+    if can then return can(t) and true or false end
+    local isSecretTable = issecrettable
+    if isSecretTable then return not isSecretTable(t) end
+    return true
+end
+
+-- ---------------------------------------------------------------------------
+-- The player's specialization: LibKa0s-Compat-1.0's, with the stub arm
+-- ---------------------------------------------------------------------------
+-- The stubs walk the library's two rungs: C_SpecializationInfo where it exists, else the deprecated
+-- global. Both read the client at CALL time.
+
+local function getSpecializationStub()
+    local api = C_SpecializationInfo
+    if api and api.GetSpecialization then return (api.GetSpecialization()) end
+    local bare = GetSpecialization
+    if bare then return (bare()) end
+    return nil
+end
+
+local function getSpecializationInfoStub(index)
+    if not index then return nil end
+    local api = C_SpecializationInfo
+    if api and api.GetSpecializationInfo then return api.GetSpecializationInfo(index) end
+    local bare = GetSpecializationInfo
+    if bare then return bare(index) end
+    return nil
+end
+
+--- The player's active specialization index, or nil.
+--- @return number|nil
+Compat.GetSpecialization = CompatLib and CompatLib.GetSpecialization or getSpecializationStub
+
+--- The specialization's info for `index` (specID, name, description, icon, role, ...), or nil.
+--- @param index number
+Compat.GetSpecializationInfo = CompatLib and CompatLib.GetSpecializationInfo or getSpecializationInfoStub
+
+-- ---------------------------------------------------------------------------
+-- Chat and number formatting
+-- ---------------------------------------------------------------------------
+
+--- The function that sends one chat message, `(text, chatType, languageID, target)`, or nil where
+--- the client has none. The caller runs it in pcall.
+--- @return function|nil
+function Compat.ChatSender()
+    local info = C_ChatInfo
+    if info and type(info.SendChatMessage) == "function" then return info.SendChatMessage end
+    local bare = SendChatMessage
+    if type(bare) == "function" then return bare end
+    return nil
+end
+
+--- A new instance of the client's number formatter (it takes a secret and abbreviates natively), or
+--- nil where the client has none or refuses to build one. modules/Format.lua sets its breakpoints.
+--- @return table|nil
+function Compat.NewNumberFormatter()
+    local util = C_StringUtil
+    local make = util and (util.CreateAbbreviatedNumberFormatter or util.CreateNumericRuleFormatter)
+    if type(make) ~= "function" then return nil end
+    local ok, f = pcall(make)
+    if not ok then return nil end
+    return f
+end
+
+--- A StaticPopup dialog's edit box, or nil: the GetEditBox method on current clients, the editBox
+--- (or EditBox) field before it.
+--- @param dialog table|nil
+--- @return table|nil
+function Compat.PopupEditBox(dialog)
+    if dialog == nil then return nil end
+    if type(dialog.GetEditBox) == "function" then return dialog:GetEditBox() end
+    return dialog.editBox or dialog.EditBox
+end

@@ -1,0 +1,802 @@
+-- LibKa0s-Widgets-1.0 — ReorderList: drag a row of a list to a new position, and the row box every
+-- draggable row in the collection wears.
+--
+-- ── WHY IT IS A FILE OF ITS OWN AND NOT MORE OF Widgets.lua ──────────────────────────────────
+--
+-- Because of `layout-§1`, as for WidgetsDragHandle.lua. Widgets.lua held three widgets at 1303
+-- lines, in the 1000–1500 band, and issue #36 named the seam: one file per widget, ReorderList
+-- first. It moved here unchanged at Widgets minor 12. It is NOT a major of its own: it is part of
+-- `LibKa0s-Widgets-1.0`, guarded with the same multi-file idiom, so a list from one vendored copy
+-- can never pair with a shell from another without saying so. It reads nothing of the shell's but
+-- `lib`; the handle's fallback art, the one file-level value it shared with the dropdown's, is
+-- restated below.
+--
+-- ── THE SKIN OWNER (minor 2) ─────────────────────────────────────────────────────────────────
+--
+-- `opts.owner`, a registered skin owner (the shell's SKIN OWNERS), takes what a drag looks like from
+-- that owner's skin: the row boxes (`list.box`, `list.boxDim`, `list.boxEdge`, `list.boxEdgeDim`),
+-- the handle at rest and under the pointer (`handle.rest`, `text.accent`), the insertion line
+-- (`list.dropLine`) and the carried copy (`list.ghostBg`, its text `text.accent`, its mark `list.ghostIcon`). A host's own
+-- `handleColor`, `handleHoverColor`, `lineColor` and per-row ghost colors still win. A controller
+-- lives for one render, so the next render after a skin switch draws the new skin. The ghost is
+-- one frame for every list in the process: it is repainted on every drag, to the dragging list's
+-- skin, or back to the defaults once a skinned list has painted it. Without an owner, or for an
+-- unregistered name, every color is minor 1's.
+--
+-- ── THE SETTINGS-PANEL SCOPE (minor 3) ───────────────────────────────────────────────────────
+--
+-- A reorder list is on a settings page: every consumer puts it on one. So it obeys its owner's
+-- "Ignore settings panel" by default, as an AceGUI row does: while the owner ignores its panel
+-- (`Skin:GetIgnore(owner)`'s panel half) every color is minor 1's, the ghost included. `opts.panel =
+-- false` opts out, for a list on a window, which wears the skin whatever that switch says. The
+-- switch is live the way a skin switch is: the settings page re-renders on it, and the next
+-- controller reads the new answer. The ghost's text wears the skin's body face from minor 5, so
+-- Ignore fonts reaches it on the next drag. LK-05 of Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS.
+--
+-- Depends on LibStub and on the Widgets shell, and on no addon framework. A payload without this
+-- file loads whole and simply has no `lib.ReorderList` and no `lib.ROW_BOX`.
+
+local lib = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
+if not lib then return end
+
+-- Minor 2: the skin owner (the header's THE SKIN OWNER).
+-- Minor 3: the settings-panel scope (the header's THE SETTINGS-PANEL SCOPE), with `opts.panel`, and
+-- the handle's tooltip line in the palette's `gtip.value` (white while unskinned; LK-06d).
+-- Minor 4 (cause L6 of Ka0sAddonsCommonTasks docs/2026-11-01-FULL_SKINNING): a skinned list with no
+-- `handleIcon` draws the Ka0s `move` icon, not the client's sort arrow.
+-- Minor 5 (cause L8 of the same bundle): the carried copy's text in the skin's body face and its mark
+-- in `list.ghostIcon`, unless the row names a color.
+-- Minor 6 (SF2-L1 of Ka0sAddonsCommonTasks docs/2026-11-06-REVENDOR_LIBKA0S_V1_89): a row box's four
+-- edges are `ROW_BOX.EDGE_SIZE` PHYSICAL pixels at any UI scale, re-sized on a scale change, through
+-- the shell's lib.__pixelLine (Widgets minor 25), where they were that many UI units.
+local REORDER_MINOR = 6
+-- Paired on the SHELL's minor as well as this file's own, as WidgetsDragHandle.lua is: a list that
+-- attached to an older shell would publish `lib.ReorderList` beside a `lib.MODULES` the shell owns,
+-- and nothing would say the two came from different vendored copies.
+if lib.__reorderMinor and lib.__reorderMinor >= REORDER_MINOR
+  and lib.__reorderShellMinor == lib.MINOR then return end
+lib.__reorderMinor      = REORDER_MINOR
+lib.__reorderShellMinor = lib.MINOR
+
+lib.MODULES = lib.MODULES or {}
+lib.MODULES.WidgetsReorder = REORDER_MINOR
+
+-- The rung below the handle's injected art: what a host with no LibKa0s-Media draws.
+local HANDLE_FALLBACK = "Interface\\Buttons\\UI-SortArrow"
+local GHOST_FONT = "GameFontNormal"
+
+-- The ghost's fill and text, and the handle's two tints, for a list with no skin owner.
+local GHOST_BG   = { 0.12, 0.12, 0.12, 0.95 }
+local GHOST_TEXT = { 1, 0.82, 0 }
+local GHOST_ICON = { 1, 1, 1 }
+local HANDLE_REST, HANDLE_HOVER = { 0.7, 0.7, 0.7 }, { 1, 0.82, 0 }
+local LINE_COLOR = { 1, 0.82, 0, 0.9 }
+-- The handle's tooltip line (minor 3): the white it always drew; a skinned list's is `gtip.value`.
+local TIP_TEXT = { 1, 1, 1 }
+
+--- A list's colors from its skin owner (minor 2), or nil for a list with none (or an unregistered
+--- name, or a shell that predates the check): every reader then falls back to minor 1's values.
+--- Nil too while a panel-scoped list's owner ignores its settings panel (minor 3).
+local function skinPalette(owner, panel)
+  local skinOf = lib.__skinOf
+  local Skin = type(skinOf) == "function" and skinOf(owner) or nil
+  if not Skin then return nil end
+  if panel ~= false and type(Skin.GetIgnore) == "function" and Skin:GetIgnore(owner) == true then
+    return nil
+  end
+  local R = lib.ROW_BOX
+  local function tok(name, fallback) return Skin:Token(owner, name) or fallback end
+  return {
+    box = { FILL = tok("list.box", R.FILL), FILL_DIM = tok("list.boxDim", R.FILL_DIM),
+            EDGE = tok("list.boxEdge", R.EDGE), EDGE_DIM = tok("list.boxEdgeDim", R.EDGE_DIM) },
+    rest = tok("handle.rest", HANDLE_REST), hover = tok("text.accent", HANDLE_HOVER),
+    line = tok("list.dropLine", LINE_COLOR), ghostBg = tok("list.ghostBg", GHOST_BG),
+    ghostText = tok("text.accent", GHOST_TEXT), tip = tok("gtip.value", TIP_TEXT),
+    ghostIcon = tok("list.ghostIcon", GHOST_ICON), Skin = Skin, owner = owner,
+  }
+end
+
+-- ── ReorderList ───────────────────────────────────────────────────────────────────────────────
+--
+-- Drag a row of a list to a new position. The library owns the GESTURE and everything you see
+-- while it is happening; the host owns the rows.
+--
+-- ── WHERE THE LINE IS DRAWN, AND WHY THERE ────────────────────────────────────────────────────
+--
+-- The two shipped consumers draw completely different rows. MultiMeters' Columns page is a state
+-- glyph and a statistic name; ConsumableMaster's priority list is a live item tooltip, a
+-- crafting-quality glyph, a pick star, a score button and a remove button. Neither would accept a
+-- widget that owned its row content, and a `render(row, item)` callback wide enough for both is
+-- not an abstraction -- it is a hole shaped like two addons.
+--
+-- So this owns no row content at all. It owns the handle, the copy that follows the cursor, the
+-- insertion line, the index arithmetic, the clamp, and nothing else. A host builds its rows however
+-- it already does -- AceGUI, raw frames, anything -- hands each one over, and gets `onMove` back.
+-- That is also the whole of what was hard: the gesture took four rounds to get right in a client,
+-- and the row content took none.
+--
+-- ── WHAT THE HOST STILL DECIDES ───────────────────────────────────────────────────────────────
+--
+-- Where the handle sits, how big it is, what art it wears, how tall a row is, whether the list has
+-- two groups or one. All parameters. What it does NOT decide is what a drag LOOKS like, because
+-- that is the thing every list in the collection should share -- the same ghost at the same alpha,
+-- the same gold insertion line, the same fade on the row you picked up.
+--
+-- ── WHY THE ART ARRIVES AS A PARAMETER ────────────────────────────────────────────────────────
+--
+-- Same reason `chevron` and `check` do, and it is the reason stated at the top of Widgets.lua:
+-- `Media.Icon` takes the CONSUMING ADDON'S name to build a path, and a vendored copy cannot know
+-- which addon folder it was copied into. `handleIcon` is a resolved path or nil, and nil falls to a
+-- Blizzard texture, so a host with no LibKa0s-Media still gets a working handle.
+
+-- ── WHY THE ROW BOX IS THE WIDGET'S AND NOT THE HOST'S ────────────────────────────────────────
+--
+-- A DELIBERATE REVERSAL of the paragraph above it, recorded as one. Minor 8 said this widget owns
+-- "the handle, the copy that follows the cursor, the insertion line, the index arithmetic, the
+-- clamp, and nothing else". It now also owns the ROW BOX -- the faint fill and the hairline border
+-- that make a stack of rows read as blocks you can pick up -- because "a draggable row looks like
+-- this" is a property of the COLLECTION (options-ui-§18), and a property of the collection cannot
+-- live in two consumers' private code. It did: MultiMeters drew a 6% white fill and no border,
+-- ConsumableMaster drew nothing at all, and that is the drift.
+--
+-- The row's CONTENTS are still entirely the consumer's, and nothing about AddRow's content
+-- contract changes. What moved is the box UNDER them.
+
+-- The canonical values, published so an audit can read them and a consumer never restates them
+-- (options-ui-§8). White and low-alpha rather than a chosen hue, so a box reads the same over
+-- whatever the host's page is painted with; the dimmed pair is for a row that is present but not
+-- draggable -- MultiMeters' hidden columns, LootHistory's sources it is not collecting.
+lib.ROW_BOX = {
+  FILL      = { 1, 1, 1, 0.06 },   -- MultiMeters' shipped fill, now everyone's
+  FILL_DIM  = { 1, 1, 1, 0.03 },
+  EDGE      = { 1, 1, 1, 0.12 },   -- 1px, all four sides; the border nobody had
+  EDGE_DIM  = { 1, 1, 1, 0.06 },
+  EDGE_SIZE = 1,                   -- physical pixels (minor 6); UI units before it
+  HANDLE_W  = 30,                  -- the left gutter the handle owns; row contents start beyond it
+}
+
+-- The one copy carried under the cursor, process-wide. A singleton for the same reason the dropdown
+-- menu is one: it lives on UIParent so it can follow the pointer OUT of whatever scroll frame the
+-- list sits in, and a per-list copy would clip at the first edge it met.
+local ghost
+
+-- Forward-declared: the ghost's OnUpdate is wired when the ghost is built, and the drag it polls is
+-- defined further down with the rest of the drag.
+local trackDragFromGhost
+
+local function ensureGhost()
+  if ghost then return ghost end
+
+  ghost = CreateFrame("Frame", nil, UIParent)
+  ghost:SetFrameStrata("TOOLTIP")
+  ghost:SetSize(300, 30)
+  -- LOAD-BEARING, NOT TIDY: a frame sitting under the pointer that accepts the mouse eats the very
+  -- button-release that ends the drag it is drawing.
+  ghost:EnableMouse(false)
+  ghost:SetAlpha(0.9)
+  ghost:Hide()
+
+  ghost.bg = ghost:CreateTexture(nil, "BACKGROUND")
+  ghost.bg:SetAllPoints(ghost)
+  ghost.bg:SetColorTexture(GHOST_BG[1], GHOST_BG[2], GHOST_BG[3], GHOST_BG[4])
+
+  ghost.icon = ghost:CreateTexture(nil, "ARTWORK")
+  ghost.icon:SetSize(18, 18)
+  ghost.icon:SetPoint("LEFT", ghost, "LEFT", 8, 0)
+
+  ghost.text = ghost:CreateFontString(nil, "OVERLAY", GHOST_FONT)
+  ghost.text:SetPoint("LEFT", ghost.icon, "RIGHT", 6, 0)
+  ghost.text:SetPoint("RIGHT", ghost, "RIGHT", -8, 0)
+  ghost.text:SetJustifyH("RIGHT")
+
+  -- THE DRAG'S POLL LIVES HERE, on a frame this library owns, and reads its row at fire time. Until
+  -- minor 10 it was `row.frame:SetScript("OnUpdate", ...)` on the HOST's row frame, cleared with
+  -- nil at the drop -- which wiped any OnUpdate the host had set there. The ghost is shown for
+  -- exactly as long as a drag is in flight, so the client polls it for exactly that long.
+  ghost:SetScript("OnUpdate", function(self) trackDragFromGhost(self.__row) end)
+
+  -- `__`-PREFIXED IS INTERNAL, the same contract `dd.__check` carries: published so a suite can
+  -- ask whether the carried copy exists, is shown, reads as the right row and follows the cursor,
+  -- none of which is reachable from the controller. A host must not touch it -- what it draws is
+  -- the one part of a drag this library deliberately does not let a host restyle.
+  lib.__DragGhost = ghost
+
+  return ghost
+end
+
+--- Put the ghost under the cursor, offset right so the pointer sits ON what it is carrying.
+local function moveGhost()
+  if not (ghost and ghost:IsShown()) then return end
+  local x, y = GetCursorPosition()
+  local scale = UIParent:GetEffectiveScale()
+  if type(x) ~= "number" or type(y) ~= "number" or type(scale) ~= "number" or scale == 0 then
+    return
+  end
+  ghost:ClearAllPoints()
+  ghost:SetPoint("LEFT", UIParent, "BOTTOMLEFT", (x / scale) + 14, y / scale)
+end
+
+--- Where a row dropped `rows` rows from `from` lands, clamped to its own group.
+---
+--- THE CLAMP IS AN INTERACTION RULE, not a safety check, and it only exists when the host says the
+--- list has two groups. A flat list clamps to its own ends and nothing else.
+local function dropIndex(from, rows, count, boundary)
+  local lo, hi = 1, count
+  if boundary and boundary > 0 and boundary < count then
+    if from <= boundary then hi = boundary else lo = boundary + 1 end
+  end
+
+  local to = from + rows
+  if to < lo then to = lo end
+  if to > hi then to = hi end
+  return to
+end
+
+--- Is the left button still down? Answers nil when the question cannot be asked.
+local function mouseHeld()
+  if type(IsMouseButtonDown) ~= "function" then return nil end
+  local ok, held = pcall(IsMouseButtonDown, "LeftButton")
+  if not ok then return nil end
+  return held and true or false
+end
+
+-- ── the handle pool ──────────────────────────────────────────────────────────────────────────
+--
+-- THE LIBRARY OWNS ITS HANDLES. It does not cache them on the frames a host hands over, and the
+-- reason is the whole of a bug that shipped:
+--
+-- Both consumers hand over frames their UI framework POOLS. Caching a handle on one looked right,
+-- because the same host gets the same frame back at its next render -- but AceGUI's pool is
+-- process-wide and typeless within a widget type. A released container is handed to whatever asks
+-- next, and what asked next was a completely unrelated part of the page: a drag handle appeared on
+-- "Drag to action bar", on an ID entry row, on a dropdown. The frame's identity is simply not the
+-- host's to lend, and a cache keyed on it is a cache keyed on nothing.
+--
+-- So handles are acquired from a free list here and RELEASED on Cancel -- hidden, unanchored and
+-- reparented off the host's frame in one step. A handle can then only ever be visible on a frame
+-- this library put it on, during a render it is live for.
+
+-- The BOXES are pooled on exactly the same terms and for exactly the same reason: a box is another
+-- frame this library parents to a frame the host pools, so it has to be given back the same way.
+local handlePool, boxPool, handleAttic = {}, {}, nil
+
+-- AND SO IS THE INSERTION LINE, from minor 10. Until then it was cached on the container as
+-- `__ka0sDropLine`, and both shipped consumers hand over an AceGUI-pooled container -- so the line
+-- rode back into AceGUI's pool, colored for the first list that ever drew on it. It is now taken
+-- from this free list per DRAG, recolored for the list that is dragging, and given back at the
+-- drop and on Cancel.
+local linePool = {}
+
+local function atticFrame()
+  if not handleAttic then
+    handleAttic = CreateFrame("Frame", nil, UIParent)
+    handleAttic:Hide()
+  end
+  return handleAttic
+end
+
+--- Give one list of borrowed frames back to its pool: hidden, unanchored, and off the host's frame,
+--- in one step. Returns how many were reclaimed.
+---
+--- Shared by the handles and the boxes rather than written twice, because those three steps are the
+--- whole of the contract and a copy that forgot the reparent would fail in the way that is only
+--- ever visible on someone else's page.
+local function reclaim(borrowed, pool)
+  local n = #borrowed
+  for i = n, 1, -1 do
+    local f = borrowed[i]
+    borrowed[i] = nil
+    f.__row = nil
+    f:Hide()
+    f:ClearAllPoints()
+    f:SetParent(atticFrame())
+    pool[#pool + 1] = f
+  end
+  return n
+end
+
+--- Take an insertion line for one drag onto `container`, painted in `color`.
+---
+--- A FRAME CARRYING A TEXTURE, not a bare texture. A texture belongs to its own frame's draw layers,
+--- so one created on the container draws UNDER every row -- each row is a child frame with its own
+--- layers, and a parent's OVERLAY still loses to a child. The line has to be a sibling that
+--- outranks them. Answers nil with no container, and the drag then simply draws no line.
+local function acquireLine(container, color)
+  if not container then return nil end
+
+  local line = table.remove(linePool)
+  if not line then
+    line = CreateFrame("Frame", nil, atticFrame())
+    line:SetHeight(3)
+    line.tex = line:CreateTexture(nil, "OVERLAY")
+    line.tex:SetAllPoints(line)
+  end
+
+  line:SetParent(container)
+  -- Guarded on the ANSWER rather than on the method existing: a stub that returns itself for
+  -- anything it does not implement answers a table here, and adding to it raises.
+  local level = container.GetFrameLevel and container:GetFrameLevel()
+  if type(level) == "number" then line:SetFrameLevel(level + 20) end
+  -- Every acquire, never once at build: a pooled line last served some other list's color.
+  line.tex:SetColorTexture(color[1], color[2], color[3], color[4])
+  line:ClearAllPoints()
+  line:Hide()
+  return line
+end
+
+--- Give a list's line back, if it holds one.
+local function releaseLine(list)
+  if list.line then
+    reclaim({ list.line }, linePool)
+    list.line = nil
+  end
+end
+
+-- ── the row box ───────────────────────────────────────────────────────────────────────────────
+--
+-- A FRAME CARRYING FIVE TEXTURES, not five textures on the host's own frame. Both consumers hand
+-- over frames their UI framework POOLS, and a texture is not a widget: nothing releases it and
+-- nothing hides it, so one created on a pooled frame rides that frame back into the pool and
+-- reappears the next time it is handed out for something else entirely. That failure is already
+-- written down in this collection -- see the landing-page logo in LibKa0s/OptionsWidgets.lua -- and
+-- a box is the same shape of mistake one widget over. A frame can be reparented off the host's
+-- frame in one step, which is exactly what Cancel does with the handles.
+--
+-- Four edges rather than `SetBackdrop`, because a backdrop needs `BackdropTemplate` at CreateFrame
+-- time and a template is a client-version dependency. Four rectangles are not.
+
+--- Size a box's four edges `ROW_BOX.EDGE_SIZE` physical pixels thick on the box (minor 6), again on
+--- each paint, since a pooled box may serve a row at another scale. In UI units under a shell older
+--- than Widgets minor 25.
+local function sizeRowBox(box)
+  local n, line = lib.ROW_BOX.EDGE_SIZE, lib.__pixelLine
+  for _, tex in ipairs(box.edges or {}) do
+    if type(line) == "function" then line(tex, box, tex.__horizontal, n)
+    elseif tex.__horizontal then tex:SetHeight(n) else tex:SetWidth(n) end
+  end
+end
+
+--- Build one box's five textures, once, when the frame is first made.
+local function buildRowBox(box)
+  box.fill = box.CreateTexture and box:CreateTexture(nil, "BACKGROUND")
+  if not (box.fill and box.fill.SetColorTexture) then
+    box.fill = nil
+    return
+  end
+  box.fill:SetAllPoints(box)
+
+  -- top, bottom, left, right -- each pinned to two corners and given its thickness on the
+  -- remaining axis, so the border follows the box however the host sizes the row.
+  local plan = {
+    { "TOPLEFT",    "TOPRIGHT",    true  },
+    { "BOTTOMLEFT", "BOTTOMRIGHT", true  },
+    { "TOPLEFT",    "BOTTOMLEFT",  false },
+    { "TOPRIGHT",   "BOTTOMRIGHT", false },
+  }
+  box.edges = {}
+  for i, e in ipairs(plan) do
+    local tex = box:CreateTexture(nil, "BORDER")
+    tex:SetPoint(e[1], box, e[1], 0, 0)
+    tex:SetPoint(e[2], box, e[2], 0, 0)
+    tex.__horizontal = e[3]
+    box.edges[i] = tex
+  end
+  sizeRowBox(box)
+end
+
+--- Paint one box for the row it is serving THIS render. Separate from building it because a pooled
+--- box may have last served a dimmed row and must not carry that over.
+--- `colors` (minor 2) is a skinned list's set, in `lib.ROW_BOX`'s shape; nil reads `lib.ROW_BOX`.
+local function paintRowBox(box, dimmed, colors)
+  if not box.fill then return end
+  local R = colors or lib.ROW_BOX
+  local fill = dimmed and R.FILL_DIM or R.FILL
+  local edge = dimmed and R.EDGE_DIM or R.EDGE
+  box.fill:SetColorTexture(fill[1], fill[2], fill[3], fill[4])
+  for _, tex in ipairs(box.edges or {}) do
+    tex:SetColorTexture(edge[1], edge[2], edge[3], edge[4])
+  end
+  sizeRowBox(box)
+end
+
+-- ── the drag, hoisted out of the controller ───────────────────────────────────────────────────
+--
+-- These take a ROW and reach the controller through `row.list`, rather than closing over one.
+--
+-- THAT IS NOT STYLE. The handle is cached on a frame its host POOLS and reused across renders, so
+-- a handler closing over the controller that built it would still be calling that controller after
+-- it had been Cancel()led -- which is a drag that works exactly once and then freezes. `handle.__row`
+-- fixes which row; this fixes which controller. Both halves are needed, and fixing only the first
+-- is a bug that still passes a test written against the first.
+
+local function showLine(row, to)
+  local list = row.list
+  local target = list.rows[to]
+  if not (list.line and target) then return end
+  local f = target.frame
+  list.line:ClearAllPoints()
+  -- ANCHORED TO THE TARGET ROW, never positioned by arithmetic. The index comes from the cursor,
+  -- but where that index sits on screen is a question only the frames can answer -- and anchoring
+  -- asks it without reading a single coordinate back.
+  if to <= row.index then
+    list.line:SetPoint("BOTTOMLEFT",  f, "TOPLEFT",  0, 0)
+    list.line:SetPoint("BOTTOMRIGHT", f, "TOPRIGHT", 0, 0)
+  else
+    list.line:SetPoint("TOPLEFT",  f, "BOTTOMLEFT",  0, 0)
+    list.line:SetPoint("TOPRIGHT", f, "BOTTOMRIGHT", 0, 0)
+  end
+  list.line:Show()
+end
+
+local function finishDrag(row)
+  if not row then return end
+  local list = row.list
+
+  if ghost and ghost.__row == row then ghost.__row = nil end
+  if ghost then ghost:Hide() end
+  releaseLine(list)
+  if row.frame.SetAlpha then row.frame:SetAlpha(1) end
+
+  if not row.startY then return end
+  row.startY  = nil
+  row.sawDown = nil
+  list.dragging = nil
+
+  local to = dropIndex(row.index, row.rows or 0, #list.rows, list.boundary)
+  list.say("drop %d -> %d (%d rows)", row.index, to, row.rows or 0)
+  -- A drag that lands where it started is not a reorder, and reporting one would have the host
+  -- rewrite its list and repaint for no change at all.
+  if to ~= row.index and list.onMove and not list.dead then
+    list.onMove(row.index, to)
+  end
+end
+
+local function trackDrag(row)
+  if not row or not row.startY then return end
+  local list = row.list
+
+  local _, y = GetCursorPosition()
+  local scale = UIParent:GetEffectiveScale()
+  if type(y) == "number" and type(scale) == "number" and scale ~= 0 then
+    -- +0.5 then floor is round-to-nearest: a row dragged 60% of the way to the next slot has
+    -- visibly left its own, and rounding down would drop it back where it started.
+    row.rows = math.floor(((row.startY - (y / scale)) / list.stride) + 0.5)
+  end
+
+  moveGhost()
+  showLine(row, dropIndex(row.index, row.rows or 0, #list.rows, list.boundary))
+
+  -- THE POLL MAY NOT ACT ALONE, and this is why it has to see the button held first. If
+  -- IsMouseButtonDown is unavailable, protected, or simply not true yet on the first frame, a poll
+  -- that ended the drag on `not held` would finish it with zero rows traveled -- no error, no
+  -- message, and indistinguishable from a press that was never received.
+  local held = mouseHeld()
+  if held then
+    row.sawDown = true
+  elseif held == false and row.sawDown then
+    finishDrag(row)
+  end
+end
+trackDragFromGhost = trackDrag
+
+--- Minor 2: one ghost for every list, so its fill follows the list dragging it: that list's skin
+--- (`pal`), or minor 1's fill once a skinned list has painted it. Untouched otherwise.
+local function skinGhost(g, pal)
+  if not (pal or g.__skinned) then return end
+  local bg = pal and pal.ghostBg or GHOST_BG
+  g.bg:SetColorTexture(bg[1], bg[2], bg[3], bg[4])
+  g.__skinned = pal ~= nil or nil
+  local skinFont = lib.__skinFont   -- minor 5; a shell's own `__skinFont` gives the template back
+  if type(skinFont) == "function" then
+    skinFont(g.text, pal and pal.owner, pal and pal.Skin or nil, GHOST_FONT)
+  end
+end
+
+--- Dress the carried copy as the row it came from and put it under the cursor.
+---
+--- Its own function because `beginDrag` was doing two jobs -- starting a drag, and drawing one --
+--- and the pair came to CCN 17 against a release gate of 15. Splitting on that seam rather than
+--- anywhere cheaper: the state machine and the picture it paints are genuinely separable, and this
+--- half is the one that grows when the ghost gains a field.
+local function raiseGhost(row, list)
+  local g = ensureGhost()
+
+  local w = row.frame.GetWidth and row.frame:GetWidth()
+  if type(w) == "number" and w > 0 then g:SetWidth(w) end
+  g:SetHeight(row.height or list.stride)
+
+  skinGhost(g, list.skin)
+
+  g.icon:SetTexture(row.ghostIcon or list.handleIcon or list.handleMark or HANDLE_FALLBACK)
+  local ic = row.ghostIconColor or (list.skin and list.skin.ghostIcon) or GHOST_ICON
+  g.icon:SetVertexColor(ic[1], ic[2], ic[3])
+
+  g.text:SetText(row.ghostText or "")
+  local tc = row.ghostTextColor or list.ghostText
+  g.text:SetTextColor(tc[1], tc[2], tc[3])
+
+  g:Show()
+  moveGhost()
+end
+
+local function beginDrag(row)
+  if not row then return end
+  local list = row.list
+  if row.startY or list.dead then return end
+
+  local _, y = GetCursorPosition()
+  local scale = UIParent:GetEffectiveScale()
+  if type(y) ~= "number" or type(scale) ~= "number" or scale == 0 then return end
+
+  row.startY  = y / scale
+  row.rows    = 0
+  row.sawDown = nil
+  list.dragging = row
+  -- A line left by a drag whose release never arrived goes back before this one takes its own.
+  releaseLine(list)
+  list.line = acquireLine(list.container, list.color)
+  -- The row you picked up fades IN THE LIST, because the copy under the cursor is the one you are
+  -- looking at now.
+  if row.frame.SetAlpha then row.frame:SetAlpha(0.35) end
+
+  raiseGhost(row, list)
+  ghost.__row = row   -- the poll, read at fire time: see ensureGhost
+  list.say("grab %d at y=%.1f", row.index, row.startY)
+end
+
+--- A skinned list's Ka0s handle (minor 4); nil for the rest, which draw their client rung.
+local function handleMark(opts, pal)
+  if pal then return lib.__ownedMark(opts.owner, "move") end
+  return nil
+end
+
+-- The list's colors, resolved once per render: an explicit option, else the owner's palette, else
+-- the constants. The line, the handle's two tints and the ghost's text are minor 2's; the tooltip's is
+-- minor 3's. Split out of ReorderList so the constructor stays under CCN 15 (the v1.81.0 release run
+-- measured it at 17).
+local function listColors(list, opts, pal)
+  list.color       = opts.lineColor or (pal and pal.line) or LINE_COLOR
+  list.handleRest  = opts.handleColor or (pal and pal.rest) or HANDLE_REST
+  list.handleMark  = handleMark(opts, pal)
+  list.handleHover = opts.handleHoverColor or (pal and pal.hover) or HANDLE_HOVER
+  list.ghostText   = (pal and pal.ghostText) or GHOST_TEXT
+  list.tipText     = (pal and pal.tip) or TIP_TEXT
+end
+
+--- Build a reorderable list controller.
+---
+--- One controller per RENDER, not one per list: it holds the rows of the pass that built it, and a
+--- repaint builds a new one. `Cancel` on the old one is what stops a drag outliving the list it
+--- was describing.
+---
+--- @param opts table
+---   stride     number            row top to next row top, in pixels. Required -- the drop target is
+---                                arithmetic on this, never a hit test, so nothing depends on the
+---                                rows having been laid out yet.
+---   onMove     function(from,to) called once when a drag lands somewhere new. Never called for a
+---                                drag that lands where it started.
+---   boundary   number|nil        how many rows are in the FIRST group. nil or 0 means one flat
+---                                list, which is the common case; MultiMeters' Columns page is the
+---                                other one, where shown columns may not be dragged among hidden.
+---   handleIcon string|nil        resolved texture path for the handle art; nil falls back.
+---   handleSize number|nil        the handle's hit width; its height is the row's. Defaults to
+---                                `lib.ROW_BOX.HANDLE_W`, the gutter every list in the collection
+---                                gives its handle -- row contents start beyond it.
+---   handleInset number|nil       px from the parent's left edge. Defaults to 0.
+---   handleColor table|nil        { r, g, b } for the handle at rest. Defaults to a neutral gray.
+---   handleHoverColor table|nil   { r, g, b } under the pointer. Defaults to the collection's gold.
+---   handleTooltip string|nil     one line shown on hover. No tooltip without it.
+---   iconSize   number|nil        the art drawn inside it, defaults to 16.
+---   rowBox     boolean|nil       false suppresses the bounded box behind every row. Defaults ON:
+---                                the box is half of what makes a list read as blocks you can pick
+---                                up (options-ui-§18), and a host that draws its own has to say so
+---                                -- and should instead delete its own, or the two fills stack.
+---   rowBoxInset number|nil       px the box is inset from the row frame's edges. Defaults to 0.
+---   lineColor  table|nil         { r, g, b, a } for the insertion line; defaults to gold.
+---   debug      function|nil      called as debug(fmt, ...) on grab and drop.
+---   owner      string|nil        minor 2. A registered skin owner (the addon folder name): the
+---                                defaults above come from that owner's skin (the header's THE SKIN
+---                                OWNER). An explicit color option still wins.
+---   panel      boolean|nil       minor 3. false: the list is on a window, so it keeps the skin
+---                                while the owner ignores its settings panel. Default: a settings
+---                                page, drawn as minor 1 did while that switch is on.
+--- @return table controller
+function lib.ReorderList(opts)
+  opts = opts or {}
+  local pal = skinPalette(opts.owner, opts.panel)
+
+  local list = {
+    stride     = opts.stride or 30,
+    boundary   = opts.boundary,
+    onMove     = opts.onMove,
+    handleIcon = opts.handleIcon,
+    skin       = pal,
+    rowBox     = opts.rowBox ~= false,
+    rows       = {},
+    handles    = {},
+    boxes      = {},
+    dead       = false,
+  }
+  listColors(list, opts, pal)
+
+  function list.say(fmt, ...)
+    if opts.debug then opts.debug(fmt, ...) end
+  end
+
+  -- A GHOST LEFT SHOWN BY A PREVIOUS CONTROLLER IS NOT THIS ONE'S TO INHERIT. Hosts are asked to
+  -- Cancel on repaint and both shipped ones do, but the ghost is a process-wide singleton and this
+  -- is the one moment where "nothing is being dragged" is known for certain.
+  if ghost then ghost:Hide() end
+
+  --- Stop any drag in flight, put the chrome away, and give every handle AND every row box back.
+  --- Idempotent.
+  ---
+  --- A HOST MUST CALL THIS BEFORE IT RENDERS ANYTHING, not merely before it rebuilds the list.
+  --- Releasing a handle is what takes it off the host frame it was parented to, and that frame goes
+  --- back into the host framework's pool the moment the host clears its page -- so a Cancel that
+  --- runs after the page has started rebuilding is a Cancel that runs after some unrelated widget
+  --- has already been handed the frame with a live handle still sitting on it.
+  function list:Cancel()
+    self.dead = true
+    if ghost then ghost:Hide() end
+    releaseLine(self)
+
+    local row = self.dragging
+    if row then
+      if ghost and ghost.__row == row then ghost.__row = nil end
+      if row.frame.SetAlpha then row.frame:SetAlpha(1) end
+      row.startY = nil
+    end
+    self.dragging = nil
+
+    -- Both ledgers, always, and in one place: a box left on a host's frame is the same bug a
+    -- handle left on one is, and a Cancel that reclaimed only half of them would be a fix that
+    -- looked complete.
+    local handles = reclaim(self.handles, handlePool)
+    local boxes   = reclaim(self.boxes, boxPool)
+    if handles > 0 or boxes > 0 then
+      self.say("released %d handles, %d boxes", handles, boxes)
+    end
+  end
+
+  --- Build one handle. Called only when the free list is empty.
+  local function newHandle()
+    local handle = CreateFrame("Button", nil, atticFrame())
+    handle:EnableMouse(true)
+    handle:RegisterForDrag("LeftButton")
+
+    handle.art = handle:CreateTexture(nil, "ARTWORK")
+    handle.art:SetPoint("CENTER", handle, "CENTER", 0, 0)
+
+    -- READ AT FIRE TIME, never captured. A pooled handle outlives the controller that last used
+    -- it, so a handler closing over either the row or the controller would drive a dead one --
+    -- which is a drag that works once and then freezes.
+    handle:SetScript("OnMouseDown", function(self) beginDrag(self.__row) end)
+    handle:SetScript("OnDragStart", function(self) beginDrag(self.__row) end)
+    handle:SetScript("OnMouseUp",   function(self) finishDrag(self.__row) end)
+    handle:SetScript("OnDragStop",  function(self) finishDrag(self.__row) end)
+
+    -- GOLD ON HOVER, so the handle says it is a control before you press it. The tint is the
+    -- host's to choose and the default is the collection's gold; a host that wants its list's
+    -- affordance to match its own palette says so, and one that says nothing matches everyone
+    -- else's.
+    handle:SetScript("OnEnter", function(self)
+      local h = self.__hoverColor
+      self.art:SetVertexColor(h[1], h[2], h[3])
+      local tip = self.__tooltip
+      if tip and GameTooltip then
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local c = self.__tipColor or TIP_TEXT
+        GameTooltip:AddLine(tip, c[1], c[2], c[3])
+        GameTooltip:Show()
+      end
+    end)
+    handle:SetScript("OnLeave", function(self)
+      local c = self.__restColor
+      self.art:SetVertexColor(c[1], c[2], c[3])
+      if GameTooltip then GameTooltip:Hide() end
+    end)
+
+    return handle
+  end
+
+  --- Put a bounded box behind one row, from the free list or newly built.
+  ---
+  --- Its own function rather than six lines inside AddRow, because the frame LEVEL is the whole of
+  --- it and the reason is not obvious: a child frame sits one level ABOVE its parent, so a box
+  --- parented to the row and left at its natural level is a box painted over the row's own label
+  --- and glyphs. One level below the row draws it behind everything the row puts on itself, which
+  --- is the only place a background belongs. Clamped at zero, because a negative level is not a
+  --- thing the client accepts.
+  local function attachBox(parent, dimmed)
+    local box = table.remove(boxPool)
+    if not box then
+      box = CreateFrame("Frame", nil, atticFrame())
+      buildRowBox(box)
+    end
+    list.boxes[#list.boxes + 1] = box
+
+    box:SetParent(parent)
+    local level = parent.GetFrameLevel and parent:GetFrameLevel()
+    if type(level) == "number" and box.SetFrameLevel then
+      box:SetFrameLevel(math.max(level - 1, 0))
+    end
+
+    local inset = opts.rowBoxInset or 0
+    box:ClearAllPoints()
+    box:SetPoint("TOPLEFT",     parent, "TOPLEFT",      inset, -inset)
+    box:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -inset,  inset)
+    paintRowBox(box, dimmed, pal and pal.box)
+    box:Show()
+    return box
+  end
+
+  --- Register one row, in display order, and get back the handle that drags it.
+  ---
+  --- `spec.draggable = false` registers the row WITHOUT a handle. The row still counts for indices
+  --- and still anchors the insertion line -- it is a place a drag can land, just not one a drag can
+  --- start from. MultiMeters' hidden columns are that case: they have an order among themselves
+  --- that nobody can act on, and offering a handle for it was offering a gesture with no meaning.
+  ---
+  --- `spec.dimmed = true` paints that row's box in the muted variant, for a row that is present but
+  --- inert. The BOX is drawn for every registered row, draggable or not, and before the handle: a
+  --- row you cannot pick up is still one of the blocks the list is made of, and a stack where only
+  --- some rows have an edge reads as a rendering fault rather than as a rule.
+  function list:AddRow(frame, spec)
+    spec = spec or {}
+
+    local row = {
+      list           = list,
+      frame          = frame,
+      index          = #self.rows + 1,
+      ghostText      = spec.ghostText,
+      ghostIcon      = spec.ghostIcon,
+      ghostIconColor = spec.ghostIconColor,
+      ghostTextColor = spec.ghostTextColor,
+      height         = spec.height,
+    }
+    self.rows[row.index] = row
+
+    local parent = spec.parent or frame
+    if self.rowBox then row.box = attachBox(parent, spec.dimmed) end
+
+    if spec.draggable == false then return nil end
+
+    local handle = table.remove(handlePool) or newHandle()
+    self.handles[#self.handles + 1] = handle
+
+    handle.__row        = row
+    handle.__restColor  = list.handleRest
+    handle.__hoverColor = list.handleHover
+    handle.__tooltip    = opts.handleTooltip
+    handle.__tipColor   = list.tipText
+
+    handle:SetParent(parent)
+    handle:SetSize(opts.handleSize or lib.ROW_BOX.HANDLE_W, spec.height or self.stride)
+    handle:ClearAllPoints()
+    handle:SetPoint("LEFT", parent, "LEFT", opts.handleInset or 0, 0)
+
+    local size = opts.iconSize or 16
+    handle.art:SetSize(size, size)
+    handle.art:SetTexture(opts.handleIcon or list.handleMark or HANDLE_FALLBACK)
+    handle.art:SetVertexColor(handle.__restColor[1], handle.__restColor[2], handle.__restColor[3])
+    handle:Show()
+
+    row.handle = handle
+    return handle
+  end
+
+  --- Name the frame the insertion line should live on -- normally the scroll's content frame, or
+  --- whatever the rows share as a parent. Call it once, after the rows.
+  ---
+  --- It NAMES the frame and builds nothing: the line itself is taken from the library's free list
+  --- when a drag starts and given back when it ends (minor 10), so nothing is left on a container
+  --- the host is about to hand back to its framework's pool.
+  function list:Finish(container)
+    self.container = container
+    self.say("painted %d rows, %d draggable, %d boxed, boundary=%s",
+      #self.rows, #self.handles, #self.boxes, tostring(self.boundary or 0))
+  end
+
+  return list
+end

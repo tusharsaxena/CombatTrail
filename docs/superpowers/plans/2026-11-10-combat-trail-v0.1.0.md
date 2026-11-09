@@ -18,7 +18,7 @@ Update the row and commit with each task. Each task row gets the commit SHA that
 
 | Task | Title | Status | Commit |
 |---|---|---|---|
-| 0.1 | Scaffold, libs, core, load test | todo | |
+| 0.1 | Scaffold, libs, core, load test | done | this commit, `feat: scaffold Combat Trail on Ace3 and LibKa0s v1.94.0` (2026-11-10: TOC for 120105 + 16001, Panel Master's Ace3/LSM/LDB/LibDBIcon, LibKa0s v1.94.0 + kit, icons pruned to 30, core ported from DpsRace minus ChartsSetup and ToastSetup (Insights and the toast are out of scope), Compat client checks, per-client default skin, defaults skeleton, logo via tools/make_logo.py, stub docs/ARCHITECTURE.md for the layout-cap census, CRLF working tree per line-endings-§2; 60 pass / 2 declared skips on retail and on forever, luacheck 0/0) |
 | 0.2 | Settings framework, General, Profiles, Slash, Launcher | todo | |
 | 1.1 | Lane defaults, ignore seeds, LaneCasts | todo | |
 | 1.2 | LaneLayout + LaneRender | todo | |

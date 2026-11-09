@@ -1,0 +1,17 @@
+package-as: CombatTrail
+
+# Libraries are vendored in libs/ and committed to git -- NOT fetched as externals.
+
+ignore:
+  - .luacheckrc
+  - .pkgmeta         # dev-only: this file configures the packager; it is not part of the package
+  - .gitignore
+  - .gitattributes   # dev-only: the repo's line-ending policy (line-endings)
+  - docs             # holds the spec, the plan and the mockup too -- all dev-only
+  - tests
+  - tools            # the logo generator (dev-only)
+  - CLAUDE.md        # contributor brief
+  - DEPENDENCIES.md  # contributor toolchain
+  - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped
+  - _dev
+  - "*.bak"
