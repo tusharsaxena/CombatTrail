@@ -127,9 +127,23 @@ plain out of combat and cached per spellID). DpsRace's ≥ 29 s rule is the defa
 
 ## 5. Fights: tracking, identity, storage, retention
 
-**A fight (Claude)** runs from the player entering combat (`PLAYER_REGEN_DISABLED`) to leaving it, bound
-to the meter session that starts with it (DpsRace `Meter.lua` and `Race.lua` show how a session is located
-and read once it settles). Every fight is **tracked** live for the HUD **(owner)**. A fight is **stored** only if
+**A fight is one Blizzard meter session (Claude).** The addon follows the meter's own segmentation, the same
+segments the built-in meter shows, rather than inventing its own. A new session appearing while the player
+enters combat (or inside combat, for example when `ENCOUNTER_START` opens one) starts a new tracked fight. The
+fight ends when the player has left combat and the session has stopped updating for the settle window (DpsRace's
+quiet-wait pattern in `Race.lua` and `Meter.lua`). Edge cases:
+- **Feign Death, Vanish, Shadowmeld:** if the player re-enters combat within a **grace period (default 4 s)** and the
+  meter keeps the same session, it is still the same fight. If the meter opened a new session but the same
+  `encounterID` is still active, the two sessions are **merged after combat** (plain sums) into one fight.
+- **Chained trash** (one long combat, many targets): one session gives one fight. The primary target is the enemy that took
+  the most damage, and the identity line says "+N others".
+- **An encounter starting mid-combat:** if the meter splits there, the pre-encounter part is its own fight (usually
+  under 30 s, so not stored) and the boss part is the encounter fight. If the meter doesn't split, the whole session is
+  one fight carrying the encounter identity.
+- **A meter reset mid-fight:** the fight is marked *lost* (as in DpsRace) and isn't stored.
+- **The live HUD** follows the same session: the clock starts on the session's first damage update.
+
+Every fight is **tracked** live for the HUD **(owner)**. A fight is **stored** only if
 it passes the recording filters:
 
 | Filter | Default |
@@ -150,8 +164,11 @@ it passes the recording filters:
 - **Who:** character, realm (Forever's two-word names and long realm labels, client-quirks §5), class, spec,
   item level, pet name and family.
 
-**Board key** (used for grouping, bests and pace): `encounterID + difficultyID` for boss fights, otherwise
-`creatureID + difficultyID` for the primary target, plus character and spec for bests. A fight with no
+**Board key (Claude)** (used for grouping, bests and pace): `encounterID + difficultyID` for boss fights, otherwise
+`creatureID + difficultyID` for the primary target, plus a **tier qualifier** where difficulty alone
+doesn't separate content: the Mythic+ keystone level, the delve tier, and the PvP bracket. The open world uses no
+group-size qualifier. Bests also add character and spec. The client key is part of the character, so boards
+never mix Retail and Forever, and their difficulty IDs never need to be comparable. A fight with no
 readable identity is stored under "Unknown target" and never counts as a best.
 
 **Best (Claude, following DpsRace):** the top DPS for a character × spec × board key. DPS is the merged total (player + pet)
@@ -167,6 +184,13 @@ id, time, duration, who, identity, content, board key, damage (merged, player, p
 spells[] {spellID, total, isPet} with percentages computed at read, casts[] {t, spellID, unit, interrupted},
 gear, stats, talent loadout string, usage[], note, client key, build and addon version. **No secret ever enters
 the record.** Fields that came back secret are left absent.
+
+**Record size (Claude).** Casts are stored packed: one string per fight, delta-encoded `t:spellID[:flags]`
+tokens, with the spell list kept separately. Gear is stored as trimmed item strings, not full links. The
+talent string is stored once per distinct loadout and referenced by hash. The target is **under 6 KB for a
+5-minute raid fight**, so 500 fights stays around 3 MB or less. The cap is one global cap (bests exempt); the
+Retention page shows the current count and an estimated size. A per-content cap can come later if the owner
+finds open-world fights crowding out raid history.
 
 ## 6. Live DPS HUD
 
@@ -266,6 +290,11 @@ The per-client feature table goes in `docs/ARCHITECTURE.md` (clients-§4).
   and an agent never marks them passed.
 - An in-game check list for the unverified items: Forever in-combat secrecy, pet source in combat, cast
   events, pet-fill anchoring on the pace bar, and the unit-frame anchors.
+- **The run does not stop for in-game input (Claude).** It builds to the "assume Retail" design, with the §12
+  fallbacks behind small seams (one place each for the pet-source split and the pace-bar pet fill). `/kct probe`
+  ships in M1. The owner runs it and the smoke tests when they can, and the merge to `main` already waits on the
+  owner's go-ahead. Any "no" from the probe becomes a fix commit on the branch before the merge. **No release tag is cut
+  in this run.** v0.1.0 is tagged after the owner's smoke tests pass.
 - Definition of Done from the NEW_ADDON context pack at the pinned standard.
 
 ## 11. Left to the builder
