@@ -14,6 +14,16 @@ NS.MSG = {
     -- "player" | "pet", item { texture, spellID (nil when it arrived secret), t = GetTime(),
     -- interrupted = bool }. The texture may itself be secret: it is only ever handed to SetTexture.
     LANE_PUSH = "Ka0s_CombatTrail_LanePush",
+    -- Sender: modules/Fight.lua (the fight state machine). Payload: (fight), the in-memory fight
+    -- { id, sessionID, sessions, startT, firstHitT, encounter, snapshot }; the same table rides every
+    -- message of that fight, and fields fill in as they become known (sessionID, firstHitT).
+    FIGHT_STARTED = "Ka0s_CombatTrail_FightStarted",
+    -- Sender: modules/Fight.lua, every Constants.FIGHT.TICK seconds while in combat. Payload: (fight).
+    FIGHT_TICK = "Ka0s_CombatTrail_FightTick",
+    -- Sender: modules/Fight.lua, once per fight after the settle (or at once, on a meter reset).
+    -- Payload: (fight, final, reason): reason "final" with `final` Meter.ReadFinal's plain shape (its
+    -- sessions merged), or "lost" with final nil.
+    FIGHT_ENDED = "Ka0s_CombatTrail_FightEnded",
 }
 
 local Bus = LibStub and LibStub("LibKa0s-Bus-1.0", true)

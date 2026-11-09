@@ -36,7 +36,7 @@ local _, NS = ...
 -- scripted meter (tests/mock_meter.lua) and a client that loses the namespace both reach the guards.
 -- modules/Probe.lua reaches the client through Meter.Call and Meter.Api too.
 --
--- Registers no event: the fight watchers (plan Task 2.2) call it.
+-- Registers no event: modules/Fight.lua calls it, on modules/Watchers.lua's events.
 
 local Meter = {}
 NS.Meter = Meter
@@ -137,12 +137,15 @@ end
 
 --- Every session the client still holds, as a set of plain IDs. An ID is plain even in combat; one
 --- that is not is skipped rather than keyed on. Each read stamps the IDs it finds first (SessionAfter)
---- and forgets the ones the client dropped.
---- @return table<number, boolean>
+--- and forgets the ones the client dropped. A read that failed (no API, or the client raised) answers
+--- an empty set and ok = false, and touches no stamp: modules/Fight.lua takes only a SUCCESSFUL read
+--- without its session as a meter reset, never a transient error.
+--- @return table<number, boolean> ids
+--- @return boolean ok
 function Meter.SessionIDs()
     local out, order = {}, {}
     local ok, list = call("GetAvailableCombatSessions")
-    if not ok then return out end
+    if not ok then return out, false end
     Secrets.SafeIterate(list, function(_, e)
         if not Secrets.CanAccessTable(e) then return end
         local id = Secrets.PlainNumber(e.sessionID)
@@ -156,7 +159,7 @@ function Meter.SessionIDs()
     for id in pairs(seen) do
         if not out[id] then seen[id] = nil end
     end
-    return out
+    return out, true
 end
 
 --- Whether the client still holds session `id`.
@@ -178,19 +181,29 @@ function Meter.Suspend()
     seen, primed, seq = {}, false, 0
 end
 
+local function bySeq(a, b) return seen[a].seq < seen[b].seq end
+
+--- Every session that appeared at or after time `t`, oldest first. Reads the list now, unless the
+--- caller hands the set it just read (Meter.SessionIDs), so one look answers both questions.
+--- @param t number  a GetTime() value
+--- @param ids table<number, boolean>|nil  a set from Meter.SessionIDs
+--- @return number[] sessionIDs
+function Meter.SessionsAfter(t, ids)
+    ids = ids or Meter.SessionIDs()
+    local out = {}
+    for id in pairs(ids) do
+        local s = seen[id]
+        if s and s.t >= t then out[#out + 1] = id end
+    end
+    table.sort(out, bySeq)
+    return out
+end
+
 --- The first session that appeared at or after time `t`, or nil. Reads the list now.
 --- @param t number  a GetTime() value
 --- @return number|nil sessionID
 function Meter.SessionAfter(t)
-    local ids = Meter.SessionIDs()
-    local best, bestSeq
-    for id in pairs(ids) do
-        local s = seen[id]
-        if s and s.t >= t and (bestSeq == nil or s.seq < bestSeq) then
-            best, bestSeq = id, s.seq
-        end
-    end
-    return best
+    return Meter.SessionsAfter(t)[1]
 end
 
 -- ---------------------------------------------------------------------------

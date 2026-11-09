@@ -118,6 +118,13 @@ modules\Meter.lua
 # `/kct probe`: the in-game checks of the meter, the casts and the pet. Registers nothing until armed;
 # reaches NS.Meter, NS.DebugLog, NS.Compat and NS.db at CALL time only.
 modules\Probe.lua
+# The fight state machine: idle -> combat -> settling, bound to the meter's sessions. LOAD-BEARING:
+# captures NS.Secrets and NS.Constants.FIGHT at FILE SCOPE; reaches NS.Meter, NS.Watchers and NS.addon
+# (its AceTimers) at CALL time only.
+modules\Fight.lua
+# The fight's event wiring, one set per fight state. Captures NS.Perf at FILE SCOPE; reaches NS.Fight
+# at CALL time only.
+modules\Watchers.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

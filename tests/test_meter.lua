@@ -109,7 +109,7 @@ test("meter: SessionIDs and HasSession track the client's list by plain ID, in c
     meter.RemoveSession(17)
     assertFalse(NS.Meter.HasSession(17))
     meter.Remove()
-    assertEqual(next(NS.Meter.SessionIDs()), nil, "no API is an empty set")
+    assertEqual(next((NS.Meter.SessionIDs())), nil, "no API is an empty set")
 end)
 
 test("meter: SessionAfter answers the first session that appeared at or after t", function()
@@ -129,6 +129,39 @@ test("meter: SessionAfter answers the first session that appeared at or after t"
     assertEqual(NS.Meter.SessionAfter(110), 6, "still the first one after combat entry")
     assertEqual(NS.Meter.SessionAfter(125), 8)
     assertNil(NS.Meter.SessionAfter(131))
+end)
+
+test("meter: SessionIDs says whether the read succeeded, so a raise is not a reset", function()
+    local NS, meter = fresh()
+    meter.SetSession(17, FIGHT)
+    local ids, ok = NS.Meter.SessionIDs()
+    assertTrue(ok)
+    assertTrue(ids[17])
+    meter.SetRaise("GetAvailableCombatSessions", "boom")
+    ids, ok = NS.Meter.SessionIDs()
+    assertFalse(ok, "a raising read is no answer")
+    assertEqual(next(ids), nil)
+    meter.SetRaise("GetAvailableCombatSessions", nil)
+    meter.Remove()
+    local _, okNoApi = NS.Meter.SessionIDs()
+    assertFalse(okNoApi, "no API is no answer either")
+end)
+
+test("meter: SessionsAfter answers every session since t, oldest first, from a list already read", function()
+    local NS, meter, inst = fresh()
+    inst.mocks.__now = 10
+    NS.Meter.Prime()
+    inst.mocks.__now = 11
+    meter.SetSession(6, FIGHT)
+    NS.Meter.SessionIDs()
+    inst.mocks.__now = 12
+    meter.SetSession(7, FIGHT)
+    local list = NS.Meter.SessionsAfter(10)
+    assertEqual(table.concat(list, ","), "6,7")
+    assertEqual(table.concat(NS.Meter.SessionsAfter(11.5), ","), "7")
+    local ids = NS.Meter.SessionIDs()
+    ids[6] = nil
+    assertEqual(table.concat(NS.Meter.SessionsAfter(10, ids), ","), "7", "the caller's set is the list")
 end)
 
 test("meter: SessionAfter reads IDs mid-combat and forgets a session the client dropped", function()

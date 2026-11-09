@@ -58,11 +58,16 @@ local function leaveCombat(inst)
 end
 
 -- The delays of the timers still live now (the kit's live set: armed AceTimer handles, canceled
--- ones left out), in order.
+-- ones left out), in order. The fight state machine's tick and settle (modules/Fight.lua) are not the
+-- probe's and are left out, both each AceTimer handle and the client queue entry it rides.
 local function delays(inst)
-    local out = {}
+    local out, fights = {}, {}
+    for _, h in pairs(inst.NS.Fight.Timers()) do
+        fights[h] = true
+        fights[h.callback or h] = true
+    end
     for _, t in ipairs(inst.mocks.__timers()) do
-        if t.delay then out[#out + 1] = t.delay end
+        if t.delay and not fights[t] and not fights[t.fn] then out[#out + 1] = t.delay end
     end
     return out
 end

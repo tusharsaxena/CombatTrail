@@ -48,6 +48,12 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 -- The Results detail pane sits at body + LEVEL.DETAIL, the damage chart's overlay at its plot +
 -- LEVEL.CHART_OVERLAY, and the Results window's dim cover under an open modal at W + LEVEL.COVER
 -- (the standard's popover band over a window's own content).
+-- THE FIGHT'S TIMING (spec §5, modules/Fight.lua). GRACE: a re-entry into combat this many seconds
+-- after the combat end (Feign Death, Vanish, Shadowmeld) carries the same fight on. SETTLE: the quiet,
+-- in seconds without a damage update for the fight's sessions, before its after-combat read. TICK:
+-- FIGHT_TICK's period in combat (4 Hz), which the HUD redraws on.
+C.FIGHT = { GRACE = 4, SETTLE = 2, TICK = 0.25 }
+
 C.LAYERS = {
     STRATA = { LANE = "LOW", CHROME = "MEDIUM", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG" },
     LEVEL  = { LANE = 1, DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8, LANE_EDIT = 10 },

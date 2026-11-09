@@ -17,6 +17,8 @@ read_globals = {
     "_G", "LibStub", "CreateFrame", "GetTime", "UIParent", "STANDARD_TEXT_FONT",
     "DEFAULT_CHAT_FRAME", "UISpecialFrames",
     "C_Timer", "C_AddOns", "GetLocale",
+    -- the epoch clock (the client's `time`, not os.time): a fight's ID (modules/Fight.lua)
+    "time",
     -- combat state: InCombatLockdown() gates secure writes; UnitAffectingCombat() drives display
     "InCombatLockdown", "UnitAffectingCombat",
     -- units: the pet's presence and name (modules/LaneCasts.lua), and the GUIDs `/kct probe` asks the meter by
