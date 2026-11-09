@@ -1,0 +1,676 @@
+<title>Ka0s Combat Trail Mockups</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a long scroll of "scenes", one per addon window, each a WoW-client-like stage with the
+   window on the left and short notes on the right. Single dark theme on purpose: it imitates the
+   game client, like the DPS Race mockup. Ka0s window edge: bg .06/.06/.08/.92, black outer line,
+   .24/.24/.27 inner line, gold title. */
+:root{
+  color-scheme: dark;
+  --bg:#0a0b0f;
+  --panel:rgba(15,15,20,.94);
+  --edge-in:rgba(61,61,69,.85);
+  --gold:#ffd100;
+  --text:#ebe8e1;
+  --muted:#8f8c96;
+  --dim:#5d5b64;
+  --red:#ff4a4a;
+  --ok:#4ad06a;
+  --blue:#4aa3ff;
+  --row:#16171d;
+  --row-alt:#121318;
+  --blizz-red:#7a0c0c;
+  --font-display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --font-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --hunter:#aad372; --mage:#3fc7eb; --warlock:#8788ee; --pet:#66ff66;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.5 var(--font-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 80px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:56px}
+h1,h2,h3{font-family:var(--font-display);font-weight:700;margin:0;letter-spacing:.01em;text-wrap:balance}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+.mono{font-family:var(--font-mono);font-size:.86em}
+
+/* header + nav */
+header.top{padding-top:44px;display:flex;flex-direction:column;gap:14px}
+.eyebrow{display:flex;gap:8px;flex-wrap:wrap;font:600 12px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.eyebrow .pill{border:1px solid var(--edge-in);padding:4px 8px;color:var(--gold)}
+header.top h1{font-size:clamp(36px,6vw,60px);line-height:1;color:var(--gold)}
+header.top h1 span{color:var(--text);font-weight:500}
+header.top p{max-width:74ch;margin:0;color:#c9c6cf}
+nav.jump{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:rgba(10,11,15,.94);border-bottom:1px solid #1d1f27;padding:10px 0;display:flex;gap:6px;flex-wrap:wrap;margin-top:-28px}
+nav.jump a{font:600 12px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid #23242c;padding:6px 9px}
+nav.jump a:hover{color:var(--gold);border-color:#4a4320}
+
+section.stage{display:flex;flex-direction:column;gap:16px;scroll-margin-top:64px}
+.stage-head h2{font-size:30px;line-height:1.1}
+.stage-head h2 small{display:block;font:600 12px/1.6 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.stage-head p{margin:6px 0 0;color:#bdb9c4;max-width:80ch}
+.scene{background:radial-gradient(1200px 520px at 20% 0%,#1b2433 0%,#0e1219 55%,#0a0b0f 100%);border:1px solid #1d1f27;padding:28px 20px;display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;justify-content:center}
+.hscroll{overflow-x:auto;max-width:100%;padding-bottom:6px}
+.notes{flex:1 1 300px;min-width:0;max-width:420px;display:flex;flex-direction:column;gap:10px}
+.notes h3{color:var(--gold);font-size:20px}
+.notes ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;color:#d4d1da}
+.callout{border-left:2px solid var(--gold);padding:4px 0 4px 12px;color:#bdb9c4;font-size:14px}
+.sample{font:600 11px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:#1a1400;background:var(--gold);padding:5px 8px;align-self:flex-start}
+
+/* Ka0s window */
+.win{background:var(--panel);border:1px solid #000;box-shadow:inset 0 0 0 1px var(--edge-in),0 10px 40px rgba(0,0,0,.55);display:flex;flex-direction:column;position:relative}
+.win-title{display:flex;align-items:center;gap:6px;padding:7px 8px 6px 10px;border-bottom:1px solid var(--edge-in)}
+.win-title .t{font:700 15px/1 var(--font-display);color:var(--gold);letter-spacing:.02em;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb{width:18px;height:18px;display:inline-grid;place-items:center;color:#8d8b94;border:0;background:none;padding:0}
+.tb:hover{color:#fff}
+.tb svg{width:13px;height:13px}
+.win-foot{border-top:1px solid var(--edge-in);padding:6px 10px;font:500 12px/1.3 var(--font-body);color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.btn{background:#1b1c23;border:1px solid #33343d;padding:7px 12px;font:700 12px/1 var(--font-display);letter-spacing:.06em;text-transform:uppercase;color:#e9e6ef}
+.btn:hover{border-color:#5a5965}
+.btn.primary{background:#2a2306;border-color:var(--gold);color:var(--gold)}
+.btn.danger{border-color:rgba(255,74,74,.6);color:#ff8a8a}
+.btn.sm{padding:5px 8px;font-size:11px}
+.btn.on{border-color:var(--gold);color:var(--gold)}
+.seg{display:inline-flex;border:1px solid #33343d}
+.seg button{background:#15161c;border:0;border-right:1px solid #33343d;padding:6px 10px;font:700 11px/1 var(--font-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:#2a2306;color:var(--gold)}
+
+/* spell icon tile */
+.ic{width:22px;height:22px;flex:none;display:inline-grid;place-items:center;font:700 9px/1 var(--font-display);color:#fff;text-shadow:0 1px 1px #000;border:1px solid rgba(0,0,0,.8);box-shadow:inset 0 0 0 1px rgba(255,255,255,.15);position:relative}
+.paw{width:12px;height:12px;color:var(--pet);flex:none}
+
+/* game viewport */
+.viewport{position:relative;width:960px;height:540px;background:
+  radial-gradient(500px 260px at 70% 30%,rgba(120,160,90,.18),transparent 70%),
+  radial-gradient(600px 300px at 20% 80%,rgba(60,90,140,.22),transparent 70%),
+  linear-gradient(180deg,#232c25 0%,#1a2120 45%,#141716 100%);border:1px solid #000;overflow:hidden}
+.viewport .boss{position:absolute;left:380px;top:70px;width:200px;text-align:center;font:700 13px/1.2 var(--font-display);color:#ff5c5c;text-shadow:0 1px 2px #000}
+.viewport .boss .hp{margin-top:4px;height:10px;background:#000;border:1px solid #444}
+.viewport .boss .hp i{display:block;height:100%;width:58%;background:linear-gradient(#d33,#811)}
+.uf{position:absolute;display:flex;gap:6px;align-items:center;background:rgba(0,0,0,.55);border:1px solid #333;padding:4px 6px}
+.uf .por{width:38px;height:38px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#b78a5a,#4d3420);border:2px solid #c9a24a}
+.uf .bars{display:flex;flex-direction:column;gap:2px;width:120px}
+.uf .bars i{display:block;height:9px}
+.uf .nm{font:600 11px/1 var(--font-display);color:#fff}
+
+/* lanes */
+.lane{position:relative;background:rgba(0,0,0,.38);overflow:hidden}
+.lane .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.14)}
+.lane .now{position:absolute;top:0;bottom:0;width:2px;background:rgba(255,255,255,.6)}
+.lane .lic{position:absolute;top:50%;margin-top:-14px;display:grid;place-items:center;font:700 10px/1 var(--font-display);color:#fff;text-shadow:0 1px 1px #000;box-shadow:0 0 0 1px var(--bc,#ffd100) inset}
+.lane .lic.x::after{content:"";position:absolute;inset:0;background:
+  linear-gradient(45deg,transparent 44%,#ff3030 44%,#ff3030 56%,transparent 56%),
+  linear-gradient(-45deg,transparent 44%,#ff3030 44%,#ff3030 56%,transparent 56%)}
+.lane .lic.cd{box-shadow:0 0 0 1px #ffd100 inset,0 0 8px 2px rgba(255,209,0,.55)}
+.lane-label{position:absolute;font:600 12px/1 var(--font-display);text-shadow:0 1px 1px #000;white-space:nowrap}
+.editbox{position:absolute;background:rgba(64,166,255,.28);border:1px solid rgba(64,166,255,.9);display:grid;place-items:center;font:600 12px/1.2 var(--font-display);color:#fff;text-align:center}
+
+/* HUD */
+.hud{width:300px}
+.hud .clock{font:700 44px/1 var(--font-display);text-align:center;padding:14px 0 4px;font-variant-numeric:tabular-nums}
+.hud .tgt{text-align:center;font:600 12px/1.2 var(--font-display);color:var(--muted);letter-spacing:.04em;padding-bottom:10px}
+.hud .tgt b{color:#ff8a5c;font-weight:700}
+.statrow{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 10px}
+.stat{border:1px solid #2a2b33;background:#101116;padding:6px 8px}
+.stat .k{font:600 10px/1 var(--font-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font:700 20px/1.15 var(--font-display);font-variant-numeric:tabular-nums}
+.pace{margin:10px 10px 0;height:8px;background:#1b1c22;position:relative}
+.pace i{position:absolute;top:0;bottom:0}
+.pace .mid{position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;background:#fff}
+.sub{font:700 10px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);padding:12px 10px 6px;display:flex;justify-content:space-between}
+.chart{padding:0 10px}
+.chart svg{display:block;width:100%;height:auto}
+.spells{display:flex;flex-direction:column;gap:2px;padding:0 10px 10px}
+.srow{position:relative;display:flex;align-items:center;gap:6px;height:22px;background:#121318;font:600 12px/1 var(--font-body)}
+.srow .fill{position:absolute;left:0;top:0;bottom:0;background:rgba(110,110,180,.38)}
+.srow.pet .fill{background:rgba(80,170,90,.32)}
+.srow > *:not(.fill){position:relative}
+.srow .n{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .a{font-variant-numeric:tabular-nums;padding-right:6px}
+.srow .p{width:44px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;padding-right:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;font:700 10px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;border:1px solid currentColor;padding:3px 5px;white-space:nowrap}
+.chip.raid{color:#ff8a3d}.chip.mplus{color:#c77dff}.chip.delve{color:#5fd3c4}.chip.bg{color:#ff5a5a}.chip.world{color:#9fc26a}.chip.dummy{color:#8fa3ff}
+.chip.best{color:var(--gold)}.chip.saved{color:var(--ok)}.chip.skip{color:var(--muted)}
+
+/* Blizzard settings */
+.settings{width:1000px;display:flex;background:#0d0d0f;border:1px solid #000;box-shadow:inset 0 0 0 1px #3a2f12,0 10px 40px rgba(0,0,0,.6)}
+.settings .cats{width:210px;flex:none;border-right:1px solid #2b2410;padding:12px 0;background:linear-gradient(#141210,#0c0b0a)}
+.settings .cats .grp{font:700 13px/1 var(--font-display);color:var(--gold);padding:6px 14px}
+.settings .cats button{display:block;width:100%;text-align:left;background:none;border:0;padding:6px 14px 6px 28px;font:600 13px/1.2 var(--font-display);color:#d9d4c4}
+.settings .cats button[aria-current="true"]{background:linear-gradient(90deg,rgba(255,209,0,.18),transparent);color:#fff}
+.settings .cats .other{color:#7d7867;padding-left:14px}
+.pm{flex:1;min-width:0;padding:16px 18px;background:
+  radial-gradient(700px 300px at 50% -10%,rgba(80,60,30,.25),transparent 70%),#12100e;display:flex;flex-direction:column;gap:12px}
+.pm-head{display:flex;align-items:center;gap:12px;border-bottom:1px solid #4a3c14;padding-bottom:10px}
+.pm-head h3{font-size:24px;color:var(--gold);flex:1;display:flex;align-items:center;gap:10px}
+.pm-head h3 .arr{width:0;height:0;border-left:12px solid var(--gold);border-top:9px solid transparent;border-bottom:9px solid transparent}
+.rbtn{background:linear-gradient(#8e1414,#5a0808);border:1px solid #2a0000;box-shadow:inset 0 0 0 1px rgba(255,120,120,.25);color:var(--gold);font:600 13px/1 var(--font-display);padding:7px 18px;border-radius:3px}
+.rbtn.wide{width:100%}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field > label,.field > .lbl{font:600 13px/1 var(--font-display);color:var(--gold)}
+.dd{appearance:none;background:#060606 linear-gradient(90deg,#0b0b0b,#1a1a1a);border:1px solid #555;border-radius:4px;box-shadow:inset 0 0 0 1px #000;padding:6px 30px 6px 10px;color:#fff;font:600 13px/1.2 var(--font-display);
+  background-image:linear-gradient(45deg,transparent 50%,#1a1400 50%),linear-gradient(-45deg,transparent 50%,#1a1400 50%),linear-gradient(var(--gold),#c89b00);
+  background-size:5px 5px,5px 5px,18px 18px;background-position:calc(100% - 13px) 50%,calc(100% - 8px) 50%,calc(100% - 4px) 50%;background-repeat:no-repeat;background-color:#0a0a0a}
+.tx{background:#050505;border:1px solid #555;border-radius:6px;padding:6px 10px;color:#fff;font:600 14px/1.2 var(--font-display);width:100%}
+.tabs{display:flex;flex-wrap:wrap;gap:4px 3px}
+.tabs button{background:linear-gradient(#2a2620,#171512);border:1px solid #4a4030;border-bottom:0;border-radius:8px 8px 0 0;padding:7px 16px;font:600 13px/1 var(--font-display);color:var(--gold)}
+.tabs button[aria-selected="true"]{background:linear-gradient(#3b352b,#22201b);color:#fff}
+.tabbody{border:1px solid #4a3e22;border-radius:0 6px 6px 6px;background:rgba(0,0,0,.35);padding:14px;min-height:330px;display:grid;grid-template-columns:1fr 1fr;gap:14px 22px;align-content:start}
+.tabbody .full{grid-column:1/-1}
+.ck{display:flex;align-items:center;gap:8px;font:600 14px/1.2 var(--font-display);color:#fff}
+.ck i{width:18px;height:18px;border:1px solid #777;background:#050505;display:grid;place-items:center;flex:none}
+.ck i.on::after{content:"";width:9px;height:5px;border-left:2px solid var(--gold);border-bottom:2px solid var(--gold);transform:rotate(-45deg) translate(1px,-1px)}
+.sl{display:flex;align-items:center;gap:8px}
+.sl .track{flex:1;height:6px;background:#050505;border:1px solid #555;border-radius:3px;position:relative}
+.sl .track i{position:absolute;top:-6px;width:10px;height:16px;background:linear-gradient(#e8c34a,#9a7612);border:1px solid #000;border-radius:2px}
+.sl .val{width:54px;background:#050505;border:1px solid #555;text-align:center;font:600 12px/1.6 var(--font-display);color:#fff}
+.sw{display:inline-block;width:34px;height:18px;border:1px solid #888;vertical-align:middle}
+.colorrow{display:flex;align-items:center;gap:10px;font:600 13px/1 var(--font-display);color:#fff}
+.hint{font:500 12px/1.35 var(--font-body);color:#a39e8e}
+.hdr{grid-column:1/-1;font:700 14px/1 var(--font-display);color:#fff;border-bottom:1px solid #3a3220;padding-bottom:6px;margin-top:4px}
+.listbox{border:1px solid #444;background:#050505;max-height:150px;overflow:auto}
+.listbox div{display:flex;align-items:center;gap:8px;padding:4px 8px;font:600 13px/1.2 var(--font-display);border-bottom:1px solid #151515}
+.listbox div .x{margin-left:auto;color:#ff6b6b}
+.preview{grid-column:1/-1;border:1px dashed #4a4030;padding:14px;display:flex;justify-content:center;background:rgba(0,0,0,.4)}
+
+/* results */
+.results{width:1180px}
+.rfilters{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;border-bottom:1px solid var(--edge-in);align-items:center}
+.pill-dd{background:#15161c;border:1px solid #33343d;padding:5px 9px;font:600 12px/1 var(--font-display);color:#ddd}
+.pill-dd::after{content:" ▾";color:var(--muted)}
+.rbody{display:grid;grid-template-columns:minmax(0,1fr) 400px;min-height:560px}
+table.runs{width:100%;border-collapse:collapse;font:500 13px/1.2 var(--font-body)}
+table.runs th{font:700 11px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 6px;border-bottom:1px solid var(--edge-in);white-space:nowrap}
+table.runs th.r,table.runs td.r{text-align:right}
+table.runs td{padding:7px 6px;border-bottom:1px solid #1c1d24;white-space:nowrap;font-variant-numeric:tabular-nums}
+table.runs tr.g td{background:#0f1015;color:var(--gold);font:700 11px/1 var(--font-display);letter-spacing:.1em;text-transform:uppercase;padding:6px}
+table.runs tbody tr.run{cursor:pointer}
+table.runs tbody tr.run:hover td{background:#1a1b22}
+table.runs tbody tr.sel td{background:#2a2410 !important}
+.delta-up{color:var(--ok)}.delta-dn{color:#ff7a7a}
+.detail{border-left:1px solid var(--edge-in);padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.detail .who{font:700 20px/1 var(--font-display);color:var(--hunter)}
+.detail .meta{font:500 12px/1.4 var(--font-body);color:var(--muted)}
+.statrow3{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.secthead{display:flex;align-items:center;justify-content:space-between;font:700 11px/1 var(--font-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.gearrow{display:flex;flex-wrap:wrap;gap:3px}
+.gearrow .ic{width:24px;height:24px}
+
+/* timeline */
+.tl{width:1180px}
+.tl-grid{display:grid;grid-template-columns:200px minmax(0,1fr) 70px}
+.tl-grid > div{border-bottom:1px solid #1c1d24}
+.tl-name{display:flex;align-items:center;gap:6px;padding:4px 8px;font:600 12px/1.15 var(--font-body)}
+.tl-name small{display:block;color:var(--muted);font-size:10px}
+.tl-lanes{position:relative;height:30px}
+.tl-lanes .ln{position:absolute;left:0;right:0;height:13px}
+.tl-lanes .ln.a{top:2px;background:rgba(255,209,0,.06)}
+.tl-lanes .ln.b{bottom:2px;background:rgba(74,163,255,.07)}
+.tl-lanes i{position:absolute;top:1px;bottom:1px;width:2px}
+.tl-lanes .a i{background:var(--gold)}
+.tl-lanes .b i{background:var(--blue)}
+.tl-cnt{display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding-right:8px;font:600 11px/1.3 var(--font-mono)}
+.strip{position:relative;height:52px}
+.strip .ic{position:absolute;width:18px;height:18px;font-size:8px}
+.axis{position:relative;height:18px;font:500 10px/1 var(--font-mono);color:var(--muted)}
+.axis span{position:absolute;top:4px;transform:translateX(-50%)}
+
+/* compare */
+.cmp{width:820px}
+.cmprow{display:grid;grid-template-columns:200px 1fr 1fr 80px;gap:8px;align-items:center;padding:4px 10px;border-bottom:1px solid #1c1d24;font:600 12px/1.2 var(--font-body)}
+.cmprow .bars{display:flex;flex-direction:column;gap:2px}
+.cmprow .bars i{display:block;height:6px}
+
+/* gear view */
+.gear{width:720px}
+.gv{display:grid;grid-template-columns:150px 1fr 150px;gap:14px;padding:14px}
+.slot{display:flex;align-items:center;gap:6px;padding:3px;font:600 11px/1.2 var(--font-body)}
+.slot.right{flex-direction:row-reverse;text-align:right}
+.slot .ic{width:34px;height:34px;font-size:10px}
+.slot.chg{background:rgba(255,209,0,.08);outline:1px solid rgba(255,209,0,.3)}
+.stats{display:flex;flex-direction:column;gap:3px;font:500 13px/1.3 var(--font-body)}
+.stats div{display:flex;justify-content:space-between;border-bottom:1px solid #1c1d24;padding:3px 0}
+
+/* chat */
+.chat{width:640px;background:rgba(0,0,0,.55);border:1px solid #222;padding:10px 12px;font:500 14px/1.45 var(--font-body);text-shadow:0 1px 1px #000}
+.chat .c{color:#4fc3f7}
+.chat .k{color:var(--gold)}
+
+/* anchoring mini scenes */
+.anch{display:flex;gap:18px;flex-wrap:wrap;justify-content:center}
+.anch .box{width:300px;height:190px;position:relative;background:linear-gradient(#202725,#151918);border:1px solid #000}
+.anch .cap{position:absolute;left:8px;top:8px;font:700 12px/1 var(--font-display);color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
+@media (prefers-reduced-motion: reduce){*{transition:none !important;animation:none !important}}
+</style>
+
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow"><span class="pill">UX mockup</span><span>Ka0s WoW Addon Standard</span><span>Retail · Forever</span><span>v0.1.0 draft</span></div>
+  <h1>Ka0s Combat Trail <span>— every window</span></h1>
+  <p>Combat Trail replaces CastTrail. It scrolls your casts and your pet's casts as icons along two lanes, climbs your DPS live on a HUD while you fight, and keeps every fight that passes your filters in a Results window built on DPS Race's: a table, a fight detail, an ability timeline, and compare against your best. All figures, names and fights below are made-up samples.</p>
+</header>
+
+<nav class="jump" aria-label="Jump to window">
+  <a href="#combat">In combat</a><a href="#hud">HUD states</a><a href="#anchor">Lane anchoring</a><a href="#settings">Settings</a><a href="#results">Results</a><a href="#timeline">Timeline</a><a href="#compare">Compare</a><a href="#gearview">Gear view</a><a href="#chat">Chat &amp; slash</a>
+</nav>
+
+<!-- 1. IN COMBAT -->
+<section class="stage" id="combat">
+  <div class="stage-head"><h2><small>1 · The game screen</small>In combat: lanes and the live DPS HUD</h2>
+  <p>Two lanes sit under the character, both free-floating by default and moved in Edit Mode. The HUD fades in on the first hit of every combat and fades out a few seconds after it ends.</p></div>
+  <div class="scene">
+    <div class="hscroll"><div class="viewport" id="vp">
+      <div class="boss">Vorasius<div class="hp"><i></i></div></div>
+      <div class="uf" style="left:20px;top:20px"><div class="por"></div><div class="bars"><span class="nm">Ka0shunter</span><i style="background:#2c2"></i><i style="background:#2266dd;width:80%"></i></div></div>
+      <div class="uf" style="left:40px;top:76px;transform:scale(.8);transform-origin:left top"><div class="por" style="background:radial-gradient(circle at 40% 35%,#8a7a5a,#3a2e1c)"></div><div class="bars"><span class="nm">Grimfang</span><i style="background:#2c2;width:90%"></i><i style="background:#d8b22c;width:60%"></i></div></div>
+      <div class="lane-label" style="left:142px;top:398px;color:var(--gold)">You</div>
+      <div id="laneP" style="position:absolute;left:176px;top:388px"></div>
+      <div class="lane-label" style="left:142px;top:436px;color:var(--pet)">Grimfang</div>
+      <div id="laneQ" style="position:absolute;left:176px;top:426px"></div>
+      <div style="position:absolute;right:16px;top:16px" id="hudSlot"></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- 2. HUD STATES -->
+<section class="stage" id="hud">
+  <div class="stage-head"><h2><small>2 · DPS HUD</small>Live climb, fight over, and the pace bar</h2>
+  <p>Numbers come from Blizzard's damage meter. In combat the game hides those figures from addon math, so the HUD can draw bars and print amounts but never work out percentages. Those arrive on the fight-over card. Pace compares against your best fight on the same boss or target.</p></div>
+  <div class="scene">
+    <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+      <div class="seg" role="group" aria-label="HUD state">
+        <button id="hs-live" aria-pressed="true">Live</button><button id="hs-over" aria-pressed="false">Fight over</button><button id="hs-short" aria-pressed="false">Too short</button><button id="hs-first" aria-pressed="false">No best yet</button>
+      </div>
+      <div id="hudBig"></div>
+    </div>
+    <div class="notes">
+      <h3 id="hudNoteT">Live</h3>
+      <ul id="hudNote"></ul>
+      <div class="callout">Pet damage is in the totals. Pet spells carry a green paw and a green bar.</div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. ANCHORING -->
+<section class="stage" id="anchor">
+  <div class="stage-head"><h2><small>3 · Lane anchoring</small>Free, docked, or on the unit frame</h2>
+  <p>Each lane picks its anchor on Lanes ▸ Size and position. Free is the default, and Edit Mode shows a blue box to drag. The other two follow their host when it moves.</p></div>
+  <div class="scene"><div class="anch" id="anchors"></div></div>
+</section>
+
+<!-- 4. SETTINGS -->
+<section class="stage" id="settings">
+  <div class="stage-head"><h2><small>4 · Settings ▸ AddOns ▸ Ka0s Combat Trail</small>The settings panel</h2>
+  <p>Pick a page on the left. The Lanes page works like Panel Master's: pick Player or Pet from the dropdown, then every tab below edits that lane. There is no "new lane" field. Click the pages, the lane dropdown and the tabs.</p></div>
+  <div class="scene"><div class="hscroll"><div class="settings" id="settingsWin">
+    <div class="cats" id="cats"></div>
+    <div class="pm" id="pm"></div>
+  </div></div></div>
+</section>
+
+<!-- 5. RESULTS -->
+<section class="stage" id="results">
+  <div class="stage-head"><h2><small>5 · Results window</small>Fight history and fight detail</h2>
+  <p>Opens from the HUD's chart button, <span class="mono">/kct results</span>, a key binding or the minimap menu. It lists every stored fight, newest first, grouped by encounter or target and difficulty. Click a row to see its detail.</p></div>
+  <div class="scene"><div class="hscroll"><div class="win results" id="resultsWin"></div></div></div>
+</section>
+
+<!-- 6. TIMELINE -->
+<section class="stage" id="timeline">
+  <div class="stage-head"><h2><small>6 · Ability timeline</small>Every cast, this fight against your best</h2>
+  <p>Opens from the detail's Timeline button, over the Results window at its size. Each ability has two lanes: this fight in gold, the compared fight in blue. Long cooldowns sort to the top. Ctrl+wheel zooms and Shift+wheel pans.</p></div>
+  <div class="scene"><div class="hscroll"><div class="win tl" id="tlWin"></div></div></div>
+</section>
+
+<!-- 7. COMPARE -->
+<section class="stage" id="compare">
+  <div class="stage-head"><h2><small>7 · Compare</small>Side by side with your best, or any fight you pick</h2></div>
+  <div class="scene"><div class="hscroll"><div class="win cmp" id="cmpWin"></div></div>
+    <div class="notes"><h3>Picking the other fight</h3><ul><li><b>Compare vs best</b> uses your best on the same encounter and difficulty, or the runner-up if this fight is the best.</li><li>Right-click any row and pick <i>Compare With This Fight</i>. The pick lasts until you clear it or reload.</li><li>The gear slots that changed and a <i>Different loadout</i> mark sit under the spells.</li></ul></div>
+  </div>
+</section>
+
+<!-- 8. GEAR VIEW -->
+<section class="stage" id="gearview">
+  <div class="stage-head"><h2><small>8 · Gear view</small>What you wore and the stats you pulled with</h2></div>
+  <div class="scene"><div class="hscroll"><div class="win gear" id="gearWin"></div></div>
+    <div class="notes"><h3>Snapshot at the pull</h3><ul><li>Gear, stats and the talent loadout are read when combat starts, and again out of combat if anything came back hidden.</li><li>A tinted slot changed since the compared fight. Item level and stat deltas are green when up and red when down.</li><li>Hover an item for its tooltip, and shift-click it to link it.</li></ul></div>
+  </div>
+</section>
+
+<!-- 9. CHAT -->
+<section class="stage" id="chat">
+  <div class="stage-head"><h2><small>9 · Chat</small>Slash commands and the shared summary</h2></div>
+  <div class="scene"><div class="chat" id="chatBox"></div>
+    <div class="notes"><h3>Same as every Ka0s addon</h3><ul><li>Every setting is also a slash path, for example <span class="mono">/kct set lanes.pet.width 360</span>.</li><li>The debug console, diagnostics, test mode and sim mode work as they do in DPS Race.</li><li>Test mode fills the lanes, the HUD and the Results window with sample data, behind a strip saying so.</li></ul></div>
+  </div>
+</section>
+</div>
+
+<script>
+(function(){
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = s => document.querySelector(s);
+const el = (tag, attrs={}, html='') => { const e=document.createElement(tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (html) e.innerHTML=html; return e; };
+const PAW = '<svg class="paw" viewBox="0 0 16 16" fill="currentColor" aria-label="pet"><circle cx="4" cy="6" r="1.8"/><circle cx="8" cy="4" r="1.8"/><circle cx="12" cy="6" r="1.8"/><ellipse cx="8" cy="11" rx="3.6" ry="3"/></svg>';
+const ICON = {
+  chart:'<svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="9" width="3" height="5"/><rect x="6.5" y="5" width="3" height="9"/><rect x="11" y="2" width="3" height="12"/></svg>',
+  gear:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 5.2A2.8 2.8 0 1 0 8 10.8 2.8 2.8 0 1 0 8 5.2zM6.9 0h2.2l.4 2.1 1.3.6 1.8-1.2 1.6 1.6-1.2 1.8.6 1.3 2.1.4v2.2l-2.1.4-.6 1.3 1.2 1.8-1.6 1.6-1.8-1.2-1.3.6-.4 2.1H6.9l-.4-2.1-1.3-.6-1.8 1.2-1.6-1.6 1.2-1.8-.6-1.3L0 9.1V6.9l2.1-.4.6-1.3-1.2-1.8 1.6-1.6 1.8 1.2 1.3-.6z"/></svg>',
+  lock:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M4 7V5a4 4 0 0 1 8 0v2h1v8H3V7zm2 0h4V5a2 2 0 0 0-4 0z"/></svg>',
+  x:'<svg viewBox="0 0 16 16" stroke="currentColor" stroke-width="2"><path d="M3 3l10 10M13 3L3 13"/></svg>',
+  fold:'<svg viewBox="0 0 16 16" fill="currentColor"><path d="M10 3L5 8l5 5z"/></svg>'
+};
+const tb = names => names.map(n=>`<button class="tb" aria-label="${n}">${ICON[n]}</button>`).join('');
+
+// ---- spell catalogue (BM hunter + pet), sample ------------------------------------------
+const S = {
+  bs:{n:'Barbed Shot',a:'BS',c:'#b5462e'}, cs:{n:'Cobra Shot',a:'CS',c:'#3f8f4a'}, ks:{n:'Kill Shot',a:'KS',c:'#8a2a2a'},
+  ms:{n:'Multi-Shot',a:'MS',c:'#6c5a9e'}, ba:{n:'Black Arrow',a:'BA',c:'#3a3a52'}, as:{n:'Auto Shot',a:'AS',c:'#666'},
+  bw:{n:'Bestial Wrath',a:'BW',c:'#c9831f',cd:90}, cw:{n:'Call of the Wild',a:'CW',c:'#2f7fb0',cd:120},
+  po:{n:'Combat Potion',a:'Po',c:'#9b59b6',cd:300}, tr:{n:'Signet Trinket',a:'Tr',c:'#a08a3a',cd:120},
+  kc:{n:'Kill Command',a:'KC',c:'#c0392b',pet:1}, cl:{n:'Claw',a:'Cl',c:'#a0522d',pet:1}, bc:{n:'Beast Cleave',a:'BC',c:'#d35400',pet:1},
+  st:{n:'Stomp',a:'St',c:'#7f6a4f',pet:1}, pa:{n:'Auto Attack',a:'AA',c:'#555',pet:1}
+};
+const tile = (k, size) => { const s=S[k]; return `<span class="ic" style="background:linear-gradient(135deg,${s.c},#111 140%)${size?`;width:${size}px;height:${size}px`:''}" title="${s.n}">${s.a}</span>`; };
+const BREAK = [['kc',11.94,25.4],['bs',8.05,17.1],['cs',6.21,13.2],['cl',4.88,10.4],['ks',3.57,7.6],['bc',3.20,6.8],['ba',2.82,6.0],['ms',2.07,4.4],['st',1.69,3.6],['pa',1.41,3.0],['as',1.13,2.4]];
+const fmtM = v => v>=1 ? v.toFixed(2)+'M' : (v*1000).toFixed(1)+'K';
+
+// ---- lanes ------------------------------------------------------------------------------
+function Lane(host, o){
+  const L = Object.assign({w:480,secs:12,size:28,dir:'left',border:'#ffd100',ticks:true,now:true,gcd:1.5,seq:['cs'],step:1.5,seed:0,x:[],cd:[]}, o);
+  const vertical = L.dir==='up'||L.dir==='down';
+  const box = el('div',{class:'lane'});
+  const len = L.w, thick = L.size+6;
+  box.style.width = (vertical?thick:len)+'px'; box.style.height=(vertical?len:thick)+'px';
+  host.innerHTML=''; host.appendChild(box);
+  const pps = len/L.secs;
+  if (L.ticks) for (let i=1;i<=Math.floor(L.secs/L.gcd);i++){ const t=el('div',{class:'tick'}); const p=i*L.gcd*pps;
+    if (vertical){ t.style.cssText=`left:0;right:0;height:1px;width:auto;${L.dir==='up'?'top':'bottom'}:${p}px`; }
+    else t.style[L.dir==='left'?'right':'left']=p+'px'; box.appendChild(t); }
+  if (L.now){ const n=el('div',{class:'now'}); if (vertical){ n.style.cssText=`left:0;right:0;height:2px;width:auto;${L.dir==='up'?'top':'bottom'}:0`; } else n.style[L.dir==='left'?'right':'left']='0'; box.appendChild(n); }
+  const items=[]; let k=0;
+  const push = (t) => { const key=L.seq[k++%L.seq.length]; const s=S[key]; const d=el('div',{class:'lic'+(L.x.includes(k)?' x':'')+(s.cd?' cd':'')},s.a);
+    d.style.cssText=`width:${L.size}px;height:${L.size}px;margin-top:${-L.size/2}px;--bc:${L.border};background:linear-gradient(135deg,${s.c},#111 140%);font-size:${Math.max(8,L.size/3)}px`;
+    if (vertical){ d.style.top='auto'; d.style.left='3px'; d.style.marginTop='0'; }
+    box.appendChild(d); items.push({d,t}); };
+  const start = performance.now()/1000; let last = start - L.secs;
+  for (let t = last + L.seed; t < start; t += L.step) push(t);
+  last = items.length? items[items.length-1].t : start;
+  function frame(){
+    const now = RM ? start : performance.now()/1000;
+    if (!RM && now - last >= L.step){ last += L.step; push(last); }
+    for (let i=items.length-1;i>=0;i--){ const it=items[i]; const age=now-it.t; if (age>L.secs){ it.d.remove(); items.splice(i,1); continue; }
+      const p = age*pps; const fade = age > L.secs*.8 ? 1-(age-L.secs*.8)/(L.secs*.2) : 1; it.d.style.opacity=fade;
+      if (L.dir==='left') it.d.style.left=(len-p-L.size)+'px';
+      else if (L.dir==='right') it.d.style.left=p+'px';
+      else if (L.dir==='up') it.d.style.top=p+'px';
+      else it.d.style.top=(len-p-L.size)+'px'; }
+    if (!RM && box.isConnected) requestAnimationFrame(frame);
+  }
+  frame();
+  return box;
+}
+const P_SEQ=['bs','kc','cs','ba','bw','kc','bs','cs','ks','kc','ms','cs','bs','cw','kc','cs'];
+const Q_SEQ=['kc','cl','bc','kc','st','cl','kc','bc'];
+Lane($('#laneP'),{seq:P_SEQ,step:1.3,x:[4,19]});
+Lane($('#laneQ'),{seq:Q_SEQ,step:1.9,border:'#66ff66',size:24,ticks:false,w:480});
+
+// ---- HUD --------------------------------------------------------------------------------
+function chartSVG(opts){
+  const W=280,H=opts.h||90,top=18,n=48,cut=opts.cut??n; let bars='',cds='';
+  const best = opts.best!==false;
+  for (let i=0;i<n;i++){ const v=.35+.5*Math.abs(Math.sin(i*.45))*(.6+.4*Math.cos(i*.13))+(i>8&&i<16?.35:0)+(i>30&&i<36?.25:0);
+    const h=Math.min(1,v)*(H-top-4); const x=i*(W/n);
+    if (i<cut) bars+=`<rect x="${x.toFixed(1)}" y="${(H-h).toFixed(1)}" width="${(W/n-1).toFixed(1)}" height="${h.toFixed(1)}" fill="${i>8&&i<16?'#c9a63a':'#5a5fa8'}"/>`; }
+  if (best) cds+=`<line x1="0" x2="${W}" y1="${H-48}" y2="${H-48}" stroke="#9fd0ff" stroke-opacity=".55" stroke-dasharray="4 3"/>`;
+  [[8,'bw'],[9,'cw'],[10,'po'],[30,'bw']].forEach(([i,k],j)=>{ if (i<cut){ const s=S[k]; const y= j===1||j===2 ? 1+(j-0)*0 : 1; const off=(j===1?8:j===2?16:0);
+    cds+=`<g transform="translate(${(i*(W/n)+off*0.6).toFixed(1)},${1+ (j===2?0:0)})"><rect width="13" height="13" fill="${s.c}" stroke="#000"/><text x="6.5" y="9.5" font-size="7" font-family="Barlow Semi Condensed" font-weight="700" fill="#fff" text-anchor="middle">${s.a}</text></g>`; }});
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Damage over the fight">${bars}${cds}<line x1="0" x2="${W}" y1="${H-.5}" y2="${H-.5}" stroke="#3a3b44"/></svg>`;
+}
+function spellRows(rows, pct){
+  const max = rows[0][1];
+  return rows.map(([k,v,p])=>{ const s=S[k]; return `<div class="srow${s.pet?' pet':''}"><span class="fill" style="width:${(v/max*100).toFixed(1)}%"></span>${tile(k,20)}<span class="n">${s.n}</span>${s.pet?PAW:''}<span class="a">${fmtM(v)}</span>${pct?`<span class="p">${p.toFixed(1)}%</span>`:''}</div>`; }).join('');
+}
+const HUD = {
+  live:{clock:'2:41.3',clockC:'#ebe8e1',dmg:'30.36M',dps:'188.4K',dpsK:'DPS · live',pace:{ahead:true},rows:8,pct:false,cut:34,
+    foot:['Beast Mastery · Ka0shunter','live · 4 Hz'], note:'Live',
+    notes:['The clock counts up from the first hit. The target line shows the encounter and difficulty that pace and history group by.','Damage and Blizzard\'s live DPS print as the meter hands them over, refreshed four times a second.','Pace bar: green past the white tick means you\'re ahead of your best on this boss so far. Red from your fill to the tick means you\'re behind.','The chart grows column by column. The dashed line is your best fight\'s average pace, and icons mark cooldowns of 29 seconds or longer.']},
+  over:{clock:'4:12.0',clockC:'#ebe8e1',dmg:'47.11M',dps:'186.9K',dpsK:'DPS',pace:{ahead:true,final:true},rows:6,pct:true,cut:48,best:true,
+    foot:['Saved to history','fades in 8s'], note:'Fight over',
+    notes:['Once combat drops and the meter settles, the card shows final damage and DPS with percentages per spell.','A gold New best chip appears when this fight beats your best on the same encounter and difficulty.','The chips say whether the fight was stored and why. The chart button opens it in the Results window.','The HUD fades out after a set delay (8s by default), or stays if you pinned it open.']},
+  short:{clock:'0:22.4',clockC:'#ebe8e1',dmg:'2.41M',dps:'107.6K',dpsK:'DPS',pace:null,rows:4,pct:true,cut:12,best:false,
+    foot:['Not saved: shorter than 30s','fades in 8s'], note:'Too short',
+    notes:['Every fight is tracked live. Only the ones that pass History ▸ Recording filters are stored.','This one lasted 22 seconds, under the 30-second minimum, so the card says it wasn\'t saved.','Other filters: bosses only, and which content counts (raid, dungeon, delve, battleground, arena, open world, dummies).']},
+  first:{clock:'1:05.8',clockC:'#ebe8e1',dmg:'11.02M',dps:'167.5K',dpsK:'DPS · live',pace:null,rows:6,pct:false,cut:20,best:false,
+    foot:['First fight on this boss','live · 4 Hz'], note:'No best yet',
+    notes:['With no stored fight on this encounter and difficulty, there is nothing to pace against. The pace bar and dashed line stay hidden.','Matching uses the encounter ID for bosses, and the creature ID plus difficulty for anything else.']}
+};
+function hudHTML(st, compact){
+  const h = HUD[st];
+  let pace='';
+  if (h.pace){ pace = h.pace.ahead ? `<div class="pace" title="Your damage against your best's pace"><i style="left:0;width:50%;background:#3a3b46"></i><i style="left:50%;width:9%;background:var(--ok)"></i><span class="mid"></span></div>` : ''; }
+  const chips = st==='over' ? `<div style="display:flex;gap:6px;justify-content:center;padding:8px 10px 0"><span class="chip best">★ New best · +2.1%</span><span class="chip saved">✓ Saved</span></div>`
+    : st==='short' ? `<div style="display:flex;gap:6px;justify-content:center;padding:8px 10px 0"><span class="chip skip">Not saved · 22s &lt; 30s</span></div>` : '';
+  return `<div class="win hud"><div class="win-title"><span class="t">Combat Trail</span>${tb(['chart','gear','lock','x'])}</div>
+    <div class="clock" style="color:${h.clockC}">${h.clock}</div>
+    <div class="tgt"><b>Vorasius</b> · The Voidspire · Heroic</div>
+    <div class="statrow"><div class="stat"><div class="k">Damage</div><div class="v">${h.dmg}</div></div><div class="stat"><div class="k">${h.dpsK}</div><div class="v" style="color:${st==='over'?'var(--ok)':'inherit'}">${h.dps}</div></div></div>
+    ${chips}${pace}
+    <div class="sub"><span>Damage profile</span><span>${h.best===false?'':'vs best 182.9K'}</span></div>
+    <div class="chart">${chartSVG({cut:h.cut,best:h.best!==false})}</div>
+    <div class="sub"><span>Spell breakdown</span><span>${h.pct?'% of total':'live order'}</span></div>
+    <div class="spells">${spellRows(BREAK.slice(0,compact?5:h.rows),h.pct)}</div>
+    <div class="win-foot"><span>${h.foot[0]}</span><span>${h.foot[1]}</span></div></div>`;
+}
+$('#hudSlot').innerHTML = hudHTML('live', true);
+$('#hudSlot').firstElementChild.style.width='280px';
+function setHud(st){
+  $('#hudBig').innerHTML = hudHTML(st);
+  $('#hudNoteT').textContent = HUD[st].note;
+  $('#hudNote').innerHTML = HUD[st].notes.map(n=>`<li>${n}</li>`).join('');
+  ['live','over','short','first'].forEach(s=>$('#hs-'+s).setAttribute('aria-pressed', s===st));
+}
+['live','over','short','first'].forEach(s=>$('#hs-'+s).addEventListener('click',()=>setHud(s)));
+setHud('live');
+
+// ---- anchoring --------------------------------------------------------------------------
+(function(){
+  const host=$('#anchors');
+  const mk=(cap, inner, note)=>{ const b=el('div',{class:'box'},`<span class="cap">${cap}</span>${inner}`); const w=el('div',{style:'display:flex;flex-direction:column;gap:6px;width:300px'}); w.appendChild(b); w.appendChild(el('div',{class:'hint',style:'color:#bdb9c4;font-size:13px'},note)); host.appendChild(w); return b; };
+  const a=mk('Free · default (Edit Mode open)', `<div class="editbox" style="left:40px;top:70px;width:220px;height:34px">Combat Trail · Player</div><div class="editbox" style="left:60px;top:122px;width:180px;height:30px">Combat Trail · Pet</div>`, 'Each lane is its own Edit Mode box. Drag it anywhere, or set the point and offsets on the settings tab.');
+  const b=mk('Docked to the other lane', `<div id="dkP" style="position:absolute;left:30px;top:64px"></div><div id="dkQ" style="position:absolute;left:30px;top:102px"></div><div class="hint" style="position:absolute;left:30px;top:134px;color:var(--gold)">↑ Pet: dock below Player, gap 4</div>`, 'Pet docks to a side of Player with a gap. Move Player and Pet follows. Player can dock to Pet the same way.');
+  Lane(b.querySelector('#dkP'),{w:240,secs:8,size:22,seq:P_SEQ,step:1.3}); Lane(b.querySelector('#dkQ'),{w:240,secs:8,size:22,seq:Q_SEQ,step:1.9,border:'#66ff66',ticks:false});
+  const c=mk('Anchored to its unit frame', `<div class="uf" style="left:16px;top:44px"><div class="por"></div><div class="bars" style="width:70px"><span class="nm">Ka0shunter</span><i style="background:#2c2"></i><i style="background:#2266dd"></i></div></div><div id="ufP" style="position:absolute;left:146px;top:52px"></div>
+    <div class="uf" style="left:16px;top:112px;transform:scale(.85);transform-origin:left top"><div class="por" style="background:radial-gradient(circle at 40% 35%,#8a7a5a,#3a2e1c)"></div><div class="bars" style="width:70px"><span class="nm">Grimfang</span><i style="background:#2c2"></i><i style="background:#d8b22c"></i></div></div><div id="ufQ" style="position:absolute;left:130px;top:118px"></div>`, 'The Player lane anchors to the player frame and the Pet lane to the pet frame. Blizzard, ElvUI, Shadowed Unit Frames, Cell and others are detected, or type a frame name.');
+  Lane(c.querySelector('#ufP'),{w:140,secs:5,size:22,seq:P_SEQ,step:1.3}); Lane(c.querySelector('#ufQ'),{w:150,secs:6,size:20,seq:Q_SEQ,step:1.9,border:'#66ff66',ticks:false});
+})();
+
+// ---- settings ---------------------------------------------------------------------------
+const lanesData = {
+  player:{name:'Player',label:'You',color:'#ffd100',w:480,secs:12,size:28,dir:'left',anchor:'Free (Edit Mode)',ign:[['as','Auto Shot · 75'],['pa','Auto Attack · 6603'],['ms','Shoot · 5019']]},
+  pet:{name:'Pet',label:'<pet name>',color:'#66ff66',w:480,secs:12,size:24,dir:'left',anchor:'Dock to lane: Player',ign:[['pa','Auto Attack · 6603'],['cl','Growl · 2649']]}
+};
+let curLane='player', curTab='general', curPage='lanes', curSub={hud:'behavior',history:'recording',general:'master'};
+const ck=(on,t)=>`<label class="ck"><i class="${on?'on':''}"></i>${t}</label>`;
+const sl=(lbl,val,pos)=>`<div class="field"><span class="lbl">${lbl}</span><div class="sl"><div class="track"><i style="left:${pos}%"></i></div><span class="val">${val}</span></div></div>`;
+const dd=(lbl,opts,sel,id)=>`<div class="field"><label${id?` for="${id}"`:''}>${lbl}</label><select class="dd"${id?` id="${id}"`:''}>${opts.map(o=>`<option${o===sel?' selected':''}>${o}</option>`).join('')}</select></div>`;
+const color=(lbl,c)=>`<div class="colorrow"><span class="sw" style="background:${c}"></span>${lbl}</div>`;
+const LANE_TABS=[['general','General'],['size','Size and position'],['icons','Icons'],['bg','Background and border'],['ticks','Ticks and labels'],['vis','Visibility'],['ignore','Ignored spells']];
+function laneTab(){
+  const d=lanesData[curLane];
+  switch(curTab){
+    case 'general': return `<div class="field full" style="grid-column:1/2"><span class="lbl">Lane</span><input class="tx" id="ln-name" value="${d.name}" readonly></div>${dd('Copy settings from lane',['', curLane==='player'?'Pet':'Player'],'')}
+      ${ck(true,'Enable this lane')}${ck(false,'Unlock this lane')}<button class="rbtn wide">Reset lane…</button><span></span>
+      <div class="hdr">Preview</div><div class="preview" id="lanePrev"></div>`;
+    case 'size': return `${dd('Direction (newest at)',['Right edge, scroll left','Left edge, scroll right','Bottom, scroll up','Top, scroll down'],'Right edge, scroll left','dirSel')}${sl('Scale','1.00',25)}
+      ${sl('Lane length (px)',d.w,24)}${sl('Seconds shown',d.secs,19)}${sl('Icon size',d.size,30)}${sl('Icon spacing (px)','0',0)}
+      <div class="hdr">Anchoring</div>${dd('Anchor to',['Free (Edit Mode)','Dock to lane: '+(curLane==='player'?'Pet':'Player'),'Unit frame (auto-detect)','Frame by name…'],d.anchor)}${dd('Point → relative point',['TOPLEFT → BOTTOMLEFT','LEFT → RIGHT','CENTER → CENTER'],'TOPLEFT → BOTTOMLEFT')}
+      ${sl('Offset X','0',50)}${sl('Offset Y','-4',48)}<div class="preview" id="lanePrev"></div>`;
+    case 'icons': return `${ck(true,'Show icon border')}${color('Border color',d.color)}${sl('Border size','1',10)}${sl('Icon zoom (crop edges)','8%',30)}
+      ${ck(true,'Mark interrupted and cancelled casts (red ✕)')}${ck(true,'Glow long cooldowns')}${sl('…cooldowns of at least (s)','29',20)}${color('Glow color','#ffd100')}
+      ${ck(true,'Show spell tooltip on hover')}${ck(false,'Show spell name under icon')}${sl('Fade out over the last','20%',20)}${ck(false,'Stack repeated casts (×2)')}`;
+    case 'bg': return `${ck(true,'Show lane background')}${dd('Background texture',['Solid','Ka0s Gradient','Blizzard Tooltip'],'Solid')}${color('Background color','rgba(0,0,0,.38)')}${sl('Background opacity','38%',38)}
+      ${ck(false,'Show lane border')}${dd('Border texture',['Ka0s 1px','Blizzard Tooltip','None'],'Ka0s 1px')}${color('Border color','#3d3d45')}${sl('Border size','1',10)}${sl('Padding (px)','3',15)}`;
+    case 'ticks': return `${ck(true,'Show GCD tick marks')}${dd('Tick spacing',['1.5s (fixed GCD)','Haste-adjusted GCD','1s'],'1.5s (fixed GCD)')}${color('Tick color','rgba(255,255,255,.15)')}${sl('Tick width','1',5)}
+      ${ck(true,'Show "now" line')}${color('"Now" line color','rgba(255,255,255,.6)')}
+      <div class="hdr">Label</div>${ck(true,'Show lane label')}<div class="field"><span class="lbl">Label text</span><input class="tx" value="${d.label}" readonly></div>
+      ${dd('Label font',['Friz Quadrata','Barlow Semi Condensed','Expressway'],'Friz Quadrata')}${sl('Label size','12',20)}${dd('Outline',['None','Outline','Thick outline'],'Outline')}${color('Label color',d.color)}${dd('Label position',['Left of lane','Above lane','Inside lane'],'Left of lane')}`;
+    case 'vis': return `${dd('Show lane',['Always','In combat only','In combat or with a target','Never (disabled)'],'Always')}${sl('Hide after combat (s)','5',10)}
+      <div class="hdr">Where</div>${ck(true,'Open world')}${ck(true,'Dungeons')}${ck(true,'Raids')}${ck(true,'Delves')}${ck(true,'Battlegrounds')}${ck(true,'Arenas')}
+      <div class="hdr">Hide when</div>${ck(true,'Mounted')}${ck(true,'In a vehicle')}${ck(true,'In a pet battle')}${ck(false,'Resting')}
+      ${sl('Opacity in combat','100%',100)}${sl('Opacity out of combat','60%',60)}<div class="hint full">The Delves and Arenas rows exist on Retail only. On Forever they are absent, not greyed out.</div>`;
+    case 'ignore': return `<div class="field full"><span class="lbl">Spells this lane never shows</span><div class="listbox">${d.ign.map(([k,t])=>`<div>${tile(k,18)}${t}<span class="x">✕</span></div>`).join('')}</div></div>
+      <div class="field"><span class="lbl">Add a spell (ID, name or shift-click a link)</span><input class="tx" placeholder="e.g. 186265 or Aspect of the Turtle"></div><div style="display:flex;align-items:flex-end;gap:8px"><button class="rbtn">Add</button><button class="rbtn">Reset list</button></div>
+      <div class="hint full">The defaults are seeded per client. Forever gets its own list, and this lane's list is separate from the other lane's.</div>`;
+  }
+}
+const PAGES=[['general','General'],['lanes','Lanes'],['hud','DPS HUD'],['history','History'],['profiles','Profiles']];
+function pageHTML(){
+  const head = (t, extra='')=>`<div class="pm-head"><h3>Ka0s Combat Trail <span class="arr"></span> ${t}</h3><button class="rbtn">Defaults</button></div>${extra}`;
+  const subtabs=(page,list)=>`<div class="tabs" role="tablist">${list.map(([k,t])=>`<button role="tab" data-sub="${page}:${k}" aria-selected="${curSub[page]===k}">${t}</button>`).join('')}</div>`;
+  if (curPage==='lanes') return head('Lanes', `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;border-bottom:1px solid #4a3c14;padding-bottom:12px">${dd('Lane',['Player','Pet'],lanesData[curLane].name,'laneSel')}<div class="hint" style="align-self:end">Pick a lane, then edit it in the tabs below. There are two fixed lanes. Target, focus and party lanes are planned.</div></div>
+    <div class="tabs" role="tablist">${LANE_TABS.map(([k,t])=>`<button role="tab" data-tab="${k}" aria-selected="${curTab===k}">${t}</button>`).join('')}</div><div class="tabbody">${laneTab()}</div>`);
+  if (curPage==='general'){ const s=curSub.general; return head('General', subtabs('general',[['master','Master controls'],['look','Look and skin'],['keys','Keybindings']])+`<div class="tabbody">${
+    s==='master'? `${ck(true,'Enabled')}${ck(true,'Locked')}${ck(false,'Test mode')}${ck(false,'Sim mode')}${ck(true,'Show DPS HUD in combat')}${ck(true,'Minimap button')}<div class="hint full">Test mode fills the lanes, the HUD and the Results window with sample data. Sim mode plays a made-up 45-second fight in real time.</div><div class="hdr">Debug</div>${ck(false,'Debug logging')}<button class="rbtn">Open debug console</button>`
+    : s==='look'? `${dd('Skin',['Ka0s Default','WoW Forever','ElvUI-like','Blizzard Classic','Minimal Dark'],'Ka0s Default')}<button class="rbtn" style="align-self:end">Open skin selector…</button>${dd('Global font',['Friz Quadrata','Barlow Semi Condensed','Expressway'],'Barlow Semi Condensed')}${sl('Global font scale','100%',50)}<div class="hint full">The skin sets the window chrome, bars and fonts for the HUD, the Results window and the timeline. Each element can be overridden on its own page. The default skin is WoW Forever on Forever and Ka0s Default on Retail.</div>`
+    : `${dd('Toggle DPS HUD',['Not bound','CTRL-SHIFT-D'],'Not bound')}${dd('Toggle Results window',['Not bound','CTRL-SHIFT-R'],'CTRL-SHIFT-R')}${dd('Toggle lanes',['Not bound'],'Not bound')}<div class="hint full">The same keys show in Options ▸ Keybindings ▸ Ka0s Combat Trail.</div>`
+  }</div>`); }
+  if (curPage==='hud'){ const s=curSub.hud; return head('DPS HUD', subtabs('hud',[['behavior','Behavior'],['layout','Layout'],['clock','Clock and figures'],['chart','Damage chart'],['spells','Spell rows'],['window','Window']])+`<div class="tabbody">${
+    s==='behavior'? `${dd('Show HUD',['Every combat, auto','Always','Only when toggled'],'Every combat, auto')}${sl('Fade out after combat (s)','8',16)}${ck(true,'Stay open while the mouse is over it')}${ck(false,'Only in instances')}${dd('Pace compares against',['Best on same boss or target','Last fight','Nothing'],'Best on same boss or target')}${sl('Pace bar range','1.5×',50)}${ck(true,'Show fight-over card')}${ck(true,'Show "not saved" reason')}`
+    : s==='layout'? `${ck(true,'Show clock')}${ck(true,'Show target line')}${ck(true,'Show damage and DPS boxes')}${ck(true,'Show pace bar')}${ck(true,'Show damage chart')}${ck(true,'Show spell breakdown')}${sl('Width','300',30)}${sl('Scale','1.00',25)}`
+    : s==='clock'? `${dd('Clock font',['Barlow Semi Condensed Bold','Friz Quadrata','Expressway'],'Barlow Semi Condensed Bold')}${sl('Clock size','44',55)}${color('Clock color','#ebe8e1')}${dd('Figures font',['Barlow Semi Condensed Bold','Friz Quadrata'],'Barlow Semi Condensed Bold')}${sl('Figures size','20',35)}${color('DPS color (fight over)','#4ad06a')}${color('Box background','#101116')}${color('Box border','#2a2b33')}`
+    : s==='chart'? `${sl('Chart height','90',40)}${color('Column color','#5a5fa8')}${color('Burst-window column color','#c9a63a')}${color('Best pace line','#9fd0ff')}${ck(true,'Show cooldown icons')}${sl('…cooldowns of at least (s)','29',20)}${ck(true,'Show grid line at zero')}${sl('Columns','48',48)}`
+    : s==='spells'? `${sl('Spell rows shown (0 = all, scroll)','8',30)}${dd('Bar texture',['Ka0s Flat','Blizzard','Smooth'],'Ka0s Flat')}${color('Player bar color','rgba(110,110,180,.6)')}${color('Pet bar color','rgba(80,170,90,.55)')}${sl('Row height','22',40)}${dd('Row font',['Barlow','Friz Quadrata'],'Barlow')}${ck(true,'Show pet paw badge')}${ck(true,'Show spell icons')}`
+    : `${ck(true,'Show title bar')}${dd('Title text',['Combat Trail','Hidden'],'Combat Trail')}${color('Window background','rgba(15,15,20,.94)')}${color('Window border','#3d3d45')}${ck(true,'Show footer')}${ck(false,'Lock position')}${dd('Strata',['MEDIUM','HIGH','DIALOG'],'MEDIUM')}${sl('Opacity','100%',100)}`
+  }</div>`); }
+  if (curPage==='history'){ const s=curSub.history; return head('History', subtabs('history',[['recording','Recording filters'],['retention','Retention'],['results','Results window'],['usage','Usage']])+`<div class="tabbody">${
+    s==='recording'? `<div class="hint full">Every combat is tracked live. A fight is <b>stored</b> only when it passes all of these.</div>${sl('Minimum fight length (s)','30',15)}${ck(false,'Bosses only (encounters)')}<div class="hdr">Content to store</div>${ck(true,'Raids')}${ck(true,'Dungeons (incl. Mythic+)')}${ck(true,'Delves')}${ck(true,'Battlegrounds')}${ck(true,'Arenas')}${ck(true,'Open world')}${ck(true,'Training dummies')}${ck(false,'Scenarios')}<div class="hint full">Delves, Arenas and Mythic+ are Retail only, and absent on Forever.</div>`
+    : s==='retention'? `${sl('Days to keep (0 = forever)','7',10)}${ck(true,'Never purge a fight that holds a best')}${sl('Maximum stored fights','500',50)}<button class="rbtn">Purge now…</button><div class="hint full">The purge runs at login and once a day while you play. A best is your top DPS for one character, spec, encounter or target, and difficulty.</div>`
+    : s==='results'? `${dd('Default grouping',['Encounter + difficulty','Character','Spec','Content type','None'],'Encounter + difficulty')}${dd('Default date range',['Last 7 days','Today','All'],'Last 7 days')}${ck(true,'Open on current character')}${ck(true,'Include talents link when sharing')}${sl('Row height','26',40)}${dd('Table font',['Barlow','Friz Quadrata'],'Barlow')}`
+    : `<div class="field full"><span class="lbl">Never show in Usage</span><div class="listbox"><div>${tile('tr',18)}Guild Tabard<span class="x">✕</span></div><div>${tile('po',18)}Healthstone<span class="x">✕</span></div></div></div><div class="field"><span class="lbl">Add item</span><input class="tx" placeholder="item ID, name or link"></div><div style="display:flex;align-items:flex-end"><button class="rbtn">Add</button></div>`
+  }</div>`); }
+  return head('Profiles', `<div class="tabbody">${dd('Current profile',['Ka0shunter - Silvermoon','Default'],'Ka0shunter - Silvermoon')}${dd('Copy from',['','Default'],'')}${ck(false,'Per-spec profiles')}<button class="rbtn">Reset profile…</button><div class="hint full">Standard Ka0s profiles page (AceDB): new, copy, delete, reset, and per-spec switching. Fight history is account-wide and not part of a profile.</div></div>`);
+}
+function renderSettings(){
+  $('#cats').innerHTML = `<div class="other">Game</div><div class="other">AddOns</div><div class="grp">Ka0s Combat Trail</div>`+PAGES.map(([k,t])=>`<button data-page="${k}" aria-current="${curPage===k}">${t}</button>`).join('')+`<div class="other" style="margin-top:8px">Ka0s DPS Race</div><div class="other">Ka0s Panel Master</div>`;
+  $('#pm').innerHTML = pageHTML();
+  const prev = $('#lanePrev');
+  if (prev){ const d=lanesData[curLane]; const dirSel=$('#dirSel'); const dirs={'Right edge, scroll left':'left','Left edge, scroll right':'right','Bottom, scroll up':'down','Top, scroll down':'up'};
+    const draw=()=>Lane(prev,{w:Math.min(d.w,620),secs:d.secs,size:d.size,dir:dirSel?dirs[dirSel.value]:'left',seq:curLane==='player'?P_SEQ:Q_SEQ,step:curLane==='player'?1.3:1.9,border:d.color,ticks:curLane==='player',x:[3]});
+    draw(); if (dirSel) dirSel.addEventListener('change',draw); }
+  const ls=$('#laneSel'); if (ls) ls.addEventListener('change',()=>{ curLane = ls.value==='Pet'?'pet':'player'; renderSettings(); });
+}
+$('#settingsWin').addEventListener('click',e=>{
+  const p=e.target.closest('[data-page]'); if (p){ curPage=p.dataset.page; renderSettings(); return; }
+  const t=e.target.closest('[data-tab]'); if (t){ curTab=t.dataset.tab; renderSettings(); return; }
+  const s=e.target.closest('[data-sub]'); if (s){ const [pg,k]=s.dataset.sub.split(':'); curSub[pg]=k; renderSettings(); }
+});
+renderSettings();
+
+// ---- results ----------------------------------------------------------------------------
+const RUNS = [
+  {g:'Vorasius · The Voidspire · Heroic'},
+  {id:1,d:'10 Nov 21:14',cls:'H',spec:'BM',ch:'Ka0shunter',cc:'var(--hunter)',il:'721.4',tg:'Vorasius',ct:['raid','Raid · HC'],len:'4:12',dmg:'47.11M',dps:'186.9K',del:'+2.1%',st:'best'},
+  {id:2,d:'08 Nov 20:40',cls:'H',spec:'BM',ch:'Ka0shunter',cc:'var(--hunter)',il:'719.8',tg:'Vorasius',ct:['raid','Raid · HC'],len:'4:31',dmg:'49.57M',dps:'182.9K',del:'−2.1%',st:'cmp'},
+  {g:'Imperator Averzian · The Voidspire · Heroic'},
+  {id:3,d:'10 Nov 21:02',cls:'H',spec:'BM',ch:'Ka0shunter',cc:'var(--hunter)',il:'721.4',tg:'Imperator Averzian',ct:['raid','Raid · HC'],len:'5:38',dmg:'58.21M',dps:'172.2K',del:'best',st:'best'},
+  {g:'Windrunner Spire · Mythic+ 12'},
+  {id:4,d:'09 Nov 22:31',cls:'M',spec:'Fi',ch:'Ka0smage',cc:'var(--mage)',il:'716.0',tg:'Trash pull (5 mobs)',ct:['mplus','M+ 12'],len:'0:48',dmg:'11.44M',dps:'238.3K',del:'—',st:''},
+  {id:5,d:'09 Nov 22:20',cls:'M',spec:'Fi',ch:'Ka0smage',cc:'var(--mage)',il:'716.0',tg:'Restless Gale',ct:['mplus','M+ 12'],len:'2:06',dmg:'21.30M',dps:'169.0K',del:'best',st:'best'},
+  {g:'Training Dummy · Silvermoon City'},
+  {id:6,d:'09 Nov 18:05',cls:'H',spec:'BM',ch:'Ka0shunter',cc:'var(--hunter)',il:'719.8',tg:'Cleave Training Dummy',ct:['dummy','Dummy'],len:'1:30',dmg:'16.02M',dps:'178.0K',del:'best',st:'best'},
+  {g:'Open world · Eversong Woods'},
+  {id:7,d:'08 Nov 14:12',cls:'W',spec:'De',ch:'Lânfear',cc:'var(--warlock)',il:'712.3',tg:'Gorehide Alpha',ct:['world','World'],len:'0:41',dmg:'5.82M',dps:'142.0K',del:'best',st:'best'},
+];
+function resultsHTML(){
+  const rows = RUNS.map(r=> r.g ? `<tr class="g"><td colspan="10">${r.g}</td></tr>` :
+    `<tr class="run${r.id===1?' sel':''}"><td>${r.d}</td><td><span class="ic" style="background:${r.cc};color:#111;width:18px;height:18px;font-size:9px">${r.cls}</span> <span class="ic" style="background:#2a2a35;width:18px;height:18px;font-size:8px">${r.spec}</span></td><td style="color:${r.cc};font-weight:600">${r.ch}</td><td class="r">${r.il}</td><td>${r.tg}</td><td><span class="chip ${r.ct[0]}">${r.ct[1]}</span></td><td class="r">${r.len}</td><td class="r">${r.dmg}</td><td class="r" style="font-weight:700">${r.dps}</td><td class="r ${r.del.startsWith('+')||r.del==='best'?'delta-up':r.del.startsWith('−')?'delta-dn':'muted'}">${r.st==='best'?'🏆 ':''}${r.del}</td></tr>`).join('');
+  const gear = ['bw','cs','kc','tr','po','bs','ks','ms','ba','cl','bc','st','cw','tr','as','pa'].map(k=>tile(k,24)).join('');
+  return `<div class="win-title"><span class="t">Combat Trail — Results</span>${tb(['fold','x'])}</div>
+  <div class="rfilters"><span class="pill-dd">Ka0shunter</span><span class="pill-dd">All specs</span><span class="pill-dd">All content</span><span class="pill-dd">All encounters</span><span class="pill-dd">All difficulties</span><span class="pill-dd">Last 7 days</span><label class="ck" style="font-size:12px"><i></i>Bosses only</label><span class="pill-dd">Group: Encounter + difficulty</span><button class="btn sm">Save view</button><span class="muted" style="margin-left:auto;font-size:12px">38 fights</span></div>
+  <div class="rbody"><div style="overflow:auto"><table class="runs"><thead><tr><th>Date</th><th>Cls · Spec</th><th>Character</th><th class="r">ilvl</th><th>Encounter / target</th><th>Content</th><th class="r">Len</th><th class="r">Damage</th><th class="r" style="color:var(--gold)">DPS ▾</th><th class="r">Delta</th></tr></thead><tbody>${rows}</tbody></table></div>
+  <div class="detail">
+    <div style="display:flex;align-items:baseline;gap:8px"><span class="who">Ka0shunter</span><span class="muted" style="font:600 13px var(--font-display)">· Beast Mastery</span><span class="chip best" style="margin-left:auto">★ New best</span></div>
+    <div class="meta">Vorasius · The Voidspire · Heroic · ilvl 721.4 · 4:12 · 10 Nov 2026 21:14 · pet Grimfang · build 120105 · v0.1.0</div>
+    <div class="statrow3"><div class="stat"><div class="k">Damage</div><div class="v" style="font-size:17px">47.11M</div></div><div class="stat"><div class="k">DPS</div><div class="v" style="font-size:17px;color:var(--ok)">186.9K</div></div><div class="stat"><div class="k">Meter DPS</div><div class="v" style="font-size:17px;color:var(--muted)">184.2K</div></div><div class="stat"><div class="k">Leads by</div><div class="v delta-up" style="font-size:17px">+2.1%</div></div></div>
+    <div class="secthead"><span>Damage profile</span><span style="text-transform:none;letter-spacing:0">this session only</span></div>
+    <div>${chartSVG({h:80})}</div>
+    <div class="secthead"><span>Spell breakdown</span><span>pet ${PAW} 23.8%</span></div>
+    <div class="spells" style="padding:0;max-height:180px;overflow:auto">${spellRows(BREAK,true)}</div>
+    <div class="secthead"><span>Gear · Talents</span><span><button class="btn sm">Gear view</button> <button class="btn sm">View</button> <button class="btn sm">Copy</button></span></div>
+    <div class="gearrow">${gear}</div>
+    <div class="secthead"><span>Usage</span><button class="btn sm">Edit</button></div>
+    <div class="gearrow">${tile('po',24)}${tile('tr',24)}<span class="muted" style="font-size:12px;align-self:center;margin-left:6px">Combat Potion at 0:02 and 3:05 · Signet at 0:01 and 2:03</span></div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:auto"><button class="btn primary sm">Timeline</button><button class="btn sm">Compare vs best</button><button class="btn sm">Add note</button><button class="btn sm">Share</button><button class="btn danger sm" style="margin-left:auto">Delete</button></div>
+  </div></div>
+  <div class="win-foot"><span>Click a row for details · right-click for note, share, compare, delete</span><span>Keeping 7 days · bests kept</span></div>`;
+}
+$('#resultsWin').innerHTML = resultsHTML();
+$('#resultsWin').addEventListener('click',e=>{ const tr=e.target.closest('tr.run'); if(!tr) return; $('#resultsWin').querySelectorAll('tr.sel').forEach(r=>r.classList.remove('sel')); tr.classList.add('sel'); });
+
+// ---- timeline ---------------------------------------------------------------------------
+(function(){
+  const LEN=252, rowsDef=[['cw',2,[1,121],[2,123]],['bw',3,[0,90,181],[1,92,184]],['tr',2,[1,122],[3,124]],['po',2,[2,185],[2,190]],
+    ['kc',0,null,null],['bs',0,null,null],['cs',0,null,null],['ks',0,null,null],['ms',0,null,null],['ba',0,null,null]];
+  const gen=(every,off,j)=>{ const a=[]; for(let t=off;t<LEN;t+=every+((t*7+j)%5)*.25) a.push(t); return a; };
+  const rate={kc:6,bs:7.5,cs:4.2,ks:11,ms:22,ba:15};
+  let grid='';
+  rowsDef.forEach(([k,_,a,b],i)=>{ const s=S[k]; const A=a||gen(rate[k],1+i*.3,1), B=b||gen(rate[k]*1.05,1.4+i*.3,3);
+    const ticks=(arr)=>arr.map(t=>`<i style="left:${(t/LEN*100).toFixed(2)}%"></i>`).join('');
+    grid+=`<div class="tl-name">${tile(k,20)}<span>${s.n}${s.pet?' '+PAW:''}${s.cd?`<small>${s.cd}s cooldown</small>`:''}</span></div><div class="tl-lanes"><div class="ln a">${ticks(A)}</div><div class="ln b">${ticks(B)}</div></div><div class="tl-cnt"><span style="color:var(--gold)">${A.length}</span><span style="color:var(--blue)">${B.length}</span></div>`; });
+  const strip=(seq,step,color)=>{ let h=''; let t=0,k=0,lastX=-99,stack=0; while(t<LEN){ const x=t/LEN*100; stack = (x-lastX<1.6)? stack+1:0; lastX=x; h+=`<span style="left:${x.toFixed(2)}%;top:${4+stack*14}px;position:absolute">${tile(seq[k++%seq.length],18)}</span>`; t+=step; } return `<div class="strip" style="background:${color}">${h}</div>`; };
+  const axis=[0,30,60,90,120,150,180,210,240].map(s=>`<span style="left:${s/LEN*100}%">${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}</span>`).join('');
+  $('#tlWin').innerHTML=`<div class="win-title"><span class="t">Ability timeline — Vorasius · Heroic · 10 Nov 21:14 vs best 08 Nov 20:40</span>${tb(['x'])}</div>
+  <div style="display:flex;gap:10px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--edge-in);flex-wrap:wrap"><span class="secthead" style="flex:none">Casts</span><button class="btn sm">−</button><button class="btn sm">+</button><button class="btn sm">◀</button><button class="btn sm">▶</button><button class="btn sm" title="Ctrl+wheel zooms around the pointer, Shift+wheel pans, the plain wheel scrolls">?</button>
+    <span style="margin-left:auto;display:flex;gap:12px;font-size:12px"><span><span class="sw" style="width:12px;height:12px;background:var(--gold)"></span> This fight</span><span><span class="sw" style="width:12px;height:12px;background:var(--blue)"></span> Best (compared)</span><label class="ck" style="font-size:12px"><i class="on"></i>Pet abilities</label></span></div>
+  <div class="tl-grid"><div class="tl-name muted">This fight</div><div>${strip(P_SEQ,1.3,'rgba(255,209,0,.07)')}</div><div></div>
+  <div class="tl-name muted">Best</div><div>${strip(P_SEQ.slice(3).concat(P_SEQ.slice(0,3)),1.35,'rgba(74,163,255,.08)')}</div><div></div>
+  <div></div><div class="axis">${axis}</div><div></div>${grid}</div>
+  <div class="win-foot"><span>Hover an icon or tick for the spell and when it was cast</span><span>Zoom 1× · 0:00–4:12</span></div>`;
+})();
+
+// ---- compare ----------------------------------------------------------------------------
+(function(){
+  const B2={kc:11.6,bs:8.3,cs:5.7,cl:4.9,ks:3.2,bc:3.4,ba:2.9,ms:1.9};
+  const rows=BREAK.slice(0,8).map(([k,v])=>{ const b=B2[k]; const d=(v-b)/b*100; const s=S[k];
+    return `<div class="cmprow"><span style="display:flex;gap:6px;align-items:center">${tile(k,18)}${s.n}${s.pet?PAW:''}</span><span class="num">${fmtM(b)} <span class="muted">→</span> ${fmtM(v)}</span><span class="bars"><i style="width:${b/12*100}%;background:var(--blue)"></i><i style="width:${v/12*100}%;background:var(--gold)"></i></span><span class="num ${d>=0?'delta-up':'delta-dn'}" style="text-align:right">${d>=0?'+':''}${d.toFixed(1)}%</span></div>`; }).join('');
+  $('#cmpWin').innerHTML=`<div class="win-title"><span class="t">Compare — this fight vs best (Vorasius · Heroic)</span>${tb(['x'])}</div>
+  <div class="statrow3" style="padding:10px;grid-template-columns:repeat(3,1fr)"><div class="stat"><div class="k">DPS</div><div class="v">182.9K → <span class="delta-up">186.9K</span></div></div><div class="stat"><div class="k">Damage</div><div class="v">49.57M → 47.11M</div></div><div class="stat"><div class="k">Length</div><div class="v">4:31 → 4:12</div></div></div>
+  <div class="cmprow muted" style="font:700 10px var(--font-display);letter-spacing:.12em;text-transform:uppercase"><span>Spell</span><span>Best → this</span><span><span style="color:var(--blue)">Best</span> / <span style="color:var(--gold)">This</span></span><span style="text-align:right">Change</span></div>
+  ${rows}
+  <div style="padding:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="secthead" style="flex:none">Gear changed</span>${tile('tr',22)}<span style="font-size:12px">Trinket 1 · 714 → <span class="delta-up">727</span></span>${tile('ks',22)}<span style="font-size:12px">Ring 2 · gem differs</span><span class="chip" style="color:#ffb84a;margin-left:auto">Different loadout</span></div>`;
+})();
+
+// ---- gear view ---------------------------------------------------------------------------
+(function(){
+  const L=[['Head','bw','723'],['Neck','cs','720'],['Shoulder','kc','723'],['Back','bs','717'],['Chest','ks','723'],['Wrist','ms','720'],['Tabard','pa','—']];
+  const R=[['Hands','ba','720'],['Waist','cl','717'],['Legs','bc','723'],['Feet','st','720'],['Ring 1','cw','723'],['Ring 2','ks','720',1],['Trinket 1','tr','727',1],['Trinket 2','po','720']];
+  const slot=(s,right)=>`<div class="slot${right?' right':''}${s[3]?' chg':''}">${tile(s[1],34)}<span>${s[0]}<br><b class="${s[3]?'delta-up':''}">${s[2]}</b></span></div>`;
+  const st=[['Agility','61,204','+412'],['Stamina','188,320',''],['Critical strike','6,120 · 21.4%','+0.6%'],['Haste','9,880 · 28.2%',''],['Mastery','7,402 · 44.0%','−0.9%'],['Versatility','3,110 · 7.6%',''],['Leech','612 · 2.1%','']];
+  $('#gearWin').innerHTML=`<div class="win-title"><span class="t">Gear — Ka0shunter · Vorasius · 10 Nov 21:14</span>${tb(['x'])}</div>
+  <div class="gv"><div>${L.map(s=>slot(s)).join('')}</div><div class="stats"><div class="secthead" style="padding-bottom:6px"><span>Stats at pull</span><span>vs best</span></div>${st.map(([k,v,d])=>`<div><span>${k}</span><span class="num">${v} <span class="${d.startsWith('+')?'delta-up':d?'delta-dn':''}" style="display:inline-block;width:46px;text-align:right">${d}</span></span></div>`).join('')}
+  <div style="margin-top:10px;display:flex;justify-content:center;gap:10px">${tile('bs',34)}${tile('cs',34)}</div><div class="hint" style="text-align:center">Main hand · Off hand</div></div><div>${R.map(s=>slot(s,true)).join('')}</div></div>`;
+})();
+
+// ---- chat -------------------------------------------------------------------------------
+$('#chatBox').innerHTML = [
+  `<span class="c">Combat Trail</span>: slash commands (<span class="k">/kct</span> or <span class="k">/combattrail</span>):`,
+  `  <span class="k">/kct</span> — open settings · <span class="k">/kct results</span> — Results window · <span class="k">/kct hud</span> show|hide`,
+  `  <span class="k">/kct unlock</span> | <span class="k">lock</span> — move the lanes · <span class="k">/kct test</span> — sample data · <span class="k">/kct sim</span> — play a made-up fight`,
+  `  <span class="k">/kct lane player|pet</span> on|off · <span class="k">/kct ignore add|remove &lt;spell&gt;</span> [player|pet]`,
+  `  <span class="k">/kct set &lt;path&gt; &lt;value&gt;</span> — any setting · <span class="k">/kct get &lt;path&gt;</span> · <span class="k">/kct reset</span>`,
+  `  <span class="k">/kct purge</span> — apply retention now · <span class="k">/kct debug</span> · <span class="k">/kct diagnostics</span> · <span class="k">/kct probe</span>`,
+  `&nbsp;`,
+  `<span class="c">Combat Trail</span>: fight saved — Vorasius (Heroic) 4:12 · 186.9K DPS · <span style="color:var(--gold)">new best +2.1%</span>`,
+  `<span style="color:#ff7eff">[Party] Ka0shunter</span>: Combat Trail · Vorasius HC · 4:12 · 186.9K DPS · BM 721.4 · top: Kill Command 25.4%, Barbed Shot 17.1% · <span style="color:#71d5ff">[talents]</span>`
+].map(l=>`<div>${l}</div>`).join('');
+})();
+</script>
