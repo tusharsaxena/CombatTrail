@@ -6,7 +6,11 @@ local addonName, NS = ...
 -- Ka0s_<Addon>_<Event>, <Event> PascalCase; the SCREAMING_SNAKE key never leaks into it. Each entry
 -- names its one sender and its payload, and arrives in the same change as that sender (the settings
 -- write seam, the lanes, the fight state machine and the recorder, plan Tasks 0.2 to 2.5).
-NS.MSG = {}
+NS.MSG = {
+    -- Sender: settings/Schema.lua (NS.AnnounceSettingsChanged: the write seam, and the profile
+    -- callbacks' wholesale change). Payload: (path, value); ("profile", key) on a profile change.
+    SETTINGS_CHANGED = "Ka0s_CombatTrail_SettingsChanged",
+}
 
 local Bus = LibStub and LibStub("LibKa0s-Bus-1.0", true)
 if not Bus then

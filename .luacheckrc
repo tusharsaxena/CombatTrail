@@ -19,11 +19,14 @@ read_globals = {
     "C_Timer", "C_AddOns", "GetLocale",
     -- combat state: InCombatLockdown() gates secure writes; UnitAffectingCombat() drives display
     "InCombatLockdown", "UnitAffectingCombat",
+    -- settings panel plumbing (settings/)
+    "Settings", "StaticPopup_Show",
 }
 
 globals = {
     "CombatTrailDB",        -- the SavedVariables write target (the AceDB tree)
     "CombatTrailPerfDB",    -- the LibKa0s-Perf capture ring, outside the AceDB tree (performance-§5)
+    "StaticPopupDialogs",   -- the addon registers its named popup (settings/General.lua) into this table
 }
 
 -- The test tree is linted; these are the globals it WRITES. Scoped here so no shipped file can reach
@@ -61,3 +64,8 @@ files["core/Database.lua"] = { ignore = { "212/self" } }
 -- OnEnable reads the file's `NS` upvalue (the same table), and OnInitialize reads `self`, which is
 -- why the entry is `212/self` and not a file-wide switch.
 files["core/CombatTrail.lua"] = { ignore = { "212/self" } }
+
+-- The dispatcher's methods are reached by colon (`NS.Slash:OnSlash(msg)`, the Ace and kit convention)
+-- and forward to the library's instance; `Sl` and `self` are the same table, so the bodies read the
+-- file's upvalue.
+files["settings/Slash.lua"] = { ignore = { "212/self" } }

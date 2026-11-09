@@ -92,14 +92,15 @@ local SUITES = {
     "test_load",
     "test_loadorder",
     "test_vendor_sync",
+    "test_settings",
+    "test_slash",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },
     { name = "test_lizard_sighted", dir = "tests/_kit/" },
     { name = "test_client_globals", dir = "tests/_kit/" },
-    -- Declared skips until their facts are wired: the diagnostics contract once the slash dispatcher
-    -- and the report exist (plan Tasks 0.2 and 5.2), the skin switch once a surface of this addon's
-    -- own is painted (milestones 1 to 4).
+    -- The diagnostics contract, against this addon's dispatcher (Kit.diagnostics below). The skin
+    -- switch is a declared skip until a surface of this addon's own is painted (milestones 1 to 4).
     { name = "test_diagnostics_contract", dir = "tests/_kit/" },
     { name = "test_skin_switch", dir = "tests/_kit/" },
     { name = "test_skin_values", dir = "tests/_kit/" },
@@ -117,6 +118,20 @@ _G.CT_TEST = Kit.expose{
     isSecret         = Kit.isSecret,
     reveal           = Kit.reveal,
     installSecretValue = Kit.installSecretValue,
+}
+
+-- The diagnostics contract runs against THIS addon's dispatcher (debug-logging-§14).
+local contractInst
+local function contract()
+    contractInst = contractInst or loadInstance()
+    return contractInst
+end
+Kit.diagnostics = {
+    brand       = "Ka0s Combat Trail",
+    dispatch    = function(line) contract().NS.Slash:OnSlash(line) end,
+    console     = function() return contract().NS.DebugLog end,
+    setDebug    = function(on) contract().NS.State.debug = on and true or false end,
+    setDisabled = function(off) contract().NS.SetByPath("general.enabled", not off) end,
 }
 
 -- The typed-value gate (skinning-§1): no row of this addon's own yet, so every color, face and texture

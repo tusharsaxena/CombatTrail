@@ -428,12 +428,16 @@ local function pickerClosed()
     NS.SetByPath(PICKER_PATH, true)
 end
 
+-- The General page's Look and skin tab: the skin rows' group, so the library's tab takes its place in
+-- the strip (settings/General.lua), and the tab the picker's gear selects.
+NS.SKIN_TAB_KEY = "Look and skin"
+
 function NS.SkinPickerSpec()
     return {
         owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice,
         -- The gear's default: O.OpenOptionsPanel("general"), then O.SelectTab("general",
-        -- "Appearance"), the Skin tab's key on the General page (settings/General.lua).
-        page = "general", tab = "Appearance",
+        -- NS.SKIN_TAB_KEY), the Look and skin tab's key on the General page (settings/General.lua).
+        page = "general", tab = NS.SKIN_TAB_KEY,
         preview = preview, onClose = pickerClosed,
     }
 end

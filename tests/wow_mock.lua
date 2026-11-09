@@ -83,6 +83,29 @@ local function build()
         Show     = function(self, name) self.__shown[name] = true end,
     }
 
+    -- The Profiles page's AceConfig trio (settings/Profiles.lua): the kit loads no lib from libs/, so
+    -- these stand in for AceDBOptions' table and AceConfigDialog's draw.
+    libs["AceDBOptions-3.0"] = {
+        GetOptionsTable = function(_, db) return { type = "group", name = "Profiles", args = {}, __db = db } end,
+    }
+    local registered = {}
+    libs["AceConfig-3.0"] = {
+        RegisterOptionsTable = function(_, name, tbl) registered[name] = tbl end,
+        __registered = registered,
+    }
+    libs["AceConfigDialog-3.0"] = {
+        Open = function(self, name, container)
+            self.__opens = (self.__opens or 0) + 1
+            self.__lastOpen = { name = name, container = container }
+        end,
+        Close = function() end,
+        SetDefaultSize = function() end,
+    }
+    libs["AceConfigRegistry-3.0"] = {
+        NotifyChange = function() end,
+        RegisterOptionsTable = function() end,
+    }
+
     -- The client's key-binding API, from the kit (the Keybindings tab, options-ui-§20). Its
     -- GetBindingName reads M and the real _G, but this addon's BINDING_NAME_ globals are rawset into
     -- the instance's environment (M._G, made after build), so the name is read there first, as the

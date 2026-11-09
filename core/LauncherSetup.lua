@@ -2,9 +2,9 @@ local addonName, NS = ...
 -- core/LauncherSetup.lua — the ONE LibDataBroker launcher, registered twice (minimap button and broker
 -- row) through LibKa0s-Launcher-1.0 (launcher-§1).
 --
--- Left-click ALWAYS opens the settings panel; right-click the options menu (launcher-§2). The menu's
--- master-controls entries (Enabled, Locked, Test mode, Sim mode, Show window) arrive with the
--- handlers they share with the slash verbs (plan Task 0.2), and the key-binding buttons with
+-- Left-click ALWAYS opens the settings panel; right-click the options menu (launcher-§2), whose
+-- master-controls entries are Enabled, Locked, Test mode, Sim mode and Show window (the DPS HUD), each
+-- on the handler its slash verb runs (core/CombatTrail.lua). The key-binding buttons arrive with
 -- Bindings.xml (plan Task 5.2).
 
 local Launcher = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
@@ -43,17 +43,32 @@ if not Launcher then
     return
 end
 
-NS.Launcher = Launcher:New({
+-- The descriptor, published for the suite (tests/test_slash.lua) so it can pin the menu's pairs.
+NS.LAUNCHER_DESCRIPTOR = {
     name    = addonName,                   -- the registration name LibDBIcon keys the position by
     icon    = NS.Constants.LOGO_128,
     label   = L["Ka0s Combat Trail"],      -- the brand in plain text, never the TOC Title (launcher-§1)
     minimap = minimapTable,                -- db.global.minimap, shared with the Minimap button row
-    -- Resolved at CALL time: the settings panel and the skin verb are built by settings/ files, which
-    -- load after this one.
+    -- Resolved at CALL time: the handlers live in core/CombatTrail.lua and the settings panel and the
+    -- skin verb in settings/ files, all of which load after this one. Each toggle calls the same
+    -- handler its verb calls -- never a copy -- and the library grays every entry but Enabled while
+    -- the addon is disabled.
     openSettings   = function() NS.OpenSettings() end,
     openSkinPicker = function() if NS.RunSkinVerb then NS.RunSkinVerb() end end,
+    isEnabled      = function() return not NS.IsDisabled() end,
+    setEnabled     = function(on) NS.RunVerb(on and "enable" or "disable") end,
+    isLocked       = function() return NS.GetSetting("general.locked") == true end,
+    toggleLock     = function() NS.ToggleLock() end,
+    isTestMode     = function() return NS.IsTestMode() end,
+    toggleTestMode = function() NS.ToggleTestMode() end,
+    isWindowShown  = function() return NS.IsHudShown() end,
+    toggleWindow   = function() NS.ToggleHud() end,
+    -- The ONE pair General > Master controls' Sim mode box carries too.
+    isSimMode      = function() return NS.IsSimMode() end,
+    toggleSim      = function() return NS.ToggleSim() end,
     version        = function() return NS.Version() end,
     print          = function(line) NS.Print(line) end,
     debug          = function(tag, message) NS.Debug(tag, "%s", message) end,
     debugAtEnable  = function(tag, message) NS.DebugAtEnable(tag, "%s", message) end,
-})
+}
+NS.Launcher = Launcher:New(NS.LAUNCHER_DESCRIPTOR)

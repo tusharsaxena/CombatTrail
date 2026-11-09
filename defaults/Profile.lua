@@ -7,11 +7,14 @@ local _, NS = ...
 
 NS.defaults = {
     profile = {
-        -- Master controls (General > Master controls). The debug flag is NOT here: it is session-only
-        -- (NS.State.debug, debug-logging-§5), as are test mode and the sim.
+        -- Master controls (General > Master controls) and the global font scale (General > Look and
+        -- skin). The debug flag is NOT here: it is session-only (NS.State.debug, debug-logging-§5), as
+        -- are test mode and the sim. Nor is the minimap button: LibDBIcon's `hide` is global (below).
         general = {
-            enabled = true,
-            locked  = false,
+            enabled     = true,
+            locked      = false,
+            hudInCombat = true,
+            fontScale   = 1,
         },
         -- The Player and Pet lanes, one block per lane (spec §4).
         lanes = {},

@@ -90,3 +90,19 @@ core\Database.lua
 # Defaults (the only place a default is hardcoded -- savedvariables-§2)
 # LOAD-BEARING: reads NS.DEFAULT_SKIN (core\SkinSetup.lua) at FILE SCOPE.
 defaults\Profile.lua
+
+# Settings (last -- depend on everything else being initialized)
+# LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua
+# calls at FILE SCOPE and core\LifecycleSetup.lua's NS.SyncEnabledHold reads at CALL time.
+settings\Schema.lua
+settings\Slash.lua
+# LOAD-BEARING: publishes NS.Helpers, which every page file below captures at FILE SCOPE, and
+# NS.RegisterTabbedPage, which settings\Lanes.lua, Hud.lua and History.lua call at FILE SCOPE.
+settings\OptionsSetup.lua
+# LOAD-BEARING: General registers FIRST and Profiles LAST -- the page order IS the registration order
+# (General, Lanes, DPS HUD, History, Profiles).
+settings\General.lua
+settings\Lanes.lua
+settings\Hud.lua
+settings\History.lua
+settings\Profiles.lua

@@ -29,7 +29,7 @@ function NS.OnProfileChanged(event, _db, key)
     -- so it shows again over the new profile's skin; one that has seen it stays down. After the
     -- hold, so a profile with the addon switched off shows nothing.
     if NS.MaybeShowSkinPicker then NS.MaybeShowSkinPicker() end
-    -- Announced through settings/Schema.lua, the message's one sender (plan Task 0.2).
+    -- Announced through settings/Schema.lua, the message's one sender.
     if NS.AnnounceSettingsChanged then NS.AnnounceSettingsChanged("profile", key) end
 end
 
