@@ -57,11 +57,12 @@ local function leaveCombat(inst)
     inst.mocks.__fire("PLAYER_REGEN_ENABLED")
 end
 
--- The delays of the timers queued now, in order.
+-- The delays of the timers still live now (the kit's live set: armed AceTimer handles, canceled
+-- ones left out), in order.
 local function delays(inst)
     local out = {}
-    for _, t in ipairs(inst.mocks.__timers) do
-        if not t.cancelled then out[#out + 1] = t.delay end
+    for _, t in ipairs(inst.mocks.__timers()) do
+        if t.delay then out[#out + 1] = t.delay end
     end
     return out
 end
