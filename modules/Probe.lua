@@ -79,10 +79,11 @@ end
 
 -- ── printing a value ───────────────────────────────────────────────────────────────────────────
 
---- One value as report text. The secret test runs FIRST, so a secret never reaches tostring.
+--- One value as report text. The secret test runs FIRST, so a secret never reaches tostring, nor
+--- even a nil test (a secret boolean such as isLocalPlayer must not meet a comparison).
 local function show(v)
-    if v == nil then return "nil" end
     if Secrets.IsSealed(v) then return "<secret>" end
+    if v == nil then return "nil" end
     local kind = type(v)
     if kind == "string" or kind == "number" or kind == "boolean" then return tostring(v) end
     return kind
@@ -91,8 +92,9 @@ end
 local function yesNo(b) return b and "yes" or "no" end
 
 local function secrecy(v)
+    if Secrets.IsSecret(v) then return "secret" end
     if v == nil then return "nil" end
-    return Secrets.IsSecret(v) and "secret" or "plain"
+    return "plain"
 end
 
 -- ── the meter, read safely ─────────────────────────────────────────────────────────────────────
