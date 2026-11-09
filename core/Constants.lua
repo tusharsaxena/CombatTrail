@@ -35,12 +35,14 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 --   FULLSCREEN_DIALOG  (library)     the LibKa0s dropdown menu (the Results filter bars)
 --   TOOLTIP            (Blizzard)    GameTooltip
 --
--- A lane's icons sit at lane level + 1 .. lane level + LEVEL.ICON_BAND, re-ordered inside that band on
--- each push so the newest is on top (spec §4 Layering). Levels inside a window (base W): chrome W+1, content W+2 .. W+8, the library resize grip W+10.
+-- A lane sits at its parent's level + LEVEL.LANE + the lane's own level offset (0-50). Its icons sit
+-- at lane level + 1 .. lane level + LEVEL.ICON_BAND, re-ordered inside that band on each push so the
+-- newest is on top (spec §4 Layering); an icon's border, glow and ✕ are regions of the icon, so they
+-- take no level of their own. Levels inside a window (base W): chrome W+1, content W+2 .. W+8, the library resize grip W+10.
 -- The Results detail pane sits at body + LEVEL.DETAIL, the damage chart's overlay at its plot +
 -- LEVEL.CHART_OVERLAY, and the Results window's dim cover under an open modal at W + LEVEL.COVER
 -- (the standard's popover band over a window's own content).
 C.LAYERS = {
     STRATA = { LANE = "LOW", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG" },
-    LEVEL  = { DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8 },
+    LEVEL  = { LANE = 1, DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8 },
 }

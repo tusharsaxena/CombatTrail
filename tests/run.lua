@@ -95,6 +95,8 @@ local SUITES = {
     "test_settings",
     "test_slash",
     "test_lane_casts",
+    "test_lane_layout",
+    "test_lane_render",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

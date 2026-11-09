@@ -193,6 +193,39 @@ function Compat.SpellTexture(id)
     return nil
 end
 
+--- A spell's name, or nil. For a PLAIN spell ID only (the lanes' name under an icon); the caller
+--- runs it in pcall.
+--- @param id number
+--- @return string|nil
+function Compat.SpellName(id)
+    if id == nil then return nil end
+    local spell = C_Spell
+    if spell and spell.GetSpellName then return (spell.GetSpellName(id)) end
+    local bare = GetSpellInfo
+    if bare then return (bare(id)) end
+    return nil
+end
+
+--- A spell's base cooldown in milliseconds, or nil (the lanes' long-cooldown glow). It may answer a
+--- secret in combat; the caller runs it in pcall and reads it through NS.Secrets.
+--- @param id number
+--- @return number|nil
+function Compat.SpellBaseCooldown(id)
+    if id == nil then return nil end
+    local fn = GetSpellBaseCooldown
+    if fn then return (fn(id)) end
+    return nil
+end
+
+--- The player's spell haste in percent, or nil (the lanes' haste-adjusted GCD ticks). It may answer
+--- a secret in combat; the caller runs it in pcall and reads it through NS.Secrets.
+--- @return number|nil
+function Compat.SpellHaste()
+    local fn = UnitSpellHaste
+    if fn then return (fn("player")) end
+    return nil
+end
+
 -- ---------------------------------------------------------------------------
 -- Chat and number formatting
 -- ---------------------------------------------------------------------------

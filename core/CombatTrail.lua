@@ -44,6 +44,8 @@ end
 function NS.RegisterGameEvents()
     -- The lanes' cast events, for the lanes switched on (modules/LaneCasts.lua).
     if NS.LaneCasts then NS.LaneCasts.Sync() end
+    -- The lanes' frames, built and styled from the current settings (modules/LaneRender.lua).
+    if NS.LaneRender then NS.LaneRender.Sync() end
 end
 
 -- ── Host handlers ───────────────────────────────────────────────────────────────────────────────

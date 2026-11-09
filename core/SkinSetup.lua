@@ -207,6 +207,8 @@ NS.SKIN_TOKENS = {
     ["ct.danger.border"] = { default = rgba(RED, 0.6), follow = "btn.border", skins = wash("sem.statusBad", 0.6) },
     ["ct.danger.text"]   = { default = rgba(RED, 1), follow = "sem.statusBad" },
     ["ct.danger.hover"]  = { default = GOLD, follow = "btn.hover" },
+    -- The ✕ a lane draws over an interrupted or canceled cast (modules/LaneRender.lua).
+    ["ct.lane.cross"] = { default = rgba(RED, 1), follow = "sem.statusBad" },
     -- The other buttons' slots: a primary button's gold wash and edge (gold under the pointer too),
     -- and every style's disabled look, its box and label faded (fill x0.4, edge 0.25, label 0.4).
     ["ct.primary.bg"]        = { default = rgba(GOLD, 0.12), follow = "btnPrimary.bg" },

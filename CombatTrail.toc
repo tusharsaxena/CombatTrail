@@ -98,6 +98,12 @@ defaults\Profile.lua
 # The lanes' cast capture. LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus
 # receiver (core\Bus.lua) at FILE SCOPE; reaches NS.db at CALL time only.
 modules\LaneCasts.lua
+# The lanes' layout math: pure, read by modules\LaneRender.lua at CALL time.
+modules\LaneLayout.lua
+# The lanes' frames. LOAD-BEARING: captures NS.Pool, NS.Secrets, NS.Perf and NS.LaneLayout and
+# registers its bus receiver (core\Bus.lua) at FILE SCOPE, so it follows modules\LaneLayout.lua;
+# reaches NS.db and NS.LaneCasts at CALL time only.
+modules\LaneRender.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

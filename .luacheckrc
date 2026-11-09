@@ -21,6 +21,8 @@ read_globals = {
     "InCombatLockdown", "UnitAffectingCombat",
     -- units: the pet's presence and name (modules/LaneCasts.lua)
     "UnitExists", "UnitName",
+    -- a lane icon's spell tooltip (modules/LaneRender.lua)
+    "GameTooltip",
     -- the perf brackets' CPU clock (LibKa0s-Perf-1.0's Note takes milliseconds)
     "debugprofilestop",
     -- settings panel plumbing (settings/)
@@ -46,7 +48,7 @@ files["core/Compat.lua"] = {
         "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CAMELOT",
         "C_ChatInfo", "SendChatMessage", "C_StringUtil",
         "C_SpecializationInfo", "GetSpecialization", "GetSpecializationInfo",
-        "C_Spell", "GetSpellTexture",
+        "C_Spell", "GetSpellTexture", "GetSpellInfo", "GetSpellBaseCooldown", "UnitSpellHaste",
         "issecretvalue", "canaccessvalue", "issecrettable", "canaccesstable",
     },
 }

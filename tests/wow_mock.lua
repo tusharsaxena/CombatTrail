@@ -55,6 +55,17 @@ local function build()
         end,
     }
 
+    -- A spell's base cooldown in ms (modules/LaneRender.lua's long-cooldown glow): 0 unless a test
+    -- sets M.__baseCooldowns[id]; every ask is counted per ID, so a suite can hold the cache to one.
+    M.__baseCooldowns, M.__baseCooldownCalls = {}, {}
+    M.GetSpellBaseCooldown = function(id)
+        M.__baseCooldownCalls[id] = (M.__baseCooldownCalls[id] or 0) + 1
+        return M.__baseCooldowns[id] or 0, 0
+    end
+    -- The player's spell haste in percent (the lanes' haste-adjusted GCD ticks): 0 unless set.
+    M.__haste = 0
+    M.UnitSpellHaste = function() return M.__haste end
+
     -- TOC metadata, read through LibKa0s-Env-1.0 (core/EnvSetup.lua).
     M.__toc = {
         Version = "0.1.0",
