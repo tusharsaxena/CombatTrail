@@ -41,7 +41,9 @@ test("load: the core seams are published", function()
 end)
 
 test("load: NS.Compat.ClientKey() follows the kit profile", function()
-    local want = T.mocks.WOW_PROJECT_CAMELOT and "forever" or "retail"
+    -- Read off the environment the run was started with, not off the mock it stamped, so a kit
+    -- profile that failed to stamp Forever's constants goes red here instead of agreeing with itself.
+    local want = (os.getenv("KA0S_KIT_CLIENT") == "forever") and "forever" or "retail"
     assertEqual(T.NS.Compat.ClientKey(), want)
     assertEqual(T.NS.Compat.IsForever(), want == "forever")
     assertEqual(T.NS.Compat.IsRetail(), want == "retail")
