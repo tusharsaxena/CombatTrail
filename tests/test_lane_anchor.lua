@@ -161,6 +161,52 @@ test("lane anchor: a dock to itself or to a lane switched off falls back to free
     assertTrue(pts()[1][2] == inst.mocks.UIParent)
 end)
 
+test("lane anchor: a lane at its fallback place sits on screen, x and y from the CENTER", function()
+    local inst = setup()
+    local pts = points(inst, "pet")
+    set(inst, "player", "enabled", false)
+    local p = pts()[1]
+    assertEqual(p[1], "CENTER", "not the dock's TOP on UIParent's BOTTOM, off the screen")
+    assertTrue(p[2] == inst.mocks.UIParent)
+    assertEqual(p[3], "CENTER")
+    assertEqual(p[4], 0)
+    assertEqual(p[5], -236)
+    assertEqual(cfgOf(inst, "pet").anchor.point, "TOP", "the dock's point is kept for when the host is back")
+end)
+
+test("lane anchor: leaving dock mode for free moves a TOP under BOTTOM point to CENTER", function()
+    local inst = setup()
+    local pts = points(inst, "pet")
+    setAnchor(inst, "pet", "mode", "free")
+    local a = cfgOf(inst, "pet").anchor
+    assertEqual(a.point, "CENTER")
+    assertEqual(a.relPoint, "CENTER")
+    local p = pts()[1]
+    assertEqual(p[1], "CENTER")
+    assertEqual(p[3], "CENTER")
+    assertEqual(p[5], -236)
+end)
+
+test("lane anchor: dragging a lane at its fallback place keeps its dock point", function()
+    local inst, A = setup()
+    set(inst, "player", "enabled", false)
+    A.SetUnlocked(true)
+    local lane, ov = inst.NS.LaneRender.Get("pet"), A.__overlay("pet")
+    rawset(lane, "StartMoving", function() end)
+    rawset(lane, "StopMovingOrSizing", function() end)
+    rawset(lane, "GetCenter", function() return 530, 350 end)
+    rawset(lane, "GetEffectiveScale", function() return 1 end)
+    rawset(inst.mocks.UIParent, "GetCenter", function() return 500, 400 end)
+    rawset(inst.mocks.UIParent, "GetEffectiveScale", function() return 1 end)
+    ov:__fire("OnDragStart", "LeftButton")
+    ov:__fire("OnDragStop")
+    local a = cfgOf(inst, "pet").anchor
+    assertEqual(a.x, 30)
+    assertEqual(a.y, -50)
+    assertEqual(a.point, "TOP", "still the dock's point")
+    assertEqual(a.relPoint, "BOTTOM")
+end)
+
 -- ── unit frames ────────────────────────────────────────────────────────────────────────────────
 
 test("lane anchor: the unit frame list names each supported addon, Blizzard's last", function()

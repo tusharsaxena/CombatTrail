@@ -5,7 +5,9 @@ local _, NS = ...
 --
 -- THREE MODES per lane, `anchor.mode`:
 --   * "free": anchor.point on UIParent's anchor.relPoint at anchor.x, anchor.y. A lane that cannot
---     reach its host in the other two modes falls back here, so x and y are also its fallback place.
+--     reach its host in the other two modes falls back to x, y from the screen's CENTER: its point
+--     and relPoint there are the dock's (TOP under BOTTOM), and on UIParent they would put the lane
+--     off the bottom of the screen.
 --   * "dock": on the other lane (anchor.target), anchor.point to its anchor.relPoint, `gap` pixels
 --     apart on the axis the two points face across (TOP under BOTTOM: down; LEFT beside RIGHT:
 --     right). A dock to itself, to a lane switched off, or to a lane docked back to this one (the
@@ -25,7 +27,8 @@ local _, NS = ...
 -- default "LOW" into "HOST" (spec §4: unit-frame mode matches its host by default), and switching
 -- out turns "HOST" back into "LOW"; a strata the player picks afterwards stands. The same edge
 -- moves a CENTER-to-CENTER point (the free default) to TOP under BOTTOM, so a lane leaving free mode
--- sits under its host and not over its middle.
+-- sits under its host and not over its middle, and the edge back INTO free mode moves a TOP under
+-- BOTTOM point (the dock default) back to CENTER-to-CENTER, so the lane lands on the screen.
 --
 -- THE EDIT OVERLAY (frame-layering-§2): one mouse-live box per lane, shown while Blizzard's Edit
 -- Mode is open (EventRegistry "EditMode.Enter"/"EditMode.Exit") and the Locked row is off, or after
@@ -34,7 +37,8 @@ local _, NS = ...
 -- takes, at lane level + LEVEL.LANE_EDIT over the whole icon band, and blind to the lane's alpha. An
 -- unlocked lane shows whatever its visibility rules say (modules/LaneVisibility.lua asks
 -- IsUnlocked). Dragging a lane that sits at its free place saves anchor.point/relPoint "CENTER" and
--- the x, y it was dropped at; a docked or unit-frame lane moves with its host and is not dragged.
+-- the x, y it was dropped at (a lane at its fallback place saves only x, y: its point is the dock's);
+-- a docked or unit-frame lane moves with its host and is not dragged.
 --
 -- WRITES go through the settings seam when a schema row holds the path (settings/Lanes.lua, plan
 -- Task 1.4), and otherwise straight to the profile with the same SETTINGS_CHANGED announcement.
@@ -251,6 +255,11 @@ local function gapOffset(point, relPoint, gap)
     return 0, 0
 end
 
+-- A lane in dock or unit mode that found no host sits at its fallback place.
+local function isFallback(a)
+    return a.mode == "dock" or a.mode == "unit"
+end
+
 local function place(frame, cfg, host)
     local a = type(cfg.anchor) == "table" and cfg.anchor or {}
     frame:ClearAllPoints()
@@ -258,6 +267,8 @@ local function place(frame, cfg, host)
         local point, relPoint = a.point or "TOP", a.relPoint or "BOTTOM"
         local dx, dy = gapOffset(point, relPoint, math.max(0, num(a.gap, 0)))
         frame:SetPoint(point, host, relPoint, dx, dy)
+    elseif isFallback(a) then
+        frame:SetPoint("CENTER", UIParent, "CENTER", num(a.x, 0), num(a.y, 0))
     else
         frame:SetPoint(a.point or "CENTER", UIParent, a.relPoint or "CENTER", num(a.x, 0), num(a.y, 0))
     end
@@ -300,8 +311,11 @@ local function dragStop(laneKey)
     lane:SetUserPlaced(false)
     local x, y = laneCenter(lane)
     if not x then return end
-    write(laneKey, "anchor.point", "CENTER")
-    write(laneKey, "anchor.relPoint", "CENTER")
+    local a = cfgOf(laneKey).anchor
+    if not (type(a) == "table" and isFallback(a)) then
+        write(laneKey, "anchor.point", "CENTER")
+        write(laneKey, "anchor.relPoint", "CENTER")
+    end
     write(laneKey, "anchor.x", x)
     write(laneKey, "anchor.y", y)
 end
@@ -522,6 +536,9 @@ local function onModeChanged(laneKey)
     if a.mode ~= "free" and a.point == "CENTER" and a.relPoint == "CENTER" then
         write(laneKey, "anchor.point", "TOP")
         write(laneKey, "anchor.relPoint", "BOTTOM")
+    elseif a.mode == "free" and a.point == "TOP" and a.relPoint == "BOTTOM" then
+        write(laneKey, "anchor.point", "CENTER")
+        write(laneKey, "anchor.relPoint", "CENTER")
     end
 end
 
