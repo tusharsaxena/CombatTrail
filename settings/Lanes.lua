@@ -143,10 +143,11 @@ local function laneRows(lane)
             defaults = { [key] = D[key], [companion] = D[companion] } })))
     end
     -- A border style row picks a statusbar texture: the edges are strips (modules/LaneRender.lua).
-    local function statusbarStyle(rows, tooltip)
+    -- Its tooltip comes in through the composer's `tooltips` (options-ui-§16, anti-pattern #106).
+    local function statusbarStyle(rows)
         for _, r in ipairs(rows) do
             if r.dialogControl == "Ka0sMedia_Border" then
-                r.dialogControl, r.values, r.tooltip = "Ka0sMedia_Statusbar", H.LSMValues("statusbar"), tooltip
+                r.dialogControl, r.values = "Ka0sMedia_Statusbar", H.LSMValues("statusbar")
             end
         end
     end
@@ -193,7 +194,8 @@ local function laneRows(lane)
     at(TAB.size, L["Layer"])
     row("strata", { type = "string", label = L["Frame strata"], values = strataValues(lane),
         validate = function(v) return STRATA_OK[v] == true end, startsLine = true,
-        tooltip = H.StrataTooltip(STRATA) .. " " .. L["Match host draws the lane on its unit frame's strata, and is offered while the lane is on one."] })
+        -- frame-layering-§1: a row-specific sentence MAY precede the library's tiers, never follow them.
+        tooltip = L["Match host draws the lane on its unit frame's strata, and is offered while the lane is on one."] .. " " .. H.StrataTooltip(STRATA) })
     row("levelOffset", { type = "number", label = L["Frame level"], min = 0, max = 50, step = 1,
         tooltip = L["Added to the lane's level on its strata. Raise it to draw this lane over a frame on the same strata."] })
 
@@ -217,13 +219,14 @@ local function laneRows(lane)
         keys = { borderShow = "border", borderStyle = "borderTexture", borderSize = "borderSize",
                  borderColor = "borderColor", useClassColorBorder = "borderClassColor" },
         defaults = { borderShow = D.border, borderStyle = D.borderTexture, borderSize = D.borderSize,
-                     borderColor = D.borderColor, useClassColorBorder = D.borderClassColor } })))
-    statusbarStyle(iconBorder, L["The texture each icon's border is drawn with. Empty draws it flat."])
+                     borderColor = D.borderColor, useClassColorBorder = D.borderClassColor },
+        tooltips = { borderStyle = L["The texture each icon's border is drawn with. Empty draws it flat."] } })))
+    statusbarStyle(iconBorder)
 
     at(TAB.icons, L["Glow"])
     row("glowLongCD", { type = "bool", label = L["Glow long cooldowns"], startsLine = true,
         tooltip = L["Ring the icon of a spell with a long cooldown, read from the spell's base cooldown."] })
-    row("glowMinCD", { type = "number", label = L["Long cooldown (s)"], min = 5, max = 300, step = 1,
+    row("glowMinCD", { type = "number", label = L["Long cooldown (seconds)"], min = 5, max = 300, step = 1,
         tooltip = L["The shortest base cooldown, in seconds, that glows."] })
     colorPair("glowColor", "glowClassColor", L["Glow color"])
 
@@ -243,8 +246,9 @@ local function laneRows(lane)
         keys = { borderShow = "laneBorder", borderStyle = "laneBorderTexture", borderSize = "laneBorderSize",
                  borderColor = "laneBorderColor", useClassColorBorder = "laneBorderClassColor" },
         defaults = { borderShow = D.laneBorder, borderStyle = D.laneBorderTexture, borderSize = D.laneBorderSize,
-                     borderColor = D.laneBorderColor, useClassColorBorder = D.laneBorderClassColor } })))
-    statusbarStyle(laneBorder, L["The texture the lane's border is drawn with. Empty draws it flat."])
+                     borderColor = D.laneBorderColor, useClassColorBorder = D.laneBorderClassColor },
+        tooltips = { borderStyle = L["The texture the lane's border is drawn with. Empty draws it flat."] } })))
+    statusbarStyle(laneBorder)
 
     -- Ticks and labels
     at(TAB.ticks, L["Ticks"])
@@ -282,7 +286,7 @@ local function laneRows(lane)
     at(TAB.vis, L["When"])
     row("visibility.show", { type = "string", label = L["Show the lane"], values = SHOWS, validate = SHOW_OK,
         tooltip = L["When the lane shows. In combat or with a target also shows it while you have something targeted."] })
-    row("visibility.hideAfter", { type = "number", label = L["Hide after combat (s)"], min = 0, max = 60, step = 1,
+    row("visibility.hideAfter", { type = "number", label = L["Hide after combat (seconds)"], min = 0, max = 60, step = 1,
         tooltip = L["How long the lane stays after combat ends, in seconds, when it shows in combat only."] })
     row("visibility.alphaCombat", { type = "number", label = L["Opacity in combat"], min = 0, max = 1, step = 0.05,
         isPercent = true, startsLine = true, tooltip = L["How opaque the whole lane is while you are in combat."] })
@@ -462,9 +466,9 @@ local GENERAL_TAB = {
         local lane = selected
         H.InlineButtonPair(ctx,
             { text = L["Copy from %s"]:format(LANE_NAME[OTHER[lane]]),
-              tooltip = L["Give this lane every setting of the other lane, except where it sits, its label text and its switch."],
+              tooltip = L["Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."],
               onClick = function() LanesPage.CopyFrom(OTHER[lane], lane) end },
-            { text = L["Reset lane"],
+            { text = L["Reset lane…"],
               tooltip = L["Put every setting of this lane back to its default, its ignore list included. Asks first."],
               onClick = function() LanesPage.ConfirmReset(lane) end })
         H.InlineButtonPair(ctx,

@@ -261,7 +261,7 @@ L["Glow"] = "Glow"
 L["Glow long cooldowns"] = "Glow long cooldowns"
 L["Ring the icon of a spell with a long cooldown, read from the spell's base cooldown."] =
     "Ring the icon of a spell with a long cooldown, read from the spell's base cooldown."
-L["Long cooldown (s)"] = "Long cooldown (s)"
+L["Long cooldown (seconds)"] = "Long cooldown (seconds)"
 L["The shortest base cooldown, in seconds, that glows."] =
     "The shortest base cooldown, in seconds, that glows."
 L["Glow color"] = "Glow color"
@@ -306,7 +306,7 @@ L["When"] = "When"
 L["Show the lane"] = "Show the lane"
 L["When the lane shows. In combat or with a target also shows it while you have something targeted."] =
     "When the lane shows. In combat or with a target also shows it while you have something targeted."
-L["Hide after combat (s)"] = "Hide after combat (s)"
+L["Hide after combat (seconds)"] = "Hide after combat (seconds)"
 L["How long the lane stays after combat ends, in seconds, when it shows in combat only."] =
     "How long the lane stays after combat ends, in seconds, when it shows in combat only."
 L["Opacity in combat"] = "Opacity in combat"
@@ -341,9 +341,9 @@ L["Unlock the lanes"] = "Unlock the lanes"
 L["Show the lanes' move boxes so you can drag them, as /kct unlock does. Both lanes unlock together."] =
     "Show the lanes' move boxes so you can drag them, as /kct unlock does. Both lanes unlock together."
 L["Copy from %s"] = "Copy from %s"
-L["Give this lane every setting of the other lane, except where it sits, its label text and its switch."] =
-    "Give this lane every setting of the other lane, except where it sits, its label text and its switch."
-L["Reset lane"] = "Reset lane"
+L["Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."] =
+    "Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."
+L["Reset lane…"] = "Reset lane…"
 L["Put every setting of this lane back to its default, its ignore list included. Asks first."] =
     "Put every setting of this lane back to its default, its ignore list included. Asks first."
 L["Preview lane"] = "Preview lane"

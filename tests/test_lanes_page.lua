@@ -313,3 +313,22 @@ test("lanes page: a Use class color companion draws the player's class color", f
     r = fs:GetTextColor()
     assertEqual(r, 1, "off, the swatch again")
 end)
+
+test("lanes page: the words follow options-ui-§16/§21 and frame-layering-§1", function()
+    local inst, ctx = shownPage()
+    local NS, L = inst.NS, inst.NS.L
+    -- A button that opens a confirmation ends in an ellipsis.
+    assertTrue(widget(inst, ctx, "Reset lane…") ~= nil, "Reset lane… is drawn")
+    -- No label writes seconds as (s).
+    for _, row in ipairs(NS.SchemaForPage("lanes")) do
+        assertFalse((row.label or ""):find("(s)", 1, true) ~= nil, row.label)
+    end
+    -- A composed border style keeps its own tooltip only through `tooltips` (anti-pattern #106).
+    local style = NS.FindSchemaRow("lanes.player.borderTexture")
+    assertEqual(style.dialogControl, "Ka0sMedia_Statusbar")
+    assertTrue(style.tooltip:find(L["The texture each icon's border is drawn with. Empty draws it flat."], 1, true) == 1)
+    -- The row's own sentence comes before the library's tiers, never after.
+    local strata = NS.FindSchemaRow("lanes.pet.strata")
+    local own = L["Match host draws the lane on its unit frame's strata, and is offered while the lane is on one."]
+    assertEqual(strata.tooltip, own .. " " .. NS.Helpers.StrataTooltip({ "BACKGROUND", "LOW", "MEDIUM", "HIGH" }))
+end)
