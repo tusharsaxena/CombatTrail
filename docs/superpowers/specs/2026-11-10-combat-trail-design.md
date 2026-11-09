@@ -98,7 +98,7 @@ Per-lane settings. Each tab maps to a settings tab on the Lanes page (mockup §4
 | Tab | Settings |
 |---|---|
 | General | enable, unlock, copy settings from the other lane, reset lane, live preview |
-| Size and position | direction (newest at right / left / bottom / top, scrolling away from it), scale, lane length px, seconds shown, icon size, icon spacing; **anchoring** (below) with point, relative point, X and Y offsets |
+| Size and position | direction (newest at right / left / bottom / top, scrolling away from it), scale, lane length px, seconds shown, icon size, icon spacing; **anchoring** (below) with point, relative point, X and Y offsets; **frame strata** (BACKGROUND, LOW, MEDIUM, HIGH, DIALOG; default **LOW**; unit-frame mode offers "Match host" as an extra choice and uses it by default) and **frame level offset** (0–50, default 0) **(owner, 2026-11-10)** |
 | Icons | border on/off, color and size; icon zoom (crop); **mark interrupted or cancelled casts** (red ✕); **glow long cooldowns** (≥ N s, default 29) with glow color; spell tooltip on hover; spell name under icon; fade portion (default the last 20%); stack repeated casts |
 | Background and border | lane background on/off, texture, color and opacity; lane border on/off, texture, color and size; padding |
 | Ticks and labels | GCD ticks on/off, spacing (1.5 s fixed, haste-adjusted GCD, 1 s), color and width; "now" line on/off and color; label on/off, text (default "You" and the pet's name), font, size, outline, color and position |
@@ -117,6 +117,18 @@ Delves and Arenas are Retail-only, and so are Mythic+ in History.
    in order: ElvUI, Shadowed Unit Frames, Cell, Pitbull, UnhaltedUnitFrames, then Blizzard. A "Frame by name…" option
    accepts any global frame name. If the frame is missing or forbidden, the lane falls back to Free and
    prints one diagnostic line. Strata and level follow the host (frame-layering, host-matched surfaces).
+
+**Layering (owner, 2026-11-10).** CastTrail's icons climbed up to 200 frame levels above their lane (`level % 200 + 1`).
+That let a cast icon draw over unrelated windows on the same strata (the owner saw a fishing icon float over a
+fishing-helper window). Combat Trail must not do this:
+- each lane sits on its configured **strata** (default LOW, below most addon windows, which use MEDIUM and up).
+  Its level is relative to that strata's base plus the lane's level offset (frame-layering: every level relative,
+  through `NS.Constants.LAYERS`).
+- icons stay inside a **bounded band** just above their lane: `laneLevel + 1 … laneLevel + ICON_BAND` with
+  `ICON_BAND = 8`. "Newest on top" comes from re-ordering the visible icons within that band on each push, never from
+  a counter that climbs.
+- the edit overlay, the ✕ marker and the glow use named offsets in the same band. Nothing in a lane ever calls
+  `SetFrameLevel` with an absolute number.
 
 **Interrupted and cancelled casts (Claude).** On `UNIT_SPELLCAST_INTERRUPTED` or `_FAILED` for a cast that
 showed a start (cast-time spells), the lane pushes the icon with the red ✕ marker. Instant casts that
