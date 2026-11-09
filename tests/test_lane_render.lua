@@ -199,6 +199,22 @@ test("lane render: a long base cooldown glows, cached per spellID", function()
     assertEqual(inst.mocks.__baseCooldownCalls[133], 1, "asked once for 133")
 end)
 
+test("lane render: a secret base cooldown is never compared or cached, and nothing raises", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local calls = 0
+        local _, R = setup(function(m)
+            m.GetSpellBaseCooldown = function() calls = calls + 1; return T.secret(120000), 0 end
+        end)
+        R.Push("player", item(12472, 0))
+        assertFalse(R.__icons("player")[1].glow[1]:IsShown(), "a secret cooldown draws no glow")
+        R.Push("player", item(12472, 0))
+        assertEqual(calls, 2, "a secret answer is not cached: the next cast asks again")
+    end)
+    restore()
+    assertTrue(ok, tostring(err))
+end)
+
 test("lane render: glowMinCD sets the bar and glowLongCD off never glows", function()
     local inst, R = setup(function(m) m.__baseCooldowns[1] = 20000 end)
     set(inst, "player", "glowMinCD", 15)
@@ -362,7 +378,11 @@ test("lane render: no absolute SetFrameLevel call (every level is the lane's plu
     local inst, R = setup()
     local LEVEL = inst.NS.Constants.LAYERS.LEVEL
     local lane = R.Get("player")
+    -- A parent above level 0, so an absolute level (LEVEL.LANE alone) cannot pass for a relative one.
+    lane:GetParent():SetFrameLevel(5)
+    R.Apply("player")
     local parentLevel = lvl(inst, lane:GetParent())
+    assertEqual(parentLevel, 5)
     assertEqual(lvl(inst, lane), parentLevel + LEVEL.LANE, "the lane: parent + LANE")
     set(inst, "player", "levelOffset", 10)
     assertEqual(lvl(inst, lane), parentLevel + LEVEL.LANE + 10, "plus the level offset")
