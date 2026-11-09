@@ -111,6 +111,7 @@ modules\LaneAnchor.lua
 # When each lane shows, and its opacity. LOAD-BEARING: captures NS.Secrets and registers its bus
 # receiver at FILE SCOPE; reaches NS.LaneRender, NS.LaneAnchor and NS.db at CALL time only.
 modules\LaneVisibility.lua
+modules\LaneIgnore.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

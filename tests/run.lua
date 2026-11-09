@@ -99,6 +99,7 @@ local SUITES = {
     "test_lane_render",
     "test_lane_anchor",
     "test_lane_visibility",
+    "test_lanes_page",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

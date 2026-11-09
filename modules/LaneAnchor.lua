@@ -72,7 +72,7 @@ LaneAnchor.UNIT_FRAMES = {
 local LANES = { "player", "pet" }
 local IS_LANE = { player = true, pet = true }
 local LANE_NAMES = { player = L["Player lane"], pet = L["Pet lane"] }
-local STRATA_OK = { BACKGROUND = true, LOW = true, MEDIUM = true, HIGH = true, DIALOG = true }
+local STRATA_OK = { BACKGROUND = true, LOW = true, MEDIUM = true, HIGH = true }
 local STRATA_RANK = { BACKGROUND = 1, LOW = 2, MEDIUM = 3, HIGH = 4, DIALOG = 5, FULLSCREEN = 6,
                       FULLSCREEN_DIALOG = 7, TOOLTIP = 8 }
 local LEVEL_OFFSET_MAX = 50

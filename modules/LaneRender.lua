@@ -72,6 +72,24 @@ local function rgba(c)
     return c.r, c.g, c.b, c.a
 end
 
+-- Each color's Use class color companion (options-ui-§17). The lanes draw the player's own casts, so
+-- the class is the player's; an unresolvable class falls through to the swatch, and the swatch's
+-- alpha applies under either.
+local CLASS_COLOR_OF = {
+    borderColor = "borderClassColor", glowColor = "glowClassColor", bgColor = "bgClassColor",
+    laneBorderColor = "laneBorderClassColor", tickColor = "tickClassColor",
+    nowColor = "nowClassColor", labelColor = "labelClassColor",
+}
+
+--- A lane color as drawn: the swatch `cfg[key]`, or the class color while its companion is on.
+local function tint(cfg, key)
+    local r, g, b, a = rgba(cfg[key])
+    if cfg[CLASS_COLOR_OF[key]] ~= true or not NS.ClassColor then return r, g, b, a end
+    local cr, cg, cb = NS.ClassColor("player")
+    if cr == nil then return r, g, b, a end
+    return cr, cg, cb, a
+end
+
 local function num(v, default)
     if type(v) == "number" and v == v then return v end
     return default
@@ -127,14 +145,15 @@ local function placeEdges(e, frame, size, out)
     end
 end
 
-local function paintEdges(e, color, texture)
+local function paintEdges(e, cfg, key, texture)
+    local r, g, b, a = tint(cfg, key)
     for i = 1, 4 do
         local t = e[i]
         if texture then
             t:SetTexture(texture)
-            t:SetVertexColor(rgba(color))
+            t:SetVertexColor(r, g, b, a)
         else
-            t:SetColorTexture(rgba(color))
+            t:SetColorTexture(r, g, b, a)
         end
     end
 end
@@ -221,10 +240,10 @@ local function styleIcon(f, cfg, face)
     local z = math.min(0.45, math.max(0, num(cfg.zoom, 0)))
     f.tex:SetTexCoord(z, 1 - z, z, 1 - z)
     placeEdges(f.border, f, math.max(1, num(cfg.borderSize, 1)), 0)
-    paintEdges(f.border, cfg.borderColor)
+    paintEdges(f.border, cfg, "borderColor", media("statusbar", cfg.borderTexture))
     showEdges(f.border, cfg.border ~= false)
     placeEdges(f.glow, f, GLOW_SIZE, GLOW_SIZE)
-    paintEdges(f.glow, cfg.glowColor)
+    paintEdges(f.glow, cfg, "glowColor")
     showEdges(f.glow, wantsGlow(f.spellID, cfg))
     paintMark(f)
     f.count:SetFont(face, math.max(8, math.floor(size * 0.4)), "OUTLINE")
@@ -358,7 +377,7 @@ local function applyTicks(st, cfg)
             t = st.frame:CreateTexture(nil, "BORDER", nil, 1)
             st.ticks[i] = t
         end
-        t:SetColorTexture(rgba(cfg.tickColor))
+        t:SetColorTexture(tint(cfg, "tickColor"))
         placeLine(t, st.frame, d, cfg, thick)
         t:Show()
     end
@@ -370,15 +389,15 @@ local function applyBackground(st, cfg)
     local tex = media("statusbar", cfg.bgTexture)
     if tex then
         st.bg:SetTexture(tex)
-        st.bg:SetVertexColor(rgba(cfg.bgColor))
+        st.bg:SetVertexColor(tint(cfg, "bgColor"))
     else
-        st.bg:SetColorTexture(rgba(cfg.bgColor))
+        st.bg:SetColorTexture(tint(cfg, "bgColor"))
     end
     st.bg:SetShown(cfg.background ~= false)
     placeEdges(st.edges, st.frame, math.max(1, num(cfg.laneBorderSize, 1)), 0)
-    paintEdges(st.edges, cfg.laneBorderColor, media("statusbar", cfg.laneBorderTexture))
+    paintEdges(st.edges, cfg, "laneBorderColor", media("statusbar", cfg.laneBorderTexture))
     showEdges(st.edges, cfg.laneBorder == true)
-    st.now:SetColorTexture(rgba(cfg.nowColor))
+    st.now:SetColorTexture(tint(cfg, "nowColor"))
     placeLine(st.now, st.frame, 0, cfg, NOW_WIDTH)
     st.now:SetShown(cfg.now ~= false)
 end
@@ -402,7 +421,15 @@ end
 local function applyLabel(st, cfg)
     local fs = st.label
     fs:SetFont(fontFace(cfg.labelFont), math.max(6, num(cfg.labelSize, 12)), outline(cfg.labelOutline))
-    fs:SetTextColor(rgba(cfg.labelColor))
+    fs:SetTextColor(tint(cfg, "labelColor"))
+    -- Font shadow: the skin's HUD text shadow color, at the one-pixel offset the HUD's text uses.
+    local sr, sg, sb, sa = NS.SkinColor("ct.hud.shadow")
+    if cfg.labelShadow == true and sr then
+        fs:SetShadowColor(sr, sg, sb, sa or 1)
+        fs:SetShadowOffset(1, -1)
+    else
+        fs:SetShadowOffset(0, 0)
+    end
     local p = LABEL_POINTS[cfg.labelPosition] or LABEL_POINTS.LEFT
     fs:ClearAllPoints()
     fs:SetPoint(p[1], st.frame, p[2], p[3], p[4])

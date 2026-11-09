@@ -50,6 +50,8 @@ if not lib then
     -- No grip: the window keeps its stored size (Core's own answer where it cannot build one).
     NS.MakeResizable   = function() return nil end
     NS.RaiseStaticPopups = function() end
+    -- No resolver: no class color, so every Use class color falls through to its swatch.
+    NS.ClassColor = function() return nil end
 
     -- The SafeRegister* family as ONE-RUNG pcall bodies (events-frames-taint-§1).
     local function reject(rejected, event)
@@ -97,6 +99,9 @@ NS.MakeResizable = lib.MakeResizable
 -- A toplevel DIALOG window re-raises a shown StaticPopup when it shows, so a confirmation shown first
 -- is never buried under it (frame-layering-§4; the ability timeline).
 NS.RaiseStaticPopups = lib.RaiseStaticPopups or function() end
+-- The ONE class-color resolver (options-ui-§17): the player's class color, or nil, which every Use
+-- class color companion falls through to its swatch on (modules/LaneRender.lua).
+NS.ClassColor = lib.ClassColor
 
 -- WRAPPED, TO SAY WHO IS ASKING -- a MUST (standalone-windows, anti-patterns #64/#65). Core draws the
 -- catalog's `close` mark only when told which addon FOLDER to build the path from. Every close

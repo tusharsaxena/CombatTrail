@@ -22,7 +22,7 @@ local descriptor = {
     set          = function(path, value) return NS.SetByPath(path, value) end,   -- the single write seam
     applyDefault = function(row) return NS.ApplyDefault(row) end,
     allRows      = function() return NS.Schema end,
-    rowsForPage  = function(pageKey) return NS.SchemaForPage(pageKey) end,
+    rowsForPage  = function(pageKey, filter) return NS.SchemaForPage(pageKey, filter) end,
 
     skipRestoreAll = vetoedFromResetAll,
     resetProfile   = function()
@@ -66,7 +66,11 @@ local descriptor = {
 --- selector's `onChange`, so the switching itself stays the library's.
 --- `tabs` are host tabs the strip draws by their own render (RenderTabbedSchema's `opts.tabs`): the
 --- one a page has before its rows arrive, and any bespoke tab after.
---- @param spec table { key, title, panelName, defaultsTooltip, afterGroup?, beforeGroup?, tabs?, redrawOnDefaults? }
+--- A page that edits one instance out of many (the Lanes page, options-ui-§14) passes `unit`, a
+--- function answering the selected instance, which every render hands the rows filter as the ctx's
+--- `unit`, and `banner(ctx)`, which draws the band's picker before the strip, on every render a tab
+--- click included. `afterDefaults()` runs after the page's Defaults, for what no row holds.
+--- @param spec table { key, title, panelName, defaultsTooltip, afterGroup?, beforeGroup?, tabs?, redrawOnDefaults?, unit?, banner?, afterDefaults? }
 NS.pageCtx = NS.pageCtx or {}   -- each built page's ctx, by key, for a page that repaints off the bus
 function NS.RegisterTabbedPage(spec)
     NS.RegisterOptionsPage(spec.key, spec.title, function(mainCategory)
@@ -79,12 +83,19 @@ function NS.RegisterTabbedPage(spec)
         })
         ctx.panel.defaultsOnClick = function()
             H.RestoreDefaults(spec.key, ctx)
+            if spec.afterDefaults then spec.afterDefaults() end
             if spec.redrawOnDefaults then H.RefreshPanel(ctx, true) end
         end
-        H.SetRenderer(ctx, function(c)
+        local opts = { beforeGroup = spec.beforeGroup, tabs = spec.tabs }
+        local function render(c)
             H.ClearScroll(c)
-            H.RenderTabbedSchema(c, spec.key, spec.afterGroup, nil, { beforeGroup = spec.beforeGroup, tabs = spec.tabs })
-        end)
+            if spec.unit then c.unit = spec.unit() end
+            if spec.banner then spec.banner(c) end
+            H.RenderTabbedSchema(c, spec.key, spec.afterGroup, nil, opts)
+        end
+        -- A tab click redraws the banner too, so it re-enters through the whole render.
+        if spec.banner then opts.rerender = render end
+        H.SetRenderer(ctx, render)
         NS.pageCtx[spec.key] = ctx
         return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, spec.title)
     end)

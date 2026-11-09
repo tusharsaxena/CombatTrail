@@ -31,20 +31,25 @@ local function lane(key, over)
         anchor    = { mode = "free", point = "CENTER", relPoint = "CENTER", x = 0, y = -200,
                       target = key == "pet" and "player" or "pet", gap = 4, frameName = "" },
         strata    = "LOW", levelOffset = 0,
-        -- Icons
-        border = true, borderColor = rgba(1, 0.82, 0, 0.9), borderSize = 1, zoom = 0.08,
+        -- Icons. Every color has its Use class color companion (`<part>ClassColor`, options-ui-§17,
+        -- off), and the icon border its style (`borderTexture`, an LSM statusbar key, "" = flat).
+        border = true, borderTexture = "", borderColor = rgba(1, 0.82, 0, 0.9), borderClassColor = false,
+        borderSize = 1, zoom = 0.08,
         markInterrupted = true, glowLongCD = true, glowMinCD = 29, glowColor = rgba(1, 0.82, 0, 1),
+        glowClassColor = false,
         tooltip = true, showName = false, fade = 0.2, stack = false,
         -- Background and border ("" texture = the skin's own)
-        background = true, bgTexture = "", bgColor = rgba(0, 0, 0, 0.35),
-        laneBorder = false, laneBorderTexture = "", laneBorderColor = rgba(0, 0, 0, 1), laneBorderSize = 1,
+        background = true, bgTexture = "", bgColor = rgba(0, 0, 0, 0.35), bgClassColor = false,
+        laneBorder = false, laneBorderTexture = "", laneBorderColor = rgba(0, 0, 0, 1),
+        laneBorderClassColor = false, laneBorderSize = 1,
         padding = 0,
         -- Ticks and labels. tickSpacing "gcd15" (1.5 s) | "haste" (haste-adjusted GCD) | "1s".
-        ticks = true, tickSpacing = "gcd15", tickColor = rgba(1, 1, 1, 0.25), tickWidth = 1,
-        now = true, nowColor = rgba(1, 1, 1, 0.6),
+        ticks = true, tickSpacing = "gcd15", tickColor = rgba(1, 1, 1, 0.25), tickClassColor = false,
+        tickWidth = 1, now = true, nowColor = rgba(1, 1, 1, 0.6), nowClassColor = false,
         -- labelText "" = the lane's own name (the pet's name on the Pet lane, modules/LaneCasts.lua).
+        -- The label's font is the Lanes page's composed Font block (labelFont "" = the skin's font).
         label = true, labelText = NS.L["You"], labelFont = "", labelSize = 12, labelOutline = "OUTLINE",
-        labelColor = rgba(1, 1, 1, 1), labelPosition = "LEFT",
+        labelColor = rgba(1, 1, 1, 1), labelClassColor = false, labelShadow = false, labelPosition = "LEFT",
         -- Visibility. show "always" | "combat" | "combatOrTarget" | "never".
         visibility = { show = "always", hideAfter = 5, where = where(), hideMounted = true,
                        hideVehicle = true, hidePetBattle = true, hideResting = false,

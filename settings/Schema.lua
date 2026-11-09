@@ -174,10 +174,14 @@ end
 
 --- The rows of one page, grouped by tab in first-appearance order, then by `order`, then in
 --- declaration order (table.sort is not stable, so the position is the last key).
-function NS.SchemaForPage(pageKey)
+--- `filter` is the page's instance (the library passes the page ctx's `unit` when it renders): on
+--- the Lanes page it is the lane in the band's picker, and a row stamped with another `lane` is left
+--- out. A Defaults press passes none, so it reaches every lane (options-ui-§13).
+function NS.SchemaForPage(pageKey, filter)
     local out, groupIndex, position = {}, {}, {}
     for _, row in ipairs(NS.Schema) do
-        if row.page == pageKey and not row.hidden then
+        if row.page == pageKey and not row.hidden
+            and (filter == nil or row.lane == nil or row.lane == filter) then
             out[#out + 1] = row
             position[row] = #out
             local g = row.group or ""
