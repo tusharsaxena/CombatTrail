@@ -349,11 +349,21 @@ local function merge(player, pet)
              spells = spells }
 end
 
+-- Whether the caller asked for no pet at all (false). A caller's GUID may be opaque: the secret test
+-- runs first, so it is never compared with false (client-quirks-§2).
+local function noPet(petGUID)
+    if petGUID == nil or Secrets.IsSealed(petGUID) then return false end
+    return petGUID == false
+end
+
 -- Which pet GUID the record read asks for: the caller's, none (false), or the pet now / the last one.
+-- Only nil tests touch a GUID that may be opaque: `ResolvePet() or lastPet` would be a boolean test.
 local function petFor(petGUID)
-    if petGUID == false or not Meter.PET_SEPARATE then return nil end
+    if not Meter.PET_SEPARATE or noPet(petGUID) then return nil end
     if petGUID ~= nil then return petGUID end
-    return Meter.ResolvePet() or lastPet
+    local now = Meter.ResolvePet()
+    if now ~= nil then return now end
+    return lastPet
 end
 
 --- Read session `id` after combat. Every value in the result is a plain number. Spells are sorted by
@@ -379,7 +389,7 @@ function Meter.ReadFinal(id, petGUID)
     if Meter.PET_SEPARATE then pet = readPetSource(acc, id, petFor(petGUID)) end
     if acc.sealed then return nil, "sealed" end
     if acc.err then return nil, acc.err end
-    if not Meter.PET_SEPARATE and petGUID ~= false then pet = splitFolded(player) end
+    if not Meter.PET_SEPARATE and not noPet(petGUID) then pet = splitFolded(player) end
 
     local p, q = finish(player, duration), finish(pet, duration)
     return { duration = duration, player = p, pet = q, merged = merge(p, q) }

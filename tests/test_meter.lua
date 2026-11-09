@@ -336,6 +336,32 @@ test("meter: ReadFinal reads the pet that fought after it was dismissed", functi
     assertEqual(NS.Meter.ReadFinal(17, false).pet, nil, "false reads no pet at all")
 end)
 
+-- In combat UnitGUID("pet") may come back opaque. It is only ever handed back to the client: never
+-- truth-tested, compared with false or remembered as the last pet (the kit cannot trap a boolean test,
+-- so this pins the pass-through; modules/Meter.lua's petFor uses nil tests alone).
+test("meter: an opaque pet GUID reaches the client untouched and is never remembered", function()
+    local NS, meter = withPet()
+    meter.SetSession(17, FIGHT)
+    assertEqual(NS.Meter.ResolvePet(), PET)              -- the plain one, seen before combat
+    local opaque = T.secret(PET)
+    meter.SetPetGUID(opaque)
+    assertTrue(NS.Meter.ResolvePet() == opaque)
+    assertEqual(NS.Meter.LastPet(), PET, "a secret never replaces the last plain GUID")
+    local ok, live = pcall(NS.Meter.ReadLive)
+    assertTrue(ok, "ReadLive raised: " .. tostring(live))
+    assertTrue(live.pet ~= nil, "the client answered the opaque GUID")
+    local r, err
+    ok, r, err = pcall(NS.Meter.ReadFinal, 17)
+    assertTrue(ok, "ReadFinal raised: " .. tostring(r))
+    assertNil(err)
+    assertEqual(r.pet.total, 3000)
+    ok, r = pcall(NS.Meter.ReadFinal, 17, opaque)
+    assertTrue(ok, "ReadFinal raised on a caller's opaque GUID: " .. tostring(r))
+    assertEqual(r.pet.total, 3000)
+    local calls = meter.CallsTo("GetCombatSessionSourceFromID")
+    assertTrue(calls[#calls].args[3] == opaque, "passed as it came")
+end)
+
 test("meter: ReadFinal returns nil while values are secret", function()
     local NS, meter = withPet()
     meter.SetSession(17, FIGHT)
