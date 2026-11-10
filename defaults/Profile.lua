@@ -159,8 +159,16 @@ NS.defaults = {
             minLength = 30, bossesOnly = false, content = content(),
             days = 7, keepBests = true, maxFights = 500,
         },
-        -- The Results window's saved view (spec §7).
-        results = {},
+        -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view
+        -- (the filters, the grouping and the sort Save view stores; "current" is the logged-in
+        -- character, `days` 0 is all time), where the window stands and its size (written by its drag
+        -- and its grip, put back by Master controls' Reset position), and its scale.
+        results = {
+            view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
+                     days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
+            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 920, height = 520 },
+            scale = 1,
+        },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the

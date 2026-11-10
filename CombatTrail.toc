@@ -171,6 +171,18 @@ modules\Hud_States.lua
 # and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.Meter, NS.Identity, NS.Bests,
 # NS.Recorder and NS.db at CALL time only.
 modules\Hud.lua
+# The Results window (spec §7). Sizing is the resize helper every resizable window shares; the source,
+# the table, the tooltips' words and the fight list each capture NS.L, NS.Style or NS.HudStates.COLORS
+# at FILE SCOPE (so they follow modules\Hud_States.lua) and reach the others at CALL time, except as
+# noted. LOAD-BEARING: modules\Results_Fights.lua reads NS.ResultsTable and NS.Identity.CONTENT at
+# FILE SCOPE; modules\Results.lua reads NS.ResultsFights and NS.ResultsTable at FILE SCOPE (its minimum
+# width) and builds its bus receiver there.
+modules\Sizing.lua
+modules\Results_Source.lua
+modules\Results_Table.lua
+modules\Results_Tips.lua
+modules\Results_Fights.lua
+modules\Results.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

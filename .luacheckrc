@@ -92,6 +92,15 @@ files["core/SkinSetup.lua"] = { read_globals = { "ITEM_QUALITY_COLORS" } }
 -- The secret-safe number: the client's abbreviated-number formatter is Compat's; with none, the plain
 -- fallback is the client's AbbreviateNumbers, type-checked at CALL time (modules/Format.lua).
 files["modules/Format.lua"] = { read_globals = { "AbbreviateNumbers" } }
+-- The Results window's table: the class colors, names and icons, a spec's name and icon (read bare
+-- and type-checked, WoW Forever has no specializations), the cursor a hovered row follows, and the
+-- client's date formatter.
+files["modules/Results_Table.lua"] = {
+    read_globals = { "RAID_CLASS_COLORS", "LOCALIZED_CLASS_NAMES_MALE", "CLASS_ICON_TCOORDS",
+                     "GetSpecializationInfoByID", "GetCursorPosition", "date" },
+}
+-- The fight list's date range: today from local midnight (the client's date formatter).
+files["modules/Results_Fights.lua"] = { read_globals = { "date" } }
 
 -- ---------------------------------------------------------------------------
 -- The narrowed 212s: every stanza names ONE file and every entry the code AND the variable.

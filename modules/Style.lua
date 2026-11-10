@@ -621,3 +621,75 @@ function Style.SetControlIcon(b, name, glyph)
     if path then b.icon:SetTexture(path) else b.glyph:SetText(glyph) end
     b.iconName = name
 end
+
+-- ── the flat buttons ────────────────────────────────────────────────────────────────────────────
+-- The skin's Button (LootHistory's bar button: a dark fill, the window's divider gray for an edge, a
+-- white label that turns gold under the pointer), with the slots a style or a state paints from
+-- another token: primary and danger keep a tinted box, and a disabled one its box and label faded
+-- (the ct.*.off* tokens, core/SkinSetup.lua). Ported from DPS Race @045f479 (modules/Hud_States.lua's
+-- buttons) for the Results window, minus the selected-preset look the race's length picker had.
+
+local BUTTON_STYLES = {
+    normal  = { on = {}, off = { bg = "ct.btn.offBg", border = "ct.btn.offBorder", disabled = "ct.btn.offText" } },
+    primary = { primary = true,
+                on = { bg = "ct.primary.bg", border = "ct.primary.border", hover = "ct.primary.hover" },
+                off = { bg = "ct.primary.offBg", border = "ct.primary.offBorder", disabled = "ct.primary.offText" } },
+    danger  = { on = { bg = "ct.danger.bg", border = "ct.danger.border", text = "ct.danger.text",
+                       hover = "ct.danger.hover" },
+                off = { bg = "ct.danger.offBg", border = "ct.danger.offBorder", disabled = "ct.danger.offText" } },
+}
+Style.BUTTON_H = 20
+
+-- Paint `b` through the skin's Button for its style and state, only when either moved: the library
+-- records the call and follows the hover and the enabled state itself.
+local function paintButton(b)
+    local on = b:IsEnabled() and true or false
+    local key = b.styleName .. (on and ":on" or ":off")
+    if b.painted == key then return end
+    b.painted = key
+    NS.Skin.Button(b, { primary = b.style.primary, tokens = on and b.style.on or b.style.off })
+end
+
+-- A button's tooltip (b.tip = { title, line, ... }), shown above it, disabled or not.
+local function buttonTip(b)
+    local tip = b.tip
+    if not (tip and GameTooltip) then return end
+    if type(tip) ~= "table" then tip = { tostring(tip) } end
+    GameTooltip:SetOwner(b, "ANCHOR_TOP")
+    GameTooltip:SetText(tip[1], Style.Rgb("gtip.value"))
+    Style.AddTipLines(GameTooltip, tip, 2, Style.Rgb("gtip.title"))
+    GameTooltip:Show()
+end
+
+--- A flat button: a label, a style ("normal" | "primary" | "danger"), and a click that a disabled
+--- button never runs. Its label is the skin's button text in the body face.
+--- @param parent table
+--- @param label string
+--- @param onClick function
+--- @param style string|nil
+--- @return table
+function Style.Button(parent, label, onClick, style)
+    local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
+    b:SetHeight(Style.BUTTON_H)
+    b.styleName = BUTTON_STYLES[style] and style or "normal"
+    b.style = BUTTON_STYLES[b.styleName]
+    b.label = Style.PlainText(b, Style.FONT.TEXT, "CENTER")
+    b.label:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b.label:SetText(label)
+    b.text = b.label   -- the label the skin's Button paints (its `btn.text`)
+    b:SetScript("OnClick", function(self)
+        if self:IsEnabled() then onClick(self) end
+    end)
+    b:SetScript("OnEnter", buttonTip)
+    b:SetScript("OnLeave", function(self)
+        if self.tip and GameTooltip then GameTooltip:Hide() end
+    end)
+    paintButton(b)
+    return b
+end
+
+--- Enable or disable a Style.Button, repainting it.
+function Style.SetEnabled(b, on)
+    b:SetEnabled(on and true or false)
+    paintButton(b)
+end

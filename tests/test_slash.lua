@@ -182,7 +182,7 @@ end)
 test("slash: a verb whose feature is not built yet says so in one line", function()
     local inst = T.load()
     local M = inst.mocks
-    for _, verb in ipairs({ "results", "hud", "lane", "ignore", "purge", "probe" }) do
+    for _, verb in ipairs({ "hud", "lane", "ignore", "purge", "probe" }) do
         M.__resetPrinted()
         inst.NS.Slash:OnSlash(verb)
         assertEqual(#M.__printed(), 1, verb .. ": " .. text(M))

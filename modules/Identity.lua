@@ -211,6 +211,13 @@ function Identity.Snapshot()
     return { who = readWho(), target = readTarget(), where = readWhere() }
 end
 
+--- Who the player is now (the snapshot's `who`): the Results window's "current character" and
+--- "current spec" filters read it out of combat.
+--- @return table who  { name, realm, class, specID, specName, ilvl, petName, petFamily, client }
+function Identity.Who()
+    return readWho()
+end
+
 -- ── the identity ────────────────────────────────────────────────────────────────────────────────
 
 -- The enemy that took the most damage, and how many others did: the meter's list is highest first.
