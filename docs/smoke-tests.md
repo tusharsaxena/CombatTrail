@@ -172,6 +172,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-T8 | Both | The Never show menu in the Usage edit | The item leaves the list and joins History → Usage |
 | SM-CT-T9 | Both | Fight twice in the same gear, swap a full equipment set (the Equipment Manager), fight again, `/reload`, fight again, then `/ct diag` | `gearSets=2`, not one per fight or per slot; the gear view and Compare's *Gear changed* show the swap; nothing new after the reload |
 | SM-CT-T10 | Both | Open Compare on a fight that is not its board's best, then on the best, then after *Compare With This Fight* on another; hover the button each time; use a trinket and a potion in one fight and not the other | The button reads Compare and its tooltip names the best, the runner-up or the pick; this fight's bars, legend, figures and item levels are yellow and the other's blue in every case; *Trinkets and consumables* lists each item once, gear first, the other's uses then this one's, "not used" on the side without it, the item tooltip on hover; "None used" with nothing on either side |
+| SM-CT-T11 | Both | On a fight with a pet and a best on its board, press *Timeline*; hover a lane icon of yours, one of your pet's, and the *Casts* icon of the first cast; zoom in two steps and pan right; click *Ticks*, then *Icons*; set History → Results window → *Casts in By ability* to *Tick lines* with the timeline open; `/reload` and open it again | Every By ability cast is its ability's icon inside its lane, a cast at 0:00 whole; your icons and your pet's sit on a thin blue-violet and green edge (the *Casts* icons too) and the corridors stay gold and blue; each lane icon's tooltip is the *Casts* icon's (spell, *Cast at m:ss*, *(pet)* on a pet's, the fight); *Ticks* turns them into thin ticks in the same caster colors and keeps the zoom and the pan, *Icons* back; the setting redraws the open window; the mode survives `/reload` |
 
 ## 7. Settings pages
 
@@ -214,3 +215,4 @@ The items the build assumed and the owner confirms, each answered by a row above
 - Whether the client's number formatters truncate a fraction, on each client: SM-CT-H10.
 - The HUD's look against DPS Race's, live and after the fight: SM-CT-H12.
 - The HUD's fixed size, grip, scroll and grow edge: SM-CT-H13.
+- The timeline's icons or ticks and the caster colors: SM-CT-T11.

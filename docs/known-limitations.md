@@ -63,6 +63,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   least width to 1038 px (1478 expanded, with the 440 px detail beside it), and the shipped width to
   1100. On a small screen or a large UI scale, lower History → Results window → Scale. A width a
   profile stored before is held to the new least.
+- **By ability icons do not stack.** A lane is 16 px, so casts closer than an icon overlap there and
+  only the one on top takes the pointer. At 1x a filler cast every global cooldown reads as a run of
+  icons; zoom in to part them, or switch the lanes to *Ticks*.
 - **The sim's "short" scenario is 22 s**, judged by the player's own minimum length: with a minimum of
   22 s or less it is saved and its label no longer holds.
 - **Outside an encounter, the live pace can use a different board than the saved fight.** The HUD

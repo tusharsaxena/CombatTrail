@@ -921,6 +921,16 @@ L["Zoom in (or Ctrl+mouse wheel up)"] = "Zoom in (or Ctrl+mouse wheel up)"
 L["Zoom out (or Ctrl+mouse wheel down)"] = "Zoom out (or Ctrl+mouse wheel down)"
 L["Casts"] = "Casts"
 L["By ability"] = "By ability"
+-- The marks By ability draws (v0.2 Task D1, modules/Results_TimelineMarks.lua) and their History row
+L["Icons"] = "Icons"
+L["Ticks"] = "Ticks"
+L["Show each cast in By ability as its ability's icon"] = "Show each cast in By ability as its ability's icon"
+L["Show each cast in By ability as a thin line"] = "Show each cast in By ability as a thin line"
+L["Casts in By ability"] = "Casts in By ability"
+L["Ability icons"] = "Ability icons"
+L["Tick lines"] = "Tick lines"
+L["How the ability timeline's By ability lanes show each cast: the ability's icon (hover it for the spell and its time) or a thin tick line. Either way a pet's cast is green and yours blue. The timeline's Icons and Ticks words switch it too."] =
+    "How the ability timeline's By ability lanes show each cast: the ability's icon (hover it for the spell and its time) or a thin tick line. Either way a pet's cast is green and yours blue. The timeline's Icons and Ticks words switch it too."
 L["No casts recorded"] = "No casts recorded"
 L["%sx"] = "%sx"
 L["Select a fight in the Results window to see its timeline."] =

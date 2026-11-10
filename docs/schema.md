@@ -43,6 +43,7 @@ default; the file's comments say what each value means.
 | `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
 | `history.days`, `keepBests`, `maxFights` | `7`, `true`, `500` | History → History |
 | `results.scale`, `rowHeight`, `shareTalents`, `closeInCombat` | `1`, `18`, `true`, `true` | History → Results window |
+| `results.timelineMarks` | `"icon"` | History → Results window (*Ability timeline*); also the timeline's *Icons* and *Ticks* words on its *By ability* heading line, through `NS.SetByPath`. How By ability draws a cast: its ability's icon or a thin tick (`"tick"`); an open timeline redraws, its zoom kept |
 | `results.view` | the saved filters, grouping and sort (`group = "board"`, `days = 7`) | (named state, below) |
 | `results.window` | `{ point, relPoint, x, y, width = 1100, height = 520, view = "collapsed" }`; the list's least width is `Results.MIN_WIDTH` (1038 with the Status, Used and Note columns), and a stored width below it is held to it | (named state, below) |
 | `results.columns` | `{}`; a dragged column's width, `{ character = px }` (Character ships at 104, held to 70–240) | (named state, below) |
@@ -60,7 +61,10 @@ stores only what differs from the defaults, so a profile that never set a swatch
 and one that did keeps its own. No migration step is needed. No skin overrides a fill color. The
 Results table's Damage and DPS bars read the palette directly (`Tbl.BAR_COLOR` = `BAR` at
 `Tbl.BAR_ALPHA` = `BAR_A`, v0.2 Task C2); they have no setting, and the class color stays on the
-name and the icons.
+name and the icons. The ability timeline reads it too (v0.2 Task D1): its fights' colors
+`Timeline.THIS` / `OTHER` are copies of `THIS_TEXT` / `BEST_TEXT` (no longer the skin's gold read at
+load), a tick is its caster's `PLAYER_LINE` or `PET_LINE` at 0.95, and every cast icon sits on a 1 px
+edge in that color in place of the skin's icon outline (a meaning color, skinning-§9).
 
 ## The global tree
 

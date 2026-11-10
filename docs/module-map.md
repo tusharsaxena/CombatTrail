@@ -90,6 +90,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Share.lua` | The one-line chat summary of a fight |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |
 | `modules/Results_Timeline.lua` | The ability timeline window |
+| `modules/Results_TimelineMarks.lua` | The timeline's cast marks on the same `NS.ResultsTimeline`: By ability's icons or ticks (`results.timelineMarks`), the caster colors and every cast icon's art and edge |
 | `modules/Results_Gear.lua` | The gear view window |
 | `modules/Results_Compare.lua` | The compare window |
 | `modules/Results.lua` | The Results window's shell, the row menu and its public toggles |

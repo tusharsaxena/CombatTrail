@@ -959,6 +959,8 @@ local function onSettings(path)
     -- History > Results window: the scale on the window and its followers, the row height on the list.
     if path == "results.scale" then Results.ApplyScale() end
     if path == "results.rowHeight" and windowShown() then render() end
+    -- How the ability timeline's By ability draws a cast (v0.2 Task D1): an open one redraws, its zoom kept.
+    if path == "results.timelineMarks" then NS.ResultsTimeline.Redraw() end
     -- The Usage "never show" list: the detail redraws (an edit under way keeps its ticks).
     if path == NS.Usage.HIDDEN_PATH and windowShown() then renderDetail() end
 end

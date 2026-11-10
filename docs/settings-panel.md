@@ -360,6 +360,11 @@ the stored count and its estimated size, and carries *Purge history…*.
 | Row height (px) | `results.rowHeight` |
 | Close when combat starts | `results.closeInCombat` |
 | Include talents link when sharing | `results.shareTalents` |
+| Casts in By ability | `results.timelineMarks` |
+
+Under its own *Ability timeline* heading, a dropdown: *Ability icons* (`icon`, the default) or *Tick
+lines* (`tick`). The timeline's *Icons* and *Ticks* words on its *By ability* heading line write the
+same key, and an open timeline redraws with its zoom and pan kept.
 
 ### Usage
 

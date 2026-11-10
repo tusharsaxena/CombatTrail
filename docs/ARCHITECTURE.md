@@ -74,8 +74,8 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   Filters, Bests, Recorder, Retention, Slices.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Loadout,
-  Results_Usage, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_Gear,
-  Results_Compare, Results.
+  Results_Usage, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
+  Results_Gear, Results_Compare, Results.
 - **Preview and support:** MockRotations, MockFights, Preview, Sim, Diagnostics.
 - **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, History, Profiles.
 

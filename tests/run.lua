@@ -145,6 +145,7 @@ local SUITES = {
     "test_results_sections",
     "test_share",
     "test_timeline",
+    "test_timeline_marks",
     "test_compare",
     "test_gear",
     "test_usage_edit",

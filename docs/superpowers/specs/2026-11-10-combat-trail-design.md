@@ -279,6 +279,10 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
 - **Ability timeline (owner: same as DpsRace):** opens over the Results window. It shows two icon strips (this fight in gold,
   the compared fight in blue), per-ability rows with two tick lanes, cooldown length under the name, cast counts, long
   cooldowns first, pet abilities (toggle), zoom and pan (buttons, Ctrl+wheel, Shift+wheel), and a help "?".
+  Since v0.2 (Task D1) each By ability cast is its ability's icon, with the Casts icon's tooltip, or a tick
+  (`results.timelineMarks`, *Icons* / *Ticks* on the By ability heading line); ticks and every cast icon's
+  1 px edge take the caster's color (`PALETTE.PLAYER_LINE` / `PET_LINE`), and the fights keep gold and blue
+  on their corridors, counts and legend.
 - **Compare (owner):** against the best on the board key, or the runner-up if this fight is the best, or any fight picked from the
   right-click menu. Damage, DPS, length and every spell side by side with deltas and dual bars, gear slots changed, a
   Different loadout mark and, since v0.2, the trinkets and consumables each fight used (the other's uses beside this

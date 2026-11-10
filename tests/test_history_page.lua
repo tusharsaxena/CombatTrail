@@ -99,7 +99,7 @@ test("history page: every history.* key, the Results window's settings and the h
     local NS = T.load().NS
     local paths = leaves(NS.defaults.profile.history, "history", {})
     for _, p in ipairs({ "results.scale", "results.shareTalents", "results.rowHeight", "results.closeInCombat",
-                        NS.Usage.HIDDEN_PATH }) do
+                        "results.timelineMarks", NS.Usage.HIDDEN_PATH }) do
         paths[#paths + 1] = p
     end
     local missing = {}
@@ -139,6 +139,7 @@ test("history page: the rows sit on their tabs, the hidden list on Usage", funct
     assertEqual(tab("results.rowHeight"), TAB.results)
     assertEqual(tab("results.shareTalents"), TAB.results)
     assertEqual(tab("results.closeInCombat"), TAB.results)
+    assertEqual(tab("results.timelineMarks"), TAB.results)
     local hidden = NS.FindSchemaRow(NS.Usage.HIDDEN_PATH)
     assertEqual(hidden.group, TAB.usage)
     assertTrue(hidden.skipRender, "drawn as the ID list, not as a text box")

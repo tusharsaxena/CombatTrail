@@ -799,6 +799,19 @@ Total.
 - timeline: the empty cases
 - timeline: a stand-down refuses the open
 
+### test_timeline_marks.lua (10)
+
+- timeline marks: the fights' colors are the palette's text hues under this kit profile
+- timeline marks: the caster colors are the palette's lines, and the row defaults to icons
+- timeline marks: by default every cast in By ability is its ability's icon on the lanes' layer
+- timeline marks: a lane icon's tooltip is the Casts icon's for the same cast
+- timeline marks: a pre-pull cast's icon sits whole inside the lanes' padded clip
+- timeline marks: a player's cast is edged PLAYER_LINE and a pet's PET_LINE, in the lanes and the Casts strips
+- timeline marks: in tick mode a pet's tick is PET_LINE and a player's PLAYER_LINE in both lanes
+- timeline marks: the setting written while the window is open redraws it as ticks, keeping the zoom
+- timeline marks: the two words on the By ability heading line switch the marks
+- timeline marks: zoomed in, the icons follow the zoomed axis; a drag of the grip moves them without re-pooling
+
 ### test_compare.lua (12)
 
 - compare: vs best, runner-up when best
@@ -1077,6 +1090,7 @@ Total.
 | test_results_sections.lua | 5 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
+| test_timeline_marks.lua | 10 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
@@ -1096,4 +1110,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **850** |
+| **Total** | **860** |

@@ -195,7 +195,9 @@ NS.defaults = {
         -- list's width clears its least (Results.MIN_WIDTH, 1038 with v0.2 Task C2's Status, Used and
         -- Note columns) with room for the target column and a Character drag; and `collapsedSections`, the
         -- fight detail's folded sections (v0.2 Task C3: `{ [section] = true }`, keys
-        -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps.
+        -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps; and
+        -- `timelineMarks`, how the ability timeline's By ability lanes draw a cast (v0.2 Task D1,
+        -- modules/Results_TimelineMarks.lua): "icon" (its ability's icon) or "tick" (a thin line).
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
                      days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
@@ -205,6 +207,7 @@ NS.defaults = {
             shareTalents = true, closeInCombat = true,
             columns = {},
             collapsedSections = {},
+            timelineMarks = "icon",
         },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
