@@ -1,8 +1,9 @@
 local addonName, NS = ...
 -- modules/Sizing.lua — smooth resizing (standalone-windows, Resizing): the one pattern every
 -- resizable window this addon owns is sized by. The Results window is the first (plan Task 4.1); the
--- ability timeline follows (Task 4.3). The DPS HUD has no grip (its width is `hud.width`, its height
--- its body's stack). Ported from DPS Race @045f479 (modules/Sizing.lua) unchanged in behavior.
+-- ability timeline follows (Task 4.3), and the DPS HUD in its fixed size mode (v0.2 Task B3: the grip
+-- sets `hud.width` and `hud.bars`, modules/Hud.lua). Ported from DPS Race @045f479
+-- (modules/Sizing.lua) unchanged in behavior.
 --
 -- WHY. NS.MakeResizable (LibKa0s-Core-1.0) runs a window's onResize on every OnSizeChanged, and while
 -- the grip is dragged that is every frame. A window whose relayout is a full redraw (the fight list

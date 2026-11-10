@@ -190,7 +190,14 @@ Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *
 (settings/Hud.lua, `NS.HUD_TAB_ORDER`). The Clock and figures tab holds two font blocks, the clock's
 (`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
 and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
-tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to 600.
+tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600).
+
+Layout's size rows (v0.2 Task B3): Window size picks Fixed (the default: the height holds Spell bars rows
+under every part the layout shows, and the HUD's bottom-right grip sets the width and the bars) or
+Auto-grow (the height follows the rows, up to Spell bars). Spell bars runs 1 to 15, default 5. Grow
+(Down, the default, or Up) is read by Auto-grow only, so it is drawn disabled in Fixed (`disabledIf`).
+Spells past the rows scroll with the mouse wheel in both. The Spell rows tab's old "Spell rows shown"
+row (`hud.spells.rows`) is retired into Spell bars.
 
 ### Behavior
 
@@ -215,6 +222,9 @@ tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to 600.
 | Show pace bar | `hud.layout.pace` |
 | Show damage chart | `hud.layout.chart` |
 | Show spell rows | `hud.layout.spells` |
+| Window size | `hud.sizeMode` |
+| Spell bars | `hud.bars` |
+| Grow (Auto-grow only) | `hud.grow` |
 | HUD width (px) | `hud.width` |
 | HUD scale | `hud.scale` |
 
@@ -272,7 +282,6 @@ tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to 600.
 
 | Row | Key |
 |---|---|
-| Spell rows shown (0 = all) | `hud.spells.rows` |
 | Row height (px) | `hud.spells.rowHeight` |
 | Show spell icons | `hud.spells.icons` |
 | Show pet paw | `hud.spells.paw` |

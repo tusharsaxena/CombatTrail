@@ -2,8 +2,8 @@
 -- player's spells then the pet's in the meter's own order, every bar scaled to the player source's
 -- maxAmount and handed the spell's total, all of it the meter's secrets, never sorted or computed;
 -- the pet's rows carry the paw and `hud.spells.petColor`; the fight-over card's rows are the plain
--- merged read, highest first, each with its share; `hud.spells.rows` caps them, 0 shows every one
--- and the wheel scrolls.
+-- merged read, highest first, each with its share; `hud.bars` caps them and the wheel scrolls past
+-- the cap (v0.2 Task B3; the size model itself is tests/test_hud_sizing.lua's).
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse =
@@ -101,31 +101,26 @@ test("breakdown: the over card's rows are merged, highest first, with their shar
     assertEqual(list[1].name:GetText(), "Spell 133")
 end)
 
-test("breakdown: hud.spells.rows caps the rows; 0 shows every one and the wheel scrolls", function()
+test("breakdown: hud.bars caps the rows and the wheel scrolls past them", function()
     local inst, meter, Hud = H.fresh({ pet = true })
     H.whole(inst, meter, 1, PETFIGHT, 10, 40)
-    H.setHud(inst, "spells.rows", 2)
+    H.setHud(inst, "sizeMode", "auto")
+    H.setHud(inst, "bars", 2)
     local list, body = rows(Hud, "over")
     assertEqual(#list, 2)
+    assertEqual(list[1].spellID, 133)
     local before = body.height
-    H.setHud(inst, "spells.rows", 0)
+    H.setHud(inst, "bars", 4)
     list = rows(Hud, "over")
     assertEqual(#list, 4, "every spell")
-    assertTrue(body.height > before, "the window grows with the rows")
-    local States = inst.NS.HudStates
-    local all = States.ALL_ROWS
-    States.ALL_ROWS = 2
-    Hud.Refresh()
-    list = rows(Hud, "over")
-    assertEqual(#list, 2, "0 shows ALL_ROWS at once")
-    assertEqual(list[1].spellID, 133)
+    assertTrue(body.height > before, "an auto-grow window grows with the rows")
+    H.setHud(inst, "bars", 2)
     body.parts.spells.frame:__fire("OnMouseWheel", -1)
     list = rows(Hud, "over")
     assertEqual(list[1].spellID, 11366, "the wheel scrolled one row")
     body.parts.spells.frame:__fire("OnMouseWheel", -5)
     list = rows(Hud, "over")
     assertEqual(list[1].spellID, 17253, "held at the last full window")
-    States.ALL_ROWS = all
 end)
 
 test("breakdown: the layout's spell rows off hides them", function()

@@ -160,6 +160,8 @@ end)
 
 test("hud layout: the window is 260 wide on DPS Race's insets, its height the stack's", function()
     local inst, _, Hud = paced()
+    -- An auto-grow window is the stack's height (a fixed one is tests/test_hud_sizing.lua's).
+    H.setHud(inst, "sizeMode", "auto")
     local NS = inst.NS
     local f, ui = Hud.Frame(), Hud.__ui()
     local body = H.body(Hud, "live")

@@ -16,9 +16,19 @@ local _, NS = ...
 -- Race's single-clock size (ClockSize).
 -- Every position is a constant offset worked out from the parts shown and the configured sizes
 -- (modules/Hud_Appearance.lua); Update answers the stack's height (body.height), which the shell
--- sizes the window from. No body reads the size or position of anything that has displayed a meter
--- value; the chips measure their own text (GetStringWidth on a label that only ever holds plain
--- copy), never a value.
+-- sizes an auto-grow window from. No body reads the size or position of anything that has displayed
+-- a meter value; the chips measure their own text (GetStringWidth on a label that only ever holds
+-- plain copy), never a value.
+--
+-- THE ROWS' WINDOW (v0.2 Task B3, plan decision D9). The view carries `bars` (`hud.bars`, or the
+-- grip's count while it is dragged) and, in fixed mode, `fitH`: the content's height. The rows shown
+-- are `bars`, fewer when fitH leaves no room for them (the over card's chips), and the wheel scrolls
+-- the rest in both modes: the offset is clamped to the spells past the window, and the heading's
+-- note counts them ("1-5 of 12") beside a thin indicator in the gutter. States.FixedStack is the
+-- stack a fixed window reserves, from the configuration alone: every part its layout switch shows,
+-- the boxes' pet row and the pace line included whether or not this fight has them, so a pet that
+-- arrives mid-fight or a board with no best never moves the window. Every count is plain (the `#` of
+-- the meter's own Lua arrays) and every height config.
 --
 -- SECRETS. The live body hands each opaque meter value to NS.Format.Number and the result straight
 -- to SetText, and to the pace bar's, the chart's and the rows' StatusBars: no concatenation, no
@@ -68,8 +78,8 @@ local PACE_GAP = 4
 local CLOCK_SCALE = 40 / 26
 -- The bodies' width when the shell hands none: the default 260 less PAD on both sides.
 local WIDTH = 236
---- How many rows `hud.spells.rows` 0 shows at once (the wheel scrolls the rest).
-States.ALL_ROWS = 12
+-- The scroll indicator in the gutter right of the rows: its width, its gap from them, its shortest thumb.
+local THUMB_W, THUMB_GAP, THUMB_MIN = 2, 4, 6
 States.GAP = GAP
 States.HEAD_GAP, States.PACE_GAP, States.SECTION_H = HEAD_GAP, PACE_GAP, SECTION_H
 
@@ -276,6 +286,13 @@ local function buildTop(body, dpsLabel, tips)
     w.dps = kpi(f, dpsLabel, tips[2])
 end
 
+--- The clock's line and a box's height (its pet row left out) for the configured fonts.
+--- @return number clockH, number kpiH
+function States.TopSizes()
+    local A = appearance()
+    return States.ClockSize(A.Font("clock").size) + CLOCK_PAD, A.Font("figures").size + KPI_CHROME
+end
+
 -- The top's look, once per Appearance stamp: the clock's and the figures' blocks, the boxes, and on
 -- the over card the DPS figure's color.
 local function restyleTop(body)
@@ -295,7 +312,7 @@ local function restyleTop(body)
     A.ApplyFont(w.dps.value, figures, over)
     A.ApplyBox(w.damage.frame)
     A.ApplyBox(w.dps.frame)
-    body.clockH, body.kpiH = clock.size + CLOCK_PAD, figures.size + KPI_CHROME
+    body.clockH, body.kpiH = States.TopSizes()
 end
 
 -- Lay the top out for the view's layout toggles; answers the y (positive, down) under it.
@@ -385,8 +402,8 @@ local function placeProfile(body, v, y)
     return top + h + GAP
 end
 
--- The spell rows' frame, heading and list, built on first need. The frame takes the wheel, which
--- scrolls the list while `hud.spells.rows` is 0 (every spell).
+-- The spell rows' frame, heading, list and scroll indicator, built on first need. The frame takes
+-- the wheel, which scrolls the list whenever there are more spells than rows.
 local function spellsPart(body)
     local s = body.parts.spells
     if s then return s end
@@ -396,6 +413,10 @@ local function spellsPart(body)
     s.note = Style.Text(body.frame, FONT.CAPTION, nil, "RIGHT")
     s.frame = CreateFrame("Frame", nil, body.frame)
     s.list = NS.HudBreakdown.New(s.frame)
+    s.track = body.frame:CreateTexture(nil, "ARTWORK")
+    Style.Fill(s.track, "ct.scroll.track")
+    s.thumb = body.frame:CreateTexture(nil, "OVERLAY")
+    Style.Fill(s.thumb, "ct.scroll.thumb")
     s.frame:EnableMouseWheel(true)
     s.frame:SetScript("OnMouseWheel", function(_, delta)
         body.offset = math.max(0, (body.offset or 0) - (tonumber(delta) or 0))
@@ -410,15 +431,55 @@ local function setSpellsShown(s, on)
     s.title:SetShown(on)
     s.note:SetShown(on)
     s.frame:SetShown(on)
+    if not on then
+        s.track:Hide()
+        s.thumb:Hide()
+    end
 end
 
--- How many rows show (`hud.spells.rows`, 0: ALL_ROWS with the wheel) of `total`, and from where.
-local function window(body, total)
-    local rows = math.floor(appearance().Number("hud.spells.rows", 0, 40))
-    local visible = rows == 0 and States.ALL_ROWS or rows
-    local maxOffset = rows == 0 and math.max(0, total - visible) or 0
+--- The height of the "Spell breakdown" section holding `n` rows: HEAD_GAP, the heading, the rows and
+--- the GAP under them. Config only.
+--- @param n number
+--- @return number
+function States.SpellsHeight(n)
+    return HEAD_GAP + SECTION_H + NS.HudBreakdown.Height(n) + GAP
+end
+
+-- How many rows show of `total`, and from where: `v.bars`, fewer where the fixed window's room
+-- (`v.fitH`) under the heading at `y` holds fewer, the offset clamped to the spells past them.
+local function window(body, total, v, y)
+    local visible = math.max(0, math.floor(tonumber(v.bars) or 1))
+    if v.fitH then
+        visible = math.min(visible, NS.HudBreakdown.Capacity(v.fitH - y - SECTION_H - GAP))
+    end
+    local maxOffset = math.max(0, total - visible)
     body.offset = math.max(0, math.min(body.offset or 0, maxOffset))
+    body.visible, body.total = visible, total
     return math.min(visible, total - body.offset), body.offset
+end
+
+-- The heading's note: what the rows are, and which of them show while the wheel has more.
+local function spellsNote(body, base, drawn)
+    if drawn < 1 or body.total <= body.visible then return base end
+    return base .. " \194\183 " .. L["%d-%d of %d"]:format(body.offset + 1, body.offset + drawn, body.total)
+end
+
+-- The thin scroll indicator right of the rows `h` high: shown while spells are past the window, its
+-- thumb as long as the share in view and as far down as the offset. Plain counts and config only.
+local function placeThumb(s, body, width, top, h)
+    local maxOffset = body.total - body.visible
+    local on = maxOffset > 0 and h > 0
+    s.track:SetShown(on)
+    s.thumb:SetShown(on)
+    if not on then return end
+    local thumbH = math.max(THUMB_MIN, math.floor(h * body.visible / body.total + 0.5))
+    local dy = math.floor((h - thumbH) * body.offset / maxOffset + 0.5)
+    s.track:ClearAllPoints()
+    s.track:SetPoint("TOPLEFT", body.frame, "TOPLEFT", width + THUMB_GAP, -top)
+    s.track:SetSize(THUMB_W, h)
+    s.thumb:ClearAllPoints()
+    s.thumb:SetPoint("TOPLEFT", body.frame, "TOPLEFT", width + THUMB_GAP, -(top + dy))
+    s.thumb:SetSize(THUMB_W, thumbH)
 end
 
 -- The "Spell breakdown" section at `y`: HEAD_GAP of clear space, its heading, then the live read's
@@ -438,21 +499,21 @@ local function placeSpells(body, v, y)
     s.note:ClearAllPoints()
     s.note:SetPoint("TOPRIGHT", body.frame, "TOPLEFT", width, -y)
     local Breakdown = NS.HudBreakdown
-    local drawn
+    local drawn, base
     if body.key == "over" then
         local list = v.finalSpells or {}
-        local n, offset = window(body, #list)
-        drawn = s.list:ShowFinal(list, v.finalTotal, n, offset)
-        s.note:SetText(L["% of total"])
+        local n, offset = window(body, #list, v, y)
+        drawn, base = s.list:ShowFinal(list, v.finalTotal, n, offset), L["% of total"]
     else
-        local n, offset = window(body, Breakdown.LiveCount(v.live))
-        drawn = s.list:ShowLive(v.live, n, offset)
-        s.note:SetText(L["live order"])
+        local n, offset = window(body, Breakdown.LiveCount(v.live), v, y)
+        drawn, base = s.list:ShowLive(v.live, n, offset), L["live order"]
     end
+    s.note:SetText(spellsNote(body, base, drawn))
     local h = Breakdown.Height(drawn)
     s.frame:ClearAllPoints()
     s.frame:SetPoint("TOPLEFT", body.frame, "TOPLEFT", 0, -(y + SECTION_H))
     s.frame:SetSize(width, math.max(1, h))
+    placeThumb(s, body, width, y + SECTION_H, h)
     return y + SECTION_H + h + GAP
 end
 
@@ -461,6 +522,38 @@ local function placeExtras(body, v, y)
     body.stackTop = y
     y = placeProfile(body, v, y)
     y = placeSpells(body, v, y)
+    return y
+end
+
+-- The top a fixed window reserves: the clock, the target line and the boxes with the pet's row.
+local function reservedTop(layout)
+    local clockH, kpiH = States.TopSizes()
+    local y = 0
+    if layout.clock ~= false then y = y + clockH end
+    if layout.target ~= false then y = y + TARGET_H end
+    if layout.figures ~= false then y = y + kpiH + KPI_CAPTION_H + GAP end
+    return y
+end
+
+--- The stack a fixed window reserves for `bars` rows, from the configuration alone (the shell adds
+--- its chrome): every part `layout` shows, the boxes' pet row always, the pace line whenever the
+--- layout shows it and the HUD paces (`paceable`), and the spell section's heading over `bars` rows.
+--- The live body with a pet, a pace and at least `bars` spells fills it exactly.
+--- @param layout table|nil  `hud.layout`
+--- @param bars number
+--- @param paceable boolean  `hud.paceAgainst` is not "none"
+--- @return number
+function States.FixedStack(layout, bars, paceable)
+    layout = layout or {}
+    local y = reservedTop(layout)
+    local paceOn, chartOn = layout.pace ~= false and paceable == true, layout.chart ~= false
+    local paceLine = paceOn and (NS.HudChart.PACE_H + PACE_GAP) or 0
+    if chartOn then
+        y = y + HEAD_GAP + NS.HudChart.BlockHeight(NS.HudChart.PlotHeight(), paceLine) + GAP
+    elseif paceOn then
+        y = y + HEAD_GAP + SECTION_H + paceLine + GAP
+    end
+    if layout.spells ~= false then y = y + States.SpellsHeight(bars) end
     return y
 end
 

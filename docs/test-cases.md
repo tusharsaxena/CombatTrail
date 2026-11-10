@@ -630,7 +630,7 @@ Total.
 - breakdown never sorts or computes in combat (mock secret values)
 - breakdown: pet rows carry paw and pet color
 - breakdown: the over card's rows are merged, highest first, with their shares
-- breakdown: hud.spells.rows caps the rows; 0 shows every one and the wheel scrolls
+- breakdown: hud.bars caps the rows and the wheel scrolls past them
 - breakdown: the layout's spell rows off hides them
 
 ### test_hud_appearance.lua (7)
@@ -671,6 +671,27 @@ Total.
 - hud layout: a spell row is 18 high in a 10 point face, its icon 16
 - hud layout: the clock draws DPS Race's 40 in the skin's face
 - hud layout: the settings' width floor is the HUD's
+
+### test_hud_sizing.lua (18)
+
+- hud sizing: the defaults are fixed, 5 bars, grow down; spells.rows is retired
+- hud sizing: the fixed height is derived from the bars, the same with 0, 3 or 20 spells
+- hud sizing: every part shown with a pet fills the fixed window exactly
+- hud sizing: a layout part switched off shrinks the fixed height, the bars stay
+- hud sizing: a pet appearing mid-fight keeps the fixed height and the bars
+- hud sizing: the fight-over card fits the fixed window, fewer rows and the wheel past them
+- hud sizing: a grip release stores the width and the rounded bars, and the height snaps
+- hud sizing: while the grip is held the rows follow the drag and nothing is stored
+- hud sizing: the grip's bounds follow the parts shown
+- hud sizing: the grip is hidden while locked and in auto mode, and refuses a drag
+- hud sizing: the wheel scrolls the live rows, clamped, and the note counts them
+- hud sizing: with every spell in view there is no scroll and no count
+- hud sizing: zero spells draws no row and keeps the HUD drawable
+- hud sizing: a new fight starts its rows at the top
+- hud sizing: auto mode grows with the rows up to the bars, then scrolls
+- hud sizing: grow down keeps the top in place, grow up the bottom
+- hud sizing: a stored point that already suits the grow edge is kept
+- hud sizing: switching the mode mid-fight redraws without error
 
 ### test_sizing.lua (7)
 
@@ -1015,6 +1036,7 @@ Total.
 | test_hud_appearance.lua | 7 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
+| test_hud_sizing.lua | 18 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 23 |
 | test_results_detail.lua | 15 |
@@ -1039,4 +1061,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **801** |
+| **Total** | **819** |

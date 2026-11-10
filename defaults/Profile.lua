@@ -120,31 +120,32 @@ NS.defaults = {
                 labelText   = "",
             }),
         },
-        -- The live DPS HUD (spec §6, modules/Hud.lua). Behavior: when it opens ("auto" on every
-        -- fight's first hit, "always", or "toggle": only when the player opens it), the seconds it
-        -- stays after the fight (0 keeps the card up), whether the pointer holds it, whether it opens
-        -- only inside an instance, what the pace compares against ("best" on the same board, the
-        -- "last" fight there, or "none"), the pace bar's range (plan Task 3.2), whether the fight-over
-        -- card shows and whether it says why a fight was not saved. Layout: its width, its scale and
-        -- one switch per part of the stack (the clock, the target line, the Damage and DPS boxes, the
-        -- pace bar, the damage chart and the spell rows). Its place: a point on UIParent, written by
-        -- the title bar's drag (the mockup's top right).
+        -- The live DPS HUD (spec §6, modules/Hud.lua). Behavior: when it opens ("auto" on every fight's first
+        -- hit, "always", or "toggle": only when the player opens it), the seconds it stays after the fight (0
+        -- keeps the card up), whether the pointer holds it, whether it opens only inside an instance, what
+        -- the pace compares against ("best" on the same board, the "last" fight there, or "none"), the pace
+        -- bar's range (plan Task 3.2), whether the fight-over card shows and whether it says why a fight was
+        -- not saved. Layout: its width, its scale, its size mode (v0.2 Task B3: "fixed", the height derived
+        -- from `bars` spell rows and set by the grip, or "auto", growing with the rows up to `bars` and then
+        -- scrolling, toward `grow` "down" or "up"), and one switch per part of the stack (the clock, the
+        -- target line, the Damage and DPS boxes, the pace bar, the damage chart and the spell rows). Its
+        -- place: a point on UIParent, written by the title bar's drag (the mockup's top right).
         -- The look (plan Task 3.2, modules/Hud_Appearance.lua), one block per mockup tab, each in the
         -- composer's shapes (options-ui-§16 and §17: a font block, a bar block, a swatch with its
-        -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own, and every font
-        -- block's text color and shadow follow the skin by default, skinning-§6). Clock and
-        -- figures: the clock's font (the mono role, no outline; the skin's HUD face and 26 points,
-        -- which the HUD draws at DPS Race's single-clock 40, v0.2 Task B2), the figures' font, the over card's DPS color and the boxes' background and
-        -- border. Damage chart: the plot's height and most
-        -- columns, the columns' bar, the burst-window and best-line colors, the cooldown icons (and
-        -- their minimum base cooldown, seconds) and the zero line. Spell rows: how many (0 = every
-        -- one, the wheel scrolls), their height, the icons and the pet's paw, the player's bar, the
-        -- pet's color and the rows' font. Window: the title bar and its title, the background and
-        -- border, the footer, the strata and the opacity. ("Lock position" is general.locked.)
+        -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own, and every font block's
+        -- text color and shadow follow the skin by default, skinning-§6). Clock and figures: the clock's font
+        -- (the mono role, no outline; the skin's HUD face and 26 points, which the HUD draws at DPS Race's
+        -- single-clock 40, v0.2 Task B2), the figures' font, the over card's DPS color and the boxes'
+        -- background and border. Damage chart: the plot's height and most columns, the columns' bar, the
+        -- burst-window and best-line colors, the cooldown icons (and their minimum base cooldown, seconds)
+        -- and the zero line. Spell rows: their height (how many is the Layout's `bars`), the icons and the
+        -- pet's paw, the player's bar, the pet's color and the rows' font. Window: the title bar and its
+        -- title, the background and border, the footer, the strata and the opacity. ("Lock position" is
+        -- general.locked.)
         hud = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
-            width = 260, scale = 1,
+            width = 260, scale = 1, sizeMode = "fixed", bars = 5, grow = "down",
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
             clock = { font = "JetBrains Mono", fontSize = 26, fontColor = rgba(0.92, 0.91, 0.88, 1),
@@ -163,7 +164,7 @@ NS.defaults = {
                       burstColor = rgba(0.79, 0.65, 0.23, 1), useClassColorBurstColor = false,
                       bestColor = swatch(PALETTE.PACE), useClassColorBestColor = false,
                       cooldowns = true, cooldownMin = 29, zeroLine = true },
-            spells = { rows = 8, rowHeight = 18, icons = true, paw = true,
+            spells = { rowHeight = 18, icons = true, paw = true,
                        barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                        useClassColorBar = false, barTextureFromSkin = true,
                        petColor = swatch(PALETTE.PET, PALETTE.BAR_A), useClassColorPetColor = false,

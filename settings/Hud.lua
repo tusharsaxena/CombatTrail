@@ -10,9 +10,15 @@ local _, NS = ...
 -- leaves and the profile's own defaults (`defaults`), so the clock keeps its plain "" flags (the
 -- mono role: no flagsFromSkin) while the figures and the rows draw the skin's outline ("@skin"). The
 -- clock draws the skin's HUD face by default, as DPS Race's does (v0.2 Task B2), and its stored size
--- scaled to DPS Race's single clock (Hud_States' ClockSize: 26 draws 40), which its size row says. The skin companions the composer has no row for (a font block's text color and
--- shadow, a backdrop swatch) are this addon's own rows in the block's `extra`, in its own words,
--- so they carry no `composed` mark (skinning-§6). The window has no Lock row: Lock frame is General >
+-- scaled to DPS Race's single clock (Hud_States' ClockSize: 26 draws 40), which its size row says.
+-- The skin companions the composer has no row for (a font block's text color and shadow, a backdrop
+-- swatch) are this addon's own rows in the block's `extra`, in its own words, so they carry no
+-- `composed` mark (skinning-§6).
+--
+-- THE SIZE (v0.2 Task B3, Layout > Size): Window size (`hud.sizeMode`: Fixed, whose height follows
+-- Spell bars and the grip, or Auto-grow), Spell bars (`hud.bars`, 1-15: the fixed window's rows, the
+-- auto window's most before it scrolls) and Grow (`hud.grow`, read only by Auto-grow, so it is drawn
+-- disabled in Fixed: disabledIf). The window has no Lock row: Lock frame is General >
 -- Master controls' (`general.locked`), the one switch for the lanes and the HUD together.
 --
 -- WRITES: every row writes through the seam (NS.SetByPath), whose SETTINGS_CHANGED on a `hud.*` path
@@ -55,6 +61,10 @@ local POINTS, POINT_OK = choices(
 local STRATA = { "BACKGROUND", "LOW", "MEDIUM", "HIGH" }
 local STRATAS, STRATA_OK = choices(
     "BACKGROUND", L["Background"], "LOW", L["Low"], "MEDIUM", L["Medium"], "HIGH", L["High"])
+local SIZES, SIZE_OK = choices(
+    "fixed", L["Fixed: drag the corner to set the bars"], "auto", L["Auto-grow with the rows"])
+local GROWS, GROW_OK = choices(
+    "down", L["Down: the top stays put"], "up", L["Up: the bottom stays put"])
 
 -- ── the rows ───────────────────────────────────────────────────────────────────────────────────
 
@@ -161,8 +171,16 @@ row("layout.spells", { type = "bool", label = L["Show spell rows"],
     tooltip = L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] })
 
 at(TAB.layout, L["Size"])
-row("width", { type = "number", label = L["HUD width (px)"], min = NS.Hud.MIN_WIDTH, max = 600, step = 10, startsLine = true,
-    tooltip = L["How wide the HUD is, in pixels. Its height follows the parts it shows."] })
+row("sizeMode", { type = "string", label = L["Window size"], values = SIZES, validate = SIZE_OK, startsLine = true,
+    tooltip = L["Fixed: the HUD keeps one height, room for Spell bars rows, and dragging its bottom-right corner sets the width and the bars. Auto-grow: it grows with the spell rows up to Spell bars, then scrolls. Either way the mouse wheel scrolls through spells past the rows."] })
+row("bars", { type = "number", label = L["Spell bars"], min = NS.Hud.MIN_BARS, max = NS.Hud.MAX_BARS, step = 1,
+    tooltip = L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel."] })
+row("grow", { type = "string", label = L["Grow"], values = GROWS, validate = GROW_OK, startsLine = true,
+    disabledIf = function() return NS.GetSetting("hud.sizeMode") ~= "auto" end,
+    tooltip = L["Which way an Auto-grow HUD grows as rows arrive: down keeps its top in place, up keeps its bottom. Needs Window size Auto-grow."] })
+row("width", { type = "number", label = L["HUD width (px)"], min = NS.Hud.MIN_WIDTH, max = NS.Hud.MAX_WIDTH, step = 10,
+    startsLine = true,
+    tooltip = L["How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."] })
 row("scale", { type = "number", label = L["HUD scale"], min = 0.5, max = 2, step = 0.05, isPercent = true,
     tooltip = L["The size of the whole HUD, its text included."] })
 
@@ -206,11 +224,8 @@ row("chart.cooldownMin", { type = "number", label = L["Shortest cooldown (second
 
 -- Spell rows
 at(TAB.spells, L["Size"])
-row("spells.rows", { type = "number", label = L["Spell rows shown (0 = all)"], min = 0, max = 40, step = 1,
-    startsLine = true,
-    tooltip = L["How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."] })
 row("spells.rowHeight", { type = "number", label = L["Row height (px)"], min = 12, max = 40, step = 1,
-    tooltip = L["The height of each spell row, in pixels."] })
+    startsLine = true, tooltip = L["The height of each spell row, in pixels. How many rows show is Layout > Spell bars."] })
 at(TAB.spells, L["Icons"])
 row("spells.icons", { type = "bool", label = L["Show spell icons"], startsLine = true,
     tooltip = L["Draw each spell's icon at the start of its row."] })

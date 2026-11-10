@@ -33,10 +33,11 @@ default; the file's comments say what each value means.
 | `lanes.<k>.visibility` | `{ show = "always", hideAfter = 5, where, hideMounted, hideVehicle, hidePetBattle, hideResting, alphaCombat, alphaOOC }`; `where` has no `delve` or `arena` key, and there is no `hideVehicle` or `hidePetBattle`, on WoW Forever | Lanes → Visibility |
 | `lanes.<k>.ignore` | `{ [spellID] = true }` from the client's seed; a removed seed is stored as `false` | Lanes → Ignored spells |
 | `hud.show`, `fadeAfter`, `holdOnMouse`, `instancesOnly`, `paceAgainst`, `paceRange`, `overCard`, `showSkipReason` | `"auto"`, `8`, `true`, `false`, `"best"`, `1.5`, `true`, `true` | DPS HUD → Behavior |
-| `hud.width`, `hud.scale`, `hud.layout.*` | `260` (DPS Race's, also the slider's floor, `Hud.MIN_WIDTH`), `1`, every part `true` | DPS HUD → Layout |
+| `hud.width`, `hud.scale`, `hud.layout.*` | `260` (DPS Race's, also the slider's floor, `Hud.MIN_WIDTH`; `Hud.MAX_WIDTH` 600), `1`, every part `true` | DPS HUD → Layout |
+| `hud.sizeMode`, `bars`, `grow` | `"fixed"` (or `"auto"`), `5` (`Hud.MIN_BARS` 1 to `Hud.MAX_BARS` 15), `"down"` (or `"up"`, read in auto only). Fixed: the height is `Hud.FixedHeight()`, the chrome plus `HudStates.FixedStack(layout, bars, paceable)`, and the grip's release writes `hud.width` and `hud.bars`. Auto: the stack's height with up to `bars` rows. Both scroll past `bars` (v0.2 Task B3; `hud.spells.rows` retired, no migration: AceDB stores only differences) | DPS HUD → Layout |
 | `hud.clock.*`, `hud.figures.*` | font blocks and the boxes' colors; the clock follows the skin's HUD face (`fontFromSkin = true`) at `fontSize = 26`, drawn at DPS Race's single-clock 40 (`HudStates.ClockSize`, × 40/26), flags `""` | DPS HUD → Clock and figures |
 | `hud.chart.*` | `height = 80`, `columns = 48`, bar, colors (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `bestColor` = `PALETTE.PACE`, the pace line), `cooldowns = true`, `cooldownMin = 29`, `zeroLine = true` | DPS HUD → Damage chart |
-| `hud.spells.*` | `rows = 8`, `rowHeight = 18`, icons, paw, bars (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `petColor` = `PALETTE.PET` at `BAR_A`), font (`fontSize = 10`, `fontShadow = true`) | DPS HUD → Spell rows |
+| `hud.spells.*` | `rowHeight = 18`, icons, paw, bars (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `petColor` = `PALETTE.PET` at `BAR_A`), font (`fontSize = 10`, `fontShadow = true`) | DPS HUD → Spell rows |
 | `hud.window.*` | title bar, colors, footer, `strata = "MEDIUM"`, `alpha = 1` | DPS HUD → Window |
 | `hud.position` | `{ point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 }` | DPS HUD → Window, and the title bar's drag (named state, below) |
 | `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
@@ -74,7 +75,7 @@ and one that did keeps its own. No migration step is needed. No skin overrides a
 | State | Storage key | Owner | Writers |
 |---|---|---|---|
 | A lane's dragged place | `lanes.<k>.anchor.x` / `.y` (and `point`) | modules/LaneAnchor.lua | `dragStop` (the edit overlay's drag) through `write`; `NS.Lanes.ResetPosition` (Master controls' Reset position) |
-| The HUD's place | `hud.position` | modules/Hud.lua | `savePosition` (the title bar's drag); `Hud.ResetPosition` |
+| The HUD's place | `hud.position` | modules/Hud.lua | `normalizeAnchor` (the title bar's drag and the grip's release, and a change of `hud.sizeMode` or `hud.grow`: TOPLEFT, or BOTTOMLEFT for an auto window growing up, on UIParent's BOTTOMLEFT), else `savePosition`; `Hud.ResetPosition` |
 | The Results window's place, size and fold | `results.window` | modules/Results.lua | `savePosition` (drag, the grip's release, the fold arrow through `Results.SetView`); `Results.ResetPosition` |
 | The saved Results view | `results.view` | modules/Results_Fights.lua | `writeView` (the Save view button) |
 | The fight store | `global.fights`, `global.fightOrder` | modules/Recorder.lua | `Recorder.Save`, `Recorder.Delete`, `Recorder.SetNote`; `Retention.Purge` (modules/Retention.lua) |

@@ -20,8 +20,8 @@ local Tips = {
     pace = { L["Pace bar"], L["Your damage against your best's at this point in the fight. The tick in the middle is on pace; your pet's damage carries on from the end of yours."] },
     overPace = { L["Pace bar"], L["This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."] },
     chart = { L["Damage profile"], L["How your damage built up over the fight, one column per slice of time. The line is your best's average pace, and icons mark your long cooldowns."] },
-    liveSpells = { L["Spell breakdown"], L["Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over."] },
-    overSpells = { L["Spell breakdown"], L["This fight's spells, highest damage first, with each one's share."] },
+    liveSpells = { L["Spell breakdown"], L["Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over. The mouse wheel scrolls through more spells than the rows hold."] },
+    overSpells = { L["Spell breakdown"], L["This fight's spells, highest damage first, with each one's share. The mouse wheel scrolls through more spells than the rows hold."] },
 }
 
 NS.HudTips = Tips

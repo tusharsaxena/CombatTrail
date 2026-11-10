@@ -226,6 +226,10 @@ icons for cooldowns ≥ 29 s); and spell rows (icon, name, bar, amount, with pet
 The look is DPS Race's (v0.2 Task B2): 260 px wide, both section headings ("Damage profile", "Spell breakdown") in the
 large section font with the same clear space over them, the pace bar directly under the "Damage profile" heading and over
 the plot, the clock in the skin's HUD face at DPS Race's size, and 18 px spell rows in a 10 pt face.
+**Size (v0.2 Task B3, owner decision D2):** by default the window is a fixed size holding 5 spell rows
+(`hud.bars`, 1 to 15) under every part it shows; a bottom-right grip sets the width and, by whole rows, the
+bars. The alternative, Auto-grow, grows with the rows up to the bars, keeping its top (the default) or its
+bottom in place. Either way spells past the rows scroll with the mouse wheel, counted in the heading's note.
 
 **Fight-over card:** final damage and DPS, percentages per spell, a New best chip with the delta, and a Saved or "Not saved:
 <reason>" chip. The chart button opens the fight in Results.

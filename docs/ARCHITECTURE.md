@@ -53,6 +53,11 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
   came back secret is left absent. The in-combat damage curve (`modules/Slices.lua`) lives in memory
   for the session only.
 - `COMBAT_LOG_EVENT_UNFILTERED` is never registered: it is protected for addons on both clients.
+- No geometry is read back off a frame that has displayed a meter value: every layout is worked out
+  from configuration and plain counts. The one exception is the DPS HUD's shell frame, which never
+  displays a value itself: its anchor (`GetPoint`) and its edges (`GetLeft`, `GetTop`, `GetBottom`,
+  for the grow edge, v0.2 Task B3) are read after a drag, each only as a plain number, and the grip's
+  sizes are the ones `OnSizeChanged` hands the shell.
 
 ## Module Map
 

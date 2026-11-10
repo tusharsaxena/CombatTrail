@@ -433,9 +433,22 @@ L["Show your damage over the fight as columns, with the pace as a line and your 
 L["Show spell rows"] = "Show spell rows"
 L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] =
     "Show your spells and your pet's, one row each, in the order the damage meter gives them."
+L["Window size"] = "Window size"
+L["Fixed: drag the corner to set the bars"] = "Fixed: drag the corner to set the bars"
+L["Auto-grow with the rows"] = "Auto-grow with the rows"
+L["Fixed: the HUD keeps one height, room for Spell bars rows, and dragging its bottom-right corner sets the width and the bars. Auto-grow: it grows with the spell rows up to Spell bars, then scrolls. Either way the mouse wheel scrolls through spells past the rows."] =
+    "Fixed: the HUD keeps one height, room for Spell bars rows, and dragging its bottom-right corner sets the width and the bars. Auto-grow: it grows with the spell rows up to Spell bars, then scrolls. Either way the mouse wheel scrolls through spells past the rows."
+L["Spell bars"] = "Spell bars"
+L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel."] =
+    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel."
+L["Grow"] = "Grow"
+L["Down: the top stays put"] = "Down: the top stays put"
+L["Up: the bottom stays put"] = "Up: the bottom stays put"
+L["Which way an Auto-grow HUD grows as rows arrive: down keeps its top in place, up keeps its bottom. Needs Window size Auto-grow."] =
+    "Which way an Auto-grow HUD grows as rows arrive: down keeps its top in place, up keeps its bottom. Needs Window size Auto-grow."
 L["HUD width (px)"] = "HUD width (px)"
-L["How wide the HUD is, in pixels. Its height follows the parts it shows."] =
-    "How wide the HUD is, in pixels. Its height follows the parts it shows."
+L["How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."] =
+    "How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."
 L["HUD scale"] = "HUD scale"
 L["The size of the whole HUD, its text included."] = "The size of the whole HUD, its text included."
 L["Clock font"] = "Clock font"
@@ -480,11 +493,9 @@ L["Mark each cast of a spell with a long cooldown with its icon along the top of
 L["Shortest cooldown (seconds)"] = "Shortest cooldown (seconds)"
 L["The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."] =
     "The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."
-L["Spell rows shown (0 = all)"] = "Spell rows shown (0 = all)"
-L["How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."] =
-    "How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."
 L["Row height (px)"] = "Row height (px)"
-L["The height of each spell row, in pixels."] = "The height of each spell row, in pixels."
+L["The height of each spell row, in pixels. How many rows show is Layout > Spell bars."] =
+    "The height of each spell row, in pixels. How many rows show is Layout > Spell bars."
 L["Show spell icons"] = "Show spell icons"
 L["Draw each spell's icon at the start of its row."] = "Draw each spell's icon at the start of its row."
 L["Show pet paw"] = "Show pet paw"
@@ -627,8 +638,8 @@ L["This fight's damage per second, yours and your pet's."] =
     "This fight's damage per second, yours and your pet's."
 L["This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."] =
     "This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."
-L["This fight's spells, highest damage first, with each one's share."] =
-    "This fight's spells, highest damage first, with each one's share."
+L["This fight's spells, highest damage first, with each one's share. The mouse wheel scrolls through more spells than the rows hold."] =
+    "This fight's spells, highest damage first, with each one's share. The mouse wheel scrolls through more spells than the rows hold."
 L["This fight's total damage, yours and your pet's."] = "This fight's total damage, yours and your pet's."
 L["Unknown spell"] = "Unknown spell"
 L["Your damage against your best's at this point in the fight. The tick in the middle is on pace; your pet's damage carries on from the end of yours."] =
@@ -637,10 +648,11 @@ L["Your damage per second so far this fight, as the damage meter reports it."] =
     "Your damage per second so far this fight, as the damage meter reports it."
 L["Your damage so far this fight, as the damage meter reports it. Your pet's shows beside it."] =
     "Your damage so far this fight, as the damage meter reports it. Your pet's shows beside it."
-L["Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over."] =
-    "Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over."
+L["Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over. The mouse wheel scrolls through more spells than the rows hold."] =
+    "Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over. The mouse wheel scrolls through more spells than the rows hold."
 L["first fight on this board"] = "first fight on this board"
 L["live order"] = "live order"
+L["%d-%d of %d"] = "%d-%d of %d"
 L["vs best pace"] = "vs best pace"
 
 -- The Results window (modules/Results.lua, Results_Fights.lua, Results_Table.lua, Results_Tips.lua)

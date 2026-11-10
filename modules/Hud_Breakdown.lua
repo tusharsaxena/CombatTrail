@@ -17,6 +17,9 @@ local _, NS = ...
 -- NO GEOMETRY IS READ BACK. A frame handed a secret has secret geometry, so a row is placed from its
 -- index and the configured row height, and nothing here asks a row, a bar or a label its size.
 --
+-- THE SCROLL. Both fills take a plain row offset and a row count (modules/Hud_States.lua works them
+-- out from `hud.bars`, the window's room and the wheel), so the list never decides what is visible.
+--
 -- THE LOOK (modules/Hud_Appearance.lua, `hud.spells.*`) is applied once per Appearance stamp: the
 -- row height, the icons, the bar's texture and the player's and the pet's colors, the text's font.
 
@@ -177,6 +180,16 @@ end
 function Breakdown.Height(n)
     if n <= 0 then return 0 end
     return n * Breakdown.Pitch() - Breakdown.ROW_GAP
+end
+
+--- How many whole rows fit `room` pixels: the inverse of Height (config only, never a measured
+--- size), 0 for no room. Height(Capacity(room)) never exceeds `room`.
+--- @param room number
+--- @return number
+function Breakdown.Capacity(room)
+    room = tonumber(room) or 0
+    if room <= 0 then return 0 end
+    return math.max(0, math.floor((room + Breakdown.ROW_GAP) / Breakdown.Pitch()))
 end
 
 -- One pooled row at index `i`, styled and in its mode.

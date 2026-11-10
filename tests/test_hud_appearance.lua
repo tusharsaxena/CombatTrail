@@ -175,8 +175,6 @@ local LIVE_CASES = join(
         { "chart.cooldownMin", 200, function(_, Hud) assertEqual(#chart(Hud):Icons(), 0, "Wrath is 120 s") end },
         { "chart.cooldowns", false, function(_, Hud) assertEqual(#chart(Hud):Icons(), 0) end },
         { "chart.zeroLine", false, function(_, Hud) assertFalse(chart(Hud).zero:IsShown()) end },
-        { "spells.rows", 1, function(_, Hud) assertEqual(#rows(Hud), 1) end },
-        { "spells.rows", 8, function(_, Hud) assertEqual(#rows(Hud), 4) end },
         { "spells.rowHeight", 30, function(_, Hud) assertEqual(rows(Hud)[1].iconSize, 28) end },
         { "spells.icons", false, function(_, Hud) assertFalse(rows(Hud)[1].icon:IsShown()) end },
         { "spells.paw", false, function(_, Hud) assertFalse(rows(Hud)[3].paw:IsShown()) end },
