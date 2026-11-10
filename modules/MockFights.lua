@@ -43,6 +43,8 @@ local RETAIL = { "retail" }
 local FOREVER = NS.Compat.IsForever()
 local CLIENT = FOREVER and {
     scale = 4, level = 60, raid = { 9, "40 Player" },
+    -- The predominant talent tree stands in for the spec (modules/Identity.lua, v0.2 plan Task A4).
+    specID = "tree:HUNTER:1", specName = "Beast Mastery", specIcon = 132164, trees = { 31, 20, 0 },
     stats = { v = 1, stamina = 4100, armor = 3900, critRating = 0, crit = 18.20, hasteRating = 0, haste = 0 },
     -- A sample carries its gear inline, never a set in db.global.gearSets (Loadouts.GearOf reads both).
     gear = { [1] = "16939", [5] = "16942", [7] = "16938", [13] = "19991", [18] = "18855" },
@@ -177,7 +179,7 @@ function MockFights.Character(key)
     local me = NS.Identity.Who()
     return { name = c.name, realm = me.realm, client = NS.Compat.ClientKey(), class = "HUNTER",
              level = CLIENT.level, specID = CLIENT.specID, specName = CLIENT.specName and L[CLIENT.specName],
-             ilvl = c.ilvl, petName = c.pet, petFamily = "Wolf" }
+             specIcon = CLIENT.specIcon, trees = CLIENT.trees, ilvl = c.ilvl, petName = c.pet, petFamily = "Wolf" }
 end
 
 --- The identity a fight against board `key` resolves to (modules/Identity.lua's own Resolve).

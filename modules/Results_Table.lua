@@ -126,16 +126,21 @@ function Tbl.SetClassIcon(tex, class)
     return true
 end
 
---- A spec's name and icon through GetSpecializationInfoByID, with the fight's own name beneath it
---- (WoW Forever has no specializations: the name stored, no icon).
+--- A spec's name and icon through GetSpecializationInfoByID, with the fight's own name and icon
+--- beneath it. On WoW Forever the spec is the predominant talent tree (a "tree:" key, never asked of
+--- the client), so its stored name and icon answer; with neither there is no icon, never the class
+--- icon a second time.
+--- @param specID number|string|nil
+--- @param fallbackName string|nil
+--- @param fallbackIcon number|string|nil
 --- @return string|nil name, any icon
-function Tbl.SpecInfo(specID, fallbackName)
+function Tbl.SpecInfo(specID, fallbackName, fallbackIcon)
     local api = GetSpecializationInfoByID
     if type(specID) == "number" and type(api) == "function" then
         local ok, _, name, _, icon = pcall(api, specID)
         if ok and type(name) == "string" then return name, icon end
     end
-    return fallbackName, nil
+    return fallbackName, fallbackIcon
 end
 
 --- A color as the "aarrggbb" hex an inline |c escape takes.
@@ -335,7 +340,7 @@ end
 
 function Bind.icons(cell, _, record)
     local who = type(record.who) == "table" and record.who or {}
-    local specName, specIcon = Tbl.SpecInfo(who.specID, who.specName)
+    local specName, specIcon = Tbl.SpecInfo(who.specID, who.specName, who.specIcon)
     Tbl.SetClassIcon(cell.class, who.class)
     cell.spec:SetTexture(specIcon)
     cell.spec:SetShown(specIcon ~= nil)

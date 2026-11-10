@@ -175,7 +175,10 @@ it passes the recording filters:
   Mythic+ keystone level (Retail, `C_ChallengeMode`); training dummy from a **per-client** dummy creature-ID
   seed list (start from DpsRace `DummyList.lua`; Forever gets its own list, possibly empty by decision).
 - **Who:** character, realm (Forever's two-word names and long realm labels, client-quirks §5), class, spec,
-  item level, pet name and family.
+  item level, pet name and family. On Forever (v0.2 owner decision D5) the client answers one class-wide spec,
+  so the talent tree with the most points stands in for the spec everywhere (the row's second icon, the Spec
+  filter and grouping, the bests' board, the Share line), worded "talent tree" (D11); each tree's points are
+  stored too.
 
 **Board key (Claude; v0.2 owner decision D3)** (used for grouping, bests and pace): `encounterID + difficultyID` for boss fights
 (a world boss without an encounter: `creatureID + difficultyID`), otherwise the primary target's **NPC ID + level + name**

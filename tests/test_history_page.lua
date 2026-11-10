@@ -346,3 +346,13 @@ test("history page: /ct set reaches a history path", function()
     NS.Slash:OnSlash("set history.keepBests false")
     assertEqual(NS.GetSetting("history.keepBests"), false)
 end)
+
+test("history page: the keep-bests tooltip names the board's spec, a talent tree on Forever (D5, D11)", function()
+    local NS = T.load().NS
+    local tip = NS.FindSchemaRow("history.keepBests").tooltip
+    if NS.Compat.IsForever() then
+        assertTrue(tip:find("one character and talent tree", 1, true) ~= nil, tip)
+    else
+        assertTrue(tip:find("one character and spec", 1, true) ~= nil, tip)
+    end
+end)

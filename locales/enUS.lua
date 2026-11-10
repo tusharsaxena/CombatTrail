@@ -598,6 +598,8 @@ L["Not saved: the meter lost this fight"] = "Not saved: the meter lost this figh
 L["Not saved: no readable character"] = "Not saved: no readable character"
 L["Your best DPS on this boss or target, for this character and spec."] =
     "Your best DPS on this boss or target, for this character and spec."
+L["Your best DPS on this boss or target, for this character and talent tree."] =
+    "Your best DPS on this boss or target, for this character and talent tree."
 L["Stored in your fight history."] = "Stored in your fight history."
 L["Every fight is tracked live; only the ones that pass History > Recording filters are stored."] =
     "Every fight is tracked live; only the ones that pass History > Recording filters are stored."
@@ -672,6 +674,8 @@ L["All characters"] = "All characters"
 L["Current character"] = "Current character"
 L["All specs"] = "All specs"
 L["Current spec"] = "Current spec"
+L["All talent trees"] = "All talent trees"
+L["Current talent tree"] = "Current talent tree"
 L["All content"] = "All content"
 L["All encounters and targets"] = "All encounters and targets"
 L["All difficulties"] = "All difficulties"
@@ -746,10 +750,12 @@ L["Other"] = "Other"
 L["Group: Encounter + difficulty"] = "Group: Encounter + difficulty"
 L["Group: Character"] = "Group: Character"
 L["Group: Spec"] = "Group: Spec"
+L["Group: Talent tree"] = "Group: Talent tree"
 L["Group: Content"] = "Group: Content"
 L["Group: None"] = "Group: None"
 L["When the fight started. Click to sort."] = "When the fight started. Click to sort."
 L["The character's class and spec."] = "The character's class and spec."
+L["The character's class and talent tree."] = "The character's class and talent tree."
 L["Who fought. Hover a name for the realm and the pet."] =
     "Who fought. Hover a name for the realm and the pet."
 L["Equipped item level when the fight started."] = "Equipped item level when the fight started."
@@ -982,8 +988,8 @@ L["Stored fights older than this many days are removed, at login and once a day 
 L["Never purge a fight that holds a best"] = "Never purge a fight that holds a best"
 L["Keep a fight however old it is while it is your best on its board: your top DPS for one character and spec on one encounter or target at one difficulty."] =
     "Keep a fight however old it is while it is your best on its board: your top DPS for one character and spec on one encounter or target at one difficulty."
-L["Keep a fight however old it is while it is your best on its board: your top DPS for one character on one encounter or target at one difficulty."] =
-    "Keep a fight however old it is while it is your best on its board: your top DPS for one character on one encounter or target at one difficulty."
+L["Keep a fight however old it is while it is your best on its board: your top DPS for one character and talent tree on one encounter or target at one difficulty."] =
+    "Keep a fight however old it is while it is your best on its board: your top DPS for one character and talent tree on one encounter or target at one difficulty."
 L["Maximum stored fights (0 = no limit)"] = "Maximum stored fights (0 = no limit)"
 L["The most fights kept. Past it the oldest go first, except a fight that holds a best while Never purge a fight that holds a best is on. 0 keeps any number."] =
     "The most fights kept. Past it the oldest go first, except a fight that holds a best while Never purge a fight that holds a best is on. 0 keeps any number."

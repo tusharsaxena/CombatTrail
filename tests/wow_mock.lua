@@ -162,7 +162,7 @@ local function build()
             local t = M.__talents
             if not t then return nil end
             if id == t.savedConfigID and t.savedName then return { ID = id, name = t.savedName } end
-            if id == t.configID then return { ID = id, name = t.configName } end
+            if id == t.configID then return { ID = id, name = t.configName, treeIDs = t.treeIDs } end
             return nil
         end,
         GetSubTreeInfo = function(_, id)

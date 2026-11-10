@@ -25,6 +25,8 @@ a library-absent load and are documented by the library, not here.
 | `KeystoneLevel()` | The active Mythic+ keystone level | Retail only: always nil on WoW Forever |
 | `DelveTierText()` | The delve tier, from the scenario tracker's widgets | Retail only; not verified in game (smoke list) |
 | `PvpRules()` | `{ ratedBG, ratedArena, soloShuffle, blitz }` for the board key's PvP bracket | Arena brackets false on WoW Forever |
+| `TalentTrees()` | WoW Forever's talent trees, `{ { name, icon, points }, ... }` in tree order, and `"sealed"` as a second value when a point count was secret (modules/Identity.lua picks the predominant tree) | Forever only, nil on Retail. `GetNumTalentTabs` / `GetTalentTabInfo` (both return shapes), then the active config's tree in `C_Traits` (`GetGroupDisplayInfoByTreeID`, `GetGroupCurrencyInfo`); unverified in game (SM-CT-P7) |
+| `TalentApis()` | Every talent API's raw answer, for `/ct probe` | Forever only, nil on Retail |
 | `BuildInfo()` | Version, build, interface (the probe, the record) | |
 | `ClientApis()` | Which version-variant APIs exist (the probe) | |
 | `ChatSender()` | The function that sends one chat message (Share) | `C_ChatInfo.SendChatMessage`, else `SendChatMessage` |

@@ -375,3 +375,21 @@ test("detail: the window steps aside for the talent tree and comes back", functi
     assertFalse(NS.Results.AwaitingTree())
     assertTrue(tickers[1].stopped, "the ticker stopped")
 end)
+
+test("detail: forever: the header's second icon is the predominant tree's, hidden with none (D5)", function()
+    local NS, m = fresh()
+    T.Loader.MockClient.apply(m, "forever")
+    local r = rec(NS, { id = "tree" })
+    r.who.specID, r.who.specName, r.who.specIcon, r.who.trees = "tree:HUNTER:2", "Marksmanship", 132222, { 5, 41, 5 }
+    local bare = rec(NS, { id = "bare" })
+    bare.who.specID, bare.who.specName, bare.who.specIcon = nil, nil, nil
+    save(NS, r, bare)
+    local pane = detailOn(NS, "tree")
+    assertTrue(pane.w.spec:IsShown(), "the tree's icon")
+    assertEqual(pane.w.spec:GetTexture(), 132222)
+    assertTrue(pane.w.specName:GetText():find("Marksmanship", 1, true) ~= nil, pane.w.specName:GetText())
+    pane = detailOn(NS, "bare")
+    assertFalse(pane.w.spec:IsShown(), "no tree: no second icon")
+    assertEqual(pane.w.specName:GetText(), "")
+    T.Loader.MockClient.apply(m)
+end)

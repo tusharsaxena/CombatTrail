@@ -154,7 +154,8 @@ end
 
 local ABOUT = {
     date = "When the fight started. Click to sort.",
-    clsSpec = "The character's class and spec.",
+    clsSpec = NS.Compat.ForClient({ "retail" }) and "The character's class and spec."
+        or "The character's class and talent tree.",
     character = "Who fought. Hover a name for the realm and the pet.",
     ilvl = "Equipped item level when the fight started.",
     target = "The encounter, or the enemy that took the most damage.",

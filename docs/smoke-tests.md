@@ -37,7 +37,8 @@ on **each** client, on a Hunter with a pet out, then again on a Warlock with a d
   seconds. The probe takes one sample 5 s into combat and one 2 s after it ends, then disarms itself.
 - Type `/ct probe` again and copy the whole report. Check its lines: **pet is separate source** (yes
   or no), **pace pet-fill anchor** (whether the anchored SetPoint raised), the cast secrecy counts
-  in and out of combat, and the meter's secrecy samples.
+  in and out of combat, and the meter's secrecy samples. On WoW Forever, also the talent-tree lines
+  (SM-CT-P7).
 - `/ct probe stop` disarms it early.
 
 Hand the reports back for `midnight-quirks.md`. A "no" on the pet line, or a raise on the pet-fill
@@ -51,6 +52,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-P4 | Both | The "pet is separate source" verdict, Hunter and Warlock | "yes" on both classes, with the note that it cannot detect double counting |
 | SM-CT-P5 | Both | The "pace pet-fill anchor" line | The SetPoint did not raise |
 | SM-CT-P6 | Forever | The cast secrecy counts in combat | Recorded either way: whether cast spell IDs and castGUIDs are secret in combat on WoW Forever |
+| SM-CT-P7 | Forever | The talent-tree lines of `/ct probe` (talent tabs, talent spec, talent config, trait tree and groups, talent tree pick), on a character with points spent | Recorded either way: which API answers, each group's fields (which one holds the icon), and a pick that names the tree with the most points |
 
 ## 1. Load and identity
 
@@ -143,7 +145,8 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-R10 | Both | Item tooltips from a trimmed item string, and Shift-click links | Full tooltips; the link posts |
 | SM-CT-R11 | Both | The detail's four boxes at 440 px | Damage, DPS, Meter DPS and Delta fit |
 | SM-CT-R12 | Retail | The Spec dropdown, column and grouping | Present |
-| SM-CT-R13 | Forever | The Spec dropdown, column and grouping, and the Mythic+, delve and arena content filters | Absent on WoW Forever |
+| SM-CT-R13 | Forever | The Mythic+, delve and arena content filters | Absent on WoW Forever |
+| SM-CT-R15 | Forever | A fight with points spent, then `/ct results` | The row's second icon is the predominant tree's (never the class icon twice); the dropdown reads "All talent trees" / "Current talent tree"; "Group: Talent tree" groups by it; Share names the tree |
 | SM-CT-R14 | Both | An open-world fight, then the same mob at another level (or a Retail mob after a level-up), then `/ct results` | The detail's three meta lines name the realm, ilvl and the zone (never the continent), the target with its level, and the stamp; the two levels group as two boards, and a second fight at one level paces against the first on the HUD |
 
 ## 6. Timeline, compare and gear view

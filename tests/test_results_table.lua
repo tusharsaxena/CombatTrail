@@ -155,30 +155,68 @@ test("results: the filters are faceted: each list reads the fights the other fil
     local all = { fire, frost, alt }
     local o = F.Options(all, { days = 0 }, NOW)
     assertEqual(values(o.board), "all,c:1985,c:2000", "the current character's targets only")
-    if F.HasSpecs() then
-        assertEqual(sorted(o.spec), "63,64,all,current", "and their specs")
-        o = F.Options(all, { days = 0, character = "all" }, NOW)
-        assertEqual(sorted(o.spec), "265,63,64,all,current")
-    else
-        assertNil(o.spec, "no Spec list on a client without specializations")
-    end
+    assertEqual(sorted(o.spec), "63,64,all,current", "and their specs")
+    o = F.Options(all, { days = 0, character = "all" }, NOW)
+    assertEqual(sorted(o.spec), "265,63,64,all,current")
     o = F.Options(all, { days = 0, character = "all", content = "raid" }, NOW)
     assertEqual(values(o.board), "all,c:3000", "a content pick narrows the targets")
     assertTrue(values(o.content):find("dungeon", 1, true) ~= nil, "the content list ignores its own pick")
     assertEqual(values(o.days), "1,7,30,0")
-    assertEqual(values(o.group), F.HasSpecs() and "board,character,spec,content,none" or "board,character,content,none")
+    assertEqual(values(o.group), "board,character,spec,content,none")
 end)
 
-test("results: forever: no Spec dropdown and no Spec grouping; retail has both", function()
+test("results: the Spec dropdown and grouping are on both clients; Forever names a talent tree (D5, D11)", function()
     local NS = fresh()
     local _, view = open(NS)
-    local retail = NS.Compat.IsRetail()
-    assertEqual(NS.ResultsFights.HasSpecs(), retail)
-    assertEqual(view.dropdowns.spec ~= nil, retail, "the Spec dropdown")
-    assertEqual(NS.ResultsFights.GroupSpec("spec") ~= nil, retail, "the Spec grouping")
-    -- A view saved with the Spec grouping groups as none where there are no specs.
+    assertTrue(view.dropdowns.spec ~= nil, "the Spec dropdown")
+    assertTrue(NS.ResultsFights.GroupSpec("spec") ~= nil, "the Spec grouping")
     view:SetFilter("group", "spec")
-    assertEqual(view.list.grouping ~= nil, retail)
+    assertTrue(view.list.grouping ~= nil)
+    local o = NS.ResultsFights.Options({ rec(NS) }, { days = 0 }, NOW)
+    local groupLabel
+    for _, g in ipairs(o.group) do if g.value == "spec" then groupLabel = g.label end end
+    if NS.Compat.IsForever() then
+        assertEqual(o.spec[2].label, "All talent trees")
+        assertEqual(o.spec[1].label, "Current talent tree")
+        assertEqual(groupLabel, "Group: Talent tree")
+    else
+        assertEqual(o.spec[2].label, "All specs")
+        assertEqual(o.spec[1].label, "Current spec")
+        assertEqual(groupLabel, "Group: Spec")
+    end
+end)
+
+test("results: forever: the predominant tree is the row's second icon, the Spec filter and the grouping", function()
+    local NS, m = fresh()
+    T.Loader.MockClient.apply(m, "forever")
+    local function tree(r, index, name, icon)
+        r.who.specID, r.who.specName, r.who.specIcon = ("tree:MAGE:%d"):format(index), name, icon
+        r.who.trees = index == 1 and { 31, 20, 0 } or { 0, 20, 31 }
+        return r
+    end
+    local arcane = tree(rec(NS, { id = "arcane" }), 1, "Arcane", 135932)
+    local frost = tree(rec(NS, { id = "frost", creatureID = 2000, target = "Ogre" }), 3, "Frost", 135846)
+    local bare = rec(NS, { id = "bare", creatureID = 3000, target = "Drake" })
+    bare.who.specID, bare.who.specName = nil, nil
+    local F = NS.ResultsFights
+    local o = F.Options({ arcane, frost, bare }, { days = 0 }, NOW)
+    assertEqual(sorted(o.spec), "all,current,tree:MAGE:1,tree:MAGE:3", "a tree is a Spec option")
+    local labels = {}
+    for _, opt in ipairs(o.spec) do labels[#labels + 1] = opt.label end
+    assertTrue(table.concat(labels, ","):find("Arcane", 1, true) ~= nil, "named by the tree")
+    assertEqual(ids(F.Filter({ arcane, frost, bare }, { days = 0, spec = "tree:MAGE:3" }, NOW)), "frost")
+    local key, label = F.GROUPS.spec.of(frost)
+    assertTrue(label:find("Frost", 1, true) ~= nil, "the group header names the tree")
+    assertTrue(key ~= F.GROUPS.spec.of(arcane), "two trees, two groups")
+    save(NS, arcane, bare)
+    local _, view = open(NS)
+    local rows = drawn(view)
+    local icon = rows.arcane.cells.clsSpec.spec
+    assertTrue(icon:IsShown(), "the tree's icon is the second icon")
+    assertEqual(icon:GetTexture(), 135932)
+    assertFalse(rows.bare.cells.clsSpec.spec:IsShown(), "no tree: no second icon, never the class icon twice")
+    assertEqual(rows.arcane.cells.clsSpec.specName, "Arcane")
+    T.Loader.MockClient.apply(m)
 end)
 
 test("results: forever: content facet lacks mplus/delve/arena", function()

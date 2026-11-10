@@ -452,3 +452,58 @@ test("probe: the pet verdict says it cannot see double counting", function()
     local lines = inst.NS.Probe.Report()
     assertTrue(lineWith(lines, "pet is separate source: yes (it cannot tell whether your own total also counts the pet's damage)") ~= nil, text(lines))
 end)
+
+-- ── the talent trees (v0.2 plan Task A4, D11) ──────────────────────────────────────────────────
+
+test("probe: forever: the report dumps every talent API's answer and the tree it picks", function()
+    local inst = T.load{ mutate = function(m)
+        m.GetNumTalentTabs = function() return 2 end
+        m.GetTalentTabInfo = function(i) return ({ "Holy", "Shadow" })[i], 100 + i, ({ 11, 40 })[i], "bg" end
+        m.__talents.treeIDs = { 900 }
+        m.C_Traits.GetGroupDisplayInfoByTreeID = function()
+            return { { groupID = 11, displayName = "Holy", orderIndex = 1 },
+                     { groupID = 12, displayName = "Shadow", orderIndex = 2 } }
+        end
+        m.C_Traits.GetGroupCurrencyInfo = function()
+            return { { traitNodeGroupID = 11, currencyInfos = { { spent = 11 } } },
+                     { traitNodeGroupID = 12, currencyInfos = { { spent = 40 } } } }
+        end
+    end }
+    T.Loader.MockClient.apply(inst.mocks, "forever")
+    local lines = inst.NS.Probe.Report()
+    T.Loader.MockClient.apply(T.mocks)
+    assertTrue(lineWith(lines, "talent tabs: GetNumTalentTabs function, GetTalentTabInfo function, count 2") ~= nil,
+               text(lines))
+    assertTrue(lineWith(lines, "talent tab 2: Shadow, 102, 40, bg") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "talent config: active 7001") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "trait tree 900: 2 groups") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "trait group 12: displayName=Shadow, groupID=12, orderIndex=2") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "trait group 12 spent: 40") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "talent tree pick: Shadow (11/40), icon 102") ~= nil, text(lines))
+end)
+
+test("probe: forever: missing or secret talent answers never raise", function()
+    local restore = T.installSecretValue()
+    local ok, lines = pcall(function()
+        local inst = T.load{ mutate = function(m)
+            m.GetNumTalentTabs = function() return T.secret(3) end
+            m.GetTalentTabInfo = function() error("boom") end
+        end }
+        T.Loader.MockClient.apply(inst.mocks, "forever")
+        return inst.NS.Probe.Report()
+    end)
+    restore()
+    T.Loader.MockClient.apply(T.mocks)
+    assertTrue(ok, tostring(lines))
+    assertTrue(lineWith(lines, "count <secret>") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "talent tree pick: none") ~= nil, text(lines))
+end)
+
+test("probe: retail: no talent-tree section (clients-§4)", function()
+    local inst = T.load()
+    T.Loader.MockClient.apply(inst.mocks, "retail")
+    local lines = inst.NS.Probe.Report()
+    T.Loader.MockClient.apply(T.mocks)
+    assertTrue(lineWith(lines, "talent tree pick") == nil, text(lines))
+    assertTrue(lineWith(lines, "talent tabs") == nil, text(lines))
+end)

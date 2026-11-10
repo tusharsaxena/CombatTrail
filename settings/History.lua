@@ -18,7 +18,8 @@ local _, NS = ...
 --
 -- CLIENTS (clients-§4): the content rows are built from the profile's defaults, whose Mythic+, delve
 -- and arena keys are ABSENT on WoW Forever, and each Retail-only row is declared `clients = { "retail" }`.
--- No label or tooltip on WoW Forever names a Retail-only feature, or a specialization.
+-- No label or tooltip on WoW Forever names a Retail-only feature, or a specialization: there the
+-- predominant talent tree stands in for the spec, and the words name a talent tree (v0.2 plan D11).
 --
 -- WRITES: every row writes through the seam (NS.SetByPath). Filters and Retention read their keys at
 -- call time; the Results window answers `results.scale` and `results.rowHeight` off SETTINGS_CHANGED
@@ -110,7 +111,7 @@ row("history.days", { type = "number", label = L["Keep history for (days, 0 = fo
 row("history.keepBests", { type = "bool", label = L["Never purge a fight that holds a best"],
     tooltip = NS.Compat.ForClient(RETAIL)
         and L["Keep a fight however old it is while it is your best on its board: your top DPS for one character and spec on one encounter or target at one difficulty."]
-        or L["Keep a fight however old it is while it is your best on its board: your top DPS for one character on one encounter or target at one difficulty."] })
+        or L["Keep a fight however old it is while it is your best on its board: your top DPS for one character and talent tree on one encounter or target at one difficulty."] })
 row("history.maxFights", { type = "number", label = L["Maximum stored fights (0 = no limit)"], min = 0, max = 1000, step = 50,
     validate = whole(0, 1000), startsLine = true,
     tooltip = L["The most fights kept. Past it the oldest go first, except a fight that holds a best while Never purge a fight that holds a best is on. 0 keeps any number."] })

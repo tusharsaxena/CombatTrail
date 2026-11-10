@@ -39,8 +39,12 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   to match Retail until the probe reports.
 - **No training dummies.** No dummy creature ID has been measured, so a dummy fight reads as open
   world.
-- **No specs.** The Spec column, dropdown and grouping are absent; bests group by character and
-  board only.
+- **The talent tree stands in for a spec.** WoW Forever answers one class-wide spec, so the tree
+  with the most points is the fight's spec (v0.2 plan A4). Which talent API the client answers
+  (`GetTalentTabInfo`, or C_Traits' trait groups) and the field that carries a group's icon are
+  unverified until the probe's talent-tree section reports (SM-CT-P7). A tree read sealed in combat
+  keeps the session's last plain read, so a respec followed by a pull before any out-of-combat read
+  could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.
 - **Spell and item IDs in the sample rotation are unverified** in game.
 

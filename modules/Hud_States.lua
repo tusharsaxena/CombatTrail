@@ -220,7 +220,9 @@ function States.OverChips(v)
     if v.newBest then
         local text = L["New best"]
         if type(v.delta) == "number" then text = L["New best %s"]:format(NS.Format.SignedPct(v.delta)) end
-        list[#list + 1] = { text = text, color = C.gold, tip = L["Your best DPS on this boss or target, for this character and spec."] }
+        list[#list + 1] = { text = text, color = C.gold, tip = NS.Compat.ForClient({ "retail" })
+            and L["Your best DPS on this boss or target, for this character and spec."]
+            or L["Your best DPS on this boss or target, for this character and talent tree."] }
     end
     if v.saved == true then
         list[#list + 1] = { text = L["Saved"], color = C.green, tip = L["Stored in your fight history."] }

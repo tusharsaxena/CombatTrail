@@ -27,6 +27,11 @@ local _, NS = ...
 --   Compat.KeystoneLevel()  Compat.DelveTierText()  Compat.PvpRules()
 --                                a fight's tier qualifiers (modules/Identity.lua): the Mythic+ level
 --                                and the delve tier (Retail-only, nil on Forever), the PvP match rules
+--   Compat.TalentTrees()  Compat.TalentApis()
+--                                WoW Forever's talent trees (name, icon, points each), which stand in
+--                                for a specialization there (v0.2 plan Task A4, D5): the talent tabs
+--                                (GetNumTalentTabs / GetTalentTabInfo), then C_Traits' trait groups;
+--                                and every answer those APIs give, raw, for `/ct probe`. Nil on Retail
 --   Compat.BuildInfo()  Compat.ClientApis()   the probe's client line: GetBuildInfo, and whether the
 --                                secrets system and C_Spell's lookups exist (modules/Probe.lua)
 -- Every client global is read at CALL time, so a client (or the harness's mock) that adds the API
@@ -180,6 +185,226 @@ Compat.GetSpecialization = CompatLib and CompatLib.GetSpecialization or getSpeci
 --- The specialization's info for `index` (specID, name, description, icon, role, ...), or nil.
 --- @param index number
 Compat.GetSpecializationInfo = CompatLib and CompatLib.GetSpecializationInfo or getSpecializationInfoStub
+
+-- ---------------------------------------------------------------------------
+-- The talent trees (WoW Forever): the predominant tree stands in for a specialization
+-- ---------------------------------------------------------------------------
+--
+-- WoW Forever answers one class-wide specialization, so its spec is no spec (its icon is the class
+-- icon). Its talents are the classic trees. Two readers, in order, each guarded and pcall'd: the
+-- talent tabs (GetNumTalentTabs / GetTalentTabInfo, in neither of the kit's client sets, so they are
+-- tried in case the client has them), then the active config's tree in C_Traits, whose groups are the
+-- trees (Forever's own talent frame: C_Traits.GetGroupDisplayInfoByTreeID, the points spent from
+-- C_Traits.GetGroupCurrencyInfo). Which one answers on the client is what `/ct probe` dumps.
+--
+-- SECRETS. Every value is read through NS.Secrets (bound at CALL time; core/Secrets.lua loads after
+-- this file). A tree whose points are sealed makes the whole answer sealed: points are only ever
+-- compared plain, so a partial read is never picked from.
+
+local FOREVER = { "forever" }
+
+local function plainNumber(v) return NS.Secrets.PlainNumber(v) end
+local function plainString(v) return NS.Secrets.PlainString(v) end
+local function sealed(v) return NS.Secrets.IsSealed(v) end
+
+--- An icon as a plain file ID or path, or nil.
+local function plainIcon(v) return plainNumber(v) or plainString(v) end
+
+-- One talent tab's { name, icon, points }, or nil plus "sealed" when its points are not plain.
+-- GetTalentTabInfo has two shapes across clients: (name, icon, points, background) and
+-- (id, name, description, icon, points, ...); a plain number first is the second.
+local function tabRow(a, b, c, d, e)
+    local name, icon, points = a, b, c
+    if plainNumber(a) then name, icon, points = b, d, e end
+    if sealed(points) or sealed(name) then return nil, "sealed" end
+    points = plainNumber(points)
+    if not points then return nil end
+    return { name = plainString(name), icon = plainIcon(icon), points = points }
+end
+
+local function tabTrees()
+    local count, info = GetNumTalentTabs, GetTalentTabInfo
+    if type(count) ~= "function" or type(info) ~= "function" then return nil end
+    local ok, raw = pcall(count)
+    if not ok then return nil end
+    if sealed(raw) then return nil, "sealed" end
+    local n = plainNumber(raw)
+    if not n or n < 1 then return nil end
+    local out = {}
+    for i = 1, n do
+        local okRow, a, b, c, d, e = pcall(info, i)
+        if not okRow then return nil end
+        local row, why = tabRow(a, b, c, d, e)
+        if not row then return nil, why end
+        out[i] = row
+    end
+    return out
+end
+
+-- The active config: the active spec group's combat config, else C_ClassTalents' active config.
+local function activeConfigID()
+    local spec = C_SpecializationInfo
+    if spec and type(spec.GetActiveSpecGroup) == "function" and type(spec.GetCombatConfigIDForSpecGroup) == "function" then
+        local okG, group = pcall(spec.GetActiveSpecGroup)
+        group = okG and plainNumber(group)
+        if group then
+            local okC, id = pcall(spec.GetCombatConfigIDForSpecGroup, group)
+            id = okC and plainNumber(id)
+            if id then return id end
+        end
+    end
+    local talents = C_ClassTalents
+    if talents and type(talents.GetActiveConfigID) == "function" then
+        local ok, id = pcall(talents.GetActiveConfigID)
+        return ok and plainNumber(id) or nil
+    end
+    return nil
+end
+
+-- The config's first tree, or nil.
+local function treeIDOf(configID)
+    local traits = C_Traits
+    if not (configID and traits and type(traits.GetConfigInfo) == "function") then return nil end
+    local ok, info = pcall(traits.GetConfigInfo, configID)
+    if not (ok and type(info) == "table" and Compat.CanAccessTable(info) and type(info.treeIDs) == "table") then
+        return nil
+    end
+    return plainNumber(info.treeIDs[1])
+end
+
+-- A group display's icon, under whichever field the client names it (unverified: the probe says).
+local ICON_FIELDS = { "iconFileID", "icon", "iconTexture", "iconID" }
+local function groupIcon(display)
+    for _, k in ipairs(ICON_FIELDS) do
+        local icon = plainIcon(display[k])
+        if icon then return icon end
+    end
+    return nil
+end
+
+local function byOrder(a, b)
+    if a.order ~= b.order then return a.order < b.order end
+    return a.id < b.id
+end
+
+-- The tree's groups as { id, name, icon, order } rows in display order, and their IDs.
+local function displayedGroups(treeID)
+    local ok, displays = pcall(C_Traits.GetGroupDisplayInfoByTreeID, treeID)
+    local rows, ids = {}, {}
+    if not (ok and type(displays) == "table" and Compat.CanAccessTable(displays)) then return rows, ids end
+    for _, d in ipairs(displays) do
+        local id = type(d) == "table" and Compat.CanAccessTable(d) and plainNumber(d.groupID)
+        if id then
+            rows[#rows + 1] = { id = id, name = plainString(d.displayName), icon = groupIcon(d),
+                                order = plainNumber(d.orderIndex) or #rows + 1 }
+        end
+    end
+    table.sort(rows, byOrder)
+    for i, r in ipairs(rows) do ids[i] = r.id end
+    return rows, ids
+end
+
+-- groupID -> the points spent (the first currency's), or nil plus "sealed".
+local function spentByGroup(configID, ids)
+    local ok, infos = pcall(C_Traits.GetGroupCurrencyInfo, configID, ids)
+    if not (ok and type(infos) == "table" and Compat.CanAccessTable(infos)) then return nil end
+    local spent = {}
+    for _, info in ipairs(infos) do
+        local id = type(info) == "table" and Compat.CanAccessTable(info) and plainNumber(info.traitNodeGroupID)
+        local list = id and info.currencyInfos
+        local first = type(list) == "table" and Compat.CanAccessTable(list) and list[1]
+        local v = type(first) == "table" and first.spent
+        if sealed(v) then return nil, "sealed" end
+        if id then spent[id] = plainNumber(v) or 0 end
+    end
+    return spent
+end
+
+local function traitTrees()
+    local traits = C_Traits
+    if not (traits and type(traits.GetGroupDisplayInfoByTreeID) == "function"
+            and type(traits.GetGroupCurrencyInfo) == "function") then
+        return nil
+    end
+    local configID = activeConfigID()
+    local treeID = treeIDOf(configID)
+    if not treeID then return nil end
+    local rows, ids = displayedGroups(treeID)
+    if #ids == 0 then return nil end
+    local spent, why = spentByGroup(configID, ids)
+    if not spent then return nil, why end
+    local out = {}
+    for i, r in ipairs(rows) do out[i] = { name = r.name, icon = r.icon, points = spent[r.id] or 0 } end
+    return out
+end
+
+--- WoW Forever's talent trees in tree order, `{ { name, icon, points }, ... }` (points plain numbers,
+--- name and icon plain or nil), or nil: on Retail (clients-§4), with no talent API, or where one
+--- raises. A second value "sealed" says a value was secret (in combat), so the caller may keep its
+--- last plain read rather than treat the trees as absent.
+--- @return table|nil trees, string|nil why
+function Compat.TalentTrees()
+    if not Compat.ForClient(FOREVER) then return nil end
+    local trees, why = tabTrees()
+    if trees then return trees end
+    local traits, whyTraits = traitTrees()
+    if traits then return traits end
+    return nil, why or whyTraits
+end
+
+-- The raw answers `/ct probe` prints: each a packed pcall result { ok, ... , n = count }.
+local function pack(...) return { n = select("#", ...), ... } end
+
+local function packed(fn, ...)
+    if type(fn) ~= "function" then return nil end
+    return pack(pcall(fn, ...))
+end
+
+local function tabAnswers(out)
+    out.tabCountFn, out.tabInfoFn = type(GetNumTalentTabs), type(GetTalentTabInfo)
+    out.tabCount = packed(GetNumTalentTabs)
+    local n = out.tabCount and out.tabCount[1] and plainNumber(out.tabCount[2])
+    out.tabs = {}
+    for i = 1, math.min(n or 0, 5) do out.tabs[i] = packed(GetTalentTabInfo, i) end
+end
+
+local function specAnswers(out)
+    out.specIndex = packed(Compat.GetSpecialization)
+    local index = out.specIndex and out.specIndex[1] and plainNumber(out.specIndex[2])
+    out.specInfo = index and packed(Compat.GetSpecializationInfo, index) or nil
+    local spec = C_SpecializationInfo or {}
+    out.specGroup = packed(spec.GetActiveSpecGroup)
+    local group = out.specGroup and out.specGroup[1] and plainNumber(out.specGroup[2])
+    out.combatConfig = group and packed(spec.GetCombatConfigIDForSpecGroup, group) or nil
+    out.activeConfig = packed((C_ClassTalents or {}).GetActiveConfigID)
+end
+
+local function traitAnswers(out)
+    out.configID = activeConfigID()
+    out.treeID = treeIDOf(out.configID)
+    local traits = C_Traits or {}
+    out.groups = out.treeID and packed(traits.GetGroupDisplayInfoByTreeID, out.treeID) or nil
+    if out.treeID and type(traits.GetGroupDisplayInfoByTreeID) == "function" then
+        local _, ids = displayedGroups(out.treeID)
+        out.groupIDs = ids
+        out.currency = #ids > 0 and packed(traits.GetGroupCurrencyInfo, out.configID, ids) or nil
+    end
+end
+
+--- Every talent API's answer on WoW Forever, raw (a value may be secret: the probe prints through
+--- NS.Secrets), plus TalentTrees()' own: { tabCountFn, tabInfoFn, tabCount, tabs, specIndex, specInfo,
+--- specGroup, combatConfig, activeConfig, configID, treeID, groups, groupIDs, currency, trees }. Each
+--- raw answer is a packed pcall { ok, ..., n }, nil where the function is missing. Nil on Retail.
+--- @return table|nil
+function Compat.TalentApis()
+    if not Compat.ForClient(FOREVER) then return nil end
+    local out = {}
+    tabAnswers(out)
+    specAnswers(out)
+    traitAnswers(out)
+    out.trees = Compat.TalentTrees()
+    return out
+end
 
 -- ---------------------------------------------------------------------------
 -- Spells

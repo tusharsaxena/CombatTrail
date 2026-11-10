@@ -20,8 +20,10 @@ local _, NS = ...
 -- pass (with no grouping, the whole list): the group's leader reads "Best" beside the trophy, every
 -- other fight its signed gap. Recomputed on every redraw; nothing is stored on a record.
 --
--- CLIENTS (clients-§4). WoW Forever has no specializations: there the Spec dropdown and the Spec
--- grouping are absent, not empty (Fights.HasSpecs), and the spec filter stays at "all".
+-- CLIENTS (clients-§4, v0.2 plan Task A4). WoW Forever has no specializations: there the predominant
+-- talent tree stands in for the spec (modules/Identity.lua, who.specID "tree:<class>:<index>"), so
+-- the Spec dropdown and the Spec grouping are on both clients, worded as a talent tree on Forever
+-- (D11). A fight with no tree has no spec and is listed under none.
 --
 -- Filter, Options, the groups and the columns are pure over stored records, so the suites drive them
 -- bare.
@@ -47,7 +49,7 @@ local FILTER_H = 32         -- one row of the filter bar
 local RETAIL = { "retail" }
 -- The bar's dropdowns, left to right, and their least widths (BarPlan), each declared for its clients.
 local DROPDOWN_SPECS = {
-    { key = "character", width = 120 }, { key = "spec", width = 100, clients = RETAIL },
+    { key = "character", width = 120 }, { key = "spec", width = 100 },
     { key = "content", width = 100 }, { key = "board", width = 150 }, { key = "difficulty", width = 100 },
     { key = "days", width = 100 }, { key = "group", width = 150 },
 }
@@ -55,9 +57,9 @@ local VIEW_BUTTON_W = 80
 local GAP = 6
 local MARGIN = GAP + 2      -- the bar's left margin, and its right one once the dropdowns stretch
 
---- Whether this client has specializations (WoW Forever has none, clients-§4).
-function Fights.HasSpecs()
-    return NS.Compat.ForClient(RETAIL)
+--- A spec label in this client's words: Retail's `retail`, WoW Forever's `forever` (a talent tree).
+local function specWords(retail, forever)
+    return NS.Compat.ForClient(RETAIL) and L[retail] or L[forever]
 end
 
 --- The bar's dropdowns this client has, in order: { key, width }.
@@ -159,7 +161,7 @@ local function charPasses(record, want, ctx)
 end
 
 local function specPasses(record, want, ctx)
-    if want == "all" or not ctx.specs then return true end
+    if want == "all" then return true end
     local id = who(record).specID
     if want == "current" then return ctx.current.specID == nil or id == ctx.current.specID end
     return id == want
@@ -193,7 +195,7 @@ local function passes(record, f, ctx, skip)
 end
 
 local function context(f, now, current)
-    return { since = Fights.Since(f.days, now), current = current or Fights.Current(), specs = Fights.HasSpecs() }
+    return { since = Fights.Since(f.days, now), current = current or Fights.Current() }
 end
 
 --- The fights that pass every filter of `view`, in the order given.
@@ -249,7 +251,8 @@ local function specOptions(records)
     local seen, list = {}, {}
     for _, r in ipairs(records) do
         local w = who(r)
-        if type(w.specID) == "number" and not seen[w.specID] then
+        local kind = type(w.specID)
+        if (kind == "number" or kind == "string") and not seen[w.specID] then
             seen[w.specID] = true
             local name = Tbl.SpecInfo(w.specID, w.specName)
             list[#list + 1] = { value = w.specID, label = name or tostring(w.specID) }
@@ -322,7 +325,7 @@ function Fights.DayOptions()
 end
 
 -- The Group by modes, in the dropdown's order, each declared for its clients.
-local GROUP_SPECS = { { key = "board" }, { key = "character" }, { key = "spec", clients = RETAIL },
+local GROUP_SPECS = { { key = "board" }, { key = "character" }, { key = "spec" },
                       { key = "content" }, { key = "none" } }
 
 --- The Group by modes this client has, in order.
@@ -334,22 +337,26 @@ function Fights.GroupOrder()
     return out
 end
 local GROUP_LABELS = {
-    board = "Group: Encounter + difficulty", character = "Group: Character", spec = "Group: Spec",
+    board = "Group: Encounter + difficulty", character = "Group: Character",
     content = "Group: Content", none = "Group: None",
 }
 
 --- Each dropdown's options under `view`, faceted: a list reads the fights that pass every filter but
---- its own. Each value list is led by its "all" entry. No `spec` list on a client without
---- specializations.
---- @return table { character, spec?, content, board, difficulty, days, group }
+--- its own. Each value list is led by its "all" entry. The `spec` list holds Retail's specs, or WoW
+--- Forever's predominant talent trees.
+--- @return table { character, spec, content, board, difficulty, days, group }
 function Fights.Options(records, view, now, current)
     current = current or Fights.Current()
     local function facet(key) return OPTION_LISTS[key](Fights.Filter(records, view, now, current, key)) end
     local groups = {}
-    for i, mode in ipairs(Fights.GroupOrder()) do groups[i] = { value = mode, label = L[GROUP_LABELS[mode]] } end
+    for i, mode in ipairs(Fights.GroupOrder()) do
+        groups[i] = { value = mode, label = mode == "spec" and specWords("Group: Spec", "Group: Talent tree")
+                      or L[GROUP_LABELS[mode]] }
+    end
     return {
         character = Fights.WithAll(facet("character"), L["All characters"], L["Current character"]),
-        spec = Fights.HasSpecs() and Fights.WithAll(facet("spec"), L["All specs"], L["Current spec"]) or nil,
+        spec = Fights.WithAll(facet("spec"), specWords("All specs", "All talent trees"),
+                              specWords("Current spec", "Current talent tree")),
         content = Fights.WithAll(facet("content"), L["All content"]),
         board = Fights.WithAll(facet("board"), L["All encounters and targets"]),
         difficulty = Fights.WithAll(facet("difficulty"), L["All difficulties"]),
@@ -403,8 +410,7 @@ Fights.GROUPS = {
     content = { of = contentGroup },
 }
 
---- The grouping for `mode`, or nil for none: a mode this client does not have (Spec on WoW Forever,
---- from a view saved on Retail) groups as none.
+--- The grouping for `mode`, or nil for none: a mode this client does not have groups as none.
 function Fights.GroupSpec(mode)
     for _, key in ipairs(Fights.GroupOrder()) do
         if key == mode then return Fights.GROUPS[mode] end

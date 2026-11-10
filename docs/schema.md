@@ -86,7 +86,7 @@ record with a higher `schema` than this build knows is never listed.
 | Field | Holds |
 |---|---|
 | `schema`, `id`, `t`, `duration` | format version, `time()-NNNN` id, combat entry (epoch), seconds |
-| `who` | name, realm, class, specID, specName, ilvl, petName, petFamily, client |
+| `who` | name, realm, class, specID, specName, ilvl, petName, petFamily, client. On WoW Forever also `trees` (each talent tree's points, plain) and `specIcon`; there `specID` is `"tree:<class>:<index>"`, the predominant tree (v0.2 plan A4), with its name and icon, and absent when no tree has points |
 | `identity`, `boardKey` | the encounter or primary target (`targetName`, `targetCreatureID`, `targetLevel`: plain or absent, -1 a skull), where (instance, difficulty, tiers, `zone`, `subzone`), the content kind, and the key bests group by: `e:<encounter>:<difficulty>` for an encounter, `c:<creature>:<difficulty>` for a world boss, `t:<npcID>:<level or ?>:<name>:<difficulty>` for any other target (the level is the combat-entry snapshot's, so the HUD's live pace key matches), `i:<instance>:<difficulty>` for PvP against players, `n:<name>:<difficulty>` for a named target with no NPC ID; then `:k`/`:d`/`:p` for the keystone, delve tier or PvP bracket. An unknown target has none. |
 | `damage`, `dps`, `meterDps` | `{ merged, player, pet }`, merged divided by duration, the meter's own figure |
 | `spells` | one packed string (CastCodec); `Recorder.Spells` unpacks it to `{ spellID, total, isPet }` |

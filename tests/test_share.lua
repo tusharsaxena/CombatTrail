@@ -163,3 +163,24 @@ test("share: the whisper box offers the target as the client addresses them (rea
         assertEqual(text, "Kaos-Stormborn", "a cross-realm target keeps its realm")
     end
 end)
+
+test("share: forever: the line names the predominant talent tree (D5)", function()
+    local NS, m = fresh()
+    T.Loader.MockClient.apply(m, "forever")
+    m.GetNumTalentTabs = function() return 3 end
+    m.GetTalentTabInfo = function(i)
+        return ({ "Beast Mastery", "Marksmanship", "Survival" })[i], 132164 + i, ({ 5, 41, 5 })[i], "bg"
+    end
+    local r = rec(NS)
+    r.who = NS.Identity.Who()
+    r.who.ilvl = 66.2
+    local line = NS.Share.Line(r, false)
+    assertTrue(line:find("Marksmanship 66.2", 1, true) ~= nil, line)
+    m.GetNumTalentTabs, m.GetTalentTabInfo = nil, nil
+    r.who = NS.Identity.Who()
+    r.who.ilvl = 66.2
+    line = NS.Share.Line(r, false)
+    assertTrue(line:find(NS.ResultsTable.ClassName(r.who.class) .. " 66.2", 1, true) ~= nil,
+               "no tree: the class names the player: " .. line)
+    T.Loader.MockClient.apply(m)
+end)

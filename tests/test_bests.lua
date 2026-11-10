@@ -149,3 +149,17 @@ test("bests: the character key carries the client, so boards never mix Retail an
     assertNil(NS.Bests.CharKey({ realm = "x" }), "no name, no character")
     assertNil(NS.Bests.CharKey(nil))
 end)
+
+test("bests: forever: the predominant tree splits the boards as a spec does (D5)", function()
+    local NS = fresh()
+    local bm = rec({ dps = 1000, client = "forever", specID = "tree:HUNTER:1" })
+    local mm = rec({ dps = 900, client = "forever", specID = "tree:HUNTER:2" })
+    local none = rec({ dps = 800, client = "forever" })
+    none.who.specID = nil
+    save(NS, bm, mm, none)
+    assertTrue(NS.Bests.IsBest(bm))
+    assertTrue(NS.Bests.IsBest(mm), "another tree, another board")
+    assertTrue(NS.Bests.IsBest(none), "no tree is a board of its own")
+    assertTrue(NS.Bests.Key(bm):find("|tree:HUNTER:1|", 1, true) ~= nil, NS.Bests.Key(bm))
+    assertEqual(NS.Bests.BestCurve("c:1985:0", NS.Bests.CharKey(mm.who), "tree:HUNTER:2"), mm.id)
+end)

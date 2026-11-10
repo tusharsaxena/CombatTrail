@@ -512,3 +512,144 @@ test("identity: two-word Forever names handled", function()
     assertEqual(id.targetName, "Doom Dock", "the meter's two-word name is kept whole")
     restoreProfile()
 end)
+
+-- ── WoW Forever: the predominant talent tree stands in for spec (v0.2 plan Task A4, D5) ────────
+
+-- The talent-tab arm: GetNumTalentTabs / GetTalentTabInfo answering (name, icon, points, bg).
+local function tabs(m, list)
+    m.GetNumTalentTabs = function() return #list end
+    m.GetTalentTabInfo = function(i)
+        local t = list[i]
+        if not t then return nil end
+        return t[1], t[2], t[3], "bg"
+    end
+end
+
+-- The C_Traits arm: the active config's tree, its groups out of display order, the points per group.
+local function groups(m, list)
+    m.__talents.treeIDs = { 900 }
+    m.C_Traits.GetGroupDisplayInfoByTreeID = function(treeID)
+        if treeID ~= 900 then return nil end
+        local out = {}
+        for i = #list, 1, -1 do
+            out[#out + 1] = { groupID = 10 + i, displayName = list[i][1], orderIndex = i, iconFileID = list[i][2] }
+        end
+        return out
+    end
+    m.C_Traits.GetGroupCurrencyInfo = function(configID, ids)
+        if configID ~= m.__talents.configID then return nil end
+        local out = {}
+        for _, id in ipairs(ids) do
+            out[#out + 1] = { traitNodeGroupID = id, currencyInfos = { { spent = list[id - 10][3] } } }
+        end
+        return out
+    end
+end
+
+local HUNTER = { { "Beast Mastery", 132164, 31 }, { "Marksmanship", 132222, 20 }, { "Survival", 132215, 0 } }
+
+test("identity: forever: trees 31/20/0 make the first tree the spec (talent tabs)", function()
+    local _, NS, m = fresh("forever")
+    tabs(m, HUNTER)
+    local trees = NS.Compat.TalentTrees()
+    assertEqual(#trees, 3)
+    assertEqual(trees[2].name, "Marksmanship")
+    assertEqual(trees[2].icon, 132222)
+    assertEqual(trees[2].points, 20)
+    local who = NS.Identity.Snapshot().who
+    assertEqual(table.concat(who.trees, "/"), "31/20/0")
+    assertEqual(who.specID, "tree:MAGE:1", "the class and the tree's index, never a Retail spec ID")
+    assertEqual(who.specName, "Beast Mastery")
+    assertEqual(who.specIcon, 132164)
+    restoreProfile()
+end)
+
+test("identity: forever: the C_Traits groups stand in when there are no talent tabs", function()
+    local _, NS, m = fresh("forever")
+    groups(m, { { "Beast Mastery", 132164, 5 }, { "Marksmanship", 132222, 41 }, { "Survival", 132215, 5 } })
+    local who = NS.Identity.Who()
+    assertEqual(table.concat(who.trees, "/"), "5/41/5", "in display order")
+    assertEqual(who.specID, "tree:MAGE:2")
+    assertEqual(who.specName, "Marksmanship")
+    assertEqual(who.specIcon, 132222)
+    restoreProfile()
+end)
+
+test("identity: forever: a tie goes to the first tree", function()
+    local _, NS, m = fresh("forever")
+    tabs(m, { { "Arcane", 1, 20 }, { "Fire", 2, 31 }, { "Frost", 3, 31 } })
+    assertEqual(NS.Identity.Who().specName, "Fire")
+    restoreProfile()
+end)
+
+test("identity: forever: 0/0/0 or no talent API gives no spec and never raises (Review focus 5)", function()
+    local _, NS, m = fresh("forever")
+    -- The client answers a class-wide spec on Forever; it is never read there.
+    m.C_SpecializationInfo = { GetSpecialization = function() return 1 end,
+                               GetSpecializationInfo = function() return 1491, "Hunter" end }
+    tabs(m, { { "Arcane", 1, 0 }, { "Fire", 2, 0 }, { "Frost", 3, 0 } })
+    local who = NS.Identity.Who()
+    assertEqual(table.concat(who.trees, "/"), "0/0/0")
+    assertNil(who.specID)
+    assertNil(who.specName)
+    assertNil(who.specIcon)
+    m.GetNumTalentTabs, m.GetTalentTabInfo = nil, nil
+    assertNil(NS.Compat.TalentTrees(), "no API: no trees")
+    who = NS.Identity.Who()
+    assertNil(who.trees)
+    assertNil(who.specID)
+    assertNil(who.specName)
+    m.GetNumTalentTabs = function() error("boom") end
+    m.GetTalentTabInfo = function() error("boom") end
+    m.C_Traits.GetGroupDisplayInfoByTreeID = function() error("boom") end
+    m.C_Traits.GetGroupCurrencyInfo = function() error("boom") end
+    m.__talents.treeIDs = { 900 }
+    assertNil(NS.Compat.TalentTrees(), "a raising API: no trees")
+    assertNil(NS.Identity.Who().specID)
+    restoreProfile()
+end)
+
+test("identity: forever: the second talent-tab shape (id, name, desc, icon, points) reads too", function()
+    local _, NS, m = fresh("forever")
+    m.GetNumTalentTabs = function() return 2 end
+    m.GetTalentTabInfo = function(i) return 280 + i, ({ "Holy", "Shadow" })[i], "desc", 100 + i, ({ 11, 40 })[i] end
+    local who = NS.Identity.Who()
+    assertEqual(table.concat(who.trees, "/"), "11/40")
+    assertEqual(who.specName, "Shadow")
+    assertEqual(who.specIcon, 102)
+    restoreProfile()
+end)
+
+test("identity: forever: sealed points give no trees; the last plain read stands in", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local _, NS, m = fresh("forever")
+        tabs(m, HUNTER)
+        assertEqual(NS.Identity.Who().specName, "Beast Mastery", "a plain read out of combat")
+        m.GetTalentTabInfo = function(i) return HUNTER[i][1], HUNTER[i][2], T.secret(HUNTER[i][3]) end
+        assertNil(NS.Compat.TalentTrees(), "a sealed point count is never compared")
+        local who = NS.Identity.Snapshot().who
+        assertEqual(who.specName, "Beast Mastery", "the snapshot keeps the last plain read")
+        assertEqual(table.concat(who.trees, "/"), "31/20/0")
+    end)
+    restore()
+    restoreProfile()
+    assertTrue(ok, tostring(err))
+end)
+
+test("identity: retail: the talent trees are absent and the spec is the client's", function()
+    local _, NS, m = fresh("retail")
+    tabs(m, HUNTER)
+    assertNil(NS.Compat.TalentTrees(), "Retail has specializations, not trees (clients-§4)")
+    local who = NS.Identity.Who()
+    assertNil(who.trees)
+    assertNil(who.specIcon)
+    if m.GetSpecializationInfo then
+        assertEqual(who.specID, 250)
+        assertEqual(who.specName, "Blood")
+    else
+        -- Under the Forever run the instance was built without the spec globals: no spec, never a tree.
+        assertNil(who.specID)
+    end
+    restoreProfile()
+end)

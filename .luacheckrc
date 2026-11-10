@@ -60,6 +60,8 @@ files["core/Compat.lua"] = {
         "GetBuildInfo",
         -- who and where a fight was (modules/Identity.lua)
         "RegionalUniqueNamesEnabled", "GetRealmName", "C_ChallengeMode", "C_UIWidgetManager", "Enum", "C_PvP",
+        -- WoW Forever's talent trees, the spec's stand-in there (v0.2 plan Task A4)
+        "GetNumTalentTabs", "GetTalentTabInfo", "C_ClassTalents", "C_Traits",
     },
 }
 

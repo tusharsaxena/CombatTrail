@@ -30,6 +30,12 @@ local _, NS = ...
 -- its pace key from the same snapshot in combat (Hud.PaceRecord), so the live key and the stored one
 -- agree. A level sealed at entry is "?" in both, and is never re-read after combat.
 --
+-- THE SPEC. On Retail it is the client's specialization. WoW Forever answers one class-wide spec, so
+-- there the predominant talent tree stands in for it (v0.2 plan Task A4, D5): who.trees holds each
+-- tree's points, and who.specID ("tree:<class>:<index>"), specName and specIcon are the tree with
+-- the most points (a tie goes to the first; none with points, no spec). NS.Compat.TalentTrees reads
+-- the trees; a read sealed in combat keeps the session's last plain one.
+--
 -- CLIENTS (clients-§4). Delves, Mythic+ and arenas are Retail-only: on WoW Forever isDelve,
 -- delveTier and keystoneLevel are never set, and an arena is filed as "bg" content. NS.Compat answers
 -- those questions (core/Compat.lua); Identity.CONTENT declares the content kinds per client.
@@ -118,6 +124,7 @@ end
 
 -- ── who ─────────────────────────────────────────────────────────────────────────────────────────
 
+-- The spec on Retail: the client's specialization.
 local function readSpec(who)
     local Compat = NS.Compat
     local index = Secrets.PlainNumber(ask(Compat.GetSpecialization))
@@ -127,13 +134,46 @@ local function readSpec(who)
     who.specName = Secrets.PlainString(specName)
 end
 
+-- WoW Forever's last plain talent-tree read: a read sealed in combat keeps it (talents change out of
+-- combat only), where a missing or raising API is no trees.
+local lastTrees
+
+--- The tree with the most points, or nil when none has any: a tie goes to the first tree.
+--- @param trees table  { { name, icon, points }, ... }, points plain
+--- @return number|nil index
+function Identity.Predominant(trees)
+    local best
+    for i, t in ipairs(trees) do
+        if t.points > 0 and (not best or t.points > trees[best].points) then best = i end
+    end
+    return best
+end
+
+-- The spec on WoW Forever (v0.2 plan Task A4, D5): the class-wide spec the client answers is never
+-- read. The trees' points are stored (who.trees), and the predominant tree stands in for the spec:
+-- who.specID "tree:<class>:<index>" (never a Retail spec ID), who.specName and who.specIcon its own.
+local function readTrees(who)
+    local trees, why = ask(NS.Compat.TalentTrees)
+    if trees then lastTrees = trees elseif why == "sealed" then trees = lastTrees end
+    if type(trees) ~= "table" or #trees == 0 then return end
+    local points = {}
+    for i, t in ipairs(trees) do points[i] = t.points end
+    who.trees = points
+    local best = Identity.Predominant(trees)
+    if not best then return end
+    who.specID = ("tree:%s:%d"):format(tostring(who.class or "?"), best)
+    who.specName = trees[best].name
+    who.specIcon = trees[best].icon
+end
+
 local function readPet(who)
     if not Secrets.PlainTruth(ask(UnitExists, "pet")) then return end
     who.petName = nameOf("pet")
     who.petFamily = Secrets.PlainString(ask(UnitCreatureFamily, "pet"))
 end
 
--- Who the player is: { name, realm, class, level, specID, specName, ilvl, petName, petFamily, client }.
+-- Who the player is: { name, realm, class, level, specID, specName, specIcon?, trees?, ilvl, petName,
+-- petFamily, client } (specIcon and trees on WoW Forever only).
 -- The level is what a fight's talentbuild link carries (the tree's points come from it).
 local function readWho()
     local Compat = NS.Compat
@@ -145,7 +185,7 @@ local function readWho()
     -- GetAverageItemLevel answers (overall, equipped); the fight's is the equipped one.
     local overall, equipped = ask(GetAverageItemLevel)
     who.ilvl = round1(equipped) or round1(overall)
-    readSpec(who)
+    if Compat.ForClient(RETAIL) then readSpec(who) else readTrees(who) end
     readPet(who)
     return who
 end
@@ -233,7 +273,8 @@ end
 
 --- Who the player is now (the snapshot's `who`): the Results window's "current character" and
 --- "current spec" filters read it out of combat.
---- @return table who  { name, realm, class, level, specID, specName, ilvl, petName, petFamily, client }
+--- @return table who  { name, realm, class, level, specID, specName, specIcon?, trees?, ilvl, petName,
+---                      petFamily, client }
 function Identity.Who()
     return readWho()
 end

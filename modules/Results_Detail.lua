@@ -355,7 +355,7 @@ end
 function Pane:fillHeader(record)
     local w, me = self.w, who(record)
     Tbl().SetClassIcon(w.class, me.class)
-    local specName, specIcon = Tbl().SpecInfo(me.specID, me.specName)
+    local specName, specIcon = Tbl().SpecInfo(me.specID, me.specName, me.specIcon)
     w.spec:SetTexture(specIcon)
     w.spec:SetShown(specIcon ~= nil)
     w.name:SetText(me.name or "?")

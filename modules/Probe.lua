@@ -13,6 +13,9 @@ local _, NS = ...
 --     is a sum the meter alone could answer, so a "yes" says so beside it.
 --   * "pace pet-fill anchor": two hidden StatusBars, bar B's LEFT anchored to bar A's fill texture's
 --     RIGHT, and whether that SetPoint raised (the pace bar's pet fill, plan Task 3.2)
+--   * on WoW Forever only, every talent API's answer (the talent tabs, the class-wide spec, the active
+--     config, its tree's trait groups and their points) and the talent tree the addon picks as the
+--     spec (v0.2 plan Task A4, D11)
 --   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it.
 --
 -- ARMING. Nothing is registered until the probe is armed. `/ct probe` writes the report and, while
@@ -372,6 +375,98 @@ local function takeSample(tag)
     debug("sample %s", tag)
 end
 
+-- ── the talent trees (WoW Forever, v0.2 plan Task A4, D11) ──────────────────────────────────────
+-- Every talent API's answer, raw, through NS.Compat.TalentApis, so the owner's probe says which one
+-- the client answers: the talent tabs, the class-wide spec, the active config, its tree's trait
+-- groups (each display's fields, by name) and their points, then the tree the addon picks.
+
+--- A packed pcall answer { ok, ..., n } as "v1, v2, ...", "missing", or "raised: <error>".
+local function answer(r)
+    if r == nil then return "missing" end
+    if not r[1] then return "raised: " .. show(r[2]) end
+    local parts = {}
+    for i = 2, r.n do parts[#parts + 1] = show(r[i]) end
+    return #parts > 0 and table.concat(parts, ", ") or "nothing"
+end
+
+--- Whether `t` is a table this context may read: the secret test first, so a secret never meets type().
+local function readable(t)
+    if t == nil or Secrets.IsSealed(t) then return false end
+    return type(t) == "table" and Secrets.CanAccessTable(t)
+end
+
+--- A plain table's fields as "k=v, ..." in key order (a secret value prints <secret>).
+local function fields(t)
+    if not readable(t) then return show(t) end
+    local keys = {}
+    for k in pairs(t) do if type(k) == "string" then keys[#keys + 1] = k end end
+    table.sort(keys)
+    for i, k in ipairs(keys) do keys[i] = k .. "=" .. show(t[k]) end
+    return table.concat(keys, ", ")
+end
+
+local function tabLines(out, a)
+    out[#out + 1] = ("talent tabs: GetNumTalentTabs %s, GetTalentTabInfo %s, count %s"):format(a.tabCountFn,
+        a.tabInfoFn, answer(a.tabCount))
+    for i, r in ipairs(a.tabs) do out[#out + 1] = ("talent tab %d: %s"):format(i, answer(r)) end
+end
+
+local function specLines(out, a)
+    out[#out + 1] = ("talent spec: GetSpecialization %s; GetSpecializationInfo %s"):format(answer(a.specIndex),
+        a.specInfo and answer(a.specInfo) or "not asked")
+    out[#out + 1] = ("talent config: active %s; spec group %s; combat config %s; read %s, tree %s"):format(
+        answer(a.activeConfig), answer(a.specGroup), a.combatConfig and answer(a.combatConfig) or "not asked",
+        show(a.configID), show(a.treeID))
+end
+
+local function groupLines(out, a)
+    local r = a.groups
+    if not (r and r[1] and readable(r[2])) then
+        out[#out + 1] = "trait groups: " .. (a.treeID and answer(r) or "no tree")
+        return
+    end
+    local rows = {}
+    local count = Secrets.SafeIterate(r[2], function(_, d)
+        local id = readable(d) and d.groupID
+        rows[#rows + 1] = ("trait group %s: %s"):format(show(id), fields(d))
+    end)
+    out[#out + 1] = ("trait tree %s: %d groups"):format(show(a.treeID), count)
+    for _, line in ipairs(rows) do out[#out + 1] = line end
+    local c = a.currency
+    if not (c and c[1] and readable(c[2])) then
+        out[#out + 1] = "trait group points: " .. answer(c)
+        return
+    end
+    Secrets.SafeIterate(c[2], function(_, info)
+        local ok = readable(info)
+        local list = ok and info.currencyInfos
+        local first = readable(list) and list[1]
+        out[#out + 1] = ("trait group %s spent: %s"):format(show(ok and info.traitNodeGroupID),
+            readable(first) and show(first.spent) or "none")
+    end)
+end
+
+local function pickLine(out, trees)
+    local best = type(trees) == "table" and NS.Identity.Predominant(trees)
+    if not best then
+        out[#out + 1] = "talent tree pick: none"
+        return
+    end
+    local points = {}
+    for i, t in ipairs(trees) do points[i] = tostring(t.points) end
+    out[#out + 1] = ("talent tree pick: %s (%s), icon %s"):format(show(trees[best].name), table.concat(points, "/"),
+        show(trees[best].icon))
+end
+
+local function talentLines(out)
+    local a = NS.Compat.TalentApis()
+    if not a then return end
+    tabLines(out, a)
+    specLines(out, a)
+    groupLines(out, a)
+    pickLine(out, a.trees)
+end
+
 -- ── the report ─────────────────────────────────────────────────────────────────────────────────
 
 --- The report, as plain text lines. Reads the client now; writes nothing.
@@ -392,6 +487,7 @@ function Probe.Report()
     end
     out[#out + 1] = "pet is separate source: " .. (hasMeter() and petSplit() or "unknown (no meter)")
     out[#out + 1] = "pace pet-fill anchor: " .. anchorCheck()
+    talentLines(out)
     sampleLines(out)
     return out
 end

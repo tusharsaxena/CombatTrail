@@ -267,7 +267,7 @@ Total.
 - lanes page: the three texture pickers offer Flat, so the flat default stays pickable
 - lanes page: the Frame level tooltip says lanes at one level mix their icons (frame-layering-§3)
 
-### test_probe.lua (25)
+### test_probe.lua (28)
 
 - probe: report runs with no C_DamageMeter
 - probe: report lists the 8 functions with mock meter
@@ -294,6 +294,9 @@ Total.
 - probe: a plain /ct probe in combat schedules the +5 s sample, one per combat
 - probe: a function the client lacks reads missing, not raised
 - probe: the pet verdict says it cannot see double counting
+- probe: forever: the report dumps every talent API's answer and the tree it picks
+- probe: forever: missing or secret talent answers never raise
+- probe: retail: no talent-tree section (clients-§4)
 
 ### test_meter.lua (33)
 
@@ -362,7 +365,7 @@ Total.
 - fight: a stand-down mid-fight drops the fight, its timers and every registration
 - fight: an encounter that starts in combat while idle starts a fight
 
-### test_identity.lua (32)
+### test_identity.lua (39)
 
 - identity: boss fight key e:3176:15
 - identity: M+ trash key carries :k12
@@ -396,6 +399,13 @@ Total.
 - identity: forever: delve/mplus fields never set
 - identity: the content keys follow the client
 - identity: two-word Forever names handled
+- identity: forever: trees 31/20/0 make the first tree the spec (talent tabs)
+- identity: forever: the C_Traits groups stand in when there are no talent tabs
+- identity: forever: a tie goes to the first tree
+- identity: forever: 0/0/0 or no talent API gives no spec and never raises (Review focus 5)
+- identity: forever: the second talent-tab shape (id, name, desc, icon, points) reads too
+- identity: forever: sealed points give no trees; the last plain read stands in
+- identity: retail: the talent trees are absent and the spec is the client's
 
 ### test_cast_codec.lua (7)
 
@@ -489,7 +499,7 @@ Total.
 - filters: scenarios are dropped by default, a kind without a toggle too
 - filters: the short check comes before the content check
 
-### test_bests.lua (9)
+### test_bests.lua (10)
 
 - bests: best per character×spec×boardKey
 - bests: For with exclude answers the runner-up
@@ -500,6 +510,7 @@ Total.
 - bests: BestCurve names the best fight's id for a board, a character and a spec
 - bests: the boards follow a save and a delete
 - bests: the character key carries the client, so boards never mix Retail and Forever
+- bests: forever: the predominant tree splits the boards as a spec does (D5)
 
 ### test_retention.lua (13)
 
@@ -643,13 +654,14 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (22)
+### test_results_table.lua (23)
 
 - results: default view: current character, last 7 days, grouped by board
 - results: the date range and the character filter
 - results: bossesOnly filter
 - results: the filters are faceted: each list reads the fights the other filters pass
-- results: forever: no Spec dropdown and no Spec grouping; retail has both
+- results: the Spec dropdown and grouping are on both clients; Forever names a talent tree (D5, D11)
+- results: forever: the predominant tree is the row's second icon, the Spec filter and the grouping
 - results: forever: content facet lacks mplus/delve/arena
 - results: delta vs group best
 - results: the leader of a group is the earlier fight on a DPS tie
@@ -668,7 +680,7 @@ Total.
 - results: a saved fight redraws a shown list
 - results: every cell and header has a tooltip
 
-### test_results_detail.lua (14)
+### test_results_detail.lua (15)
 
 - detail: the header meta is three lines: where and who, what, the stamp (plan A2)
 - detail: an open-world fight names its zone, not the continent, and the target's level
@@ -684,14 +696,16 @@ Total.
 - detail: ShowFight on a fight the view filters out shows its detail
 - detail: the popups the window opened close with it
 - detail: the window steps aside for the talent tree and comes back
+- detail: forever: the header's second icon is the predominant tree's, hidden with none (D5)
 
-### test_share.lua (5)
+### test_share.lua (6)
 
 - share: line format and length <= 255
 - share: talents link appended when enabled
 - share: send goes out of combat only, and the menu grays the channels the player is not in
 - share: the row menu's Share is live for a stored fight
 - share: the whisper box offers the target as the client addresses them (realm on Retail, full regional name on Forever)
+- share: forever: the line names the predominant talent tree (D5)
 
 ### test_timeline.lua (12)
 
@@ -735,7 +749,7 @@ Total.
 - usage edit: never-show list hides
 - usage edit: a sample fight changes in memory only
 
-### test_history_page.lua (15)
+### test_history_page.lua (16)
 
 - history page: four tabs, Recording filters first and Usage last
 - history page: every history.* key, the Results window's settings and the hidden list have a row
@@ -752,6 +766,7 @@ Total.
 - history page: every tab renders without printing
 - history page: the page's Defaults puts every row back and leaves the fights
 - history page: /ct set reaches a history path
+- history page: the keep-bests tooltip names the board's spec, a talent tree on Forever (D5, D11)
 
 ### test_preview.lua (7)
 
@@ -950,17 +965,17 @@ Total.
 | test_lane_anchor.lua | 33 |
 | test_lane_visibility.lua | 30 |
 | test_lanes_page.lua | 21 |
-| test_probe.lua | 25 |
+| test_probe.lua | 28 |
 | test_meter.lua | 33 |
 | test_fight.lua | 28 |
-| test_identity.lua | 32 |
+| test_identity.lua | 39 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 7 |
 | test_loadouts.lua | 22 |
 | test_filters.lua | 10 |
-| test_bests.lua | 9 |
+| test_bests.lua | 10 |
 | test_retention.lua | 13 |
 | test_record.lua | 16 |
 | test_slices.lua | 18 |
@@ -971,14 +986,14 @@ Total.
 | test_hud_appearance.lua | 3 |
 | test_hud_page.lua | 14 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 22 |
-| test_results_detail.lua | 14 |
-| test_share.lua | 5 |
+| test_results_table.lua | 23 |
+| test_results_detail.lua | 15 |
+| test_share.lua | 6 |
 | test_timeline.lua | 12 |
 | test_compare.lua | 8 |
 | test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
-| test_history_page.lua | 15 |
+| test_history_page.lua | 16 |
 | test_preview.lua | 7 |
 | test_sim.lua | 5 |
 | test_bindings.lua | 11 |
@@ -994,4 +1009,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **764** |
+| **Total** | **779** |
