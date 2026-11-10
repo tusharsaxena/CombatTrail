@@ -16,7 +16,8 @@ function above CCN 15. Write the failing test first.
 - Add the locale strings to `locales/enUS.lua` (US spelling; the prose gate reads them).
 - If it is a look (a color, a face, a texture), it needs its `FromSkin` companion (skinning-§6) and a
   surface in `tests/skin_surfaces.lua` if it paints a new frame.
-- Update `docs/settings-panel.md` and `docs/schema.md`.
+- Update `docs/settings-panel.md` and `docs/schema.md` (`tests/test_docs.lua` checks that every drawn
+  row has its `| Row | Key |` line in `settings-panel.md`).
 
 ## Add a slash verb
 

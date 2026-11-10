@@ -204,6 +204,21 @@ test("docs: every bus message and slash verb is documented", function()
     end
 end)
 
+-- settings-panel.md's tree is derived from the schema (documentation-§3, Tier 1): every row the panel
+-- draws has its key as the Key cell of a two-cell `| Row | Key |` line. A lane row is written once,
+-- as `lanes.<k>.…`, since the band's picker binds the same rows to either lane.
+test("docs: settings-panel.md has a Row | Key line for every drawn schema row", function()
+    local s = mustRead("docs/settings-panel.md")
+    local missing = {}
+    for _, row in ipairs(T.NS.Schema) do
+        if row.path and not row.skipRender then
+            local key = row.path:gsub("^lanes%.player%.", "lanes.<k>."):gsub("^lanes%.pet%.", "lanes.<k>.")
+            if not contains(s, "| `" .. key .. "` |") then missing[#missing + 1] = key end
+        end
+    end
+    assertEqual(table.concat(missing, ", "), "", "schema rows settings-panel.md has no Key cell for")
+end)
+
 -- The frozen and generated stores the register names once, as directories (documentation-§3).
 local FROZEN = { "^docs/superpowers/", "^docs/audits/", "^docs/reviews/", "^docs/revendor/",
                  "^docs/investigations/", "^docs/automated%-tests/[^/]+/", "^docs/perf%-analysis/[^/]+/" }

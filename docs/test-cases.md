@@ -759,7 +759,7 @@ Total.
 - skin surfaces: the lane label's Font flags lead with From skin, its default
 - skin surfaces: each declared companion is a schema row that defaults on
 
-### test_docs.lua (14)
+### test_docs.lua (15)
 
 - docs: README opens on its H1 and keeps the canonical section order
 - docs: README badge row tracks the TOC and the case inventory
@@ -772,6 +772,7 @@ Total.
 - docs: ARCHITECTURE carries the per-client feature table
 - docs: every TOC file is in the module map and the hub
 - docs: every bus message and slash verb is documented
+- docs: settings-panel.md has a Row | Key line for every drawn schema row
 - docs: the Documentation map registers every doc under docs/, each once, each on disk
 - docs: every smoke check names its client
 - docs: the smoke suite carries the in-game verification list and the probe steps
@@ -940,7 +941,7 @@ Total.
 | test_bindings.lua | 11 |
 | test_diagnostics.lua | 6 |
 | test_skin_surfaces.lua | 5 |
-| test_docs.lua | 14 |
+| test_docs.lua | 15 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
@@ -950,4 +951,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **720** |
+| **Total** | **721** |

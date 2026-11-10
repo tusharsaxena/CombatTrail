@@ -196,7 +196,7 @@ Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *
 |---|---|
 | Show the HUD | `hud.show` |
 | Only in instances | `hud.instancesOnly` |
-| Fade after the fight (seconds, 0 | never) = `hud.fadeAfter` |
+| Fade after the fight (seconds, 0 = never) | `hud.fadeAfter` |
 | Stay open while the mouse is over it | `hud.holdOnMouse` |
 | Pace compares against | `hud.paceAgainst` |
 | Pace bar range | `hud.paceRange` |
@@ -270,7 +270,7 @@ Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *
 
 | Row | Key |
 |---|---|
-| Spell rows shown (0 | all) = `hud.spells.rows` |
+| Spell rows shown (0 = all) | `hud.spells.rows` |
 | Row height (px) | `hud.spells.rowHeight` |
 | Show spell icons | `hud.spells.icons` |
 | Show pet paw | `hud.spells.paw` |
@@ -337,9 +337,9 @@ carries *Purge now*.
 
 | Row | Key |
 |---|---|
-| Keep history for (days, 0 | forever) = `history.days` |
+| Keep history for (days, 0 = forever) | `history.days` |
 | Never purge a fight that holds a best | `history.keepBests` |
-| Maximum stored fights (0 | no limit) = `history.maxFights` |
+| Maximum stored fights (0 = no limit) | `history.maxFights` |
 
 ### Results window
 
