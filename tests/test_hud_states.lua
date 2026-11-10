@@ -293,6 +293,24 @@ test("hud: fades after hud.fadeAfter unless mouse over or pinned", function()
     assertEqual(Hud.State(), "hidden", "unpinned, it fades")
 end)
 
+test("hud: a pointer that leaves from a chip still lets the card fade", function()
+    local inst, meter, Hud = fresh()
+    whole(inst, meter, 1, FIGHT, 10, 40)
+    local ended = Hud.View().endedAt
+    local f = Hud.Frame()
+    -- On a chip (a child that takes the pointer): the frame's own OnLeave has fired, IsMouseOver holds.
+    local over = true
+    f.IsMouseOver = function() return over end
+    f:__fire("OnEnter")
+    f:__fire("OnLeave")
+    run(inst, ended + 8.1)
+    assertEqual(Hud.State(), "over", "held while the pointer is on the chip")
+    -- The pointer leaves the chip straight off the HUD: no OnLeave reaches the frame.
+    over = false
+    run(inst, ended + 8.1 + Hud.LEAVE_DELAY + 0.1)
+    assertEqual(Hud.State(), "hidden", "let go once the pointer is gone, with no OnLeave")
+end)
+
 test("hud: fadeAfter 0 keeps the card up until the next fight or a close", function()
     local inst, meter, Hud = fresh()
     setHud(inst, "fadeAfter", 0)

@@ -44,7 +44,8 @@ local Secrets = NS.Secrets
 Hud.STATE = { HIDDEN = "hidden", LIVE = "live", OVER = "over", NO_BEST = "noBest" }
 Hud.FRAME_NAME = "CombatTrailHud"
 Hud.MIN_WIDTH = 220
--- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade.
+-- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade (and
+-- how often a held card looks again whether the pointer is still on it).
 Hud.LEAVE_DELAY = 2
 
 local STATE = Hud.STATE
@@ -398,7 +399,7 @@ local function footer(v)
     if v.key == "live" and cur then right = L["live \194\183 4 Hz"] end
     if v.key == "over" then
         if pinned then right = L["Pinned open"]
-        elseif fadeAt then right = L["Fades %d s after the fight"]:format(tonumber(setting("hud.fadeAfter")) or 0) end
+        elseif fadeAt and not held then right = L["Fades %d s after the fight"]:format(tonumber(setting("hud.fadeAfter")) or 0) end
     end
     ui.footRight:SetText(right)
 end
@@ -645,8 +646,11 @@ function fadeCheck()
     local left = fadeAt - GetTime()
     if left > 0 then return schedule(left) end
     if setting("hud.holdOnMouse") ~= false and mouseOver() then
-        fadeAt, held = nil, true
-        return
+        -- Held: look again a moment later rather than wait for the frame's OnLeave, which never
+        -- comes when the pointer leaves from a child (a chip, a title-bar control) that took it.
+        held = true
+        fadeAt = GetTime() + Hud.LEAVE_DELAY
+        return schedule(Hud.LEAVE_DELAY)
     end
     fadeAt = nil
     wanted = false
