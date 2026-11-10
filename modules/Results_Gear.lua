@@ -163,9 +163,10 @@ local function side(item, ilvlOf)
 end
 
 --- The slots whose gear differs between `record` and `other` (another item, one side empty, or on
---- the same item another enchant or other gems), in the character frame's order
---- (ResultsLoadout.ORDER): { { slot, item, otherItem, diff } }. `ilvlOf(item)` (optional) gives each
---- side's item level for `diff.ilvl`. Empty when either fight has no gear recorded.
+--- the same item another enchant, other gems or, given `ilvlOf`, another item level: an upgrade), in
+--- the character frame's order (ResultsLoadout.ORDER): { { slot, item, otherItem, diff } }.
+--- `ilvlOf(item)` (optional) gives each side's item level for `diff.ilvl`. Empty when either fight
+--- has no gear recorded.
 --- @return table changed
 function Gear.ChangedSlots(record, other, ilvlOf)
     local a, b, out = gearOf(record), gearOf(other), {}
@@ -173,7 +174,7 @@ function Gear.ChangedSlots(record, other, ilvlOf)
     for _, slot in ipairs(NS.ResultsLoadout.ORDER) do
         local ia, ib = a[slot], b[slot]
         local d = (ia ~= nil or ib ~= nil) and Gear.SlotDiff(side(ia, ilvlOf), side(ib, ilvlOf)) or nil
-        if d and (d.item or d.enchant or d.gems) then
+        if d and (d.item or d.enchant or d.gems or d.ilvl ~= 0) then
             out[#out + 1] = { slot = slot, item = ia, otherItem = ib, diff = d }
         end
     end

@@ -599,7 +599,8 @@ local function layoutGear(y)
     ui.chip:SetShown(different)
     ui.chip:ClearAllPoints()
     ui.chip:SetPoint("TOPRIGHT", ui.frame, "TOPRIGHT", -Compare.PAD, y - 2)
-    local changes = ui.other and G.ChangedSlots(ui.record, ui.other) or {}
+    -- With the item levels, so an upgraded item (the same item ID) counts as changed gear too.
+    local changes = ui.other and G.ChangedSlots(ui.record, ui.other, G.IlvlOf) or {}
     local recorded = type(ui.record.gear) == "table" and ui.other ~= nil and type(ui.other.gear) == "table"
     ui.gearNone:SetShown(#changes == 0)
     ui.gearNone:SetText(recorded and L["No gear changed."] or L["Gear not recorded for both fights."])

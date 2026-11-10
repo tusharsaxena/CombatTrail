@@ -234,6 +234,22 @@ test("compare: the window opens over the Results window, follows the detail and 
     assertNil(NS.ResultsCompare.Pick(nil))
 end)
 
+test("compare: an upgraded item is on the gear line", function()
+    local NS = fresh()
+    local up, before = "212060:::::::::::1:200", "212060:::::::::::1:100"
+    save(NS, rec(NS, { id = "best", dps = 3000, gear = { [14] = before } }),
+        rec(NS, { id = "mid", dps = 2000, gear = { [14] = up } }))
+    local levels = { [up] = 727, [before] = 714 }
+    NS.ResultsGear.IlvlOf = function(item) return levels[item] end
+    detailOn(NS, "mid").w.compare:__fire("OnClick")
+    local ui = NS.ResultsCompare.__ui()
+    local texts = {}
+    for _, g in ipairs(ui.gearItems) do if g.text:IsShown() then texts[#texts + 1] = g.text:GetText() end end
+    assertEqual(#texts, 1, "the same item ID, another item level")
+    assertEqual(texts[1], "Trinket 2 \194\183 714 \194\187 727")
+    assertFalse(ui.gearNone:IsShown())
+end)
+
 test("compare: Escape closes the compare first and the Results window stays", function()
     local NS, M = fresh()
     save(NS, rec(NS, { id = "best", dps = 3000 }), rec(NS, { id = "mid", dps = 2000 }))

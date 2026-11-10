@@ -91,6 +91,18 @@ test("gear: gear changed slots detected", function()
     assertEqual(Cmp.GearText(changed[3], 727, 714), "Trinket 1 \194\183 714 \194\187 727")
     assertEqual(Cmp.GearText(changed[2]), "Ring 2 \194\183 gem differs")
     assertEqual(Cmp.GearText(changed[4]), "Off hand \194\183 nothing worn before")
+    -- An upgraded item (the same item ID, another item level) is changed gear once the levels are
+    -- known, and the gear line says the levels.
+    local up = rec(NS, { id = "up", gear = { [14] = "212060:::::::::::1:200" } })
+    local before = rec(NS, { id = "before", gear = { [14] = "212060:::::::::::1:100" } })
+    local upLevels = { ["212060:::::::::::1:200"] = 727, ["212060:::::::::::1:100"] = 714 }
+    assertEqual(#G.ChangedSlots(up, before), 0, "no levels: the same item, nothing marked")
+    local upgraded = G.ChangedSlots(up, before, function(item) return upLevels[item] end)
+    assertEqual(#upgraded, 1, "the upgrade is a change")
+    assertEqual(upgraded[1].slot, 14)
+    assertFalse(upgraded[1].diff.item)
+    assertEqual(upgraded[1].diff.ilvl, 1)
+    assertEqual(Cmp.GearText(upgraded[1], 727, 714), "Trinket 2 \194\183 714 \194\187 727")
     -- Either fight without gear: nothing to mark.
     assertEqual(#G.ChangedSlots(a, rec(NS, { id = "c" })), 0)
     -- The marks and the notes.
