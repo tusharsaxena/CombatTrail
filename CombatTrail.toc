@@ -141,6 +141,15 @@ modules\Casts.lua
 modules\Usage.lua
 modules\Stats.lua
 modules\Loadouts.lua
+# The recording filters, the bests and the store: pure over the settings and the stored records.
+# Bests and Recorder each register their bus receiver at FILE SCOPE; Recorder captures NS.Secrets and
+# NS.L there. Each reaches the others, NS.db and the fight modules above at CALL time only.
+modules\Filters.lua
+modules\Bests.lua
+modules\Recorder.lua
+# The purge (at login, daily, `/kct purge`) and the store's size. Reaches NS.Recorder, NS.Bests,
+# NS.Loadouts and NS.db at CALL time only; its daily timer is the addon object's AceTimer.
+modules\Retention.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

@@ -62,7 +62,10 @@ end
 -- probe's and are left out, both each AceTimer handle and the client queue entry it rides.
 local function delays(inst)
     local out, fights = {}, {}
-    for _, h in pairs(inst.NS.Fight.Timers()) do
+    local others = inst.NS.Fight.Timers()
+    -- The purge's daily timer (modules/Retention.lua) is not the probe's either.
+    others.retention = inst.NS.Retention.Timer()
+    for _, h in pairs(others) do
         fights[h] = true
         fights[h.callback or h] = true
     end

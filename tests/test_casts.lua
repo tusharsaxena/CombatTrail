@@ -19,6 +19,9 @@ end
 local function fresh()
     local meter
     local inst = T.load{ mutate = function(m) meter = T.mockMeter.install(m) end }
+    -- The recorder (modules/Recorder.lua) takes each ended fight's list with Casts.Finish, which
+    -- answers once: here the suite is the one that asks, so the recorder stands aside.
+    inst.NS.Recorder.OnFightEnded = function() end
     local ended = {}
     local rx = inst.NS.NewBusTarget()
     rx:RegisterMessage(inst.NS.MSG.FIGHT_ENDED, function(_, fight, final, reason)

@@ -14,6 +14,16 @@ local _, NS = ...
 --
 -- THE LIST is { { t = seconds from the fight's start, spellID, unit = "player"|"pet", interrupted } }
 -- (modules/Casts.lua's shape). Decode skips a token that does not parse, and its delta with it.
+--
+-- THE SPELLS (plan Task 2.5). The record's damage by spell is packed the same way, so a fight with
+-- forty damaging spells stays a few hundred bytes rather than three kilobytes of nested tables (the
+-- 6 KB record target, spec §5). One token per spell, in list order, joined by ";":
+--     <id>:<total>[:p]
+--   id     the spell ID, base 36
+--   total  the damage, a whole number in DECIMAL (a raid total passes 2^32, which a base-36
+--          tonumber cannot read back on a client whose C long is 32 bits)
+--   p      a pet spell
+-- The list is { { spellID, total, isPet } } (modules/Meter.lua's merged spells, highest first).
 
 local CastCodec = {}
 NS.CastCodec = CastCodec
@@ -84,6 +94,38 @@ function CastCodec.Decode(s)
             at = at + dt
             out[#out + 1] = { t = at / 10, spellID = spellID, unit = flags:find("p", 1, true) and "pet" or "player",
                               interrupted = flags:find("x", 1, true) ~= nil }
+        end
+    end
+    return out
+end
+
+-- ── the spells ──────────────────────────────────────────────────────────────────────────────────
+
+--- The stored string for a spell list ("" for none). A row without a spell ID or a total is left out.
+--- @param spells table|nil  { { spellID, total, isPet } }
+--- @return string
+function CastCodec.EncodeSpells(spells)
+    local parts = {}
+    for _, sp in ipairs(type(spells) == "table" and spells or {}) do
+        local id, total = tonumber(sp.spellID), tonumber(sp.total)
+        if id and total then
+            parts[#parts + 1] = b36(floor(id)) .. ":" .. ("%.0f"):format(total) .. (sp.isPet and ":p" or "")
+        end
+    end
+    return table.concat(parts, ";")
+end
+
+--- The spell list a stored string holds, in stored order; a token that does not parse is skipped.
+--- @param s string|nil
+--- @return table spells  { { spellID, total, isPet } }
+function CastCodec.DecodeSpells(s)
+    local out = {}
+    if type(s) ~= "string" or s == "" then return out end
+    for token in (s .. ";"):gmatch("([^;]*);") do
+        local id, total, rest = token:match("^([0-9a-z]+):(%d+)(.*)$")
+        local spellID = id and tonumber(id, 36)
+        if spellID and (rest == "" or rest == ":p") then
+            out[#out + 1] = { spellID = spellID, total = tonumber(total), isPet = rest == ":p" }
         end
     end
     return out

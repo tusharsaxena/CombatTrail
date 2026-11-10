@@ -78,3 +78,36 @@ test("cast codec: 250 casts packs under 2.5 KB", function()
     assertTrue(#s < 2560, "250 casts took " .. #s .. " bytes")
     assertEqual(#Codec.Decode(s), 250)
 end)
+
+-- ── the spells (plan Task 2.5) ─────────────────────────────────────────────────────────────────
+
+test("codec: the spell list round-trips with the pet flag and a raid-sized total", function()
+    local Codec = T.NS.CastCodec
+    local spells = {
+        { spellID = 133, total = 9876543210, isPet = false },     -- past 2^32
+        { spellID = 17253, total = 1200, isPet = true },
+        { spellID = 400001, total = 0, isPet = false },
+    }
+    local s = Codec.EncodeSpells(spells)
+    assertEqual(s, "3p:9876543210;db9:1200:p;8kn5:0")
+    local back = Codec.DecodeSpells(s)
+    assertEqual(#back, 3)
+    for i, sp in ipairs(spells) do
+        assertEqual(back[i].spellID, sp.spellID)
+        assertEqual(back[i].total, sp.total)
+        assertEqual(back[i].isPet, sp.isPet)
+    end
+    assertEqual(Codec.EncodeSpells(Codec.DecodeSpells(s)), s)
+end)
+
+test("codec: the spell list skips a row without an ID or a total, and a token that does not parse", function()
+    local Codec = T.NS.CastCodec
+    assertEqual(Codec.EncodeSpells({ { spellID = 133 }, { total = 5 }, { spellID = 2948, total = 7 } }), "29w:7")
+    assertEqual(Codec.EncodeSpells(nil), "")
+    local back = Codec.DecodeSpells("3p:10;junk;dbx:5:q;29w:7:p")
+    assertEqual(#back, 2)
+    assertEqual(back[2].spellID, 2948)
+    assertTrue(back[2].isPet)
+    assertEqual(#Codec.DecodeSpells(nil), 0)
+    assertFalse(#Codec.DecodeSpells("") > 0)
+end)

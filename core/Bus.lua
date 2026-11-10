@@ -24,6 +24,15 @@ NS.MSG = {
     -- Payload: (fight, final, reason): reason "final" with `final` Meter.ReadFinal's plain shape (its
     -- sessions merged), or "lost" with final nil.
     FIGHT_ENDED = "Ka0s_CombatTrail_FightEnded",
+    -- Sender: modules/Recorder.lua, when a fight that ended "final" passed the recording filters and
+    -- was stored. Payload: (record), the stored record (plain throughout).
+    FIGHT_SAVED = "Ka0s_CombatTrail_FightSaved",
+    -- Sender: modules/Recorder.lua, for every ended fight it did not store. Payload: (fight, reason),
+    -- the fight table and "short" | "filtered" | "lost" | "unknown" (no readable character).
+    FIGHT_SKIPPED = "Ka0s_CombatTrail_FightSkipped",
+    -- Sender: modules/Recorder.lua (Delete, SetNote) and modules/Retention.lua (a purge that removed
+    -- anything). Payload: none; the store changed other than by a save.
+    FIGHTS_CHANGED = "Ka0s_CombatTrail_FightsChanged",
 }
 
 local Bus = LibStub and LibStub("LibKa0s-Bus-1.0", true)

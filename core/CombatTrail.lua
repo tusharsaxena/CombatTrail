@@ -55,6 +55,8 @@ function NS.RegisterGameEvents()
     if NS.Meter then NS.Meter.Prime() end
     -- The fight watchers' events for the fight state machine's current state (modules/Watchers.lua).
     if NS.Watchers then NS.Watchers.Sync() end
+    -- The stored fights' purge, at login and every stand-up, and its daily timer (modules/Retention.lua).
+    if NS.Retention then NS.Retention.Sync() end
 end
 
 -- ── Host handlers ───────────────────────────────────────────────────────────────────────────────

@@ -19,6 +19,17 @@ local function where()
     return w
 end
 
+-- What the recording filters store, per content kind (spec §5): every kind on but scenarios. The
+-- keys are modules/Identity.lua's Identity.CONTENT for this client (a suite holds the two equal):
+-- Mythic+, delves and arenas are Retail-only, so on WoW Forever their keys are ABSENT (clients-§4).
+local function content()
+    local c = { raid = true, dungeon = true, bg = true, world = true, dummy = true, scenario = false }
+    if NS.Compat.ForClient({ "retail" }) then
+        c.mplus, c.delve, c.arena = true, true, true
+    end
+    return c
+end
+
 -- One lane's every setting (spec §4's table, tab by tab). The two lanes differ only where `over` says.
 local function lane(key, over)
     local d = {
@@ -87,8 +98,14 @@ NS.defaults = {
         },
         -- The live DPS HUD (spec §6).
         hud = {},
-        -- The recording filters and retention (spec §5).
-        history = {},
+        -- The recording filters and retention (spec §5; modules/Filters.lua, modules/Retention.lua):
+        -- the minimum length in seconds, bosses only, one toggle per content kind (content(), above),
+        -- the days a fight is kept (0 = for ever), whether a fight holding a best is kept past them,
+        -- and the store's cap (0 = none).
+        history = {
+            minLength = 30, bossesOnly = false, content = content(),
+            days = 7, keepBests = true, maxFights = 500,
+        },
         -- The Results window's saved view (spec §7).
         results = {},
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the

@@ -410,3 +410,8 @@ L["The probe watches your next fight. Fight for 20 seconds or more, then type %s
 L["The probe stopped watching."] = "The probe stopped watching."
 L["The probe sampled your fight. Type %s to see the report."] = "The probe sampled your fight. Type %s to see the report."
 L["Usage: /kct probe, /kct probe start or /kct probe stop"] = "Usage: /kct probe, /kct probe start or /kct probe stop"
+
+-- `/kct purge` (modules/Retention.lua)
+L["No stored fight was old enough to remove."] = "No stored fight was old enough to remove."
+L["Removed 1 stored fight."] = "Removed 1 stored fight."
+L["Removed %d stored fights."] = "Removed %d stored fights."
