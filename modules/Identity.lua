@@ -246,7 +246,8 @@ local function contentOf(ident)
     return CONTENT_OF_TYPE[kind] or "world"
 end
 
--- The primary target onto `ident`: the meter's, else the snapshot's, else Unknown target.
+-- The primary target onto `ident`: the meter's, else the snapshot's, else the encounter's name (an
+-- encounter is a readable identity, spec §5, so it is never unknown), else Unknown target.
 local function resolveTarget(ident, snap, enemies)
     local first, others = primaryOf(enemies)
     if not first and type(snap.target) == "table" and (snap.target.name or snap.target.creatureID) then
@@ -254,11 +255,15 @@ local function resolveTarget(ident, snap, enemies)
     end
     ident.otherTargets = others
     if not first then
+        if ident.encounterID then
+            ident.targetName = ident.encounterName or L["Unknown target"]
+            return
+        end
         ident.targetName, ident.unknown = L["Unknown target"], true
         return
     end
     ident.targetCreatureID = first.creatureID
-    ident.targetName = first.name or NS.DummyName(first.creatureID)
+    ident.targetName = first.name or NS.DummyName(first.creatureID) or ident.encounterName
     if ident.targetName == nil then ident.targetName = L["Unknown target"] end
 end
 

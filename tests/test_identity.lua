@@ -220,6 +220,30 @@ test("identity: no enemies and no snapshot -> Unknown target, key nil", function
     restoreProfile()
 end)
 
+test("identity: an encounter with no readable enemy is named by the encounter and keeps its board", function()
+    local _, NS, m = fresh()
+    place(m, { name = "Liberation of Undermine", type = "raid", difficultyID = 15, maxPlayers = 30,
+               instanceID = 2769 })
+    local fight = { encounter = { id = 3176, name = "Gallywix", difficultyID = 15 },
+                    snapshot = NS.Identity.Snapshot() }
+    local id = NS.Identity.Resolve(fight, nil, {})
+    assertEqual(id.targetName, "Gallywix")
+    assertNil(id.unknown, "an encounter is a readable identity")
+    assertEqual(id.isBoss, true)
+    assertEqual(NS.Identity.BoardKey(id), "e:3176:15")
+    restoreProfile()
+end)
+
+test("identity: a battleground fight with no readable target has no board", function()
+    local _, NS, m = fresh()
+    place(m, { name = "Warsong Gulch", type = "pvp", difficultyID = 0, maxPlayers = 10, instanceID = 489 })
+    local id = NS.Identity.Resolve({ snapshot = NS.Identity.Snapshot() }, nil, {})
+    assertEqual(id.pvpBracket, "10")
+    assertEqual(id.unknown, true)
+    assertNil(NS.Identity.BoardKey(id), "an unknown target is never keyed by its instance")
+    restoreProfile()
+end)
+
 test("identity: a world boss target snapshot makes a boss", function()
     local _, NS, m = fresh()
     target(m, creatureGUID(221224), "Aggregation of Horrors", "worldboss")
