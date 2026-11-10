@@ -348,7 +348,7 @@ if busTarget then busTarget:RegisterMessage(NS.MSG.SETTINGS_CHANGED, onSettingsC
 --- The pet's name, or nil when there is no pet (or its name may not be looked at).
 --- @return string|nil
 function LaneCasts.PetName()
-    if not UnitExists("pet") then return nil end
+    if not Secrets.PlainTruth(UnitExists("pet")) then return nil end
     local name = Secrets.PlainString(UnitName("pet"))
     if name == "" then return nil end
     return name

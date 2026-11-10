@@ -56,6 +56,10 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   Delta column measures against the group's best.
 - **The sim's "short" scenario is 22 s**, judged by the player's own minimum length: with a minimum of
   22 s or less it is saved and its label no longer holds.
+- **Outside an encounter, the live pace can use a different board than the saved fight.** The HUD
+  paces against the board of the target held at the pull, while the record is filed on the enemy
+  that took the most damage. Pull an add and kill the pack leader, and the live view and the over
+  card can disagree about a best. Encounters key both on the encounter, so they agree.
 - **Two lanes overlapping at the same frame level mix their icons**; the Frame level tooltip says how
   to separate them.
 - **The lanes' skin-following defaults** change their look under Ka0s Default (a gold label, a black

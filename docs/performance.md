@@ -29,7 +29,12 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   §2's anti-goal).
 - The HUD redraws on `FIGHT_TICK` (0.25 s), not per frame; its rows and the Results window's rows
   come from pools.
-- The settle read, the record build and the purge run out of combat.
+- The settle read, the record build and the purge run out of combat. A daily purge that falls due
+  in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
+- On a boundary tick the HUD and the slices share one `Meter.ReadLive` of the session: Fight brackets
+  `FIGHT_TICK` with `Meter.ShareLive`, so the client is asked once per tick, never twice.
+- The chart's cooldown icons are laid again only when the casts, the span or the geometry change,
+  compared by value, since the HUD builds a fresh list every tick.
 
 ## Taking a capture
 

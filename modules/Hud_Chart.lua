@@ -449,14 +449,26 @@ local function newMark(over)
     return f
 end
 
--- The icons for `casts` over `span`, laid again only when the list, its size, the span or the
--- geometry changed.
+-- True when `casts` holds the same casts (time and spell, in order) as the last list laid. The HUD
+-- builds a fresh list every tick, so identity alone would lay the icons again four times a second.
+local function sameCasts(laid, casts, n)
+    if type(laid) ~= "table" or #laid ~= n * 2 then return false end
+    for i = 1, n do
+        if laid[i * 2 - 1] ~= casts[i].t or laid[i * 2] ~= casts[i].spellID then return false end
+    end
+    return true
+end
+
+-- The icons for `casts` over `span`, laid again only when the casts, the span or the geometry
+-- changed.
 function Strip:drawIcons(casts, span)
     local n = casts and #casts or 0
-    if self.iconList == casts and self.iconN == n and self.iconSpan == span and self.iconGeom == self.geometry then
+    if self.iconSpan == span and self.iconGeom == self.geometry and sameCasts(self.iconLaid, casts, n) then
         return
     end
-    self.iconList, self.iconN, self.iconSpan, self.iconGeom = casts, n, span, self.geometry
+    local laid = {}
+    for i = 1, n do laid[i * 2 - 1], laid[i * 2] = casts[i].t, casts[i].spellID end
+    self.iconLaid, self.iconSpan, self.iconGeom = laid, span, self.geometry
     NS.Pool.ReleaseAll(self.iconPool, function(f) f.cast = nil end)
     NS.Pool.ReleaseAll(self.markPool, function(f) f.casts = nil end)
     self.icons, self.marks = {}, {}

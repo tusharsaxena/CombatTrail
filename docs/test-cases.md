@@ -325,7 +325,7 @@ Total.
 - meter: Call reports a missing function and a raising one without throwing
 - meter: ReadFinal keeps the player's part when only the pet's read raises
 
-### test_fight.lua (27)
+### test_fight.lua (28)
 
 - fight: the states and the timing constants are the plan's
 - fight: normal combat → started, ticks, ended final
@@ -351,6 +351,7 @@ Total.
 - fight: a read sealed past the retries ends lost
 - fight: idle registers only the idle events
 - fight: COMBAT_LOG_EVENT_UNFILTERED is never registered
+- fight: an event the client rejects costs only itself, and is never unregistered
 - fight: disabled addon registers nothing
 - fight: a stand-down mid-fight drops the fight, its timers and every registration
 - fight: an encounter that starts in combat while idle starts a fight
@@ -391,7 +392,7 @@ Total.
 - codec: the spell list round-trips with the pet flag and a raid-sized total
 - codec: the spell list skips a row without an ID or a total, and a token that does not parse
 
-### test_casts.lua (16)
+### test_casts.lua (17)
 
 - casts: a fight's casts come from the lanes' capture, timed from its combat entry
 - casts: pet casts tagged unit=pet, and the pet's spells make PetSpellSet
@@ -406,6 +407,7 @@ Total.
 - casts: a lost fight's capture is dropped
 - casts: Live reads the fight in progress without ending it; Finish answers once
 - casts: Finish answers each spell's base cooldown, known ones only, asked once per spell
+- casts: a secret base cooldown is not cached, so the spell's cooldown arrives once readable
 - casts: while idle the buffer holds only the pre-pull's worth
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
@@ -469,7 +471,7 @@ Total.
 - bests: the boards follow a save and a delete
 - bests: the character key carries the client, so boards never mix Retail and Forever
 
-### test_retention.lua (12)
+### test_retention.lua (13)
 
 - retention: purge removes >7 days except bests
 - retention: keepBests off lets an old best go
@@ -480,6 +482,7 @@ Total.
 - retention: the purge repairs an order that lost step with the store
 - retention: a record from a later version is left alone
 - retention: the purge runs at login and on a daily timer
+- retention: the daily run waits out combat and a fight in progress
 - retention: the stand-down cancels the daily timer, the stand-up arms it again
 - retention: /kct purge purges now and says how many went
 - retention: EstimateBytes sizes the store as SavedVariables writes it
@@ -555,9 +558,11 @@ Total.
 - pace: PACE_PET_FILL=false shows player-only against the best's player damage
 - pace: no best, or the layout's pace off, hides the bar
 
-### test_hud_chart.lua (5)
+### test_hud_chart.lua (7)
 
 - chart cooldown icons for base CD >= 29 s
+- chart: unchanged cooldown icons are not laid again on the next ticks
+- chart: the HUD and the slices share one live read on a boundary tick
 - chart: live columns are the slices, scaled to the best's player damage
 - chart: with no best the scale is the live total itself, and no line
 - chart: hud.chart.columns caps the columns; the layout's chart off hides it
@@ -909,21 +914,21 @@ Total.
 | test_lanes_page.lua | 20 |
 | test_probe.lua | 25 |
 | test_meter.lua | 32 |
-| test_fight.lua | 27 |
+| test_fight.lua | 28 |
 | test_identity.lua | 23 |
 | test_cast_codec.lua | 7 |
-| test_casts.lua | 16 |
+| test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 7 |
 | test_loadouts.lua | 8 |
 | test_filters.lua | 10 |
 | test_bests.lua | 8 |
-| test_retention.lua | 12 |
+| test_retention.lua | 13 |
 | test_record.lua | 15 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 21 |
 | test_hud_pace.lua | 5 |
-| test_hud_chart.lua | 5 |
+| test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 5 |
 | test_hud_appearance.lua | 3 |
 | test_hud_page.lua | 14 |
@@ -951,4 +956,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **721** |
+| **Total** | **726** |

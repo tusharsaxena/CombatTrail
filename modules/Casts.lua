@@ -133,12 +133,14 @@ local function tenth(x)
     return math.floor(x * 10 + 0.5) / 10
 end
 
+-- A spell's base cooldown in ms, or nil. A plain answer is cached (false for "none"); a secret one
+-- is neither used nor cached, so the next read asks again (the lanes' cache keeps the same rule).
 local function cooldown(id)
     local ms = cooldowns[id]
     if ms == nil then
         local ok, v = pcall(NS.Compat.SpellBaseCooldown, id)
-        ms = ok and Secrets.PlainNumber(v) or nil
-        if not ms then ms = false end
+        if ok and Secrets.IsSealed(v) then return nil end
+        ms = ok and Secrets.PlainNumber(v) or false
         cooldowns[id] = ms
     end
     return ms or nil

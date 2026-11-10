@@ -62,6 +62,47 @@ test("chart cooldown icons for base CD >= 29 s", function()
     assertEqual(iconIDs(chart), "", "icons off")
 end)
 
+test("chart: unchanged cooldown icons are not laid again on the next ticks", function()
+    local inst, meter, Hud = H.fresh({ mutate = function(m) m.__baseCooldowns[WRATH] = 120000 end })
+    H.start(inst, meter, 1, FIGHT, 10)
+    H.cast(inst, 11.5, "player", WRATH)
+    H.tick(inst, 16.25, 18)
+    local chart = chartOf(Hud, "live")
+    local first = chart:Icons()[1]
+    assertTrue(first ~= nil, "Wrath's icon is up")
+    local moved = 0
+    local setPoint = first.frame.SetPoint
+    first.frame.SetPoint = function(...) moved = moved + 1; return setPoint(...) end
+    H.tick(inst, 16.5, 18)
+    H.tick(inst, 17.75, 18)
+    assertEqual(moved, 0, "same casts, span and geometry: the icon stays where it is")
+    assertTrue(chart:Icons()[1] == first, "the same icon entry")
+    H.cast(inst, 18, "player", WRATH)
+    H.tick(inst, 19.25, 20)
+    assertEqual(iconIDs(chart), WRATH .. "," .. WRATH, "a new cast lays them again")
+end)
+
+test("chart: the HUD and the slices share one live read on a boundary tick", function()
+    local inst, meter = H.fresh()
+    H.start(inst, meter, 1, FIGHT, 10)
+    local function reads()
+        local n = 0
+        for _, c in ipairs(meter.CallsTo("GetCombatSessionSourceFromID")) do
+            if c.args[3] == inst.mocks.UnitGUID("player") then n = n + 1 end
+        end
+        return n
+    end
+    local most, t = 0, 11.5
+    while t <= 16 do
+        local before = reads()
+        H.run(inst, t)
+        most = math.max(most, reads() - before)
+        t = t + 0.25
+    end
+    assertEqual(most, 1, "one player source read per tick, boundary or not")
+    assertTrue(#inst.NS.Slices.Columns(inst.NS.Fight.Current().id, 6, 10).values > 0, "the slices still filled")
+end)
+
 test("chart: live columns are the slices, scaled to the best's player damage", function()
     local inst, meter, Hud = H.fresh()
     H.whole(inst, meter, 1, FIGHT, 10, 40)

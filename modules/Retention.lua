@@ -3,7 +3,7 @@ local _, NS = ...
 -- every fight older than `history.days` days (0 keeps them for ever), except a fight holding a best
 -- while `history.keepBests` is on (modules/Bests.lua), then caps the store at `history.maxFights`
 -- (0 is no cap): the oldest non-best fights go first. It runs at login (and every stand-up), once a
--- day while logged in, and from `/kct purge`. Each run also puts db.global.fightOrder back in step
+-- day while logged in (out of combat), and from `/kct purge`. Each run also puts db.global.fightOrder back in step
 -- with the store (newest first, no id without its record), and sweeps the talent loadouts no fight
 -- refers to any more (modules/Loadouts.lua). FIGHTS_CHANGED fires once when anything was removed.
 --
@@ -26,6 +26,9 @@ local L = NS.L
 Retention.DAY = 86400
 --- How often the purge runs while logged in (seconds).
 Retention.PERIOD = 86400
+
+--- How soon a daily run that landed in a fight is asked again (seconds).
+Retention.RETRY = 60
 
 local timer
 
@@ -127,17 +130,26 @@ end
 
 -- ── when it runs ────────────────────────────────────────────────────────────────────────────────
 
-local function arm()
+local function arm(delay)
     local addon = NS.addon
     if addon and addon.CancelTimer and timer then addon:CancelTimer(timer) end
     timer = nil
-    if addon and addon.ScheduleTimer then timer = addon:ScheduleTimer(Retention.OnTimer, Retention.PERIOD) end
+    if addon and addon.ScheduleTimer then
+        timer = addon:ScheduleTimer(Retention.OnTimer, delay or Retention.PERIOD)
+    end
 end
 
---- The daily run: purge, then arm the next one.
+-- In combat, or while a fight is open or settling, the purge waits (docs/performance.md).
+local function busy()
+    if InCombatLockdown and InCombatLockdown() then return true end
+    return NS.Fight ~= nil and NS.Fight.Current() ~= nil
+end
+
+--- The daily run: purge, then arm the next one. A run that lands in a fight is asked again shortly.
 function Retention.OnTimer()
     timer = nil
     if NS.IsStoodDown and NS.IsStoodDown() then return end
+    if busy() then return arm(Retention.RETRY) end
     Retention.Purge(time())
     arm()
 end

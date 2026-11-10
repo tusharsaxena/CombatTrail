@@ -488,16 +488,48 @@ test("fight: COMBAT_LOG_EVENT_UNFILTERED is never registered", function()
     local inst, meter = fresh()
     meter.SetSession(1, FIGHT)
     enter(inst, 10)
+    local events = 0
     for _, r in ipairs(inst.mocks.__registrations()) do
+        if r.kind == "event" then events = events + 1 end
         assertTrue(r.event ~= "COMBAT_LOG_EVENT_UNFILTERED")
     end
-    for _, path in ipairs({ "/modules/Fight.lua", "/modules/Watchers.lua" }) do
+    assertTrue(events > 0, "the registry holds the fight set, so the check above is not vacuous")
+    -- Every authored source file, not only the ones that register today (libs/ and tests/ aside).
+    local paths = {}
+    local p = io.popen('cd "' .. T.root .. '" && git ls-files "*.lua" "*.xml" | grep -v "^libs/" | grep -v "^tests/"')
+    for line in p:lines() do paths[#paths + 1] = "/" .. line end
+    p:close()
+    assertTrue(#paths > 40, "scanned " .. #paths .. " files")
+    for _, path in ipairs(paths) do
         local f = io.open(T.root .. path, "rb")
         local src = f:read("*a")
         f:close()
         assertNil(src:find("Register[%a]*Event%s*%([^)]*COMBAT_LOG"), path .. ": no registration call names it")
         assertNil(src:find('"COMBAT_LOG_EVENT', 1, true), path .. ": no event list names it")
     end
+end)
+
+test("fight: an event the client rejects costs only itself, and is never unregistered", function()
+    local meter
+    local inst = T.load{ mutate = function(m)
+        meter = T.mockMeter.install(m)
+        m.__badEvents = { DAMAGE_METER_RESET = true }
+    end }
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    local named = false
+    for _, e in ipairs(inst.NS.rejectedEvents) do if e == "DAMAGE_METER_RESET" then named = true end end
+    assertTrue(named, "the rejection is recorded")
+    local target = inst.NS.Watchers.EventTarget()
+    local unregister = target.UnregisterEvent
+    target.UnregisterEvent = function(self, event, ...)
+        if event == "DAMAGE_METER_RESET" then error("Attempt to unregister unknown event", 2) end
+        return unregister(self, event, ...)
+    end
+    leave(inst, 20)
+    local ok, err = pcall(settle, inst, 24.5)
+    assertTrue(ok, "back to idle without unregistering the rejected name: " .. tostring(err))
+    assertEqual(watched(inst), "ENCOUNTER_START,PLAYER_REGEN_DISABLED", "the idle set")
 end)
 
 test("fight: disabled addon registers nothing", function()

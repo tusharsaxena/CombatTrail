@@ -341,7 +341,10 @@ end
 onTick = function()
     if isDown() or state ~= STATE.COMBAT or not cur then return end
     if cur.sessionID == nil then scan(GetTime()) end
-    if cur then NS.SendBus(NS.MSG.FIGHT_TICK, cur) end
+    if not cur then return end
+    NS.Meter.ShareLive(true)
+    NS.SendBus(NS.MSG.FIGHT_TICK, cur)
+    NS.Meter.ShareLive(false)
 end
 
 -- ── queries ─────────────────────────────────────────────────────────────────────────────────────

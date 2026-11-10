@@ -191,6 +191,21 @@ test("retention: the purge runs at login and on a daily timer", function()
     assertTrue(NS.Retention.Timer() ~= timer, "re-armed")
 end)
 
+test("retention: the daily run waits out combat and a fight in progress", function()
+    local seeded = { global = { fights = {}, fightOrder = {} } }
+    local NS, M = boot(seeded)
+    local again = rec({ t = 1000 })
+    NS.Recorder.Save(again)
+    M.InCombatLockdown = function() return true end
+    M.__fireTimers()
+    assertTrue(NS.db.global.fights[again.id] ~= nil, "no purge in combat")
+    assertEqual(NS.Retention.Timer().delay, NS.Retention.RETRY, "asked again shortly")
+    M.InCombatLockdown = function() return false end
+    M.__fireTimers()
+    assertNil(NS.db.global.fights[again.id], "purged once combat is over")
+    assertEqual(NS.Retention.Timer().delay, DAY, "and the daily timer is armed again")
+end)
+
 test("retention: the stand-down cancels the daily timer, the stand-up arms it again", function()
     local NS = fresh()
     assertTrue(NS.Retention.Timer() ~= nil)

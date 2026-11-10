@@ -49,6 +49,7 @@ local FIGHT_EVENTS = {
 
 local target          -- this module's AceEvent target (nil until a set is first registered)
 local registered = {} -- the events registered now, as a set
+local refused = {}    -- the events the client rejected (NS.rejectedEvents names them), as a set
 
 -- ── dispatch ────────────────────────────────────────────────────────────────────────────────────
 
@@ -96,21 +97,26 @@ function Watchers.Sync()
     for _, event in ipairs(wanted()) do want[event] = true end
     for event in pairs(registered) do
         if not want[event] then
-            target:UnregisterEvent(event)
+            pcall(target.UnregisterEvent, target, event)
             registered[event] = nil
         end
     end
     for event in pairs(want) do
-        if not registered[event] then
-            NS.SafeRegisterEvent(ensureTarget(), event, onEvent, NS.rejectedEvents)
-            registered[event] = true
+        if not registered[event] and not refused[event] then
+            if NS.SafeRegisterEvent(ensureTarget(), event, onEvent, NS.rejectedEvents) then
+                registered[event] = true
+            else
+                refused[event] = true   -- the client does not know it: never asked again, never unregistered
+            end
         end
     end
 end
 
 --- The lifecycle's stand-down: every registration goes.
 function Watchers.Suspend()
-    if target then target:UnregisterAllEvents() end
+    if target then
+        for event in pairs(registered) do pcall(target.UnregisterEvent, target, event) end
+    end
     registered = {}
 end
 

@@ -281,6 +281,29 @@ test("casts: Finish answers each spell's base cooldown, known ones only, asked o
     assertEqual(inst.mocks.__baseCooldownCalls[133] <= 2, true, "cached (the lane's glow may ask too)")
 end)
 
+test("casts: a secret base cooldown is not cached, so the spell's cooldown arrives once readable", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local secret = true
+        local inst, meter = fresh()
+        inst.mocks.GetSpellBaseCooldown = function()
+            if secret then return T.secret(120000), 0 end
+            return 120000, 0
+        end
+        meter.SetSession(1, FIGHT)
+        enter(inst, 100)
+        cast(inst, 101, "player", 19574)
+        local id = inst.NS.Fight.Current().id
+        local _, live = inst.NS.Casts.Live(id)
+        assertNil(live[19574], "a secret answer is not a cooldown")
+        secret = false
+        local _, after = inst.NS.Casts.Live(id)
+        assertEqual(after[19574], 120000, "the next read asks again and keeps the plain answer")
+    end)
+    restore()
+    assertTrue(ok, tostring(err))
+end)
+
 test("casts: while idle the buffer holds only the pre-pull's worth", function()
     local inst = fresh()
     for i = 1, 200 do cast(inst, i, "player", 133) end

@@ -213,12 +213,13 @@ end
 -- ---------------------------------------------------------------------------
 
 local lastPet   -- the last PLAIN pet GUID ResolvePet saw
+local shared    -- Meter.ShareLive's one-dispatch read: { at = GetTime(), id, live } while open
 
 --- The pet's GUID while a pet exists, else nil. In combat the GUID may be opaque: it is only ever
 --- handed back to the client. The last plain one is kept for LastPet.
 --- @return any guid
 function Meter.ResolvePet()
-    if not UnitExists("pet") then return nil end
+    if not Secrets.PlainTruth(UnitExists("pet")) then return nil end
     local guid = UnitGUID("pet")
     local plainGUID = Secrets.PlainString(guid)
     if plainGUID then lastPet = plainGUID end
@@ -404,7 +405,6 @@ function Meter.ReadFinal(id, petGUID)
     local pet
     if Meter.PET_SEPARATE then pet = readPetSource(acc, id, petFor(petGUID)) end
     if acc.sealed then return nil, "sealed" end
-    if acc.err then return nil, acc.err end
     if not Meter.PET_SEPARATE and not noPet(petGUID) then pet = splitFolded(player) end
 
     local p, q = finish(player, duration), finish(pet, duration)
@@ -576,6 +576,7 @@ end
 --- @return table live  { player = {total, dps, rung, maxAmount, spells = { {spellID, total, dps} }}|nil,
 ---                       pet = {total, dps, maxAmount, spells}|nil }
 function Meter.ReadLive(id)
+    if shared and shared.at == GetTime() and shared.id == id and shared.live then return shared.live end
     local t0 = Perf.on and debugprofilestop()
     liveID = id
     local player = livePlayer()
@@ -583,5 +584,16 @@ function Meter.ReadLive(id)
     if pet then pet.source = nil end
     liveID = nil
     if t0 then Perf.Note("meter", debugprofilestop() - t0) end
-    return { player = player, pet = pet }
+    local live = { player = player, pet = pet }
+    if shared and shared.at == GetTime() then shared.id, shared.live = id, live end
+    return live
+end
+
+--- Fight's tick brackets FIGHT_TICK's receivers with this (true, then false), so the HUD and the
+--- slices share one ReadLive of a session in that dispatch instead of asking the client twice. The
+--- share holds only within the frame it was opened in (GetTime()), so a receiver that raised and
+--- skipped the close cannot serve a stale read later. Its values stay opaque and are never kept.
+--- @param on boolean
+function Meter.ShareLive(on)
+    shared = on and { at = GetTime() } or nil
 end
