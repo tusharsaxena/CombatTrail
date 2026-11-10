@@ -44,9 +44,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **The talent tree stands in for a spec.** WoW Forever answers one class-wide spec, so the tree
   with the most points is the fight's spec (v0.2 plan A4). The probe (build 70862, out of combat)
   found the trees in C_Traits' trait groups, with the talent-tab API absent (midnight-quirks.md);
-  whether a group's points read secret in combat is not measured. A tree read sealed in combat
-  keeps the session's last plain read, so a respec followed by a pull before any out-of-combat read
-  could file that fight under the old tree.
+  whether the config, tree or group IDs or a group's points read secret in combat is not measured.
+  A tree read sealed in combat (any of those) keeps the session's last plain read, so a respec
+  followed by a pull before any out-of-combat read could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.
 - **Spell and item IDs in the sample rotation are unverified** in game.
 

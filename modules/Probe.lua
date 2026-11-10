@@ -458,8 +458,13 @@ local function pickLine(out, trees)
         show(trees[best].icon))
 end
 
+-- The talent section; a talent read that raises prints one line rather than losing the report.
 local function talentLines(out)
-    local a = NS.Compat.TalentApis()
+    local ok, a = pcall(NS.Compat.TalentApis)
+    if not ok then
+        out[#out + 1] = "talent apis: raised: " .. show(a)
+        return
+    end
     if not a then return end
     tabLines(out, a)
     specLines(out, a)

@@ -267,7 +267,7 @@ Total.
 - lanes page: the three texture pickers offer Flat, so the flat default stays pickable
 - lanes page: the Frame level tooltip says lanes at one level mix their icons (frame-layering-§3)
 
-### test_probe.lua (28)
+### test_probe.lua (29)
 
 - probe: report runs with no C_DamageMeter
 - probe: report lists the 8 functions with mock meter
@@ -296,6 +296,7 @@ Total.
 - probe: the pet verdict says it cannot see double counting
 - probe: forever: the report dumps every talent API's answer and the tree it picks
 - probe: forever: missing or secret talent answers never raise
+- probe: forever: a talent read that raises prints one line and the rest of the report
 - probe: retail: no talent-tree section (clients-§4)
 
 ### test_meter.lua (33)
@@ -380,7 +381,7 @@ Total.
 - fight: COMBAT_ENTERED is sent on the regen edge from idle, on the grace carry-on and on park+begin
 - fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in combat, or while stood down
 
-### test_identity.lua (39)
+### test_identity.lua (45)
 
 - identity: boss fight key e:3176:15
 - identity: M+ trash key carries :k12
@@ -420,6 +421,12 @@ Total.
 - identity: forever: 0/0/0 or no talent API gives no spec and never raises (Review focus 5)
 - identity: forever: the second talent-tab shape (id, name, desc, icon, points) reads too
 - identity: forever: sealed points give no trees; the last plain read stands in
+- identity: forever: a sealed config ID keeps the last plain read and never raises
+- identity: forever: a sealed config info keeps the last plain read and never raises
+- identity: forever: a sealed tree list keeps the last plain read and never raises
+- identity: forever: a sealed tree ID keeps the last plain read and never raises
+- identity: forever: a sealed group list keeps the last plain read and never raises
+- identity: forever: a sealed currency row keeps the last plain read and never raises
 - identity: retail: the talent trees are absent and the spec is the client's
 
 ### test_cast_codec.lua (7)
@@ -1065,11 +1072,11 @@ Total.
 | test_lane_anchor.lua | 33 |
 | test_lane_visibility.lua | 30 |
 | test_lanes_page.lua | 21 |
-| test_probe.lua | 28 |
+| test_probe.lua | 29 |
 | test_meter.lua | 33 |
 | test_format.lua | 10 |
 | test_fight.lua | 30 |
-| test_identity.lua | 39 |
+| test_identity.lua | 45 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
@@ -1114,4 +1121,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **864** |
+| **Total** | **871** |

@@ -242,35 +242,63 @@ local function tabTrees()
     return out
 end
 
--- The active config: the active spec group's combat config, else C_ClassTalents' active config.
+-- A table answer that is there but cannot be read: a sealed one, never indexed.
+local function sealedTable(t)
+    return sealed(t) or (type(t) == "table" and not Compat.CanAccessTable(t))
+end
+
+-- A table answer that can be read, or nil plus "sealed" when it is there but sealed.
+local function readableTable(t)
+    if sealedTable(t) then return nil, "sealed" end
+    if type(t) ~= "table" then return nil end
+    return t
+end
+
+-- The spec group's combat config, or nil (plus "sealed" when the group or the ID was secret).
+local function combatConfigID(spec)
+    local okG, group = pcall(spec.GetActiveSpecGroup)
+    if okG and sealed(group) then return nil, "sealed" end
+    group = okG and plainNumber(group)
+    if not group then return nil end
+    local okC, id = pcall(spec.GetCombatConfigIDForSpecGroup, group)
+    if okC and sealed(id) then return nil, "sealed" end
+    return okC and plainNumber(id) or nil
+end
+
+-- The active config: the active spec group's combat config, else C_ClassTalents' active config. Nil
+-- plus "sealed" when the only answer there was secret.
 local function activeConfigID()
-    local spec = C_SpecializationInfo
+    local spec, why = C_SpecializationInfo, nil
     if spec and type(spec.GetActiveSpecGroup) == "function" and type(spec.GetCombatConfigIDForSpecGroup) == "function" then
-        local okG, group = pcall(spec.GetActiveSpecGroup)
-        group = okG and plainNumber(group)
-        if group then
-            local okC, id = pcall(spec.GetCombatConfigIDForSpecGroup, group)
-            id = okC and plainNumber(id)
-            if id then return id end
-        end
+        local id
+        id, why = combatConfigID(spec)
+        if id then return id end
     end
     local talents = C_ClassTalents
     if talents and type(talents.GetActiveConfigID) == "function" then
         local ok, id = pcall(talents.GetActiveConfigID)
-        return ok and plainNumber(id) or nil
+        if ok and sealed(id) then return nil, "sealed" end
+        id = ok and plainNumber(id)
+        if id then return id end
     end
-    return nil
+    return nil, why
 end
 
--- The config's first tree, or nil.
+-- The config's first tree, or nil (plus "sealed" when the config info, its tree list or the ID was
+-- sealed: an inaccessible table is never indexed).
 local function treeIDOf(configID)
     local traits = C_Traits
     if not (configID and traits and type(traits.GetConfigInfo) == "function") then return nil end
-    local ok, info = pcall(traits.GetConfigInfo, configID)
-    if not (ok and type(info) == "table" and Compat.CanAccessTable(info) and type(info.treeIDs) == "table") then
-        return nil
-    end
-    return plainNumber(info.treeIDs[1])
+    local ok, raw = pcall(traits.GetConfigInfo, configID)
+    if not ok then return nil end
+    local info, why = readableTable(raw)
+    if not info then return nil, why end
+    local ids
+    ids, why = readableTable(info.treeIDs)
+    if not ids then return nil, why end
+    local id = ids[1]
+    if sealed(id) then return nil, "sealed" end
+    return plainNumber(id)
 end
 
 -- A group display's icon, under whichever field the client names it (unverified: the probe says).
@@ -288,13 +316,16 @@ local function byOrder(a, b)
     return a.id < b.id
 end
 
--- The tree's groups as { id, name, icon, order } rows in display order, and their IDs.
+-- The tree's groups as { id, name, icon, order } rows in display order, and their IDs; a third value
+-- "sealed" when the list or a row was sealed (the rows are then empty: a partial tree is no tree).
 local function displayedGroups(treeID)
-    local ok, displays = pcall(C_Traits.GetGroupDisplayInfoByTreeID, treeID)
+    local ok, raw = pcall(C_Traits.GetGroupDisplayInfoByTreeID, treeID)
     local rows, ids = {}, {}
-    if not (ok and type(displays) == "table" and Compat.CanAccessTable(displays)) then return rows, ids end
+    local displays, why = readableTable(ok and raw or nil)
+    if not displays then return rows, ids, why end
     for _, d in ipairs(displays) do
-        local id = type(d) == "table" and Compat.CanAccessTable(d) and plainNumber(d.groupID)
+        if sealedTable(d) or (type(d) == "table" and sealed(d.groupID)) then return {}, {}, "sealed" end
+        local id = type(d) == "table" and plainNumber(d.groupID)
         if id then
             rows[#rows + 1] = { id = id, name = plainString(d.displayName), icon = groupIcon(d),
                                 order = plainNumber(d.orderIndex) or #rows + 1 }
@@ -305,18 +336,33 @@ local function displayedGroups(treeID)
     return rows, ids
 end
 
--- groupID -> the points spent (the first currency's), or nil plus "sealed".
+-- One group's currency row: its groupID and points spent (the first currency's), or nil; a third
+-- value "sealed" when the row, its currency list, the first currency or a value in them was sealed.
+local function groupSpent(info)
+    if sealedTable(info) then return nil, nil, "sealed" end
+    if type(info) ~= "table" then return nil end
+    if sealed(info.traitNodeGroupID) then return nil, nil, "sealed" end
+    local id = plainNumber(info.traitNodeGroupID)
+    if not id then return nil end
+    local list = info.currencyInfos
+    if sealedTable(list) then return nil, nil, "sealed" end
+    local first = type(list) == "table" and list[1]
+    if sealedTable(first) then return nil, nil, "sealed" end
+    local v = type(first) == "table" and first.spent or nil
+    if sealed(v) then return nil, nil, "sealed" end
+    return id, plainNumber(v) or 0
+end
+
+-- groupID -> the points spent, or nil (plus "sealed" when any of it was sealed).
 local function spentByGroup(configID, ids)
-    local ok, infos = pcall(C_Traits.GetGroupCurrencyInfo, configID, ids)
-    if not (ok and type(infos) == "table" and Compat.CanAccessTable(infos)) then return nil end
+    local ok, raw = pcall(C_Traits.GetGroupCurrencyInfo, configID, ids)
+    local infos, why = readableTable(ok and raw or nil)
+    if not infos then return nil, why end
     local spent = {}
     for _, info in ipairs(infos) do
-        local id = type(info) == "table" and Compat.CanAccessTable(info) and plainNumber(info.traitNodeGroupID)
-        local list = id and info.currencyInfos
-        local first = type(list) == "table" and Compat.CanAccessTable(list) and list[1]
-        local v = type(first) == "table" and first.spent
-        if sealed(v) then return nil, "sealed" end
-        if id then spent[id] = plainNumber(v) or 0 end
+        local id, v, whyRow = groupSpent(info)
+        if whyRow then return nil, whyRow end
+        if id then spent[id] = v end
     end
     return spent
 end
@@ -327,12 +373,16 @@ local function traitTrees()
             and type(traits.GetGroupCurrencyInfo) == "function") then
         return nil
     end
-    local configID = activeConfigID()
-    local treeID = treeIDOf(configID)
-    if not treeID then return nil end
-    local rows, ids = displayedGroups(treeID)
-    if #ids == 0 then return nil end
-    local spent, why = spentByGroup(configID, ids)
+    local configID, why = activeConfigID()
+    if not configID then return nil, why end
+    local treeID
+    treeID, why = treeIDOf(configID)
+    if not treeID then return nil, why end
+    local rows, ids
+    rows, ids, why = displayedGroups(treeID)
+    if #ids == 0 then return nil, why end
+    local spent
+    spent, why = spentByGroup(configID, ids)
     if not spent then return nil, why end
     local out = {}
     for i, r in ipairs(rows) do out[i] = { name = r.name, icon = r.icon, points = spent[r.id] or 0 } end
@@ -341,8 +391,10 @@ end
 
 --- WoW Forever's talent trees in tree order, `{ { name, icon, points }, ... }` (points plain numbers,
 --- name and icon plain or nil), or nil: on Retail (clients-§4), with no talent API, or where one
---- raises. A second value "sealed" says a value was secret (in combat), so the caller may keep its
---- last plain read rather than treat the trees as absent.
+--- raises. A second value "sealed" says an answer was secret or an inaccessible table (in combat):
+--- the config or spec group ID, the config info or its tree IDs, the group list or a row of it, or
+--- a group's points. The caller may then keep its last plain read rather than treat the trees as
+--- absent. A sealed table is never indexed.
 --- @return table|nil trees, string|nil why
 function Compat.TalentTrees()
     if not Compat.ForClient(FOREVER) then return nil end

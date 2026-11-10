@@ -499,6 +499,17 @@ test("probe: forever: missing or secret talent answers never raise", function()
     assertTrue(lineWith(lines, "talent tree pick: none") ~= nil, text(lines))
 end)
 
+test("probe: forever: a talent read that raises prints one line and the rest of the report", function()
+    local inst = T.load()
+    T.Loader.MockClient.apply(inst.mocks, "forever")
+    inst.NS.Compat.TalentApis = function() error("boom") end
+    local ok, lines = pcall(inst.NS.Probe.Report)
+    T.Loader.MockClient.apply(T.mocks)
+    assertTrue(ok, tostring(lines))
+    assertTrue(lineWith(lines, "talent apis: raised: ") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "pace pet-fill anchor: ") ~= nil, text(lines))
+end)
+
 test("probe: retail: no talent-tree section (clients-§4)", function()
     local inst = T.load()
     T.Loader.MockClient.apply(inst.mocks, "retail")

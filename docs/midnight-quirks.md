@@ -301,8 +301,10 @@ group from `C_Traits.GetGroupCurrencyInfo` (10/3/0 on the probe's character). *C
 specialization API would file every fight of a class under one "spec". *Do:* never read
 `GetSpecializationInfo` on Forever; `Compat.TalentTrees` reads the C_Traits groups (the talent-tab
 pair stays first in its ladder in case a build adds it) and Identity's predominant tree stands in
-for the spec; the probe's pick read "Beast Mastery (10/3/0)". *Source:* this repo, `core/Compat.lua`
-(TalentTrees), `modules/Identity.lua` (readTrees); plan v0.2 Task A4.
+for the spec; the probe's pick read "Beast Mastery (10/3/0)". In combat is not measured, so every
+answer on the way (the IDs, the config info, the group list and rows, the points) is treated as
+possibly secret: any one sealed makes the read "sealed", which keeps the last plain one, and a
+sealed table is never indexed. *Source:* this repo, `core/Compat.lua` (TalentTrees), `modules/Identity.lua` (readTrees); plan v0.2 Task A4.
 
 **The pet is not its own meter source on WoW Forever out of combat.** *Client:* Forever (build
 70862). *Measured:* `/ct probe`, 2026-11-10, out of combat, a 3 s session. The Current session lists

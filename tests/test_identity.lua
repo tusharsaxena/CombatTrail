@@ -637,6 +637,57 @@ test("identity: forever: sealed points give no trees; the last plain read stands
     assertTrue(ok, tostring(err))
 end)
 
+-- A sealed config ID, tree, group list or group answer is a sealed read too (not "no trees"): each
+-- keeps the last plain read, and an inaccessible nested table is never indexed.
+local MARKS = { { "Beast Mastery", 132164, 5 }, { "Marksmanship", 132222, 41 }, { "Survival", 132215, 5 } }
+
+local SEALINGS = {
+    { "config ID", function(m) m.C_ClassTalents.GetActiveConfigID = function() return T.secret(7001) end end },
+    { "config info", function(m)
+        local real = m.C_Traits.GetConfigInfo
+        m.C_Traits.GetConfigInfo = function(id) return T.secret(real(id)) end
+    end },
+    { "tree list", function(m) m.__talents.treeIDs = T.secret({ 900 }) end },
+    { "tree ID", function(m) m.__talents.treeIDs = { T.secret(900) } end },
+    { "group list", function(m)
+        local real = m.C_Traits.GetGroupDisplayInfoByTreeID
+        m.C_Traits.GetGroupDisplayInfoByTreeID = function(id) return T.secret(real(id)) end
+    end },
+    { "currency row", function(m)
+        local real = m.C_Traits.GetGroupCurrencyInfo
+        m.C_Traits.GetGroupCurrencyInfo = function(c, ids)
+            local out = real(c, ids)
+            out[2].currencyInfos[1] = T.secret(out[2].currencyInfos[1])
+            return out
+        end
+    end },
+}
+
+for _, case in ipairs(SEALINGS) do
+    test("identity: forever: a sealed " .. case[1] .. " keeps the last plain read and never raises", function()
+        local restore = T.installSecretValue()
+        local ok, err = pcall(function()
+            local _, NS, m = fresh("forever")
+            m.issecrettable = function(t) return T.isSecret(t) end
+            groups(m, MARKS)
+            assertEqual(NS.Identity.Who().specName, "Marksmanship", "a plain read out of combat")
+            case[2](m)
+            local okRead, trees, why = pcall(NS.Compat.TalentTrees)
+            assertTrue(okRead, tostring(trees))
+            assertNil(trees, "a sealed read is no trees")
+            assertEqual(why, "sealed", "and says it was sealed")
+            local who = NS.Identity.Snapshot().who
+            assertEqual(who.specName, "Marksmanship", "the snapshot keeps the last plain read")
+            assertEqual(table.concat(who.trees, "/"), "5/41/5")
+            local okApis, apis = pcall(NS.Compat.TalentApis)
+            assertTrue(okApis, tostring(apis))
+        end)
+        restore()
+        restoreProfile()
+        assertTrue(ok, tostring(err))
+    end)
+end
+
 test("identity: retail: the talent trees are absent and the spec is the client's", function()
     local _, NS, m = fresh("retail")
     tabs(m, HUNTER)
