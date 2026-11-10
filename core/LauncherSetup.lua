@@ -47,7 +47,7 @@ NS.BINDINGS = {
 -- The category's title is the brand, assigned at file scope because the client reads it when it
 -- registers the bindings (launcher-§6). The labels' global names hold a space and a colon, so no
 -- identifier can spell them: rawset.
-rawset(_G, "BINDING_HEADER_COMBATTRAIL", L["Ka0s Combat Trail"])
+rawset(_G, "BINDING_HEADER_COMBATTRAIL", NS.BRAND)
 rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[1].command, L["Toggle DPS HUD"])
 rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[2].command, L["Toggle Results window"])
 rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[3].command, L["Toggle lanes"])

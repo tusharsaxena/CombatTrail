@@ -194,13 +194,13 @@ test("lanes page: the dock gap and the frame name show only in the modes that us
     local inst, ctx = shownPage()
     local NS = inst.NS
     NS.Helpers.SelectTab("lanes", NS.LANES_TABS.size)
-    assertFalse(widget(inst, ctx, "Gap") ~= nil, "a free lane has no gap")
+    assertFalse(widget(inst, ctx, "Gap (px)") ~= nil, "a free lane has no gap")
     NS.SetByPath("lanes.player.anchor.mode", "unit")
     NS.Helpers.RefreshPanel(ctx, true)
-    assertTrue(widget(inst, ctx, "Gap") ~= nil)
+    assertTrue(widget(inst, ctx, "Gap (px)") ~= nil)
     assertTrue(widget(inst, ctx, "Frame by name") ~= nil)
     NS.LanesPage.Select("pet")
-    assertTrue(widget(inst, ctx, "Gap") ~= nil, "the Pet lane docks")
+    assertTrue(widget(inst, ctx, "Gap (px)") ~= nil, "the Pet lane docks")
     assertFalse(widget(inst, ctx, "Frame by name") ~= nil)
 end)
 
@@ -333,4 +333,30 @@ test("lanes page: the words follow options-ui-§16/§21 and frame-layering-§1",
     local strata = NS.FindSchemaRow("lanes.pet.strata")
     local own = L["Match host draws the lane on its unit frame's strata, and is offered while the lane is on one."]
     assertEqual(strata.tooltip, own .. " " .. NS.Helpers.StrataTooltip({ "BACKGROUND", "LOW", "MEDIUM", "HIGH" }))
+end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("lanes page: every pixel row says (px) (options-ui-§21 Units)", function()
+    local NS = T.load().NS
+    for _, key in ipairs({ "width", "iconSize", "spacing", "anchor.gap", "padding", "tickWidth" }) do
+        local row = NS.FindSchemaRow("lanes.player." .. key)
+        assertTrue(row.label:sub(-5) == " (px)", key .. ": " .. tostring(row.label))
+    end
+end)
+
+test("lanes page: the three texture pickers offer Flat, so the flat default stays pickable", function()
+    local NS = T.load().NS
+    for _, key in ipairs({ "bgTexture", "borderTexture", "laneBorderTexture" }) do
+        local row = NS.FindSchemaRow("lanes.player." .. key)
+        local values = type(row.values) == "function" and row.values() or row.values
+        assertEqual(values[""], NS.L["Flat"], key .. " lists Flat as \"\"")
+        assertTrue(NS.SetByPath("lanes.player." .. key, ""), key .. " takes \"\"")
+    end
+end)
+
+test("lanes page: the Frame level tooltip says lanes at one level mix their icons (frame-layering-§3)", function()
+    local NS = T.load().NS
+    local tip = NS.FindSchemaRow("lanes.pet.levelOffset").tooltip
+    assertTrue(tip:find(NS.L["Two lanes at the same level that overlap mix their icons. Give one a higher level to draw it whole over the other."], 1, true) ~= nil, tip)
 end)

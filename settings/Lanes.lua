@@ -158,10 +158,22 @@ local function laneRows(lane)
     end
     -- A border style row picks a statusbar texture: the edges are strips (modules/LaneRender.lua).
     -- Its tooltip comes in through the composer's `tooltips` (options-ui-§16, anti-pattern #106).
+    -- The statusbar textures with a "Flat" entry for "": the three texture rows store "" by default
+    -- (drawn flat), and a list without it would leave the default unpickable once changed.
+    local function flatTextures()
+        local list = H.LSMValues("statusbar")
+        return function()
+            local textures = {}
+            for k, v in pairs(list()) do textures[k] = v end
+            textures[""] = L["Flat"]
+            return textures
+        end
+    end
+
     local function statusbarStyle(rows)
         for _, r in ipairs(rows) do
             if r.dialogControl == "Ka0sMedia_Border" then
-                r.dialogControl, r.values = "Ka0sMedia_Statusbar", H.LSMValues("statusbar")
+                r.dialogControl, r.values = "Ka0sMedia_Statusbar", flatTextures()
             end
         end
     end
@@ -177,13 +189,13 @@ local function laneRows(lane)
         tooltip = L["Which edge the newest cast appears at, and which way the casts move away from it."] })
     row("scale", { type = "number", label = L["Scale"], min = 0.5, max = 2, step = 0.05, isPercent = true,
         tooltip = L["The size of the whole lane, its icons, ticks and label included."] })
-    row("width", { type = "number", label = L["Lane length"], min = 100, max = 1200, step = 10, startsLine = true,
+    row("width", { type = "number", label = L["Lane length (px)"], min = 100, max = 1200, step = 10, startsLine = true,
         tooltip = L["How long the lane is, in pixels, from the now edge to the far end."] })
     row("seconds", { type = "number", label = L["Seconds shown"], min = 3, max = 30, step = 1,
         tooltip = L["How many seconds a cast takes to cross the lane."] })
-    row("iconSize", { type = "number", label = L["Icon size"], min = 12, max = 64, step = 1, startsLine = true,
+    row("iconSize", { type = "number", label = L["Icon size (px)"], min = 12, max = 64, step = 1, startsLine = true,
         tooltip = L["The size of each cast's icon, in pixels. The lane is this tall, or this wide when it runs up or down."] })
-    row("spacing", { type = "number", label = L["Icon spacing"], min = 0, max = 20, step = 1,
+    row("spacing", { type = "number", label = L["Icon spacing (px)"], min = 0, max = 20, step = 1,
         tooltip = L["The smallest gap between two icons, in pixels. A fast burst of casts pushes older icons along to keep it."] })
 
     at(TAB.size, L["Position"])
@@ -197,7 +209,7 @@ local function laneRows(lane)
         tooltip = L["The point of the lane that is placed."] })
     row("anchor.relPoint", { type = "string", label = L["Relative point"], values = POINTS, validate = POINT_OK,
         tooltip = L["The point it is placed at: on the screen, on the other lane or on the unit frame."] })
-    row("anchor.gap", { type = "number", label = L["Gap"], min = 0, max = 50, step = 1, startsLine = true,
+    row("anchor.gap", { type = "number", label = L["Gap (px)"], min = 0, max = 50, step = 1, startsLine = true,
         shownWhen = { path = mode, equals = { "dock", "unit" } },
         tooltip = L["The space between the lane and what it follows, in pixels."] })
     block(H.PositionBlock(spec({ keys = { x = "anchor.x", y = "anchor.y" }, subgroup = L["Position"],
@@ -211,7 +223,8 @@ local function laneRows(lane)
         -- frame-layering-§1: a row-specific sentence MAY precede the library's tiers, never follow them.
         tooltip = L["Match host draws the lane on its unit frame's strata, and is offered while the lane is on one."] .. " " .. H.StrataTooltip(STRATA) })
     row("levelOffset", { type = "number", label = L["Frame level"], min = 0, max = 50, step = 1,
-        tooltip = L["Added to the lane's level on its strata. Raise it to draw this lane over a frame on the same strata."] })
+        tooltip = L["Added to the lane's level on its strata. Raise it to draw this lane over a frame on the same strata."]
+            .. " " .. L["Two lanes at the same level that overlap mix their icons. Give one a higher level to draw it whole over the other."] })
 
     -- Icons
     at(TAB.icons, L["Icons"])
@@ -250,10 +263,10 @@ local function laneRows(lane)
     row("background", { type = "bool", label = L["Show background"], startsLine = true,
         tooltip = L["Fill the lane behind its icons."] })
     row("bgTexture", { type = "string", label = L["Background texture"], dialogControl = "Ka0sMedia_Statusbar",
-        values = H.LSMValues("statusbar"),
+        values = flatTextures(),
         tooltip = L["The texture the background is drawn with, tinted by its color. Empty fills it flat."] })
     colorPair("bgColor", "bgClassColor", L["Background color"], true)
-    row("padding", { type = "number", label = L["Padding"], min = 0, max = 20, step = 1, startsLine = true,
+    row("padding", { type = "number", label = L["Padding (px)"], min = 0, max = 20, step = 1, startsLine = true,
         tooltip = L["Space between the lane's edge and its icons, in pixels."] })
 
     at(TAB.bg, L["Border"])
@@ -272,7 +285,7 @@ local function laneRows(lane)
         tooltip = L["Draw a thin line across the lane at each global cooldown back from now."] })
     row("tickSpacing", { type = "string", label = L["Tick spacing"], values = SPACINGS, validate = SPACING_OK,
         tooltip = L["How far apart the ticks are. With haste, they follow your global cooldown, read out of combat."] })
-    row("tickWidth", { type = "number", label = L["Tick width"], min = 1, max = 6, step = 1, startsLine = true,
+    row("tickWidth", { type = "number", label = L["Tick width (px)"], min = 1, max = 6, step = 1, startsLine = true,
         tooltip = L["How thick each tick is, in pixels."] })
     colorPair("tickColor", "tickClassColor", L["Tick color"])
 

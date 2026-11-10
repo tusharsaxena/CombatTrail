@@ -199,15 +199,15 @@ L["Which edge the newest cast appears at, and which way the casts move away from
 L["Scale"] = "Scale"
 L["The size of the whole lane, its icons, ticks and label included."] =
     "The size of the whole lane, its icons, ticks and label included."
-L["Lane length"] = "Lane length"
+L["Lane length (px)"] = "Lane length (px)"
 L["How long the lane is, in pixels, from the now edge to the far end."] =
     "How long the lane is, in pixels, from the now edge to the far end."
 L["Seconds shown"] = "Seconds shown"
 L["How many seconds a cast takes to cross the lane."] = "How many seconds a cast takes to cross the lane."
-L["Icon size"] = "Icon size"
+L["Icon size (px)"] = "Icon size (px)"
 L["The size of each cast's icon, in pixels. The lane is this tall, or this wide when it runs up or down."] =
     "The size of each cast's icon, in pixels. The lane is this tall, or this wide when it runs up or down."
-L["Icon spacing"] = "Icon spacing"
+L["Icon spacing (px)"] = "Icon spacing (px)"
 L["The smallest gap between two icons, in pixels. A fast burst of casts pushes older icons along to keep it."] =
     "The smallest gap between two icons, in pixels. A fast burst of casts pushes older icons along to keep it."
 L["Position"] = "Position"
@@ -222,7 +222,7 @@ L["The point of the lane that is placed."] = "The point of the lane that is plac
 L["Relative point"] = "Relative point"
 L["The point it is placed at: on the screen, on the other lane or on the unit frame."] =
     "The point it is placed at: on the screen, on the other lane or on the unit frame."
-L["Gap"] = "Gap"
+L["Gap (px)"] = "Gap (px)"
 L["The space between the lane and what it follows, in pixels."] =
     "The space between the lane and what it follows, in pixels."
 L["Horizontal offset of the lane's own place, in pixels. A docked lane, or one on its unit frame, uses it when what it follows is missing."] =
@@ -236,6 +236,9 @@ L["Match host draws the lane on its unit frame's strata, and is offered while th
 L["Frame level"] = "Frame level"
 L["Added to the lane's level on its strata. Raise it to draw this lane over a frame on the same strata."] =
     "Added to the lane's level on its strata. Raise it to draw this lane over a frame on the same strata."
+L["Two lanes at the same level that overlap mix their icons. Give one a higher level to draw it whole over the other."] =
+    "Two lanes at the same level that overlap mix their icons. Give one a higher level to draw it whole over the other."
+L["Flat"] = "Flat"
 L["Icon zoom"] = "Icon zoom"
 L["How much of each icon's edge is cropped away."] = "How much of each icon's edge is cropped away."
 L["Fade portion"] = "Fade portion"
@@ -269,7 +272,7 @@ L["Background texture"] = "Background texture"
 L["The texture the background is drawn with, tinted by its color. Empty fills it flat."] =
     "The texture the background is drawn with, tinted by its color. Empty fills it flat."
 L["Background color"] = "Background color"
-L["Padding"] = "Padding"
+L["Padding (px)"] = "Padding (px)"
 L["Space between the lane's edge and its icons, in pixels."] =
     "Space between the lane's edge and its icons, in pixels."
 L["The texture the lane's border is drawn with. Empty draws it flat."] =
@@ -281,7 +284,7 @@ L["Draw a thin line across the lane at each global cooldown back from now."] =
 L["Tick spacing"] = "Tick spacing"
 L["How far apart the ticks are. With haste, they follow your global cooldown, read out of combat."] =
     "How far apart the ticks are. With haste, they follow your global cooldown, read out of combat."
-L["Tick width"] = "Tick width"
+L["Tick width (px)"] = "Tick width (px)"
 L["How thick each tick is, in pixels."] = "How thick each tick is, in pixels."
 L["Tick color"] = "Tick color"
 L["Now line"] = "Now line"
