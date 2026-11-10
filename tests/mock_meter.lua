@@ -38,6 +38,7 @@
 --   SetSecret(on)      the combat restriction: every value read while on is a secret wrapper.
 --   SetSealed(id, on)  that one session answers secrets even with the restriction off.
 --   SetAvailable(ok, reason) · SetRaise(fnName, message|nil) · SetPlayerGUID(guid) · SetPetGUID(guid)
+--   SetRaiseFor(guid, message|nil)  the source reads by ID raise for that one GUID only.
 --   Remove()           takes C_DamageMeter away (an older client).
 --   calls              every API call, as { fn, args = {...} }.
 
@@ -56,6 +57,7 @@ return function(Kit)
             available = true,
             reason    = nil,
             raise     = {},
+            raiseFor  = {},
             guid      = "Player-1-00000001",
             petGUID   = nil,
             calls     = {},
@@ -187,6 +189,7 @@ return function(Kit)
         end
         function api.GetCombatSessionSourceFromID(id, statType, guid, creatureID)
             record(ctl, "GetCombatSessionSourceFromID", id, statType, guid, creatureID)
+            if guid ~= nil and not Kit.isSecret(guid) and ctl.raiseFor[guid] then error(ctl.raiseFor[guid], 2) end
             if statType == DPS then return dpsSourceTable(ctl, id, guid) end
             if statType ~= DAMAGE_DONE then return nil end
             return sourceTable(ctl, id, guid)
@@ -229,6 +232,7 @@ return function(Kit)
         function ctl.SetSealed(id, on) ctl.sealed[id] = on and true or nil end
         function ctl.SetAvailable(ok, reason) ctl.available, ctl.reason = ok, reason end
         function ctl.SetRaise(fn, msg) ctl.raise[fn] = msg end
+        function ctl.SetRaiseFor(guid, msg) ctl.raiseFor[guid] = msg end
         function ctl.SetPlayerGUID(guid) ctl.guid = guid end
         function ctl.SetPetGUID(guid) ctl.petGUID = guid end
         function ctl.Remove() mocks.C_DamageMeter = nil end

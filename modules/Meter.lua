@@ -21,7 +21,9 @@ local _, NS = ...
 -- and remembers the last PLAIN one, so the after-combat read still finds the pet that fought after it
 -- was dismissed. PET_SEPARATE is the seam for a client that folds the pet into its owner: false, and
 -- ReadFinal reads no pet source and tags the player's spells that NS.Casts.PetSpellSet() names as the
--- pet's instead (plan Task 2.4 builds that set; until then nothing is tagged).
+-- pet's instead (plan Task 2.4 builds that set; until then nothing is tagged). A pet read that raises
+-- costs only the pet: the record keeps the player's part with no pet part, while a SEALED pet read
+-- still seals the whole read, so the settle tries again.
 --
 -- WHICH SESSION. SessionAfter(t) is the session that appeared at or after time t (a fight's combat
 -- entry, spec §5). The client gives a session no timestamp, so this file stamps each ID with GetTime()
@@ -309,12 +311,13 @@ local function readPlayer(acc, session, source, guid)
     return { total = total or 0, meterRate = meterRate, spells = readSpells(acc, source) }
 end
 
--- The pet's own source: { total, meterRate, spells }, or nil when it dealt nothing.
+-- The pet's own source: { total, meterRate, spells }, or nil when it dealt nothing or its read raised
+-- (the player's part stands; only a sealed pet read seals the whole read).
 local function readPetSource(acc, id, petGUID)
     if petGUID == nil then return nil end
     local ok, src = sourceByID(id, petGUID)
     if not ok then
-        acc.err = src
+        if src == "sealed" then acc.sealed = true else debug("pet source of session %s: %s", id, src) end
         return nil
     end
     if src == nil then return nil end

@@ -376,3 +376,19 @@ test("no secret reaches the record", function()
     end
     walk(r, "record")
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("record: a short fight with no readable character is skipped as short, the filters first", function()
+    local inst, _, heard = fresh()
+    local NS = inst.NS
+    local f = fakeFight(NS, { len = 5 })
+    f.snapshot.who.name = nil
+    finish(NS, f, fakeFinal({ duration = 5 }))
+    assertEqual(heard.skipped[1].reason, "short")
+    NS.db.profile.history.bossesOnly = true
+    f = fakeFight(NS, { id = "fake-2" })
+    f.snapshot.who.name = nil
+    finish(NS, f, fakeFinal())
+    assertEqual(heard.skipped[2].reason, "filtered")
+end)

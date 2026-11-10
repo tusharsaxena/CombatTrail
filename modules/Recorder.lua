@@ -9,7 +9,8 @@ local _, NS = ...
 -- is resolved (Identity.Resolve over the meter's enemies, summed across a merged fight's sessions),
 -- timed (the meter's session duration, else the fight's own combat-entry-to-end clock), and put
 -- through the recording filters (modules/Filters.lua): FIGHT_SKIPPED(fight, "short" | "filtered"),
--- or "unknown" when no character can be read (a record must say whose fight it was). A fight that
+-- or, once it passes them, "unknown" when no character can be read (a record must say whose fight it
+-- was), so a short fight reads "short" whoever fought it. A fight that
 -- passes becomes a record, stored, and FIGHT_SAVED(record). An Unknown TARGET is still stored (spec
 -- §5): it has no board key and never counts as a best (modules/Bests.lua).
 --
@@ -312,11 +313,11 @@ end
 function Recorder.OnFightEnded(fight, final, reason)
     if type(fight) ~= "table" then return end
     if reason ~= "final" or type(final) ~= "table" then return skip(fight, "lost") end
-    if not hasWho(fight) then return skip(fight, "unknown") end
     local identity = NS.Identity.Resolve(fight, final, enemiesOf(fight))
     local duration = durationOf(fight, final)
     local ok, why = NS.Filters.Passes(identity, duration)
     if not ok then return skip(fight, why) end
+    if not hasWho(fight) then return skip(fight, "unknown") end
     local record = Recorder.Build(fight, final, identity, duration)
     -- The fight remembers its record, so the chart's in-session store (modules/Slices.lua) answers it.
     fight.recordID = record.id

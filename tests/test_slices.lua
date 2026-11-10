@@ -382,3 +382,25 @@ test("slices: a lost fight forgets its store, and the stand-down drops an open o
     assertNil(NS.Slices.Get("open-one"), "an open store goes with the fight it belonged to")
     assertTrue(NS.Slices.Get("closed-one") ~= nil, "a closed one keeps its chart")
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("slices: Seed fills in the step, count and filled a store leaves out", function()
+    local S = slices()
+    S.Seed("s1", { values = { 100, nil, 300 } })
+    local rec = S.Get("s1")
+    assertEqual(rec.step, S.STEP)
+    assertEqual(rec.count, 3, "the highest step held")
+    assertEqual(rec.filled, 2, "the steps holding a value")
+    assertTrue(S.Columns("s1") ~= nil, "it draws")
+    S.Seed("s2", { values = { T.secret(1) }, count = 4, filled = 1 })
+    assertEqual(S.Get("s2").count, 4, "a given count stands")
+end)
+
+test("slices: a saved fight's store keeps its record id, not the fight table", function()
+    local inst, fight, heard = secretFight()
+    local S = inst.NS.Slices
+    local rec = S.Get(fight.id)
+    assertNil(rec.fight, "the closed store lets the fight table go")
+    assertTrue(rawequal(S.Get(heard.saved[1].id), rec), "and still answers the record's id")
+end)

@@ -281,14 +281,44 @@ function Slices.Close(fightID)
     while #closed > Slices.KEEP do Slices.Forget(closed[1]) end
 end
 
+-- The highest step index a store's values hold, and how many hold a value (only `~= nil` is asked).
+local function extent(values)
+    local top, n = 0, 0
+    for i, v in pairs(values) do
+        if type(i) == "number" and v ~= nil then
+            n = n + 1
+            if i > top then top = i end
+        end
+    end
+    return top, n
+end
+
 --- Put a ready-made store under `id`: a sample fight's chart (test mode, plan Task 5.1), drawn by the
---- same path as a real one.
+--- same path as a real one. A store that leaves out `step`, `count` or `filled` takes STEP, its
+--- highest step and the steps holding a value.
 --- @param id any
---- @param rec table  { step, values, pet, count, filled }
+--- @param rec table  { values, pet?, step?, count?, filled? }
 function Slices.Seed(id, rec)
     if id == nil or type(rec) ~= "table" then return end
-    rec.pet = rec.pet or {}
+    rec.values, rec.pet = rec.values or {}, rec.pet or {}
+    rec.step = rec.step or Slices.STEP
+    if rec.count == nil or rec.filled == nil then
+        local top, n = extent(rec.values)
+        rec.count, rec.filled = rec.count or top, rec.filled or n
+    end
     store[id] = rec
+end
+
+--- Alias every store whose fight became a record (Recorder sets fight.recordID before FIGHT_SAVED)
+--- and drop its fight table.
+function Slices.AdoptRecords()
+    for fid, rec in pairs(store) do
+        local f = rec.fight
+        if type(f) == "table" and f.recordID ~= nil then
+            alias[f.recordID] = fid
+            rec.fight = nil
+        end
+    end
 end
 
 --- How many fights this session hold a store (the diagnostics report).
@@ -353,6 +383,9 @@ if busTarget then
         if rec then rec.fight = fight end
     end)
     busTarget:RegisterMessage(NS.MSG.FIGHT_TICK, function(_, fight) Slices.OnTick(fight) end)
+    -- The record is written: its id joins the alias and the store lets the fight table go, so a
+    -- closed store holds plain steps alone and a lookup by record id needs no scan.
+    busTarget:RegisterMessage(NS.MSG.FIGHT_SAVED, function() Slices.AdoptRecords() end)
     busTarget:RegisterMessage(NS.MSG.FIGHT_ENDED, function(_, fight, _, reason)
         if type(fight) ~= "table" then return end
         if reason == "final" then Slices.Close(fight.id) else Slices.Forget(fight.id) end

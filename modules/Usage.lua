@@ -14,7 +14,9 @@ local _, NS = ...
 --                   time unknown. A fight parked while the next one starts has its end counts taken
 --                   then (`fight.usageAfter`), so the next fight's potion is never the parked one's.
 -- An aura at the start whose spell is a bag consumable's (a flask, a phial) was used before the pull;
--- the Well Fed aura is food. No weapon enchant is listed, and the item-cooldown compare is not used (a
+-- the Well Fed aura is food, found by its spell ID (Usage.WELL_FED_SPELLS) or by the client's own name
+-- for it (the name of Usage.WELL_FED_SPELL, so it matches in every client language; the English word
+-- only when the client cannot name that spell). No weapon enchant is listed, and the item-cooldown compare is not used (a
 -- shared cooldown made DPS Race's probe's false positive). DPS Race's early-cast give-back is gone: the
 -- snapshot is taken at the fight's start, so a potion drunk before it is already out of the counts.
 --
@@ -58,6 +60,32 @@ Usage.BAGS = { 0, 1, 2, 3, 4, 5 }
 Usage.KIND_BY_SUBCLASS = { [1] = "potion", [2] = "flask", [3] = "flask", [5] = "food" }
 -- How many helpful auras a snapshot's walk reads at most.
 local AURA_LIMIT = 255
+-- Well Fed: the spell whose name is the client's word for the buff, and the buff spell IDs known to
+-- be it. The same on both clients (clients-§5: one list, picked once); unverified in game.
+Usage.WELL_FED_SPELL = 19705
+Usage.WELL_FED_SPELLS = { [19705] = true }
+
+local fedName   -- the client's name for Well Fed, once read plain (false: the client cannot name it)
+
+-- A secret answer (the read in combat) is never kept: the next look asks again.
+local function wellFedName()
+    if fedName == nil then
+        local ok, v = pcall(NS.Compat.SpellName, Usage.WELL_FED_SPELL)
+        local plain = ok and Secrets.PlainString(v) or nil
+        if plain then
+            fedName = plain
+        elseif not Secrets.IsSealed(v) then
+            fedName = false
+        end
+    end
+    return fedName or L["Well Fed"]
+end
+
+-- Whether a start aura is Well Fed: by its plain spell ID, else by name.
+local function isWellFed(aura)
+    if aura.spellID and Usage.WELL_FED_SPELLS[aura.spellID] then return true end
+    return aura.name ~= nil and aura.name == wellFedName()
+end
 
 -- What each item is, asked once per session ({ [itemID] = { subclass, spellID } | false }): an item's
 -- class and use spell do not change. Only a definite answer is kept (a consumable whose use spell the
@@ -262,7 +290,7 @@ local function detectAuras(snap, used, list)
         if itemID and not used[itemID] then
             used[itemID] = { itemID = itemID, kind = Usage.KindOf(snap.bags[itemID].subclass), n = 1, src = "buff" }
             list[#list + 1] = used[itemID]
-        elseif aura.name == L["Well Fed"] and not fed then
+        elseif not fed and isWellFed(aura) then
             fed = true
             list[#list + 1] = { kind = "food", n = 1, src = "buff" }
         end

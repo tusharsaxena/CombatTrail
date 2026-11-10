@@ -221,3 +221,25 @@ test("usage: a parked fight's end counts are taken as the next fight starts", fu
     assertEqual(#NS.Usage.ForFight(first, {}).used, 2, "only the flask and food buffs, no potion")
     assertEqual(kinds(NS.Usage.ForFight(second, {}).used), "potion:bag,flask:buff,food:buff")
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("usage: food is found by the Well Fed spell ID, or by the client's own name for it", function()
+    local Usage = T.NS.Usage
+    local snap = snapOf()
+    local fedID = next(Usage.WELL_FED_SPELLS)
+    assertTrue(fedID ~= nil, "a Well Fed spell ID is listed")
+    snap.auras = { { spellID = fedID, name = nil } }
+    assertEqual(kinds(Usage.Detect(snap, {}, nil)), "food:buff", "an aura with no readable name, by its ID")
+    snap.auras = { { spellID = 123456, name = "Wohlgenaehrt" } }
+    assertEqual(#Usage.Detect(snap, {}, nil), 0, "a name that is not the client's word for it")
+    local inst = T.load({ mutate = function(m)
+        local name = m.C_Spell.GetSpellName
+        m.C_Spell.GetSpellName = function(id)
+            if id == Usage.WELL_FED_SPELL then return "Wohlgenaehrt" end
+            return name(id)
+        end
+    end })
+    local U = inst.NS.Usage
+    assertEqual(kinds(U.Detect(snap, {}, nil)), "food:buff", "another client language's Well Fed, by its name")
+end)

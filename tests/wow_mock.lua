@@ -47,7 +47,8 @@ local function build()
     M.__unitGUIDs = { player = "Player-1-00000001" }
     M.UnitGUID = function(unit) return M.__unitGUIDs[unit] end
 
-    -- C_Spell: a spell's icon is a made-up file id per plain ID (136000 + id), nil for anything else.
+    -- C_Spell: a spell's icon is a made-up file id per plain ID (136000 + id), nil for anything else;
+    -- its name is "Spell <id>", except 19705, which the client names Well Fed (modules/Usage.lua).
     -- A suite that hands a secret ID replaces GetSpellTexture with one that reveals it.
     M.C_Spell = {
         GetSpellTexture = function(id)
@@ -55,6 +56,7 @@ local function build()
             return nil
         end,
         GetSpellName = function(id)
+            if id == 19705 then return "Well Fed" end    -- the client's word for the food buff (Usage)
             if type(id) == "number" then return "Spell " .. id end
             return nil
         end,

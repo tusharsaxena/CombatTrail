@@ -559,3 +559,21 @@ test("meter: Call reports a missing function and a raising one without throwing"
     meter.Remove()
     assertNil(NS.Meter.Api())
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("meter: ReadFinal keeps the player's part when only the pet's read raises", function()
+    local NS, meter = withPet()
+    meter.SetSession(17, FIGHT)
+    meter.SetRaiseFor(PET, "pet source says no")
+    local r, err = NS.Meter.ReadFinal(17)
+    assertNil(err, "the player's read stands")
+    assertEqual(r.player.total, 9000)
+    assertNil(r.pet, "no pet part")
+    assertEqual(r.merged.total, 9000, "the merged total is the player's alone")
+    meter.SetRaiseFor(PET, nil)
+    meter.SetSealed(17, true)
+    r, err = NS.Meter.ReadFinal(17)
+    assertNil(r)
+    assertEqual(err, "sealed", "a sealed read still asks for a retry")
+end)
