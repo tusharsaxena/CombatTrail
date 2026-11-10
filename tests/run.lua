@@ -116,6 +116,7 @@ local SUITES = {
     "test_retention",
     "test_record",
     "test_slices",
+    "test_hud_states",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

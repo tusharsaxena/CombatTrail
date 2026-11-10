@@ -36,6 +36,7 @@ NS.Perf = lib:New({
         { key = "fight" },           -- every combat, encounter and meter event, in modules/Watchers.lua
         { key = "casts" },           -- each cast the fight record keeps, in modules/Casts.lua (inside laneCast)
         { key = "slices" },          -- the damage chart's once-a-step live read, in modules/Slices.lua (holds meter)
+        { key = "hud" },             -- the HUD's live read and redraw on each FIGHT_TICK, in modules/Hud.lua (holds meter)
     },
     -- The latch the capture's suspended arm takes its `perf` hold on. suspend/resume are NOT passed:
     -- the latch's standDown/standUp (core/LifecycleSetup.lua) are the one teardown.

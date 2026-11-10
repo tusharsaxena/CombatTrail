@@ -57,6 +57,9 @@ function NS.RegisterGameEvents()
     if NS.Watchers then NS.Watchers.Sync() end
     -- The stored fights' purge, at login and every stand-up, and its daily timer (modules/Retention.lua).
     if NS.Retention then NS.Retention.Sync() end
+    -- The DPS HUD registers nothing with the client; "always" opens it at login and every stand-up
+    -- (modules/Hud.lua).
+    if NS.Hud then NS.Hud.Sync() end
 end
 
 -- ── Host handlers ───────────────────────────────────────────────────────────────────────────────

@@ -151,6 +151,17 @@ modules\Recorder.lua
 # NS.Loadouts and NS.db at CALL time only; its daily timer is the addon object's AceTimer.
 modules\Retention.lua
 modules\Slices.lua
+# The DPS HUD (spec §6). Format first: the HUD's files reach it at call time, as they reach each other.
+modules\Format.lua
+# LOAD-BEARING: the shared look. NS.Skin.OnLooksChanged is registered and the live colors are built at
+# FILE SCOPE (core\SkinSetup.lua); the HUD's files capture NS.Style at FILE SCOPE.
+modules\Style.lua
+# The HUD's bodies: capture NS.Style and NS.Secrets at FILE SCOPE.
+modules\Hud_States.lua
+# LOAD-BEARING: builds its bus receiver (FIGHT_* / SETTINGS_CHANGED) at FILE SCOPE through core\Bus.lua
+# and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.Meter, NS.Identity, NS.Bests,
+# NS.Recorder and NS.db at CALL time only.
+modules\Hud.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

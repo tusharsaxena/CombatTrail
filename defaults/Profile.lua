@@ -96,8 +96,22 @@ NS.defaults = {
                 labelText   = "",
             }),
         },
-        -- The live DPS HUD (spec §6).
-        hud = {},
+        -- The live DPS HUD (spec §6, modules/Hud.lua). Behavior: when it opens ("auto" on every
+        -- fight's first hit, "always", or "toggle": only when the player opens it), the seconds it
+        -- stays after the fight (0 keeps the card up), whether the pointer holds it, whether it opens
+        -- only inside an instance, what the pace compares against ("best" on the same board, the
+        -- "last" fight there, or "none"), the pace bar's range (plan Task 3.2), whether the fight-over
+        -- card shows and whether it says why a fight was not saved. Layout: its width, its scale and
+        -- one switch per part of the stack (the clock, the target line, the Damage and DPS boxes, the
+        -- pace bar, the damage chart and the spell rows). Its place: a point on UIParent, written by
+        -- the title bar's drag (the mockup's top right).
+        hud = {
+            show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
+            paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
+            width = 300, scale = 1,
+            layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
+            position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
+        },
         -- The recording filters and retention (spec §5; modules/Filters.lua, modules/Retention.lua):
         -- the minimum length in seconds, bosses only, one toggle per content kind (content(), above),
         -- the days a fight is kept (0 = for ever), whether a fight holding a best is kept past them,

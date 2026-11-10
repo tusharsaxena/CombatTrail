@@ -89,6 +89,9 @@ files["modules/Stats.lua"] = {
 files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }
 -- An item quality's client color, the degraded skin facade's fallback.
 files["core/SkinSetup.lua"] = { read_globals = { "ITEM_QUALITY_COLORS" } }
+-- The secret-safe number: the client's abbreviated-number formatter is Compat's; with none, the plain
+-- fallback is the client's AbbreviateNumbers, type-checked at CALL time (modules/Format.lua).
+files["modules/Format.lua"] = { read_globals = { "AbbreviateNumbers" } }
 
 -- ---------------------------------------------------------------------------
 -- The narrowed 212s: every stanza names ONE file and every entry the code AND the variable.

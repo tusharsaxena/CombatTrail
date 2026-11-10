@@ -287,6 +287,9 @@ end
 local function secretFight()
     local inst, meter, heard = fresh()
     local NS = inst.NS
+    -- The DPS HUD stays shut: while it is up it reads the meter once a tick on its own
+    -- (modules/Hud.lua), and this case counts the chart store's reads.
+    NS.db.profile.hud.show = "toggle"
     at(inst, 10)
     meter.SetSession(1, FIGHT)
     meter.SetPetGUID("Pet-0-1")
