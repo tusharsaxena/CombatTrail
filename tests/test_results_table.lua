@@ -716,6 +716,18 @@ test("results: the Status badge reads Best with the trophy on the board's top on
     assertTrue(NS.ResultsTips.Cell(status, slow)[1] ~= nil, "every fight's tooltip")
 end)
 
+test("results: the Status header names a spec on Retail and a talent tree on Forever (clients-§4)", function()
+    local NS = fresh()
+    local cols = NS.ResultsFights.Columns()
+    local about = NS.ResultsTips.About(cols[indexOf(cols, "status")])
+    if NS.Compat.ForClient({ "retail" }) then
+        assertTrue(about.text:find("spec", 1, true) ~= nil, about.text)
+    else
+        assertTrue(about.text:find("talent tree", 1, true) ~= nil, about.text)
+        assertNil(about.text:lower():find("spec", 1, true), "no specialization named on Forever: " .. about.text)
+    end
+end)
+
 test("results: the Used column lists the fight's usage as icons, +n past what fits, a dash for none", function()
     local NS = freshItems()
     local Tbl, U = NS.ResultsTable, NS.ResultsUsage

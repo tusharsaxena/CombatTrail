@@ -786,6 +786,8 @@ L["How far this fight's DPS is from the best fight in its group (with no groupin
     "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best reads 0.0%."
 L["Best: your best fight on its board (this character and spec against this encounter or target), whatever the filters show."] =
     "Best: your best fight on its board (this character and spec against this encounter or target), whatever the filters show."
+L["Best: your best fight on its board (this character and talent tree against this encounter or target), whatever the filters show."] =
+    "Best: your best fight on its board (this character and talent tree against this encounter or target), whatever the filters show."
 L["What the fight used: on-use gear (trinkets first), then potions, flasks, food and the rest. Hover for when; sorted by how many."] =
     "What the fight used: on-use gear (trinkets first), then potions, flasks, food and the rest. Hover for when; sorted by how many."
 L["The note you kept with the fight. Click to sort."] =
