@@ -19,8 +19,15 @@ local _, NS = ...
 --     the castGUID it cannot be told apart from a failed press during the cast.
 --   * the pet's name is read through Secrets.PlainString; a secret name reads as no name.
 --
+-- LISTENERS (LaneCasts.Listen). The fight record (modules/Casts.lua) hears the same casts from here
+-- rather than registering UNIT_SPELLCAST_* a second time: every cast the rules above keep (a
+-- SUCCEEDED once per castGUID, an interrupt of the cast in flight) is handed to each listener as
+-- (unit, spellID, t, interrupted) BEFORE the lane's own switches (enabled, ignore list, the
+-- interrupt mark), which decide only what a lane shows. The spell ID is handed raw: it may be secret.
+--
 -- REGISTRATION follows CURRENT settings (slash-commands-§7): nothing while stood down, and otherwise
--- the cast events for the units of the lanes whose `enabled` is on, on one unit-filter frame through
+-- the cast events for the units of the lanes whose `enabled` is on, and both units while a listener
+-- is on (the record hears a lane that shows nothing), on one unit-filter frame through
 -- NS.SafeRegisterUnitEvent (events-frames-taint-§1). LaneCasts.Sync() rebuilds it on login, on every
 -- SETTINGS_CHANGED that can move it, and at stand-up; the lifecycle's stand-down calls Suspend.
 -- Never COMBAT_LOG_EVENT_UNFILTERED: it is protected for addons on both clients.
@@ -57,6 +64,7 @@ local KIND = {
 }
 
 local frame          -- the unit-filter frame (nil until a lane first registers)
+local listeners = {} -- { { key, fn } }, in the order they listened
 local registered     -- the unit set registered now, as a string key ("" = nothing), nil = unknown
 local busTarget      -- this module's own bus receiver (architecture-§4)
 
@@ -118,23 +126,25 @@ function LaneCasts.IsIgnored(laneKey, spellID)
     return type(ignore) == "table" and ignore[id] == true
 end
 
-local function push(laneKey, spellID, interrupted)
+local function push(laneKey, spellID, interrupted, t)
     local ok, texture = pcall(NS.Compat.SpellTexture, spellID)
     if not ok then texture = nil end
     NS.SendBus(NS.MSG.LANE_PUSH, laneKey, {
         texture     = texture,
         spellID     = Secrets.PlainNumber(spellID),
-        t           = GetTime(),
+        t           = t,
         interrupted = interrupted == true,
     })
 end
 
 -- ── the handlers, one per kind ──────────────────────────────────────────────────────────────────
--- Each gets (laneKey, cfg, s, guid, secretGUID, spellID): `guid` is the plain castGUID or nil, and
--- `secretGUID` says a castGUID arrived but may not be looked at.
+-- Each gets (s, guid, secretGUID, kind): `guid` is the plain castGUID or nil, and `secretGUID` says a
+-- castGUID arrived but may not be looked at. Each answers whether the event is a cast: nil (none),
+-- false (a cast), true (an interrupted cast).
 
-local function onStart(_, _, s, guid, secretGUID)
+local function onStart(s, guid, secretGUID)
     if guid or secretGUID then s.flight = { guid = guid, secret = secretGUID } end
+    return nil
 end
 
 -- Whether the event's castGUID is the cast in flight. A plain one must match; a secret one counts only
@@ -146,27 +156,27 @@ local function isFlight(s, guid, secretGUID)
     return secretGUID and f.secret
 end
 
-local function onSucceeded(laneKey, _, s, guid, secretGUID, spellID)
-    if isFlight(s, guid, secretGUID) then s.flight = nil end
-    if guid then
-        if seen(s, guid) then return end
-        remember(s, guid)
-    end
-    if LaneCasts.IsIgnored(laneKey, spellID) then return end
-    push(laneKey, spellID, false)
+-- A plain castGUID heard before is no new cast; a new one is remembered.
+local function fresh(s, guid)
+    if not guid then return true end
+    if seen(s, guid) then return false end
+    remember(s, guid)
+    return true
 end
 
-local function onEnded(laneKey, cfg, s, guid, secretGUID, spellID, kind)
-    if not isFlight(s, guid, secretGUID) then return end
+local function onSucceeded(s, guid, secretGUID)
+    if isFlight(s, guid, secretGUID) then s.flight = nil end
+    if not fresh(s, guid) then return nil end
+    return false
+end
+
+local function onEnded(s, guid, secretGUID, kind)
+    if not isFlight(s, guid, secretGUID) then return nil end
     -- A secret castGUID's _FAILED cannot be told from a failed press during the cast: dropped.
-    if secretGUID and kind == "failed" then return end
+    if secretGUID and kind == "failed" then return nil end
     s.flight = nil
-    if guid then
-        if seen(s, guid) then return end
-        remember(s, guid)
-    end
-    if cfg.markInterrupted == false or LaneCasts.IsIgnored(laneKey, spellID) then return end
-    push(laneKey, spellID, true)
+    if not fresh(s, guid) then return nil end
+    return true
 end
 
 local HANDLERS = {
@@ -176,15 +186,25 @@ local HANDLERS = {
     failed      = onEnded,
 }
 
+local function tell(unit, spellID, t, interrupted)
+    for _, l in ipairs(listeners) do l.fn(unit, spellID, t, interrupted) end
+end
+
 -- UNIT_SPELLCAST_*(unit, castGUID, spellID). The unit token is plain; the other two may be secret.
 local function hear(event, unit, castGUID, spellID)
     local kind = KIND[event]
     if not kind or not IS_LANE[unit] or NS.IsStoodDown() then return end
-    local cfg = laneConfig(unit)
-    if not cfg or cfg.enabled == false then return end
     local guid = Secrets.PlainString(castGUID)
     local secretGUID = guid == nil and castGUID ~= nil
-    HANDLERS[kind](unit, cfg, laneState(unit), guid, secretGUID, spellID, kind)
+    local interrupted = HANDLERS[kind](laneState(unit), guid, secretGUID, kind)
+    if interrupted == nil then return end
+    local t = GetTime()
+    tell(unit, spellID, t, interrupted)
+    local cfg = laneConfig(unit)
+    if not cfg or cfg.enabled == false then return end
+    if interrupted and cfg.markInterrupted == false then return end
+    if LaneCasts.IsIgnored(unit, spellID) then return end
+    push(unit, spellID, interrupted, t)
 end
 
 local function onEvent(_, event, ...)
@@ -195,13 +215,14 @@ end
 
 -- ── registration ────────────────────────────────────────────────────────────────────────────────
 
--- The units the CURRENT settings ask for, in lane order (none while stood down or before the store).
+-- The units the CURRENT settings ask for, in lane order (none while stood down or before the store);
+-- every lane's unit while a listener is on.
 local function wantedUnits()
     local out = {}
     if not NS.db or NS.IsStoodDown() then return out end
     for _, laneKey in ipairs(LaneCasts.LANES) do
         local cfg = laneConfig(laneKey)
-        if cfg and cfg.enabled ~= false then out[#out + 1] = laneKey end
+        if #listeners > 0 or (cfg and cfg.enabled ~= false) then out[#out + 1] = laneKey end
     end
     return out
 end
@@ -242,6 +263,24 @@ end
 function LaneCasts.Resume()
     registered = nil
     LaneCasts.Sync()
+end
+
+--- Hand every cast the lanes' rules keep to `fn(unit, spellID, t, interrupted)` as well, under `key`
+--- (one listener per key: listening again replaces it). `spellID` may be secret; `t` is GetTime().
+--- @param key string
+--- @param fn function
+function LaneCasts.Listen(key, fn)
+    LaneCasts.Unlisten(key)
+    listeners[#listeners + 1] = { key = key, fn = fn }
+    if registered ~= nil then LaneCasts.Sync() end
+end
+
+--- Stop handing casts to the listener under `key`.
+function LaneCasts.Unlisten(key)
+    for i = #listeners, 1, -1 do
+        if listeners[i].key == key then table.remove(listeners, i) end
+    end
+    if registered ~= nil then LaneCasts.Sync() end
 end
 
 --- The unit-filter frame (nil until a lane first registered), for the suites.

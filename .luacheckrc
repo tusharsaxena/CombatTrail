@@ -73,6 +73,18 @@ files["modules/Identity.lua"] = {
                      "GetInstanceInfo", "GetDifficultyInfo" },
 }
 
+-- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
+-- time, so a client without one leaves the field absent).
+files["modules/Usage.lua"] = {
+    read_globals = { "C_Item", "C_Container", "C_UnitAuras", "GetInventoryItemID" },
+}
+files["modules/Loadouts.lua"] = { read_globals = { "GetInventoryItemLink", "C_ClassTalents", "C_Traits" } }
+files["modules/Stats.lua"] = {
+    read_globals = { "UnitStat", "UnitArmor", "GetCombatRating", "GetCritChance", "GetRangedCritChance",
+                     "GetSpellCritChance", "GetHaste", "GetMasteryEffect", "GetCombatRatingBonus",
+                     "GetVersatilityBonus", "GetLifesteal", "GetAvoidance", "GetSpeed" },
+}
+
 -- The context menus: the client's menu without the library.
 files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }
 -- An item quality's client color, the degraded skin facade's fallback.

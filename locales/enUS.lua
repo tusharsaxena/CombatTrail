@@ -380,6 +380,27 @@ L["Blizzard's damage meter is not available on this client."] =
 -- A fight's identity (modules/Identity.lua)
 L["Unknown target"] = "Unknown target"
 
+-- What a fight used (modules/Usage.lua): the food buff's name, read off the player's auras
+L["Well Fed"] = "Well Fed"
+
+-- The stats a fight was fought with (modules/Stats.lua): the gear view's groups and rows
+L["Primary"] = "Primary"
+L["Secondary"] = "Secondary"
+L["Tertiary"] = "Tertiary"
+L["Primary stat"] = "Primary stat"
+L["Strength"] = "Strength"
+L["Agility"] = "Agility"
+L["Intellect"] = "Intellect"
+L["Stamina"] = "Stamina"
+L["Armor"] = "Armor"
+L["Critical Strike"] = "Critical Strike"
+L["Haste"] = "Haste"
+L["Mastery"] = "Mastery"
+L["Versatility"] = "Versatility"
+L["Leech"] = "Leech"
+L["Avoidance"] = "Avoidance"
+L["Speed"] = "Speed"
+
 -- `/kct probe` (modules/Probe.lua)
 L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
     "The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."

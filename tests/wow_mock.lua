@@ -125,6 +125,91 @@ local function build()
     M.__ilvl = { overall = 640.25, equipped = 638.96 }
     M.GetAverageItemLevel = function() return M.__ilvl.overall, M.__ilvl.equipped end
 
+    -- The gear and the talents a fight was fought with (modules/Loadouts.lua): the equipped links by
+    -- slot and the talent APIs over one settable table (DPS Race's fakes). A case edits M.__gear or
+    -- M.__talents before the snapshot; nil = an empty slot, or no active config.
+    M.__gear = {
+        [1] = "|cnIQ4:|Hitem:212001::::::::80:267::6:2:10390:1540::::::|h[Hood of the Test]|h|r",
+        [5] = "|cnIQ4:|Hitem:212005::::::::80:267::6:2:10390:1540::::::|h[Robe of the Test]|h|r",
+        [16] = "|cnIQ3:|Hitem:212016::::::::80:267::6:1:10390::::::|h[Staff of the Test]|h|r",
+        [4] = "|cnIQ1:|Hitem:6833::::::::80:267::::::::|h[White Tuxedo Shirt]|h|r",
+    }
+    M.GetInventoryItemLink = function(unit, slot)
+        if unit ~= "player" then return nil end
+        return M.__gear[slot]
+    end
+    M.__talents = {
+        configID = 7001, savedConfigID = 7002, configName = "Active", savedName = "Raid ST",
+        heroSpecID = 58, heroName = "Diabolist", importString = "C0PAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    }
+    M.C_ClassTalents = {
+        GetActiveConfigID = function() return M.__talents and M.__talents.configID end,
+        GetLastSelectedSavedConfigID = function() return M.__talents and M.__talents.savedConfigID end,
+        GetActiveHeroTalentSpec = function() return M.__talents and M.__talents.heroSpecID end,
+    }
+    M.C_Traits = {
+        GetConfigInfo = function(id)
+            local t = M.__talents
+            if not t then return nil end
+            if id == t.savedConfigID and t.savedName then return { ID = id, name = t.savedName } end
+            if id == t.configID then return { ID = id, name = t.configName } end
+            return nil
+        end,
+        GetSubTreeInfo = function(_, id)
+            local t = M.__talents
+            return t and id == t.heroSpecID and { ID = id, name = t.heroName } or nil
+        end,
+        GenerateImportString = function(id)
+            local t = M.__talents
+            return t and id == t.configID and t.importString or nil
+        end,
+    }
+
+    -- What a fight used (modules/Usage.lua): the on-use slots (the item ID out of M.__gear's link),
+    -- the item data, the bags and the helpful auras. Empty by default; a case fills them:
+    --   M.__itemSpells  [itemID] = its use spell ID
+    --   M.__itemInfo    [itemID] = { classID, subclassID }
+    --   M.__bags        [bag] = { size = n, [slot] = { itemID, stackCount } }
+    --   M.__auras       { { spellId, name }, ... }, the player's helpful auras in order
+    M.__itemSpells, M.__itemInfo, M.__bags, M.__auras = {}, {}, {}, {}
+    M.__itemCalls = 0
+    M.GetInventoryItemID = function(unit, slot)
+        local link = M.GetInventoryItemLink(unit, slot)
+        return type(link) == "string" and tonumber(link:match("item:(%d+)")) or nil
+    end
+    M.C_Item = {
+        GetItemSpell = function(itemID)
+            local id = M.__itemSpells[itemID]
+            if id then return "Spell " .. id, id end
+            return nil
+        end,
+        GetItemInfoInstant = function(itemID)
+            M.__itemCalls = M.__itemCalls + 1
+            local i = M.__itemInfo[itemID]
+            if not i then return nil end
+            return itemID, "Consumable", "Consumable", "", 134400, i[1], i[2]
+        end,
+    }
+    M.C_Container = {
+        GetContainerNumSlots = function(bag)
+            local b = M.__bags[bag]
+            return b and b.size or 0
+        end,
+        GetContainerItemInfo = function(bag, slot)
+            local b = M.__bags[bag]
+            local s = b and b[slot]
+            if not s then return nil end
+            return { itemID = s[1], stackCount = s[2] }
+        end,
+    }
+    M.C_UnitAuras = {
+        GetAuraDataByIndex = function(unit, i, filter)
+            if unit ~= "player" or filter ~= "HELPFUL" then return nil end
+            local a = M.__auras[i]
+            return a and { spellId = a[1], name = a[2] } or nil
+        end,
+    }
+
     -- TOC metadata, read through LibKa0s-Env-1.0 (core/EnvSetup.lua).
     M.__toc = {
         Version = "0.1.0",

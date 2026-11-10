@@ -312,8 +312,16 @@ test("lane casts: both lanes on registers the cast events for player and pet onl
     end
 end)
 
+-- The fight record's listener (modules/Casts.lua) keeps both units registered whatever the lanes
+-- show; these cases measure the lanes' own share with it taken off.
+local function lanesOnly(inst)
+    inst.NS.LaneCasts.Unlisten("casts")
+    return inst
+end
+
 test("lane casts: a lane turned off drops its unit, both off registers nothing", function()
     local inst, heard = setup()
+    lanesOnly(inst)
     setLane(inst, "pet", "enabled", false)
     local regs = unitRegs(inst)
     assertTrue(regs.UNIT_SPELLCAST_SUCCEEDED.player, "player stays")
@@ -328,6 +336,7 @@ end)
 
 test("lane casts: general.enabled off drops every registration, on rebuilds them", function()
     local inst, heard = setup()
+    lanesOnly(inst)
     local NS = inst.NS
     NS.SetByPath("general.enabled", false)
     assertEqual(next(unitRegs(inst)), nil, "nothing registered while disabled")
@@ -353,4 +362,33 @@ test("lane casts: a disabled login registers nothing", function()
         if frame and r.target == frame then n = n + 1 end
     end
     assertEqual(n, 0)
+end)
+
+test("lane casts: a listener hears every cast the lanes' rules keep, whatever each lane shows", function()
+    local inst, heard = setup()
+    local NS = inst.NS
+    local got = {}
+    NS.LaneCasts.Listen("probe-test", function(unit, spellID, t, interrupted)
+        got[#got + 1] = { unit = unit, id = spellID, t = t, x = interrupted }
+    end)
+    setLane(inst, "pet", "enabled", false)
+    NS.db.profile.lanes.player.ignore[2948] = true
+    NS.db.profile.lanes.player.markInterrupted = false
+    inst.mocks.__now = 7
+    fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "pet", "Cast-P", 17253)
+    fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-I", 2948)
+    fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-I", 2948)
+    fire(inst, "UNIT_SPELLCAST_START", "player", "Cast-X", 133)
+    fire(inst, "UNIT_SPELLCAST_INTERRUPTED", "player", "Cast-X", 133)
+    fire(inst, "UNIT_SPELLCAST_FAILED", "player", "Cast-F", 116)
+    assertEqual(#heard, 0, "no lane showed any of them")
+    assertEqual(#got, 3, "the pet's, the ignored spell once, the interrupted cast; not the failed instant")
+    assertEqual(got[1].unit, "pet")
+    assertEqual(got[2].id, 2948)
+    assertEqual(got[3].id, 133)
+    assertTrue(got[3].x, "interrupted")
+    assertEqual(got[1].t, 7)
+    NS.LaneCasts.Unlisten("probe-test")
+    fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-Q", 133)
+    assertEqual(#got, 3, "off again")
 end)

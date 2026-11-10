@@ -34,6 +34,7 @@ NS.Perf = lib:New({
         { key = "probe" },           -- the armed probe's cast and combat events, in modules/Probe.lua
         { key = "meter" },           -- the live read of the player's and the pet's sources, in modules/Meter.lua
         { key = "fight" },           -- every combat, encounter and meter event, in modules/Watchers.lua
+        { key = "casts" },           -- each cast the fight record keeps, in modules/Casts.lua (inside laneCast)
     },
     -- The latch the capture's suspended arm takes its `perf` hold on. suspend/resume are NOT passed:
     -- the latch's standDown/standUp (core/LifecycleSetup.lua) are the one teardown.
