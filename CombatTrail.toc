@@ -178,7 +178,9 @@ modules\Hud.lua
 # FILE SCOPE; modules\Results.lua reads NS.ResultsFights and NS.ResultsTable at FILE SCOPE (its minimum
 # width) and builds its bus receiver there. The detail's parts (the loadout, the usage, the detail pane)
 # and the share line register nothing and reach each other at CALL time; modules\Share.lua defines its
-# whisper popup at FILE SCOPE.
+# whisper popup at FILE SCOPE. LOAD-BEARING: modules\Results_TimelineData.lua reads
+# NS.ResultsTable.COLORS at FILE SCOPE, and modules\Results_Timeline.lua reads NS.ResultsTimelineData and
+# NS.ResultsTable there.
 modules\Sizing.lua
 modules\Results_Source.lua
 modules\Results_Table.lua
@@ -188,6 +190,8 @@ modules\Results_Loadout.lua
 modules\Results_Usage.lua
 modules\Results_Detail.lua
 modules\Share.lua
+modules\Results_TimelineData.lua
+modules\Results_Timeline.lua
 modules\Results.lua
 
 # Settings (last -- depend on everything else being initialized)

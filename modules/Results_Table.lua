@@ -224,6 +224,27 @@ function Tbl.SideTip(window, row, lines)
     placeSide(tip, window, row)
 end
 
+--- The client's spell tooltip for `id` beside `window`, level with `row`, then `lines` under a gap
+--- (the ability timeline's names and icons). The id is a stored, plain one; SetSpellByID is pcall'd,
+--- and the spell's name stands in when the client draws nothing.
+function Tbl.SpellTip(window, row, id, lines)
+    local tip = GameTooltip
+    if not tip then return end
+    tip:SetOwner(window, "ANCHOR_NONE")
+    local shown = id ~= nil and tip.SetSpellByID ~= nil and pcall(tip.SetSpellByID, tip, id)
+    if shown and tip.NumLines then shown = (plainGeom(tip, "NumLines") or 0) > 0 end
+    if not shown then
+        local r, g, b = Style.Rgb("gtip.value")
+        tip:SetText(NS.HudBreakdown.SpellName(id), r, g, b, 1, true)
+    end
+    if type(lines) == "table" and lines[1] then
+        tip:AddLine(" ")
+        addLines(tip, lines, 1)
+    end
+    tip:Show()
+    placeSide(tip, window, row)
+end
+
 local function hideTip()
     if GameTooltip then GameTooltip:Hide() end
 end

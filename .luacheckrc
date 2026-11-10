@@ -112,6 +112,11 @@ files["modules/Results_Loadout.lua"] = {
 files["modules/Results_Usage.lua"] = { read_globals = { "C_Item" } }
 -- Share's whisper offers the targeted player's name.
 files["modules/Share.lua"] = { read_globals = { "UnitIsPlayer" } }
+-- The ability timeline: the cursor a Ctrl+wheel zooms about and the modifier keys the wheel reads
+-- (each read bare at CALL time and type-checked).
+files["modules/Results_Timeline.lua"] = {
+    read_globals = { "GetCursorPosition", "IsControlKeyDown", "IsShiftKeyDown" },
+}
 
 -- ---------------------------------------------------------------------------
 -- The narrowed 212s: every stanza names ONE file and every entry the code AND the variable.

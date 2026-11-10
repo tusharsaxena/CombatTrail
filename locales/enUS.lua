@@ -840,3 +840,43 @@ L["Say"] = "Say"
 L["Party"] = "Party"
 L["Guild"] = "Guild"
 L["Whisper\226\128\166"] = "Whisper\226\128\166"
+
+-- The ability timeline (modules/Results_Timeline.lua, modules/Results_TimelineData.lua)
+L["%s cooldown"] = "%s cooldown"
+L["%s (pet)"] = "%s (pet)"
+L["This fight"] = "This fight"
+L["No fight to compare with"] = "No fight to compare with"
+L["No fight to compare with: the blue lanes stay empty."] =
+    "No fight to compare with: the blue lanes stay empty."
+L["%s has no casts recorded: the blue lanes stay empty."] =
+    "%s has no casts recorded: the blue lanes stay empty."
+L["Too many casts here for %d rows: this icon overlaps others."] =
+    "Too many casts here for %d rows: this icon overlaps others."
+L["%s: 1 cast"] = "%s: 1 cast"
+L["%s: %d casts"] = "%s: %d casts"
+L["Cooldown %s"] = "Cooldown %s"
+L["Mouse controls"] = "Mouse controls"
+L["Mouse wheel: scroll up and down"] = "Mouse wheel: scroll up and down"
+L["Shift+mouse wheel: scroll left and right (zoomed in)"] =
+    "Shift+mouse wheel: scroll left and right (zoomed in)"
+L["Ctrl+mouse wheel: zoom in and out"] = "Ctrl+mouse wheel: zoom in and out"
+L["Ability timeline"] = "Ability timeline"
+L["Pet abilities"] = "Pet abilities"
+L["Right: casts in each lane"] = "Right: casts in each lane"
+L["Scroll right, toward the end (or Shift+mouse wheel down)"] =
+    "Scroll right, toward the end (or Shift+mouse wheel down)"
+L["Scroll left, toward 0:00 (or Shift+mouse wheel up)"] = "Scroll left, toward 0:00 (or Shift+mouse wheel up)"
+L["Reset zoom"] = "Reset zoom"
+L["Zoom in (or Ctrl+mouse wheel up)"] = "Zoom in (or Ctrl+mouse wheel up)"
+L["Zoom out (or Ctrl+mouse wheel down)"] = "Zoom out (or Ctrl+mouse wheel down)"
+L["Casts"] = "Casts"
+L["By ability"] = "By ability"
+L["No casts recorded"] = "No casts recorded"
+L["%sx"] = "%sx"
+L["Select a fight in the Results window to see its timeline."] =
+    "Select a fight in the Results window to see its timeline."
+L["No casts recorded for this fight."] = "No casts recorded for this fight."
+L["Only pet abilities were cast: turn on Pet abilities to see them."] =
+    "Only pet abilities were cast: turn on Pet abilities to see them."
+L["Picked"] = "Picked"
+L["Runner-up"] = "Runner-up"

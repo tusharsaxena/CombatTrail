@@ -126,6 +126,7 @@ local SUITES = {
     "test_results_table",
     "test_results_detail",
     "test_share",
+    "test_timeline",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

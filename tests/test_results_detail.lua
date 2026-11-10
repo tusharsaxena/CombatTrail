@@ -222,7 +222,7 @@ test("detail: the buttons and their seams", function()
     r.casts = "0:34026"
     save(NS, r)
     local pane = detailOn(NS, "a")
-    assertFalse(pane.w.timeline:IsEnabled(), "Timeline waits for the timeline (plan Task 4.3)")
+    assertTrue(pane.w.timeline:IsEnabled(), "Timeline is live for a fight with casts (plan Task 4.3)")
     assertFalse(pane.w.compare:IsEnabled(), "Compare vs best waits for the compare (plan Task 4.4)")
     assertTrue(pane.w.share:IsEnabled(), "Share for a stored fight")
     assertEqual(pane.w.addNote.label:GetText(), "Add Note")
@@ -232,7 +232,10 @@ test("detail: the buttons and their seams", function()
     assertEqual(pane.w.addNote.label:GetText(), "Edit Note", "FIGHTS_CHANGED redrew the detail")
     assertEqual(pane.w.note:GetText(), "pulled early")
     assertEqual(pane.w.noteTitle:IsShown(), true, "the note under its heading")
-    -- With the timeline's module in place, the button is live for a fight with casts.
+    -- A fight with no casts has it off.
+    save(NS, rec(NS, { id = "bare" }))
+    assertFalse(detailOn(NS, "bare").w.timeline:IsEnabled(), "no Timeline without casts")
+    -- The button hands the timeline its pane.
     local opened
     NS.ResultsTimeline = { Open = function(p) opened = p end }
     pane = detailOn(NS, "a")
