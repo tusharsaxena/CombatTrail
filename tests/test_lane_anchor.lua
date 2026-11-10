@@ -507,3 +507,35 @@ test("lane anchor: stand-down drops the Edit Mode callbacks and hides the overla
     assertEqual(callbacks(), 2, "back")
     assertFalse(A.IsUnlocked(), "a stand-up comes back locked")
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("lane anchor: a place saved with no schema row builds the table it writes into", function()
+    local inst, A = setup()
+    inst.NS.FindSchemaRow = function() return nil end
+    cfgOf(inst, "player").anchor = nil
+    A.SetUnlocked(true)
+    local lane, ov = inst.NS.LaneRender.Get("player"), A.__overlay("player")
+    rawset(lane, "StartMoving", function() end)
+    rawset(lane, "StopMovingOrSizing", function() end)
+    rawset(lane, "SetUserPlaced", function() end)
+    rawset(lane, "GetCenter", function() return 600, 300 end)
+    rawset(lane, "GetEffectiveScale", function() return 1 end)
+    rawset(inst.mocks.UIParent, "GetCenter", function() return 500, 400 end)
+    rawset(inst.mocks.UIParent, "GetEffectiveScale", function() return 1 end)
+    ov:__fire("OnDragStart", "LeftButton")
+    local ok, err = pcall(ov.__fire, ov, "OnDragStop")
+    assertTrue(ok, "the drag's save raised: " .. tostring(err))
+    local a = cfgOf(inst, "player").anchor
+    assertTrue(type(a) == "table", "the anchor table was made")
+    assertEqual(a.x, 100)
+    assertEqual(a.y, -100)
+end)
+
+test("lane anchor: a delve reads as none on WoW Forever, whatever the client says (clients-§4)", function()
+    local inst = setup(function(m) m.__inDelve = true end)
+    local NS = inst.NS
+    assertEqual(NS.Compat.InDelve(), NS.Compat.IsRetail(), "a delve only on Retail")
+    inst.mocks.__inDelve = false
+    assertFalse(NS.Compat.InDelve())
+end)

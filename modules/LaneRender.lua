@@ -587,7 +587,7 @@ function LaneRender.Apply(laneKey)
     applyBackground(st, cfg)
     applyTicks(st, cfg)
     applyLabel(st, cfg)
-    local face = fontFace(cfg.labelFont)
+    local face = labelFace(cfg)
     for _, f in ipairs(st.icons) do styleIcon(f, cfg, face) end
     restack(st)
     LaneRender.ApplyVisibility(laneKey)
@@ -660,7 +660,7 @@ function LaneRender.Push(laneKey, item)
     local t0 = Perf.on and debugprofilestop()
     if not stackOnto(st, item) then
         local f = Pool.Acquire(st.pool, st.factory)
-        styleIcon(f, st.cfg, fontFace(st.cfg.labelFont))
+        styleIcon(f, st.cfg, labelFace(st.cfg))
         setItem(f, item, st.cfg)
         table.insert(st.icons, 1, f)
         if #st.icons > LaneRender.MAX_ICONS then expireFrom(st, LaneRender.MAX_ICONS + 1) end
@@ -727,6 +727,14 @@ function LaneRender.__icons(laneKey)
     local out = {}
     for i, f in ipairs(st and st.icons or {}) do out[i] = f end
     return out
+end
+
+--- How many icons lane `laneKey` holds now (0 when it was never built): the diagnostics report.
+--- @param laneKey string
+--- @return number
+function LaneRender.Count(laneKey)
+    local st = lanes[laneKey]
+    return st and #st.icons or 0
 end
 
 --- The lane's frame when it was built, else nil (never builds one: the diagnostics report reads it).

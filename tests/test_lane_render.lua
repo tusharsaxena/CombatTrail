@@ -486,3 +486,65 @@ test("lane render: a skin's border styles draw the edges while their companions 
     assertTrue(icon.border[1]:IsShown(), "companion off: the stored icon border")
     Skin:SetChoice("CombatTrail", source, skin)
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("lane render: a skin switch repaints the interrupt mark on a live icon", function()
+    local inst, R = setup()
+    R.Push("player", item(116, 0, { interrupted = true }))
+    local mark = R.__icons("player")[1].mark
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    local source, skin = Skin:GetChoice("CombatTrail")
+    local before = inst.mocks.__paint(mark).vertex
+    Skin:RegisterSkin({ key = "__crossProbe", label = "Probe", tokens = { ["sem.statusBad"] = { 0.2, 0.9, 0.3, 1 } } })
+    Skin:SetChoice("CombatTrail", "ka0s", "__crossProbe")
+    near(inst.mocks.__paint(mark).vertex, { 0.2, 0.9, 0.3, 1 }, "the mark follows the new skin")
+    Skin:SetChoice("CombatTrail", source, skin)
+    near(inst.mocks.__paint(mark).vertex, before, "and comes back")
+end)
+
+test("lane render: haste ticks keep the last plain haste in combat and never read it there", function()
+    local inst, R = setup(function(m) m.__haste = 50 end)
+    set(inst, "player", "tickSpacing", "haste")
+    assertEqual(#R.__ticks("player"), 12, "1.0 s GCD over 12 s, read out of combat")
+    local reads = 0
+    inst.mocks.UnitSpellHaste = function() reads = reads + 1; return 0 end
+    inst.mocks.InCombatLockdown = function() return true end
+    set(inst, "player", "tickWidth", 2)
+    R.Push("player", item(133, 0))
+    assertEqual(reads, 0, "no haste read in combat")
+    assertEqual(#R.__ticks("player"), 12, "the cached haste still spaces the ticks")
+    inst.mocks.InCombatLockdown = function() return false end
+    inst.mocks.UnitSpellHaste = function() return T.secret(10) end
+    set(inst, "player", "tickWidth", 1)
+    assertEqual(#R.__ticks("player"), 12, "a secret haste is never taken over the cached one")
+end)
+
+test("lane render: the spell names under the icons use the label's face, the skin's while it is on", function()
+    local inst, R = setup()
+    set(inst, "player", "showName", true)
+    -- A stored face that is not the skin's: the names must still take the skin's while it is on.
+    local LSM = inst.mocks.LibStub("LibSharedMedia-3.0")
+    local skinFace = inst.NS.Skin.GetFont()
+    for key, path in pairs(LSM:HashTable("font")) do
+        if path ~= skinFace then
+            set(inst, "player", "labelFont", key)
+            break
+        end
+    end
+    R.Push("player", item(133, 0))
+    local icon = R.__icons("player")[1]
+    local labelFace = R.__label("player"):GetFont()
+    assertEqual((icon.name:GetFont()), labelFace, "the name follows the label's face")
+    set(inst, "player", "labelFontFromSkin", false)
+    assertEqual((icon.name:GetFont()), (R.__label("player"):GetFont()), "and the stored face once it is off")
+end)
+
+test("lane render: Count answers a lane's live icons without building it", function()
+    local _, R = setup()
+    assertEqual(R.Count("player"), 0)
+    R.Push("player", item(133, 0))
+    R.Push("player", item(116, 0))
+    assertEqual(R.Count("player"), 2)
+    assertEqual(R.Count("nope"), 0, "an unknown lane holds none")
+end)

@@ -111,7 +111,10 @@ local function write(laneKey, key, value)
     if not t then return end
     local parts = {}
     for part in key:gmatch("[^.]+") do parts[#parts + 1] = part end
-    for i = 1, #parts - 1 do t = t[parts[i]] end
+    for i = 1, #parts - 1 do
+        if type(t[parts[i]]) ~= "table" then t[parts[i]] = {} end
+        t = t[parts[i]]
+    end
     t[parts[#parts]] = value
     NS.AnnounceSettingsChanged(path, value)
 end

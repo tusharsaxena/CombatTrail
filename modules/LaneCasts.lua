@@ -18,12 +18,18 @@ local _, NS = ...
 --     marked only on _INTERRUPTED with a cast in flight; a secret _FAILED is dropped, because without
 --     the castGUID it cannot be told apart from a failed press during the cast.
 --   * the pet's name is read through Secrets.PlainString; a secret name reads as no name.
+-- THE IN-COMBAT LOSS: with secret castGUIDs any SUCCEEDED counts as the end of the cast in flight,
+-- since the two cannot be compared. An off-GCD instant cast during a cast-time spell therefore closes
+-- that cast, and an interrupt of it later in the cast is not marked (the lane shows the instant, and
+-- the interrupted spell shows nothing). Out of combat, with plain castGUIDs, nothing is lost.
 --
 -- LISTENERS (LaneCasts.Listen). The fight record (modules/Casts.lua) hears the same casts from here
 -- rather than registering UNIT_SPELLCAST_* a second time: every cast the rules above keep (a
 -- SUCCEEDED once per castGUID, an interrupt of the cast in flight) is handed to each listener as
 -- (unit, spellID, t, interrupted) BEFORE the lane's own switches (enabled, ignore list, the
 -- interrupt mark), which decide only what a lane shows. The spell ID is handed raw: it may be secret.
+-- Each listener runs in pcall: one that raises is logged and costs neither the next listener nor the
+-- lane its push.
 --
 -- REGISTRATION follows CURRENT settings (slash-commands-§7): nothing while stood down, and otherwise
 -- the cast events for the units of the lanes whose `enabled` is on, and both units while a listener
@@ -198,7 +204,12 @@ local function refused(unit, guard)
 end
 
 local function tell(unit, spellID, t, interrupted)
-    for _, l in ipairs(listeners) do l.fn(unit, spellID, t, interrupted) end
+    for _, l in ipairs(listeners) do
+        local ok, err = pcall(l.fn, unit, spellID, t, interrupted)
+        if not ok and NS.Debug then
+            NS.Debug("Lanes", "listener %s raised: %s", l.key, Secrets.IsSealed(err) and "<secret>" or tostring(err))
+        end
+    end
 end
 
 -- UNIT_SPELLCAST_*(unit, castGUID, spellID). The unit token is plain; the other two may be secret.

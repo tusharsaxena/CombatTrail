@@ -58,7 +58,7 @@ local function lanes(out)
         local frame = NS.LaneRender.Frame(key)
         local shown = NS.LaneVisibility.Decide(key)
         out:add("Diag", "lane %s shown=%s decides=%s icons=%s mode=%s unlocked=%s", key,
-            frame ~= nil and frame:IsShown(), shown, #NS.LaneRender.__icons(key),
+            frame ~= nil and frame:IsShown(), shown, NS.LaneRender.Count(key),
             NS.GetSetting("lanes." .. key .. ".anchor.mode"), NS.LaneAnchor.IsUnlocked())
     end
 end
