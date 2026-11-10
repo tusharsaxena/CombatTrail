@@ -29,7 +29,7 @@ Update your row, with the commit SHA, in your task's final commit. A resumed ses
 | A1 | Schema 2 wipe, History rename, HUD "always" wins | done | c5a6a8f: SCHEMA_VERSION 2 wipe step, CT_SCHEMA 2, always returns early in autoAllowed, tab "History" / "Purge history…" (key `retention` kept) |
 | A2 | Target identity: name + level + NPC ID, board key, detail meta | done | 32481c2: key `t:<npcID>:<level\|?>:<name>:<diff>` (+tier), `n:<name>:<diff>` fallback, world boss stays `c:`; fields `targetLevel` (existing `targetCreatureID` is the NPC ID), `zone`, `subzone`; level from the entry snapshot only; Detail.Meta returns 3 lines |
 | A3 | Equipment sets with recon | done | 6751328: `db.global.gearSets`, `Loadouts.StoreGear/GetGear/GearOf/CurrentGearSet/Recon/GearCount/Sync/Suspend`; recon on PEW, PLAYER_EQUIPMENT_CHANGED, UNIT_INVENTORY_CHANGED(player), stand-up and post-combat if owed, one coalesced 0.5 s AceTimer; record `gearSet` (no `gear`); Sweep keeps current + live fight's set |
-| A4 | Forever: predominant talent tree stands in for spec | todo | |
+| A4 | Forever: predominant talent tree stands in for spec | done | e14eb75: `Compat.TalentTrees()` (talent tabs, then C_Traits groups; nil on Retail) and `Compat.TalentApis()` (probe); Forever `who.trees` + `who.specID = "tree:<class>:<index>"`, `specName`, `specIcon`; `Tbl.SpecInfo(id, name, icon)`; Spec filter/grouping on both clients, "talent tree" wording on Forever; `Fights.HasSpecs` removed |
 | A5 | Live DPS formatter: no raw decimals | todo | |
 | B1 | Shared bar palette (HUD) | todo | |
 | B2 | HUD look parity with DPS Race | todo | |
