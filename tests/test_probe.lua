@@ -403,3 +403,52 @@ test("probe: nothing is registered until the probe is armed", function()
     assertEqual(#probeRegs(inst), 0)
     assertFalse(inst.NS.Probe.IsArmed())
 end)
+
+-- ── deferred review items (plan Task 5.2b) ──────────────────────────────────────────────────────
+
+test("probe: Disarm and a fresh Arm cancel the samples still pending", function()
+    local inst, meter = withMeter()
+    session(meter)
+    local Probe = inst.NS.Probe
+    slash(inst, "probe")
+    enterCombat(inst)
+    assertEqual(table.concat(delays(inst), ","), "5")
+    slash(inst, "probe stop")
+    assertEqual(#delays(inst), 0, "stop cancels the +5 s sample")
+    slash(inst, "probe start")
+    assertEqual(table.concat(delays(inst), ","), "5", "start in combat takes it again")
+    Probe.Arm(true)
+    assertEqual(table.concat(delays(inst), ","), "5", "a fresh arm cancels the old one: one timer, not two")
+end)
+
+test("probe: a plain /kct probe in combat schedules the +5 s sample, one per combat", function()
+    local inst, meter = withMeter()
+    session(meter)
+    inst.mocks.InCombatLockdown = function() return true end
+    inst.mocks.__inCombat = true
+    slash(inst, "probe")
+    assertTrue(inst.NS.Probe.IsArmed())
+    assertEqual(table.concat(delays(inst), ","), "5", "armed in combat, the sample is scheduled now")
+    inst.mocks.__fire("PLAYER_REGEN_DISABLED")
+    assertEqual(table.concat(delays(inst), ","), "5", "a second edge in the same combat adds none")
+    slash(inst, "probe")
+    assertEqual(table.concat(delays(inst), ","), "5", "nor does a second report")
+end)
+
+test("probe: a function the client lacks reads missing, not raised", function()
+    local inst, meter = withMeter()
+    session(meter)
+    inst.mocks.C_DamageMeter.GetAvailableCombatSessions = nil
+    inst.mocks.C_DamageMeter.GetSessionDurationSeconds = nil
+    local lines = inst.NS.Probe.Report()
+    assertTrue(lineWith(lines, "sessions: missing") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "GetSessionDurationSeconds(current): missing") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "raised: missing") == nil, text(lines))
+end)
+
+test("probe: the pet verdict says it cannot see double counting", function()
+    local inst, meter = withMeter(function(m) m.__unitExists.pet = true end)
+    petSession(meter, { { id = 17253, dmg = 300, dps = 15 } })
+    local lines = inst.NS.Probe.Report()
+    assertTrue(lineWith(lines, "pet is separate source: yes (it cannot tell whether your own total also counts the pet's damage)") ~= nil, text(lines))
+end)

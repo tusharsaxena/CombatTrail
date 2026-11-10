@@ -8,14 +8,17 @@ local _, NS = ...
 --     IsDamageMeterAvailable, both enums, the session count, the player's and the pet's sources in
 --     the Current session (top five spells each), the Current session's sources and its duration
 --   * "pet is separate source": yes when the pet's GUID answers a source of its own that is not
---     empty while the player's source holds none of the pet's spells (spec §12's pet-split seam)
+--     empty while the player's source holds none of the pet's spells (spec §12's pet-split seam).
+--     It cannot see double counting: whether the player's own total also holds the pet's damage
+--     is a sum the meter alone could answer, so a "yes" says so beside it.
 --   * "pace pet-fill anchor": two hidden StatusBars, bar B's LEFT anchored to bar A's fill texture's
 --     RIGHT, and whether that SetPoint raised (the pace bar's pet fill, plan Task 3.2)
 --   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it.
 --
 -- ARMING. Nothing is registered until the probe is armed. `/kct probe` writes the report and, while
 -- no fight has been sampled, arms the probe for the next combat; `/kct probe start` arms it now with
--- fresh counts (taking the +5 s sample at once when already in combat); `/kct probe stop` disarms it.
+-- fresh counts; `/kct probe stop` disarms it. Armed in combat, either way, the +5 s sample is
+-- scheduled from then, and a combat schedules one in-combat sample however many edges it sees.
 -- An armed probe hears UNIT_SPELLCAST_SUCCEEDED for the player and the pet and the two
 -- PLAYER_REGEN_* edges, and disarms itself after the sample 2 s past the end of one combat.
 --
@@ -69,6 +72,7 @@ local armed = false    -- session state: watching casts and the next combat
 local counts           -- { inCombat = bucket, outCombat = bucket }
 local samples = {}     -- the meter samples, as report lines
 local timers = {}      -- the pending sample timers
+local combatSample     -- true once this combat's in-combat sample is scheduled
 local anchorLine       -- the pace pet-fill anchor's answer, kept once found
 
 local function newBucket() return { n = 0, secretID = 0, secretGUID = 0, pet = 0 } end
@@ -102,12 +106,13 @@ end
 -- ── the meter, read safely ─────────────────────────────────────────────────────────────────────
 
 --- The client meter's function `name` through NS.Meter.Call (pcall'd). Answers ok plus up to two
---- results, or false plus the error text ("missing" when the function is not there).
+--- results, or false plus what went wrong: "missing" when the function is not there, else
+--- "raised: <error>".
 local function call(name, ...)
     local ok, a, b = NS.Meter.Call(name, ...)
     if ok then return true, a, b end
     if a == "unavailable" then return false, "missing" end
-    return false, show(b)
+    return false, "raised: " .. show(b)
 end
 
 local function hasMeter() return NS.Meter.Api() ~= nil end
@@ -170,7 +175,7 @@ end
 local function availabilityLine(out)
     local ok, available, reason = call("IsDamageMeterAvailable")
     if not ok then
-        out[#out + 1] = "IsDamageMeterAvailable: raised: " .. available
+        out[#out + 1] = "IsDamageMeterAvailable: " .. available
         return
     end
     out[#out + 1] = ("IsDamageMeterAvailable: ok, available %s, reason %s"):format(show(available), show(reason))
@@ -193,7 +198,7 @@ end
 local function sessionsLine(out)
     local ok, list = call("GetAvailableCombatSessions")
     if not ok then
-        out[#out + 1] = "sessions: raised: " .. list
+        out[#out + 1] = "sessions: " .. list
         return
     end
     out[#out + 1] = ("sessions: %d"):format(Secrets.SafeIterate(list, function() end))
@@ -210,7 +215,7 @@ end
 local function sourceLines(out, who, guid)
     local ok, src, err = sourceOf(guid)
     if not ok then
-        out[#out + 1] = ("%s source: raised: %s"):format(who, err)
+        out[#out + 1] = ("%s source: %s"):format(who, err)
         return
     end
     if not Secrets.CanAccessTable(src) then
@@ -236,7 +241,7 @@ end
 local function sessionLines(out)
     local ok, sess = call("GetCombatSessionFromType", sessionCurrent(), damageDone())
     if not ok then
-        out[#out + 1] = "current session: raised: " .. sess
+        out[#out + 1] = "current session: " .. sess
     elseif not Secrets.CanAccessTable(sess) then
         out[#out + 1] = "current session: " .. show(sess)
     else
@@ -250,7 +255,7 @@ local function sessionLines(out)
         for _, line in ipairs(rows) do out[#out + 1] = line end
     end
     local okD, dur = call("GetSessionDurationSeconds", sessionCurrent())
-    out[#out + 1] = "GetSessionDurationSeconds(current): " .. (okD and show(dur) or ("raised: " .. dur))
+    out[#out + 1] = "GetSessionDurationSeconds(current): " .. (okD and show(dur) or dur)
 end
 
 -- ── the pet split ──────────────────────────────────────────────────────────────────────────────
@@ -289,7 +294,7 @@ local function petSplit()
         return "no (the pet's own source is empty: its damage may be folded into yours)"
     end
     if anyShared(petIDs, playerIDs) then return "no (your source also holds the pet's spells)" end
-    return "yes"
+    return "yes (it cannot tell whether your own total also counts the pet's damage)"
 end
 
 -- ── the pace bar's pet fill ────────────────────────────────────────────────────────────────────
@@ -349,7 +354,7 @@ end
 
 local function sourceSecrecy(who, guid)
     local ok, src, err = sourceOf(guid)
-    if not ok then return ("%s raised: %s"):format(who, err) end
+    if not ok then return ("%s %s"):format(who, err) end
     if not Secrets.CanAccessTable(src) then return ("%s source %s"):format(who, show(src)) end
     return ("%s total %s, dps %s, spells %s"):format(who, secrecy(src.totalAmount), secrecy(src.amountPerSecond),
         secrecy(src.combatSpells))
@@ -409,6 +414,7 @@ local function cancelTimers()
         if addon and addon.CancelTimer then addon:CancelTimer(handle) end
     end
     timers = {}
+    combatSample = nil
 end
 
 local function schedule(fn, delay)
@@ -423,6 +429,13 @@ end
 
 local function sampleInCombat()
     if armed then takeSample("combat+" .. Probe.SAMPLE_IN_COMBAT .. "s") end
+end
+
+-- This combat's in-combat sample, once: a second edge or a second arm in the same combat adds none.
+local function scheduleCombatSample()
+    if combatSample then return end
+    combatSample = true
+    schedule(sampleInCombat, Probe.SAMPLE_IN_COMBAT)
 end
 
 local function sampleAfterCombat()
@@ -445,8 +458,9 @@ local function hear(event, ...)
     if event == "UNIT_SPELLCAST_SUCCEEDED" then
         onCast(...)
     elseif event == "PLAYER_REGEN_DISABLED" then
-        schedule(sampleInCombat, Probe.SAMPLE_IN_COMBAT)
+        scheduleCombatSample()
     elseif event == "PLAYER_REGEN_ENABLED" then
+        combatSample = nil
         schedule(sampleAfterCombat, Probe.SAMPLE_AFTER_COMBAT)
     end
 end
@@ -470,7 +484,7 @@ local function register()
 end
 
 --- Arm the probe: watch casts and the next combat. `fresh` starts the counts and samples again.
---- Already in combat, the in-combat sample is taken on its usual delay from now.
+--- Already in combat, this combat's in-combat sample is taken on its usual delay from now.
 --- @param fresh boolean|nil
 function Probe.Arm(fresh)
     if fresh then
@@ -480,7 +494,7 @@ function Probe.Arm(fresh)
     end
     armed = true
     register()
-    if fresh and InCombatLockdown() then schedule(sampleInCombat, Probe.SAMPLE_IN_COMBAT) end
+    if InCombatLockdown() then scheduleCombatSample() end
     debug("armed%s", fresh and " (fresh)" or "")
 end
 
