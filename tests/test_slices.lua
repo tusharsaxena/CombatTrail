@@ -327,6 +327,27 @@ test("slices: a secret fight is captured once a step, opaque, and its record fin
     assertNil(record.slices, "nothing of the chart is persisted")
 end)
 
+test("slices: a fight the recording filters skip lets its store go, so it never holds a KEEP slot", function()
+    local inst, meter = fresh()
+    local NS = inst.NS
+    local s = {}
+    for k, v in pairs(FIGHT) do s[k] = v end
+    s.duration = 12
+    at(inst, 10)
+    meter.SetSession(1, s)
+    enter(inst, 10)
+    local fight = NS.Fight.Current()
+    at(inst, 11)
+    inst.mocks.__fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 0, 1)
+    ticks(inst, fight, 11, 21.75)
+    assertTrue(NS.Slices.Get(fight.id).filled > 0, "the short fight was captured while it ran")
+    leave(inst, 22)
+    settle(inst, 27)
+    settle(inst, 32)
+    assertNil(NS.Slices.Get(fight.id), "a skipped fight has no record to draw, so no chart is kept")
+    assertEqual(NS.Slices.Held(), 0)
+end)
+
 test("slices: no read before a session is bound, and those boundaries become holes", function()
     local inst = fresh()
     local NS = inst.NS

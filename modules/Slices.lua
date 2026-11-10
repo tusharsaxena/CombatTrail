@@ -26,8 +26,8 @@ local _, NS = ...
 -- THE READS. FIGHT_STARTED opens the fight's store and FIGHT_TICK (4 Hz, combat only) reads
 -- Meter.ReadLive once per step, never more often: the tick only reads when a boundary is due. A merged
 -- fight reads its newest session. FIGHT_ENDED "final" closes the store, which waits for the record
--- (Recorder sets fight.recordID, so Slices.Get answers a record id too); "lost" forgets it. Slices.KEEP
--- closed fights are held, the oldest let go first.
+-- (Recorder sets fight.recordID, so Slices.Get answers a record id too); "lost" and FIGHT_SKIPPED
+-- forget it. Slices.KEEP closed fights are held, the oldest let go first.
 --
 -- IN MEMORY ONLY, NEVER STORED. A value captured in combat stays secret, and the client writes a
 -- secret to SavedVariables as nil, so a fight recorded before the last /reload or login has no chart
@@ -349,5 +349,10 @@ if busTarget then
     busTarget:RegisterMessage(NS.MSG.FIGHT_ENDED, function(_, fight, _, reason)
         if type(fight) ~= "table" then return end
         if reason == "final" then Slices.Close(fight.id) else Slices.Forget(fight.id) end
+    end)
+    -- A fight the recording filters skip has no record to draw (modules/Recorder.lua drops its cast
+    -- list the same way), so it never takes a KEEP slot from a stored fight's chart.
+    busTarget:RegisterMessage(NS.MSG.FIGHT_SKIPPED, function(_, fight)
+        if type(fight) == "table" then Slices.Forget(fight.id) end
     end)
 end
