@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/Results_Compare.lua — the compare (spec §7, mockup §7): a window from the Results detail's
--- *Compare vs best* button that sets the fight beside another, figure by figure and spell by spell.
+-- *Compare* button that sets the fight beside another, figure by figure and spell by spell.
 -- Adapted from DPS Race @045f479 (modules/Results_Compare.lua) without its race, and drawn as the
 -- mockup draws it: its own window over the Results window, where DPS Race drew the compare inside
 -- the detail behind a toggle.
@@ -13,14 +13,22 @@ local _, NS = ...
 -- session-only view state, never stored: it holds until *Clear pick* (here, while it is in use) or
 -- the picked fight is deleted.
 --
--- THE LAYOUT. A legend bar (this fight's label in gold, the other's in blue and what it is, a note
+-- THE LAYOUT. A legend bar (this fight's label in yellow, the other's in blue and what it is, a note
 -- when a picked fight is on another board, *Clear pick* at its right while a pick is in use); three
 -- figure boxes, DPS, Damage and Length, each "other >> this" and the change; the spell table, every
 -- spell either fight cast matched by spell and caster (the pet's marked "(pet)"), each row the other's
--- total -> this one's, a blue and a gold bar on one scale, and the change; and the gear line under the
+-- total -> this one's, a blue and a yellow bar on one scale, and the change; the gear line under the
 -- spells: the slots whose gear differs (Gear.ChangedSlots, with the item levels), and the *Different
--- loadout* mark when the two fights' talent loadouts differ. The table shows MAX_ROWS rows at once and
--- the mouse wheel scrolls it.
+-- loadout* mark when the two fights' talent loadouts differ; and *Trinkets and consumables* (v0.2 Task
+-- C4): every item either fight used (ResultsUsage.Entries: gear first, hidden items and enchants never),
+-- a line each, the other's uses then this one's, "not used" on a side without it. The table shows
+-- MAX_ROWS rows at once and the mouse wheel scrolls it.
+--
+-- THE COLORS BY SIDE (v0.2 Task C4, plan D15). The sides are fixed whatever the other fight is (the
+-- best, the runner-up or the pick): this fight is always yellow and the other always blue, DPS Race's
+-- compare hues from the shared palette (NS.Constants.PALETTE): the bars THIS_BAR and BEST_BAR at BAR_A,
+-- every figure and label of a side in THIS_TEXT or BEST_TEXT (escapes, Compare.SideText; the change
+-- keeps its green and red). They are data hues, the same under every skin. The tooltips stay plain.
 --
 -- THE WINDOW is a modal of the ability timeline's kind (modules/Results_Timeline.lua): one strata above
 -- the Results window, toplevel, the shared skin made opaque, in UISpecialFrames (Escape closes it
@@ -31,7 +39,8 @@ local _, NS = ...
 --
 -- PLAIN NUMBERS ONLY. Both fights are stored records (every figure went through NS.Secrets on its
 -- way in), so they may be divided, compared and sorted. Pick, Target, Default, Spells, Pct, Kpis,
--- DifferentLoadout, SameBoard, BarWidths, ChangeText, GearText and Size are pure over the source.
+-- DifferentLoadout, SameBoard, BarWidths, ChangeText, PairText, SideText, GearText, UsageRows and Size
+-- are pure over the source.
 
 local Compare = { wanted = false }
 NS.ResultsCompare = Compare
@@ -42,6 +51,7 @@ local FONT = Style.FONT
 local Tbl = NS.ResultsTable
 local C = Tbl.COLORS
 local TL = NS.ResultsTimeline
+local PALETTE = NS.Constants.PALETTE
 
 Compare.FRAME_NAME = "CombatTrailCompare"
 Compare.WIDTH = 660
@@ -57,6 +67,8 @@ Compare.BAR_H = 6           -- each of a row's two bars
 Compare.GEAR_TITLE_H = 22
 Compare.GEAR_LINE_H = 26
 Compare.GEAR_ICON = 20
+Compare.USAGE_TITLE_H = 22  -- the Trinkets and consumables heading
+Compare.USAGE_ROW_H = 22    -- one used item
 Compare.CLEAR_W = 78
 Compare.CHIP_W = 112
 -- The spell table's columns (mockup §7): the name, "other -> this", the bars, the change.
@@ -260,19 +272,30 @@ local function figure(key, v)
     return NS.Format.Number(v)
 end
 
---- A figure pair, the other's then this fight's ("182.9K -> 186.9K").
+--- A figure pair, the other's then this fight's ("182.9K -> 186.9K"), plain (the tooltips').
 function Compare.PairText(key, a, b)
     return figure(key, b) .. ARROW .. figure(key, a)
 end
 
+-- `s` in data hue `c`.
+local function tint(c, s) return Style.HueEscape(c) .. s .. "|r" end
+
+--- The pair as the window writes it: the other fight's figure in blue, this one's in yellow.
+function Compare.SideText(key, a, b)
+    return tint(PALETTE.BEST_TEXT, figure(key, b)) .. ARROW .. tint(PALETTE.THIS_TEXT, figure(key, a))
+end
+
 --- One changed slot's words for the gear line: its slot's name, then the item levels when they
 --- differ ("Trinket 1 · 714 -> 727"), else what differs ("gem differs", "enchant differs", "another
---- item", "nothing worn" or "nothing worn before"). `ilvlA`, `ilvlB` are this fight's and the other's.
-function Compare.GearText(change, ilvlA, ilvlB)
+--- item", "nothing worn" or "nothing worn before"). `ilvlA`, `ilvlB` are this fight's and the other's;
+--- `tinted` writes the levels in their sides' hues (the window's line; plain, its width's estimate).
+function Compare.GearText(change, ilvlA, ilvlB, tinted)
     local d = change.diff or {}
     local what
     if type(ilvlA) == "number" and type(ilvlB) == "number" and math.floor(ilvlA) ~= math.floor(ilvlB) then
-        what = ("%d%s%d"):format(math.floor(ilvlB), ARROW, math.floor(ilvlA))
+        local b, a = ("%d"):format(math.floor(ilvlB)), ("%d"):format(math.floor(ilvlA))
+        if tinted then b, a = tint(PALETTE.BEST_TEXT, b), tint(PALETTE.THIS_TEXT, a) end
+        what = b .. ARROW .. a
     elseif change.item == nil then
         what = L["nothing worn"]
     elseif change.otherItem == nil then
@@ -287,13 +310,49 @@ function Compare.GearText(change, ilvlA, ilvlB)
     return NS.ResultsGear.SlotName(change.slot) .. SEP .. what
 end
 
---- The window's height for `n` spell rows and `gearLines` lines of changed gear.
-function Compare.Size(n, gearLines)
+--- The window's height for `n` spell rows, `gearLines` lines of changed gear and `usageLines` used
+--- items (each at least one line: a "none" line stands in).
+function Compare.Size(n, gearLines, usageLines)
     local shown = math.max(1, math.min(Compare.MAX_ROWS, n or 0))
     local height = HEADER_H + Compare.LEGEND_H + Compare.KPI_H + Compare.KPI_GAP + Compare.HEAD_H
         + shown * Compare.ROW_H + Compare.KPI_GAP + Compare.GEAR_TITLE_H
-        + math.max(1, gearLines or 0) * Compare.GEAR_LINE_H + Compare.PAD
+        + math.max(1, gearLines or 0) * Compare.GEAR_LINE_H
+        + Compare.KPI_GAP + Compare.USAGE_TITLE_H + math.max(1, usageLines or 0) * Compare.USAGE_ROW_H
+        + Compare.PAD
     return Compare.WIDTH, height
+end
+
+-- ── pure: what was used ─────────────────────────────────────────────────────────────────────────
+
+-- A used entry's match across the fights: its item, or its kind for an entry with none (food).
+local function usageKey(e)
+    if e.itemID ~= nil then return "i" .. tostring(e.itemID) end
+    return "k" .. tostring(e.kind)
+end
+
+--- `NS.ResultsCompare.UsageRows(a, b)`: every item either fight used (ResultsUsage.Entries: hidden
+--- items and enchants never), matched by item (by kind with none): { itemID, kind, a = entry|nil,
+--- b = entry|nil }. The gear (trinkets) first, then the consumables, each in this fight's order, then
+--- the other's. Also whether each fight recorded its usage at all.
+--- @return table rows, boolean aRecorded, boolean bRecorded
+function Compare.UsageRows(a, b)
+    local U = NS.ResultsUsage
+    local ea, eb = U.Entries(a), U.Entries(b)
+    local rows, at = {}, {}
+    local function add(e, side)
+        local k = usageKey(e)
+        local row = at[k]
+        if not row then
+            row = { itemID = e.itemID, kind = e.kind }
+            at[k], rows[#rows + 1] = row, row
+        end
+        if row[side] == nil then row[side] = e end
+    end
+    for _, gear in ipairs({ true, false }) do
+        for _, e in ipairs(ea or {}) do if (e.kind == "gear") == gear then add(e, "a") end end
+        for _, e in ipairs(eb or {}) do if (e.kind == "gear") == gear then add(e, "b") end end
+    end
+    return rows, ea ~= nil, eb ~= nil
 end
 
 -- ── the client's item data ──────────────────────────────────────────────────────────────────────
@@ -326,9 +385,9 @@ end
 
 local function buildLegend(f)
     local y = -HEADER_H - Compare.LEGEND_H / 2
-    ui.legendA = Style.Text(f, FONT.TEXT, TL.THIS)
+    ui.legendA = Style.Text(f, FONT.TEXT, PALETTE.THIS_TEXT)
     ui.legendA:SetPoint("LEFT", f, "TOPLEFT", Compare.PAD, y)
-    ui.legendB = Style.Text(f, FONT.TEXT, TL.OTHER)
+    ui.legendB = Style.Text(f, FONT.TEXT, PALETTE.BEST_TEXT)
     ui.legendB:SetPoint("LEFT", ui.legendA, "RIGHT", 16, 0)
     ui.note = Style.Text(f, FONT.CAPTION, C.amber)
     ui.note:SetPoint("LEFT", ui.legendB, "RIGHT", 12, 0)
@@ -415,11 +474,11 @@ local function newRow(f)
     row.barB = row:CreateTexture(nil, "ARTWORK")
     row.barB:SetPoint("TOPLEFT", row, "LEFT", barX - px, Compare.BAR_H + 1)
     row.barB:SetHeight(Compare.BAR_H)
-    Style.Fill(row.barB, TL.OTHER, 0.9)
+    Style.Fill(row.barB, PALETTE.BEST_BAR, PALETTE.BAR_A)
     row.barA = row:CreateTexture(nil, "ARTWORK")
     row.barA:SetPoint("TOPLEFT", row, "LEFT", barX - px, -1)
     row.barA:SetHeight(Compare.BAR_H)
-    Style.Fill(row.barA, TL.THIS, 0.9)
+    Style.Fill(row.barA, PALETTE.THIS_BAR, PALETTE.BAR_A)
     row.barW = barW
     row.change = Style.Text(row, FONT.TEXT, C.dim, "RIGHT")
     row.change:SetPoint("LEFT", row, "LEFT", changeX - px, 0)
@@ -454,6 +513,13 @@ local function buildGear(f)
     ui.chip:SetScript("OnLeave", function() Tbl.HideTip() end)
 end
 
+local function buildUsage(f)
+    ui.usageTitle = Style.Text(f, FONT.SECTION)
+    ui.usageTitle:SetText(L["Trinkets and consumables"])
+    ui.usageNone = Style.Text(f, FONT.TEXT, C.dim)
+    ui.usageLines = {}
+end
+
 -- A close-stack close, a frame later: the Results window's cover goes unless the window is open again.
 local function settle()
     if Compare.IsShown() then return end
@@ -473,7 +539,7 @@ end
 local function ensureWindow()
     if ui then return ui end
     local f = CreateFrame("Frame", Compare.FRAME_NAME, UIParent, "BackdropTemplate")
-    ui = { frame = f, rows = {}, gearItems = {}, offset = 0, data = {} }
+    ui = { frame = f, rows = {}, gearItems = {}, usageLines = {}, offset = 0, data = {} }
     f:Hide()
     f:SetFrameStrata(NS.Constants.LAYERS.STRATA.MODAL)
     f:SetClampedToScreen(true)
@@ -485,6 +551,7 @@ local function ensureWindow()
     buildKpis(f)
     buildHead(f)
     buildGear(f)
+    buildUsage(f)
     NS.Skin.Shell(f, TL.SHELL)
     f:SetScript("OnHide", onHide)
     f:EnableMouseWheel(true)
@@ -514,8 +581,8 @@ function Compare.LoadoutLines(record, other)
     local Lo = NS.ResultsLoadout
     if not (record and other) then return nil end
     return { L["Different loadout"],
-             L["This fight: %s"]:format(Lo.TalentsText(Lo.TalentsOf(record))),
-             L["The other fight: %s"]:format(Lo.TalentsText(Lo.TalentsOf(other))) }
+             L["This fight: %s"]:format(Lo.TalentsText(Lo.TalentsOf(record), record.who)),
+             L["The other fight: %s"]:format(Lo.TalentsText(Lo.TalentsOf(other), other.who)) }
 end
 
 -- ── drawing ─────────────────────────────────────────────────────────────────────────────────────
@@ -530,14 +597,15 @@ local function fillLegend(record, other, kind)
     local R = NS.Results
     local pickID = R.Pick()
     ui.clear:SetShown(pickID ~= nil and NS.ResultsSource.Get(pickID) ~= nil)
-    ui.headFigure:SetText(L["%s \194\187 this"]:format(ui.otherKind or L["Best"]))
-    ui.headBars:SetText(L["%s / This"]:format(ui.otherKind or L["Best"]))
+    local otherWord = tint(PALETTE.BEST_TEXT, ui.otherKind or L["Best"])
+    ui.headFigure:SetText(otherWord .. ARROW .. tint(PALETTE.THIS_TEXT, L["this"]))
+    ui.headBars:SetText(otherWord .. " / " .. tint(PALETTE.THIS_TEXT, L["This"]))
 end
 
 local function fillKpis(record, other)
     for i, k in ipairs(Compare.Kpis(record, other)) do
         local box = ui.kpis[i]
-        box.value:SetText(Compare.PairText(k.key, k.a, k.b))
+        box.value:SetText(Compare.SideText(k.key, k.a, k.b))
         box.change:SetText(k.pct and Compare.ChangeText(k.pct) or "")
         Style.Paint(box.change, Compare.ChangeColor(k.pct, k.key == "length"))
     end
@@ -548,7 +616,7 @@ local function fillRow(row, data, index)
     Style.Stripe(row.bg, index)
     row.icon:SetTexture(NS.HudBreakdown.SpellIcon(data.spellID))
     row.name:SetText(NS.ResultsTimelineData.Name({ spellID = data.spellID, pet = data.pet }))
-    row.figure:SetText(figure("damage", data.bTotal) .. ARROW .. figure("damage", data.aTotal))
+    row.figure:SetText(Compare.SideText("damage", data.aTotal, data.bTotal))
     local bw, aw = Compare.BarWidths(data, ui.maxTotal, row.barW)
     row.barB:SetWidth(math.max(1, bw))
     row.barB:SetShown(bw > 0)
@@ -609,8 +677,9 @@ local function layoutGear(y)
     local x, line, right = Compare.PAD, 0, Compare.WIDTH - Compare.PAD
     for i, change in ipairs(changes) do
         local g = gearItem(i)
-        local text = Compare.GearText(change, G.IlvlOf(change.item), G.IlvlOf(change.otherItem))
-        local w = Compare.GEAR_ICON + 6 + Tbl.BadgeWidth(text, false) + 12
+        local ilvlA, ilvlB = G.IlvlOf(change.item), G.IlvlOf(change.otherItem)
+        local text = Compare.GearText(change, ilvlA, ilvlB, true)
+        local w = Compare.GEAR_ICON + 6 + Tbl.BadgeWidth(Compare.GearText(change, ilvlA, ilvlB), false) + 12
         if x > Compare.PAD and x + w > right then x, line = Compare.PAD, line + 1 end
         g.icon:ClearAllPoints()
         g.icon:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", x, y - Compare.GEAR_TITLE_H - line * Compare.GEAR_LINE_H)
@@ -627,10 +696,90 @@ local function layoutGear(y)
     return #changes == 0 and 1 or line + 1
 end
 
+-- A used item's hover: the client's item tooltip (pcall'd), then each side's uses in its hue.
+local function usageTip(line)
+    local tt, d = GameTooltip, line.data
+    if not (tt and d) then return end
+    tt:SetOwner(line, "ANCHOR_RIGHT")
+    local shown = d.itemID and tt.SetItemByID and pcall(tt.SetItemByID, tt, d.itemID)
+    if not shown then tt:SetText(NS.ResultsUsage.Name(d.a or d.b), Style.Rgb("gtip.value")) end
+    tt:AddLine(L["This fight: %s"]:format(line.this:GetText() or ""), Style.Rgb(PALETTE.THIS_TEXT))
+    tt:AddLine(L["The other fight: %s"]:format(line.other:GetText() or ""), Style.Rgb(PALETTE.BEST_TEXT))
+    tt:Show()
+end
+
+local function usageLine(i)
+    local u = ui.usageLines[i]
+    if u then return u end
+    local _, figX, barX, barW = columns()
+    local px = Compare.PAD
+    u = CreateFrame("Frame", nil, ui.frame)
+    u:SetSize(Compare.WIDTH - 2 * Compare.PAD, Compare.USAGE_ROW_H)
+    u.icon = u:CreateTexture(nil, "ARTWORK")
+    u.icon:SetSize(Compare.ICON, Compare.ICON)
+    u.icon:SetPoint("LEFT", u, "LEFT", 0, 0)
+    Style.EdgeIcon(u.icon)
+    u.name = Style.Text(u, FONT.TEXT, C.text)
+    u.name:SetPoint("LEFT", u, "LEFT", Compare.ICON + 6, 0)
+    u.name:SetWidth(Compare.NAME_W - Compare.ICON - 6)
+    u.other = Style.Text(u, FONT.TEXT, PALETTE.BEST_TEXT)
+    u.other:SetPoint("LEFT", u, "LEFT", figX - px, 0)
+    u.other:SetWidth(Compare.FIGURE_W)
+    u.this = Style.Text(u, FONT.TEXT, PALETTE.THIS_TEXT)
+    u.this:SetPoint("LEFT", u, "LEFT", barX - px, 0)
+    u.this:SetWidth(barW)
+    u:EnableMouse(true)
+    u:SetScript("OnEnter", usageTip)
+    u:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    ui.usageLines[i] = u
+    return u
+end
+
+-- One side's uses: the entry's detail in the side's hue, else a dim "not used" ("not recorded" when
+-- that fight kept no usage).
+local function sideUses(fs, e, recorded, hue)
+    if e then
+        fs:SetText(NS.ResultsUsage.Detail(e))
+        Style.Paint(fs, hue)
+    else
+        fs:SetText(recorded and L["not used"] or L["not recorded"])
+        Style.Paint(fs, C.dim)
+    end
+end
+
+-- The used items, a line each under their heading. Answers how many lines they took.
+local function layoutUsage(y)
+    local U = NS.ResultsUsage
+    ui.usageTitle:ClearAllPoints()
+    ui.usageTitle:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", Compare.PAD, y)
+    local rows, aRec, bRec = {}, false, false
+    if ui.other then rows, aRec, bRec = Compare.UsageRows(ui.record, ui.other) end
+    for i, r in ipairs(rows) do
+        local u = usageLine(i)
+        u.data = r
+        u:ClearAllPoints()
+        u:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", Compare.PAD, y - Compare.USAGE_TITLE_H - (i - 1) * Compare.USAGE_ROW_H)
+        u.icon:SetTexture(U.Icon(r.a or r.b))
+        u.name:SetText(U.Name(r.a or r.b))
+        sideUses(u.other, r.b, bRec, PALETTE.BEST_TEXT)
+        sideUses(u.this, r.a, aRec, PALETTE.THIS_TEXT)
+        u:Show()
+    end
+    for i = #rows + 1, #ui.usageLines do
+        ui.usageLines[i].data = nil
+        ui.usageLines[i]:Hide()
+    end
+    ui.usageNone:SetShown(#rows == 0)
+    ui.usageNone:SetText((aRec or bRec) and L["None used"] or L["Usage not recorded for both fights."])
+    ui.usageNone:ClearAllPoints()
+    ui.usageNone:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", Compare.PAD, y - Compare.USAGE_TITLE_H)
+    return #rows
+end
+
 -- Centered over the Results window (its anchor and its size in the view shown).
 local function applyPlacement()
     local point, relativePoint, x, y, width, height = NS.Results.Placement()
-    local ch = ui.height or select(2, Compare.Size(0, 1))
+    local ch = ui.height or select(2, Compare.Size(0, 1, 1))
     local cx, cy = NS.ResultsGear.CenterOver(point, x, y, width, height, Compare.WIDTH, ch)
     ui.frame:ClearAllPoints()
     ui.frame:SetPoint(point, UIParent, relativePoint, cx, cy)
@@ -654,7 +803,8 @@ function draw()
     fillKpis(record, other)
     local y = layoutRows() - Compare.KPI_GAP
     local lines = layoutGear(y)
-    ui.width, ui.height = Compare.Size(#ui.data, lines)
+    local used = layoutUsage(y - Compare.GEAR_TITLE_H - lines * Compare.GEAR_LINE_H - Compare.KPI_GAP)
+    ui.width, ui.height = Compare.Size(#ui.data, lines, used)
     ui.frame:SetSize(ui.width, ui.height)
     Compare.ApplyScale()
     debug("drawn: %d spells", #ui.data)
@@ -734,6 +884,15 @@ function Compare.Rows()
     local out = {}
     for _, row in ipairs(ui and ui.rows or {}) do
         if row:IsShown() then out[#out + 1] = row end
+    end
+    return out
+end
+
+--- The used-item lines drawn now, for the suites: { line frame (name, other, this), ... } (shown ones).
+function Compare.UsageLines()
+    local out = {}
+    for _, u in ipairs(ui and ui.usageLines or {}) do
+        if u:IsShown() then out[#out + 1] = u end
     end
     return out
 end

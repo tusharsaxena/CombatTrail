@@ -145,7 +145,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-R6 | Both | The Usage icon file ids (134062, 134400) | Both icons draw |
 | SM-CT-R7 | Both | Share to party and say | One line; the difficulty short names read right; refused in combat |
 | SM-CT-R8 | Both | A talentbuild link in chat | It opens the talents |
-| SM-CT-R9 | Retail | View talents | Opens PlayerSpellsFrame; the Results window steps aside and comes back |
+| SM-CT-R9 | Retail | View Talents | Opens PlayerSpellsFrame; the Results window steps aside and comes back |
 | SM-CT-R10 | Both | Item tooltips from a trimmed item string, and Shift-click links | Full tooltips; the link posts |
 | SM-CT-R11 | Both | The detail's four boxes at 440 px | Damage, DPS, Meter DPS and Delta fit |
 | SM-CT-R12 | Retail | The Spec dropdown, column and grouping | Present |
@@ -171,6 +171,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-T7 | Forever | The gear view's primary stat | A dash, by design |
 | SM-CT-T8 | Both | The Never show menu in the Usage edit | The item leaves the list and joins History → Usage |
 | SM-CT-T9 | Both | Fight twice in the same gear, swap a full equipment set (the Equipment Manager), fight again, `/reload`, fight again, then `/ct diag` | `gearSets=2`, not one per fight or per slot; the gear view and Compare's *Gear changed* show the swap; nothing new after the reload |
+| SM-CT-T10 | Both | Open Compare on a fight that is not its board's best, then on the best, then after *Compare With This Fight* on another; hover the button each time; use a trinket and a potion in one fight and not the other | The button reads Compare and its tooltip names the best, the runner-up or the pick; this fight's bars, legend, figures and item levels are yellow and the other's blue in every case; *Trinkets and consumables* lists each item once, gear first, the other's uses then this one's, "not used" on the side without it, the item tooltip on hover; "None used" with nothing on either side |
 
 ## 7. Settings pages
 

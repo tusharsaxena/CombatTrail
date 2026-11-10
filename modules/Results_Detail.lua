@@ -27,8 +27,9 @@ local _, NS = ...
 -- The trophy chip beside the name marks a fight that holds the personal best on its board.
 --
 -- THE SEAMS. Timeline (NS.ResultsTimeline) is live for a fight with casts; Compare (NS.ResultsCompare)
--- for a fight with a fight to compare with, labeled just "Compare" (the best, the runner-up or the
--- picked fight: Pane:CompareTarget, the one answer the timeline, the gear view and the compare read);
+-- for a fight with a fight to compare with, labeled just "Compare", its tooltip naming the target
+-- (the best, the runner-up or the picked fight: Pane:CompareTarget, the one answer the timeline, the
+-- gear view and the compare read);
 -- Share while modules/Share.lua answers (never on a sample fight); Add note and Delete are the
 -- shell's (the note box and the delete's confirmation).
 --
@@ -385,6 +386,20 @@ local function tipOf(key)
     return { L[t[1]], L[t[2]] }
 end
 
+-- The Compare button's tooltip names the fight it compares with (v0.2 Task C4); with none, the
+-- general line.
+local COMPARE_TIPS = {
+    best = "This fight beside the best on its board.",
+    runnerUp = "This fight beside the runner-up on its board. This fight is the best.",
+    picked = "This fight beside the fight you picked with Compare With This Fight.",
+}
+
+local function compareTip(kind)
+    local line = COMPARE_TIPS[kind]
+    if not line then return tipOf("compare") end
+    return { L["Compare"], L[line] }
+end
+
 local function buildButtons(p)
     local w, f, hooks = p.w, p.frame, p.hooks
     local act = {
@@ -514,8 +529,9 @@ function Pane:fillButtons(record)
     local TL, CMP = NS.ResultsTimeline, NS.ResultsCompare
     local hasCasts = type(record.casts) == "string" and record.casts ~= ""
     Style.SetEnabled(w.timeline, TL ~= nil and type(TL.Open) == "function" and hasCasts)
-    local other = self:CompareTarget()
+    local other, kind = self:CompareTarget()
     Style.SetEnabled(w.compare, CMP ~= nil and type(CMP.Open) == "function" and other ~= nil)
+    w.compare.tip = compareTip(other and kind)
     Style.SetEnabled(w.share, hooks.canShare ~= nil and hooks.canShare() == true)
     local hasNote = type(record.note) == "string" and record.note ~= ""
     w.addNote.label:SetText(hasNote and L["Edit Note"] or L["Add Note"])

@@ -799,7 +799,7 @@ Total.
 - timeline: the empty cases
 - timeline: a stand-down refuses the open
 
-### test_compare.lua (8)
+### test_compare.lua (12)
 
 - compare: vs best, runner-up when best
 - compare: session pick overrides until cleared
@@ -809,6 +809,10 @@ Total.
 - compare: an upgraded item is on the gear line
 - compare: the gear line reads stored sets, a sample's inline gear, and one set on both says no change
 - compare: Escape closes the compare first and the Results window stays
+- compare: the Compare button's tooltip names the fight it compares with
+- compare: this fight is yellow and the other blue, in the best and the runner-up cases alike
+- compare: trinkets and consumables used by both fights, side by side
+- compare: the Different loadout tooltip writes a Forever fight's talent points
 
 ### test_gear.lua (6)
 
@@ -980,7 +984,7 @@ Total.
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
 
-### test_skin_switch.lua (38)
+### test_skin_switch.lua (40)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the HUD's window shell changes
@@ -1010,6 +1014,8 @@ Total.
 - skin switch: the compare's shell changes with the Scope ignored
 - skin switch: the compare's spell header changes
 - skin switch: the compare's spell header changes with the Scope ignored
+- skin switch: the compare's usage heading changes
+- skin switch: the compare's usage heading changes with the Scope ignored
 - skin switch: the gear view's shell changes
 - skin switch: the gear view's shell changes with the Scope ignored
 - skin switch: the gear view's legend changes
@@ -1071,7 +1077,7 @@ Total.
 | test_results_sections.lua | 5 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
-| test_compare.lua | 8 |
+| test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 16 |
@@ -1087,7 +1093,7 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_client_globals.lua | 3 |
 | test_diagnostics_contract.lua | 8 |
-| test_skin_switch.lua | 38 |
+| test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **844** |
+| **Total** | **850** |

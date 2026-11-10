@@ -280,8 +280,12 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
   the compared fight in blue), per-ability rows with two tick lanes, cooldown length under the name, cast counts, long
   cooldowns first, pet abilities (toggle), zoom and pan (buttons, Ctrl+wheel, Shift+wheel), and a help "?".
 - **Compare (owner):** against the best on the board key, or the runner-up if this fight is the best, or any fight picked from the
-  right-click menu. Damage, DPS, length and every spell side by side with deltas and dual bars, gear slots changed, and a
-  Different loadout mark.
+  right-click menu. Damage, DPS, length and every spell side by side with deltas and dual bars, gear slots changed, a
+  Different loadout mark and, since v0.2, the trinkets and consumables each fight used (the other's uses beside this
+  one's, "not used" on a side without the item). The button reads just *Compare*; its tooltip names the target. Since
+  v0.2 the sides keep fixed colors: this fight is yellow and the other is blue (`PALETTE.THIS_BAR` / `BEST_BAR` at
+  `BAR_A` for the bars, `THIS_TEXT` / `BEST_TEXT` for every figure and label of a side), whether the other is the best,
+  the runner-up or a pick. DPS Race paints whichever side is best in blue instead.
 - **Gear view and stats (owner):** DpsRace `Results_Gear.lua` and `Stats.lua`. Snapshots are taken at combat start, and
   re-read out of combat for any field that came back secret.
 - **Usage (owner):** DpsRace `Usage.lua` and `Results_Usage.lua`: on-use gear and consumables found from casts, bag counts

@@ -254,7 +254,11 @@ test("compare: an upgraded item is on the gear line", function()
     local texts = {}
     for _, g in ipairs(ui.gearItems) do if g.text:IsShown() then texts[#texts + 1] = g.text:GetText() end end
     assertEqual(#texts, 1, "the same item ID, another item level")
-    assertEqual(texts[1], "Trinket 2 \194\183 714 \194\187 727")
+    local P, Style = NS.Constants.PALETTE, NS.Style
+    assertEqual(texts[1], "Trinket 2 \194\183 " .. Style.HueEscape(P.BEST_TEXT) .. "714|r \194\187 "
+        .. Style.HueEscape(P.THIS_TEXT) .. "727|r", "the other's level in blue, this one's in yellow")
+    assertEqual(NS.ResultsCompare.GearText({ slot = 14, item = up, otherItem = before, diff = {} }, 727, 714),
+        "Trinket 2 \194\183 714 \194\187 727", "plain without the tint")
     assertFalse(ui.gearNone:IsShown())
 end)
 
@@ -294,4 +298,159 @@ test("compare: Escape closes the compare first and the Results window stays", fu
     assertTrue(NS.Results.IsShown(), "the Results window stayed")
     assertTrue(NS.Results.__ui().frame:IsShown())
     assertFalse(NS.Results.IsCovered(), "the cover went once the compare's close settled")
+end)
+
+-- ── v0.2 Task C4: the button's tip, the colors by side, what was used ───────────────────────────
+
+test("compare: the Compare button's tooltip names the fight it compares with", function()
+    local NS = fresh()
+    save(NS, rec(NS, { id = "best", dps = 3000 }), rec(NS, { id = "mid", dps = 2000 }),
+        rec(NS, { id = "elsewhere", dps = 9000, encounterID = 9999 }))
+    local pane = detailOn(NS, "mid")
+    assertEqual(pane.w.compare.tip[1], "Compare")
+    assertEqual(pane.w.compare.tip[2], "This fight beside the best on its board.")
+    pane = detailOn(NS, "best")
+    assertEqual(pane.w.compare.tip[2], "This fight beside the runner-up on its board. This fight is the best.")
+    NS.Results.CompareWith("elsewhere")
+    pane = detailOn(NS, "mid")
+    assertEqual(pane.w.compare.tip[2], "This fight beside the fight you picked with Compare With This Fight.")
+    assertEqual(pane.w.compare.label:GetText(), "Compare", "the label stays Compare")
+end)
+
+-- Whether paint color `c` is palette entry `p` at alpha `a`.
+local function sameHue(c, p, a, what)
+    assertTrue(c ~= nil, what .. ": painted")
+    for i = 1, 3 do assertTrue(math.abs(c[i] - p[i]) < 1e-6, what .. " channel " .. i) end
+    if a then assertTrue(math.abs((c[4] or 1) - a) < 1e-6, what .. " alpha") end
+end
+
+-- Whether `text` writes the other fight in blue, then the arrow, then this one in yellow.
+local function sidesTinted(NS, text, what)
+    local P, Style = NS.Constants.PALETTE, NS.Style
+    local blue, yellow = Style.HueEscape(P.BEST_TEXT), Style.HueEscape(P.THIS_TEXT)
+    local b = text:find(blue, 1, true)
+    local y = text:find(yellow, 1, true)
+    assertTrue(b ~= nil, what .. ": the other side in blue: " .. text)
+    assertTrue(y ~= nil, what .. ": this side in yellow: " .. text)
+    assertTrue(b < y, what .. ": the other side first: " .. text)
+end
+
+test("compare: this fight is yellow and the other blue, in the best and the runner-up cases alike", function()
+    local NS, M = fresh()
+    local P = NS.Constants.PALETTE
+    save(NS, rec(NS, { id = "best", dps = 3000 }), rec(NS, { id = "mid", dps = 2000 }))
+    detailOn(NS, "mid").w.compare:__fire("OnClick")
+    local ui = NS.ResultsCompare.__ui()
+    local function check(case)
+        local row = NS.ResultsCompare.Rows()[1]
+        sameHue(M.__paint(row.barA).color, P.THIS_BAR, P.BAR_A, case .. " this fight's bar")
+        sameHue(M.__paint(row.barB).color, P.BEST_BAR, P.BAR_A, case .. " the other's bar")
+        sameHue(M.__paint(ui.legendA).textColor, P.THIS_TEXT, nil, case .. " this fight's legend")
+        sameHue(M.__paint(ui.legendB).textColor, P.BEST_TEXT, nil, case .. " the other's legend")
+        for i = 1, 3 do sidesTinted(NS, ui.kpis[i].value:GetText(), case .. " box " .. i) end
+        sidesTinted(NS, row.figure:GetText(), case .. " the row's figure")
+        sidesTinted(NS, ui.headFigure:GetText(), case .. " the figure header")
+        sidesTinted(NS, ui.headBars:GetText(), case .. " the bars header")
+    end
+    check("vs best:")
+    NS.Results.ShowFight("best")
+    assertEqual(ui.kind, "runnerUp")
+    check("vs runner-up:")
+    -- The pure pair stays plain: the tooltips write it.
+    assertEqual(NS.ResultsCompare.PairText("dps", 1100, 1000), NS.Format.Number(1000) .. " \194\187 " .. NS.Format.Number(1100))
+    -- A skin switch repaints the window; the bars stay the palette's (a data hue).
+    local W = dofile(T.root .. "/tests/_kit/skin_switch.lua")
+    local Skin = M.LibStub("LibKa0s-Skin-1.0")
+    Skin:RegisterSkin({ key = W.PROBE_KEY, label = "Probe", tokens = W.probeTokens(Skin) })
+    Skin:SetChoice("CombatTrail", "ka0s", W.PROBE_KEY)
+    local row = NS.ResultsCompare.Rows()[1]
+    sameHue(M.__paint(row.barA).color, P.THIS_BAR, P.BAR_A, "under the probe skin, this fight's bar")
+    sameHue(M.__paint(row.barB).color, P.BEST_BAR, P.BAR_A, "under the probe skin, the other's bar")
+end)
+
+local TRINKET, POTION, FLASK, HIDDEN = 212456, 211001, 212283, 5512
+local function usage(used) return { v = 1, used = used, candidates = {} } end
+
+test("compare: trinkets and consumables used by both fights, side by side", function()
+    local NS, M = fresh()
+    local Cmp, P = NS.ResultsCompare, NS.Constants.PALETTE
+    local mid = rec(NS, { id = "mid", dps = 2000 })
+    mid.usage = usage({
+        { itemID = POTION, kind = "potion", times = { 3 }, n = 1, src = "cast" },
+        { itemID = TRINKET, kind = "gear", slot = 13, times = { 5, 95 }, n = 2, src = "cast" },
+        { itemID = HIDDEN, kind = "other", times = { 1 }, n = 1, src = "cast" },
+        { kind = "enchant", n = 1, src = "buff" },
+    })
+    local best = rec(NS, { id = "best", dps = 3000 })
+    best.usage = usage({
+        { itemID = FLASK, kind = "flask", n = 1, src = "buff" },
+        { itemID = TRINKET, kind = "gear", slot = 13, times = { 4 }, n = 1, src = "cast" },
+    })
+    local bare = rec(NS, { id = "bare", dps = 1000 })
+    bare.usage = usage({})
+    local old = rec(NS, { id = "old", dps = 500 })
+    save(NS, mid, best, bare, old)
+    assertTrue(NS.Usage.Hide(HIDDEN), "a hidden item is never listed")
+    local rows = Cmp.UsageRows(NS.Recorder.Get("mid"), NS.Recorder.Get("best"))
+    assertEqual(#rows, 3, "the trinket, the potion and the flask; never a hidden item or an enchant")
+    assertEqual(rows[1].itemID, TRINKET, "gear first")
+    assertTrue(rows[1].a ~= nil and rows[1].b ~= nil, "the trinket on both sides")
+    assertEqual(rows[2].itemID, POTION, "then this fight's consumables")
+    assertNil(rows[2].b, "the other fight drank no potion")
+    assertEqual(rows[3].itemID, FLASK, "then the other's")
+    assertNil(rows[3].a)
+    -- The window: a row for each, this side yellow, the other blue, a missing side "not used".
+    detailOn(NS, "mid").w.compare:__fire("OnClick")
+    local ui = Cmp.__ui()
+    assertEqual(ui.usageTitle:GetText(), "Trinkets and consumables")
+    local shown = Cmp.UsageLines()
+    assertEqual(#shown, 3)
+    assertEqual(shown[1].this:GetText(), "x2 at 0:05, 1:35")
+    assertEqual(shown[1].other:GetText(), "at 0:04")
+    sameHue(M.__paint(shown[1].this).textColor, P.THIS_TEXT, nil, "this fight's uses")
+    sameHue(M.__paint(shown[1].other).textColor, P.BEST_TEXT, nil, "the other's uses")
+    assertEqual(shown[2].other:GetText(), "not used")
+    assertEqual(shown[3].this:GetText(), "not used")
+    assertEqual(shown[3].other:GetText(), "active at the start")
+    assertEqual(shown[1].name:GetText(), NS.ResultsUsage.Name({ itemID = TRINKET }))
+    assertFalse(ui.usageNone:IsShown())
+    -- The window grows a line for each row.
+    local _, h1 = Cmp.Size(1, 1, 1)
+    local _, h3 = Cmp.Size(1, 1, 3)
+    assertEqual(h3 - h1, 2 * Cmp.USAGE_ROW_H)
+    assertEqual(ui.height, select(2, Cmp.Size(1, 1, 3)), "sized for its three usage rows")
+    -- Nothing used on either side, and not recorded on both.
+    -- A side with no usage record says so in its column.
+    NS.Results.CompareWith("old")
+    shown = Cmp.UsageLines()
+    assertEqual(#shown, 2, "this fight's trinket and potion")
+    assertEqual(shown[1].other:GetText(), "not recorded")
+    assertEqual(shown[1].this:GetText(), "x2 at 0:05, 1:35")
+    local NS2 = fresh()
+    local a, b = rec(NS2, { id = "a", dps = 2000 }), rec(NS2, { id = "b", dps = 3000 })
+    a.usage, b.usage = usage({}), usage({})
+    local c, d = rec(NS2, { id = "c", dps = 1000, encounterID = 9999 }), rec(NS2, { id = "d", dps = 1500, encounterID = 9999 })
+    save(NS2, a, b, c, d)
+    detailOn(NS2, "a").w.compare:__fire("OnClick")
+    local ui2 = NS2.ResultsCompare.__ui()
+    assertEqual(#NS2.ResultsCompare.UsageLines(), 0)
+    assertTrue(ui2.usageNone:IsShown())
+    assertEqual(ui2.usageNone:GetText(), "None used")
+    detailOn(NS2, "c")
+    assertTrue(ui2.usageNone:IsShown())
+    assertEqual(ui2.usageNone:GetText(), "Usage not recorded for both fights.")
+end)
+
+test("compare: the Different loadout tooltip writes a Forever fight's talent points", function()
+    local NS = fresh()
+    local Cmp = NS.ResultsCompare
+    local raid = NS.Loadouts.Store({ importString = "CQQAAAA", specID = 253, name = "Raid" })
+    local aoe = NS.Loadouts.Store({ importString = "CQQBBBB", specID = 253, name = "AoE" })
+    local a = rec(NS, { id = "a", dps = 1000, loadout = raid })
+    local b = rec(NS, { id = "b", dps = 2000, loadout = aoe })
+    a.who.class, a.who.trees = "HUNTER", { 31, 20, 0 }
+    local lines = Cmp.LoadoutLines(a, b)
+    assertEqual(lines[2], "This fight: " .. NS.ResultsLoadout.TalentsText(NS.ResultsLoadout.TalentsOf(a), a.who))
+    assertTrue(lines[2]:find("31/20/0", 1, true) ~= nil, lines[2])
+    assertEqual(lines[3], "The other fight: AoE")
 end)

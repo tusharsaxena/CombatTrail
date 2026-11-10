@@ -134,6 +134,7 @@ return function(T)
             -- The compare
             { window = "compare", name = "the compare's shell", build = function() return compare().frame end },
             { window = "compare", name = "the compare's spell header", build = function() return compare().headName end },
+            { window = "compare", name = "the compare's usage heading", build = function() return compare().usageTitle end },
             -- The gear view
             { window = "gear", name = "the gear view's shell", build = function() return gear().frame end },
             -- The legend's color is the compared fight's data hue: only its face follows, which Ignore fonts keeps.
