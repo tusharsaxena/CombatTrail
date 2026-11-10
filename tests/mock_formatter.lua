@@ -3,7 +3,7 @@
 -- applies the breakpoints it was given, and the global AbbreviateNumbers. A formatter reads the
 -- plain value behind a secret wrapper (T.reveal), as the client does natively, and counts its calls.
 --
--- Two behaviours, per constructor:
+-- Two behaviors, per constructor:
 --   "floor"  truncates to the breakpoint's decimals, as the ladder's semantics promise
 --   "raw"    the measured defect: an integer input truncates, a fractional one passes through
 --            unfloored ("30.1904761904K"), which the fractional check must catch
