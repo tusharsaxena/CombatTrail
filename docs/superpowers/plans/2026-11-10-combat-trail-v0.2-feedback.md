@@ -40,7 +40,7 @@ Update your row, with the commit SHA, in your task's final commit. A resumed ses
 | C4 | Compare popup: label, colours, trinkets/consumables | todo | |
 | D1 | Timeline: icons or ticks, player/pet colours | todo | |
 | E1 | DPS Race: HUD sizing model (same as B3) | todo | |
-| E2 | DPS Race: timeline icons or ticks, player/pet colours (DpsRace#21) | todo | |
+| E2 | DPS Race: timeline icons or ticks, player/pet colours (DpsRace#21) | done | DpsRace 4a1e82c: `results.timelineMarks` "icon" (default) / "tick" (History > Run detail > Ability timeline, plus Icons/Ticks words on the By ability heading line via SetByPath; onChange `ResultsTimeline.Redraw()` keeps zoom/pan); `Timeline.PLAYER_LINE`/`PET_LINE`/`CASTER`/`CasterColor(pet)`, ticks at `MARK_A` 0.95, every cast icon (lanes and Casts strips) on a 1 px BORDER edge in caster colour instead of S.IconBorder; lane from side, not colour; lanes clip padded CLIP_PAD both modes; new `modules/Results_TimelineMarks.lua` (`NewCastIcon`, `PaintCast`, `LaneMarks`, `ReleaseMarks`, `PutMark`, `MarkMode`, `SetMarkMode`; `MarkLines` moved there); Marks() entries carry `kind`; no caster legend swatch |
 | E3 | DPS Race: formatter fix and palette check | todo | |
 | F1 | Extraction issue, docs sync, branch review, push | todo | |
 
