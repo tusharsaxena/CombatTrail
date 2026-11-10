@@ -207,13 +207,16 @@ test("hud sizing: while the grip is held the rows follow the drag and nothing is
     local writes = {}
     local set = NS.SetByPath
     NS.SetByPath = function(path, ...) writes[#writes + 1] = path; return set(path, ...) end
+    local sets = 0
+    local setSize = rawget(f, "SetSize")
+    rawset(f, "SetSize", function(self, w, h) sets = sets + 1; return setSize(self, w, h) end)
     f.resizeGrip:__fire("OnMouseDown", "LeftButton")
     M.__now = M.__now + 1 / 60
     f:__fire("OnSizeChanged", 300, base + 9 * 20)
     assertEqual(#rows(Hud), 9, "nine bars fit the dragged height")
     assertEqual(Hud.View().width, 300 - 24, "the bodies lay out at the dragged width")
     assertEqual(table.concat(writes, ","), "", "stored only on release")
-    assertEqual(f.__h, Hud.FixedHeight(), "the drag owns the size: no SetSize while it is held")
+    assertEqual(sets, 0, "the drag owns the size: no SetSize while it is held")
     f:__setGeom(300, base + 9 * 20)
     f.resizeGrip:__fire("OnMouseUp")
     NS.SetByPath = set
@@ -385,4 +388,22 @@ test("hud sizing: switching the mode mid-fight redraws without error", function(
     H.setHud(inst, "sizeMode", "auto")
     assertEqual(Hud.State(), "over")
     assertEqual(f.__h, chrome(inst) + H.body(Hud, "over").height)
+end)
+
+test("hud sizing: grow up chosen before the window is built takes the bottom edge at its first show", function()
+    local inst, meter, Hud = H.fresh()
+    local NS = inst.NS
+    assertTrue(Hud.Frame() == nil, "the window is built on first show")
+    H.setHud(inst, "sizeMode", "auto")
+    H.setHud(inst, "grow", "up")
+    H.start(inst, meter, 2, fightOf(2), 100)
+    local f = Hud.Frame()
+    track(f)
+    edges(f, 400.4, 700.6, 300.2)
+    Hud.Refresh()
+    local p = NS.db.profile.hud.position
+    assertEqual(p.point, "BOTTOMLEFT", "the stored point moved onto the grow edge")
+    assertEqual(p.relPoint, "BOTTOMLEFT")
+    assertEqual(p.y, 300)
+    assertEqual(anchor(f)[1], "BOTTOMLEFT")
 end)

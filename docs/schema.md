@@ -75,7 +75,7 @@ and one that did keeps its own. No migration step is needed. No skin overrides a
 | State | Storage key | Owner | Writers |
 |---|---|---|---|
 | A lane's dragged place | `lanes.<k>.anchor.x` / `.y` (and `point`) | modules/LaneAnchor.lua | `dragStop` (the edit overlay's drag) through `write`; `NS.Lanes.ResetPosition` (Master controls' Reset position) |
-| The HUD's place | `hud.position` | modules/Hud.lua | `normalizeAnchor` (the title bar's drag and the grip's release, and a change of `hud.sizeMode` or `hud.grow`: TOPLEFT, or BOTTOMLEFT for an auto window growing up, on UIParent's BOTTOMLEFT), else `savePosition`; `Hud.ResetPosition` |
+| The HUD's place | `hud.position` | modules/Hud.lua | `normalizeAnchor` (the title bar's drag and the grip's release, a change of `hud.sizeMode` or `hud.grow`, and a Refresh that finds the stored point off that edge: TOPLEFT, or BOTTOMLEFT for an auto window growing up, on UIParent's BOTTOMLEFT), else `savePosition`; `Hud.ResetPosition` |
 | The Results window's place, size and fold | `results.window` | modules/Results.lua | `savePosition` (drag, the grip's release, the fold arrow through `Results.SetView`); `Results.ResetPosition` |
 | The saved Results view | `results.view` | modules/Results_Fights.lua | `writeView` (the Save view button) |
 | The fight store | `global.fights`, `global.fightOrder` | modules/Recorder.lua | `Recorder.Save`, `Recorder.Delete`, `Recorder.SetNote`; `Retention.Purge` (modules/Retention.lua) |

@@ -58,9 +58,11 @@ local _, NS = ...
 --   "auto"             the height is the body's stack, growing with the rows up to `hud.bars`;
 --                      `hud.grow` picks the edge that stays put ("down": the top, "up": the bottom).
 -- In both, spells past the rows scroll with the wheel (modules/Hud_States.lua). The edge holds because
--- the stored anchor is on it: a drag of the title bar or the grip, and a change of the mode or the
--- edge, re-anchor the window (normalizeAnchor) to TOPLEFT ("down", and fixed mode, whose grip keeps
--- the top left) or BOTTOMLEFT ("up") on UIParent's BOTTOMLEFT, from the shell frame's own edges.
+-- the stored anchor is on it: a drag of the title bar or the grip, a change of the mode or the edge,
+-- and any Refresh that finds the stored point off the edge (an edge chosen before the window was
+-- built, a profile switch) re-anchor the window (normalizeAnchor) to TOPLEFT ("down", and fixed mode,
+-- whose grip keeps the top left) or BOTTOMLEFT ("up") on UIParent's BOTTOMLEFT, from the shell
+-- frame's own edges.
 --
 -- A SAMPLE FIGHT (test mode and the sim, modules/Preview.lua and modules/Sim.lua) comes to the same
 -- receivers, handed over directly rather than on the bus, flagged `sample`. Its live and cast reads
@@ -781,6 +783,9 @@ function Hud.Refresh()
     render()
     applyGrip()   -- after the strip is placed: its height is in the bounds
     if not windowShown() then ui.frame:Show() end
+    -- A grow edge set while the window was unbuilt, or arriving with a profile: the stored point moved
+    -- onto it once the window is placed and sized (a no-op while it already sits on the edge).
+    normalizeAnchor(false)
 end
 
 --- Open the window. `reason` "auto" is the addon's own opening, which fades after the fight; any

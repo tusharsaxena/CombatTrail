@@ -672,7 +672,7 @@ Total.
 - hud layout: the clock draws DPS Race's 40 in the skin's face
 - hud layout: the settings' width floor is the HUD's
 
-### test_hud_sizing.lua (18)
+### test_hud_sizing.lua (19)
 
 - hud sizing: the defaults are fixed, 5 bars, grow down; spells.rows is retired
 - hud sizing: the fixed height is derived from the bars, the same with 0, 3 or 20 spells
@@ -692,6 +692,7 @@ Total.
 - hud sizing: grow down keeps the top in place, grow up the bottom
 - hud sizing: a stored point that already suits the grow edge is kept
 - hud sizing: switching the mode mid-fight redraws without error
+- hud sizing: grow up chosen before the window is built takes the bottom edge at its first show
 
 ### test_sizing.lua (7)
 
@@ -1036,7 +1037,7 @@ Total.
 | test_hud_appearance.lua | 7 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
-| test_hud_sizing.lua | 18 |
+| test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 23 |
 | test_results_detail.lua | 15 |
@@ -1061,4 +1062,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **819** |
+| **Total** | **820** |
