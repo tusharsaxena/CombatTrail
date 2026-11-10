@@ -96,7 +96,7 @@ test("hud sizing: the defaults are fixed, 5 bars, grow down; spells.rows is reti
     assertTrue(mode.validate("fixed") and mode.validate("auto") and not mode.validate("big"))
     assertTrue(grow.validate("down") and grow.validate("up") and not grow.validate("left"))
     assertEqual(type(grow.disabledIf), "function")
-    assertTrue(grow.disabledIf(grow), "Grow is greyed out in fixed mode")
+    assertTrue(grow.disabledIf(grow), "Grow is drawn disabled in fixed mode")
     NS.SetByPath("hud.sizeMode", "auto")
     assertFalse(grow.disabledIf(grow), "and live in auto mode")
     assertEqual(NS.FindSchemaRow("hud.width").max, NS.Hud.MAX_WIDTH)
