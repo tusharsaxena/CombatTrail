@@ -14,9 +14,10 @@ local _, NS = ...
 --
 -- WHEN IT OPENS (`hud.show`). "auto" (default): on the first hit of every fight (FIGHT_TICK after the
 -- fight's firstHitT is set; the Master controls' `general.hudInCombat` off turns this off), and
--- `hud.instancesOnly` keeps it shut outside an instance. It fades `hud.fadeAfter` seconds after the
--- fight ends (0 keeps the card up), held while the pointer is over it (`hud.holdOnMouse`) and never
--- while pinned (Hud.Pin). "always": up at login and after a stand-up, and never fades. "toggle":
+-- `hud.instancesOnly` keeps it shut outside an instance; both apply to "auto" only. It fades
+-- `hud.fadeAfter` seconds after the fight ends (0 keeps the card up), held while the pointer is over
+-- it (`hud.holdOnMouse`) and never while pinned (Hud.Pin). "always": up at login and after a
+-- stand-up, in or out of an instance, and never fades. "toggle":
 -- only the player opens it. A HUD the player opened (Show, the toggle, the launcher, `/ct hud`) never
 -- fades; one the player closed stays closed for the rest of that fight. `hud.overCard` off closes an
 -- auto-opened HUD when its fight ends instead of showing the card.
@@ -143,15 +144,21 @@ local function inInstance()
     return ok and Secrets.PlainTruth(inside) == true
 end
 
+--- Whether the player closed the HUD on `fight`.
+local function closedOn(fight)
+    return fight ~= nil and dismissed ~= nil and dismissed == fight.id
+end
+
 --- Whether the HUD may open itself for `fight` now (the show mode, the master row, instancesOnly,
---- and the player's close on this fight).
+--- and the player's close on this fight). "always" answers before the master row and instancesOnly,
+--- which govern "auto" only (plan decision D4): only the player's close on this fight holds it.
 local function autoAllowed(fight)
     local mode = setting("hud.show")
     if mode == "toggle" then return false end
-    if mode ~= "always" and setting("general.hudInCombat") == false then return false end
+    if mode == "always" then return not closedOn(fight) end
+    if setting("general.hudInCombat") == false then return false end
     if setting("hud.instancesOnly") == true and not inInstance() then return false end
-    if fight and dismissed ~= nil and dismissed == fight.id then return false end
-    return true
+    return not closedOn(fight)
 end
 
 local function identityOf(fight)

@@ -63,6 +63,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-L5 | Both | Hover and right-click the minimap button | Status tooltip; menu with Enabled, Locked, Test mode, Sim mode, Show window |
 | SM-CT-L6 | Both | The three bindings (Toggle DPS HUD, Toggle Results window, Toggle lanes) pressed in game | Each toggles its target; the lanes key brings back exactly the lanes it turned off |
 | SM-CT-L7 | Both | The bindings under Options → Keybindings → Ka0s Combat Trail and General → Keybindings | The same keys in both places |
+| SM-CT-L8 | Both | The first login on v0.2 over a v0.1 SavedVariables with stored fights | No Lua error; Results is empty, `/ct diag` reads `schema stored=2 code=2 fightFormat=2`; the hidden items and the minimap button are kept |
 
 ## 2. Lanes
 
@@ -124,6 +125,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-H6 | Both | Beat the best on a board | The card shows New best with the delta, and Saved |
 | SM-CT-H7 | Both | The HUD's fade 8 s after combat, held by the mouse, and `/ct hud pin` | It fades, waits while hovered, stays pinned |
 | SM-CT-H8 | Both | The test and sim strips under the title bar on both skins, and the body at small HUD heights | The strip sits under the title bar; the body is not clipped |
+| SM-CT-H9 | Both | Show the HUD Always with Only in instances on, two fights in the open world | The HUD stays up through and after both fights |
 
 ## 5. Results
 
@@ -162,7 +164,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 |---|---|---|---|
 | SM-CT-S1 | Both | Each page's Defaults button | Resets that page only, after asking |
 | SM-CT-S2 | Both | History → Usage: the ID list's lookup by name and Shift-click | Both add the item |
-| SM-CT-S3 | Both | The Retention tab's stored-size readout with 500 fights | Draws without a hitch |
+| SM-CT-S3 | Both | The History tab's stored-size readout with 500 fights, and Purge history… | Draws without a hitch |
 | SM-CT-S4 | Both | Row height changed while the Results window is open | The list redraws |
 | SM-CT-S5 | Retail | History → Recording filters | Mythic+, Delves and Arenas rows present |
 | SM-CT-S6 | Forever | History → Recording filters | Mythic+, Delves and Arenas rows absent on WoW Forever |

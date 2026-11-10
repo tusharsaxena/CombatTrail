@@ -195,7 +195,7 @@ Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *
 | Row | Key |
 |---|---|
 | Show the HUD | `hud.show` |
-| Only in instances | `hud.instancesOnly` |
+| Only in instances (when Show the HUD is On each fight's first hit; Always ignores it) | `hud.instancesOnly` |
 | Fade after the fight (seconds, 0 = never) | `hud.fadeAfter` |
 | Stay open while the mouse is over it | `hud.holdOnMouse` |
 | Pace compares against | `hud.paceAgainst` |
@@ -313,9 +313,9 @@ Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *
 
 ## History
 
-Tabs: *Recording filters*, *Retention*, *Results window*, *Usage* (settings/History.lua,
-`NS.HISTORY_TAB_ORDER`). The Retention tab also shows the stored count and its estimated size, and
-carries *Purge now*.
+Tabs: *Recording filters*, *History*, *Results window*, *Usage* (settings/History.lua,
+`NS.HISTORY_TAB_ORDER`; the History tab's internal key stays `retention`). The History tab also shows
+the stored count and its estimated size, and carries *Purge history…*.
 
 ### Recording filters
 
@@ -333,7 +333,7 @@ carries *Purge now*.
 | Training dummies | `history.content.dummy` |
 | Scenarios | `history.content.scenario` |
 
-### Retention
+### History (tab)
 
 | Row | Key |
 |---|---|

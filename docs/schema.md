@@ -40,7 +40,7 @@ default; the file's comments say what each value means.
 | `hud.window.*` | title bar, colors, footer, `strata = "MEDIUM"`, `alpha = 1` | DPS HUD → Window |
 | `hud.position` | `{ point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 }` | DPS HUD → Window, and the title bar's drag (named state, below) |
 | `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
-| `history.days`, `keepBests`, `maxFights` | `7`, `true`, `500` | History → Retention |
+| `history.days`, `keepBests`, `maxFights` | `7`, `true`, `500` | History → History |
 | `results.scale`, `rowHeight`, `shareTalents` | `1`, `18`, `true` | History → Results window |
 | `results.view` | the saved filters, grouping and sort (`group = "board"`, `days = 7`) | (named state, below) |
 | `results.window` | `{ point, relPoint, x, y, width = 920, height = 520, view = "collapsed" }` | (named state, below) |
@@ -75,7 +75,7 @@ The debug flag, test mode and the sim are session-only (`NS.State`), never store
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
 | The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |
 
-## The fight record (CT_SCHEMA 1)
+## The fight record (CT_SCHEMA 2)
 
 Built by `Recorder.Build` after combat from plain values only; anything that came back secret is left
 absent. `Recorder.CT_SCHEMA` is the record's own format version, separate from the settings stamp; a
@@ -93,7 +93,7 @@ record with a higher `schema` than this build knows is never listed.
 | `note`, `client`, `build`, `version`, `status` | the player's note, `retail`/`forever`, the client build, the addon version, `"final"` |
 
 A five-minute raid fight packs under 6 KB (pinned by `tests/test_record.lua`), so 500 fights stay
-near 3 MB. The History page's Retention tab shows the count and an estimate (`Retention.EstimateBytes`).
+near 3 MB. The History page's History tab shows the count and an estimate (`Retention.EstimateBytes`).
 
 ## Migrations
 
@@ -104,6 +104,8 @@ a step that returned; a step marked `perProfile` runs once for every stored prof
 | Step | From → to | Does |
 |---|---|---|
 | 1 | 0 → 1 | Nothing: the first release's shape |
+| 2 | 1 → 2 | Empties the fight store, its order, the loadouts and the gear sets (`global.fights`, `fightOrder`, `loadouts`, `gearSets`): the v0.2 record shape, CT_SCHEMA 2. Every other account-wide key is kept |
 
 A change to the fight record bumps `Recorder.CT_SCHEMA` and reads the older shape where it is read,
-never by rewriting stored fights.
+never by rewriting stored fights. The one exception is step 2: the addon was unpublished, so the v0.1
+store was emptied once instead of migrated (v0.2 plan, decision D1).

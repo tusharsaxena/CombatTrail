@@ -41,7 +41,7 @@ local Secrets = NS.Secrets
 local L = NS.L
 
 --- The fight record's format version (spec §5). Distinct from NS.SCHEMA_VERSION, the settings'.
-Recorder.CT_SCHEMA = 1
+Recorder.CT_SCHEMA = 2
 --- The longest note a record keeps.
 Recorder.NOTE_MAX = 200
 

@@ -3,12 +3,22 @@ local addonName, NS = ...
 
 -- The runner's target: the highest step's `to` (savedvariables-§1). Distinct from the FIGHT RECORD
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings.
-NS.SCHEMA_VERSION = 1
+NS.SCHEMA_VERSION = 2
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
 local STEPS = {
     { to = 1, run = function() end },   -- 0 -> 1: the first release's shape, a no-op
+    -- 1 -> 2: the v0.2 fight record (CT_SCHEMA 2: the target's level and NPC ID, the gear set). The
+    -- addon was unpublished, so the store is emptied once rather than migrated (plan decision D1):
+    -- the fights, their order, the loadouts and the gear sets. Through NS.db.global, which AceDB
+    -- always has (the raw SavedVariables' `global` can be nil on a fresh install); idempotent, and
+    -- harmless on a fresh install. Every other account-wide key (usage.hidden, minimap, the skin
+    -- notice) is kept.
+    { to = 2, run = function()
+        local g = NS.db.global
+        g.fights, g.fightOrder, g.loadouts, g.gearSets = {}, {}, {}, {}
+    end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 

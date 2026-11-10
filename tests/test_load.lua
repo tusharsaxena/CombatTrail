@@ -81,3 +81,64 @@ test("load: the library-absent load still loads and initializes", function()
     assertTrue(inst.NS.db ~= nil and type(inst.NS.db.profile) == "table", "NS.db.profile without LibKa0s")
     assertEqual(type(inst.NS.Compat.ClientKey()), "string")
 end)
+
+-- ── the schema 2 wipe (plan Task A1, decision D1) ────────────────────────────────────────────────
+
+-- An instance that logs in over `seeded` SavedVariables (the client's login reads the store first).
+local function boot(seeded)
+    local inst = T.load{ init = false }
+    _G.CombatTrailDB = seeded
+    local AceAddon = inst.mocks.LibStub("AceAddon-3.0")
+    AceAddon:InitializeAddon(inst.NS)
+    AceAddon:EnableAddon(inst.NS)
+    return inst.NS
+end
+
+local function count(t)
+    local c = 0
+    for _ in pairs(t or {}) do c = c + 1 end
+    return c
+end
+
+test("load: the settings stamp is 2 and the fight record's format is 2", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 2)
+    assertEqual(T.NS.Recorder.CT_SCHEMA, 2)
+end)
+
+test("load: a schema 1 store loads empty at version 2, keeping the account's other state", function()
+    local old = { schema = 1, id = "f-old", t = 1000, duration = 60, status = "final", dps = 100 }
+    local NS = boot({ global = {
+        schemaVersion = 1,
+        fights = { [old.id] = old }, fightOrder = { old.id },
+        loadouts = { ["l-1"] = { talents = "x" } }, gearSets = { ["g-1"] = { slots = {} } },
+        usage = { hidden = "6948" }, minimap = { hide = true },
+    } })
+    local g = NS.db.global
+    assertEqual(g.schemaVersion, 2, "stamped")
+    assertEqual(count(g.fights), 0, "fights emptied")
+    assertEqual(#g.fightOrder, 0, "fightOrder emptied")
+    assertEqual(count(g.loadouts), 0, "loadouts emptied")
+    assertEqual(count(g.gearSets), 0, "gearSets emptied")
+    assertEqual(g.usage.hidden, "6948", "usage.hidden kept")
+    assertEqual(g.minimap.hide, true, "minimap kept")
+    -- A second run is a no-op: a fight saved since survives it.
+    g.fights["f-new"] = { schema = 2, id = "f-new" }
+    g.fightOrder[1] = "f-new"
+    NS:RunMigrations()
+    assertTrue(g.fights["f-new"] ~= nil, "the stamped store is not wiped again")
+end)
+
+test("load: a store already at version 2 keeps its fights", function()
+    local kept = { schema = 2, id = "f-kept", t = os.time(), duration = 60, status = "final", dps = 100 }
+    local NS = boot({ global = { schemaVersion = 2, fights = { [kept.id] = kept }, fightOrder = { kept.id } } })
+    assertTrue(NS.db.global.fights[kept.id] ~= nil, "not wiped")
+end)
+
+test("load: a fresh install runs step 2 harmlessly", function()
+    local NS = boot(nil)
+    local g = NS.db.global
+    assertEqual(g.schemaVersion, 2)
+    assertEqual(type(g.fights), "table")
+    assertEqual(type(g.fightOrder), "table")
+    assertEqual(count(g.fights), 0)
+end)

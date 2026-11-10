@@ -124,7 +124,7 @@ at(TAB.behavior, L["When it shows"])
 row("show", { type = "string", label = L["Show the HUD"], values = SHOWS, validate = SHOW_OK,
     tooltip = L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] })
 row("instancesOnly", { type = "bool", label = L["Only in instances"], startsLine = true,
-    tooltip = L["Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."] })
+    tooltip = L["When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."] })
 row("fadeAfter", { type = "number", label = L["Fade after the fight (seconds, 0 = never)"], min = 0, max = 60, step = 1,
     startsLine = true,
     tooltip = L["How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."] })

@@ -2,11 +2,11 @@ local _, NS = ...
 -- settings/History.lua — the History page (spec §5, §7 and §8, the mockup's History tabs, plan Task
 -- 4.5): four tabs in strip order. Recording filters holds what a fight must pass to be stored
 -- (modules/Filters.lua: `history.minLength`, `history.bossesOnly`, one `history.content.<kind>` per
--- content kind this client has). Retention holds how long and how many are kept (modules/Retention.lua
--- and modules/Bests.lua: `history.days`, `history.keepBests`, `history.maxFights`), then the stored
--- count and size, then Purge now… last. Results window holds the window's scale, its list's row height
--- and whether Share appends the talents link (`results.scale`, `results.rowHeight`,
--- `results.shareTalents`). Usage holds the "never show" list (`global.usage.hidden`), drawn as the
+-- content kind this client has). History (internal key `retention`, plan decision D6) holds how long
+-- and how many are kept (modules/Retention.lua and modules/Bests.lua: `history.days`,
+-- `history.keepBests`, `history.maxFights`), then the stored count and size, then Purge history…
+-- last. Results window holds the window's scale, its list's row height and whether Share appends the
+-- talents link (`results.scale`, `results.rowHeight`, `results.shareTalents`). Usage holds the "never show" list (`global.usage.hidden`), drawn as the
 -- library's ID list.
 --
 -- NOT ROWS: `results.view` (the filters, the grouping and the sort Save view captures) and
@@ -31,7 +31,7 @@ local D = NS.defaults.profile
 --- The four tabs, by the plan's key, in strip order.
 NS.HISTORY_TAB_ORDER = { "recording", "retention", "results", "usage" }
 NS.HISTORY_TABS = {
-    recording = L["Recording filters"], retention = L["Retention"], results = L["Results window"], usage = L["Usage"],
+    recording = L["Recording filters"], retention = L["History"], results = L["Results window"], usage = L["Usage"],
 }
 local TAB = NS.HISTORY_TABS
 
@@ -102,7 +102,7 @@ for i, c in ipairs(CONTENT) do
     end
 end
 
--- Retention (options-ui-§21's data-lifetime family: how long, then the readout, then the purge last)
+-- The History tab (options-ui-§21's data-lifetime family: how long, then the readout, then the purge last)
 at(TAB.retention, nil)
 row("history.days", { type = "number", label = L["Keep history for (days, 0 = forever)"], min = 0, max = 365, step = 1,
     validate = whole(0, 365), startsLine = true,
@@ -145,7 +145,7 @@ out[#out + 1] = {
 for i, r in ipairs(out) do r.order = i end
 NS.RegisterSchemaRows(out)
 
--- ── the Retention tab's readout and act ─────────────────────────────────────────────────────────
+-- ── the History tab's readout and act ───────────────────────────────────────────────────────────
 
 local KB, MB = 1024, 1024 * 1024
 
@@ -165,7 +165,7 @@ function HistoryPage.StoredLine()
     return L["Stored now: %d fights, about %s of saved variables."]:format(n, size)
 end
 
---- The Purge now… tooltip (one function, so a suite reads the words the button carries).
+--- The Purge history… tooltip (one function, so a suite reads the words the button carries).
 function HistoryPage.PURGE_TOOLTIP()
     return L["Remove now the stored fights these settings no longer keep, as the purge at login does. Asks for confirmation."]
 end
@@ -182,18 +182,18 @@ StaticPopupDialogs[HistoryPage.POPUP] = {
     OnAccept     = function() NS.Retention.OnVerb() end,
 }
 
---- Purge now…: asks first, through the one popup. The answer runs `/ct purge`'s purge.
+--- Purge history…: asks first, through the one popup. The answer runs `/ct purge`'s purge.
 function HistoryPage.ConfirmPurge()
     return StaticPopup_Show(HistoryPage.POPUP)
 end
 
--- After the Retention rows: the readout, then Purge now… as the tab's last act, with no heading over
+-- After the History tab's rows: the readout, then Purge history… as the tab's last act, with no heading over
 -- it (options-ui-§7, §21).
 local function afterRetention(ctx)
     local H = NS.Helpers
     H.TextRow(ctx, HistoryPage.StoredLine())
     H.InlineButtonPair(ctx, {
-        text    = L["Purge now\226\128\166"],
+        text    = L["Purge history\226\128\166"],
         tooltip = HistoryPage.PURGE_TOOLTIP(),
         onClick = function() HistoryPage.ConfirmPurge() end,
     })

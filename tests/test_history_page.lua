@@ -2,7 +2,7 @@
 -- mockup's History tabs): the four tabs, a row for every `history.*` key the recorder, the filters,
 -- the retention and the bests read, the Results window's settings (its scale reaching every
 -- follower, its row height reaching the list), the Usage tab's "never show" list as the library's ID
--- list, the Retention tab's stored count and size and its Purge now… behind a confirmation, no
+-- list, the History tab's stored count and size and its Purge history… behind a confirmation, no
 -- Retail-only trace on WoW Forever, the words options-ui-§7/§21 fix, and the page's Defaults.
 
 local T = _G.CT_TEST
@@ -86,7 +86,9 @@ test("history page: four tabs, Recording filters first and Usage last", function
     assertEqual(table.concat(NS.HISTORY_TAB_ORDER, ","), "recording,retention,results,usage")
     local want = {}
     for i, key in ipairs(NS.HISTORY_TAB_ORDER) do want[i] = NS.HISTORY_TABS[key] end
-    assertEqual(table.concat(want, ","), "Recording filters,Retention,Results window,Usage")
+    assertEqual(table.concat(want, ","), "Recording filters,History,Results window,Usage")
+    -- The label is the standard's (plan D6); the internal key stays `retention`.
+    assertEqual(NS.HISTORY_TABS.retention, "History")
     local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "history")
     assertEqual(table.concat(keys or {}, ","), table.concat(want, ","))
     assertFalse(anyText(inst, ctx, NS.L["The History settings arrive with the fight history."]),
@@ -214,7 +216,8 @@ test("history page: the Retention tab shows the stored count and size", function
     assertTrue(NS.HistoryPage.StoredLine():find("1 fight", 1, true) ~= nil, "one fight, singular")
     NS.Helpers.SelectTab("history", NS.HISTORY_TABS.retention)
     assertTrue(anyText(inst, ctx, NS.HistoryPage.StoredLine()), "the line is drawn on the tab")
-    assertTrue(widget(inst, ctx, "Purge now\226\128\166") ~= nil, "Purge now… is drawn")
+    assertTrue(widget(inst, ctx, "Purge history\226\128\166") ~= nil, "Purge history… is drawn")
+    assertNil(widget(inst, ctx, "Purge now\226\128\166"), "the old label is gone")
 end)
 
 test("history page: purge now confirm", function()

@@ -392,8 +392,8 @@ L["Show the HUD"] = "Show the HUD"
 L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] =
     "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."
 L["Only in instances"] = "Only in instances"
-L["Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."] =
-    "Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."
+L["When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."] =
+    "When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."
 L["Fade after the fight (seconds, 0 = never)"] = "Fade after the fight (seconds, 0 = never)"
 L["How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."] =
     "How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."
@@ -959,10 +959,9 @@ L["Hidden items"] = "Hidden items"
 L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."] =
     "Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."
 
--- The History page (settings/History.lua): its tabs, the Recording filters, Retention (the stored
--- count and size, Purge now… and its question), the Results window's rows and the Usage tab's list
+-- The History page (settings/History.lua): its tabs, the Recording filters, History (the stored
+-- count and size, Purge history… and its question), the Results window's rows and the Usage tab's list
 L["Recording filters"] = "Recording filters"
-L["Retention"] = "Retention"
 L["Results window"] = "Results window"
 L["Mythic+ dungeons"] = "Mythic+ dungeons"
 L["Training dummies"] = "Training dummies"
@@ -1007,7 +1006,7 @@ L["Remove now the stored fights these settings no longer keep, as the purge at l
 L["Remove the stored fights that Keep history for and Maximum stored fights no longer keep? This cannot be undone."] =
     "Remove the stored fights that Keep history for and Maximum stored fights no longer keep? This cannot be undone."
 L["Remove"] = "Remove"
-L["Purge now\226\128\166"] = "Purge now\226\128\166"
+L["Purge history\226\128\166"] = "Purge history\226\128\166"
 L["Every fight is tracked live on the DPS HUD. A fight is stored only when it passes all of these."] =
     "Every fight is tracked live on the DPS HUD. A fight is stored only when it passes all of these."
 L["Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."] =

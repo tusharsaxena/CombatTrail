@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_load.lua (9)
+### test_load.lua (13)
 
 - load: NS is the AceAddon object named CombatTrail
 - load: the identity constants
@@ -19,6 +19,10 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
+- load: the settings stamp is 2 and the fight record's format is 2
+- load: a schema 1 store loads empty at version 2, keeping the account's other state
+- load: a store already at version 2 keeps its fights
+- load: a fresh install runs step 2 harmlessly
 
 ### test_loadorder.lua (4)
 
@@ -239,7 +243,7 @@ Total.
 - lane visibility: a lane set to never or switched off needs no event
 - lane visibility: stand-down drops every registration and the hide-after timer
 
-### test_lanes_page.lua (20)
+### test_lanes_page.lua (21)
 
 - lanes page: all seven tabs exist, General first and Ignored spells last
 - lanes page: every lane setting has a row for each lane
@@ -248,6 +252,7 @@ Total.
 - lanes page: copy from player copies everything but anchor and label
 - lanes page: reset lane restores defaults for that lane only
 - lanes page: forever profile: no delve or arena rows on the Visibility tab
+- lanes page: vehicle and pet battle hides are Retail-only rows
 - lanes page: Size and position has Frame strata (BACKGROUND to HIGH, + Match host in unit-frame mode) and Frame level 0-50
 - lanes page: the dock gap and the frame name show only in the modes that use them
 - lanes page: ignore tab add by ID, by name, remove, reset to seed
@@ -290,7 +295,7 @@ Total.
 - probe: a function the client lacks reads missing, not raised
 - probe: the pet verdict says it cannot see double counting
 
-### test_meter.lua (32)
+### test_meter.lua (33)
 
 - meter: the stat and session constants come from the client enum
 - meter: without the enum, the documented values stand and the enemy view is unread
@@ -318,6 +323,7 @@ Total.
 - meter: ReadFinal of a missing session, a raising client or no API answers nil and a reason
 - meter: ReadFinal with no damage of the player's is a zero result, not an error
 - meter: amountPerSecond nil → dps computed as total/duration in ReadFinal
+- meter: an empty pet source falls back to tagging the pet's spells in the player's
 - meter: PET_SEPARATE=false path tags by cast set
 - meter: ReadEnemies sorts by damage taken
 - meter: ReadEnemies is empty with a reason while sealed, missing or without the enum
@@ -526,7 +532,7 @@ Total.
 - slices: Seed fills in the step, count and filled a store leaves out
 - slices: a saved fight's store keeps its record id, not the fight table
 
-### test_hud_states.lua (21)
+### test_hud_states.lua (23)
 
 - hud: the states and the defaults are the plan's
 - hud: auto: hidden -> live on FIGHT_STARTED's first hit
@@ -545,6 +551,8 @@ Total.
 - hud: Show DPS HUD in combat off: auto opens nothing
 - hud: always mode is up at login and after a stand-up, and never fades
 - hud: instancesOnly hides in world
+- hud: always beats instancesOnly: in the open world it stays up through two fights
+- hud: always plus instancesOnly: a player close holds for that fight only
 - hud: a HUD the player closed mid-fight stays closed for that fight
 - hud: /ct hud show, hide, pin and unpin
 - hud: Locked stops the drag; Reset position puts it back
@@ -650,12 +658,13 @@ Total.
 - detail: the popups the window opened close with it
 - detail: the window steps aside for the talent tree and comes back
 
-### test_share.lua (4)
+### test_share.lua (5)
 
 - share: line format and length <= 255
 - share: talents link appended when enabled
 - share: send goes out of combat only, and the menu grays the channels the player is not in
 - share: the row menu's Share is live for a stored fight
+- share: the whisper box offers the target as the client addresses them (realm on Retail, full regional name on Forever)
 
 ### test_timeline.lua (12)
 
@@ -901,7 +910,7 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_load.lua | 9 |
+| test_load.lua | 13 |
 | test_loadorder.lua | 4 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
@@ -911,9 +920,9 @@ Total.
 | test_lane_render.lua | 38 |
 | test_lane_anchor.lua | 33 |
 | test_lane_visibility.lua | 30 |
-| test_lanes_page.lua | 20 |
+| test_lanes_page.lua | 21 |
 | test_probe.lua | 25 |
-| test_meter.lua | 32 |
+| test_meter.lua | 33 |
 | test_fight.lua | 28 |
 | test_identity.lua | 23 |
 | test_cast_codec.lua | 7 |
@@ -926,7 +935,7 @@ Total.
 | test_retention.lua | 13 |
 | test_record.lua | 15 |
 | test_slices.lua | 18 |
-| test_hud_states.lua | 21 |
+| test_hud_states.lua | 23 |
 | test_hud_pace.lua | 5 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 5 |
@@ -935,7 +944,7 @@ Total.
 | test_sizing.lua | 7 |
 | test_results_table.lua | 22 |
 | test_results_detail.lua | 13 |
-| test_share.lua | 4 |
+| test_share.lua | 5 |
 | test_timeline.lua | 12 |
 | test_compare.lua | 7 |
 | test_gear.lua | 5 |
@@ -956,4 +965,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **726** |
+| **Total** | **735** |

@@ -171,8 +171,9 @@ test("retention: a record from a later version is left alone", function()
 end)
 
 test("retention: the purge runs at login and on a daily timer", function()
+    -- At the current stamp, so the schema 2 wipe (core/Database.lua) does not empty it first.
     local seeded = {
-        global = { fights = {}, fightOrder = {} },
+        global = { schemaVersion = T.NS.SCHEMA_VERSION, fights = {}, fightOrder = {} },
     }
     local old = rec({ t = 1000 })          -- 1970: far older than 7 days
     seeded.global.fights[old.id] = old
@@ -192,7 +193,7 @@ test("retention: the purge runs at login and on a daily timer", function()
 end)
 
 test("retention: the daily run waits out combat and a fight in progress", function()
-    local seeded = { global = { fights = {}, fightOrder = {} } }
+    local seeded = { global = { schemaVersion = T.NS.SCHEMA_VERSION, fights = {}, fightOrder = {} } }
     local NS, M = boot(seeded)
     local again = rec({ t = 1000 })
     NS.Recorder.Save(again)
