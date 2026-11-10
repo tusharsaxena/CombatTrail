@@ -12,6 +12,9 @@ local _, NS = ...
 --   Compat.GetSpecialization()  Compat.GetSpecializationInfo(index)
 --                                C_SpecializationInfo first, then the deprecated globals (both are
 --                                gone on WoW Forever, where the stubs answer nil)
+--   Compat.UnitCharacterName(unit)  Compat.RealmKey()
+--                                a character's whole name and the player's realm key (client-quirks
+--                                §5: "First Surname" and the ruleset on WoW Forever)
 -- Hand-written ladders across clients and patches:
 --   Compat.SpellTexture(id)      C_Spell.GetSpellTexture, then the bare global; the id is passed through
 --                                untouched, so the caller runs it in pcall (it may be secret)
@@ -21,6 +24,9 @@ local _, NS = ...
 --                                numeric-rule constructor
 --   Compat.PopupEditBox(dialog)  a StaticPopup's edit box: the GetEditBox method, then the editBox /
 --                                EditBox field
+--   Compat.KeystoneLevel()  Compat.DelveTierText()  Compat.PvpRules()
+--                                a fight's tier qualifiers (modules/Identity.lua): the Mythic+ level
+--                                and the delve tier (Retail-only, nil on Forever), the PvP match rules
 --   Compat.BuildInfo()  Compat.ClientApis()   the probe's client line: GetBuildInfo, and whether the
 --                                secrets system and C_Spell's lookups exist (modules/Probe.lua)
 -- Every client global is read at CALL time, so a client (or the harness's mock) that adds the API
@@ -255,6 +261,104 @@ function Compat.InDelve()
     local party = C_PartyInfo
     if party and type(party.IsDelveInProgress) == "function" then return party.IsDelveInProgress() == true end
     return false
+end
+
+-- ---------------------------------------------------------------------------
+-- Who and where a fight was (modules/Identity.lua)
+-- ---------------------------------------------------------------------------
+--
+-- A character's name and realm: LibKa0s-Compat-1.0's identity readers (minor 4, client-quirks §5),
+-- each with its library-absent stub. On WoW Forever names are unique per region, a character is its
+-- first name and surname together, and UnitName's second value is the SURNAME, never a realm; the
+-- realm is its ruleset. The stubs re-implement the two rules this addon depends on (the whole name,
+-- never the second value as a realm) and, without the library, take the realm label for the ruleset.
+
+local function regionalNamesStub()
+    local fn = RegionalUniqueNamesEnabled
+    return type(fn) == "function" and fn() == true
+end
+
+local function unitCharacterNameStub(unit)
+    local read = UnitName
+    if not unit or type(read) ~= "function" then return nil, nil end
+    local name, second = read(unit)
+    if name == nil then return nil, nil end
+    if not regionalNamesStub() then return name, second end
+    if isSecretStub(name) or isSecretStub(second) or type(second) ~= "string" or second == "" then
+        return name, nil
+    end
+    return name .. " " .. second, nil
+end
+
+local function realmKeyStub()
+    local fn = GetRealmName
+    local realm = type(fn) == "function" and fn() or nil
+    if type(realm) ~= "string" or realm == "" then return nil end
+    return realm
+end
+
+--- A unit's character name and realm (two values; either may be secret in combat, so the caller
+--- reads both through NS.Secrets). With regional names the name is the whole "First Surname".
+--- @param unit string
+--- @return string|nil name, string|nil realm
+Compat.UnitCharacterName = CompatLib and CompatLib.UnitCharacterName or unitCharacterNameStub
+
+--- The player's realm key: the ruleset with regional names (WoW Forever), else GetRealmName().
+--- @return string|nil
+Compat.RealmKey = CompatLib and CompatLib.RealmKey or realmKeyStub
+
+--- The active Mythic+ keystone's level (C_ChallengeMode.GetActiveKeystoneInfo's first value), raw:
+--- the caller reads it through NS.Secrets and runs this in pcall. Mythic+ is Retail-only
+--- (clients-§4): always nil on WoW Forever.
+--- @return number|nil
+function Compat.KeystoneLevel()
+    if not Compat.ForClient({ "retail" }) then return nil end
+    local cm = C_ChallengeMode
+    if not (cm and type(cm.GetActiveKeystoneInfo) == "function") then return nil end
+    return (cm.GetActiveKeystoneInfo())
+end
+
+--- The tier of the delve in progress, as the objective tracker's ScenarioHeaderDelves widget writes
+--- it (its tierText, raw: the caller reads it through NS.Secrets and runs this in pcall). Without the
+--- visualization enum every widget of the tracker's set is asked. Delves are Retail-only
+--- (clients-§4): always nil on WoW Forever. Not verified in-game (plan's smoke list).
+--- @return string|nil
+function Compat.DelveTierText()
+    if not Compat.InDelve() then return nil end
+    local wm = C_UIWidgetManager
+    if not (wm and type(wm.GetObjectiveTrackerWidgetSetID) == "function"
+            and type(wm.GetAllWidgetsBySetID) == "function"
+            and type(wm.GetScenarioHeaderDelvesWidgetVisualizationInfo) == "function") then
+        return nil
+    end
+    local setID = wm.GetObjectiveTrackerWidgetSetID()
+    local widgets = setID and wm.GetAllWidgetsBySetID(setID)
+    if type(widgets) ~= "table" then return nil end
+    local vis = Enum and Enum.UIWidgetVisualizationType
+    local kind = vis and vis.ScenarioHeaderDelves
+    for _, w in ipairs(widgets) do
+        if kind == nil or w.widgetType == kind then
+            local info = wm.GetScenarioHeaderDelvesWidgetVisualizationInfo(w.widgetID)
+            if type(info) == "table" and info.tierText ~= nil then return info.tierText end
+        end
+    end
+    return nil
+end
+
+--- The PvP match's rules, each a plain boolean (false where the client has no such call): a rated
+--- battleground, a rated arena, Solo Shuffle and Battleground Blitz. Solo Shuffle and rated arenas
+--- are arena brackets, Retail-only (clients-§4): false on WoW Forever.
+--- @return table { ratedBG, ratedArena, soloShuffle, blitz }
+function Compat.PvpRules()
+    local pvp = type(C_PvP) == "table" and C_PvP or {}
+    local function on(name) return type(pvp[name]) == "function" and pvp[name]() == true end
+    local arenas = Compat.ForClient({ "retail" })
+    return {
+        ratedBG     = on("IsRatedBattleground"),
+        ratedArena  = arenas and on("IsRatedArena"),
+        soloShuffle = arenas and on("IsSoloShuffle"),
+        blitz       = on("IsRatedSoloRBG"),
+    }
 end
 
 -- ---------------------------------------------------------------------------

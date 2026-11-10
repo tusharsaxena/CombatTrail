@@ -377,6 +377,9 @@ L["The %s ignores its starting spells again."] = "The %s ignores its starting sp
 L["Blizzard's damage meter is not available on this client."] =
     "Blizzard's damage meter is not available on this client."
 
+-- A fight's identity (modules/Identity.lua)
+L["Unknown target"] = "Unknown target"
+
 -- `/kct probe` (modules/Probe.lua)
 L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
     "The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."

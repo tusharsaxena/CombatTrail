@@ -80,6 +80,51 @@ local function build()
     M.C_PetBattles = { IsInBattle = function() return M.__petBattle end }
     M.C_PartyInfo = { IsDelveInProgress = function() return M.__inDelve end }
 
+    -- Where the player is and what against (modules/Identity.lua). GetInstanceInfo answers the
+    -- client's ten values out of M.__instance; a test sets its fields. The open world by default.
+    M.__instance = { name = "Isle of Dorn", type = "none", difficultyID = 0, difficultyName = "",
+                     maxPlayers = 0, instanceID = 2552 }
+    M.GetInstanceInfo = function()
+        local i = M.__instance
+        return i.name, i.type, i.difficultyID, i.difficultyName, i.maxPlayers, 0, false, i.instanceID,
+               i.groupSize, i.lfgID
+    end
+    M.__difficulties = { [1] = "Normal", [8] = "Mythic Keystone", [15] = "Heroic", [16] = "Mythic",
+                         [208] = "Delves" }
+    M.GetDifficultyInfo = function(id) return M.__difficulties[id] end
+    -- The Mythic+ keystone level (C_ChallengeMode.GetActiveKeystoneInfo's first value), nil when none.
+    M.__keystone = nil
+    M.C_ChallengeMode = { GetActiveKeystoneInfo = function() return M.__keystone, {}, false end }
+    -- A delve's tier, as the client's objective-tracker widget shows it: one ScenarioHeaderDelves
+    -- widget whose tierText is M.__delveTier (nil: no widget).
+    M.__delveTier = nil
+    M.C_UIWidgetManager = {
+        GetObjectiveTrackerWidgetSetID = function() return 252 end,
+        GetAllWidgetsBySetID = function(setID)
+            if setID ~= 252 or M.__delveTier == nil then return {} end
+            return { { widgetID = 6183, widgetType = 29 } }
+        end,
+        GetScenarioHeaderDelvesWidgetVisualizationInfo = function(widgetID)
+            if widgetID ~= 6183 or M.__delveTier == nil then return nil end
+            return { tierText = M.__delveTier }
+        end,
+    }
+    -- The PvP match's rules (the bracket qualifier): each false until a test sets it.
+    M.__pvp = { ratedBG = false, ratedArena = false, soloShuffle = false, blitz = false }
+    M.C_PvP = {
+        IsRatedBattleground = function() return M.__pvp.ratedBG end,
+        IsRatedArena        = function() return M.__pvp.ratedArena end,
+        IsSoloShuffle       = function() return M.__pvp.soloShuffle end,
+        IsRatedSoloRBG      = function() return M.__pvp.blitz end,
+    }
+    -- A unit's classification ("normal", "elite", "worldboss", ...) and a pet's family.
+    M.__classifications, M.__families = {}, {}
+    M.UnitClassification = function(unit) return M.__classifications[unit] end
+    M.UnitCreatureFamily = function(unit) return M.__families[unit] end
+    -- The player's item level: overall, then equipped.
+    M.__ilvl = { overall = 640.25, equipped = 638.96 }
+    M.GetAverageItemLevel = function() return M.__ilvl.overall, M.__ilvl.equipped end
+
     -- TOC metadata, read through LibKa0s-Env-1.0 (core/EnvSetup.lua).
     M.__toc = {
         Version = "0.1.0",

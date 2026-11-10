@@ -58,6 +58,8 @@ files["core/Compat.lua"] = {
         "C_PetBattles", "UnitInVehicle", "C_PartyInfo",
         "issecretvalue", "canaccessvalue", "issecrettable", "canaccesstable",
         "GetBuildInfo",
+        -- who and where a fight was (modules/Identity.lua)
+        "RegionalUniqueNamesEnabled", "GetRealmName", "C_ChallengeMode", "C_UIWidgetManager", "Enum", "C_PvP",
     },
 }
 
@@ -65,6 +67,11 @@ files["core/Compat.lua"] = {
 -- `/kct probe` reaches the meter through NS.Meter and reads the meter enums itself, for the report.
 files["modules/Meter.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
 files["modules/Probe.lua"] = { read_globals = { "Enum" } }
+-- A fight's identity: the player, the target and the instance (the version-variant reads are Compat's).
+files["modules/Identity.lua"] = {
+    read_globals = { "UnitClass", "UnitClassification", "UnitCreatureFamily", "GetAverageItemLevel",
+                     "GetInstanceInfo", "GetDifficultyInfo" },
+}
 
 -- The context menus: the client's menu without the library.
 files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }

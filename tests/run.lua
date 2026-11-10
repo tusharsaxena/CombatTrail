@@ -105,6 +105,7 @@ local SUITES = {
     "test_probe",
     "test_meter",
     "test_fight",
+    "test_identity",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },
