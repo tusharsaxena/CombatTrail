@@ -112,13 +112,22 @@ test("bindings: a key bound in the tab is the client's key", function()
 end)
 
 test("bindings: each button is plain, named, hidden and down-edge only", function()
-    local inst = T.load()
+    -- The base frame answers RegisterForClicks through its catch-all; record what each button asks.
+    local inst = T.load({ mutate = function(m)
+        local real = m.CreateFrame
+        m.CreateFrame = function(...)
+            local f = real(...)
+            f.RegisterForClicks = function(self, ...) self.__clicks = { ... }; return self end
+            return f
+        end
+    end })
     local M = inst.mocks
     for _, name in ipairs({ "CombatTrailToggleHud", "CombatTrailToggleResults", "CombatTrailToggleLanes" }) do
         local b = M.__frameByName[name]
         assertTrue(b ~= nil, name .. " was not created")
         assertFalse(b:IsShown(), name .. " is shown")
         assertTrue(b.__template == nil, name .. " carries a template")
+        assertEqual(table.concat(b.__clicks or {}, ","), "AnyDown", name .. " registers the down edge only")
     end
 end)
 
