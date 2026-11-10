@@ -135,7 +135,7 @@ function Share.TalentsLink(record)
     local w = who(record)
     local name = talents.name or L["Talents"]
     local text = w.specName and ("%s: %s"):format(w.specName, name) or name
-    return NS.ResultsLoadout.Hyperlink(talents, w.level, text)
+    return NS.ResultsLoadout.Hyperlink(talents, NS.ResultsLoadout.Level(record), text)
 end
 
 local function includeTalents()

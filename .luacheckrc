@@ -69,7 +69,7 @@ files["modules/Meter.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
 files["modules/Probe.lua"] = { read_globals = { "Enum" } }
 -- A fight's identity: the player, the target and the instance (the version-variant reads are Compat's).
 files["modules/Identity.lua"] = {
-    read_globals = { "UnitClass", "UnitClassification", "UnitCreatureFamily", "GetAverageItemLevel",
+    read_globals = { "UnitClass", "UnitLevel", "UnitClassification", "UnitCreatureFamily", "GetAverageItemLevel",
                      "GetInstanceInfo", "GetDifficultyInfo" },
 }
 
@@ -106,7 +106,9 @@ files["modules/Results_Fights.lua"] = { read_globals = { "date" } }
 files["modules/Results.lua"] = { read_globals = { "StaticPopup_Hide", "PlayerSpellsFrame" } }
 -- The fight detail's gear, talents and usage: the item data, the talent tree's link and an item's
 -- Shift-click (each read bare at CALL time and pcall'd).
-files["modules/Results_Loadout.lua"] = { read_globals = { "C_Item", "SetItemRef", "HandleModifiedItemClick" } }
+files["modules/Results_Loadout.lua"] = {
+    read_globals = { "C_Item", "SetItemRef", "HandleModifiedItemClick", "UnitLevel" },
+}
 files["modules/Results_Usage.lua"] = { read_globals = { "C_Item" } }
 -- Share's whisper offers the targeted player's name.
 files["modules/Share.lua"] = { read_globals = { "UnitIsPlayer" } }

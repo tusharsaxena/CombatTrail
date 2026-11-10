@@ -69,7 +69,7 @@ test("share: talents link appended when enabled", function()
     local with = NS.Share.Line(r, true)
     local plain = NS.Share.Line(r, false)
     assertTrue(with:sub(1, #plain) == plain, "the line, then the link")
-    assertTrue(with:find("|Htalentbuild:253:0:CQQAAAAAA|h[Beast Mastery: Raid]|h|r", 1, true) ~= nil, with)
+    assertTrue(with:find("|Htalentbuild:253:80:CQQAAAAAA|h[Beast Mastery: Raid]|h|r", 1, true) ~= nil, with)
     assertTrue(#with <= NS.Share.MAX_CHAT)
     assertEqual(NS.GetSetting("results.shareTalents"), true, "on by default (mockup §4)")
     local msgs = NS.Share.Messages(r)
@@ -79,6 +79,12 @@ test("share: talents link appended when enabled", function()
     msgs = NS.Share.Messages(r)
     assertEqual(#msgs, 1)
     assertEqual(msgs[1], plain, "the line alone when the setting is off")
+    -- The link carries the level the fight was fought at (the talent tree's points come from it),
+    -- and the logged-in character's for a record that holds none.
+    r.who.level = 70
+    assertTrue(NS.Share.TalentsLink(r):find("talentbuild:253:70:", 1, true) ~= nil, "the fight's level")
+    r.who.level = nil
+    assertTrue(NS.Share.TalentsLink(r):find("talentbuild:253:80:", 1, true) ~= nil, "the character's level")
     -- No loadout: the line alone either way.
     NS.db.profile.results.shareTalents = true
     assertEqual(NS.Share.Messages(rec(NS))[1], plain)

@@ -151,7 +151,7 @@ end)
 
 test("detail: gear in the character frame's order, talents with View and Copy", function()
     local copied
-    local NS = fresh()
+    local NS, M = fresh()
     NS.ShowCopy = function(text) copied = text return true end
     local r = rec(NS, { id = "a" })
     r.gear = { [13] = "212001", [1] = "212002::::::::80", [16] = "212003" }
@@ -165,6 +165,13 @@ test("detail: gear in the character frame's order, talents with View and Copy", 
     assertEqual(pane.lo.talents:GetText(), "Talents: Raid \194\183 Pack Leader")
     assertTrue(pane.lo.view:IsEnabled(), "View with an import string")
     assertTrue(pane.lo.copy:IsEnabled())
+    -- View opens the tree at the fight's level (the record's, here the mock character's 80).
+    assertEqual(NS.Identity.Who().level, 80, "who records the character's level")
+    local ref
+    M.SetItemRef = function(data) ref = data end
+    pane.lo.view:__fire("OnClick")
+    M.SetItemRef = nil
+    assertEqual(ref, "talentbuild:253:80:CQQAAAAAA", "View's link carries the level")
     pane.lo.copy:__fire("OnClick")
     assertEqual(copied, "CQQAAAAAA")
     assertFalse(pane.lo.gearView:IsEnabled(), "Gear view waits for the gear window (plan Task 4.4)")

@@ -92,6 +92,16 @@ function Loadout.Hyperlink(t, level, text)
     return ("%s|H%s|h[%s]|h|r"):format(Style.HueEscape(Loadout.LINK_COLOR), data, label)
 end
 
+--- The level a fight's talentbuild link carries: the one it was fought at, else the logged-in
+--- character's (the client sizes the tree's points from it, so a 0 would draw a tree it cannot fill).
+--- @return number|nil
+function Loadout.Level(record)
+    local w = type(record) == "table" and type(record.who) == "table" and record.who or {}
+    if type(w.level) == "number" and w.level > 0 then return w.level end
+    local ok, level = pcall(UnitLevel, "player")
+    return ok and NS.Secrets.PlainNumber(level) or nil
+end
+
 --- Whether View can open the loadout: it has an import string.
 --- @return boolean
 function Loadout.CanView(t)
@@ -222,7 +232,7 @@ function Loadout.Build(p, c)
     x.grid = CreateFrame("Frame", nil, c)
     x.talents = Style.Text(c, FONT.TEXT, C.text)
     x.view = Style.Button(c, L["View"], function()
-        Loadout.View(x.talentsData, nil, Loadout.Label(p.record))
+        Loadout.View(x.talentsData, Loadout.Level(p.record), Loadout.Label(p.record))
     end)
     x.copy = Style.Button(c, L["Copy"], function()
         Loadout.Copy(x.talentsData, NS.ResultsTable.WindowOf(p.frame))

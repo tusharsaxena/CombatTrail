@@ -126,13 +126,15 @@ local function readPet(who)
     who.petFamily = Secrets.PlainString(ask(UnitCreatureFamily, "pet"))
 end
 
--- Who the player is: { name, realm, class, specID, specName, ilvl, petName, petFamily, client }.
+-- Who the player is: { name, realm, class, level, specID, specName, ilvl, petName, petFamily, client }.
+-- The level is what a fight's talentbuild link carries (the tree's points come from it).
 local function readWho()
     local Compat = NS.Compat
     local who = { name = nameOf("player"), realm = Secrets.PlainString(ask(Compat.RealmKey)),
                   client = Compat.ClientKey() }
     local _, classToken = ask(UnitClass, "player")
     who.class = Secrets.PlainString(classToken)
+    who.level = Secrets.PlainNumber(ask(UnitLevel, "player"))
     -- GetAverageItemLevel answers (overall, equipped); the fight's is the equipped one.
     local overall, equipped = ask(GetAverageItemLevel)
     who.ilvl = round1(equipped) or round1(overall)
@@ -213,7 +215,7 @@ end
 
 --- Who the player is now (the snapshot's `who`): the Results window's "current character" and
 --- "current spec" filters read it out of combat.
---- @return table who  { name, realm, class, specID, specName, ilvl, petName, petFamily, client }
+--- @return table who  { name, realm, class, level, specID, specName, ilvl, petName, petFamily, client }
 function Identity.Who()
     return readWho()
 end
