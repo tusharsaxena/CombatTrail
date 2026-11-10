@@ -168,8 +168,14 @@ Kit.diagnostics = {
     setDisabled = function(off) contract().NS.SetByPath("general.enabled", not off) end,
 }
 
--- The typed-value gate (skinning-§1): no row of this addon's own yet, so every color, face and texture
--- in the tracked source is one a kit category takes.
-Kit.skinValues = { root = root, rows = {} }
+-- The typed-value gate (skinning-§1): every color, face and texture in the tracked source is one a
+-- kit category takes, but for the rows below (each its reason and cause id).
+Kit.skinValues = {
+    root = root,
+    rows = {
+        { file = "modules/Results_Timeline.lua", substring = "local DISC =",
+          why = "a white disc shape tinted through Style.Vertex, the legend's swatch: a shape, not skin data", cause = "L10" },
+    },
+}
 
 Kit.run{ dir = root .. "/tests/", suites = SUITES }
