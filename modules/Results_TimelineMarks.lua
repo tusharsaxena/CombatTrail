@@ -10,7 +10,9 @@ local _, NS = ...
 -- NS.SetByPath; modules/Results.lua hears the write and calls Timeline.Redraw). "icon", the default:
 -- each cast is its ability's LANE_ICON icon centered on its time in the lane, with the Casts icon's
 -- tooltip (the client's spell tooltip, then *Cast at m:ss* and its fight). A lane is 16 px, so icons
--- in one lane do not stack: casts closer than an icon overlap, the later drawn over. "tick": the thin
+-- in one lane do not stack: casts closer than an icon overlap. The icons are pooled siblings at one
+-- frame level, so which of two overlapping icons draws on top (and takes the pointer) is the client's,
+-- not the cast order (docs/known-limitations.md). "tick": the thin
 -- tick the lane's full height (MARK_W) with its wider hover frame and the tick's tooltip
 -- (Data.MarkLines), as before. A redraw keeps the zoom, the pan and the scroll.
 --

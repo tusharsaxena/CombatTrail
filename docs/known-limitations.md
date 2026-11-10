@@ -27,8 +27,8 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **The pet is its own source.** `Meter.PET_SEPARATE = true` assumes the meter reports the pet beside
   the player and that the player's total does not already hold the pet's damage. The probe cannot see
   double counting. *Unverified* in combat. On WoW Forever, out of combat, the pet's source came back
-  empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage looks folded
-  into the player's, so the pet's own figure is empty there until the in-combat probe says more.
+  empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage is most likely
+  folded into the player's (not measured: it may simply be uncounted), so the pet's own figure is empty there until the in-combat probe says more.
 - **A meter reset mid-fight loses the fight.** It is marked lost and not stored, and the rest of that
   combat is not tracked. DPS Race's shared-session netting is not ported.
 - **Nothing after the settle is read.** Damage that lands more than the settle window after combat
