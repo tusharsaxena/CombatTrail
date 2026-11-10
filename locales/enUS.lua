@@ -55,14 +55,10 @@ L["DPS HUD"] = "DPS HUD"
 L["History"] = "History"
 L["Profiles"] = "Profiles"
 L["Slash Commands"] = "Slash Commands"
-L["The History settings arrive with the fight history."] =
-    "The History settings arrive with the fight history."
 L["Restore every Lanes setting on this profile to its addon default."] =
     "Restore every Lanes setting on this profile to its addon default."
 L["Restore every DPS HUD setting on this profile to its addon default."] =
     "Restore every DPS HUD setting on this profile to its addon default."
-L["Restore every History setting on this profile to its addon default. Stored fights are not touched."] =
-    "Restore every History setting on this profile to its addon default. Stored fights are not touched."
 
 -- Master controls tab (settings/General.lua)
 L["Reset this profile to the addon's defaults? Everything you have configured or added in it is discarded — your other profiles are not affected."] =
@@ -949,3 +945,63 @@ L["Nothing to list: no on-use item or consumable was found at the start."] =
 L["Hidden items"] = "Hidden items"
 L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."] =
     "Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."
+
+-- The History page (settings/History.lua): its tabs, the Recording filters, Retention (the stored
+-- count and size, Purge now… and its question), the Results window's rows and the Usage tab's list
+L["Recording filters"] = "Recording filters"
+L["Retention"] = "Retention"
+L["Results window"] = "Results window"
+L["Mythic+ dungeons"] = "Mythic+ dungeons"
+L["Training dummies"] = "Training dummies"
+L["Scenarios"] = "Scenarios"
+L["Which fights"] = "Which fights"
+L["Minimum fight length (seconds)"] = "Minimum fight length (seconds)"
+L["A fight shorter than this is shown on the DPS HUD but not stored."] =
+    "A fight shorter than this is shown on the DPS HUD but not stored."
+L["Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."] =
+    "Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."
+L["Content to store"] = "Content to store"
+L["Store the fights you have here. Off, they are still shown on the DPS HUD."] =
+    "Store the fights you have here. Off, they are still shown on the DPS HUD."
+L["Keep history for (days, 0 = forever)"] = "Keep history for (days, 0 = forever)"
+L["Stored fights older than this many days are removed, at login and once a day while you play. 0 keeps every fight."] =
+    "Stored fights older than this many days are removed, at login and once a day while you play. 0 keeps every fight."
+L["Never purge a fight that holds a best"] = "Never purge a fight that holds a best"
+L["Keep a fight however old it is while it is your best on its board: your top DPS for one character and spec on one encounter or target at one difficulty."] =
+    "Keep a fight however old it is while it is your best on its board: your top DPS for one character and spec on one encounter or target at one difficulty."
+L["Keep a fight however old it is while it is your best on its board: your top DPS for one character on one encounter or target at one difficulty."] =
+    "Keep a fight however old it is while it is your best on its board: your top DPS for one character on one encounter or target at one difficulty."
+L["Maximum stored fights (0 = no limit)"] = "Maximum stored fights (0 = no limit)"
+L["The most fights kept. Past it the oldest go first, except a fight that holds a best while Never purge a fight that holds a best is on. 0 keeps any number."] =
+    "The most fights kept. Past it the oldest go first, except a fight that holds a best while Never purge a fight that holds a best is on. 0 keeps any number."
+L["Window scale"] = "Window scale"
+L["The size of the Results window, its text included, and of the ability timeline, the gear view and the compare that open over it."] =
+    "The size of the Results window, its text included, and of the ability timeline, the gear view and the compare that open over it."
+L["The height of each row in the Results window's list of fights, in pixels."] =
+    "The height of each row in the Results window's list of fights, in pixels."
+L["Sharing"] = "Sharing"
+L["Include talents link when sharing"] = "Include talents link when sharing"
+L["Add the fight's talents to the shared line as a link others can click to see the talent tree. When the line and the link would be too long for one chat message, the link follows as a second one."] =
+    "Add the fight's talents to the shared line as a link others can click to see the talent tree. When the line and the link would be too long for one chat message, the link follows as a second one."
+L["%d bytes"] = "%d bytes"
+L["%.1f KB"] = "%.1f KB"
+L["%.1f MB"] = "%.1f MB"
+L["Stored now: 1 fight, about %s of saved variables."] = "Stored now: 1 fight, about %s of saved variables."
+L["Stored now: %d fights, about %s of saved variables."] =
+    "Stored now: %d fights, about %s of saved variables."
+L["Remove now the stored fights these settings no longer keep, as the purge at login does. Asks for confirmation."] =
+    "Remove now the stored fights these settings no longer keep, as the purge at login does. Asks for confirmation."
+L["Remove the stored fights that Keep history for and Maximum stored fights no longer keep? This cannot be undone."] =
+    "Remove the stored fights that Keep history for and Maximum stored fights no longer keep? This cannot be undone."
+L["Remove"] = "Remove"
+L["Purge now\226\128\166"] = "Purge now\226\128\166"
+L["Every fight is tracked live on the DPS HUD. A fight is stored only when it passes all of these."] =
+    "Every fight is tracked live on the DPS HUD. A fight is stored only when it passes all of these."
+L["Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."] =
+    "Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."
+L["Hide an item"] = "Hide an item"
+L["An item ID, a shift-clicked item link, or the name of an item a fight listed."] =
+    "An item ID, a shift-clicked item link, or the name of an item a fight listed."
+L["No item is hidden."] = "No item is hidden."
+L["Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."] =
+    "Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."

@@ -130,6 +130,7 @@ local SUITES = {
     "test_compare",
     "test_gear",
     "test_usage_edit",
+    "test_history_page",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

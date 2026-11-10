@@ -26,13 +26,23 @@ local Style = NS.Style
 local FONT = Style.FONT
 
 -- Compact rows under a 20px header, as LootHistory's list draws them (BrowserTable: 18px rows).
+-- ROW_H is the shipped row height; the drawn one is `results.rowHeight` (History > Results window),
+-- read at each layout through Tbl.RowHeight.
 Tbl.ROW_H = 18
+Tbl.ROW_H_MIN, Tbl.ROW_H_MAX = 14, 32
 Tbl.HEADER_H = 20
 Tbl.PAD = 6                 -- the gap between two cells, and the row's inner margin
 Tbl.SCROLLBAR_W = NS.Skin.Token("scroll.width") or 8
 Tbl.ICON = 16
 Tbl.WHEEL_ROWS = 3          -- rows one notch of the mouse wheel moves
 Tbl.BAR_ALPHA = 0.25        -- a bar cell's fill over the row: the class color at this opacity
+
+--- The list's row height now (px): `results.rowHeight`, else the shipped one.
+function Tbl.RowHeight()
+    local h = tonumber(NS.GetSetting and NS.GetSetting("results.rowHeight"))
+    if not h then return Tbl.ROW_H end
+    return math.max(Tbl.ROW_H_MIN, math.min(Tbl.ROW_H_MAX, math.floor(h + 0.5)))
+end
 
 local CLASS_ATLAS = "Interface\\GLUES\\CHARACTERCREATE\\UI-CHARACTERCREATE-CLASSES"
 local DASH = "\226\128\148"
@@ -479,7 +489,7 @@ end
 
 local function newRow(t)
     local row = CreateFrame("Button", nil, t.body)
-    row:SetHeight(Tbl.ROW_H)
+    row:SetHeight(Tbl.RowHeight())
     if row.RegisterForClicks then row:RegisterForClicks("LeftButtonUp", "RightButtonUp") end
     rowBackground(row)
     row.cells = {}
@@ -780,7 +790,7 @@ function Table:HoverCell(row)
 end
 
 function Table:visibleCount()
-    return math.max(1, math.floor((self.height - Tbl.HEADER_H) / Tbl.ROW_H))
+    return math.max(1, math.floor((self.height - Tbl.HEADER_H) / Tbl.RowHeight()))
 end
 
 function Table:maxOffset()
@@ -819,7 +829,9 @@ function Table:SetSelected(id)
 end
 
 function Table:placeRow(row, i)
-    local y = -(i - 1) * Tbl.ROW_H
+    local h = Tbl.RowHeight()
+    local y = -(i - 1) * h
+    row:SetHeight(h)
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", self.body, "TOPLEFT", 0, y)
     row:SetPoint("TOPRIGHT", self.body, "TOPRIGHT", -Tbl.SCROLLBAR_W - 2, y)

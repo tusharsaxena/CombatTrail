@@ -121,7 +121,7 @@ end
 
 -- ── the parts ───────────────────────────────────────────────────────────────────────────────────
 
-local layout, resize, render, renderDetail, footer
+local layout, resize, render, renderDetail, footer, applyScale
 
 local function fight(id)
     return id and Source.Get(id) or nil
@@ -654,6 +654,18 @@ function Results.Placement()
     return point, relativePoint, x, y, width, height
 end
 
+-- `results.scale` (History > Results window) on the window, read at each show.
+function applyScale()
+    local scale = tonumber(NS.GetSetting("results.scale"))
+    if ui and scale and scale > 0 then ui.frame:SetScale(scale) end
+end
+
+--- A change to Window scale: the window and every follower open over it take it at once.
+function Results.ApplyScale()
+    applyScale()
+    eachFollower("ApplyScale")
+end
+
 -- ── the public surface ──────────────────────────────────────────────────────────────────────────
 
 --- Whether the window decides to show: wanted, and the addon standing up.
@@ -665,8 +677,7 @@ end
 function Results.Refresh(reveal)
     if not Results.IsShown() then return hideWindow() end
     ensureWindow()
-    local scale = tonumber(NS.GetSetting("results.scale"))
-    if scale and scale > 0 then ui.frame:SetScale(scale) end
+    applyScale()
     local opening = not windowShown()
     if opening then ui.frame:Show() end
     applySampleMarker()
@@ -929,6 +940,9 @@ local function onSettings(path)
         return
     end
     if path == "history.days" and windowShown() then footer() end
+    -- History > Results window: the scale on the window and its followers, the row height on the list.
+    if path == "results.scale" then Results.ApplyScale() end
+    if path == "results.rowHeight" and windowShown() then render() end
     -- The Usage "never show" list: the detail redraws (an edit under way keeps its ticks).
     if path == NS.Usage.HIDDEN_PATH and windowShown() then renderDetail() end
 end
