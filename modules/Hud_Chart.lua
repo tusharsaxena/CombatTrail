@@ -32,7 +32,10 @@ local _, NS = ...
 -- the bar's left edge: the bar reads deep behind either way.)
 --
 -- LAYOUT FROM CONFIG. Every size is the width Place() is handed and the configured plot height
--- (`hud.chart.height`); nothing reads a size or position back off a column.
+-- (`hud.chart.height`); nothing reads a size or position back off a column. The heading is DPS
+-- Race's (FONT.SECTION on Style.SECTION_H), and the HUD lays the pace bar on a line between it and
+-- the plot (Place's `midH`; Hud_States' placeProfile), keeping the heading over the bar when the plot
+-- is off (SetParts).
 
 local Chart = {}
 NS.HudChart = Chart
@@ -41,7 +44,7 @@ local L = NS.L
 local Style = NS.Style
 
 Chart.HEADROOM = 1.15   -- the best's level plus room to pass it
-Chart.HEAD_H = 16       -- the "Damage profile" heading's line
+Chart.HEAD_H = Style.SECTION_H   -- the "Damage profile" heading's line (FONT.SECTION)
 Chart.AXIS_H = 12       -- the time labels under the plot
 Chart.GAP = 2
 Chart.INSET = 2         -- the plot's inner padding
@@ -50,7 +53,7 @@ Chart.ICON = 12         -- a cooldown icon's size
 Chart.ICON_GAP = 1      -- between two rows of icons
 Chart.RESERVE = Chart.ICON + Chart.ICON_GAP   -- the plot's headroom on top: one row of icons
 Chart.BURST_WINDOW = 15 -- seconds after a long cooldown's cast its columns draw as a burst
-Chart.PACE_H = 10       -- the pace bar's line
+Chart.PACE_H = 12       -- the pace bar's line: the bar 8px tall, 2px clear over and under it
 
 local ICON_CROP = { 0.08, 0.92, 0.08, 0.92 }
 
@@ -80,10 +83,15 @@ function Chart.ColumnEdges(inner, count)
     return xs, widths
 end
 
---- The chart block's whole height for a plot `plotH` tall: heading, the icons' row, the plot, the
---- gap and the time labels.
-function Chart.BlockHeight(plotH)
-    return Chart.HEAD_H + Chart.RESERVE + plotH + Chart.GAP + Chart.AXIS_H
+--- The plot frame's height for a plot `plotH` tall: the columns and the icons' row on top.
+function Chart.FrameHeight(plotH)
+    return plotH + Chart.RESERVE
+end
+
+--- The chart block's whole height for a plot `plotH` tall: heading, `midH` (default 0: the line the
+--- HUD lays the pace bar on), the plot frame, the gap and the time labels.
+function Chart.BlockHeight(plotH, midH)
+    return Chart.HEAD_H + (midH or 0) + Chart.FrameHeight(plotH) + Chart.GAP + Chart.AXIS_H
 end
 
 --- A cast's center x on a plot `width` wide spanning `span` seconds, held inside the plot; nil
@@ -278,7 +286,7 @@ local function hideTip() if GameTooltip then GameTooltip:Hide() end end
 function Chart.New(parent)
     local s = setmetatable({ parent = parent, cols = {}, iconPool = NS.Pool.New(), markPool = NS.Pool.New(),
                              icons = {}, marks = {} }, Strip)
-    s.title = Style.Text(parent, Style.FONT.HEADER)
+    s.title = Style.Text(parent, Style.FONT.SECTION)
     s.title:SetText(L["Damage profile"])
     s.note = Style.Text(parent, Style.FONT.CAPTION, nil, "RIGHT")
     s.plot = CreateFrame("Frame", nil, parent)
@@ -299,26 +307,45 @@ function Chart.New(parent)
     return s
 end
 
-function Strip:SetShown(on)
-    on = on and true or false
-    self.title:SetShown(on)
-    self.note:SetShown(on)
-    self.plot:SetShown(on)
-    for _, fs in ipairs(self.axis) do fs:SetShown(on) end
-    self.shown = on
+--- Show or hide the heading (its title and note) and the plot (with its time labels) apart: the HUD
+--- keeps the heading over the pace bar when the plot is off.
+--- @param head boolean
+--- @param plot boolean
+function Strip:SetParts(head, plot)
+    head, plot = head and true or false, plot and true or false
+    self.title:SetShown(head)
+    self.note:SetShown(head)
+    self.plot:SetShown(plot)
+    for _, fs in ipairs(self.axis) do fs:SetShown(plot) end
+    self.shown = plot
 end
 
---- Place the chart at `y` (negative, from `anchor`'s top) across `width`; answers its height.
+--- Show or hide every part.
+function Strip:SetShown(on)
+    self:SetParts(on, on)
+end
+
+--- The note at the heading's right, for a heading shown without its plot (Draw sets it otherwise).
+function Strip:SetNote(text)
+    self.note:SetText(text or "")
+end
+
+--- Place the chart at `y` (negative, from `anchor`'s top) across `width`, `midH` (default 0) left
+--- clear between the heading's line and the plot; answers its height.
+--- @param anchor table
+--- @param y number
+--- @param width number
+--- @param midH number|nil
 --- @return number height
-function Strip:Place(anchor, y, width)
+function Strip:Place(anchor, y, width, midH)
     local plotH = Chart.PlotHeight()
     self.width, self.plotH = width, plotH
     self.title:ClearAllPoints()
     self.title:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y)
     self.note:ClearAllPoints()
     self.note:SetPoint("TOPRIGHT", anchor, "TOPLEFT", width, y)
-    local py = y - Chart.HEAD_H
-    self.frameH = plotH + Chart.RESERVE
+    local py = y - Chart.HEAD_H - (midH or 0)
+    self.frameH = Chart.FrameHeight(plotH)
     self.plot:ClearAllPoints()
     self.plot:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, py)
     self.plot:SetSize(width, self.frameH)
@@ -332,7 +359,7 @@ function Strip:Place(anchor, y, width)
         fs:SetPoint(points[i][1], anchor, "TOPLEFT", points[i][2], ay)
     end
     self.geometry = nil
-    return Chart.BlockHeight(plotH)
+    return Chart.BlockHeight(plotH, midH)
 end
 
 -- The columns' and the line's look, once per Appearance stamp.
@@ -575,13 +602,14 @@ function Pace:SetShown(on)
     self.bar:SetShown(on and true or false)
 end
 
---- Place it at `y` (negative, from `anchor`'s top) across `width`; answers its height.
+--- Place it on the PACE_H line at `y` (negative, from `anchor`'s top) across `width`, DPS Race's
+--- geometry: the bar 2px under the line's top and 4px shorter than it; answers the line's height.
 --- @return number
 function Pace:Place(anchor, y, width)
     self.bar:ClearAllPoints()
-    self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y)
+    self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y - 2)
     self.barW = math.max(1, width)
-    self.bar:SetSize(self.barW, Chart.PACE_H)
+    self.bar:SetSize(self.barW, Chart.PACE_H - 4)
     local x = math.floor(self.barW / 2 + 0.5)
     self.tick:ClearAllPoints()
     self.tick:SetPoint("TOP", self.bar, "TOPLEFT", x, 2)

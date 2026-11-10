@@ -441,6 +441,8 @@ L["The size of the whole HUD, its text included."] = "The size of the whole HUD,
 L["Clock font"] = "Clock font"
 L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."] =
     "The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."
+L["The clock's size. It draws about half again as tall as this, as DPS Race's clock does: 26 draws it 40 points high."] =
+    "The clock's size. It draws about half again as tall as this, as DPS Race's clock does: 26 draws it 40 points high."
 L["Figures font"] = "Figures font"
 L["The face the Damage and DPS figures are drawn in."] = "The face the Damage and DPS figures are drawn in."
 L["Final DPS color"] = "Final DPS color"

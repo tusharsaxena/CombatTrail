@@ -130,6 +130,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-H9 | Both | Show the HUD Always with Only in instances on, two fights in the open world | The HUD stays up through and after both fights |
 | SM-CT-H10 | Both | `/ct debug on`, a 20 s fight on a dummy, then the over card; out of combat, the formatter probe in `midnight-quirks.md` (each `C_StringUtil` constructor's `FormatNumber(30190.4761904)` and `AbbreviateNumbers(30190.4761904)`) | The DPS tile, Damage and spell amounts never show a long decimal tail; the console names the path ("numbers served by ...") and any constructor passed over; the probe's answers are recorded in `midnight-quirks.md` |
 | SM-CT-H11 | Both | A fresh profile (or the swatches reset), a fight with a pet, side by side with DPS Race on the same skin | The spell rows, chart columns and the pace fill are DPS Race's blue at the same opacity; the pet rows and pet pace fill are a darker green with legible white text; the pace line is a pale neutral gray, not light blue; switching the skin leaves the fill colors as they are |
+| SM-CT-H12 | Both | A fresh profile, the Ka0s Default skin, a fight with a best (live, then the over card), side by side with DPS Race's running body and result card | Same width (260) and about the same height; "Damage profile" and "Spell breakdown" in the same large gold heading with the same space over them; the pace bar directly under "Damage profile" and over the plot; the clock in the same face and size; spell rows 18 px in a 10 pt face; nothing overlaps at 236 px, the heading and its right-hand note included |
 
 ## 5. Results
 
@@ -204,3 +205,4 @@ The items the build assumed and the owner confirms, each answered by a row above
 - Channel ticks: SM-CT-N3. The delve tier read: SM-CT-F15.
 - The standalone-windows resize check: SM-CT-R2.
 - Whether the client's number formatters truncate a fraction, on each client: SM-CT-H10.
+- The HUD's look against DPS Race's, live and after the fight: SM-CT-H12.

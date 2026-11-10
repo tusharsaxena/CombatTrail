@@ -8,8 +8,12 @@ local _, NS = ...
 -- bar's controls are the HUD's acts).
 --
 -- THE STACK, top down, each part switched by its `hud.layout.*` key: the clock, the target line, the
--- Damage and DPS boxes, on the over card the chips, then the pace bar (only with a fight to pace
--- against), the damage chart (modules/Hud_Chart.lua) and the spell rows (modules/Hud_Breakdown.lua).
+-- Damage and DPS boxes, on the over card the chips, then the "Damage profile" section (its heading,
+-- the pace bar directly under it when there is a fight to pace against, then the damage chart,
+-- modules/Hud_Chart.lua) and the "Spell breakdown" section (modules/Hud_Breakdown.lua). The look is
+-- DPS Race's (v0.2 Task B2): each heading in FONT.SECTION on Style.SECTION_H with HEAD_GAP of clear
+-- space over it, the pace bar on its PACE_H line under the profile heading, and the clock at DPS
+-- Race's single-clock size (ClockSize).
 -- Every position is a constant offset worked out from the parts shown and the configured sizes
 -- (modules/Hud_Appearance.lua); Update answers the stack's height (body.height), which the shell
 -- sizes the window from. No body reads the size or position of anything that has displayed a meter
@@ -47,16 +51,34 @@ States.COLORS = C
 local BOX = { bg = "list.boxDim", border = "ct.box.border" }
 
 -- The stack's pitches. The clock's and the figures' heights follow their configured sizes.
-local CLOCK_PAD = 10
+local CLOCK_PAD = 12
 local TARGET_H = 18
 local KPI_CHROME = 26          -- a box's caption and padding around its figure
 local KPI_PAD, KPI_CAPTION_H = 5, 14
 local GAP = 8
 local CHIP_HEIGHT, CHIP_GAP = 18, 5
-local SECTION_H = 16           -- a section's heading line (the spell rows')
+-- A section's heading line (FONT.SECTION), and the clear space over it: the shared SECTION_GAP less
+-- the GAP the block above already leaves (DPS Race's HEAD_GAP, 6).
+local SECTION_H = Style.SECTION_H
+local HEAD_GAP = Style.SECTION_GAP - GAP
+-- The gap between the pace bar's line and the plot under it.
+local PACE_GAP = 4
+-- The clock draws its stored size scaled as DPS Race's single clock does (BIG / CLOCK_PAIR, 40 / 26):
+-- the composed Font size row tops out at 32, so the stored 26 is what draws DPS Race's 40.
+local CLOCK_SCALE = 40 / 26
+-- The bodies' width when the shell hands none: the default 260 less PAD on both sides.
+local WIDTH = 236
 --- How many rows `hud.spells.rows` 0 shows at once (the wheel scrolls the rest).
 States.ALL_ROWS = 12
 States.GAP = GAP
+States.HEAD_GAP, States.PACE_GAP, States.SECTION_H = HEAD_GAP, PACE_GAP, SECTION_H
+
+--- The size the clock draws at for a stored `hud.clock.fontSize`, whole points.
+--- @param size number
+--- @return number
+function States.ClockSize(size)
+    return math.floor((tonumber(size) or 0) * CLOCK_SCALE + 0.5)
+end
 local DASH = "\226\128\148"   -- "no figure"
 
 local function appearance() return NS.HudAppearance end
@@ -147,7 +169,7 @@ local Chips = {}
 Chips.__index = Chips
 
 local function chips(parent)
-    return setmetatable({ parent = parent, y = 0, pool = NS.Pool.New(), width = 276, shown = {}, lines = 0 },
+    return setmetatable({ parent = parent, y = 0, pool = NS.Pool.New(), width = WIDTH, shown = {}, lines = 0 },
         Chips)
 end
 
@@ -262,6 +284,7 @@ local function restyleTop(body)
     body.topStamp = A.stamp
     local w = body.w
     local clock, figures = A.Font("clock"), A.Font("figures")
+    clock.size = States.ClockSize(clock.size)
     A.ApplyFont(w.clock, clock)
     A.ApplyFont(w.damage.value, figures)
     local over
@@ -311,45 +334,55 @@ end
 
 -- ── the extras: pace bar, damage chart, spell rows ──────────────────────────────────────────────
 
--- The pace bar at `y` when the view carries one (and the layout shows it); answers the y under it.
-local function placePace(body, v, y)
-    local pv = v.paceView
-    local on = (v.layout or {}).pace ~= false and v.pace ~= nil and pv ~= nil
-    body.paceShown = on
-    local pace = body.parts.pace
-    if not on then
-        if pace then pace:SetShown(false) end
-        return y
-    end
-    if not pace then
-        pace = NS.HudChart.NewPace(body.frame)
-        body.parts.pace = pace
-    end
-    NS.HudTips.Attach(pace.bar, body.key == "over" and "overPace" or "pace")
-    pace:SetShown(true)
-    local h = pace:Place(body.frame, -y, v.width or 276)
-    pace:Set(pv.lo, pv.hi, pv.player, pv.pet, pv.withPet)
-    return y + h + GAP
+-- The parts the profile section is built from, on first need: the chart (its heading is the
+-- section's) and the pace bar.
+local function profileParts(body)
+    local parts = body.parts
+    if not parts.chart then parts.chart = NS.HudChart.New(body.frame) end
+    if not parts.pace then parts.pace = NS.HudChart.NewPace(body.frame) end
+    return parts.chart, parts.pace
 end
 
--- The damage chart at `y` when the view carries one; answers the y under it.
-local function placeChart(body, v, y)
-    local view = v.chartView
-    local on = (v.layout or {}).chart ~= false and view ~= nil
-    local chart = body.parts.chart
-    body.chartShown = on
-    if not on then
-        if chart then chart:SetShown(false) end
+-- Whether the view's pace bar and chart show (each by its layout switch and the view carrying it).
+local function profileShown(v)
+    local layout = v.layout or {}
+    return layout.pace ~= false and v.pace ~= nil and v.paceView ~= nil,
+           layout.chart ~= false and v.chartView ~= nil
+end
+
+-- The "Damage profile" section at `y` (DPS Race's placeStack): HEAD_GAP of clear space, the heading,
+-- the pace bar directly under it when the view carries one (and the layout shows it), then the plot
+-- and its time labels when the view carries a chart. The heading stays over the pace bar with the
+-- plot off, and goes with both off. Answers the y under the section.
+local function placeProfile(body, v, y)
+    local pv, view = v.paceView, v.chartView
+    local paceOn, chartOn = profileShown(v)
+    body.paceShown, body.chartShown = paceOn, chartOn
+    if not (paceOn or chartOn) then
+        if body.parts.chart then body.parts.chart:SetShown(false) end
+        if body.parts.pace then body.parts.pace:SetShown(false) end
         return y
     end
-    if not chart then
-        chart = NS.HudChart.New(body.frame)
-        body.parts.chart = chart
+    local chart, pace = profileParts(body)
+    local width = v.width or WIDTH
+    local paceLine = paceOn and (NS.HudChart.PACE_H + PACE_GAP) or 0
+    local top = y + HEAD_GAP
+    chart:SetParts(true, chartOn)
+    local h = chart:Place(body.frame, -top, width, paceLine)
+    if chartOn then
+        chart:Draw(view)
+    else
+        -- No plot, no Draw: the note names the pace bar alone (it has no caption of its own).
+        chart:SetNote(L["vs best pace"])
+        h = SECTION_H + paceLine
     end
-    chart:SetShown(true)
-    local h = chart:Place(body.frame, -y, v.width or 276)
-    chart:Draw(view)
-    return y + h + GAP
+    pace:SetShown(paceOn)
+    if paceOn then
+        NS.HudTips.Attach(pace.bar, body.key == "over" and "overPace" or "pace")
+        pace:Place(body.frame, -(top + SECTION_H), width)
+        pace:Set(pv.lo, pv.hi, pv.player, pv.pet, pv.withPet)
+    end
+    return top + h + GAP
 end
 
 -- The spell rows' frame, heading and list, built on first need. The frame takes the wheel, which
@@ -358,7 +391,7 @@ local function spellsPart(body)
     local s = body.parts.spells
     if s then return s end
     s = {}
-    s.title = Style.Text(body.frame, FONT.HEADER)
+    s.title = Style.Text(body.frame, FONT.SECTION)
     s.title:SetText(L["Spell breakdown"])
     s.note = Style.Text(body.frame, FONT.CAPTION, nil, "RIGHT")
     s.frame = CreateFrame("Frame", nil, body.frame)
@@ -388,8 +421,8 @@ local function window(body, total)
     return math.min(visible, total - body.offset), body.offset
 end
 
--- The spell rows at `y`: the live read's (player then pet) or the over card's plain ones; answers
--- the y under them.
+-- The "Spell breakdown" section at `y`: HEAD_GAP of clear space, its heading, then the live read's
+-- rows (player then pet) or the over card's plain ones; answers the y under them.
 local function placeSpells(body, v, y)
     local on = (v.layout or {}).spells ~= false
     local s = (on or body.parts.spells) and spellsPart(body) or nil
@@ -398,7 +431,8 @@ local function placeSpells(body, v, y)
         return y
     end
     setSpellsShown(s, true)
-    local width = v.width or 276
+    local width = v.width or WIDTH
+    y = y + HEAD_GAP
     s.title:ClearAllPoints()
     s.title:SetPoint("TOPLEFT", body.frame, "TOPLEFT", 0, -y)
     s.note:ClearAllPoints()
@@ -424,8 +458,8 @@ end
 
 -- Everything under the top, from `y`; answers the stack's height.
 local function placeExtras(body, v, y)
-    y = placePace(body, v, y)
-    y = placeChart(body, v, y)
+    body.stackTop = y
+    y = placeProfile(body, v, y)
     y = placeSpells(body, v, y)
     return y
 end
@@ -498,7 +532,8 @@ end
 --- Build one body into `parent`.
 --- @param key string  "live" | "over"
 --- @param parent table
---- @return table|nil body  { key, frame, w, parts, height, paceShown, Update(view), SetLive(live)? }
+--- @return table|nil body  { key, frame, w, parts, height, stackTop, paceShown, chartShown, Update(view),
+---   SetLive(live)? }
 function States.Build(key, parent)
     local builder = Builders[key]
     if not builder then return nil end

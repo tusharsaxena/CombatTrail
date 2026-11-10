@@ -33,10 +33,10 @@ default; the file's comments say what each value means.
 | `lanes.<k>.visibility` | `{ show = "always", hideAfter = 5, where, hideMounted, hideVehicle, hidePetBattle, hideResting, alphaCombat, alphaOOC }`; `where` has no `delve` or `arena` key, and there is no `hideVehicle` or `hidePetBattle`, on WoW Forever | Lanes → Visibility |
 | `lanes.<k>.ignore` | `{ [spellID] = true }` from the client's seed; a removed seed is stored as `false` | Lanes → Ignored spells |
 | `hud.show`, `fadeAfter`, `holdOnMouse`, `instancesOnly`, `paceAgainst`, `paceRange`, `overCard`, `showSkipReason` | `"auto"`, `8`, `true`, `false`, `"best"`, `1.5`, `true`, `true` | DPS HUD → Behavior |
-| `hud.width`, `hud.scale`, `hud.layout.*` | `300`, `1`, every part `true` | DPS HUD → Layout |
-| `hud.clock.*`, `hud.figures.*` | font blocks and the boxes' colors | DPS HUD → Clock and figures |
-| `hud.chart.*` | `height = 90`, `columns = 48`, bar, colors (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `bestColor` = `PALETTE.PACE`, the pace line), `cooldowns = true`, `cooldownMin = 29`, `zeroLine = true` | DPS HUD → Damage chart |
-| `hud.spells.*` | `rows = 8`, `rowHeight = 22`, icons, paw, bars (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `petColor` = `PALETTE.PET` at `BAR_A`), font | DPS HUD → Spell rows |
+| `hud.width`, `hud.scale`, `hud.layout.*` | `260` (DPS Race's, also the slider's floor, `Hud.MIN_WIDTH`), `1`, every part `true` | DPS HUD → Layout |
+| `hud.clock.*`, `hud.figures.*` | font blocks and the boxes' colors; the clock follows the skin's HUD face (`fontFromSkin = true`) at `fontSize = 26`, drawn at DPS Race's single-clock 40 (`HudStates.ClockSize`, × 40/26), flags `""` | DPS HUD → Clock and figures |
+| `hud.chart.*` | `height = 80`, `columns = 48`, bar, colors (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `bestColor` = `PALETTE.PACE`, the pace line), `cooldowns = true`, `cooldownMin = 29`, `zeroLine = true` | DPS HUD → Damage chart |
+| `hud.spells.*` | `rows = 8`, `rowHeight = 18`, icons, paw, bars (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `petColor` = `PALETTE.PET` at `BAR_A`), font (`fontSize = 10`, `fontShadow = true`) | DPS HUD → Spell rows |
 | `hud.window.*` | title bar, colors, footer, `strata = "MEDIUM"`, `alpha = 1` | DPS HUD → Window |
 | `hud.position` | `{ point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 }` | DPS HUD → Window, and the title bar's drag (named state, below) |
 | `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |

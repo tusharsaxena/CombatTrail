@@ -115,7 +115,7 @@ test("hud: the states and the defaults are the plan's", function()
     assertEqual(d.paceRange, 1.5)
     assertEqual(d.overCard, true)
     assertEqual(d.showSkipReason, true)
-    assertEqual(d.width, 300)
+    assertEqual(d.width, 260)
     assertEqual(d.scale, 1)
     for _, key in ipairs({ "clock", "target", "figures", "pace", "chart", "spells" }) do
         assertEqual(d.layout[key], true, "layout." .. key)

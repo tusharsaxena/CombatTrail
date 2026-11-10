@@ -68,8 +68,10 @@ end
 local function texture(bar) return bar:GetStatusBarTexture():GetTexture() end
 
 -- A font block's cases (one per key, the shadow's twice) on `fs(Hud)`, in an order that keeps each assertion its own key's.
-local function fontCases(block, fs)
+-- `drawn` maps a stored size to the one drawn (the clock's ClockSize); default, the stored size.
+local function fontCases(block, fs, drawn)
     local p = block .. "."
+    drawn = drawn or function(n) return n end
     return {
         { p .. "fontFromSkin", true, function(inst, Hud) assertEqual(face(fs(Hud)), skinFace(inst)) end },
         { p .. "font", "Ka0s Inter", function(inst, Hud)
@@ -78,7 +80,7 @@ local function fontCases(block, fs)
         { p .. "fontFromSkin", false, function(inst, Hud)
             assertEqual(face(fs(Hud)), media(inst, "Font", "Ka0s Inter"), "the stored pick")
         end },
-        { p .. "fontSize", 17, function(_, Hud) assertEqual(size(fs(Hud)), 17) end },
+        { p .. "fontSize", 17, function(_, Hud) assertEqual(size(fs(Hud)), drawn(17)) end },
         { p .. "fontColor", RED, function(inst, Hud)
             local r, g, b = inst.NS.Skin.HudTextColor()
             assertFalse(r == 1 and g == 0 and b == 0, "the skin's HUD text color is not the stored red")
@@ -150,7 +152,7 @@ local function rowName(Hud) return rows(Hud)[1].name end
 local function playerRowBar(Hud) return rows(Hud)[1].bar end
 
 local LIVE_CASES = join(
-    fontCases("clock", function(Hud) return live(Hud).w.clock end),
+    fontCases("clock", function(Hud) return live(Hud).w.clock end, function(n) return math.floor(n * 40 / 26 + 0.5) end),
     fontCases("figures", damageText),
     backdropCases("figures", "boxBg", box, "GetBackdropColor"),
     backdropCases("figures", "boxBorder", box, "GetBackdropBorderColor"),

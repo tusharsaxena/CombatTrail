@@ -660,6 +660,18 @@ Total.
 - hud page: /ct set reaches a hud path, and hud.show always opens the HUD
 - hud page: the page's Defaults puts every hud row back
 
+### test_hud_layout.lua (9)
+
+- hud layout: the live body stacks the top, Damage profile, the pace bar, the plot, Spell breakdown
+- hud layout: the fight-over card stacks the same under its chips
+- hud layout: with the plot off the heading stays over the pace bar
+- hud layout: with nothing to pace against the plot sits right under its heading
+- hud layout: the defaults are DPS Race's sizes
+- hud layout: the window is 260 wide on DPS Race's insets, its height the stack's
+- hud layout: a spell row is 18 high in a 10 point face, its icon 16
+- hud layout: the clock draws DPS Race's 40 in the skin's face
+- hud layout: the settings' width floor is the HUD's
+
 ### test_sizing.lua (7)
 
 - sizing: a size change the grip did not start redraws at once
@@ -1002,6 +1014,7 @@ Total.
 | test_hud_breakdown.lua | 5 |
 | test_hud_appearance.lua | 7 |
 | test_hud_page.lua | 14 |
+| test_hud_layout.lua | 9 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 23 |
 | test_results_detail.lua | 15 |
@@ -1026,4 +1039,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **792** |
+| **Total** | **801** |

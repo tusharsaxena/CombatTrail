@@ -50,7 +50,7 @@ test("diagnostics: a setting off its default is listed with its default", functi
     local inst = T.load()
     inst.NS.SetByPath("hud.width", 360)
     local lines = report(inst)
-    assertTrue(has(lines, "hud.width = 360 (300)"), dump(lines))
+    assertTrue(has(lines, "hud.width = 360 (260)"), dump(lines))
 end)
 
 test("diagnostics: test mode shows in the preview line", function()
@@ -67,7 +67,7 @@ test("diagnostics: stood down, the runtime sections say so and the stored ones s
     inst.NS.Slash:OnSlash("disable")
     local lines = report(inst)
     assertTrue(has(lines, "stood down: runtime state released"), dump(lines))
-    assertTrue(has(lines, "hud.width = 360 (300)"), "the settings still print:\n" .. dump(lines))
+    assertTrue(has(lines, "hud.width = 360 (260)"), "the settings still print:\n" .. dump(lines))
     assertTrue(has(lines, "fights stored=0"), "the store still prints:\n" .. dump(lines))
     assertFalse(has(lines, "fight state="), "no runtime fight line while stood down:\n" .. dump(lines))
 end)

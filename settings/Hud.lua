@@ -7,9 +7,10 @@ local _, NS = ...
 --
 -- COMPOSED BLOCKS (options-ui-§16/§17): every font is the library's FontGroup, every status bar its
 -- BarGroup and every color a ColorPair with its Use class color companion, all over this addon's
--- leaves and the profile's own defaults (`defaults`), so the clock keeps its unskinned face and its
--- plain "" flags (the mono role: no flagsFromSkin) while the figures and the rows draw the skin's
--- outline ("@skin"). The skin companions the composer has no row for (a font block's text color and
+-- leaves and the profile's own defaults (`defaults`), so the clock keeps its plain "" flags (the
+-- mono role: no flagsFromSkin) while the figures and the rows draw the skin's outline ("@skin"). The
+-- clock draws the skin's HUD face by default, as DPS Race's does (v0.2 Task B2), and its stored size
+-- scaled to DPS Race's single clock (Hud_States' ClockSize: 26 draws 40), which its size row says. The skin companions the composer has no row for (a font block's text color and
 -- shadow, a backdrop swatch) are this addon's own rows in the block's `extra`, in its own words,
 -- so they carry no `composed` mark (skinning-§6). The window has no Lock row: Lock frame is General >
 -- Master controls' (`general.locked`), the one switch for the lanes and the HUD together.
@@ -160,14 +161,15 @@ row("layout.spells", { type = "bool", label = L["Show spell rows"],
     tooltip = L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] })
 
 at(TAB.layout, L["Size"])
-row("width", { type = "number", label = L["HUD width (px)"], min = 220, max = 600, step = 10, startsLine = true,
+row("width", { type = "number", label = L["HUD width (px)"], min = NS.Hud.MIN_WIDTH, max = 600, step = 10, startsLine = true,
     tooltip = L["How wide the HUD is, in pixels. Its height follows the parts it shows."] })
 row("scale", { type = "number", label = L["HUD scale"], min = 0.5, max = 2, step = 0.05, isPercent = true,
     tooltip = L["The size of the whole HUD, its text included."] })
 
 -- Clock and figures
 at(TAB.clock, L["Clock font"])
-fontBlock("clock", false, { font = L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."] })
+fontBlock("clock", false, { font = L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."],
+    fontSize = L["The clock's size. It draws about half again as tall as this, as DPS Race's clock does: 26 draws it 40 points high."] })
 at(TAB.clock, L["Figures font"])
 fontBlock("figures", true, { font = L["The face the Damage and DPS figures are drawn in."] })
 at(TAB.clock, L["Fight-over card"])

@@ -70,13 +70,14 @@ Hud.PACE_PET_FILL = true
 -- Seconds between two reads of the fight's casts for the chart's cooldown icons.
 Hud.CAST_READ = 1
 Hud.FRAME_NAME = "CombatTrailHud"
-Hud.MIN_WIDTH = 220
+Hud.MIN_WIDTH = 260   -- DPS Race's, and the default `hud.width` (v0.2 Task B2)
 -- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade (and
 -- how often a held card looks again whether the pointer is still on it).
 Hud.LEAVE_DELAY = 2
 
 local STATE = Hud.STATE
-local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 10
+-- DPS Race's insets: PAD at the sides, the content 10 under the title bar and 8 over the footer.
+local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 12
 
 local ui                         -- the built window
 local wanted = false             -- the window should be up
@@ -278,8 +279,8 @@ end
 -- The content's insets from the window's top and bottom: the title bar's and the footer's, each
 -- only while shown (`hud.window.titleBar`, `hud.window.footer`).
 local function stripHeight() return ui and ui.stripMode and ui.stripShown and NS.TEST_STRIP_HEIGHT or 0 end
-local function contentTop() return (setting("hud.window.titleBar") ~= false and HEADER_H + 8 or PAD) + stripHeight() end
-local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 6 or PAD end
+local function contentTop() return (setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD) + stripHeight() end
+local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 8 or PAD end
 
 local function applyPlacement()
     local f, p = ui.frame, position() or {}

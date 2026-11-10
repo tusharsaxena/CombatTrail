@@ -139,7 +139,7 @@ test("hud page: the composed blocks follow the skin with the profile's defaults"
     -- The clock is the mono role: no outline, and its flags never follow the skin's outline.
     assertEqual(row("hud.clock.fontFlags").default, "")
     assertTrue(row("hud.clock.fontFlags").values["@skin"] == nil, "no From skin on the clock's flags")
-    assertEqual(row("hud.clock.fontFromSkin").default, false)
+    assertEqual(row("hud.clock.fontFromSkin").default, true, "the skin's HUD face, as DPS Race's clock (v0.2 B2)")
     -- The figures and the rows draw the skin's outline by default.
     assertEqual(row("hud.figures.fontFlags").default, "@skin")
     assertEqual(row("hud.spells.fontFlags").default, "@skin")

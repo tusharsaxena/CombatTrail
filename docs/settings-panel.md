@@ -188,7 +188,9 @@ shift-clicked link, remove one, or reset the list to the client's seed. `/ct ign
 
 Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *Window*
 (settings/Hud.lua, `NS.HUD_TAB_ORDER`). The Clock and figures tab holds two font blocks, the clock's
-(`hud.clock.*`) and the figures' (`hud.figures.*`).
+(`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
+and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
+tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to 600.
 
 ### Behavior
 

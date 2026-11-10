@@ -133,8 +133,8 @@ NS.defaults = {
         -- composer's shapes (options-ui-§16 and §17: a font block, a bar block, a swatch with its
         -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own, and every font
         -- block's text color and shadow follow the skin by default, skinning-§6). Clock and
-        -- figures: the clock's font (the mono role, no outline, 32 points: the composed Font size
-        -- row's top), the figures' font, the over card's DPS color and the boxes' background and
+        -- figures: the clock's font (the mono role, no outline; the skin's HUD face and 26 points,
+        -- which the HUD draws at DPS Race's single-clock 40, v0.2 Task B2), the figures' font, the over card's DPS color and the boxes' background and
         -- border. Damage chart: the plot's height and most
         -- columns, the columns' bar, the burst-window and best-line colors, the cooldown icons (and
         -- their minimum base cooldown, seconds) and the zero line. Spell rows: how many (0 = every
@@ -144,11 +144,11 @@ NS.defaults = {
         hud = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
-            width = 300, scale = 1,
+            width = 260, scale = 1,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
-            clock = { font = "JetBrains Mono", fontSize = 32, fontColor = rgba(0.92, 0.91, 0.88, 1),
-                      useClassColorFont = false, fontFlags = "", fontShadow = false, fontFromSkin = false,
+            clock = { font = "JetBrains Mono", fontSize = 26, fontColor = rgba(0.92, 0.91, 0.88, 1),
+                      useClassColorFont = false, fontFlags = "", fontShadow = false, fontFromSkin = true,
                       fontColorFromSkin = true, fontShadowFromSkin = true },
             figures = { font = "Ka0s Prototype", fontSize = 20, fontColor = rgba(0.93, 0.93, 0.95, 1),
                         useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
@@ -157,18 +157,18 @@ NS.defaults = {
                         boxBg = rgba(0.06, 0.07, 0.09, 0.8), useClassColorBoxBg = false, boxBgFromSkin = true,
                         boxBorder = rgba(0.16, 0.17, 0.2, 1), useClassColorBoxBorder = false,
                         boxBorderFromSkin = true },
-            chart = { height = 90, columns = 48,
+            chart = { height = 80, columns = 48,
                       barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                       useClassColorBar = false, barTextureFromSkin = true,
                       burstColor = rgba(0.79, 0.65, 0.23, 1), useClassColorBurstColor = false,
                       bestColor = swatch(PALETTE.PACE), useClassColorBestColor = false,
                       cooldowns = true, cooldownMin = 29, zeroLine = true },
-            spells = { rows = 8, rowHeight = 22, icons = true, paw = true,
+            spells = { rows = 8, rowHeight = 18, icons = true, paw = true,
                        barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                        useClassColorBar = false, barTextureFromSkin = true,
                        petColor = swatch(PALETTE.PET, PALETTE.BAR_A), useClassColorPetColor = false,
-                       font = "Ka0s Prototype", fontSize = 12, fontColor = rgba(1, 1, 1, 1),
-                       useClassColorFont = false, fontFlags = "@skin", fontShadow = false, fontFromSkin = true,
+                       font = "Ka0s Prototype", fontSize = 10, fontColor = rgba(1, 1, 1, 1),
+                       useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
                        fontColorFromSkin = true, fontShadowFromSkin = true },
             window = { titleBar = true, title = true,
                        bg = rgba(0.06, 0.06, 0.08, 0.94), useClassColorBg = false, bgFromSkin = true,

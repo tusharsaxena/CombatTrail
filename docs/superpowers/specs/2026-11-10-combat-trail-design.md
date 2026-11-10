@@ -223,6 +223,9 @@ the mouse is over it, and can be pinned open. Other modes: always shown, or only
 difficulty); Damage and DPS boxes (live from the meter, copied, never computed); a **pace bar** against your
 best on the same board key **(owner)**; the damage chart (one column per time bucket, a dashed line for the best's average pace,
 icons for cooldowns ≥ 29 s); and spell rows (icon, name, bar, amount, with pet spells marked by a paw and a green bar).
+The look is DPS Race's (v0.2 Task B2): 260 px wide, both section headings ("Damage profile", "Spell breakdown") in the
+large section font with the same clear space over them, the pace bar directly under the "Damage profile" heading and over
+the plot, the clock in the skin's HUD face at DPS Race's size, and 18 px spell rows in a 10 pt face.
 
 **Fight-over card:** final damage and DPS, percentages per spell, a New best chip with the delta, and a Saved or "Not saved:
 <reason>" chip. The chart button opens the fight in Results.

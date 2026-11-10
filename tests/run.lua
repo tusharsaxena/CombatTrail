@@ -137,6 +137,7 @@ local SUITES = {
     "test_hud_breakdown",
     "test_hud_appearance",
     "test_hud_page",
+    "test_hud_layout",
     "test_sizing",
     "test_results_table",
     "test_results_detail",
