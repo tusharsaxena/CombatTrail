@@ -339,10 +339,14 @@ local function laneRows(lane)
     at(TAB.vis, L["Hide when"])
     row("visibility.hideMounted", { type = "bool", label = L["Mounted"], startsLine = true,
         tooltip = L["Hide the lane while you are mounted."] })
-    row("visibility.hideVehicle", { type = "bool", label = L["In a vehicle"],
-        tooltip = L["Hide the lane while you are in a vehicle."] })
-    row("visibility.hidePetBattle", { type = "bool", label = L["In a pet battle"], startsLine = true,
-        tooltip = L["Hide the lane during a pet battle."] })
+    -- Vehicles and pet battles are Retail-only: built only where the defaults hold their keys.
+    local retailHides = D.visibility.hidePetBattle ~= nil
+    if retailHides then
+        row("visibility.hideVehicle", { type = "bool", label = L["In a vehicle"], clients = { "retail" },
+            tooltip = L["Hide the lane while you are in a vehicle."] })
+        row("visibility.hidePetBattle", { type = "bool", label = L["In a pet battle"], startsLine = true,
+            clients = { "retail" }, tooltip = L["Hide the lane during a pet battle."] })
+    end
     row("visibility.hideResting", { type = "bool", label = L["Resting"],
         tooltip = L["Hide the lane while you rest in a city or an inn."] })
 

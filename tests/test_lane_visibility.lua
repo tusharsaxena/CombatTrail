@@ -169,9 +169,15 @@ test("lane visibility: the hide rules' defaults (mounted, vehicle and pet battle
     local inst = setup()
     local v = vis(inst, "pet")
     assertEqual(v.hideMounted, true)
-    assertEqual(v.hideVehicle, true)
-    assertEqual(v.hidePetBattle, true)
     assertEqual(v.hideResting, false)
+    if inst.NS.Compat.IsForever() then
+        -- Vehicles and pet battles are Retail-only (clients-§4): the keys are absent, not false.
+        assertEqual(v.hideVehicle, nil, "no vehicle key on Forever")
+        assertEqual(v.hidePetBattle, nil, "no pet battle key on Forever")
+    else
+        assertEqual(v.hideVehicle, true)
+        assertEqual(v.hidePetBattle, true)
+    end
 end)
 
 test("lane visibility: Alpha follows alphaCombat and alphaOOC", function()
@@ -251,6 +257,7 @@ end)
 
 test("lane visibility: a vehicle hides the lane through UNIT_ENTERED_VEHICLE", function()
     local inst = setup()
+    if inst.NS.Compat.IsForever() then return end -- no vehicles on Forever: the rule is absent
     local m = inst.mocks
     m.__inVehicle = true
     m.__fire("UNIT_ENTERED_VEHICLE", "player")
@@ -262,6 +269,7 @@ end)
 
 test("lane visibility: a pet battle hides the lane until it closes", function()
     local inst = setup()
+    if inst.NS.Compat.IsForever() then return end -- no pet battles on Forever: the rule is absent
     local m = inst.mocks
     m.__petBattle = true
     m.__fire("PET_BATTLE_OPENING_START")
@@ -348,8 +356,13 @@ test("lane visibility: events are registered only while some lane uses their rul
     local r = regs(inst)
     -- The defaults: always shown, hide when mounted, in a vehicle or in a pet battle.
     assertTrue(r.PLAYER_MOUNT_DISPLAY_CHANGED, "mounted")
-    assertTrue(r.UNIT_ENTERED_VEHICLE and r.UNIT_EXITED_VEHICLE, "vehicle")
-    assertTrue(r.PET_BATTLE_OPENING_START and r.PET_BATTLE_CLOSE, "pet battle")
+    if inst.NS.Compat.IsForever() then
+        assertFalse(r.UNIT_ENTERED_VEHICLE ~= nil, "no vehicle event on Forever")
+        assertFalse(r.PET_BATTLE_OPENING_START ~= nil, "no pet battle event on Forever")
+    else
+        assertTrue(r.UNIT_ENTERED_VEHICLE and r.UNIT_EXITED_VEHICLE, "vehicle")
+        assertTrue(r.PET_BATTLE_OPENING_START and r.PET_BATTLE_CLOSE, "pet battle")
+    end
     assertTrue(r.UNIT_PET, "the pet lane's label")
     assertFalse(r.PLAYER_REGEN_DISABLED ~= nil, "no lane needs combat")
     assertFalse(r.PLAYER_TARGET_CHANGED ~= nil, "no lane needs the target")

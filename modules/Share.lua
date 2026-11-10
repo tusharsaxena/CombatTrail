@@ -218,6 +218,18 @@ end
 Share.AcceptWhisper = acceptWhisper
 
 -- The whisper's recipient: a name typed into the popup, the targeted player's offered first.
+-- Who a whisper goes to, as the client addresses them: on Retail "Name-Realm" when the target is from
+-- another realm, on WoW Forever the full regional name ("First Surname", client-quirks §5). Plain or nil.
+local function whisperName(unit)
+    if not NS.Compat.ForClient({ "retail" }) then
+        return NS.Secrets.PlainString((NS.Compat.UnitCharacterName(unit)))
+    end
+    local name, realm = UnitName(unit)
+    name, realm = NS.Secrets.PlainString(name), NS.Secrets.PlainString(realm)
+    if name and realm and realm ~= "" then return name .. "-" .. realm end
+    return name
+end
+
 StaticPopupDialogs[WHISPER_POPUP] = {
     text         = L["Whisper this fight to:"],
     button1      = L["Send"],
@@ -230,7 +242,7 @@ StaticPopupDialogs[WHISPER_POPUP] = {
     OnShow       = function(self)
         local box = NS.Compat.PopupEditBox(self)
         local isPlayer = type(UnitIsPlayer) == "function" and UnitIsPlayer("target")
-        local name = isPlayer and NS.Secrets.PlainString((UnitName("target")))
+        local name = isPlayer and whisperName("target")
         if box and name then box:SetText(name) end
     end,
     OnAccept     = function(self, record) acceptWhisper(self, record) end,

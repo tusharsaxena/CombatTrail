@@ -30,7 +30,7 @@ default; the file's comments say what each value means.
 | `general.fontScale` | `1` | General → Look and skin |
 | `lanes.player.*`, `lanes.pet.*` | one block per lane, `lane()` in `defaults/Profile.lua` | Lanes (all seven tabs) |
 | `lanes.<k>.anchor` | `{ mode, point, relPoint, x, y, target, gap, frameName }`: the Player lane free at `CENTER` 0, -200, the Pet lane docked under it | Lanes → Size and position |
-| `lanes.<k>.visibility` | `{ show = "always", hideAfter = 5, where, hideMounted, hideVehicle, hidePetBattle, hideResting, alphaCombat, alphaOOC }`; `where` has no `delve` or `arena` key on WoW Forever | Lanes → Visibility |
+| `lanes.<k>.visibility` | `{ show = "always", hideAfter = 5, where, hideMounted, hideVehicle, hidePetBattle, hideResting, alphaCombat, alphaOOC }`; `where` has no `delve` or `arena` key, and there is no `hideVehicle` or `hidePetBattle`, on WoW Forever | Lanes → Visibility |
 | `lanes.<k>.ignore` | `{ [spellID] = true }` from the client's seed; a removed seed is stored as `false` | Lanes → Ignored spells |
 | `hud.show`, `fadeAfter`, `holdOnMouse`, `instancesOnly`, `paceAgainst`, `paceRange`, `overCard`, `showSkipReason` | `"auto"`, `8`, `true`, `false`, `"best"`, `1.5`, `true`, `true` | DPS HUD → Behavior |
 | `hud.width`, `hud.scale`, `hud.layout.*` | `300`, `1`, every part `true` | DPS HUD → Layout |

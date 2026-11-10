@@ -31,6 +31,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Delves (lane visibility, the delve tier on the board key, the recording filter) | present | absent |
 | Arenas (lane visibility, the recording filter) | present | absent |
 | Mythic+ (the keystone level on the board key, the recording filter) | present | absent |
+| Vehicles and pet battles (lane visibility's "Hide when" rows and their events) | present | absent |
 | Training dummies (Identity's dummy content) | the measured dummies in `defaults/Dummies.lua` | none, empty by decision until one is measured |
 | Ignore seeds (`defaults/IgnoreSeeds.lua`) | its own list, picked once | its own list (the same IDs today) |
 | Default skin | Ka0s Default | WoW Forever |

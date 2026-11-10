@@ -147,3 +147,19 @@ test("share: the row menu's Share is live for a stored fight", function()
     assertTrue(share ~= nil and share.enabled, "Share is live")
     assertEqual(share.subs, #NS.Share.CHANNELS, "one entry per channel")
 end)
+
+test("share: the whisper box offers the target as the client addresses them (realm on Retail, full regional name on Forever)", function()
+    local NS, M = fresh(function(m)
+        m.UnitIsPlayer = function(unit) return unit == "target" end
+        m.UnitName = function(unit) if unit == "target" then return "Kaos", "Stormborn" end end
+    end)
+    local dialog = M.StaticPopupDialogs[NS.Share.WHISPER_POPUP]
+    local text
+    local box = { SetText = function(_, t) text = t end }
+    dialog.OnShow({ editBox = box })
+    if NS.Compat.IsForever() then
+        assertEqual(text, (NS.Compat.UnitCharacterName("target")), "through Compat.UnitCharacterName")
+    else
+        assertEqual(text, "Kaos-Stormborn", "a cross-realm target keeps its realm")
+    end
+end)

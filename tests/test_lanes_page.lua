@@ -169,6 +169,20 @@ test("lanes page: forever profile: no delve or arena rows on the Visibility tab"
     end
 end)
 
+test("lanes page: vehicle and pet battle hides are Retail-only rows", function()
+    local NS = T.load().NS
+    local veh = NS.FindSchemaRow("lanes.player.visibility.hideVehicle")
+    local pb = NS.FindSchemaRow("lanes.pet.visibility.hidePetBattle")
+    assertTrue(NS.FindSchemaRow("lanes.player.visibility.hideMounted") ~= nil)
+    if NS.Compat.IsForever() then
+        assertEqual(veh, nil)
+        assertEqual(pb, nil)
+    else
+        assertEqual(table.concat(veh.clients, ","), "retail")
+        assertEqual(table.concat(pb.clients, ","), "retail")
+    end
+end)
+
 test("lanes page: Size and position has Frame strata (BACKGROUND to HIGH, + Match host in unit-frame mode) and Frame level 0-50", function()
     local NS = T.load().NS
     local strata = NS.FindSchemaRow("lanes.player.strata")

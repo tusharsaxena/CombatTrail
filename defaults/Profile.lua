@@ -19,6 +19,17 @@ local function where()
     return w
 end
 
+-- The lane's hide rules (spec §4, Visibility). Vehicles and pet battles are Retail-only (WoW Forever is
+-- the vanilla-era game type), so on Forever those keys are ABSENT (clients-§4), like where()'s.
+local function visibility()
+    local v = { show = "always", hideAfter = 5, where = where(), hideMounted = true, hideResting = false,
+                alphaCombat = 1, alphaOOC = 1 }
+    if NS.Compat.ForClient({ "retail" }) then
+        v.hideVehicle, v.hidePetBattle = true, true
+    end
+    return v
+end
+
 -- What the recording filters store, per content kind (spec §5): every kind on but scenarios. The
 -- keys are modules/Identity.lua's Identity.CONTENT for this client (a suite holds the two equal):
 -- Mythic+, delves and arenas are Retail-only, so on WoW Forever their keys are ABSENT (clients-§4).
@@ -71,9 +82,7 @@ local function lane(key, over)
         labelColor = rgba(1, 1, 1, 1), labelClassColor = false, labelShadow = false, labelPosition = "LEFT",
         labelFontFromSkin = true, labelColorFromSkin = true, labelShadowFromSkin = true,
         -- Visibility. show "always" | "combat" | "combatOrTarget" | "never".
-        visibility = { show = "always", hideAfter = 5, where = where(), hideMounted = true,
-                       hideVehicle = true, hidePetBattle = true, hideResting = false,
-                       alphaCombat = 1, alphaOOC = 1 },
+        visibility = visibility(),
         -- Ignored spells: { [spellID] = true }, seeded per client; a seed the player removes is
         -- stored as false, which AceDB keeps because it differs from the default.
         ignore = NS.IgnoreSeedSet(key),
