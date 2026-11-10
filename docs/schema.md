@@ -44,7 +44,7 @@ default; the file's comments say what each value means.
 | `history.days`, `keepBests`, `maxFights` | `7`, `true`, `500` | History → History |
 | `results.scale`, `rowHeight`, `shareTalents`, `closeInCombat` | `1`, `18`, `true`, `true` | History → Results window |
 | `results.view` | the saved filters, grouping and sort (`group = "board"`, `days = 7`) | (named state, below) |
-| `results.window` | `{ point, relPoint, x, y, width = 920, height = 520, view = "collapsed" }` | (named state, below) |
+| `results.window` | `{ point, relPoint, x, y, width = 1100, height = 520, view = "collapsed" }`; the list's least width is `Results.MIN_WIDTH` (1038 with the Status, Used and Note columns), and a stored width below it is held to it | (named state, below) |
 | `results.columns` | `{}`; a dragged column's width, `{ character = px }` (Character ships at 104, held to 70–240) | (named state, below) |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
@@ -56,7 +56,10 @@ The bar colors come from one place, `NS.Constants.PALETTE` in `core/Constants.lu
 `BEST_BAR` and `THIS_TEXT` / `BEST_TEXT` for the compare's two sides, and `PACE` {0.9, 0.9, 0.92, 0.4}
 for the pace line. `defaults/Profile.lua` copies each entry into its block as a table of its own. AceDB
 stores only what differs from the defaults, so a profile that never set a swatch draws the palette
-and one that did keeps its own. No migration step is needed. No skin overrides a fill color.
+and one that did keeps its own. No migration step is needed. No skin overrides a fill color. The
+Results table's Damage and DPS bars read the palette directly (`Tbl.BAR_COLOR` = `BAR` at
+`Tbl.BAR_ALPHA` = `BAR_A`, v0.2 Task C2); they have no setting, and the class color stays on the
+name and the icons.
 
 ## The global tree
 
@@ -103,7 +106,7 @@ record with a higher `schema` than this build knows is never listed.
 | `spells` | one packed string (CastCodec); `Recorder.Spells` unpacks it to `{ spellID, total, isPet }` |
 | `casts`, `cooldowns` | the packed cast list, and `{ [spellID] = ms }` for the timeline |
 | `gearSet`, `stats`, `loadout`, `usage` | the key of the equipment set current at combat start (`global.gearSets`; read through `Loadouts.GearOf`, which also takes a sample fight's inline `gear`), the stats (per fight: they move with buffs), the loadout key, what was used |
-| `note`, `client`, `build`, `version`, `status` | the player's note, `retail`/`forever`, the client build, the addon version, `"final"` |
+| `note`, `client`, `build`, `version`, `status` | the player's note (`Recorder.ClampNote`: a control character to a space, `\|` to `/`, trimmed, at most 200 UTF-8 characters), `retail`/`forever`, the client build, the addon version, `"final"` |
 
 A five-minute raid fight packs under 6 KB (pinned by `tests/test_record.lua`), so 500 fights stay
 near 3 MB. The History page's History tab shows the count and an estimate (`Retention.EstimateBytes`).

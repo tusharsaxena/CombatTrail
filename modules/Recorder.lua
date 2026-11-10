@@ -156,15 +156,33 @@ function Recorder.Delete(id)
     return true
 end
 
---- Store a record's note: trimmed, clamped to NOTE_MAX, and an empty one removes it. Fires
---- FIGHTS_CHANGED.
+--- A note as it is stored (v0.2 Task C2, DPS Race's ClampNote): a control character becomes a
+--- space and "|" becomes "/", so no chat escape (a color, a link, a texture) reaches the list, the
+--- detail or a shared line; then trimmed and cut at NOTE_MAX characters (UTF-8 characters, never a
+--- byte cut through one). "" for anything that is not a plain string.
+--- @param text any
+--- @return string
+function Recorder.ClampNote(text)
+    local s = Secrets.PlainString(text)
+    if not s then return "" end
+    s = s:gsub("%c", " "):gsub("|", "/"):match("^%s*(.-)%s*$")
+    local n, cut = 0, #s
+    for pos in s:gmatch("()[^\128-\191]") do
+        n = n + 1
+        if n > Recorder.NOTE_MAX then
+            cut = pos - 1
+            break
+        end
+    end
+    return s:sub(1, cut)
+end
+
+--- Store a record's note (Recorder.ClampNote's), and an empty one removes it. Fires FIGHTS_CHANGED.
 --- @return boolean stored
 function Recorder.SetNote(id, text)
     local r = Recorder.Get(id)
     if not r then return false end
-    local note = Secrets.PlainString(text) or ""
-    note = note:gsub("^%s+", ""):gsub("%s+$", "")
-    if #note > Recorder.NOTE_MAX then note = note:sub(1, Recorder.NOTE_MAX) end
+    local note = Recorder.ClampNote(text)
     r.note = note ~= "" and note or nil
     NS.SendBus(NS.MSG.FIGHTS_CHANGED)
     return true

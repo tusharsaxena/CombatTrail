@@ -782,8 +782,30 @@ L["Your damage and your pet's, read from Blizzard's meter after combat. The bar 
     "Your damage and your pet's, read from Blizzard's meter after combat. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list)."
 L["Damage over the fight's length. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list)."] =
     "Damage over the fight's length. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list)."
-L["How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best shows a trophy."] =
-    "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best shows a trophy."
+L["How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best reads 0.0%."] =
+    "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best reads 0.0%."
+L["Best: your best fight on its board (this character and spec against this encounter or target), whatever the filters show."] =
+    "Best: your best fight on its board (this character and spec against this encounter or target), whatever the filters show."
+L["What the fight used: on-use gear (trinkets first), then potions, flasks, food and the rest. Hover for when; sorted by how many."] =
+    "What the fight used: on-use gear (trinkets first), then potions, flasks, food and the rest. Hover for when; sorted by how many."
+L["The note you kept with the fight. Click to sort."] =
+    "The note you kept with the fight. Click to sort."
+
+-- The Status, Used and Note columns (modules/Results_Fights.lua, modules/Results_Tips.lua; v0.2 Task C2)
+L["Status"] = "Status"
+L["Used"] = "Used"
+L["No note"] = "No note"
+L["This fight has no note. Add one from its detail or the row's right-click menu."] =
+    "This fight has no note. Add one from its detail or the row's right-click menu."
+L["Another fight holds your best on this board."] = "Another fight holds your best on this board."
+L["This fight was recorded before the addon kept what was used."] =
+    "This fight was recorded before the addon kept what was used."
+L["No on-use item or consumable was detected or ticked for this fight."] =
+    "No on-use item or consumable was detected or ticked for this fight."
+L["1 item used"] = "1 item used"
+L["%d items used"] = "%d items used"
+L["%s: %s"] = "%s: %s"
+L["Edit the list in the fight's detail."] = "Edit the list in the fight's detail."
 
 -- The fight detail (modules/Results_Detail.lua, Results_Loadout.lua, Results_Usage.lua, Results.lua's
 -- fold arrow) and Share (modules/Share.lua)

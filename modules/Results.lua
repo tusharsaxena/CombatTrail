@@ -845,7 +845,7 @@ StaticPopupDialogs["COMBATTRAIL_FIGHT_NOTE"] = {
     button1      = L["Save"],
     button2      = L["Cancel"],
     hasEditBox   = true,
-    maxLetters   = 200,
+    maxLetters   = NS.Recorder.NOTE_MAX,
     timeout      = 0,
     whileDead    = true,
     hideOnEscape = true,
@@ -856,6 +856,14 @@ StaticPopupDialogs["COMBATTRAIL_FIGHT_NOTE"] = {
     OnAccept     = function(self, data)
         local box = noteBox(self)
         if box and data then Results.SetNote(data.id, box:GetText()) end
+    end,
+    -- Enter in the box saves and closes, as Save does; Escape closes and saves nothing.
+    EditBoxOnEnterPressed = function(box, data)
+        if data then Results.SetNote(data.id, box:GetText()) end
+        box:GetParent():Hide()
+    end,
+    EditBoxOnEscapePressed = function(box)
+        box:GetParent():Hide()
     end,
 }
 
@@ -884,7 +892,8 @@ function Results.EditNote(id)
     return true
 end
 
---- Store a fight's note (trimmed, at most Recorder.NOTE_MAX characters) and answer what was stored.
+--- Store a fight's note (Recorder.ClampNote's: escapes neutralized, trimmed, at most NOTE_MAX
+--- characters) and answer what was stored.
 function Results.SetNote(id, text)
     local record = fight(id)
     if not record then return nil end

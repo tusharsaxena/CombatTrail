@@ -56,8 +56,13 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   enforced when the purge runs, not on each save.
 - **The HUD has no Pin control in its title bar** (the icon catalog has none); `/ct hud pin` pins
   it. The fade hides at once, the pace bar has no ahead or behind color, and the best line is solid.
-- **Results:** the detail ships collapsed, there are no `results.*` look keys for the table, and the
-  Delta column measures against the group's best.
+- **Results:** the detail ships collapsed, there are no `results.*` look keys for the table (its bars
+  are the palette's blue, with no class-color option), and the Delta column measures against the
+  group's best while the Status column's Best is the board's, whatever the filters.
+- **The Results window is wider since v0.2.** The Status, Used and Note columns raise the list's
+  least width to 1038 px (1478 expanded, with the 440 px detail beside it), and the shipped width to
+  1100. On a small screen or a large UI scale, lower History → Results window → Scale. A width a
+  profile stored before is held to the new least.
 - **The sim's "short" scenario is 22 s**, judged by the player's own minimum length: with a minimum of
   22 s or less it is saved and its label no longer holds.
 - **Outside an encounter, the live pace can use a different board than the saved fight.** The HUD

@@ -706,7 +706,7 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (31)
+### test_results_table.lua (37)
 
 - results: default view: current character, last 7 days, grouped by board
 - results: the date range and the character filter
@@ -739,6 +739,12 @@ Total.
 - results: dragging the Character header's edge resizes it and stores the width on release
 - results: a window hidden while the Character edge is held ends the drag and stores the width
 - results: no spec: the row draws its class icon and no second icon
+- results: the Status badge reads Best with the trophy on the board's top only
+- results: the Used column lists the fight's usage as icons, +n past what fits, a dash for none
+- results: the Note column shows the note cut to ten characters, the whole of it on hover
+- results: a note is added, edited and cleared from the note box, and a reload keeps it
+- results: a note's escape codes and control characters are neutralized
+- results: the Damage and DPS bars are the palette's blue, not the class color, under every skin
 
 ### test_results_detail.lua (15)
 
@@ -1049,7 +1055,7 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 31 |
+| test_results_table.lua | 37 |
 | test_results_detail.lua | 15 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
@@ -1072,4 +1078,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **830** |
+| **Total** | **836** |

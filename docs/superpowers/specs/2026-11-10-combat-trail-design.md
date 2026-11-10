@@ -255,8 +255,14 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
 - **Filters:** character, spec, content type, encounter or target, difficulty, date range (default last 7
   days), bosses only, group by (encounter + difficulty (default), character, spec, content, none), and Save view.
 - **Table:** date, class and spec icons, character, ilvl, encounter or target, content chip, length, damage,
-  DPS, delta against the best in the group, a trophy on the best. Clicking a row shows its detail. The right-click menu has note,
-  share, compare with this fight, and delete (with confirmation).
+  DPS, delta against the best in the group, status, used and note. Clicking a row shows its detail. The right-click menu has note,
+  share, compare with this fight, and delete (with confirmation). Since v0.2 (DPS Race's): the group's best reads a
+  green "0.0%" in Delta; Status shows "Best" with the trophy, in the best blue, on the fight that holds the best on
+  its board, and nothing on the rest; Used shows the detected trinkets and consumables as icons ("+n" past what
+  fits, a dash for none); Note shows the first ten characters of the note, the whole of it on hover. The Damage and
+  DPS bars are the palette's blue at 0.9 (`PALETTE.BAR`, D12), never the class color. A note is written in the
+  client's popup (Enter or Save stores it, Escape closes); it is stored with every control character as a space
+  and every `|` as `/`, so no chat escape reaches the list, at most 200 characters.
 - **Detail:** header (who and spec, then three meta lines since v0.2: realm, ilvl and the place; the target and its
   level, difficulty, tier, length and pet; the date, build and version), stat boxes (damage,
   DPS, meter DPS, a Delta or "Leads by" box), the damage chart (this session only), the spell breakdown with pet

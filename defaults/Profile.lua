@@ -191,11 +191,13 @@ NS.defaults = {
         -- by its drag, its grip and its fold arrow and put back by Master controls' Reset position;
         -- its scale, its list's row height (px); whether Share appends the fight's talents link; whether
         -- it closes when combat starts (v0.2 Task C1); and `columns`, the widths a header's edge was
-        -- dragged to (`{ character = px }`; empty is the shipped width), put back by Reset position.
+        -- dragged to (`{ character = px }`; empty is the shipped width), put back by Reset position. The
+        -- list's width clears its least (Results.MIN_WIDTH, 1038 with v0.2 Task C2's Status, Used and
+        -- Note columns) with room for the target column and a Character drag.
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
                      days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
-            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 920, height = 520,
+            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 1100, height = 520,
                        view = "collapsed" },
             scale = 1, rowHeight = 18,
             shareTalents = true, closeInCombat = true,

@@ -1,8 +1,8 @@
 local _, NS = ...
 -- modules/Results_Usage.lua — what a fight used (spec §7, mockup §5), as the fight detail shows it,
 -- and the player's edit of it. Adapted from DPS Race @045f479 (modules/Results_Usage.lua) without its
--- race and without its Used column (the fight list has none) or its folding heading (spec §7 names one
--- fold arrow, the window's).
+-- race and without its folding heading (spec §7 names one fold arrow, the window's). The fight list's
+-- Used column (v0.2 Task C2) reads Count and Icons.
 --
 -- THE SECTION shows what was used: one row per used entry, the item's icon and its name with a dim
 -- detail after it ("x2 at 0:09, 1:12", "active at the start", "time unknown"), or a dim *Nothing
@@ -71,6 +71,12 @@ function ResultsUsage.Entries(record)
     end
     for _, e in ipairs(rest) do gear[#gear + 1] = e end
     return gear
+end
+
+--- The Used column's sort value: how many entries, nil (last) when not recorded.
+function ResultsUsage.Count(record)
+    local entries = ResultsUsage.Entries(record)
+    return entries and #entries or nil
 end
 
 --- A time on the fight clock as m:ss, a pre-pull one (negative) with its minus sign; one that rounds
@@ -246,6 +252,21 @@ function ResultsUsage.Icon(e)
     if e.itemID then return ask(itemApi("GetItemIconByID"), e.itemID) or ResultsUsage.UNKNOWN_ICON end
     if e.kind == "food" then return ResultsUsage.FOOD_ICON end
     return ResultsUsage.UNKNOWN_ICON
+end
+
+--- An entry's icon as an inline texture for a tooltip line, its art cropped 5/64 per side, so no
+--- native rounded edge shows (an inline icon takes no edge).
+function ResultsUsage.InlineIcon(e)
+    return "|T" .. tostring(ResultsUsage.Icon(e)) .. ":14:14:0:0:64:64:5:59:5:59|t"
+end
+
+--- The Used column's icons for `record`, in Entries' order; nil when not recorded.
+function ResultsUsage.Icons(record)
+    local entries = ResultsUsage.Entries(record)
+    if not entries then return nil end
+    local out = {}
+    for i, e in ipairs(entries) do out[i] = ResultsUsage.Icon(e) end
+    return out
 end
 
 -- ── the section ─────────────────────────────────────────────────────────────────────────────────

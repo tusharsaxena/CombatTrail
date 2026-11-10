@@ -85,7 +85,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_Tips.lua` | What every cell and header says on hover |
 | `modules/Results_Fights.lua` | The filter bar, the grouping and the fight list |
 | `modules/Results_Loadout.lua` | The detail's Gear and Talents |
-| `modules/Results_Usage.lua` | The detail's Usage list and its edit |
+| `modules/Results_Usage.lua` | The detail's Usage list and its edit, and the list's Used icons |
 | `modules/Results_Detail.lua` | One fight in full |
 | `modules/Share.lua` | The one-line chat summary of a fight |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |

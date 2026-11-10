@@ -149,8 +149,8 @@ function Source.SetNote(id, note)
     if not mock then return NS.Recorder.SetNote(id, note) end
     local record = Source.Get(id)
     if not record then return false end
-    note = type(note) == "string" and note:gsub("^%s+", ""):gsub("%s+$", "") or ""
-    record.note = note ~= "" and note:sub(1, NS.Recorder.NOTE_MAX) or nil
+    note = NS.Recorder.ClampNote(note)
+    record.note = note ~= "" and note or nil
     changed(false)
     return true
 end

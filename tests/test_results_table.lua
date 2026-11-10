@@ -247,14 +247,14 @@ test("results: delta vs group best", function()
     local _, view = open(NS)
     local rows = drawn(view)
     local function cell(id) return rows[id].cells.delta.fs:GetText() end
-    assertTrue(cell("fast"):find("Best", 1, true) ~= nil, "the board's best: " .. cell("fast"))
+    assertEqual(cell("fast"), "0.0%", "the board's best reads 0.0% (v0.2 Task C2: no trophy, no word)")
     assertEqual(cell("slow"), "-33.3%", "against its own board's best")
-    assertTrue(cell("other"):find("Best", 1, true) ~= nil, "alone on its board, it is its best")
+    assertEqual(cell("other"), "0.0%", "alone on its board, it is its best")
     view:SetFilter("group", "none")
     rows = drawn(view)
     assertEqual(cell("other"), "-46.7%", "flat: against the best in the list")
     assertEqual(cell("slow"), "-33.3%")
-    assertTrue(cell("fast"):find("Best", 1, true) ~= nil)
+    assertEqual(cell("fast"), "0.0%")
     -- The Delta context the fight detail reads (plan Task 4.2).
     local ctx = view:DeltaContext(slow)
     assertEqual(ctx.first.id, "fast")
@@ -269,6 +269,7 @@ test("results: the leader of a group is the earlier fight on a DPS tie", functio
     local ctx = F.Context({ late, early })
     assertEqual(ctx.first.id, "early")
     assertEqual(F.DeltaText(late, ctx), "0.0%")
+    assertEqual(F.DeltaText(early, ctx), "0.0%", "the leader reads 0.0% too")
     assertEqual(F.Delta(late, ctx.top), 0)
     assertNil(F.Delta({ id = "x" }, ctx.top), "no DPS, no delta")
 end)
@@ -279,7 +280,7 @@ test("results: the table's columns are the plan's", function()
     local NS = fresh()
     local keys = {}
     for i, col in ipairs(NS.ResultsFights.Columns()) do keys[i] = col.key end
-    assertEqual(table.concat(keys, ","), "date,clsSpec,character,ilvl,target,content,len,damage,dps,delta")
+    assertEqual(table.concat(keys, ","), "date,clsSpec,character,ilvl,target,content,len,damage,dps,delta,status,used,note")
 end)
 
 test("results: table builds 500 rows via pooled rows", function()
@@ -590,14 +591,15 @@ test("results: Character is a fixed 104 px column and the target column takes th
     local cols = F.Columns()
     local ci, ti = indexOf(cols, "character"), indexOf(cols, "target")
     assertEqual(F.CHARACTER_W, 104)
-    for _, width in ipairs({ NS.Results.MIN_WIDTH, 920, 1400 }) do
+    local shipped = NS.defaults.profile.results.window.width
+    for _, width in ipairs({ NS.Results.MIN_WIDTH, shipped, 1400 }) do
         local place = Tbl.Columns(cols, width)
         assertEqual(place[ci].w, 104, "Character at " .. width)
         assertTrue(place[ti].w >= F.TARGET_W, "the target column keeps its minimum at " .. width)
         local last = place[#place]
         assertTrue(last.x + last.w <= width - Tbl.SCROLLBAR_W - Tbl.PAD, "the columns fit at " .. width)
     end
-    assertTrue(Tbl.Columns(cols, 1400)[ti].w > Tbl.Columns(cols, 920)[ti].w, "a wider window widens the target")
+    assertTrue(Tbl.Columns(cols, 1400)[ti].w > Tbl.Columns(cols, shipped)[ti].w, "a wider window widens the target")
     assertTrue(NS.defaults.profile.results.window.width >= NS.Results.MIN_WIDTH, "the shipped width fits")
 end)
 
@@ -672,4 +674,186 @@ test("results: no spec: the row draws its class icon and no second icon", functi
     local cell = drawn(view).nospec.cells.clsSpec
     assertTrue(cell.class:IsShown(), "the class icon")
     assertFalse(cell.spec:IsShown(), "no second icon, never the class icon twice")
+end)
+
+-- ── v0.2 Task C2: Delta 0.0%, the Status, Used and Note columns, notes, the palette's bars ──────
+
+-- A fresh instance whose item API answers an icon per item (5000 + its id) and a name.
+local function freshItems()
+    return fresh(function(m)
+        m.C_Item.GetItemIconByID = function(id) return 5000 + id end
+        m.C_Item.GetItemNameByID = function(id) return "Item " .. id end
+    end)
+end
+
+-- A usage record of `count` used entries: on-use gear first, then food.
+local function usageOf(count)
+    local used = {}
+    for i = 1, count do
+        used[i] = i == count and { kind = "food", src = "buff" } or { kind = "gear", itemID = 100 + i, slot = 13, n = 1, times = { 9 } }
+    end
+    return { v = 1, edited = false, used = used, candidates = {} }
+end
+
+test("results: the Status badge reads Best with the trophy on the board's top only", function()
+    local NS = fresh()
+    local slow, fast = rec(NS, { id = "slow", dps = 1000 }), rec(NS, { id = "fast", dps = 1500 })
+    save(NS, slow, fast)
+    local _, view = open(NS)
+    local rows = drawn(view)
+    local top, other = rows.fast.cells.status, rows.slow.cells.status
+    assertEqual(top.fs:GetText(), "Best")
+    assertTrue(top.box:IsShown(), "the badge's box")
+    assertTrue(top.icon:IsShown(), "the trophy inside it")
+    assertEqual(top.icon:GetTexture(), NS.Icon("ph:trophy"))
+    assertEqual(other.fs:GetText(), "", "no tag below the top")
+    assertFalse(other.box:IsShown(), "no box below the top")
+    local cols = NS.ResultsFights.Columns()
+    local status = cols[indexOf(cols, "status")]
+    assertEqual(status.kind, "badge")
+    assertTrue(status.sort(fast) < 99 and status.sort(slow) == nil, "the best sorts first, the rest after it")
+    assertTrue(NS.ResultsTips.Cell(status, fast)[1] ~= nil, "the best's tooltip")
+    assertTrue(NS.ResultsTips.Cell(status, slow)[1] ~= nil, "every fight's tooltip")
+end)
+
+test("results: the Used column lists the fight's usage as icons, +n past what fits, a dash for none", function()
+    local NS = freshItems()
+    local Tbl, U = NS.ResultsTable, NS.ResultsUsage
+    local two, many, none, unrec = rec(NS, { id = "two" }), rec(NS, { id = "many" }), rec(NS, { id = "none" }),
+        rec(NS, { id = "unrec" })
+    two.usage, many.usage, none.usage = usageOf(2), usageOf(6), usageOf(0)
+    save(NS, two, many, none, unrec)
+    assertEqual(U.Count(two), 2)
+    assertEqual(U.Count(none), 0)
+    assertNil(U.Count(unrec), "not recorded sorts last")
+    local icons = U.Icons(two)
+    assertEqual(icons[1], 5101, "the gear's own icon first")
+    assertEqual(icons[2], U.FOOD_ICON, "then the food")
+    assertNil(U.Icons(unrec))
+    local cols = NS.ResultsFights.Columns()
+    local used = cols[indexOf(cols, "used")]
+    assertEqual(used.kind, "items")
+    assertEqual(Tbl.IconSlots(used.width), 4)
+    local shown, more = Tbl.IconsFit(6, used.width)
+    assertEqual(shown, 3)
+    assertEqual(more, 3)
+    local _, view = open(NS)
+    view:SetFilter("group", "none")
+    local rows = drawn(view)
+    local c2 = rows.two.cells.used
+    assertTrue(c2.icon1:IsShown() and c2.icon2:IsShown(), "two icons")
+    assertFalse(c2.icon3:IsShown(), "no third")
+    assertEqual(c2.icon1:GetTexture(), 5101)
+    assertFalse(c2.dash:IsShown())
+    assertFalse(c2.more:IsShown())
+    local c6 = rows.many.cells.used
+    assertTrue(c6.icon3:IsShown() and not c6.icon4:IsShown(), "three icons, then the count")
+    assertEqual(c6.more:GetText(), "+3")
+    assertTrue(rows.none.cells.used.dash:IsShown(), "a dash for nothing used")
+    assertTrue(rows.unrec.cells.used.dash:IsShown(), "a dash for not recorded")
+    -- The tooltip names each entry.
+    local tip = NS.ResultsTips.Cell(used, two)
+    assertEqual(tip[1], "2 items used")
+    assertTrue(tostring(tip[2]):find("Item 101", 1, true) ~= nil, "the gear by name: " .. tostring(tip[2]))
+    assertEqual(NS.ResultsTips.Cell(used, unrec)[1], "Not recorded")
+    assertEqual(NS.ResultsTips.Cell(used, none)[1], "Nothing used")
+end)
+
+test("results: the Note column shows the note cut to ten characters, the whole of it on hover", function()
+    local NS = fresh()
+    local F = NS.ResultsFights
+    local long, short, bare = rec(NS, { id = "long" }), rec(NS, { id = "short" }), rec(NS, { id = "bare" })
+    long.note, short.note = "pulled with \195\169clat early", "ok"
+    save(NS, long, short, bare)
+    assertEqual(F.NoteCell(long), "pulled wit\226\128\166", "ten characters, then an ellipsis")
+    assertEqual(F.NoteCell(short), "ok")
+    assertEqual(F.NoteCell(bare), "")
+    local accented = { note = "\195\169\195\169\195\169\195\169\195\169\195\169\195\169\195\169\195\169\195\169\195\169" }
+    assertEqual(F.NoteCell(accented), ("\195\169"):rep(10) .. "\226\128\166", "never a byte cut through a character")
+    assertEqual(F.NoteSort(long), "pulled with \195\169clat early")
+    assertNil(F.NoteSort(bare), "no note sorts last")
+    local cols = F.Columns()
+    local note = cols[indexOf(cols, "note")]
+    assertEqual(NS.ResultsTips.Cell(note, long)[2], long.note, "the whole note on hover")
+    assertTrue(NS.ResultsTips.Cell(note, bare)[1] ~= nil, "a fight with no note says so")
+    local _, view = open(NS)
+    view:SetFilter("group", "none")
+    assertEqual(drawn(view).long.cells.note.fs:GetText(), "pulled wit\226\128\166")
+end)
+
+test("results: a note is added, edited and cleared from the note box, and a reload keeps it", function()
+    local NS, M = fresh()
+    save(NS, rec(NS, { id = "a" }))
+    local _, view = open(NS)
+    view:SetFilter("group", "none")
+    local dialog = M.StaticPopupDialogs.COMBATTRAIL_FIGHT_NOTE
+    assertEqual(dialog.maxLetters, NS.Recorder.NOTE_MAX)
+    assertTrue(NS.Results.EditNote("a"))
+    local data = M.__popups[#M.__popups].data
+    -- Enter in the box saves and closes, as Save does; Escape closes.
+    local hidden = 0
+    local popup = { Hide = function() hidden = hidden + 1 end }
+    local function box(text) return { GetText = function() return text end, GetParent = function() return popup end } end
+    dialog.EditBoxOnEnterPressed(box("  first pull  "), data)
+    assertEqual(NS.Recorder.Get("a").note, "first pull", "added")
+    assertEqual(hidden, 1, "Enter closed the box")
+    assertEqual(drawn(view).a.cells.note.fs:GetText(), "first pull", "FIGHTS_CHANGED redrew the list")
+    dialog.EditBoxOnEnterPressed(box("second pull"), data)
+    assertEqual(NS.Recorder.Get("a").note, "second pull", "edited")
+    dialog.EditBoxOnEscapePressed(box("ignored"), data)
+    assertEqual(hidden, 3, "Escape closed it")
+    assertEqual(NS.Recorder.Get("a").note, "second pull", "Escape saved nothing")
+    -- The /reload: the same SavedVariables come back on a new instance, the note with them.
+    local saved = _G.CombatTrailDB
+    local again = T.load{ init = false }
+    _G.CombatTrailDB = saved
+    local AceAddon = again.mocks.LibStub("AceAddon-3.0")
+    AceAddon:InitializeAddon(again.NS)
+    AceAddon:EnableAddon(again.NS)
+    assertEqual(again.NS.Recorder.Get("a").note, "second pull", "the note survived the reload")
+    assertTrue(again.NS.Results.SetNote("a", "   ") == nil, "an empty note clears it")
+    assertNil(again.NS.Recorder.Get("a").note)
+end)
+
+test("results: a note's escape codes and control characters are neutralized", function()
+    local NS = fresh()
+    local R = NS.Recorder
+    assertEqual(R.ClampNote("|cffff0000red|r and |Hitem:1|h[x]|h"), "/cffff0000red/r and /Hitem:1/h[x]/h")
+    assertEqual(R.ClampNote("two\nlines\tand\001more"), "two lines and more")
+    assertEqual(R.ClampNote(("\195\169"):rep(250)), ("\195\169"):rep(R.NOTE_MAX), "200 characters, not bytes")
+    assertEqual(R.ClampNote(nil), "")
+    save(NS, rec(NS, { id = "a" }))
+    NS.Results.SetNote("a", "|TInterface\\Icons\\x:0|t boom")
+    assertEqual(R.Get("a").note, "/TInterface\\Icons\\x:0/t boom", "stored with its escapes neutralized")
+    -- The sample's notes (test mode) go through the same clamp.
+    assertTrue(NS.Preview.Start({ mode = "test" }), "test mode")
+    local sample = NS.ResultsSource.All()[1]
+    assertTrue(NS.ResultsSource.SetNote(sample.id, "a|cffffffffb"))
+    assertEqual(sample.note, "a/cffffffffb")
+end)
+
+test("results: the Damage and DPS bars are the palette's blue, not the class color, under every skin", function()
+    local NS, M = fresh()
+    local P = NS.Constants.PALETTE
+    save(NS, rec(NS, { id = "slow", dps = 1000 }), rec(NS, { id = "fast", dps = 1500 }))
+    local _, view = open(NS)
+    local function barColor(id, key)
+        local c = M.__paint(drawn(view)[id].cells[key].bar).color
+        return c
+    end
+    local function isPalette(c, what)
+        for i = 1, 3 do assertTrue(math.abs(c[i] - P.BAR[i]) < 1e-6, what .. " channel " .. i) end
+        assertTrue(math.abs(c[4] - P.BAR_A) < 1e-6, what .. " alpha")
+    end
+    assertEqual(NS.ResultsTable.BAR_ALPHA, P.BAR_A)
+    for _, key in ipairs({ "damage", "dps" }) do
+        for _, id in ipairs({ "slow", "fast" }) do isPalette(barColor(id, key), key .. " " .. id) end
+    end
+    -- A skin switch repaints the window; the fills stay the palette's (skinning rung 4: a data hue).
+    local W = dofile(T.root .. "/tests/_kit/skin_switch.lua")
+    local Skin = M.LibStub("LibKa0s-Skin-1.0")
+    Skin:RegisterSkin({ key = W.PROBE_KEY, label = "Probe", tokens = W.probeTokens(Skin) })
+    Skin:SetChoice("CombatTrail", "ka0s", W.PROBE_KEY)
+    view:Refresh()
+    for _, key in ipairs({ "damage", "dps" }) do isPalette(barColor("fast", key), key .. " under the probe skin") end
 end)

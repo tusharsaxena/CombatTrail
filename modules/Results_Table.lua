@@ -35,7 +35,12 @@ Tbl.PAD = 6                 -- the gap between two cells, and the row's inner ma
 Tbl.SCROLLBAR_W = NS.Skin.Token("scroll.width") or 8
 Tbl.ICON = 16
 Tbl.WHEEL_ROWS = 3          -- rows one notch of the mouse wheel moves
-Tbl.BAR_ALPHA = 0.25        -- a bar cell's fill over the row: the class color at this opacity
+-- A bar cell's fill over the row (v0.2 Task C2, D12): DPS Race's bar blue, the shared palette's
+-- (core/Constants.lua), at its opacity; never the class color, which stays on the name and the icons.
+Tbl.BAR_COLOR = NS.Constants.PALETTE.BAR
+Tbl.BAR_ALPHA = NS.Constants.PALETTE.BAR_A
+Tbl.BADGE_ICON = 11         -- an icon inside a badge (the Status column's trophy)
+Tbl.ICON_GAP = 2            -- between two icons of an items cell (the Used column)
 
 --- The list's row height now (px): `results.rowHeight`, else the shipped one.
 function Tbl.RowHeight()
@@ -58,6 +63,7 @@ local C = {
     amber = HC.amber,
     green = HC.green,
     red   = HC.red,
+    blue  = NS.Constants.PALETTE.BEST_TEXT,   -- a best's tag (the Status column, D15's best blue)
 }
 Tbl.COLORS = C
 
@@ -271,7 +277,7 @@ local Cells = {}
 
 -- A text cell; a column with `bar` also draws a fill under its text, as long as its value's place
 -- between the smallest and the largest in its group (Table:measure, Tbl.BarShare), over the row's own
--- stripe, in the fight's class color.
+-- stripe, in the palette's bar blue (Tbl.BAR_COLOR).
 function Cells.text(row, col)
     local cell = { fs = Tbl.Text(row, FONT.TEXT, C.text, col.justify) }
     if col.bar then cell.bar = row:CreateTexture(nil, "BORDER", nil, 2) end
@@ -288,12 +294,34 @@ function Cells.icons(row)
     return cell
 end
 
--- A chip: its word in the chip's color, in a 1px box tinted that color (the Content column).
+-- A row of small icons (the Used column, ported from DPS Race's): as many as the column's configured
+-- width holds (Tbl.IconSlots), each its own part (cell.icon1, ...) so a group header's showCells
+-- hides it, then "+n" for the rest, or a dash when there is nothing. Each icon is cropped and
+-- outlined; its edge shows and hides with it.
+function Cells.items(row, col)
+    local cell = { more = Tbl.Text(row, FONT.TEXT, C.dim), dash = Tbl.Text(row, FONT.TEXT, C.dim) }
+    cell.dash:SetText(DASH)
+    cell.slots = Tbl.IconSlots(col.width)
+    for i = 1, cell.slots do
+        local icon = row:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(Tbl.ICON, Tbl.ICON)
+        Style.EdgeIcon(icon)
+        cell["icon" .. i] = icon
+    end
+    return cell
+end
+
+-- A chip or a tag: its icon (where the column's text names one) before its word, both in the tag's
+-- color, in a 1px box tinted that color (the Content and Status columns).
 function Cells.badge(row)
     local cell = { box = Style.FlatBox(row) }
     cell.box:SetHeight(Tbl.CHIP_H)
     cell.fs = Tbl.Text(cell.box, FONT.TEXT, C.amber, "CENTER")
     cell.fs:SetPoint("CENTER", cell.box, "CENTER", 0, 0)
+    cell.icon = cell.box:CreateTexture(nil, "ARTWORK")
+    cell.icon:SetSize(Tbl.BADGE_ICON, Tbl.BADGE_ICON)
+    cell.icon:SetPoint("LEFT", cell.box, "LEFT", 4, 0)
+    cell.icon:Hide()
     return cell
 end
 
@@ -326,8 +354,7 @@ local function bindBar(cell, col, record)
     local on = share > 0
     cell.bar:SetShown(on)
     if not on then return end
-    local who = type(record.who) == "table" and record.who or {}
-    Style.Fill(cell.bar, Tbl.ClassColor(who.class), Tbl.BAR_ALPHA)
+    Style.Fill(cell.bar, Tbl.BAR_COLOR, Tbl.BAR_ALPHA)
     cell.bar:SetWidth(math.max(1, math.floor((cell.barW or 0) * share + 0.5)))
 end
 
@@ -336,6 +363,38 @@ function Bind.text(cell, col, record)
     cell.fs:SetText(s or "")
     paint(cell.fs, color)
     if cell.bar then bindBar(cell, col, record) end
+end
+
+--- How many icons an items cell `width` px wide holds (at least one). Pure.
+function Tbl.IconSlots(width)
+    return math.max(1, math.floor(((width or 0) + Tbl.ICON_GAP) / (Tbl.ICON + Tbl.ICON_GAP)))
+end
+
+--- How many of `count` icons an items cell `width` px wide draws, and the "+n" after them: all of
+--- them when they fit, else one slot fewer than fit and the rest counted in the last slot. Pure.
+--- @return number shown, number more
+function Tbl.IconsFit(count, width)
+    local slots = Tbl.IconSlots(width)
+    if count <= slots then return count, 0 end
+    return slots - 1, count - (slots - 1)
+end
+
+-- The column's `items(record)` answers the icons ({ texture, ... }), or nil: a dash for none.
+function Bind.items(cell, col, record)
+    local list = col.items(record) or {}
+    local shown, more = Tbl.IconsFit(#list, col.width)
+    for i = 1, cell.slots do
+        local icon = cell["icon" .. i]
+        icon:SetShown(i <= shown)
+        if i <= shown then icon:SetTexture(list[i]) end
+    end
+    cell.dash:SetShown(#list == 0)
+    cell.more:SetShown(more > 0)
+    cell.more:SetText(more > 0 and ("+" .. more) or "")
+    if more > 0 then
+        cell.more:ClearAllPoints()
+        cell.more:SetPoint("LEFT", cell.icon1 or cell.dash, "LEFT", shown * (Tbl.ICON + Tbl.ICON_GAP), 0)
+    end
 end
 
 function Bind.icons(cell, _, record)
@@ -348,14 +407,15 @@ function Bind.icons(cell, _, record)
 end
 
 --- A chip's width from its label's length (config, never a measured width): 6 px a character (a
---- UTF-8 continuation byte adds none: "·" is one), 4 px of pad (14 in a box). Pure; the fit tests
---- size columns against it.
+--- UTF-8 continuation byte adds none: "·" is one), 4 px of pad (14 in a box), plus `extra` for an
+--- icon. Pure; the fit tests size columns against it.
 --- @param s string
 --- @param boxed boolean|nil
+--- @param extra number|nil
 --- @return number
-function Tbl.BadgeWidth(s, boxed)
+function Tbl.BadgeWidth(s, boxed, extra)
     local chars = select(2, s:gsub("[^\128-\191]", ""))
-    return math.floor(chars * 6 + (boxed and 14 or 4))
+    return math.floor(chars * 6 + (boxed and 14 or 4) + (extra or 0))
 end
 
 --- Set a checkbox's label (`check.label`, 1px right of the box) and widen its click area over it, so
@@ -367,16 +427,31 @@ function Tbl.SetCheckLabel(check, text)
     check:SetHitRectInsets(0, -(1 + Tbl.BadgeWidth(text, false)), 0, 0)
 end
 
+-- The tag's icon (a catalog name), tinted the tag's color, before the word: answers the room the
+-- word shifts right by.
+local function bindBadgeIcon(cell, icon, color)
+    local path = icon and NS.Icon(icon)
+    cell.icon:SetShown(path ~= nil)
+    if not path then return 0 end
+    cell.icon:SetTexture(path)
+    Style.Vertex(cell.icon, color, 1)
+    return Tbl.BADGE_ICON + 2
+end
+
+-- The column's text answers the word, its color and, for a tag, its icon's catalog name.
 function Bind.badge(cell, col, record)
-    local s, color = col.text(record)
+    local s, color, icon = col.text(record)
     s = s or ""
     color = color or C.amber
     cell.fs:SetText(s)
     paint(cell.fs, color)
     cell.box:SetShown(s ~= "")
-    local w = Tbl.BadgeWidth(s, true)
+    local extra = bindBadgeIcon(cell, s ~= "" and icon or nil, color)
+    local w = Tbl.BadgeWidth(s, true, extra)
     if cell.w and w > cell.w then w = math.max(14, cell.w) end
-    cell.fs:SetWidth(math.max(1, w - 6))
+    cell.fs:ClearAllPoints()
+    cell.fs:SetPoint("CENTER", cell.box, "CENTER", extra / 2, 0)
+    cell.fs:SetWidth(math.max(1, w - 6 - extra))
     Style.TintBox(cell.box, color, Style.BADGE_EDGE_A)
     cell.box:SetWidth(w)
 end
@@ -395,6 +470,16 @@ local function placeCell(row, cell, col, x, w)
         cell.box:ClearAllPoints()
         cell.box:SetPoint("LEFT", row, "LEFT", x, 0)
         cell.w = w
+        return
+    end
+    if kind == "items" then
+        for i = 1, cell.slots do
+            cell["icon" .. i]:ClearAllPoints()
+            cell["icon" .. i]:SetPoint("LEFT", row, "LEFT", x + (i - 1) * (Tbl.ICON + Tbl.ICON_GAP), 0)
+        end
+        cell.dash:ClearAllPoints()
+        cell.dash:SetPoint("LEFT", row, "LEFT", x, 0)
+        cell.more:SetWidth(math.max(10, Tbl.ICON + 8))
         return
     end
     cell.fs:ClearAllPoints()
@@ -634,10 +719,11 @@ end
 
 --- A sortable, scrolling list in `parent` (which it fills).
 --- @param parent table
---- @param columns table  { key, label, kind = "text"|"icons"|"badge", width | flex+min,
+--- @param columns table  { key, label, kind = "text"|"icons"|"badge"|"items", width | flex+min,
 ---                         tip = fn(record) -> lines, about = header text, justify,
 ---                         sort = fn(record) -> value, desc = default direction, text = fn(record),
 ---                         bar = fn(record) -> value, scan = fn(list, groupOf) on SetData and SetGroup,
+---                         items = fn(record) -> { texture, ... } | nil (an items column),
 ---                         resize = { min, max } (a fixed column its header's edge drags) }
 --- @param opts table  { sortKey, sortDesc, onClick(record), onRightClick(record, row), empty = text,
 ---                      widths = fn() -> { [key] = px } (the dragged widths of the `resize` columns),

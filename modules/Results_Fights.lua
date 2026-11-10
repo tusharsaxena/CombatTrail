@@ -4,7 +4,8 @@ local _, NS = ...
 -- view) over the pooled, sortable fight table (modules/Results_Table.lua). A click selects a fight
 -- and a right-click opens its menu; the shell (modules/Results.lua) places the list. Adapted from DPS
 -- Race @045f479 (modules/Results_Runs.lua) without its race: no race length, no dummy category, no
--- status tags or late-cast flags, no Include incomplete (every stored fight is final).
+-- late-cast flags, no Include incomplete (every stored fight is final), so the Status column has one
+-- tag, Best, and no Complete, Flagged or Incomplete.
 --
 -- THE VIEW is `results.view` (defaults/Profile.lua): the filters, the grouping and the sort. Each
 -- build opens on the profile's saved view; Save view writes the view on screen there, and Reset view
@@ -17,8 +18,10 @@ local _, NS = ...
 -- on WoW Forever, clients-§4) is never offered there.
 --
 -- THE DELTA COLUMN. Each fight's DPS against the best DPS in its own group of the fights the filters
--- pass (with no grouping, the whole list): the group's leader reads "Best" beside the trophy, every
--- other fight its signed gap. Recomputed on every redraw; nothing is stored on a record.
+-- pass (with no grouping, the whole list): the group's leader reads a green "0.0%" (DPS Race's, v0.2
+-- Task C2), every other fight its signed gap. Recomputed on every redraw; nothing is stored on a
+-- record. The Status column carries the trophy instead: "Best" on the fight that holds the best on its
+-- board (character x spec x board key, modules/Bests.lua), whatever the filters.
 --
 -- CLIENTS (clients-§4, v0.2 plan Task A4). WoW Forever has no specializations: there the predominant
 -- talent tree stands in for the spec (modules/Identity.lua, who.specID "tree:<class>:<index>"), so
@@ -489,20 +492,12 @@ end
 
 local C = Tbl.COLORS
 
--- The trophy before "Best" (the catalog's `ph:trophy`, declared in CLAUDE.md), in the header gold;
--- nothing when the catalog cannot answer. Built at bind time, so a skin change takes on the next draw.
-local function trophy()
-    local path = NS.Icon("ph:trophy")
-    if not path then return "" end
-    return Style.IconMarkup("ph:trophy", path, C.gold) .. " "
-end
-
---- The Delta cell: the trophy and "Best" on the group's leader, a fight level with it "0.0%", every
---- other fight its signed gap in red; a dash with nothing to measure.
+--- The Delta cell: "0.0%" in green on the group's leader and on a fight level with it, every other
+--- fight its signed gap in red; a dash with nothing to measure.
 --- @return string text, table color
 function Fights.DeltaText(record, ctx)
     if type(ctx) ~= "table" then return DASH, C.dim end
-    if Fights.IsTop(record, ctx) then return trophy() .. L["Best"], C.green end
+    if Fights.IsTop(record, ctx) then return L["%.1f%%"]:format(0), C.green end
     local pct = Fights.Delta(record, ctx.top)
     if pct == nil then return DASH, C.dim end
     if pct == 0 then return L["%.1f%%"]:format(0), C.green end
@@ -526,6 +521,71 @@ function Fights.DeltaTip(record, ctx, grouped)
     end
     if NS.ResultsSource.IsBest(record) then lines[#lines + 1] = { L["Your best on this board."], C.gold[1], C.gold[2], C.gold[3] } end
     return lines
+end
+
+-- ── the Status and Note columns (v0.2 Task C2, DPS Race's) ─────────────────────────────────────
+
+-- The Status tag of the best on its board: its word, DPS Race's best blue and the trophy.
+Fights.STATUS_ICON = "ph:trophy"
+
+--- The Status cell: "Best", in the best blue with the trophy, on the fight that holds the best on its
+--- board (NS.ResultsSource.IsBest: the store's or the sample's); "" on every other fight.
+--- @return string text, table|nil color, string|nil icon
+function Fights.StatusText(record)
+    if NS.ResultsSource.IsBest(record) then return L["Best"], C.blue, Fights.STATUS_ICON end
+    return "", nil, nil
+end
+
+--- The Status column's sort value: 1 for the best on its board, nil (last) for the rest.
+function Fights.StatusSort(record)
+    return NS.ResultsSource.IsBest(record) and 1 or nil
+end
+
+--- The Status cell's tooltip: the board, then what the tag means.
+function Fights.StatusTip(record)
+    if NS.ResultsSource.IsBest(record) then
+        return { L["Best"], Fights.BoardLabel(record), L["Your best on this board."] }
+    end
+    return { DASH, Fights.BoardLabel(record), L["Another fight holds your best on this board."] }
+end
+
+Fights.NOTE_CHARS = 10
+local ELLIPSIS = "\226\128\166"
+
+local function noteOf(record)
+    local note = type(record) == "table" and record.note
+    if type(note) ~= "string" or note == "" then return nil end
+    return note
+end
+
+--- The Note cell's text: the note's first NOTE_CHARS characters (UTF-8 characters, never a byte cut
+--- through one), an ellipsis after them when the note is longer; "" with no note.
+function Fights.NoteCell(record)
+    local note = noteOf(record)
+    if not note then return "" end
+    local n, cut = 0, nil
+    for pos in note:gmatch("()[^\128-\191]") do
+        n = n + 1
+        if n > Fights.NOTE_CHARS then
+            cut = pos - 1
+            break
+        end
+    end
+    if not cut then return note end
+    return note:sub(1, cut) .. ELLIPSIS
+end
+
+--- The Note column's sort value: the note in lower case, nil (last) with none.
+function Fights.NoteSort(record)
+    local note = noteOf(record)
+    return note and note:lower() or nil
+end
+
+--- The Note cell's tooltip: "Note", then the whole note (wrapped by the tooltip).
+function Fights.NoteTip(record)
+    local note = noteOf(record)
+    if not note then return { L["No note"], L["This fight has no note. Add one from its detail or the row's right-click menu."] } end
+    return { L["Note"], note }
 end
 
 -- ── the columns ─────────────────────────────────────────────────────────────────────────────────
@@ -563,6 +623,10 @@ end
 
 Fights.TARGET_W = 150
 Fights.CONTENT_W = 90
+-- DPS Race's Used and Note widths; the Status column fits its one boxed tag, "Best" and the trophy.
+Fights.STATUS_W = 60
+Fights.USED_W = 70
+Fights.NOTE_W = 80
 -- The Character column (v0.2 Task C1): a fixed width a twelve-letter name fits, the target column
 -- taking the window's slack; its header's right edge drags it between the least and the most.
 Fights.CHARACTER_W = 104
@@ -597,9 +661,9 @@ function Fights.ClearColumnWidths()
     for k in pairs(store) do store[k] = nil end
 end
 
---- The fight table's columns (mockup §5): date, class and spec icons, character, item level,
---- encounter or target, content, length, damage, DPS and delta. `view` (optional) keeps the Delta
---- column's contexts (View:DeltaContext).
+--- The fight table's columns (mockup §5, v0.2 Task C2): date, class and spec icons, character, item
+--- level, encounter or target, content, length, damage, DPS, delta, status, used and note. `view`
+--- (optional) keeps the Delta column's contexts (View:DeltaContext).
 function Fights.Columns(view)
     view = view or {}
     view.contexts, view.ids = {}, {}
@@ -640,6 +704,16 @@ function Fights.Columns(view)
           end,
           text = function(r) return Fights.DeltaText(r, ctxOf(r)) end,
           tip = function(r) return Fights.DeltaTip(r, ctxOf(r), view.grouped) end },
+        { key = "status", label = L["Status"], width = Fights.STATUS_W, kind = "badge", desc = false,
+          sort = Fights.StatusSort, text = Fights.StatusText, tip = Fights.StatusTip },
+        -- What the fight used: the gear first, "+n" past what fits, a dash for nothing; sorted by how
+        -- many, a fight with no usage record last either way.
+        { key = "used", label = L["Used"], width = Fights.USED_W, kind = "items", desc = true,
+          sort = function(r) return NS.ResultsUsage.Count(r) end,
+          items = function(r) return NS.ResultsUsage.Icons(r) end },
+        { key = "note", label = L["Note"], width = Fights.NOTE_W, desc = false,
+          sort = Fights.NoteSort, text = function(r) return Fights.NoteCell(r), C.dim end,
+          tip = Fights.NoteTip },
     }
 end
 

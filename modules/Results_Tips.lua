@@ -121,6 +121,25 @@ function CELL.dps(record)
     return lines
 end
 
+-- What a fight used: each entry's icon, name and when (modules/Results_Usage.lua); a hidden item is
+-- not listed.
+function CELL.used(record)
+    local U = NS.ResultsUsage
+    local entries = U.Entries(record)
+    if not entries then
+        return { L["Not recorded"], L["This fight was recorded before the addon kept what was used."] }
+    end
+    if #entries == 0 then
+        return { L["Nothing used"], L["No on-use item or consumable was detected or ticked for this fight."] }
+    end
+    local lines = { #entries == 1 and L["1 item used"] or L["%d items used"]:format(#entries) }
+    for _, e in ipairs(entries) do
+        lines[#lines + 1] = U.InlineIcon(e) .. " " .. L["%s: %s"]:format(U.Name(e), U.Detail(e))
+    end
+    lines[#lines + 1] = dimLine(L["Edit the list in the fight's detail."])
+    return lines
+end
+
 -- A builder's lines with any hole closed up, however many there are.
 local function compact(lines)
     local top = 0
@@ -163,7 +182,10 @@ local ABOUT = {
     len = "How long the fight lasted.",
     damage = "Your damage and your pet's, read from Blizzard's meter after combat. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list).",
     dps = "Damage over the fight's length. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list).",
-    delta = "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best shows a trophy.",
+    delta = "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best reads 0.0%.",
+    status = "Best: your best fight on its board (this character and spec against this encounter or target), whatever the filters show.",
+    used = "What the fight used: on-use gear (trinkets first), then potions, flasks, food and the rest. Hover for when; sorted by how many.",
+    note = "The note you kept with the fight. Click to sort.",
 }
 
 --- A header's tooltip: { title, text }, or nil for a column with nothing to say.
