@@ -343,6 +343,21 @@ test("gear sets: Sweep drops the orphaned sets, keeping the referenced and the c
     assertTrue(NS.Loadouts.GetGear(current) ~= nil, "the current set kept with no fight on it yet")
 end)
 
+test("gear sets: Sweep mid-fight keeps the live fight's set after a swap in combat", function()
+    local meter
+    local NS, M = fresh(function(m) meter = T.mockMeter.install(m) end)
+    meter.SetSession(1, { damage = 10, dps = 1, duration = 10, spells = {} })
+    M.__now = 100
+    M.__fire("PLAYER_REGEN_DISABLED")
+    local start = NS.Fight.Current().gearSet
+    M.__gear[16] = link(900016)
+    M.__fire("PLAYER_EQUIPMENT_CHANGED", 16, false)
+    M.__fireTimers()
+    assertTrue(NS.Loadouts.CurrentGearSet() ~= start, "the swap moved the current set")
+    NS.Loadouts.Sweep({})
+    assertTrue(NS.Loadouts.GetGear(start) ~= nil, "the live fight's set survives a delete in combat")
+end)
+
 test("gear sets: the stored size estimate counts the sets", function()
     local NS = fresh()
     local before = NS.Retention.EstimateBytes()

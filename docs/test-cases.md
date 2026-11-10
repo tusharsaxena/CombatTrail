@@ -451,7 +451,7 @@ Total.
 - stats: Groups lays out Primary, Secondary and Tertiary with each value's text
 - stats: deltas against the compared fight, signed, the percent deciding a rated row
 
-### test_loadouts.lua (21)
+### test_loadouts.lua (22)
 
 - loadouts: an item link trims to its item string, and back
 - loadouts: Snapshot reads the gear as item strings without the shirt or the tabard, and the talents
@@ -473,6 +473,7 @@ Total.
 - gear sets: with no set known yet, the pull reconciles once
 - gear sets: GearOf reads the record's set, else an inline gear (sample fights)
 - gear sets: Sweep drops the orphaned sets, keeping the referenced and the current one
+- gear sets: Sweep mid-fight keeps the live fight's set after a swap in combat
 - gear sets: the stored size estimate counts the sets
 
 ### test_filters.lua (10)
@@ -957,7 +958,7 @@ Total.
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 7 |
-| test_loadouts.lua | 21 |
+| test_loadouts.lua | 22 |
 | test_filters.lua | 10 |
 | test_bests.lua | 9 |
 | test_retention.lua | 13 |
@@ -993,4 +994,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **763** |
+| **Total** | **764** |
