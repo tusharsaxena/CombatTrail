@@ -67,7 +67,7 @@ local function rgb(want, r, g, b, msg)
 end
 local function texture(bar) return bar:GetStatusBarTexture():GetTexture() end
 
--- A font block's seven cases on `fs(Hud)`, in an order that keeps each assertion its own key's.
+-- A font block's cases (one per key, the shadow's twice) on `fs(Hud)`, in an order that keeps each assertion its own key's.
 local function fontCases(block, fs)
     local p = block .. "."
     return {
@@ -79,12 +79,28 @@ local function fontCases(block, fs)
             assertEqual(face(fs(Hud)), media(inst, "Font", "Ka0s Inter"), "the stored pick")
         end },
         { p .. "fontSize", 17, function(_, Hud) assertEqual(size(fs(Hud)), 17) end },
-        { p .. "fontColor", RED, function(_, Hud) rgb(RED, fs(Hud):GetTextColor()) end },
+        { p .. "fontColor", RED, function(inst, Hud)
+            local r, g, b = inst.NS.Skin.HudTextColor()
+            assertFalse(r == 1 and g == 0 and b == 0, "the skin's HUD text color is not the stored red")
+            rgb({ r = r, g = g, b = b }, fs(Hud):GetTextColor())
+        end },
+        { p .. "fontColorFromSkin", false, function(_, Hud) rgb(RED, fs(Hud):GetTextColor()) end },
         { p .. "useClassColorFont", true, function(_, Hud) rgb(MAGE, fs(Hud):GetTextColor()) end },
         { p .. "fontFlags", "THICKOUTLINE", function(_, Hud) assertEqual(flags(fs(Hud)), "THICKOUTLINE") end },
-        { p .. "fontShadow", true, function(_, Hud)
+        { p .. "fontShadow", true, function(inst, Hud)
+            -- The skin's answer while the companion is on: none (false, Ka0s Default) or its offset.
+            local sx, sy = inst.NS.Skin.HudShadow()
+            if sx == false then sx, sy = 0, 0 end
             local x, y = fs(Hud):GetShadowOffset()
-            assertTrue(x ~= 0 or y ~= 0, "a shadow offset")
+            assertTrue(x == sx and y == sy, "the skin's shadow, not the stored one, while its companion is on")
+        end },
+        { p .. "fontShadowFromSkin", false, function(_, Hud)
+            local x, y = fs(Hud):GetShadowOffset()
+            assertTrue(x ~= 0 or y ~= 0, "the stored shadow once the companion is off")
+        end },
+        { p .. "fontShadow", false, function(_, Hud)
+            local x, y = fs(Hud):GetShadowOffset()
+            assertTrue(x == 0 and y == 0, "and the stored none")
         end },
     }
 end

@@ -9,7 +9,9 @@ local addonName, NS = ...
 -- THE BLOCKS are the composer's shapes (LibKa0s-Options-1.0 OptionsCompose, options-ui-§16 and
 -- §17), so the DPS HUD page (plan Task 3.3) builds its rows from FontGroup, BarGroup and ColorPair
 -- over these very leaves: a font block is `font`, `fontSize`, `fontColor`, `useClassColorFont`,
--- `fontFlags`, `fontShadow` and `fontFromSkin`; a bar block `barTexture`, `barAlpha`, `barColor`,
+-- `fontFlags`, `fontShadow` and `fontFromSkin`, plus the two text companions skinning-§6 asks of every
+-- HUD string, `fontColorFromSkin` and `fontShadowFromSkin` (on: the skin's S.HudTextColor and
+-- S.HudShadow draw, a class color still first); a bar block `barTexture`, `barAlpha`, `barColor`,
 -- `useClassColorBar` and `barTextureFromSkin`; a swatch `<key>` with its `useClassColor<Key>`.
 --   hud.clock    the fight clock's font block (the mono role: its flags never follow the outline)
 --   hud.figures  the Damage and DPS figures' font block, the over card's DPS color (`overColor`),
@@ -119,7 +121,16 @@ local function mediaKey(p, leaf, token)
     return stored, stored
 end
 
---- One font block, resolved: { path, size, flags, shadow, r, g, b, a }.
+-- The skin's HUD text color for the block at `p` while its `fontColorFromSkin` is on and no class
+-- color comes first (skinning-§6); nil leaves the stored color (a degraded facade answers nil too).
+local function skinText(p)
+    local S = NS.Skin
+    if setting(p .. "fontColorFromSkin") ~= true or setting(p .. "useClassColorFont") == true then return nil end
+    if not (S and type(S.HudTextColor) == "function") then return nil end
+    return S.HudTextColor()
+end
+
+--- One font block, resolved: { path, size, flags, shadow, shadowFromSkin, r, g, b, a }.
 --- @param block string  "clock" | "figures" | "spells"
 --- @return table
 function Appearance.Font(block)
@@ -127,11 +138,13 @@ function Appearance.Font(block)
     local name, stored = mediaKey(p, "font", "hud.font")
     local path = fetch("font", name) or fetch("font", stored) or fetch("font", shipped(p .. "font"))
         or (block == "clock" and NS.Constants.FONT_MONO) or FALLBACK_FONT
-    local r, g, b, a = Appearance.Color(p .. "fontColor", p .. "useClassColorFont")
+    local r, g, b, a = skinText(p)
+    if r == nil then r, g, b, a = Appearance.Color(p .. "fontColor", p .. "useClassColorFont") end
     local flags = setting(p .. "fontFlags")
     if type(flags) ~= "string" then flags = "" end
     return { path = path, size = math.max(6, tonumber(setting(p .. "fontSize")) or 12), flags = flags,
-             shadow = setting(p .. "fontShadow") == true, r = r, g = g, b = b, a = a }
+             shadow = setting(p .. "fontShadow") == true,
+             shadowFromSkin = setting(p .. "fontShadowFromSkin") == true, r = r, g = g, b = b, a = a }
 end
 
 local fontOpts = {}   -- refilled per call: S.HudFont keeps nothing of it
@@ -143,7 +156,7 @@ local fontOpts = {}   -- refilled per call: S.HudFont keeps nothing of it
 --- @param color table|nil
 function Appearance.ApplyFont(fs, font, color)
     fontOpts.face, fontOpts.size, fontOpts.flags = font.path, font.size, font.flags
-    fontOpts.shadow, fontOpts.shadowFromSkin = font.shadow, false
+    fontOpts.shadow, fontOpts.shadowFromSkin = font.shadow, font.shadowFromSkin == true
     NS.Skin.HudFont(fs, fontOpts)
     local c = color or font
     fs:SetTextColor(c.r, c.g, c.b, c.a)

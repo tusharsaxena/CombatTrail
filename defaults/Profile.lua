@@ -107,7 +107,8 @@ NS.defaults = {
         -- the title bar's drag (the mockup's top right).
         -- The look (plan Task 3.2, modules/Hud_Appearance.lua), one block per mockup tab, each in the
         -- composer's shapes (options-ui-§16 and §17: a font block, a bar block, a swatch with its
-        -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own). Clock and
+        -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own, and every font
+        -- block's text color and shadow follow the skin by default, skinning-§6). Clock and
         -- figures: the clock's font (the mono role, no outline), the figures' font, the over card's
         -- DPS color and the boxes' background and border. Damage chart: the plot's height and most
         -- columns, the columns' bar, the burst-window and best-line colors, the cooldown icons (and
@@ -122,9 +123,11 @@ NS.defaults = {
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
             clock = { font = "JetBrains Mono", fontSize = 40, fontColor = rgba(0.92, 0.91, 0.88, 1),
-                      useClassColorFont = false, fontFlags = "", fontShadow = false, fontFromSkin = false },
+                      useClassColorFont = false, fontFlags = "", fontShadow = false, fontFromSkin = false,
+                      fontColorFromSkin = true, fontShadowFromSkin = true },
             figures = { font = "Ka0s Prototype", fontSize = 20, fontColor = rgba(0.93, 0.93, 0.95, 1),
                         useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
+                        fontColorFromSkin = true, fontShadowFromSkin = true,
                         overColor = rgba(0.29, 0.82, 0.42, 1), useClassColorOverColor = false,
                         boxBg = rgba(0.06, 0.07, 0.09, 0.8), useClassColorBoxBg = false, boxBgFromSkin = true,
                         boxBorder = rgba(0.16, 0.17, 0.2, 1), useClassColorBoxBorder = false,
@@ -140,7 +143,8 @@ NS.defaults = {
                        useClassColorBar = false, barTextureFromSkin = true,
                        petColor = rgba(0.31, 0.67, 0.35, 0.55), useClassColorPetColor = false,
                        font = "Ka0s Prototype", fontSize = 12, fontColor = rgba(1, 1, 1, 1),
-                       useClassColorFont = false, fontFlags = "@skin", fontShadow = false, fontFromSkin = true },
+                       useClassColorFont = false, fontFlags = "@skin", fontShadow = false, fontFromSkin = true,
+                       fontColorFromSkin = true, fontShadowFromSkin = true },
             window = { titleBar = true, title = true,
                        bg = rgba(0.06, 0.06, 0.08, 0.94), useClassColorBg = false, bgFromSkin = true,
                        border = rgba(0.24, 0.24, 0.27, 1), useClassColorBorder = false, borderFromSkin = true,
