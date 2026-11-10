@@ -63,6 +63,16 @@ function Secrets.IsSealed(v)
     return not Secrets.CanAccess(v)
 end
 
+--- Whether `v` is there at all, secret or plain, without comparing it: a secret is present (the test
+--- runs first, so a secret meets nothing else), and anything else answers type(). What a caller asks
+--- of a client answer that may itself be secret, such as a formatter's secret string (modules/Format.lua).
+--- @param v any
+--- @return boolean
+function Secrets.IsPresent(v)
+    if Secrets.IsSecret(v) then return true end
+    return type(v) ~= "nil"
+end
+
 --- `v` as a plain Lua number, or nil when it is nil, secret, inaccessible or not a number. The
 --- secret test runs FIRST, so a secret never meets type() on a client where type() answers its
 --- underlying type.

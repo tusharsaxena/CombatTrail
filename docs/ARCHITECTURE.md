@@ -43,7 +43,9 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 ### Secret-value invariants (spec §3)
 
 - `core/Secrets.lua` is the only file that inspects a value that may be secret; everything else asks
-  `NS.Secrets` (`IsSecret`, `PlainNumber`, `PlainString`, `CanAccessTable`, `SafeIterate`).
+  `NS.Secrets` (`IsSecret`, `IsPresent`, `PlainNumber`, `PlainString`, `CanAccessTable`, `SafeIterate`).
+  A client answer that may itself be secret, such as a formatter's secret string, is tested for
+  presence with `Secrets.IsPresent`, never compared to nil (v0.2 Task F1a).
 - `modules/Meter.lua` is the only reader of `C_DamageMeter` (the probe reads it raw through
   `Meter.Api` / `Meter.Call`). In combat its live read is opaque and goes only into C-side widgets:
   `StatusBar:SetMinMaxValues/SetValue`, `SetTexture`, and the secret-safe number formatter.

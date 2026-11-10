@@ -334,13 +334,15 @@ Total.
 - meter: Call reports a missing function and a raising one without throwing
 - meter: ReadFinal keeps the player's part when only the pet's read raises
 
-### test_format.lua (8)
+### test_format.lua (10)
 
 - format: a plain fractional DPS abbreviates in Lua, never through the client formatter
 - format: a secret goes to a formatter that passes both checks
 - format: a formatter that renders a fraction raw fails the check, and the next constructor answers
 - format: a secret with no trusted formatter goes to AbbreviateNumbers
 - format: a secret with no client formatter at all is handed back untouched
+- format: a secret the client formatter answers with a secret string goes to SetText untouched
+- format: Secrets.IsPresent answers a secret and a plain value without comparing either
 - format: the debug log names the path that served a number, once per change
 - format: a refused or failing constructor is skipped
 - format: Clock, Length, Pct and SignedPct take plain numbers
@@ -1065,7 +1067,7 @@ Total.
 | test_lanes_page.lua | 21 |
 | test_probe.lua | 28 |
 | test_meter.lua | 33 |
-| test_format.lua | 8 |
+| test_format.lua | 10 |
 | test_fight.lua | 30 |
 | test_identity.lua | 39 |
 | test_cast_codec.lua | 7 |
@@ -1112,4 +1114,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **862** |
+| **Total** | **864** |

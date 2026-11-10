@@ -77,6 +77,55 @@ test("format: a secret with no client formatter at all is handed back untouched"
     assertEqual(NS.Format.Number(-1234), "-1.2K")
 end)
 
+-- The client's formatters answer a secret with a secret string. Lua 5.1 cannot trap `out ~= nil`
+-- against a wrapper (the kit's secrets.lua: `==` against a non-table never consults __eq), so the
+-- case asserts it explicitly: Format's presence test on a client answer is Secrets.IsPresent, which
+-- never compares the value, and no `~= nil` / `== nil` on a client answer is left in the file.
+test("format: a secret the client formatter answers with a secret string goes to SetText untouched", function()
+    local inst = T.load{ mutate = function(m)
+        Formatter.install(m, { abbreviated = "floor", abbreviate = true })
+        local util = m.C_StringUtil
+        local make = util.CreateAbbreviatedNumberFormatter
+        util.CreateAbbreviatedNumberFormatter = function()
+            local f = make()
+            local plain = f.FormatNumber
+            function f:FormatNumber(v)
+                local out = plain(self, v)
+                if T.isSecret(v) then return T.secret(out) end
+                return out
+            end
+            return f
+        end
+    end }
+    local NS = inst.NS
+    local asked = 0
+    local present = NS.Secrets.IsPresent
+    NS.Secrets.IsPresent = function(v) asked = asked + 1; return present(v) end
+    local out = NS.Format.Number(T.secret(FRACTION))
+    NS.Secrets.IsPresent = present
+    assertTrue(T.isSecret(out), "the formatter's secret string itself")
+    assertEqual(T.reveal(out), "30.1K")
+    assertTrue(asked >= 1, "the answer's presence asked of Secrets.IsPresent")
+    local fh = assert(io.open(T.root .. "/modules/Format.lua", "rb"))
+    local src = fh:read("*a")
+    fh:close()
+    assertTrue(not src:find("out%s*[~=]=%s*nil"), "no comparison of a client answer against nil")
+end)
+
+test("format: Secrets.IsPresent answers a secret and a plain value without comparing either", function()
+    local NS = fresh()
+    local restore = T.installSecretValue()
+    local S = NS.Secrets
+    local ok, err = pcall(function()
+        assertTrue(S.IsPresent(T.secret("30.1K")), "a secret string is present")
+        assertTrue(S.IsPresent(T.secret(false)), "a secret false is present")
+        assertTrue(S.IsPresent("x") and S.IsPresent(0) and S.IsPresent(false), "plain values are present")
+        assertTrue(not S.IsPresent(nil), "nil is absent")
+    end)
+    restore()
+    assert(ok, err)
+end)
+
 test("format: the debug log names the path that served a number, once per change", function()
     local NS, _, inst = fresh{ abbreviated = "raw", numeric = "floor" }
     NS.State.debug = true

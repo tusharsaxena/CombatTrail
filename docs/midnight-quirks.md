@@ -305,7 +305,8 @@ decimals. *Do:* `modules/Format.lua` checks each constructor
 (`Compat.NumberFormatterCandidates`) against a fractional value too (30190.4761904 -> "30.1K") and
 uses the first that passes. A plain number never reaches the client formatter; Lua abbreviates and
 truncates it. A secret with no trusted formatter goes to `AbbreviateNumbers` in pcall, and the raw
-secret is the last resort. `/ct debug` writes which path served the numbers. Settle it with the
+secret is the last resort. An answer to a secret may itself be a secret string, so its presence
+is asked of `Secrets.IsPresent`, never compared to nil. `/ct debug` writes which path served the numbers. Settle it with the
 out-of-combat probe in recon R:hud-sizing#4 on both clients (each constructor's `FormatNumber(30190.4761904)`
 and `AbbreviateNumbers(30190.4761904)`). *Source:* this repo, `modules/Format.lua` header; plan v0.2
 Task A5.

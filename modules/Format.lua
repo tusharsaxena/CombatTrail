@@ -124,12 +124,13 @@ local function abbreviate(n)
 end
 
 -- A secret through the client: the trusted formatter, then AbbreviateNumbers, both in pcall. Either
--- answer goes to SetText untouched. nil when neither answered.
+-- answer goes to SetText untouched. nil when neither answered. An answer to a secret may itself be
+-- secret (a secret string), so its presence is asked of Secrets.IsPresent and never compared to nil.
 local function native(v)
     local f = instance()
     if f then
         local ok, out = pcall(f.FormatNumber, f, v)
-        if ok and out ~= nil then
+        if ok and Secrets.IsPresent(out) then
             servedBy("the client formatter (" .. tostring(formatterName) .. ")")
             return out
         end
@@ -137,7 +138,7 @@ local function native(v)
     local client = AbbreviateNumbers
     if type(client) == "function" then
         local ok, out = pcall(client, v)
-        if ok and out ~= nil then
+        if ok and Secrets.IsPresent(out) then
             servedBy("AbbreviateNumbers")
             return out
         end
@@ -159,7 +160,7 @@ function Format.Number(v)
         return abbreviate(plain)
     end
     local out = native(v)
-    if out ~= nil then return out end
+    if Secrets.IsPresent(out) then return out end
     servedBy("nothing: the raw value")
     return v
 end
