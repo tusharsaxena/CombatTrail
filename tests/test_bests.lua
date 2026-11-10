@@ -88,6 +88,25 @@ test("bests: a record with a board key but the unknown flag, or no character, ne
     for _, r in ipairs({ flagged, nameless, lostOne }) do assertFalse(NS.Bests.IsBest(r), r.id) end
 end)
 
+-- A non-boss identity on NPC `npc` at `level` (plan Task A2): its board key is Identity.BoardKey's.
+local function onNpc(NS, o, npc, level)
+    local r = rec(o)
+    r.identity = { content = "world", targetName = "Boar", targetCreatureID = npc, targetLevel = level,
+                   difficultyID = 0 }
+    r.boardKey = NS.Identity.BoardKey(r.identity)
+    return r
+end
+
+test("bests: one NPC at two levels is two boards; the same NPC and level share one", function()
+    local NS = fresh()
+    local low, lowFaster = onNpc(NS, { dps = 1000 }, 1985, 70), onNpc(NS, { dps = 2000 }, 1985, 70)
+    local high = onNpc(NS, { dps = 500 }, 1985, 71)
+    save(NS, low, lowFaster, high)
+    assertTrue(low.boardKey ~= high.boardKey, "the level splits the key")
+    assertEqual(NS.Bests.For(low), lowFaster, "the same NPC and level share a board")
+    assertTrue(NS.Bests.IsBest(high), "level 71 is a board of its own, so its slower fight is its best")
+end)
+
 test("bests: a tie goes to the earlier fight", function()
     local NS = fresh()
     local late = rec({ dps = 1000, t = 5000 })

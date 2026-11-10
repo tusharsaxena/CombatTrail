@@ -170,15 +170,19 @@ it passes the recording filters:
 - **Primary target:** the enemy that took the most damage, from the session's `EnemyDamageTaken` sources
   (name, `sourceCreatureID`). The fallback is the target snapshot taken at combat start (DpsRace `Recorder`'s
   secret-safe snapshot).
-- **Content:** `GetInstanceInfo()` (instance type, difficultyID, instance name and map); delve (Retail);
+- **Content:** `GetInstanceInfo()` (instance type, difficultyID, instance name and map) and, since v0.2, the zone and
+  subzone (`GetZoneText`, `GetSubZoneText`: the open world's instance name is the continent); delve (Retail);
   Mythic+ keystone level (Retail, `C_ChallengeMode`); training dummy from a **per-client** dummy creature-ID
   seed list (start from DpsRace `DummyList.lua`; Forever gets its own list, possibly empty by decision).
 - **Who:** character, realm (Forever's two-word names and long realm labels, client-quirks §5), class, spec,
   item level, pet name and family.
 
-**Board key (Claude)** (used for grouping, bests and pace): `encounterID + difficultyID` for boss fights, otherwise
-`creatureID + difficultyID` for the primary target, plus a **tier qualifier** where difficulty alone
-doesn't separate content: the Mythic+ keystone level, the delve tier, and the PvP bracket. The open world uses no
+**Board key (Claude; v0.2 owner decision D3)** (used for grouping, bests and pace): `encounterID + difficultyID` for boss fights
+(a world boss without an encounter: `creatureID + difficultyID`), otherwise the primary target's **NPC ID + level + name**
+`+ difficultyID` (the level is the combat-entry target read, taken when that target is the primary; a sealed level
+is "?"; a named target with no NPC ID keys by its name alone), plus a **tier qualifier** where difficulty alone
+doesn't separate content: the Mythic+ keystone level, the delve tier, and the PvP bracket. Bosses store the target's
+level and NPC ID for display only. The open world uses no
 group-size qualifier. Bests also add character and spec. The client key is part of the character, so boards
 never mix Retail and Forever, and their difficulty IDs never need to be comparable. A fight with no
 readable identity is stored under "Unknown target" and never counts as a best.
@@ -240,7 +244,8 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
 - **Table:** date, class and spec icons, character, ilvl, encounter or target, content chip, length, damage,
   DPS, delta against the best in the group, a trophy on the best. Clicking a row shows its detail. The right-click menu has note,
   share, compare with this fight, and delete (with confirmation).
-- **Detail:** header (who, spec, identity, ilvl, length, date, pet, build, version), stat boxes (damage,
+- **Detail:** header (who and spec, then three meta lines since v0.2: realm, ilvl and the place; the target and its
+  level, difficulty, tier, length and pet; the date, build and version), stat boxes (damage,
   DPS, meter DPS, a Delta or "Leads by" box), the damage chart (this session only), the spell breakdown with pet
   spells tagged, Gear and Talents (Gear view, View talents, Copy import string), Usage (Edit), and buttons for Timeline,
   Compare vs best, Add note, Share and Delete. A fold arrow hides the detail.

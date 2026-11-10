@@ -63,21 +63,49 @@ end
 
 -- ── the header and the figures ──────────────────────────────────────────────────────────────────
 
-test("detail: the header line names the fight in full", function()
+test("detail: the header meta is three lines: where and who, what, the stamp (plan A2)", function()
     local NS = fresh()
     local r = rec(NS, { id = "a", petName = "Grimfang" })
-    local line = NS.ResultsDetail.Meta(r)
-    for _, part in ipairs({ "Vorasius", "The Voidspire", "Heroic", "ilvl 721.4", "1:00", "pet Grimfang",
-                            "build 120105", "v0.1.0" }) do
-        assertTrue(line:find(part, 1, true) ~= nil, "the line has " .. part .. ": " .. line)
+    r.who.realm = "Area 52"
+    local lines = NS.ResultsDetail.Meta(r)
+    assertEqual(#lines, 3, "where/who, what, stamp")
+    local want = { { "Area 52", "ilvl 721.4", "The Voidspire" },
+                   { "Vorasius", "Heroic", "1:00", "pet Grimfang" },
+                   { NS.ResultsTable.Date(r.t, "%d %b %Y %H:%M"), "build 120105", "v0.1.0" } }
+    for k, parts in ipairs(want) do
+        for _, part in ipairs(parts) do
+            assertTrue(lines[k]:find(part, 1, true) ~= nil, ("line %d has %s: %s"):format(k, part, lines[k]))
+        end
     end
+    assertTrue(lines[2]:find("Area 52", 1, true) == nil, "the realm is line 1's alone")
     save(NS, r)
     local pane = detailOn(NS, "a")
-    assertEqual(pane.w.meta:GetText(), line)
+    for k = 1, 3 do assertEqual(pane.w.meta[k]:GetText(), lines[k], "meta line " .. k) end
     assertEqual(pane.w.name:GetText(), r.who.name)
     assertEqual(pane.w.damage.value:GetText(), NS.Format.Number(60000))
     assertEqual(pane.w.dps.value:GetText(), NS.Format.Number(1000))
     assertEqual(pane.w.meterDps.value:GetText(), NS.Format.Number(990))
+end)
+
+test("detail: an open-world fight names its zone, not the continent, and the target's level", function()
+    local NS = fresh()
+    local r = rec(NS, { id = "w" })
+    r.identity = { content = "world", targetName = "Ravenous Boar", targetCreatureID = 1985, targetLevel = 72,
+                   instanceType = "none", instanceName = "Eastern Kingdoms", zone = "Burning Steppes",
+                   subzone = "Flame Crest", difficultyID = 0 }
+    r.boardKey = NS.Identity.BoardKey(r.identity)
+    local lines = NS.ResultsDetail.Meta(r)
+    assertTrue(lines[1]:find("Burning Steppes, Flame Crest", 1, true) ~= nil, "the zone and subzone: " .. lines[1])
+    for k = 1, 3 do
+        assertTrue(lines[k]:find("Eastern Kingdoms", 1, true) == nil, "never the continent: " .. lines[k])
+    end
+    assertTrue(lines[2]:find("Ravenous Boar", 1, true) ~= nil, lines[2])
+    assertTrue(lines[2]:find(NS.L["level %s"]:format("72"), 1, true) ~= nil, "the target's level: " .. lines[2])
+    r.identity.targetLevel = -1
+    assertTrue(NS.ResultsDetail.Meta(r)[2]:find(NS.L["level %s"]:format("??"), 1, true) ~= nil, "a skull level")
+    r.identity.zone, r.identity.subzone = nil, nil
+    assertTrue(NS.ResultsDetail.Meta(r)[1]:find("Eastern Kingdoms", 1, true) == nil,
+               "an old record with no zone omits the place rather than name the continent")
 end)
 
 test("detail: shows Leads by on best", function()

@@ -173,8 +173,24 @@ test("hud: noBest when Bests.For is nil hides pace; a stored best makes it live 
     start(inst, meter, 2, FASTER, 100)
     assertEqual(Hud.State(), "live", "the boar's board now holds a best")
     local best = Hud.View().pace
-    assertTrue(best ~= nil and best.boardKey == "c:1985:0", "paced against the stored best")
+    assertTrue(best ~= nil and best.boardKey == "t:1985:?:Angry Boar:0", "paced against the stored best")
     assertTrue(Hud.__ui().body.live.paceShown == true)
+end)
+
+test("hud: the live pace key is the stored boardKey, level and NPC ID included (plan A2)", function()
+    local inst, meter, Hud = fresh(function(m) m.__unitLevels.target = 72 end)
+    whole(inst, meter, 1, FIGHT, 10, 40)
+    local stored = inst.NS.Recorder.List()[1]
+    assertEqual(stored.boardKey, "t:1985:72:Angry Boar:0", "the record keys the target's level")
+    start(inst, meter, 2, FASTER, 100)
+    local view = Hud.View()
+    assertEqual(inst.NS.Identity.BoardKey(view.ident), stored.boardKey, "the HUD builds the same key in combat")
+    assertTrue(view.pace == stored, "so it paces against the stored fight")
+    finish(inst, 100, 40)
+    -- Another level of the same boar is another board: nothing to pace against.
+    inst.mocks.__unitLevels.target = 73
+    start(inst, meter, 3, FIGHT, 200)
+    assertEqual(Hud.State(), "noBest", "level 73 has no stored fight")
 end)
 
 test("hud: paceAgainst none is always noBest; last paces against the newest fight on the board", function()

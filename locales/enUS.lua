@@ -806,6 +806,7 @@ L["Tick what the fight really used: an item the detection missed, or one it got 
     "Tick what the fight really used: an item the detection missed, or one it got wrong."
 L["Nothing used"] = "Nothing used"
 L["pet %s"] = "pet %s"
+L["level %s"] = "level %s"
 L["Leads by"] = "Leads by"
 L["Personal best"] = "Personal best"
 L["Meter DPS"] = "Meter DPS"

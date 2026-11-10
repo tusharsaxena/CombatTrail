@@ -122,6 +122,14 @@ local function build()
     -- A unit's classification ("normal", "elite", "worldboss", ...) and a pet's family.
     M.__classifications, M.__families = {}, {}
     M.UnitClassification = function(unit) return M.__classifications[unit] end
+    -- A unit's level beyond the player's (the target's, modules/Identity.lua): the player's is the
+    -- capture context's, any other unit's is M.__unitLevels[unit] (nil until a test sets it; -1 is a
+    -- skull level).
+    M.__unitLevels = {}
+    M.UnitLevel = function(unit)
+        if unit == nil or unit == "player" then return M.__context.level end
+        return M.__unitLevels[unit]
+    end
     M.UnitCreatureFamily = function(unit) return M.__families[unit] end
     -- The player's item level: overall, then equipped.
     M.__ilvl = { overall = 640.25, equipped = 638.96 }

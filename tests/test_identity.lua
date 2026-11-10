@@ -24,11 +24,12 @@ local function place(m, fields)
     for k, v in pairs(fields) do m.__instance[k] = v end
 end
 
-local function target(m, guid, name, classification)
+local function target(m, guid, name, classification, level)
     m.__unitExists.target = true
     m.__unitGUIDs.target = guid
     m.__unitNames.target = name
     m.__classifications.target = classification
+    m.__unitLevels.target = level
 end
 
 local function creatureGUID(id) return ("Creature-0-1465-2552-17-%d-00006E5A1B"):format(id) end
@@ -68,7 +69,7 @@ test("identity: M+ trash key carries :k12", function()
     assertEqual(id.content, "mplus")
     assertEqual(id.keystoneLevel, 12)
     assertEqual(id.isBoss, false)
-    assertEqual(NS.Identity.BoardKey(id), "c:218671:8:k12")
+    assertEqual(NS.Identity.BoardKey(id), "t:218671:?:Venture Co. Patron:8:k12")
     restoreProfile()
 end)
 
@@ -79,7 +80,7 @@ test("identity: a dungeon without a keystone is dungeon content with no qualifie
                                    { { name = "Cursed Rooktender", creatureID = 212793, total = 3000 } })
     assertEqual(id.content, "dungeon")
     assertNil(id.keystoneLevel)
-    assertEqual(NS.Identity.BoardKey(id), "c:212793:1")
+    assertEqual(NS.Identity.BoardKey(id), "t:212793:?:Cursed Rooktender:1")
     restoreProfile()
 end)
 
@@ -93,7 +94,7 @@ test("identity: delve key carries :d8 (retail)", function()
     assertEqual(id.isDelve, true)
     assertEqual(id.delveTier, 8)
     assertEqual(id.difficultyName, "Delves")
-    assertEqual(NS.Identity.BoardKey(id), "c:207454:208:d8")
+    assertEqual(NS.Identity.BoardKey(id), "t:207454:?:Spinshroom:208:d8")
     restoreProfile()
 end)
 
@@ -104,7 +105,7 @@ test("identity: a scenario that is no delve is scenario content", function()
                                    { { name = "Scenario Mob", creatureID = 5000, total = 10 } })
     assertEqual(id.content, "scenario")
     assertEqual(id.isDelve, false)
-    assertEqual(NS.Identity.BoardKey(id), "c:5000:12")
+    assertEqual(NS.Identity.BoardKey(id), "t:5000:?:Scenario Mob:12")
     restoreProfile()
 end)
 
@@ -116,7 +117,7 @@ test("identity: bg key carries bracket", function()
                                    { { name = "Drek'Thar", creatureID = 11946, total = 9000 } })
     assertEqual(id.content, "bg")
     assertEqual(id.pvpBracket, "40")
-    assertEqual(NS.Identity.BoardKey(id), "c:11946:0:p40")
+    assertEqual(NS.Identity.BoardKey(id), "t:11946:?:Drek'Thar:0:p40")
     -- Players: no creature, so the board is the battleground's own, still with the bracket.
     m.__pvp.ratedBG = true
     place(m, { name = "Warsong Gulch", maxPlayers = 10, instanceID = 489 })
@@ -151,16 +152,150 @@ test("identity: open world key has no qualifier", function()
     assertNil(id.keystoneLevel)
     assertNil(id.delveTier)
     assertNil(id.pvpBracket)
-    assertEqual(NS.Identity.BoardKey(id), "c:1985:0")
+    assertEqual(NS.Identity.BoardKey(id), "t:1985:?:Ravenous Boar:0")
     restoreProfile()
 end)
 
-test("identity: a player target in the open world has a name and no board", function()
+test("identity: a named target with no NPC ID falls back to the name-only key", function()
     local _, NS = fresh()
     local id = NS.Identity.Resolve({ snapshot = NS.Identity.Snapshot() }, nil, { { name = "Gankster", total = 400 } })
     assertEqual(id.targetName, "Gankster")
-    assertNil(NS.Identity.BoardKey(id), "a player is no board outside PvP instances")
+    assertNil(id.targetCreatureID)
+    assertEqual(NS.Identity.BoardKey(id), "n:Gankster:0", "plan A2: name-only when there is no NPC ID")
     restoreProfile()
+end)
+
+-- ── the target's level and NPC ID (plan Task A2) ───────────────────────────────────────────────
+
+-- One open-world fight on `npc` targeted at `level` (nil: no level), resolved over the meter's row.
+local function boarFight(NS, m, npc, level, name)
+    target(m, creatureGUID(npc), name or "Ravenous Boar", "normal", level)
+    local fight = { snapshot = NS.Identity.Snapshot() }
+    return NS.Identity.Resolve(fight, nil, { { name = name or "Ravenous Boar", creatureID = npc, total = 400 } }), fight
+end
+
+test("identity: the snapshot reads the target's level", function()
+    local _, NS, m = fresh()
+    target(m, creatureGUID(1985), "Ravenous Boar", "normal", 72)
+    local snap = NS.Identity.Snapshot()
+    assertEqual(snap.target.level, 72)
+    assertEqual(snap.target.creatureID, 1985)
+    restoreProfile()
+end)
+
+test("identity: the key is t:<npcID>:<level>:<name>:<difficulty>", function()
+    local _, NS, m = fresh()
+    local id = boarFight(NS, m, 1985, 72)
+    assertEqual(id.targetLevel, 72)
+    assertEqual(id.targetCreatureID, 1985)
+    assertEqual(NS.Identity.BoardKey(id), "t:1985:72:Ravenous Boar:0")
+    restoreProfile()
+end)
+
+test("identity: one NPC at two levels is two boards; the same NPC and level share one", function()
+    local _, NS, m = fresh()
+    local low, high, again = boarFight(NS, m, 1985, 70), boarFight(NS, m, 1985, 71), boarFight(NS, m, 1985, 70)
+    local B = NS.Identity.BoardKey
+    assertTrue(B(low) ~= B(high), "levels 70 and 71 split the board")
+    assertEqual(B(low), B(again), "the same NPC and level share it")
+    restoreProfile()
+end)
+
+test("identity: a skull level keys as -1", function()
+    local _, NS, m = fresh()
+    local id = boarFight(NS, m, 1985, -1)
+    assertEqual(id.targetLevel, -1)
+    assertEqual(NS.Identity.BoardKey(id), "t:1985:-1:Ravenous Boar:0")
+    restoreProfile()
+end)
+
+test("identity: the level is taken only when the primary is the snapshot's target", function()
+    local _, NS, m = fresh()
+    target(m, creatureGUID(1985), "Ravenous Boar", "normal", 72)
+    local id = NS.Identity.Resolve({ snapshot = NS.Identity.Snapshot() }, nil,
+                                   { { name = "Angry Wolf", creatureID = 2000, total = 900 } })
+    assertEqual(id.targetCreatureID, 2000)
+    assertNil(id.targetLevel, "the boar's level is not the wolf's")
+    assertEqual(NS.Identity.BoardKey(id), "t:2000:?:Angry Wolf:0")
+    restoreProfile()
+end)
+
+test("identity: a boss fight's key ignores the level and the NPC ID, which stay for display", function()
+    local _, NS, m = fresh()
+    place(m, { name = "Liberation of Undermine", type = "raid", difficultyID = 15, maxPlayers = 30,
+               instanceID = 2769 })
+    target(m, creatureGUID(229953), "Chrome King Gallywix", "worldboss", -1)
+    local fight = { encounter = { id = 3176, name = "Gallywix", difficultyID = 15 }, snapshot = NS.Identity.Snapshot() }
+    local id = NS.Identity.Resolve(fight, nil, { { name = "Chrome King Gallywix", creatureID = 229953, total = 9 } })
+    assertEqual(id.targetLevel, -1, "stored for display")
+    assertEqual(id.targetCreatureID, 229953)
+    assertEqual(NS.Identity.BoardKey(id), "e:3176:15")
+    target(m, creatureGUID(229953), "Chrome King Gallywix", "worldboss", 83)
+    fight.snapshot = NS.Identity.Snapshot()
+    assertEqual(NS.Identity.BoardKey(NS.Identity.Resolve(fight, nil, {})), "e:3176:15", "another level, same board")
+    restoreProfile()
+end)
+
+test("identity: a world boss keeps its creature key, level aside", function()
+    local _, NS, m = fresh()
+    target(m, creatureGUID(221224), "Aggregation of Horrors", "worldboss", -1)
+    local id = NS.Identity.Resolve({ snapshot = NS.Identity.Snapshot() }, nil,
+                                   { { name = "Aggregation of Horrors", creatureID = 221224, total = 9 } })
+    assertEqual(id.isBoss, true)
+    assertEqual(id.targetLevel, -1)
+    assertEqual(NS.Identity.BoardKey(id), "c:221224:0")
+    restoreProfile()
+end)
+
+test("identity: a sealed level or GUID leaves the fields nil and never raises", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local _, NS, m = fresh()
+        target(m, creatureGUID(1985), "Ravenous Boar", "normal", T.secret(72))
+        local snap = NS.Identity.Snapshot()
+        assertNil(snap.target.level, "a sealed level is absent")
+        assertEqual(snap.target.creatureID, 1985)
+        local id = NS.Identity.Resolve({ snapshot = snap }, nil,
+                                       { { name = "Ravenous Boar", creatureID = 1985, total = 400 } })
+        assertNil(id.targetLevel)
+        assertEqual(NS.Identity.BoardKey(id), "t:1985:?:Ravenous Boar:0", "a sealed level keys as ?")
+        m.__unitGUIDs.target = T.secret(creatureGUID(1985))
+        snap = NS.Identity.Snapshot()
+        assertNil(snap.target.creatureID, "a sealed GUID is never parsed")
+        assertNil(snap.target.level)
+        id = NS.Identity.Resolve({ snapshot = snap }, nil, {})
+        assertNil(id.targetCreatureID)
+        assertNil(id.targetLevel)
+        assertEqual(NS.Identity.BoardKey(id), "n:Ravenous Boar:0")
+    end)
+    restore()
+    restoreProfile()
+    assertTrue(ok, tostring(err))
+end)
+
+test("identity: where carries the zone and subzone; sealed or raising ones are absent", function()
+    local _, NS, m = fresh()
+    m.__context.zone, m.__context.subZone = "Burning Steppes", "Flame Crest"
+    local snap = NS.Identity.Snapshot()
+    assertEqual(snap.where.zone, "Burning Steppes")
+    assertEqual(snap.where.subzone, "Flame Crest")
+    local id = NS.Identity.Resolve({ snapshot = snap }, nil, {})
+    assertEqual(id.zone, "Burning Steppes")
+    assertEqual(id.subzone, "Flame Crest")
+    m.__context.subZone = ""
+    assertNil(NS.Identity.Snapshot().where.subzone, "an empty subzone is none")
+    m.GetZoneText = function() error("no zone") end
+    m.GetSubZoneText = nil
+    snap = NS.Identity.Snapshot()
+    assertNil(snap.where.zone)
+    assertNil(snap.where.subzone)
+    local restore = T.installSecretValue()
+    m.GetZoneText = function() return T.secret("Burning Steppes") end
+    local okSealed, sealed = pcall(NS.Identity.Snapshot)
+    restore()
+    restoreProfile()
+    assertTrue(okSealed, tostring(sealed))
+    assertNil(sealed.where.zone, "a secret zone is dropped")
 end)
 
 -- ── training dummies ───────────────────────────────────────────────────────────────────────────
@@ -185,7 +320,7 @@ test("identity: dummy creature -> content dummy", function()
                                       { { name = "Raider's Training Dummy", creatureID = id, total = 9000 } })
     assertEqual(ident.content, "dummy")
     assertEqual(ident.isBoss, false)
-    assertEqual(NS.Identity.BoardKey(ident), "c:31146:0")
+    assertEqual(NS.Identity.BoardKey(ident), "t:31146:?:Raider's Training Dummy:0")
     restoreProfile()
 end)
 
@@ -331,7 +466,7 @@ test("identity: forever: delve/mplus fields never set", function()
     assertNil(id.delveTier)
     assertNil(id.keystoneLevel)
     assertEqual(id.content, "scenario")
-    assertEqual(NS.Identity.BoardKey(id), "c:5000:208")
+    assertEqual(NS.Identity.BoardKey(id), "t:5000:?:Mob:208")
     place(m, { type = "party", difficultyID = 8, name = "A Dungeon" })
     id = NS.Identity.Resolve({ snapshot = NS.Identity.Snapshot() }, nil, { { name = "Mob", creatureID = 5000, total = 10 } })
     assertEqual(id.content, "dungeon")

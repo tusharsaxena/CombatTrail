@@ -63,28 +63,52 @@ local function Fights() return NS.ResultsFights end
 local function who(record) return type(record.who) == "table" and record.who or {} end
 local function ident(record) return type(record.identity) == "table" and record.identity or {} end
 
---- The header's meta line (spec §7): "Vorasius · The Voidspire · Heroic · Mythic+ 12 · ilvl 721.4 ·
---- 4:12 · 10 Nov 2026 21:14 · pet Grimfang · build 120105 · v0.1.0", every part the record has.
---- @param record table
---- @return string
-function Detail.Meta(record)
-    local i, w = ident(record), who(record)
-    local parts = { Fights().TargetName(record) }
-    if i.instanceName and i.instanceName ~= parts[1] then parts[#parts + 1] = i.instanceName end
-    if type(i.difficultyName) == "string" and i.difficultyName ~= "" then parts[#parts + 1] = i.difficultyName end
-    parts[#parts + 1] = Fights().TierText(record)
-    if type(w.ilvl) == "number" then parts[#parts + 1] = L["ilvl %s"]:format(Tbl().Ilvl(w.ilvl)) end
-    parts[#parts + 1] = NS.Format.Length(record.duration)
-    parts[#parts + 1] = Tbl().Date(record.t, "%d %b %Y %H:%M")
-    if w.petName then parts[#parts + 1] = L["pet %s"]:format(w.petName) end
-    if record.build then parts[#parts + 1] = L["build %s"]:format(tostring(record.build)) end
-    if record.version then parts[#parts + 1] = "v" .. tostring(record.version) end
+-- `parts` joined by " · ", the absent and empty ones left out (a part may be nil).
+local function joinParts(parts, n)
     local out = {}
-    for k = 1, #parts + 1 do
+    for k = 1, n do
         local s = parts[k]
         if type(s) == "string" and s ~= "" then out[#out + 1] = s end
     end
     return table.concat(out, SEP)
+end
+
+-- Where the fight was: an instance's name (when it is not the target's), or, in the open world (where
+-- the instance name is the continent), the zone and its subzone. An old record with no zone names none.
+local function placeOf(record, i)
+    if i.instanceType == "none" then
+        if type(i.zone) ~= "string" then return nil end
+        if type(i.subzone) == "string" and i.subzone ~= "" then return i.zone .. ", " .. i.subzone end
+        return i.zone
+    end
+    if i.instanceName ~= Fights().TargetName(record) then return i.instanceName end
+    return nil
+end
+
+-- The target's level as the meta line shows it: "level 72", "level ??" for a skull, nil for none.
+local function levelText(i)
+    local lv = i.targetLevel
+    if type(lv) ~= "number" then return nil end
+    return L["level %s"]:format(lv < 0 and "??" or ("%d"):format(lv))
+end
+
+--- The header's meta (spec §7, v0.2 plan Task A2), three lines in DPS Race's shape:
+---   1. where and who: "Area 52 · ilvl 721.4 · The Voidspire" (the zone and subzone in the open world);
+---   2. what: "Vorasius · level 72 · Heroic · Mythic+ 12 · 4:12 · pet Grimfang";
+---   3. the stamp: "10 Nov 2026 21:14 · build 120105 · v0.1.0".
+--- Every part the record has; a line with none is "".
+--- @param record table
+--- @return string[] lines  { where, what, stamp }
+function Detail.Meta(record)
+    local i, w = ident(record), who(record)
+    local ilvl = type(w.ilvl) == "number" and L["ilvl %s"]:format(Tbl().Ilvl(w.ilvl)) or nil
+    local where = joinParts({ w.realm, ilvl, placeOf(record, i) }, 3)
+    local what = joinParts({ Fights().TargetName(record), levelText(i), i.difficultyName, Fights().TierText(record),
+                             NS.Format.Length(record.duration), w.petName and L["pet %s"]:format(w.petName) }, 6)
+    local stamp = joinParts({ Tbl().Date(record.t, "%d %b %Y %H:%M"),
+                              record.build and L["build %s"]:format(tostring(record.build)),
+                              record.version and ("v" .. tostring(record.version)) }, 3)
+    return { where, what, stamp }
 end
 
 --- The fight's board among `records` as a Delta context (the fallback when the list's filters leave
@@ -206,15 +230,19 @@ local function buildHeader(p, c)
     w.bestText = Style.Text(w.best, FONT.TEXT, C.gold, "RIGHT")
     w.bestText:SetPoint("RIGHT", w.bestIcon, "LEFT", -4, 0)
     w.bestText:SetText(L["Personal best"])
-    w.meta = Style.Text(c, FONT.TEXT, C.dim)
-    w.meta:SetWordWrap(true)
-    w.meta:SetJustifyV("TOP")
+    w.meta, w.metaHover = {}, {}
+    for k = 1, 3 do
+        local line = Style.Text(c, FONT.TEXT, C.dim)
+        line:SetWordWrap(true)
+        line:SetJustifyV("TOP")
+        w.meta[k] = line
+        w.metaHover[k] = hoverOver(p, line, function(r) return NS.ResultsTips.Detail("meta", r) end)
+    end
     w.damage = kpi(p, L["Damage"], C.text, "damage")
     w.dps = kpi(p, L["DPS"], C.green, "dps")
     w.meterDps = kpi(p, L["Meter DPS"], C.dim, "meterDps")
     w.deltaBox = kpi(p, L["Delta"], C.dim, "delta")
     w.bestHover = hoverOver(p, w.best, function() return { L["Personal best"], L["This fight holds your best DPS on its board."] } end)
-    w.metaHover = hoverOver(p, w.meta, function(r) return NS.ResultsTips.Detail("meta", r) end)
 end
 
 local function buildChart(p, c)
@@ -334,7 +362,8 @@ function Pane:fillHeader(record)
     Style.Paint(w.name, Tbl().ClassColor(me.class))
     w.specName:SetText(specName and (SEP:sub(2) .. specName) or "")
     w.best:SetShown(NS.ResultsSource.IsBest(record))
-    w.meta:SetText(Detail.Meta(record))
+    local meta = Detail.Meta(record)
+    for k = 1, 3 do w.meta[k]:SetText(meta[k]) end
 end
 
 function Pane:fillDelta(record)
@@ -448,11 +477,16 @@ function Pane:layoutHeader(y, cw)
     w.best:ClearAllPoints()
     w.best:SetPoint("RIGHT", c, "TOPLEFT", cw, y - Detail.ICON / 2)
     y = y - Detail.ICON - 6
-    place(w.meta, c, 0, y)
-    w.meta:SetWidth(cw)
-    local lines = wrappedLines(w.meta:GetText() or "", cw, 5.4)
-    w.meta:SetHeight(lines * Detail.LINE_H)
-    y = y - lines * Detail.LINE_H - 8
+    for k = 1, 3 do
+        local line = w.meta[k]
+        local text = line:GetText() or ""
+        local lines = text == "" and 0 or wrappedLines(text, cw, 5.4)
+        place(line, c, 0, y)
+        line:SetWidth(cw)
+        line:SetHeight(math.max(1, lines * Detail.LINE_H))
+        y = y - lines * Detail.LINE_H
+    end
+    y = y - 8
     local box = math.floor((cw - 3 * Detail.KPI_GAP) / 4)
     for i, k in ipairs({ w.damage, w.dps, w.meterDps, w.deltaBox }) do
         place(k.frame, c, (i - 1) * (box + Detail.KPI_GAP), y)

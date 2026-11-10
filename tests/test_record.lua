@@ -128,7 +128,7 @@ test("record: a real fight becomes a stored record with the spec §5 fields", fu
     assertEqual(spells[1].isPet, false)
     assertEqual(r.identity.targetName, "Angry Boar", "the enemy that took the most")
     assertEqual(r.identity.otherTargets, 1)
-    assertEqual(r.boardKey, "c:1985:0")
+    assertEqual(r.boardKey, "t:1985:?:Angry Boar:0")
     assertEqual(r.who.client, NS.Compat.ClientKey())
     assertEqual(type(r.who.name), "string")
     assertEqual(type(r.t), "number")

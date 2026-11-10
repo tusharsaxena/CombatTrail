@@ -15,13 +15,20 @@ local _, NS = ...
 --     NS.Meter.ReadEnemies, highest first; the snapshot's target when the list is empty), the content
 --     and the boss flag. Without a snapshot, where is read at that moment.
 --
--- THE BOARD KEY (spec §5): "e:<encounterID>:<difficultyID>" for an encounter, else
--- "c:<creatureID>:<difficultyID>" for the primary target, then one tier qualifier where difficulty
--- alone does not separate content: ":k<keystone level>", ":d<delve tier>" or ":p<PvP bracket>". The
--- open world takes none. In a battleground or an arena the primary target is usually a player, who
--- has no creature ID: there the board is the instance's, "i:<instanceID>:<difficultyID>:p<bracket>"
--- (the plan names only "e:" and "c:"; a PvP fight against players would otherwise never have a
--- board). A fight with no readable target is "Unknown target" and has no key, so it is never a best.
+-- THE BOARD KEY (spec §5, v0.2 plan Task A2 and decision D3): "e:<encounterID>:<difficultyID>" for
+-- an encounter; "c:<creatureID>:<difficultyID>" for a world boss (a boss without an encounter, whose
+-- level is no part of its board); else the primary target by NPC ID, level and name,
+-- "t:<npcID>:<level|?>:<name>:<difficultyID>". Then one tier qualifier where difficulty alone does not
+-- separate content: ":k<keystone level>", ":d<delve tier>" or ":p<PvP bracket>". The open world
+-- takes none. In a battleground or an arena the primary target is usually a player, who has no
+-- creature ID: there the board is the instance's, "i:<instanceID>:<difficultyID>:p<bracket>". Any
+-- other named target with no NPC ID falls back to the name alone, "n:<name>:<difficultyID>". A fight
+-- with no readable target is "Unknown target" and has no key, so it is never a best.
+--
+-- THE LEVEL in the key is the combat-entry snapshot's (the target's UnitLevel; -1 is a skull), taken
+-- only when the snapshot's target is the primary (their plain creature IDs are equal). The HUD builds
+-- its pace key from the same snapshot in combat (Hud.PaceRecord), so the live key and the stored one
+-- agree. A level sealed at entry is "?" in both, and is never re-read after combat.
 --
 -- CLIENTS (clients-§4). Delves, Mythic+ and arenas are Retail-only: on WoW Forever isDelve,
 -- delveTier and keystoneLevel are never set, and an arena is filed as "bg" content. NS.Compat answers
@@ -145,12 +152,14 @@ end
 
 -- ── the target ──────────────────────────────────────────────────────────────────────────────────
 
--- The target at combat entry: { name, creatureID, classification, isDummy }, or nil with no target.
+-- The target at combat entry: { name, creatureID, level, classification, isDummy }, or nil with no
+-- target. The level is plain or absent (a sealed one is never compared); -1 is a skull level.
 local function readTarget()
     if not Secrets.PlainTruth(ask(UnitExists, "target")) then return nil end
     local t = {
         creatureID     = creatureOf(ask(UnitGUID, "target")),
         name           = nameOf("target"),
+        level          = Secrets.PlainNumber(ask(UnitLevel, "target")),
         classification = Secrets.PlainString(ask(UnitClassification, "target")),
     }
     local dummy = NS.DummyName(t.creatureID)
@@ -187,8 +196,16 @@ local function readRetailTiers(w)
     end
 end
 
+-- A zone text, plain and non-empty, or nil.
+local function zoneText(fn)
+    local text = Secrets.PlainString((ask(fn)))
+    if text == "" then return nil end
+    return text
+end
+
 -- Where the player is: { instanceType, instanceName, instanceID, difficultyID, difficultyName,
--- maxPlayers, isDelve, delveTier, keystoneLevel, pvpBracket }.
+-- maxPlayers, isDelve, delveTier, keystoneLevel, pvpBracket, zone, subzone }. In the open world the
+-- instance's name is the continent; the zone and subzone (GetZoneText, GetSubZoneText) name the place.
 local function readWhere()
     local name, instanceType, difficultyID, difficultyName, maxPlayers, _, _, instanceID = ask(GetInstanceInfo)
     local w = {
@@ -200,6 +217,7 @@ local function readWhere()
         instanceID     = Secrets.PlainNumber(instanceID),
     }
     if w.difficultyName == "" then w.difficultyName = nil end
+    w.zone, w.subzone = zoneText(GetZoneText), zoneText(GetSubZoneText)
     readRetailTiers(w)
     w.pvpBracket = bracketOf(w)
     return w
@@ -255,6 +273,14 @@ local function contentOf(ident)
     return CONTENT_OF_TYPE[kind] or "world"
 end
 
+-- The snapshot target's level when it is the primary `first` (the meter's list carries no level):
+-- the same table, or plain creature IDs that are equal. Both IDs passed Secrets on the way in.
+local function levelOf(first, t)
+    if type(t) ~= "table" or t.level == nil then return nil end
+    if first == t or (first.creatureID ~= nil and first.creatureID == t.creatureID) then return t.level end
+    return nil
+end
+
 -- The primary target onto `ident`: the meter's, else the snapshot's, else the encounter's name (an
 -- encounter is a readable identity, spec §5, so it is never unknown), else Unknown target.
 local function resolveTarget(ident, snap, enemies)
@@ -272,6 +298,7 @@ local function resolveTarget(ident, snap, enemies)
         return
     end
     ident.targetCreatureID = first.creatureID
+    ident.targetLevel = levelOf(first, snap.target)
     ident.targetName = first.name or NS.DummyName(first.creatureID) or ident.encounterName
     if ident.targetName == nil then ident.targetName = L["Unknown target"] end
 end
@@ -286,15 +313,15 @@ local function isBoss(ident, snap)
 end
 
 local WHERE_FIELDS = { "instanceType", "instanceName", "instanceID", "isDelve", "delveTier", "keystoneLevel",
-                       "pvpBracket" }
+                       "pvpBracket", "zone", "subzone" }
 
 --- The fight's identity, out of plain values (after combat).
 --- @param fight table  the fight (modules/Fight.lua): its encounter and snapshot are read
 --- @param _ table|nil  the final read (Meter.ReadFinal's shape); the identity takes nothing from it
 --- @param enemies table|nil  Meter.ReadEnemies' list, highest first ({} or nil: none readable)
 --- @return table identity  { encounterID?, encounterName?, difficultyID, difficultyName?, instanceType,
----   instanceName?, instanceID?, isDelve?, delveTier?, keystoneLevel?, pvpBracket?, content,
----   targetName, targetCreatureID?, otherTargets, isBoss, unknown? }
+---   instanceName?, instanceID?, isDelve?, delveTier?, keystoneLevel?, pvpBracket?, zone?, subzone?,
+---   content, targetName, targetCreatureID?, targetLevel?, otherTargets, isBoss, unknown? }
 function Identity.Resolve(fight, _, enemies)
     fight = type(fight) == "table" and fight or {}
     local snap = type(fight.snapshot) == "table" and fight.snapshot or {}
@@ -312,22 +339,30 @@ function Identity.Resolve(fight, _, enemies)
     return ident
 end
 
+-- The key's head, before its tier qualifier, or nil: see THE BOARD KEY above.
+local function keyHead(ident, diff)
+    if ident.encounterID then return ("e:%d:%d"):format(ident.encounterID, diff) end
+    local npc = ident.targetCreatureID
+    if npc and ident.isBoss then return ("c:%d:%d"):format(npc, diff) end
+    if ident.unknown then return nil end
+    local name = type(ident.targetName) == "string" and ident.targetName or nil
+    if npc then
+        local level = type(ident.targetLevel) == "number" and ("%d"):format(ident.targetLevel) or "?"
+        return ("t:%d:%s:%s:%d"):format(npc, level, name or "", diff)
+    end
+    if ident.pvpBracket and ident.instanceID then return ("i:%d:%d"):format(ident.instanceID, diff) end
+    if name then return ("n:%s:%d"):format(name, diff) end
+    return nil
+end
+
 --- The board key of an identity (spec §5), or nil when its target is unknown.
 --- @param ident table|nil  an Identity.Resolve result
 --- @return string|nil
 function Identity.BoardKey(ident)
     if type(ident) ~= "table" then return nil end
     local diff = ident.difficultyID or 0
-    local key
-    if ident.encounterID then
-        key = ("e:%d:%d"):format(ident.encounterID, diff)
-    elseif ident.targetCreatureID then
-        key = ("c:%d:%d"):format(ident.targetCreatureID, diff)
-    elseif ident.pvpBracket and ident.instanceID and not ident.unknown then
-        key = ("i:%d:%d"):format(ident.instanceID, diff)
-    else
-        return nil
-    end
+    local key = keyHead(ident, diff)
+    if not key then return nil end
     if ident.keystoneLevel then return key .. ":k" .. ident.keystoneLevel end
     if ident.delveTier then return key .. ":d" .. ident.delveTier end
     if ident.pvpBracket then return key .. ":p" .. ident.pvpBracket end

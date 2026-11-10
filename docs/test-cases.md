@@ -362,7 +362,7 @@ Total.
 - fight: a stand-down mid-fight drops the fight, its timers and every registration
 - fight: an encounter that starts in combat while idle starts a fight
 
-### test_identity.lua (23)
+### test_identity.lua (32)
 
 - identity: boss fight key e:3176:15
 - identity: M+ trash key carries :k12
@@ -372,7 +372,16 @@ Total.
 - identity: bg key carries bracket
 - identity: an arena is arena content on retail, keyed by bracket
 - identity: open world key has no qualifier
-- identity: a player target in the open world has a name and no board
+- identity: a named target with no NPC ID falls back to the name-only key
+- identity: the snapshot reads the target's level
+- identity: the key is t:<npcID>:<level>:<name>:<difficulty>
+- identity: one NPC at two levels is two boards; the same NPC and level share one
+- identity: a skull level keys as -1
+- identity: the level is taken only when the primary is the snapshot's target
+- identity: a boss fight's key ignores the level and the NPC ID, which stay for display
+- identity: a world boss keeps its creature key, level aside
+- identity: a sealed level or GUID leaves the fields nil and never raises
+- identity: where carries the zone and subzone; sealed or raising ones are absent
 - identity: the dummy list is picked once, per client; Forever's is empty by decision
 - identity: dummy creature -> content dummy
 - identity: a dummy found only by the snapshot's target is still a dummy
@@ -466,12 +475,13 @@ Total.
 - filters: scenarios are dropped by default, a kind without a toggle too
 - filters: the short check comes before the content check
 
-### test_bests.lua (8)
+### test_bests.lua (9)
 
 - bests: best per character×spec×boardKey
 - bests: For with exclude answers the runner-up
 - bests: unknown target never a best
 - bests: a record with a board key but the unknown flag, or no character, never counts
+- bests: one NPC at two levels is two boards; the same NPC and level share one
 - bests: a tie goes to the earlier fight
 - bests: BestCurve names the best fight's id for a board, a character and a spec
 - bests: the boards follow a save and a delete
@@ -532,12 +542,13 @@ Total.
 - slices: Seed fills in the step, count and filled a store leaves out
 - slices: a saved fight's store keeps its record id, not the fight table
 
-### test_hud_states.lua (23)
+### test_hud_states.lua (24)
 
 - hud: the states and the defaults are the plan's
 - hud: auto: hidden -> live on FIGHT_STARTED's first hit
 - hud: the live figures are the meter's handles, copied and never inspected
 - hud: noBest when Bests.For is nil hides pace; a stored best makes it live with pace
+- hud: the live pace key is the stored boardKey, level and NPC ID included (plan A2)
 - hud: paceAgainst none is always noBest; last paces against the newest fight on the board
 - hud: over card after FIGHT_ENDED final with saved chip
 - hud: a faster fight on the board says New best with its gain
@@ -642,9 +653,10 @@ Total.
 - results: a saved fight redraws a shown list
 - results: every cell and header has a tooltip
 
-### test_results_detail.lua (13)
+### test_results_detail.lua (14)
 
-- detail: the header line names the fight in full
+- detail: the header meta is three lines: where and who, what, the stamp (plan A2)
+- detail: an open-world fight names its zone, not the continent, and the target's level
 - detail: shows Leads by on best
 - detail: a fight the filters leave out falls back to its board
 - detail: missing slices shows the session-only note
@@ -924,18 +936,18 @@ Total.
 | test_probe.lua | 25 |
 | test_meter.lua | 33 |
 | test_fight.lua | 28 |
-| test_identity.lua | 23 |
+| test_identity.lua | 32 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 7 |
 | test_loadouts.lua | 8 |
 | test_filters.lua | 10 |
-| test_bests.lua | 8 |
+| test_bests.lua | 9 |
 | test_retention.lua | 13 |
 | test_record.lua | 15 |
 | test_slices.lua | 18 |
-| test_hud_states.lua | 23 |
+| test_hud_states.lua | 24 |
 | test_hud_pace.lua | 5 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 5 |
@@ -943,7 +955,7 @@ Total.
 | test_hud_page.lua | 14 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 22 |
-| test_results_detail.lua | 13 |
+| test_results_detail.lua | 14 |
 | test_share.lua | 5 |
 | test_timeline.lua | 12 |
 | test_compare.lua | 7 |
@@ -965,4 +977,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **735** |
+| **Total** | **747** |

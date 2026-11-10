@@ -67,10 +67,11 @@ files["core/Compat.lua"] = {
 -- `/ct probe` reaches the meter through NS.Meter and reads the meter enums itself, for the report.
 files["modules/Meter.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
 files["modules/Probe.lua"] = { read_globals = { "Enum" } }
--- A fight's identity: the player, the target and the instance (the version-variant reads are Compat's).
+-- A fight's identity: the player, the target, the instance and the zone (the version-variant reads are
+-- Compat's).
 files["modules/Identity.lua"] = {
     read_globals = { "UnitClass", "UnitLevel", "UnitClassification", "UnitCreatureFamily", "GetAverageItemLevel",
-                     "GetInstanceInfo", "GetDifficultyInfo" },
+                     "GetInstanceInfo", "GetDifficultyInfo", "GetZoneText", "GetSubZoneText" },
 }
 
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL

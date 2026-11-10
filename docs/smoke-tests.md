@@ -144,6 +144,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-R11 | Both | The detail's four boxes at 440 px | Damage, DPS, Meter DPS and Delta fit |
 | SM-CT-R12 | Retail | The Spec dropdown, column and grouping | Present |
 | SM-CT-R13 | Forever | The Spec dropdown, column and grouping, and the Mythic+, delve and arena content filters | Absent on WoW Forever |
+| SM-CT-R14 | Both | An open-world fight, then the same mob at another level (or a Retail mob after a level-up), then `/ct results` | The detail's three meta lines name the realm, ilvl and the zone (never the continent), the target with its level, and the stamp; the two levels group as two boards, and a second fight at one level paces against the first on the HUD |
 
 ## 6. Timeline, compare and gear view
 
