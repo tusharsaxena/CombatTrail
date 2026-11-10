@@ -21,7 +21,7 @@ local _, NS = ...
 -- and remembers the last PLAIN one, so the after-combat read still finds the pet that fought after it
 -- was dismissed. PET_SEPARATE is the seam for a client that folds the pet into its owner: false, and
 -- ReadFinal reads no pet source and tags the player's spells that NS.Casts.PetSpellSet() names as the
--- pet's instead (plan Task 2.4 builds that set; until then nothing is tagged). A pet read that raises
+-- pet's instead (ReadFinal also does this whenever the pet's own source comes back empty) (plan Task 2.4 builds that set; until then nothing is tagged). A pet read that raises
 -- costs only the pet: the record keeps the player's part with no pet part, while a SEALED pet read
 -- still seals the whole read, so the settle tries again.
 --
@@ -328,13 +328,16 @@ local function readPetSource(acc, id, petGUID)
     return part
 end
 
--- PET_SEPARATE = false: move the player's spells that the cast set names to a pet part.
+local AUTO_ATTACK = 6603
+
+-- No pet source (PET_SEPARATE = false, or an empty one): move the player's spells that the cast set
+-- names to a pet part. Auto Attack stays the player's, since a folded source cannot tell whose it is.
 local function splitFolded(player)
     local set = NS.Casts and NS.Casts.PetSpellSet and NS.Casts.PetSpellSet()
     if type(set) ~= "table" then return nil end
     local mine, theirs, petTotal = {}, {}, 0
     for _, sp in ipairs(player.spells) do
-        if set[sp.spellID] then
+        if set[sp.spellID] and sp.spellID ~= AUTO_ATTACK then -- both melee as Auto Attack: the owner's
             theirs[#theirs + 1] = sp
             petTotal = petTotal + sp.total
         else
@@ -405,7 +408,9 @@ function Meter.ReadFinal(id, petGUID)
     local pet
     if Meter.PET_SEPARATE then pet = readPetSource(acc, id, petFor(petGUID)) end
     if acc.sealed then return nil, "sealed" end
-    if not Meter.PET_SEPARATE and not noPet(petGUID) then pet = splitFolded(player) end
+    -- No pet source of its own (the folding seam, or a client that folds: Forever's probe, 2026-11-10,
+    -- showed an empty pet source): tag the pet's spells inside the player's source instead.
+    if pet == nil and not noPet(petGUID) then pet = splitFolded(player) end
 
     local p, q = finish(player, duration), finish(pet, duration)
     return { duration = duration, player = p, pet = q, merged = merge(p, q) }

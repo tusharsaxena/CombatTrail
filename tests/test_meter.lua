@@ -454,6 +454,21 @@ test("meter: amountPerSecond nil → dps computed as total/duration in ReadFinal
     assertEqual(NS.Meter.ReadFinal(18).merged.dps, 0, "a zero-length session divides by nothing")
 end)
 
+test("meter: an empty pet source falls back to tagging the pet's spells in the player's", function()
+    local NS, meter = withPet()
+    assertTrue(NS.Meter.PET_SEPARATE == true)
+    NS.Casts = { PetSpellSet = function() return { [17253] = true, [6603] = true } end }
+    local folded = copy(FIGHT, { damage = 10000, pet = false, spells = {
+        { id = 6603, dmg = 500, dps = 16 }, { id = 17253, dmg = 1000, dps = 33 }, { id = 11366, dmg = 8500, dps = 280 },
+    } })
+    meter.SetSession(19, folded)
+    local r = NS.Meter.ReadFinal(19)
+    assertEqual(r.merged.total, 10000, "counted once")
+    assertEqual(r.pet.total, 1000, "the pet's spell moved to the pet part")
+    assertEqual(r.player.total, 9000, "Auto Attack stays the player's")
+    NS.Casts = nil
+end)
+
 test("meter: PET_SEPARATE=false path tags by cast set", function()
     local NS, meter = withPet()
     NS.Meter.PET_SEPARATE = false
