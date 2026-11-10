@@ -706,7 +706,7 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (38)
+### test_results_table.lua (39)
 
 - results: default view: current character, last 7 days, grouped by board
 - results: the date range and the character filter
@@ -738,6 +738,7 @@ Total.
 - results: a stored Character width wins, within the room the target column leaves
 - results: dragging the Character header's edge resizes it and stores the width on release
 - results: a window hidden while the Character edge is held ends the drag and stores the width
+- results: a profile switch lays the columns out at the new profile's widths, shown or hidden
 - results: no spec: the row draws its class icon and no second icon
 - results: the Status badge reads Best with the trophy on the board's top only
 - results: the Status header names a spec on Retail and a talent tree on Forever (clients-§4)
@@ -799,7 +800,7 @@ Total.
 - timeline: the empty cases
 - timeline: a stand-down refuses the open
 
-### test_timeline_marks.lua (10)
+### test_timeline_marks.lua (11)
 
 - timeline marks: the fights' colors are the palette's text hues under this kit profile
 - timeline marks: the caster colors are the palette's lines, and the row defaults to icons
@@ -809,6 +810,7 @@ Total.
 - timeline marks: a player's cast is edged PLAYER_LINE and a pet's PET_LINE, in the lanes and the Casts strips
 - timeline marks: in tick mode a pet's tick is PET_LINE and a player's PLAYER_LINE in both lanes
 - timeline marks: the setting written while the window is open redraws it as ticks, keeping the zoom
+- timeline marks: a profile switch redraws an open window in the new profile's mode
 - timeline marks: the two words on the By ability heading line switch the marks
 - timeline marks: zoomed in, the icons follow the zoomed axis; a drag of the grip moves them without re-pooling
 
@@ -1085,12 +1087,12 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 38 |
+| test_results_table.lua | 39 |
 | test_results_detail.lua | 17 |
 | test_results_sections.lua | 5 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
-| test_timeline_marks.lua | 10 |
+| test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
@@ -1110,4 +1112,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **860** |
+| **Total** | **862** |

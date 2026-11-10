@@ -61,8 +61,14 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   group's best while the Status column's Best is the board's, whatever the filters.
 - **The Results window is wider since v0.2.** The Status, Used and Note columns raise the list's
   least width to 1038 px (1478 expanded, with the 440 px detail beside it), and the shipped width to
-  1100. On a small screen or a large UI scale, lower History → Results window → Scale. A width a
-  profile stored before is held to the new least.
+  1100, above the least so the Character column's header drag has room to grow. On a small screen
+  or a large UI scale, lower History → Results window → Scale. A width a profile stored before is
+  held to the new least.
+- **The Status column holds one tag.** It is 60 px (`Fights.STATUS_W`), which fits the "Best" badge
+  with its trophy (51 px) and no second tag; a later tag widens it and the window's least width.
+- **The compare's "Trinkets and consumables" list has no cap.** Each item used by either fight adds
+  a 22 px line (`Compare.USAGE_ROW_H`), so a fight with many consumables makes a tall window that
+  relies on being clamped to the screen and can run past it on a small one.
 - **By ability icons do not stack.** A lane is 16 px, so casts closer than an icon overlap there and
   only the one on top takes the pointer. At 1x a filler cast every global cooldown reads as a run of
   icons; zoom in to part them, or switch the lanes to *Ticks*.

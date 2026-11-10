@@ -1,6 +1,6 @@
 -- tests/test_gear.lua — the gear view (plan Task 4.4, spec §7, mockup §8): the stored item strings
 -- parsed for their enchant and gems, the slots that changed against the compared fight, the marks
--- and the notes; and the window: opened from the detail's Gear view button over the Results window
+-- and the notes; and the window: opened from the detail's View gear button over the Results window
 -- under its cover, the character panel's layout, the stats against the compared fight, and closing
 -- with the Results window.
 
@@ -183,7 +183,7 @@ test("gear: the window opens from the detail, marks the changes and closes with 
         rec(NS, { id = "bare", dps = 100 }))
     assertTrue(NS.Results.ShowFight("this"))
     local pane = NS.Results.__ui().detail
-    assertTrue(pane.lo.gearView:IsEnabled(), "Gear view for a fight with gear")
+    assertTrue(pane.lo.gearView:IsEnabled(), "View gear for a fight with gear")
     pane.lo.gearView:__fire("OnClick")
     local ui = NS.ResultsGear.__ui()
     assertTrue(NS.ResultsGear.IsShown())

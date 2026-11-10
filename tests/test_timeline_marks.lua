@@ -297,6 +297,18 @@ test("timeline marks: the setting written while the window is open redraws it as
     assertEqual(TL.Marks()[1].kind, "tick", "the open reads the stored mode")
 end)
 
+test("timeline marks: a profile switch redraws an open window in the new profile's mode", function()
+    local NS = opened()
+    local TL = NS.ResultsTimeline
+    assertEqual(TL.Marks()[1].kind, "icon", "the first profile draws icons")
+    -- A profile that has seen the first-run skin picker (a new one shows it, which closes the modals).
+    NS.db.sv.profiles["Ticks"] = { skin = { pickerSeen = true }, results = { timelineMarks = "tick" } }
+    NS.db:SetProfile("Ticks")
+    assertTrue(TL.IsShown(), "still open")
+    assertEqual(#TL.Marks(), #THIS + #BEST)
+    for _, d in ipairs(TL.Marks()) do assertEqual(d.kind, "tick", "the new profile's ticks") end
+end)
+
 test("timeline marks: the two words on the By ability heading line switch the marks", function()
     local NS, ui = opened()
     local TL, D, Style = NS.ResultsTimeline, NS.ResultsTimelineData, NS.Style

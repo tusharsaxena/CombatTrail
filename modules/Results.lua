@@ -946,7 +946,10 @@ local function onStoreChanged()
 end
 
 -- A profile change takes the new profile's view, place, size and fold whether the window is up or not
--- (a hidden list keeps its filters for its next show).
+-- (a hidden list keeps its filters for its next show). The render lays the columns out at the new
+-- profile's dragged widths (Fights.ColumnWidths reads the live profile) and, through renderDetail's
+-- DetailChanged, redraws an open timeline in the new profile's mark mode; a hidden window does both on
+-- its next show (tests/test_results_table.lua, tests/test_timeline_marks.lua).
 local function onSettings(path)
     if path == "profile" and ui then
         ui.list:ApplyView(NS.ResultsFights.SavedView())

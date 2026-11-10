@@ -665,6 +665,23 @@ test("results: a window hidden while the Character edge is held ends the drag an
     assertEqual(view.list.place[ci].w, 124, "a later layout keeps the stored width")
 end)
 
+test("results: a profile switch lays the columns out at the new profile's widths, shown or hidden", function()
+    local NS = fresh()
+    local ci = indexOf(NS.ResultsFights.Columns(), "character")
+    NS.db.profile.results.columns.character = 150
+    local _, view = open(NS)
+    assertEqual(view.list.place[ci].w, 150, "the first profile's width")
+    -- A profile that has seen the first-run skin picker, with no dragged widths.
+    NS.db.sv.profiles["Other"] = { skin = { pickerSeen = true } }
+    NS.db:SetProfile("Other")
+    assertEqual(view.list.place[ci].w, NS.ResultsFights.CHARACTER_W, "the new profile's shipped width at once")
+    NS.db.profile.results.columns.character = 200
+    NS.Results.Hide()
+    NS.db:SetProfile("Default")
+    NS.Results.Show()
+    assertEqual(view.list.place[ci].w, 150, "a hidden window's next show takes the profile's width")
+end)
+
 test("results: no spec: the row draws its class icon and no second icon", function()
     local NS = fresh(function(m) m.CLASS_ICON_TCOORDS = { MAGE = { 0, 0.25, 0, 0.25 } } end)
     local r = rec(NS, { id = "nospec" })
