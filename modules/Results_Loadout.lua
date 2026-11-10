@@ -7,8 +7,8 @@ local _, NS = ...
 -- THE GEAR is a row of item icons in the character frame's order, wrapping across the pane, each
 -- with its quality edge and item level (mockup §5's gear row); hovering one shows the client's own
 -- item tooltip from the stored item string, and Shift-click links it in chat. *Gear view* (the gear
--- and the stats laid out as the character panel does) is modules/Results_Gear.lua's, plan Task 4.4:
--- the button stays grayed until that window exists. A fight with no gear says *Not recorded*.
+-- and the stats laid out as the character panel does) opens modules/Results_Gear.lua's window; it is
+-- grayed for a fight with no gear. A fight with no gear says *Not recorded*.
 --
 -- THE TALENTS line names the loadout and its hero tree, with *View* (the `talentbuild` link posted to
 -- the player's own chat window, and the tree opened read-only through SetItemRef; the Results window
@@ -172,7 +172,7 @@ function Loadout.Label(record)
     return ("%s, %s"):format(tostring(w.name or "?"), NS.ResultsTable.Date(record and record.t, "%d %b %H:%M"))
 end
 
--- Whether the gear view exists yet (plan Task 4.4).
+-- Whether the gear view is loaded (modules/Results_Gear.lua).
 local function hasGearView()
     local G = NS.ResultsGear
     return G ~= nil and type(G.Open) == "function"

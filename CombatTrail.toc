@@ -180,7 +180,8 @@ modules\Hud.lua
 # and the share line register nothing and reach each other at CALL time; modules\Share.lua defines its
 # whisper popup at FILE SCOPE. LOAD-BEARING: modules\Results_TimelineData.lua reads
 # NS.ResultsTable.COLORS at FILE SCOPE, and modules\Results_Timeline.lua reads NS.ResultsTimelineData and
-# NS.ResultsTable there.
+# NS.ResultsTable there; modules\Results_Gear.lua and modules\Results_Compare.lua read NS.ResultsTable
+# and NS.ResultsTimeline (its colors and its shell) at FILE SCOPE.
 modules\Sizing.lua
 modules\Results_Source.lua
 modules\Results_Table.lua
@@ -192,6 +193,8 @@ modules\Results_Detail.lua
 modules\Share.lua
 modules\Results_TimelineData.lua
 modules\Results_Timeline.lua
+modules\Results_Gear.lua
+modules\Results_Compare.lua
 modules\Results.lua
 
 # Settings (last -- depend on everything else being initialized)

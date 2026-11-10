@@ -110,6 +110,9 @@ files["modules/Results_Loadout.lua"] = {
     read_globals = { "C_Item", "SetItemRef", "HandleModifiedItemClick", "UnitLevel" },
 }
 files["modules/Results_Usage.lua"] = { read_globals = { "C_Item" } }
+-- The gear view and the compare's gear line: the client's item data, and Shift-click's link.
+files["modules/Results_Gear.lua"] = { read_globals = { "C_Item", "HandleModifiedItemClick" } }
+files["modules/Results_Compare.lua"] = { read_globals = { "C_Item" } }
 -- Share's whisper offers the targeted player's name.
 files["modules/Share.lua"] = { read_globals = { "UnitIsPlayer" } }
 -- The ability timeline: the cursor a Ctrl+wheel zooms about and the modifier keys the wheel reads

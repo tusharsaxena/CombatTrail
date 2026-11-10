@@ -390,13 +390,32 @@ function footer()
         or L["Fights are kept until you delete them"])
 end
 
+-- The modal windows that follow the detail (its fight and its compare target), each by its NS name.
+Results.FOLLOWERS = { "ResultsTimeline", "ResultsGear", "ResultsCompare" }
+
+-- Each follower that has `method`, called with `...`.
+local function eachFollower(method, ...)
+    for _, name in ipairs(Results.FOLLOWERS) do
+        local m = NS[name]
+        if m and type(m[method]) == "function" then m[method](...) end
+    end
+end
+
 function renderDetail()
     if not ui then return end
     if selected and not fight(selected) then selected, detailOpen = nil, false end
     ui.detail:Show(fight(selected))
-    -- The ability timeline follows the detail's fight and its compare target (plan Task 4.3).
-    local TL = NS.ResultsTimeline
-    if TL and type(TL.DetailChanged) == "function" then TL.DetailChanged(ui.detail) end
+    -- The timeline, the gear view and the compare follow the detail's fight and its compare target.
+    eachFollower("DetailChanged", ui.detail)
+end
+
+--- Close every modal window over this one but `keep` (an NS name, nil for none): one opens at a time,
+--- under the one dim cover.
+function Results.CloseModals(keep)
+    for _, name in ipairs(Results.FOLLOWERS) do
+        local m = NS[name]
+        if name ~= keep and m and type(m.Hide) == "function" then m.Hide() end
+    end
 end
 
 -- `reveal` scrolls the list to the selected fight (the window opened on it): a store change alone
@@ -480,13 +499,10 @@ local function closePopups()
     for _, name in ipairs(Results.POPUPS) do StaticPopup_Hide(name) end
 end
 
--- The windows that follow the detail (the ability timeline, the gear view: plan Tasks 4.3, 4.4)
--- close with it.
+-- The windows that follow the detail (the ability timeline, the gear view, the compare: plan Tasks
+-- 4.3, 4.4) close with it.
 local function hideFollowers()
-    for _, name in ipairs({ "ResultsTimeline", "ResultsGear", "ResultsCompare" }) do
-        local m = NS[name]
-        if m and type(m.Hide) == "function" then m.Hide() end
-    end
+    Results.CloseModals(nil)
 end
 
 local function hideWindow()
@@ -722,9 +738,8 @@ function Results.ResetPosition()
         renderDetail()
         layout()
     end
-    -- An open timeline goes back over the window, at its new place.
-    local TL = NS.ResultsTimeline
-    if TL and type(TL.ResetPosition) == "function" then TL.ResetPosition() end
+    -- An open timeline, gear view or compare goes back over the window, at its new place.
+    eachFollower("ResetPosition")
 end
 
 local VERBS = {
@@ -914,6 +929,8 @@ local function onSettings(path)
         return
     end
     if path == "history.days" and windowShown() then footer() end
+    -- The Usage "never show" list: the detail redraws (an edit under way keeps its ticks).
+    if path == NS.Usage.HIDDEN_PATH and windowShown() then renderDetail() end
 end
 
 do

@@ -182,24 +182,13 @@ function Data.Build(record, other, opts)
 end
 
 --- The fight `record` is compared with, and what it is: "picked" (the row menu's Compare With This
---- Fight), "best" (the best on its board) or "runnerUp" (the fight is the best). Nil with none.
+--- Fight), "best" (the best on its board) or "runnerUp" (the fight is the best). Nil with none. The
+--- compare's own answer (modules/Results_Compare.lua, Compare.Pick), so the timeline, the gear view
+--- and the compare window never disagree.
 --- @return table|nil other, string|nil kind
 function Data.CompareTarget(record)
     if type(record) ~= "table" then return nil end
-    local Source, Results = NS.ResultsSource, NS.Results
-    local pickID = Results and Results.Pick and Results.Pick()
-    if pickID ~= nil and pickID ~= record.id then
-        local picked = Source.Get(pickID)
-        if picked then return picked, "picked" end
-    end
-    local key = NS.Bests.Key(record)
-    if not key then return nil end
-    local all = Source.All()
-    local best = NS.Bests.Compute(all)[key]
-    if best and best.id ~= record.id then return best, "best" end
-    local runnerUp = NS.Bests.Compute(all, best)[key]
-    if runnerUp and runnerUp.id ~= record.id then return runnerUp, "runnerUp" end
-    return nil
+    return NS.ResultsCompare.Pick(record)
 end
 
 -- ── the axis and the zoom ───────────────────────────────────────────────────────────────────────

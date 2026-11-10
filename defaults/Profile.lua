@@ -191,6 +191,9 @@ NS.defaults = {
         -- character's history.
         fights = {},
         fightOrder = {},
+        -- The items the Results detail's Usage never lists (modules/Usage.lua, spec §7's "never show"
+        -- list): item IDs, comma-separated. Global, as the fight store it filters is.
+        usage = { hidden = "" },
         -- LibDBIcon's own table, handed straight to :Register (launcher-§3). Global, because the
         -- button belongs to the installation and a profile switch must not move it.
         minimap = { hide = false },

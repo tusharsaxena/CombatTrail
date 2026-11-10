@@ -137,6 +137,15 @@ function Source.SetNote(id, note)
     return true
 end
 
+--- A sample fight changed in place (its usage edit, modules/Usage.lua): the window redraws, nothing is
+--- written. Nothing with no sample history in place.
+--- @return boolean announced
+function Source.Touched()
+    if not mock then return false end
+    changed(false)
+    return true
+end
+
 --- Delete a fight. A sample fight leaves the sample history only.
 --- @return boolean removed
 function Source.Delete(id)

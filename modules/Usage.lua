@@ -24,10 +24,19 @@ local _, NS = ...
 -- Each client function is read bare at CALL time and pcall'd.
 --
 -- THE RECORD (Usage.ForFight): { v = 1, used = { { itemID?, kind, slot?, times?, n, src } }, candidates
--- = { { itemID, kind, slot? } }, edited = false }, src "cast", "bag" or "buff". Detection (Usage.Detect)
--- is pure over the snapshot, the casts and the after counts. The player's edit (SetUsed) and the
--- "never show" list arrive with the Results window's usage edit and the History page (plan Tasks 4.4
--- and 4.5).
+-- = { { itemID, kind, slot? } }, edited = bool }, src "cast", "bag", "buff" or "manual" (a tick the
+-- player added). Detection (Usage.Detect) is pure over the snapshot, the casts and the after counts.
+--
+-- THE PLAYER'S EDIT (Usage.SetUsed, plan Task 4.4, from the Results detail's Usage Edit): the ticks
+-- replace the used list, a detected entry keeping its times and source, and the record is marked
+-- edited. A stored fight changes in the store (FIGHTS_CHANGED); a sample fight (test mode, the sim)
+-- in memory only, as its note does (Results_Source.Touched).
+--
+-- THE HIDDEN ITEMS ("never show", spec §7): item IDs the player never wants listed, written whole
+-- through the schema seam at Usage.HIDDEN_PATH as one plain string ("12345,67890"; the History page's
+-- Usage tab, plan Task 4.5, and the detail's right-click in the edit). Account-wide, like the fight
+-- store it filters. Detection still records a hidden item, so taking it off the list brings it back
+-- on every fight that used it.
 
 local Usage = {}
 NS.Usage = Usage
@@ -37,6 +46,10 @@ local L = NS.L
 
 -- The record's own format.
 Usage.VERSION = 1
+-- Every kind an entry may carry.
+Usage.KINDS = { gear = true, potion = true, flask = true, food = true, other = true }
+-- The hidden items' setting (global: the fight store it filters is).
+Usage.HIDDEN_PATH = "global.usage.hidden"
 -- The equipment slots a use is looked for in: every one, the tabard included (a use tabard exists).
 Usage.SLOTS = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 }
 -- The bags read: the backpack, the four bags and the reagent bag.
@@ -335,6 +348,200 @@ end
 --- The lifecycle's stand-down: the last fight is forgotten (its table goes with the fight).
 function Usage.Suspend()
     lastFight = nil
+end
+
+-- ── the player's edit ───────────────────────────────────────────────────────────────────────────
+
+-- Whether a detected entry is the one a tick names: by item, else food by kind; in each case in the
+-- tick's slot when it names one (a pair of one trinket shares one item ID), so an entry with no slot or
+-- another never answers it.
+local function same(e, tick)
+    if tick.slot ~= nil and e.slot ~= tick.slot then return false end
+    if tick.itemID then return e.itemID == tick.itemID end
+    return e.itemID == nil and e.kind == tick.kind
+end
+
+-- The first entry of `list` the tick names that `taken` has not had yet; marks it taken.
+local function find(list, tick, taken)
+    for i, e in ipairs(list or {}) do
+        if not taken[i] and type(e) == "table" and same(e, tick) then
+            taken[i] = true
+            return e
+        end
+    end
+    return nil
+end
+
+-- What a ticked-again entry with no item had been detected as: only detection lists food.
+local RETICKED = { food = "buff" }
+
+-- A ticked entry nothing detected: used once, no time.
+local function fresh(tick)
+    local src = tick.itemID == nil and RETICKED[tick.kind] or "manual"
+    return { itemID = tick.itemID, kind = tick.kind, slot = tick.slot, n = 1, src = src }
+end
+
+-- An unticked food (no item) has no candidate to stand for it: it joins the candidates, so its row
+-- stays in the list and can be ticked again.
+local function keepRows(u, taken)
+    if type(u.candidates) ~= "table" then u.candidates = {} end
+    for i, e in ipairs(type(u.used) == "table" and u.used or {}) do
+        if not taken[i] and type(e) == "table" and e.itemID == nil and RETICKED[e.kind]
+                and not find(u.candidates, e, {}) then
+            u.candidates[#u.candidates + 1] = { kind = e.kind, slot = e.slot }
+        end
+    end
+end
+
+-- A tick from the window with its plain fields only, or nil.
+local function clean(tick)
+    if type(tick) ~= "table" then return nil end
+    local kind = Secrets.PlainString(tick.kind)
+    return { itemID = Secrets.PlainNumber(tick.itemID), slot = Secrets.PlainNumber(tick.slot),
+             kind = Usage.KINDS[kind] and kind or "other" }
+end
+
+--- Replace a fight's used list with the player's ticks: an entry already detected keeps its times and
+--- source (each detected entry answers one tick, matched by item and by slot); a newly ticked one is
+--- "manual", used once, no time, except food ticked again, which keeps what it was detected as. An
+--- unticked food joins the candidates, so its row stays. Marks the record edited and announces the
+--- change: FIGHTS_CHANGED for a stored fight, the sample's own redraw for a sample one.
+--- @param record table
+--- @param list table  { { itemID?, kind, slot? }, ... }
+--- @return boolean stored
+function Usage.SetUsed(record, list)
+    local u = type(record) == "table" and record.usage
+    if type(u) ~= "table" or type(list) ~= "table" then return false end
+    local out, taken = {}, {}
+    for _, raw in ipairs(list) do
+        local tick = clean(raw)
+        if tick then out[#out + 1] = find(u.used, tick, taken) or fresh(tick) end
+    end
+    keepRows(u, taken)
+    u.used, u.edited = out, true
+    local Source = NS.ResultsSource
+    if Source and Source.IsMock() then
+        Source.Touched()
+    else
+        NS.SendBus(NS.MSG.FIGHTS_CHANGED)
+    end
+    return true
+end
+
+-- ── the hidden items ────────────────────────────────────────────────────────────────────────────
+
+--- The hidden items' IDs in `text` ("12345, 67890"), ascending and each once; nil when `text` is not
+--- a string or holds anything but positive whole numbers between the commas. Pure.
+--- @return table|nil ids
+function Usage.ParseHidden(text)
+    if type(text) ~= "string" then return nil end
+    local ids, seen = {}, {}
+    for token in (text .. ","):gmatch("([^,]*),") do
+        local word = token:match("^%s*(.-)%s*$")
+        if word ~= "" then
+            local id = word:match("^%d+$") and tonumber(word)
+            if not id or id < 1 then return nil end
+            if not seen[id] then seen[id], ids[#ids + 1] = true, id end
+        end
+    end
+    table.sort(ids)
+    return ids
+end
+
+-- The parsed list of the last stored text, so a redraw parses it once.
+local hiddenText, hiddenList, hiddenSet
+
+local function readHidden()
+    local text = NS.GetSetting(Usage.HIDDEN_PATH)
+    if text ~= hiddenText or not hiddenList then
+        hiddenText, hiddenList, hiddenSet = text, Usage.ParseHidden(text) or {}, {}
+        for _, id in ipairs(hiddenList) do hiddenSet[id] = true end
+    end
+    return hiddenList, hiddenSet
+end
+
+--- The hidden items' IDs, ascending. A copy.
+function Usage.HiddenList()
+    local out = {}
+    for i, id in ipairs((readHidden())) do out[i] = id end
+    return out
+end
+
+--- The hidden items as a set, { [itemID] = true }. Read only.
+function Usage.HiddenSet()
+    local _, set = readHidden()
+    return set
+end
+
+--- Whether a used entry or a candidate is listed: never a hidden item, never an enchant entry.
+--- @param e table
+--- @param hidden table|nil  Usage.HiddenSet() (read now when nil)
+function Usage.Shown(e, hidden)
+    if type(e) ~= "table" or e.kind == "enchant" then return false end
+    return not (e.itemID and (hidden or Usage.HiddenSet())[e.itemID])
+end
+
+--- The stored text for `ids`: ascending, comma-separated ("201,6948"). Sorts `ids` in place.
+function Usage.JoinHidden(ids)
+    table.sort(ids)
+    local words = {}
+    for i, id in ipairs(ids) do words[i] = tostring(id) end
+    return table.concat(words, ",")
+end
+
+--- The row's normalize: `text` as Usage.JoinHidden writes it, or nil (refused) when it does not parse.
+function Usage.NormalizeHidden(text)
+    local ids = Usage.ParseHidden(text)
+    return ids and Usage.JoinHidden(ids) or nil
+end
+
+local function writeHidden(ids)
+    return NS.SetByPath(Usage.HIDDEN_PATH, Usage.JoinHidden(ids))
+end
+
+--- Hide an item everywhere the usage is shown (the setting, written whole through the seam).
+--- @return boolean changed
+function Usage.Hide(itemID)
+    itemID = Secrets.PlainNumber(itemID)
+    if not itemID or itemID < 1 or itemID % 1 ~= 0 or Usage.HiddenSet()[itemID] then return false end
+    local ids = Usage.HiddenList()
+    ids[#ids + 1] = itemID
+    return writeHidden(ids) and true or false
+end
+
+--- Show a hidden item again.
+--- @return boolean changed
+function Usage.Unhide(itemID)
+    if not Usage.HiddenSet()[itemID] then return false end
+    local ids = {}
+    for _, id in ipairs(Usage.HiddenList()) do
+        if id ~= itemID then ids[#ids + 1] = id end
+    end
+    return writeHidden(ids) and true or false
+end
+
+-- Append each entry's item ID in `entries` to `out`, once.
+local function appendItemIDs(entries, out, seen)
+    for _, e in ipairs(type(entries) == "table" and entries or {}) do
+        local id = type(e) == "table" and e.itemID
+        if type(id) == "number" and not seen[id] then seen[id], out[#out + 1] = true, id end
+    end
+end
+
+--- Every item the stored fights list (used or a candidate), each once, newest fight first: the names
+--- the History page's ID list can resolve and suggest (plan Task 4.5; the client has no item-name
+--- search).
+--- @return table ids
+function Usage.KnownItems()
+    local out, seen = {}, {}
+    for _, record in ipairs(NS.Recorder.List()) do
+        local u = type(record.usage) == "table" and record.usage or nil
+        if u then
+            appendItemIDs(u.used, out, seen)
+            appendItemIDs(u.candidates, out, seen)
+        end
+    end
+    return out
 end
 
 local busTarget = NS.NewBusTarget()

@@ -34,11 +34,12 @@ local _, NS = ...
 -- (`pos`), so a resize keeps the same moment at the left. Zoom and pan go back to 1x on another
 -- fight or compare target; the pet toggle keeps them.
 --
--- WHICH FIGHTS. The detail's: its fight, and its compare target (the pane's CompareTarget once plan
--- Task 4.4's compare gives it one, else Data.CompareTarget). Every detail draw redraws the window
--- while it is open (Timeline.DetailChanged). With no compared fight, or one with no casts, the blue
--- lanes stay empty under a note; a fight with no casts (the button is disabled for one, but the
--- detail may move to one while the window is open) shows a message in place of the lanes.
+-- WHICH FIGHTS. The detail's: its fight, and its compare target (the pane's CompareTarget, the
+-- compare's one answer, modules/Results_Compare.lua; Data.CompareTarget asks the same). Every detail
+-- draw redraws the window while it is open (Timeline.DetailChanged). With no compared fight, or one
+-- with no casts, the blue lanes stay empty under a note; a fight with no casts (the button is disabled
+-- for one, but the detail may move to one while the window is open) shows a message in place of the
+-- lanes.
 --
 -- THE WINDOW is the Results window's kind (standalone-windows): a plain frame skinned through the
 -- skin's Shell, closed through NS.MakeCloseButton, in UISpecialFrames (Escape closes it), clamped,
@@ -932,6 +933,7 @@ end
 --- @return boolean opened
 function Timeline.Open(p)
     if NS.IsStoodDown() then return false end
+    NS.Results.CloseModals("ResultsTimeline")
     pane = p
     Timeline.wanted = true
     ensureWindow()

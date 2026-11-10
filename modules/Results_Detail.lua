@@ -20,10 +20,11 @@ local _, NS = ...
 -- leader shows "Leads by" and its lead over the runner-up; every other fight "Delta" and its gap.
 -- The trophy chip beside the name marks a fight that holds the personal best on its board.
 --
--- THE SEAMS. Timeline (plan Task 4.3, NS.ResultsTimeline) and Compare vs best (Task 4.4,
--- NS.ResultsCompare) stay grayed until their module exists; Share until modules/Share.lua answers
--- (never on a sample fight); Add note and Delete are the shell's (the note box and the delete's
--- confirmation).
+-- THE SEAMS. Timeline (NS.ResultsTimeline) is live for a fight with casts; Compare (NS.ResultsCompare)
+-- for a fight with a fight to compare with, its label saying which (the best, the runner-up or the
+-- picked fight: Pane:CompareTarget, the one answer the timeline, the gear view and the compare read);
+-- Share while modules/Share.lua answers (never on a sample fight); Add note and Delete are the
+-- shell's (the note box and the delete's confirmation).
 --
 -- LAYOUT FROM CONFIG. Every block is placed from the constants here and the widths the shell hands
 -- it; nothing reads a size back. The content scrolls (the mouse wheel); the buttons stay put.
@@ -45,7 +46,7 @@ Detail.CHIP_ICON = 14
 -- The buttons along the foot, left to right (Delete at the right edge), and their widths.
 Detail.BUTTONS = {
     { key = "timeline", label = "Timeline", width = 70, style = "primary" },
-    { key = "compare", label = "Compare vs best", width = 104 },
+    { key = "compare", label = "Compare vs best", width = 126 },
     { key = "addNote", label = "Add Note", width = 70 },
     { key = "share", label = "Share", width = 58 },
 }
@@ -250,7 +251,7 @@ end
 
 local BUTTON_TIPS = {
     timeline = { "Timeline", "Every cast of the fight along its length, beside the fight it is compared with." },
-    compare = { "Compare vs best", "This fight beside the best on its board, or the runner-up when it is the best." },
+    compare = { "Compare", "This fight beside the best on its board, the runner-up when it is the best, or the fight you picked with Compare With This Fight." },
     addNote = { "Add Note", "A short note of your own on this fight." },
     share = { "Share", "One line about this fight in a chat channel you pick." },
     delete = { "Delete", "Delete this fight. It asks first." },
@@ -367,13 +368,28 @@ function Pane:fillSpells(record)
     self.w.petShare:SetText(pet and L["Pet %s"]:format(NS.Format.Pct(pet)) or "")
 end
 
+-- The Compare button's label by what the compare target is.
+local COMPARE_LABELS = { best = "Compare vs best", runnerUp = "Compare vs runner-up", picked = "Compare vs pick" }
+
+--- The fight this one is compared with and what it is ("picked", "best" or "runnerUp"), or nil: the
+--- compare's answer (NS.ResultsCompare.Pick), the one the timeline, the gear view and the compare
+--- window all read. `_resolve` is the timeline's call shape (always resolved here).
+--- @return table|nil other, string|nil kind
+function Pane:CompareTarget(_resolve)
+    local CMP = NS.ResultsCompare
+    if not (self.record and CMP and type(CMP.Pick) == "function") then return nil end
+    return CMP.Pick(self.record)
+end
+
 -- The buttons' states for `record`: a seam's button grayed until its module exists.
 function Pane:fillButtons(record)
     local w, hooks = self.w, self.hooks
     local TL, CMP = NS.ResultsTimeline, NS.ResultsCompare
     local hasCasts = type(record.casts) == "string" and record.casts ~= ""
     Style.SetEnabled(w.timeline, TL ~= nil and type(TL.Open) == "function" and hasCasts)
-    Style.SetEnabled(w.compare, CMP ~= nil and type(CMP.Open) == "function")
+    local other, kind = self:CompareTarget()
+    w.compare.label:SetText(L[COMPARE_LABELS[kind] or "Compare vs best"])
+    Style.SetEnabled(w.compare, CMP ~= nil and type(CMP.Open) == "function" and other ~= nil)
     Style.SetEnabled(w.share, hooks.canShare ~= nil and hooks.canShare() == true)
     local hasNote = type(record.note) == "string" and record.note ~= ""
     w.addNote.label:SetText(hasNote and L["Edit Note"] or L["Add Note"])
@@ -396,7 +412,7 @@ function Pane:Show(record)
     self:fillSpells(record)
     self.chartView = Detail.ChartView(record)
     NS.ResultsLoadout.Fill(self)
-    NS.ResultsUsage.Fill(self)
+    NS.ResultsUsage.Fill(self, same)
     self.noteText = type(record.note) == "string" and record.note or ""
     self.w.note:SetText(self.noteText)
     self:fillButtons(record)

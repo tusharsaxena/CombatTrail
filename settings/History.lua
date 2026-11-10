@@ -18,3 +18,15 @@ NS.RegisterTabbedPage({
         render = function(ctx) NS.Helpers.TextRow(ctx, L["The History settings arrive with the fight history."]) end,
     } },
 })
+
+-- The Usage "never show" list (modules/Usage.lua, spec §7): one plain string of item IDs, written whole
+-- through the seam by Usage.Hide and Usage.Unhide (the Results detail's right-click in its Usage edit).
+-- Global, as the fight store it filters is. Drawn by nothing yet (skipRender): plan Task 4.5 moves it to
+-- the page's Usage tab and draws it there as the library's ID list.
+NS.RegisterSchemaRows({
+    { path = NS.Usage.HIDDEN_PATH, page = PAGE, group = L["History"], type = "string", skipRender = true,
+      label = L["Hidden items"], default = NS.defaults.global.usage.hidden,
+      validate = function(v) return NS.Usage.ParseHidden(v) ~= nil end,
+      normalize = function(v) return NS.Usage.NormalizeHidden(v) end,
+      tooltip = L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."] },
+})
