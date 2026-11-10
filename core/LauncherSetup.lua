@@ -4,11 +4,53 @@ local addonName, NS = ...
 --
 -- Left-click ALWAYS opens the settings panel; right-click the options menu (launcher-§2), whose
 -- master-controls entries are Enabled, Locked, Test mode, Sim mode and Show window (the DPS HUD), each
--- on the handler its slash verb runs (core/CombatTrail.lua). The key-binding buttons arrive with
--- Bindings.xml (plan Task 5.2).
+-- on the handler its slash verb runs (core/CombatTrail.lua). Also the three key-binding buttons
+-- (launcher-§6, plan Task 5.2) and NS.BINDINGS, the table Bindings.xml and the General page's
+-- Keybindings tab are both held to.
 
 local Launcher = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
 local L = NS.L
+
+-- The key bindings (launcher-§6). Each button is plain, named, hidden and NOT secure, registered for
+-- the down edge only, and its click runs the SAME handler the launcher menu and the slash verb run
+-- (core/CombatTrail.lua), which refuses through the one hold-aware helper while stood down. The NAMES
+-- ARE PERMANENT: the client stores the player's key against them, so a rename unbinds every key. The
+-- handlers are reached at CALL time: core/CombatTrail.lua loads after this file.
+NS.TOGGLE_HUD_BUTTON     = "CombatTrailToggleHud"
+NS.TOGGLE_RESULTS_BUTTON = "CombatTrailToggleResults"
+NS.TOGGLE_LANES_BUTTON   = "CombatTrailToggleLanes"
+do
+    local function button(name, handler)
+        local b = CreateFrame("Button", name, UIParent)
+        b:RegisterForClicks("AnyDown")
+        b:SetScript("OnClick", function() NS[handler]() end)
+        b:Hide()
+        return b
+    end
+    button(NS.TOGGLE_HUD_BUTTON, "ToggleHud")
+    button(NS.TOGGLE_RESULTS_BUTTON, "ToggleResults")
+    button(NS.TOGGLE_LANES_BUTTON, "ToggleLanes")
+end
+
+-- The ONE bindings table (launcher-§6), in Bindings.xml's order with the Show window key first: the
+-- General page's Keybindings tab draws its rows from it (options-ui-§20) and the suite checks
+-- Bindings.xml against it. Each command is the CLICK binding on the button above.
+local function clickCommand(button) return "CLICK " .. button .. ":LeftButton" end
+NS.BINDINGS = {
+    { command = clickCommand(NS.TOGGLE_HUD_BUTTON),
+      tooltip = L["Shows or hides the DPS HUD, as the launcher's Show window entry and /kct hud do."] },
+    { command = clickCommand(NS.TOGGLE_RESULTS_BUTTON),
+      tooltip = L["Shows or hides the Results window, with your fight history."] },
+    { command = clickCommand(NS.TOGGLE_LANES_BUTTON),
+      tooltip = L["Shows or hides the Player and Pet cast lanes."] },
+}
+-- The category's title is the brand, assigned at file scope because the client reads it when it
+-- registers the bindings (launcher-§6). The labels' global names hold a space and a colon, so no
+-- identifier can spell them: rawset.
+rawset(_G, "BINDING_HEADER_COMBATTRAIL", L["Ka0s Combat Trail"])
+rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[1].command, L["Toggle DPS HUD"])
+rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[2].command, L["Toggle Results window"])
+rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[3].command, L["Toggle lanes"])
 
 local function minimapTable()
     local db = NS.db

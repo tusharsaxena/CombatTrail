@@ -204,6 +204,9 @@ modules\MockRotations.lua
 modules\MockFights.lua
 modules\Preview.lua
 modules\Sim.lua
+# `/kct diagnostics`'s own sections (debug-logging-§14): read at RUN time by core\DebugLogSetup.lua's
+# descriptor; reaches every module above at CALL time only.
+modules\Diagnostics.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

@@ -147,13 +147,16 @@ local SUITES = {
     "test_history_page",
     "test_preview",
     "test_sim",
+    "test_bindings",
+    "test_diagnostics",
+    "test_skin_surfaces",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },
     { name = "test_lizard_sighted", dir = "tests/_kit/" },
     { name = "test_client_globals", dir = "tests/_kit/" },
-    -- The diagnostics contract, against this addon's dispatcher (Kit.diagnostics below). The skin
-    -- switch is a declared skip until a surface of this addon's own is painted (milestones 1 to 4).
+    -- The diagnostics contract, against this addon's dispatcher (Kit.diagnostics below), and the skin
+    -- switch over this addon's painted surfaces (Kit.skinSwitch below, tests/skin_surfaces.lua).
     { name = "test_diagnostics_contract", dir = "tests/_kit/" },
     { name = "test_skin_switch", dir = "tests/_kit/" },
     { name = "test_skin_values", dir = "tests/_kit/" },
@@ -197,5 +200,9 @@ Kit.skinValues = {
           why = "a white disc shape tinted through Style.Vertex, the legend's swatch: a shape, not skin data", cause = "L10" },
     },
 }
+
+-- The skin-switch test's painted surfaces (skinning-§1): one per window, tests/test_skin_surfaces.lua
+-- holds the coverage.
+Kit.skinSwitch = dofile(root .. "/tests/skin_surfaces.lua")(_G.CT_TEST)
 
 Kit.run{ dir = root .. "/tests/", suites = SUITES }

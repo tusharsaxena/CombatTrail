@@ -18,8 +18,11 @@ local _, NS = ...
 -- COMPOSED BLOCKS (options-ui-§16/§17): the label's Font block, the icon border and the lane border
 -- are the library's groups over this addon's keys (`keys`), and every color is a ColorPair with its
 -- Use class color companion. The border style rows pick a statusbar texture, which is what the lanes
--- draw their edges with (modules/LaneRender.lua). The skin-following companions (`<key>FromSkin`)
--- arrive with the lanes' skin surfaces (plan Task 5.2).
+-- draw their edges with (modules/LaneRender.lua). Every style a skin describes takes the composer's
+-- `fromSkin` companion (the label's face, the icon border on the icon family, the lane border on the
+-- bar family), the label's Font flags lead with From skin (`flagsFromSkin`), and every color a skin
+-- describes, and the label's shadow, carries this addon's own `<key>FromSkin` row in the block's
+-- `extra` (options-ui-§16, skinning-§6), each on by default as defaults/Profile.lua stores it.
 --
 -- WRITES: every row writes through the seam (NS.SetByPath), whose SETTINGS_CHANGED the lane modules
 -- already redraw from, so no row carries an onChange.
@@ -129,7 +132,8 @@ local function laneRows(lane)
     -- A composed block: the library's words, this lane's keys.
     local function block(rows)
         for _, r in ipairs(rows) do
-            r.composed = true
+            if not r.own then r.composed = true end
+            r.own = nil
             out[#out + 1] = r
         end
         return rows
@@ -138,9 +142,19 @@ local function laneRows(lane)
         t.prefix, t.page, t.group, t.subgroup, t.classColor = P, PAGE, group, subgroup, PLAYER_CLASS
         return t
     end
-    local function colorPair(key, companion, label)
+    -- A companion of this addon's own after a composed block (`own`: not the library's words).
+    local function skinRow(key, label, tooltip)
+        return { path = P .. key, type = "bool", startsLine = true, own = true, label = label,
+                 tooltip = tooltip, default = D[key] }
+    end
+    local function colorSkin(key)
+        return skinRow(key .. "FromSkin", L["Use the skin's color"],
+            L["Draw this in the skin's own color. The swatch is not read while this is on, and Use class color comes first."])
+    end
+    local function colorPair(key, companion, label, followsSkin)
         return block(H.ColorPair(spec({ key = key, companionKey = companion, label = label,
-            defaults = { [key] = D[key], [companion] = D[companion] } })))
+            defaults = { [key] = D[key], [companion] = D[companion] },
+            extra = followsSkin and { colorSkin(key) } or nil })))
     end
     -- A border style row picks a statusbar texture: the edges are strips (modules/LaneRender.lua).
     -- Its tooltip comes in through the composer's `tooltips` (options-ui-§16, anti-pattern #106).
@@ -215,12 +229,13 @@ local function laneRows(lane)
         tooltip = L["Write each spell's name under its icon."] })
 
     at(TAB.icons, L["Border"])
-    local iconBorder = block(H.BorderGroup(spec({ show = true,
+    local iconBorder = block(H.BorderGroup(spec({ show = true, fromSkin = "icon",
         keys = { borderShow = "border", borderStyle = "borderTexture", borderSize = "borderSize",
                  borderColor = "borderColor", useClassColorBorder = "borderClassColor" },
         defaults = { borderShow = D.border, borderStyle = D.borderTexture, borderSize = D.borderSize,
                      borderColor = D.borderColor, useClassColorBorder = D.borderClassColor },
-        tooltips = { borderStyle = L["The texture each icon's border is drawn with. Empty draws it flat."] } })))
+        tooltips = { borderStyle = L["The texture each icon's border is drawn with. Empty draws it flat."] },
+        extra = { colorSkin("borderColor") } })))
     statusbarStyle(iconBorder)
 
     at(TAB.icons, L["Glow"])
@@ -228,7 +243,7 @@ local function laneRows(lane)
         tooltip = L["Ring the icon of a spell with a long cooldown, read from the spell's base cooldown."] })
     row("glowMinCD", { type = "number", label = L["Long cooldown (seconds)"], min = 5, max = 300, step = 1,
         tooltip = L["The shortest base cooldown, in seconds, that glows."] })
-    colorPair("glowColor", "glowClassColor", L["Glow color"])
+    colorPair("glowColor", "glowClassColor", L["Glow color"], true)
 
     -- Background and border
     at(TAB.bg, L["Background"])
@@ -237,17 +252,18 @@ local function laneRows(lane)
     row("bgTexture", { type = "string", label = L["Background texture"], dialogControl = "Ka0sMedia_Statusbar",
         values = H.LSMValues("statusbar"),
         tooltip = L["The texture the background is drawn with, tinted by its color. Empty fills it flat."] })
-    colorPair("bgColor", "bgClassColor", L["Background color"])
+    colorPair("bgColor", "bgClassColor", L["Background color"], true)
     row("padding", { type = "number", label = L["Padding"], min = 0, max = 20, step = 1, startsLine = true,
         tooltip = L["Space between the lane's edge and its icons, in pixels."] })
 
     at(TAB.bg, L["Border"])
-    local laneBorder = block(H.BorderGroup(spec({ show = true,
+    local laneBorder = block(H.BorderGroup(spec({ show = true, fromSkin = "bar",
         keys = { borderShow = "laneBorder", borderStyle = "laneBorderTexture", borderSize = "laneBorderSize",
                  borderColor = "laneBorderColor", useClassColorBorder = "laneBorderClassColor" },
         defaults = { borderShow = D.laneBorder, borderStyle = D.laneBorderTexture, borderSize = D.laneBorderSize,
                      borderColor = D.laneBorderColor, useClassColorBorder = D.laneBorderClassColor },
-        tooltips = { borderStyle = L["The texture the lane's border is drawn with. Empty draws it flat."] } })))
+        tooltips = { borderStyle = L["The texture the lane's border is drawn with. Empty draws it flat."] },
+        extra = { colorSkin("laneBorderColor") } })))
     statusbarStyle(laneBorder)
 
     -- Ticks and labels
@@ -275,12 +291,18 @@ local function laneRows(lane)
             or L["The label's words. Empty shows You."] })
 
     at(TAB.ticks, L["Label font"])
-    block(H.FontGroup(spec({
+    block(H.FontGroup(spec({ fromSkin = true, flagsFromSkin = true,
         keys = { font = "labelFont", fontSize = "labelSize", fontColor = "labelColor",
                  useClassColorFont = "labelClassColor", fontFlags = "labelOutline", fontShadow = "labelShadow" },
         defaults = { font = D.labelFont, fontSize = D.labelSize, fontColor = D.labelColor,
                      useClassColorFont = D.labelClassColor, fontFlags = D.labelOutline, fontShadow = D.labelShadow },
-        tooltips = { font = L["The face the label is drawn in. Empty uses the skin's font."] } })))
+        tooltips = { font = L["The face the label is drawn in. Empty uses the skin's font."] },
+        extra = {
+            skinRow("labelColorFromSkin", L["Use the skin's color"],
+                L["Draw the label in the skin's HUD label color. The Font color swatch is not read while this is on, and Use class color comes first."]),
+            skinRow("labelShadowFromSkin", L["Use the skin's shadow"],
+                L["Draw the label with the skin's shadow. Font shadow is not read while this is on."]),
+        } })))
 
     -- Visibility
     at(TAB.vis, L["When"])

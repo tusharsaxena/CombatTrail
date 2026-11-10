@@ -151,6 +151,8 @@ end)
 
 test("lane render: Apply restyles the border color on live icons", function()
     local inst, R = setup()
+    set(inst, "player", "borderColorFromSkin", false)
+    set(inst, "player", "borderTextureFromSkin", false)
     R.Push("player", item(133, 0))
     local icon = R.__icons("player")[1]
     local c = inst.mocks.__paint(icon.border[1]).color
@@ -318,6 +320,7 @@ end)
 
 test("lane render: background and now line follow their switches", function()
     local inst, R = setup()
+    set(inst, "player", "bgColorFromSkin", false)
     local bg = R.__bg("player")
     assertTrue(bg:IsShown())
     assertEqual(inst.mocks.__paint(bg).color[4], 0.35)
@@ -394,4 +397,71 @@ test("lane render: no absolute SetFrameLevel call (every level is the lane's plu
     set(inst, "player", "levelOffset", 0)
     assertEqual(lvl(inst, R.__icons("player")[1]), lvl(inst, lane) + LEVEL.ICON_BAND,
         "a level change carries the live icons with the lane")
+end)
+
+-- ── the skin (skinning-§6, plan Task 5.2) ───────────────────────────────────────────────────────
+
+-- The owner's resolved color for token `name` (Ka0s Default, or the skin in force).
+local function skinColor(inst, name)
+    local r, g, b, a = inst.NS.Skin.Color(name)
+    return { r, g, b, a or 1 }
+end
+
+local function near(a, b, msg)
+    for i = 1, 4 do
+        assertTrue(math.abs((a[i] or 1) - (b[i] or 1)) < 0.001, (msg or "") .. " channel " .. i .. ": "
+            .. tostring(a[i]) .. " vs " .. tostring(b[i]))
+    end
+end
+
+test("lane render: the skin draws each color while its companion is on, the swatch once it is off", function()
+    local inst, R = setup()
+    R.Push("player", item(133, 0))
+    local icon = R.__icons("player")[1]
+    near(inst.mocks.__paint(icon.border[1]).color, skinColor(inst, "icon.border"), "icon border")
+    near(inst.mocks.__paint(R.__bg("player")).color, skinColor(inst, "bar.bg"), "background")
+    set(inst, "player", "borderColorFromSkin", false)
+    set(inst, "player", "bgColorFromSkin", false)
+    near(inst.mocks.__paint(icon.border[1]).color, { 1, 0.82, 0, 0.9 }, "the stored border")
+    near(inst.mocks.__paint(R.__bg("player")).color, { 0, 0, 0, 0.35 }, "the stored background")
+end)
+
+test("lane render: a class color comes before the skin's", function()
+    local inst, R = setup()
+    inst.NS.ClassColor = function() return 0.1, 0.2, 0.3 end
+    set(inst, "player", "bgClassColor", true)
+    near(inst.mocks.__paint(R.__bg("player")).color, { 0.1, 0.2, 0.3, 0.35 }, "the class color, the swatch's alpha")
+end)
+
+test("lane render: the label's From skin flags resolve through the skin's outline", function()
+    local inst, R = setup()
+    assertEqual(cfgOf(inst, "player").labelOutline, "@skin", "From skin is the default")
+    R.Apply("player")
+    local _, _, flags = R.__label("player"):GetFont()
+    assertEqual(flags, inst.NS.Skin.FontFlags("@skin"))
+    set(inst, "player", "labelOutline", "THICKOUTLINE")
+    _, _, flags = R.__label("player"):GetFont()
+    assertEqual(flags, "THICKOUTLINE", "a picked flag wins")
+end)
+
+test("lane render: the label draws the skin's label color while its companion is on", function()
+    local inst, R = setup()
+    R.Apply("player")
+    near({ R.__label("player"):GetTextColor() }, skinColor(inst, "hud.label"), "the skin's label color")
+    set(inst, "player", "labelColorFromSkin", false)
+    near({ R.__label("player"):GetTextColor() }, { 1, 1, 1, 1 }, "the stored label color")
+end)
+
+test("lane render: a skin switch repaints a live lane", function()
+    local inst, R = setup()
+    R.Push("player", item(133, 0))
+    local bg = R.__bg("player")
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    local before = inst.mocks.__paint(bg).color
+    local source, skin = Skin:GetChoice("CombatTrail")
+    Skin:RegisterSkin({ key = "__laneProbe", label = "Probe", tokens = { ["bar.bg"] = { 0.9, 0.1, 0.1, 0.7 } } })
+    Skin:SetChoice("CombatTrail", "ka0s", "__laneProbe")
+    near(inst.mocks.__paint(bg).color, { 0.9, 0.1, 0.1, 0.7 }, "the background follows the new skin")
+    Skin:SetChoice("CombatTrail", source, skin)
+    near(inst.mocks.__paint(bg).color, before, "and comes back")
 end)

@@ -127,6 +127,48 @@ function NS.IsHudShown()
     return NS.Hud ~= nil and NS.Hud.IsShown ~= nil and NS.Hud.IsShown() == true
 end
 
+--- The Results window key and `/kct results`: show or hide the Results window.
+function NS.ToggleResults()
+    if refused() then return false end
+    if not (NS.Results and NS.Results.Toggle) then return notBuilt() end
+    NS.Results.Toggle()
+    return true
+end
+
+-- ── the lanes key ───────────────────────────────────────────────────────────────────────────────
+-- The Toggle lanes key writes each lane's Enable row through the seam, so the Lanes page, `/kct lane`
+-- and the CLI read what the key did. Off remembers which lanes were on, for this session only, so the
+-- key brings back exactly those; with no memory (both were off), it turns both on.
+
+local LANE_KEYS = { "player", "pet" }
+local lanesWereOn   -- { [laneKey] = true } while the key holds the lanes off, else nil
+
+local function laneOn(key)
+    return NS.GetSetting("lanes." .. key .. ".enabled") ~= false
+end
+
+--- The Toggle lanes key: every lane that is on goes off, or the lanes the key turned off come back.
+function NS.ToggleLanes()
+    if refused() then return false end
+    local on = {}
+    for _, key in ipairs(LANE_KEYS) do
+        if laneOn(key) then on[key] = true end
+    end
+    if next(on) then
+        lanesWereOn = on
+        for key in pairs(on) do NS.SetByPath("lanes." .. key .. ".enabled", false) end
+        NS.Print(L["The lanes are off. Press the key again to bring them back."])
+    else
+        local back = lanesWereOn or { player = true, pet = true }
+        lanesWereOn = nil
+        for _, key in ipairs(LANE_KEYS) do
+            if back[key] then NS.SetByPath("lanes." .. key .. ".enabled", true) end
+        end
+        NS.Print(L["The lanes are on."])
+    end
+    return true
+end
+
 -- ── Test mode and Sim mode ──────────────────────────────────────────────────────────────────────
 -- Session state, never stored (preview-mode): modules/Preview.lua owns the switch and its end
 -- conditions, modules/Sim.lua the sim's grammar and its step window. The Master controls' boxes, the

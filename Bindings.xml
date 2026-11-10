@@ -1,0 +1,14 @@
+<Bindings>
+	<!-- The key bindings (launcher-§6, plan Task 5.2): each clicks a plain, hidden button
+	     core/LauncherSetup.lua creates at load, whose OnClick is the SAME handler the launcher menu
+	     and the slash verb run (NS.ToggleHud, NS.ToggleResults, NS.ToggleLanes), so a press while
+	     stood down refuses exactly as the verb does. Every label, the category's title (the brand)
+	     included, and NS.BINDINGS (this file's order) are set there. Every Binding names the addon's
+	     own category and none carries a header, so Options -> Keybindings shows a "Ka0s Combat Trail"
+	     section with no blank row. No default key: the player picks one there or on the General
+	     page's Keybindings tab. The button names are permanent; renaming one unbinds every player's
+	     key. Not listed in the TOC: the client reads this file by name. -->
+	<Binding name="CLICK CombatTrailToggleHud:LeftButton" category="BINDING_HEADER_COMBATTRAIL"/>
+	<Binding name="CLICK CombatTrailToggleResults:LeftButton" category="BINDING_HEADER_COMBATTRAIL"/>
+	<Binding name="CLICK CombatTrailToggleLanes:LeftButton" category="BINDING_HEADER_COMBATTRAIL"/>
+</Bindings>

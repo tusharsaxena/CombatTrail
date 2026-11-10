@@ -392,3 +392,51 @@ test("lane casts: a listener hears every cast the lanes' rules keep, whatever ea
     fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-Q", 133)
     assertEqual(#got, 3, "off again")
 end)
+
+-- ── the log (debug-logging-§8) ──────────────────────────────────────────────────────────────────
+
+local function logged(inst, needle)
+    local n = 0
+    for _, line in ipairs(inst.NS.DebugLog.buffer) do
+        if line:find(needle, 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+test("lane casts: the log names each registration rebuild and the stand-down", function()
+    local inst = setup()
+    lanesOnly(inst)
+    inst.NS.State.debug = true
+    setLane(inst, "pet", "enabled", false)
+    assertEqual(logged(inst, "[Lanes] cast events registered for player (5 of 5)"), 1)
+    inst.NS.SetByPath("general.enabled", false)
+    assertEqual(logged(inst, "[Lanes] stood down: cast events released, 0 cast(s) in flight dropped"), 1)
+    inst.NS.SetByPath("general.enabled", true)
+    assertTrue(logged(inst, "[Lanes] cast events registered for player (5 of 5)") >= 2, "the stand-up rebuilds")
+end)
+
+test("lane casts: an event the client refuses is logged once", function()
+    local inst = setup()
+    lanesOnly(inst)
+    inst.NS.State.debug = true
+    local real = inst.NS.SafeRegisterUnitEvent
+    inst.NS.SafeRegisterUnitEvent = function(f, event, ...)
+        if event == "UNIT_SPELLCAST_EMPOWER_START" then return false end
+        return real(f, event, ...)
+    end
+    setLane(inst, "pet", "enabled", false)
+    setLane(inst, "pet", "enabled", true)
+    inst.NS.SafeRegisterUnitEvent = real
+    assertEqual(logged(inst, "[Lanes] cast event UNIT_SPELLCAST_EMPOWER_START refused by the client"), 1)
+    assertTrue(logged(inst, "(4 of 5)") >= 1, "the rebuild counts what took")
+end)
+
+test("lane casts: a cast a guard keeps off a lane is logged once per guard", function()
+    local inst = setup()
+    lanesOnly(inst)
+    inst.NS.State.debug = true
+    inst.NS.LaneIgnore.Add("player", 133)
+    fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-A", 133)
+    fire(inst, "UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-B", 133)
+    assertEqual(logged(inst, "[Lanes] player lane: casts not shown (ignored spell)"), 1, "one line for the repeat")
+end)

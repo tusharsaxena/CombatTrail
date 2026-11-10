@@ -38,6 +38,9 @@ L["Shows or hides the DPS HUD, as the launcher's Show window entry and /kct hud 
 L["Shows or hides the Results window, with your fight history."] =
     "Shows or hides the Results window, with your fight history."
 L["Shows or hides the Player and Pet cast lanes."] = "Shows or hides the Player and Pet cast lanes."
+L["The lanes are off. Press the key again to bring them back."] =
+    "The lanes are off. Press the key again to bring them back."
+L["The lanes are on."] = "The lanes are on."
 
 -- Shared refusals (slash-commands-§1, slash-commands-§7)
 L["%s is unavailable: the LibKa0s library did not load."] = "%s is unavailable: the LibKa0s library did not load."
@@ -372,6 +375,13 @@ L["Use the skin's color"] = "Use the skin's color"
 L["Draw this text in the skin's HUD text color. The Font color swatch is not read while this is on, and Use class color comes first."] =
     "Draw this text in the skin's HUD text color. The Font color swatch is not read while this is on, and Use class color comes first."
 L["Use the skin's shadow"] = "Use the skin's shadow"
+-- The Lanes page's skin companions (settings/Lanes.lua)
+L["Draw this in the skin's own color. The swatch is not read while this is on, and Use class color comes first."] =
+    "Draw this in the skin's own color. The swatch is not read while this is on, and Use class color comes first."
+L["Draw the label in the skin's HUD label color. The Font color swatch is not read while this is on, and Use class color comes first."] =
+    "Draw the label in the skin's HUD label color. The Font color swatch is not read while this is on, and Use class color comes first."
+L["Draw the label with the skin's shadow. Font shadow is not read while this is on."] =
+    "Draw the label with the skin's shadow. Font shadow is not read while this is on."
 L["Draw this text with the skin's shadow. Font shadow is not read while this is on."] =
     "Draw this text with the skin's shadow. Font shadow is not read while this is on."
 L["When it shows"] = "When it shows"

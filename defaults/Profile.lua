@@ -44,23 +44,32 @@ local function lane(key, over)
         strata    = "LOW", levelOffset = 0,
         -- Icons. Every color has its Use class color companion (`<part>ClassColor`, options-ui-§17,
         -- off), and the icon border its style (`borderTexture`, an LSM statusbar key, "" = flat).
+        -- Each style and color a skin describes follows it through its `<key>FromSkin` companion
+        -- (skinning-§6, options-ui-§16: on by default, the composer's default too): the border's
+        -- style and thickness (the composer's icon family), its color and the glow color.
         border = true, borderTexture = "", borderColor = rgba(1, 0.82, 0, 0.9), borderClassColor = false,
-        borderSize = 1, zoom = 0.08,
+        borderSize = 1, borderTextureFromSkin = true, borderColorFromSkin = true, zoom = 0.08,
         markInterrupted = true, glowLongCD = true, glowMinCD = 29, glowColor = rgba(1, 0.82, 0, 1),
-        glowClassColor = false,
+        glowClassColor = false, glowColorFromSkin = true,
         tooltip = true, showName = false, fade = 0.2, stack = false,
-        -- Background and border ("" texture = the skin's own)
+        -- Background and border ("" texture = flat); the background color, the lane border's style
+        -- and thickness (the composer's bar family) and its color follow the skin while on.
         background = true, bgTexture = "", bgColor = rgba(0, 0, 0, 0.35), bgClassColor = false,
+        bgColorFromSkin = true,
         laneBorder = false, laneBorderTexture = "", laneBorderColor = rgba(0, 0, 0, 1),
-        laneBorderClassColor = false, laneBorderSize = 1,
+        laneBorderClassColor = false, laneBorderSize = 1, laneBorderTextureFromSkin = true,
+        laneBorderColorFromSkin = true,
         padding = 0,
         -- Ticks and labels. tickSpacing "gcd15" (1.5 s) | "haste" (haste-adjusted GCD) | "1s".
         ticks = true, tickSpacing = "gcd15", tickColor = rgba(1, 1, 1, 0.25), tickClassColor = false,
         tickWidth = 1, now = true, nowColor = rgba(1, 1, 1, 0.6), nowClassColor = false,
         -- labelText "" = the lane's own name (the pet's name on the Pet lane, modules/LaneCasts.lua).
-        -- The label's font is the Lanes page's composed Font block (labelFont "" = the skin's font).
-        label = true, labelText = NS.L["You"], labelFont = "", labelSize = 12, labelOutline = "OUTLINE",
+        -- The label's font is the Lanes page's composed Font block (labelFont "" = the skin's font):
+        -- its face, flags ("@skin" = From skin, S.FontFlags), color and shadow follow the skin by
+        -- default (labelFontFromSkin, labelColorFromSkin, labelShadowFromSkin).
+        label = true, labelText = NS.L["You"], labelFont = "", labelSize = 12, labelOutline = "@skin",
         labelColor = rgba(1, 1, 1, 1), labelClassColor = false, labelShadow = false, labelPosition = "LEFT",
+        labelFontFromSkin = true, labelColorFromSkin = true, labelShadowFromSkin = true,
         -- Visibility. show "always" | "combat" | "combatOrTarget" | "never".
         visibility = { show = "always", hideAfter = 5, where = where(), hideMounted = true,
                        hideVehicle = true, hidePetBattle = true, hideResting = false,

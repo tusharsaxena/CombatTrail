@@ -1,7 +1,7 @@
 local addonName, NS = ...
 -- settings/General.lua — the General page: `Master controls` first (options-ui-§15), then `Look and
 -- skin` (the library's Skin tab with the global font scale under it, skinning-§3), and `Keybindings`
--- last (options-ui-§20, its rows arrive with Bindings.xml in plan Task 5.2); and the landing page's
+-- last (options-ui-§20, its rows NS.BINDINGS, core/LauncherSetup.lua's); and the landing page's
 -- spec, NS.LANDING (options-ui-§5).
 
 local L = NS.L
@@ -215,8 +215,8 @@ local LOOK_TAB = {
 }
 
 -- The page's host tabs, in strip order: Look and skin in its group's place, Keybindings last
--- (options-ui-§20). NS.BINDINGS arrives with Bindings.xml (plan Task 5.2).
-NS.GENERAL_TABS = { LOOK_TAB, H.KeybindingsTab({ bindings = NS.BINDINGS or {} }) }
+-- (options-ui-§20), drawn from NS.BINDINGS (core/LauncherSetup.lua, Bindings.xml's order).
+NS.GENERAL_TABS = { LOOK_TAB, H.KeybindingsTab({ bindings = NS.BINDINGS }) }
 
 -- ── The page ────────────────────────────────────────────────────────────────────────────────────
 local function build(mainCategory)

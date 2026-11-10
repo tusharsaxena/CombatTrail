@@ -31,6 +31,12 @@ local _, NS = ...
 -- NS.SafeRegisterUnitEvent (events-frames-taint-§1). LaneCasts.Sync() rebuilds it on login, on every
 -- SETTINGS_CHANGED that can move it, and at stand-up; the lifecycle's stand-down calls Suspend.
 -- Never COMBAT_LOG_EVENT_UNFILTERED: it is protected for addons on both clients.
+--
+-- THE LOG (debug-logging-§8, tag `Lanes`): one line per registration rebuild (the units, or none),
+-- one per event name the client refuses (once each), one at the stand-down, and one per lane each
+-- time the guard that keeps a cast off it changes (stood down, lane off, interrupt marks off, an
+-- ignored spell): a repeat of the same guard writes nothing (DebugChanged), so a busy rotation of
+-- ignored spells is one line, not a line per cast.
 
 local LaneCasts = {}
 NS.LaneCasts = LaneCasts
@@ -186,6 +192,11 @@ local HANDLERS = {
     failed      = onEnded,
 }
 
+-- The guard that kept a cast off lane `unit`, once per change of guard (the header's THE LOG).
+local function refused(unit, guard)
+    if NS.DebugChanged then NS.DebugChanged("laneCasts:" .. unit, "Lanes", "%s lane: casts not shown (%s)", unit, guard) end
+end
+
 local function tell(unit, spellID, t, interrupted)
     for _, l in ipairs(listeners) do l.fn(unit, spellID, t, interrupted) end
 end
@@ -193,7 +204,8 @@ end
 -- UNIT_SPELLCAST_*(unit, castGUID, spellID). The unit token is plain; the other two may be secret.
 local function hear(event, unit, castGUID, spellID)
     local kind = KIND[event]
-    if not kind or not IS_LANE[unit] or NS.IsStoodDown() then return end
+    if not kind or not IS_LANE[unit] then return end
+    if NS.IsStoodDown() then return refused(unit, "stood down") end
     local guid = Secrets.PlainString(castGUID)
     local secretGUID = guid == nil and castGUID ~= nil
     local interrupted = HANDLERS[kind](laneState(unit), guid, secretGUID, kind)
@@ -201,9 +213,9 @@ local function hear(event, unit, castGUID, spellID)
     local t = GetTime()
     tell(unit, spellID, t, interrupted)
     local cfg = laneConfig(unit)
-    if not cfg or cfg.enabled == false then return end
-    if interrupted and cfg.markInterrupted == false then return end
-    if LaneCasts.IsIgnored(unit, spellID) then return end
+    if not cfg or cfg.enabled == false then return refused(unit, "lane off") end
+    if interrupted and cfg.markInterrupted == false then return refused(unit, "interrupt marks off") end
+    if LaneCasts.IsIgnored(unit, spellID) then return refused(unit, "ignored spell") end
     push(unit, spellID, interrupted, t)
 end
 
@@ -246,17 +258,31 @@ function LaneCasts.Sync()
     if key == registered then return end
     unregisterAll()
     registered = key
-    if #units == 0 then return end
-    local f = ensureFrame()
-    for _, event in ipairs(EVENTS) do
-        NS.SafeRegisterUnitEvent(f, event, NS.rejectedEvents, units[1], units[2])
+    if #units == 0 then
+        if NS.Debug then NS.Debug("Lanes", "cast events released: no lane or listener wants them") end
+        return
     end
+    local f = ensureFrame()
+    local n = 0
+    for _, event in ipairs(EVENTS) do
+        if NS.SafeRegisterUnitEvent(f, event, NS.rejectedEvents, units[1], units[2]) then
+            n = n + 1
+        elseif NS.DebugOnce then
+            NS.DebugOnce("laneCasts:refused:" .. event, "Lanes", "cast event %s refused by the client", event)
+        end
+    end
+    if NS.Debug then NS.Debug("Lanes", "cast events registered for %s (%s of %s)", key, n, #EVENTS) end
 end
 
 --- The lifecycle's stand-down: every registration goes, and no cast stays in flight.
 function LaneCasts.Suspend()
+    local inFlight = 0
+    for _, s in pairs(state) do
+        if s.flight then inFlight = inFlight + 1 end
+    end
     unregisterAll()
     state = {}
+    if NS.Debug then NS.Debug("Lanes", "stood down: cast events released, %s cast(s) in flight dropped", inFlight) end
 end
 
 --- The lifecycle's stand-up: rebuilt from the CURRENT settings, never from a snapshot.
@@ -281,6 +307,14 @@ function LaneCasts.Unlisten(key)
         if listeners[i].key == key then table.remove(listeners, i) end
     end
     if registered ~= nil then LaneCasts.Sync() end
+end
+
+--- What the capture is registered for, for the diagnostics report: the unit set ("" none, "unknown"
+--- before the first Sync) and how many listeners hear the casts.
+function LaneCasts.Diagnose()
+    local units = registered
+    if units == nil then units = "unknown" elseif units == "" then units = "none" end
+    return { registered = units, listeners = #listeners }
 end
 
 --- The unit-filter frame (nil until a lane first registered), for the suites.

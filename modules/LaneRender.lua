@@ -29,6 +29,17 @@ local _, NS = ...
 -- is modules/LaneVisibility.lua's: each Apply asks LaneVisibility.Decide and shows or hides the lane
 -- (ApplyVisibility). A hidden lane holds no icon and takes no push.
 --
+-- THE SKIN (skinning-§6, plan Task 5.2). Every lane color a skin describes, and the label's face,
+-- flags and shadow, follow the skin through a `<key>FromSkin` companion (on by default): the icon
+-- border's style, thickness and color (`icon.borderStyle`, `icon.borderSize`, `icon.border`), the
+-- glow (`glow.color`), the background (`bar.bg`), the lane border (S.BarBorder over `bar.borderStyle`
+-- and `bar.borderSize`, `bar.border`), and the label (`hud.font`, S.FontFlags for a stored "@skin",
+-- S.HudLabelColor, S.HudShadow through S.HudFont). A class color comes first; a companion off, or a
+-- skin that states nothing, draws the stored value. The edges are strips, so a skin's border style
+-- draws flat (a texture picked on the Lanes page draws only while its companion is off, or under a
+-- skin whose bar border is None). The ticks and the now line are thin flat lines and keep their
+-- stored colors (skinning-§9's Leave class). A skin switch re-applies every lane (OnLooksChanged).
+--
 -- Stand-down (core/LifecycleSetup.lua) calls Suspend: every icon released, every lane hidden, no
 -- OnUpdate. Resume rebuilds from the CURRENT settings.
 
@@ -81,13 +92,36 @@ local CLASS_COLOR_OF = {
     nowColor = "nowClassColor", labelColor = "labelClassColor",
 }
 
---- A lane color as drawn: the swatch `cfg[key]`, or the class color while its companion is on.
+-- The skin's color for each color a skin describes, read while its `<key>FromSkin` is on.
+local SKIN_COLOR_OF = {
+    borderColor     = function(S) return S.Color("icon.border") end,
+    glowColor       = function(S) return S.GlowColor() end,
+    bgColor         = function(S) return S.Color("bar.bg") end,
+    laneBorderColor = function(S) return S.Color("bar.border") end,
+    labelColor      = function(S) return S.HudLabelColor() end,
+}
+
+-- The skin's color for `key`, or nil (companion off, no skin token, or a facade that answers none).
+local function skinTint(cfg, key)
+    local read = SKIN_COLOR_OF[key]
+    local S = NS.Skin
+    if not (read and S) or cfg[key .. "FromSkin"] ~= true then return nil end
+    local ok, r, g, b, a = pcall(read, S)
+    if not ok or type(r) ~= "number" then return nil end
+    return r, g, b, a or 1
+end
+
+--- A lane color as drawn: the class color while its companion is on (the swatch's alpha kept), else
+--- the skin's while its FromSkin companion is on, else the swatch `cfg[key]`.
 local function tint(cfg, key)
     local r, g, b, a = rgba(cfg[key])
-    if cfg[CLASS_COLOR_OF[key]] ~= true or not NS.ClassColor then return r, g, b, a end
-    local cr, cg, cb = NS.ClassColor("player")
-    if cr == nil then return r, g, b, a end
-    return cr, cg, cb, a
+    if cfg[CLASS_COLOR_OF[key]] == true and NS.ClassColor then
+        local cr, cg, cb = NS.ClassColor("player")
+        if cr ~= nil then return cr, cg, cb, a end
+    end
+    local sr, sg, sb, sa = skinTint(cfg, key)
+    if sr ~= nil then return sr, sg, sb, sa end
+    return r, g, b, a
 end
 
 local function num(v, default)
@@ -109,9 +143,51 @@ local function fontFace(key)
     return STANDARD_TEXT_FONT
 end
 
-local function outline(v)
-    if type(v) ~= "string" or v == "NONE" then return "" end
-    return v
+-- The label's face: the skin's `hud.font` while `labelFontFromSkin` is on (S.Resolve answers the
+-- stored pick while the owner ignores fonts), else the stored pick ("" = the skin's body font).
+local function labelFace(cfg)
+    local S = NS.Skin
+    if cfg.labelFontFromSkin == true and S and S.Resolve then
+        local ok, key = pcall(S.Resolve, "hud.font", cfg.labelFont, true)
+        local face = ok and media("font", key) or nil
+        if face then return face end
+    end
+    return fontFace(cfg.labelFont)
+end
+
+-- The icon border's texture (nil = flat), thickness and whether it shows. While
+-- `borderTextureFromSkin` is on the skin's icon border style and thickness draw: "None" hides it,
+-- any other style draws flat strips.
+local function iconEdge(cfg)
+    local size = math.max(1, num(cfg.borderSize, 1))
+    local tex, shown = media("statusbar", cfg.borderTexture), cfg.border ~= false
+    local S = NS.Skin
+    if cfg.borderTextureFromSkin ~= true or not (S and S.Resolve) then return tex, size, shown end
+    local okStyle, style = pcall(S.Resolve, "icon.borderStyle", cfg.borderTexture, true)
+    if okStyle and type(style) == "string" and style ~= cfg.borderTexture then
+        tex = nil
+        if style == "None" then shown = false end
+    end
+    local okSize, skinSize = pcall(S.Resolve, "icon.borderSize", size, true)
+    if okSize and type(skinSize) == "number" then size = math.max(1, skinSize) end
+    return tex, size, shown
+end
+
+-- The lane border's texture (nil = flat), thickness and whether it shows, through S.BarBorder: a
+-- skin's real bar border style wins while `laneBorderTextureFromSkin` is on; its None hands back the
+-- stored three.
+local function laneEdge(cfg)
+    local stored, show = cfg.laneBorderTexture, cfg.laneBorder == true
+    local size = math.max(1, num(cfg.laneBorderSize, 1))
+    local S = NS.Skin
+    if S and S.BarBorder then
+        local ok, style, skinShow, skinSize = pcall(S.BarBorder, stored, show, size,
+            cfg.laneBorderTextureFromSkin == true)
+        if ok and style ~= stored then
+            return nil, skinShow == true, math.max(1, num(skinSize, size))
+        end
+    end
+    return media("statusbar", stored), show, size
 end
 
 -- ── edges (an icon's border and glow, the lane's border): four strips round a frame ────────────
@@ -239,9 +315,10 @@ local function styleIcon(f, cfg, face)
     f:SetSize(size, size)
     local z = math.min(0.45, math.max(0, num(cfg.zoom, 0)))
     f.tex:SetTexCoord(z, 1 - z, z, 1 - z)
-    placeEdges(f.border, f, math.max(1, num(cfg.borderSize, 1)), 0)
-    paintEdges(f.border, cfg, "borderColor", media("statusbar", cfg.borderTexture))
-    showEdges(f.border, cfg.border ~= false)
+    local edgeTex, edgeSize, edgeShown = iconEdge(cfg)
+    placeEdges(f.border, f, edgeSize, 0)
+    paintEdges(f.border, cfg, "borderColor", edgeTex)
+    showEdges(f.border, edgeShown)
     placeEdges(f.glow, f, GLOW_SIZE, GLOW_SIZE)
     paintEdges(f.glow, cfg, "glowColor")
     showEdges(f.glow, wantsGlow(f.spellID, cfg))
@@ -394,9 +471,10 @@ local function applyBackground(st, cfg)
         st.bg:SetColorTexture(tint(cfg, "bgColor"))
     end
     st.bg:SetShown(cfg.background ~= false)
-    placeEdges(st.edges, st.frame, math.max(1, num(cfg.laneBorderSize, 1)), 0)
-    paintEdges(st.edges, cfg, "laneBorderColor", media("statusbar", cfg.laneBorderTexture))
-    showEdges(st.edges, cfg.laneBorder == true)
+    local edgeTex, edgeShown, edgeSize = laneEdge(cfg)
+    placeEdges(st.edges, st.frame, edgeSize, 0)
+    paintEdges(st.edges, cfg, "laneBorderColor", edgeTex)
+    showEdges(st.edges, edgeShown)
     st.now:SetColorTexture(tint(cfg, "nowColor"))
     placeLine(st.now, st.frame, 0, cfg, NOW_WIDTH)
     st.now:SetShown(cfg.now ~= false)
@@ -418,18 +496,25 @@ local function labelText(st, cfg)
     fs:SetAlpha(dim and LABEL_DIM or 1)
 end
 
+-- The label's stored shadow: the HUD text's shadow color at the one-pixel offset, or none.
+local function storedShadow(cfg)
+    if cfg.labelShadow ~= true then return false end
+    local r, g, b, a = NS.SkinColor("ct.hud.shadow")
+    if not r then return true end
+    return { 1, -1, r, g, b, a or 1 }
+end
+
+local labelFont = {}   -- refilled per call: S.HudFont keeps nothing of it
+
 local function applyLabel(st, cfg)
     local fs = st.label
-    fs:SetFont(fontFace(cfg.labelFont), math.max(6, num(cfg.labelSize, 12)), outline(cfg.labelOutline))
+    -- Face, size, flags and shadow through S.HudFont, the one way a 12.0.7 client draws a HUD
+    -- string's shadow; a stored "@skin" flag resolves through S.FontFlags inside it.
+    labelFont.face, labelFont.size = labelFace(cfg), math.max(6, num(cfg.labelSize, 12))
+    labelFont.flags = type(cfg.labelOutline) == "string" and cfg.labelOutline or ""
+    labelFont.shadow, labelFont.shadowFromSkin = storedShadow(cfg), cfg.labelShadowFromSkin == true
+    NS.Skin.HudFont(fs, labelFont)
     fs:SetTextColor(tint(cfg, "labelColor"))
-    -- Font shadow: the skin's HUD text shadow color, at the one-pixel offset the HUD's text uses.
-    local sr, sg, sb, sa = NS.SkinColor("ct.hud.shadow")
-    if cfg.labelShadow == true and sr then
-        fs:SetShadowColor(sr, sg, sb, sa or 1)
-        fs:SetShadowOffset(1, -1)
-    else
-        fs:SetShadowOffset(0, 0)
-    end
     local p = LABEL_POINTS[cfg.labelPosition] or LABEL_POINTS.LEFT
     fs:ClearAllPoints()
     fs:SetPoint(p[1], st.frame, p[2], p[3], p[4])
@@ -627,6 +712,13 @@ if busTarget then
     busTarget:RegisterMessage(NS.MSG.SETTINGS_CHANGED, onSettingsChanged)
 end
 
+-- A skin switch: every built lane re-applies over the new skin's tokens (the header's THE SKIN).
+NS.Skin.OnLooksChanged(function()
+    for _, laneKey in ipairs(LANES) do
+        if lanes[laneKey] then LaneRender.Apply(laneKey) end
+    end
+end)
+
 -- ── for the suites ─────────────────────────────────────────────────────────────────────────────
 
 --- The lane's live icons, newest first.
@@ -635,6 +727,11 @@ function LaneRender.__icons(laneKey)
     local out = {}
     for i, f in ipairs(st and st.icons or {}) do out[i] = f end
     return out
+end
+
+--- The lane's frame when it was built, else nil (never builds one: the diagnostics report reads it).
+function LaneRender.Frame(laneKey)
+    return lanes[laneKey] and lanes[laneKey].frame or nil
 end
 
 function LaneRender.__pool(laneKey) return lanes[laneKey] and lanes[laneKey].pool end

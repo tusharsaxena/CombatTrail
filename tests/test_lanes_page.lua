@@ -303,6 +303,8 @@ test("lanes page: a Use class color companion draws the player's class color", f
         m.RAID_CLASS_COLORS = { MAGE = { r = 0.25, g = 0.78, b = 0.92 } }
     end })
     local NS = inst.NS
+    -- The swatch, not the skin's label color, is what the companion falls back to here.
+    NS.SetByPath("lanes.player.labelColorFromSkin", false)
     NS.SetByPath("lanes.player.labelClassColor", true)
     local fs = NS.LaneRender.__label("player")
     local r, g, b = fs:GetTextColor()
