@@ -226,6 +226,7 @@ test("casts: a fight parked at a late re-entry ends at its combat end", function
     meter.SetSession(1, FIGHT)
     enter(inst, 100)
     cast(inst, 101, "player", 1)
+    cast(inst, 108, "player", 3)       -- within the next fight's PREPULL, but before this one's end
     leave(inst, 110)
     at(inst, 116)
     meter.SetSession(2, SECOND)
@@ -234,7 +235,7 @@ test("casts: a fight parked at a late re-entry ends at its combat end", function
     leave(inst, 130)
     settle(inst, 140)
     assertEqual(#ended, 2)
-    assertEqual(ids(inst.NS.Casts.Finish(ended[1].fight.id)), "1")
+    assertEqual(ids(inst.NS.Casts.Finish(ended[1].fight.id)), "1,3")
     assertEqual(ids(inst.NS.Casts.Finish(ended[2].fight.id)), "2", "nothing of the parked fight's")
 end)
 
