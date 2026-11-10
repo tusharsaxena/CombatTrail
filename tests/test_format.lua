@@ -46,6 +46,8 @@ test("format: a secret goes to a formatter that passes both checks", function()
     assertEqual(NS.Format.Number(T.secret(130600)), "130.6K")
     local f = m.__formatters[1]
     assertTrue(T.isSecret(f.seen[#f.seen]), "the secret itself was handed over")
+    NS.Format.Number(77.142857)
+    assertEqual(handedAfterChecks(f), 2, "a plain number skips even a trusted formatter")
 end)
 
 test("format: a formatter that renders a fraction raw fails the check, and the next constructor answers", function()
