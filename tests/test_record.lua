@@ -135,7 +135,9 @@ test("record: a real fight becomes a stored record with the spec §5 fields", fu
     assertEqual(type(r.casts), "string", "packed")
     assertEqual(r.version, NS.version)
     assertEqual(r.client, NS.Compat.ClientKey())
-    assertTrue(r.gear ~= nil and r.gear[1] ~= nil, "gear as item strings")
+    assertNil(r.gear, "no gear inline (v0.2 plan Task A3)")
+    assertEqual(type(r.gearSet), "string", "the gear set's key")
+    assertEqual(NS.Loadouts.GearOf(r)[1], "212001::::::::80:267::6:2:10390:1540", "the set holds the item strings")
     assertEqual(type(r.loadout), "string", "the talents' hash")
     assertTrue(NS.Loadouts.Get(r.loadout) ~= nil, "the talent string stored once, by hash")
     assertTrue(r.stats ~= nil, "stats")
@@ -247,11 +249,11 @@ test("record: 5-min raid record < 6 KB", function()
                                                      groupSize = 20, startT = 100, endT = 400, success = true } })
     f.snapshot.where = { instanceType = "raid", instanceName = "Liberation of Undermine", instanceID = 2769,
                          difficultyID = 15, difficultyName = "Heroic", maxPlayers = 30 }
-    f.loadout = { gear = {}, talents = { importString = ("C0PAAAAAAAAAAAAAAAAAAAAAAAAAAA"):rep(6), specID = 63,
-                                         name = "Raid ST", heroSpecID = 58, heroName = "Sunfury" } }
-    for slot = 1, 17 do
-        f.loadout.gear[slot] = ("2120%02d::::::::80:267::6:2:10390:1540::::::"):format(slot)
-    end
+    f.loadout = { talents = { importString = ("C0PAAAAAAAAAAAAAAAAAAAAAAAAAAA"):rep(6), specID = 63,
+                              name = "Raid ST", heroSpecID = 58, heroName = "Sunfury" } }
+    local gear = {}
+    for slot = 1, 17 do gear[slot] = ("2120%02d::::::::80:267::6:2:10390:1540"):format(slot) end
+    f.gearSet = NS.Loadouts.StoreGear(gear)
     f.stats = NS.Stats.Read()
     -- 300 casts: a press every second across 40 spells, a pet cast every third second.
     at(inst, 100)
@@ -349,7 +351,7 @@ test("no secret reaches the record", function()
     f.snapshot.who.ilvl = T.secret(650)
     f.snapshot.target.name = T.secret("Angry Boar")
     f.stats = { v = 1, crit = T.secret(25), haste = 12.5 }
-    f.loadout = { gear = { [1] = T.secret("212001::::"), [2] = "212002::::" } }
+    f.gearSet = T.secret("deadbeef")
     local final = fakeFinal()
     final.merged.spells[2] = { spellID = 999, total = T.secret(5), isPet = false }
     finish(NS, f, final)
@@ -359,8 +361,8 @@ test("no secret reaches the record", function()
     assertNil(r.who.ilvl)
     assertEqual(r.who.name, "Tush", "the plain fields stay")
     assertEqual(r.identity.targetCreatureID, 1985, "the target is still known by its creature")
-    assertNil(r.gear[1])
-    assertEqual(r.gear[2], "212002::::")
+    assertNil(r.gearSet, "a sealed gear set key is absent")
+    assertNil(r.gear)
     local spells = NS.Recorder.Spells(r)
     assertEqual(#spells, 1, "a spell whose total is sealed is left out")
     assertEqual(spells[1].spellID, 133)
@@ -391,4 +393,43 @@ test("record: a short fight with no readable character is skipped as short, the 
     f.snapshot.who.name = nil
     finish(NS, f, fakeFinal())
     assertEqual(heard.skipped[2].reason, "filtered")
+end)
+
+test("record: three fights in the same gear share one gear set; a swap between fights is a second", function()
+    local inst, meter, heard = fresh()
+    local NS, M = inst.NS, inst.mocks
+    -- Fight n on meter session n, a minute apart.
+    local function nth(n)
+        local t0 = n * 1000
+        at(inst, t0)
+        meter.SetSession(n, FIGHT)
+        enter(inst, t0)
+        at(inst, t0 + 1)
+        M.__fire("DAMAGE_METER_COMBAT_SESSION_UPDATED", 0, n)
+        leave(inst, t0 + 40)
+        settle(inst, t0 + 45)
+        settle(inst, t0 + 50)
+    end
+    for i = 1, 3 do
+        nth(i)
+        M.__fire("PLAYER_ENTERING_WORLD", false, true)
+        M.__fireTimers()
+        assertEqual(#heard.saved, i, "fight " .. i .. " saved")
+    end
+    local key = heard.saved[1].gearSet
+    assertTrue(key ~= nil)
+    assertEqual(heard.saved[2].gearSet, key)
+    assertEqual(heard.saved[3].gearSet, key)
+    assertEqual(NS.Loadouts.GearCount(), 1, "one set for three fights")
+    M.__gear[16] = "|cnIQ3:|Hitem:299999::::::::80:267::::::|h[Other Staff]|h|r"
+    M.__fire("PLAYER_EQUIPMENT_CHANGED", 16, true)
+    M.__fireTimers()
+    nth(4)
+    assertEqual(#heard.saved, 4)
+    assertTrue(heard.saved[4].gearSet ~= key, "the new weapon is another set")
+    assertEqual(NS.Loadouts.GearCount(), 2)
+    -- Deleting the fights on a set no longer current drops that set too.
+    for i = 1, 3 do NS.Recorder.Delete(heard.saved[i].id) end
+    assertNil(NS.Loadouts.GetGear(key), "the orphaned set swept with its last fight")
+    assertTrue(NS.Loadouts.GetGear(heard.saved[4].gearSet) ~= nil)
 end)

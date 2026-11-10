@@ -56,6 +56,7 @@ The debug flag, test mode and the sim are session-only (`NS.State`), never store
 | `fights` | The fight store, `{ [id] = record }` |
 | `fightOrder` | The store's ids, newest first |
 | `loadouts` | Talent loadouts interned once, keyed by hash; a record holds the key |
+| `gearSets` | Equipment sets interned once, `{ [key] = { [slot] = trimmed item string } }`, keyed by the hash of the canonical gear (`slot=item` in slot order); a record holds the key (`gearSet`). Created on first use |
 | `usage.hidden` | The item IDs the Usage list never shows, comma-separated |
 | `minimap` | LibDBIcon's own table, handed to `:Register` |
 | `skinNotice` | The account's one-time skin notice, written by LibKa0s-Options |
@@ -70,6 +71,7 @@ The debug flag, test mode and the sim are session-only (`NS.State`), never store
 | The saved Results view | `results.view` | modules/Results_Fights.lua | `writeView` (the Save view button) |
 | The fight store | `global.fights`, `global.fightOrder` | modules/Recorder.lua | `Recorder.Save`, `Recorder.Delete`, `Recorder.SetNote`; `Retention.Purge` (modules/Retention.lua) |
 | Interned loadouts | `global.loadouts` | modules/Loadouts.lua | `Loadouts.Store`; `Loadouts.Sweep`, called by the purge |
+| Equipment sets | `global.gearSets` | modules/Loadouts.lua | `Loadouts.StoreGear`, through `Loadouts.Recon` (PLAYER_ENTERING_WORLD, the debounced PLAYER_EQUIPMENT_CHANGED and UNIT_INVENTORY_CHANGED, the stand-up, and the pull when no set is known); `Loadouts.Sweep`, called by the purge and a delete, keeping the current set and the live fight's |
 | The Usage hidden list | `global.usage.hidden` | modules/Usage.lua | `Usage.Hide`, `Usage.Unhide` and the History page's Usage tab, all through `NS.SetByPath` |
 | The skin picker seen | `skin.pickerSeen`, `global.skinNotice` | core/SkinSetup.lua (LibKa0s-Options writes the notice) | the picker's close |
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
@@ -89,7 +91,7 @@ record with a higher `schema` than this build knows is never listed.
 | `damage`, `dps`, `meterDps` | `{ merged, player, pet }`, merged divided by duration, the meter's own figure |
 | `spells` | one packed string (CastCodec); `Recorder.Spells` unpacks it to `{ spellID, total, isPet }` |
 | `casts`, `cooldowns` | the packed cast list, and `{ [spellID] = ms }` for the timeline |
-| `gear`, `stats`, `loadout`, `usage` | trimmed item strings, the stats, the loadout key, what was used |
+| `gearSet`, `stats`, `loadout`, `usage` | the key of the equipment set current at combat start (`global.gearSets`; read through `Loadouts.GearOf`, which also takes a sample fight's inline `gear`), the stats (per fight: they move with buffs), the loadout key, what was used |
 | `note`, `client`, `build`, `version`, `status` | the player's note, `retail`/`forever`, the client build, the addon version, `"final"` |
 
 A five-minute raid fight packs under 6 KB (pinned by `tests/test_record.lua`), so 500 fights stay

@@ -13,7 +13,7 @@ shared by every character (`AceDB:New(..., true)`).
 
 These are global on purpose, so a profile switch never hides or moves them:
 
-- **The fight store** (`global.fights`, `global.fightOrder`) and the interned talent loadouts: a fight
+- **The fight store** (`global.fights`, `global.fightOrder`), the interned talent loadouts and the equipment sets: a fight
   belongs to the installation, and bests span characters.
 - **The Usage hidden list** (`global.usage.hidden`), as it filters the global store.
 - **The minimap button** (`global.minimap`): a per-installation display preference, which survives

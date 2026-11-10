@@ -2,8 +2,8 @@ local _, NS = ...
 -- modules/Results_Gear.lua — the gear view (spec §7, mockup §8): a window from the Results detail's
 -- *Gear view* button that lays the fight's gear out as the character panel does, without the model,
 -- with the stats the fight was pulled with where the model would be. Ported from DPS Race @045f479
--- (modules/Results_Gear.lua) for Combat Trail's record: the gear rides it as trimmed item strings
--- (modules/Loadouts.lua), each handed to the client as "item:<string>".
+-- (modules/Results_Gear.lua) for Combat Trail's record: its gear is an equipment set of trimmed item
+-- strings (record.gearSet, read through Loadouts.GearOf), each handed to the client as "item:<string>".
 --
 -- THE LAYOUT. A legend bar (this fight's label and item level in gold, the compared fight's in blue),
 -- then three columns: on the left head, neck, shoulders, back, chest, shirt and tabard (each only when
@@ -152,9 +152,9 @@ function Gear.SlotDiff(a, b)
     return d
 end
 
+-- The record's gear: its stored set, else a sample's inline gear (Loadouts.GearOf).
 local function gearOf(record)
-    local g = type(record) == "table" and record.gear or nil
-    return type(g) == "table" and g or nil
+    return NS.Loadouts.GearOf(record)
 end
 
 -- One side of a slot for SlotDiff: its item and, given `ilvlOf`, its item level.
@@ -171,6 +171,8 @@ end
 function Gear.ChangedSlots(record, other, ilvlOf)
     local a, b, out = gearOf(record), gearOf(other), {}
     if not (a and b) then return out end
+    -- One set on both fights: the same item strings, so nothing differs (not even an item level).
+    if a == b then return out end
     for _, slot in ipairs(NS.ResultsLoadout.ORDER) do
         local ia, ib = a[slot], b[slot]
         local d = (ia ~= nil or ib ~= nil) and Gear.SlotDiff(side(ia, ilvlOf), side(ib, ilvlOf)) or nil

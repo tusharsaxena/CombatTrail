@@ -36,7 +36,7 @@ identity header (brand, version, client build, locale, the running LibKa0s minor
 |---|---|
 | `identity` | The stored and code schema versions and the fight format, the profile, enabled, stood down, the holds |
 | `settings` | Every row that differs from its default |
-| `store` | The stored fights, the loadouts, the estimated size |
+| `store` | The stored fights, the loadouts, the gear sets, the estimated size |
 | `lanes` | Each lane on or off, the cast registrations and listeners, and per lane: shown, the visibility decision, the icons showing, the anchor mode, unlocked |
 | `fight` | The fight state machine's state, the current fight's id and session, the meter, the fights the chart holds, the probe armed |
 | `windows` | The HUD's state, body, pin and lock; the Results window, the timeline, the compare and the gear view |

@@ -21,6 +21,12 @@ local function fresh()
     return inst.NS, inst.mocks
 end
 
+--- The record's gear set key: `o.gear` stored as a set, unless the record carries it inline.
+local function gearSetOf(NS, o)
+    if o.inline or type(o.gear) ~= "table" then return nil end
+    return NS.Loadouts.StoreGear(o.gear)
+end
+
 local n = 0
 --- A stored-shape record on the logged-in character, on one boss board. `o`: id, dps, gear, stats.
 local function rec(NS, o)
@@ -35,7 +41,9 @@ local function rec(NS, o)
         schema = 1, id = o.id, t = NOW - n * 60, duration = 60, status = "final",
         who = who, identity = ident, boardKey = NS.Identity.BoardKey(ident),
         damage = { merged = dps * 60, player = dps * 60 }, dps = dps, meterDps = dps,
-        build = "120105", version = "0.1.0", gear = o.gear, stats = o.stats,
+        build = "120105", version = "0.1.0", stats = o.stats,
+        -- The gear as the recorder stores it, a set by key (v0.2 plan Task A3); `inline` = a sample's.
+        gear = o.inline and o.gear or nil, gearSet = gearSetOf(NS, o),
         spells = NS.CastCodec.EncodeSpells({ { spellID = 34026, total = dps * 60, isPet = false } }),
     }
 end
@@ -112,6 +120,34 @@ test("gear: gear changed slots detected", function()
     local notes = G.NoteLines({ item = true, ilvl = -1 }, "Best", "Old Trinket")
     assertEqual(notes[1], "Changed: Best wore Old Trinket.")
     assertEqual(notes[2], "Lower item level than Best's.")
+end)
+
+test("gear: a stored gear set and a sample's inline gear read alike through Loadouts.GearOf", function()
+    local NS = fresh()
+    local G = NS.ResultsGear
+    local a, b = rec(NS, { id = "a", gear = GEAR }), rec(NS, { id = "b", gear = BEST })
+    assertNil(a.gear, "the set, not the items, rides the record")
+    assertTrue(a.gearSet ~= nil and a.gearSet ~= b.gearSet)
+    local inlineA, inlineB = rec(NS, { id = "ia", gear = GEAR, inline = true }), rec(NS, { id = "ib", gear = BEST, inline = true })
+    assertNil(inlineA.gearSet)
+    local function slots(list)
+        local out = {}
+        for i, c in ipairs(list) do out[i] = c.slot end
+        return table.concat(out, ",")
+    end
+    assertEqual(slots(G.ChangedSlots(a, b)), "1,12,13,17")
+    assertEqual(slots(G.ChangedSlots(inlineA, inlineB)), "1,12,13,17", "the inline fallback")
+    assertEqual(slots(G.ChangedSlots(a, inlineB)), "1,12,13,17", "one of each")
+    -- The same set on both fights: nothing changed, and no slot walked.
+    local same = rec(NS, { id = "same", gear = GEAR })
+    assertEqual(same.gearSet, a.gearSet, "the same gear interns once")
+    assertEqual(#G.ChangedSlots(a, same, function() error("not asked") end), 0)
+    -- The row's gear (the character frame's order) through the set.
+    local order = NS.ResultsLoadout.Order(a)
+    assertEqual(order[1].slot, 1)
+    assertEqual(order[1].item, "212002:7000")
+    assertEqual(#NS.ResultsLoadout.Order(inlineA), #order)
+    assertNil(NS.ResultsLoadout.Order(rec(NS, { id = "bare" })))
 end)
 
 test("gear: the character panel's layout and its size", function()

@@ -202,7 +202,10 @@ gear, stats, talent loadout string, usage[], note, client key, build and addon v
 the record.** Fields that came back secret are left absent.
 
 **Record size (Claude).** Casts are stored packed: one string per fight, delta-encoded `t:spellID[:flags]`
-tokens, with the spell list kept separately. Gear is stored as trimmed item strings, not full links. The
+tokens, with the spell list kept separately. Gear is stored as trimmed item strings, not full links, and
+(v0.2) once per distinct equipment set in `db.global.gearSets`: a recon at every world entry and after each
+equipment change interns the set the player wears, and a record holds the key of the set current at combat
+start (`gearSet`). The
 talent string is stored once per distinct loadout and referenced by hash. The target is **under 6 KB for a
 5-minute raid fight**, so 500 fights stays around 3 MB or less. The cap is one global cap (bests exempt); the
 Retention page shows the current count and an estimated size. A per-content cap can come later if the owner

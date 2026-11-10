@@ -44,6 +44,7 @@ local FOREVER = NS.Compat.IsForever()
 local CLIENT = FOREVER and {
     scale = 4, level = 60, raid = { 9, "40 Player" },
     stats = { v = 1, stamina = 4100, armor = 3900, critRating = 0, crit = 18.20, hasteRating = 0, haste = 0 },
+    -- A sample carries its gear inline, never a set in db.global.gearSets (Loadouts.GearOf reads both).
     gear = { [1] = "16939", [5] = "16942", [7] = "16938", [13] = "19991", [18] = "18855" },
 } or {
     scale = 1000, level = 90, raid = { 15, "Heroic" }, specID = 253, specName = "Beast Mastery",

@@ -29,6 +29,9 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   §2's anti-goal).
 - The HUD redraws on `FIGHT_TICK` (0.25 s), not per frame; its rows and the Results window's rows
   come from pools.
+- The equipment recon walks the gear once per burst of `PLAYER_EQUIPMENT_CHANGED` /
+  `UNIT_INVENTORY_CHANGED` (one coalesced 0.5 s timer), never per event and never per fight: the pull
+  takes the current set's key.
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
 - On a boundary tick the HUD and the slices share one `Meter.ReadLive` of the session: Fight brackets

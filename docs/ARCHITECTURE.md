@@ -77,7 +77,7 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 The profile tree is `defaults/Profile.lua` (the only place a default is written): `general`,
 `lanes.player` / `lanes.pet`, `hud`, `history`, `results` and `skin`. The global tree holds the fight
-store (`fights`, `fightOrder`), the interned talent loadouts (`loadouts`), the Usage hidden list, the
+store (`fights`, `fightOrder`), the interned talent loadouts (`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the
 minimap table and `schemaVersion`, migrated by `core/Database.lua`'s runner to `NS.SCHEMA_VERSION`.
 Every row registers into `NS.Schema` through `NS.RegisterSchemaRows`, and every write goes through
 `NS.SetByPath`. The storage keys, the registry writer and its load pass, and every piece of named
@@ -123,6 +123,11 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   `ENCOUNTER_END` and the meter's `DAMAGE_METER_COMBAT_SESSION_UPDATED`, `_CURRENT_SESSION_UPDATED`
   and `_RESET`; stood down hears nothing.
 - **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges.
+- **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
+  `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an
+  AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one
+  too. `PLAYER_REGEN_ENABLED` asks for one only after a recon ran in combat, where a sealed link is
+  left out of the set. The stand-down drops the events and the timer.
 - **HUD and Results:** no game events; they hear the bus.
 
 Every registration goes through `NS.SafeRegisterEvent`, so a name a client does not know costs only

@@ -55,6 +55,9 @@ function NS.RegisterGameEvents()
     if NS.Meter then NS.Meter.Prime() end
     -- The fight watchers' events for the fight state machine's current state (modules/Watchers.lua).
     if NS.Watchers then NS.Watchers.Sync() end
+    -- The equipment recon's events, and one recon now: at login and every stand-up, whatever the gear
+    -- became while the addon was not watching is interned as the current set (modules/Loadouts.lua).
+    if NS.Loadouts then NS.Loadouts.Sync() end
     -- The stored fights' purge, at login and every stand-up, and its daily timer (modules/Retention.lua).
     if NS.Retention then NS.Retention.Sync() end
     -- The DPS HUD registers nothing with the client; "always" opens it at login and every stand-up

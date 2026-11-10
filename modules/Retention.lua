@@ -4,8 +4,8 @@ local _, NS = ...
 -- while `history.keepBests` is on (modules/Bests.lua), then caps the store at `history.maxFights`
 -- (0 is no cap): the oldest non-best fights go first. It runs at login (and every stand-up), once a
 -- day while logged in (out of combat), and from `/ct purge`. Each run also puts db.global.fightOrder back in step
--- with the store (newest first, no id without its record), and sweeps the talent loadouts no fight
--- refers to any more (modules/Loadouts.lua). FIGHTS_CHANGED fires once when anything was removed.
+-- with the store (newest first, no id without its record), and sweeps the talent loadouts and the
+-- equipment sets no fight refers to any more (modules/Loadouts.lua). FIGHTS_CHANGED fires once when anything was removed.
 --
 -- A record written by a later version (modules/Recorder.lua's Recorder.Known) is never removed and
 -- never listed.
@@ -227,11 +227,11 @@ function Retention.SizeOf(v)
 end
 
 --- About how many bytes the fight store takes in SavedVariables: the fights, their order and the
---- talent loadouts they refer to.
+--- talent loadouts and equipment sets they refer to.
 --- @return number bytes
 function Retention.EstimateBytes()
     local g = NS.db and NS.db.global
     if type(g) ~= "table" then return 0 end
     return Retention.SizeOf(g.fights or {}) + Retention.SizeOf(g.fightOrder or {})
-        + Retention.SizeOf(g.loadouts or {})
+        + Retention.SizeOf(g.loadouts or {}) + Retention.SizeOf(g.gearSets or {})
 end

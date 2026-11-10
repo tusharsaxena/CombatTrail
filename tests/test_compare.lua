@@ -22,6 +22,12 @@ local function fresh()
     return inst.NS, inst.mocks
 end
 
+--- The record's gear set key: `o.gear` stored as a set, unless the record carries it inline.
+local function gearSetOf(NS, o)
+    if o.inline or type(o.gear) ~= "table" then return nil end
+    return NS.Loadouts.StoreGear(o.gear)
+end
+
 local n = 0
 --- A stored-shape record on the logged-in character, on one boss board. `o`: id, dps, duration,
 --- spells ({ { spellID, total, isPet } }), gear, loadout, encounterID.
@@ -39,7 +45,9 @@ local function rec(NS, o)
         schema = 1, id = o.id, t = NOW - n * 60, duration = duration, status = "final",
         who = who, identity = ident, boardKey = NS.Identity.BoardKey(ident),
         damage = { merged = merged, player = merged }, dps = dps, meterDps = dps,
-        build = "120105", version = "0.1.0", gear = o.gear, loadout = o.loadout,
+        build = "120105", version = "0.1.0", loadout = o.loadout,
+        -- The gear as the recorder stores it, a set by key (v0.2 plan Task A3); `inline` = a sample's.
+        gear = o.inline and o.gear or nil, gearSet = gearSetOf(NS, o),
         spells = NS.CastCodec.EncodeSpells(o.spells or { { spellID = KC, total = merged, isPet = false } }),
     }
 end
@@ -248,6 +256,25 @@ test("compare: an upgraded item is on the gear line", function()
     assertEqual(#texts, 1, "the same item ID, another item level")
     assertEqual(texts[1], "Trinket 2 \194\183 714 \194\187 727")
     assertFalse(ui.gearNone:IsShown())
+end)
+
+test("compare: the gear line reads stored sets, a sample's inline gear, and one set on both says no change", function()
+    local NS = fresh()
+    save(NS, rec(NS, { id = "best", dps = 3000, gear = { [13] = "212001" }, inline = true }),
+        rec(NS, { id = "mid", dps = 2000, gear = { [13] = "212009" } }),
+        rec(NS, { id = "low", dps = 1000, gear = { [13] = "212009" } }))
+    detailOn(NS, "mid").w.compare:__fire("OnClick")
+    local ui = NS.ResultsCompare.__ui()
+    local function texts()
+        local out = {}
+        for _, g in ipairs(ui.gearItems) do if g.text:IsShown() then out[#out + 1] = g.text:GetText() end end
+        return out
+    end
+    assertEqual(texts()[1], "Trinket 1 \194\183 another item", "a set against an inline sample")
+    NS.Results.CompareWith("low")
+    assertEqual(#texts(), 0, "the same set")
+    assertTrue(ui.gearNone:IsShown())
+    assertEqual(ui.gearNone:GetText(), "No gear changed.", "recorded on both, through the sets")
 end)
 
 test("compare: Escape closes the compare first and the Results window stays", function()

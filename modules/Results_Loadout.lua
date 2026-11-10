@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Results_Loadout.lua — the fight detail's Gear and Talents (spec §7, mockup §5): what the
 -- fight was fought with. Adapted from DPS Race @045f479 (modules/Results_Loadout.lua) for Combat
--- Trail's record: the gear rides the record as trimmed item strings (modules/Loadouts.lua), the
+-- Trail's record: the gear is an equipment set of trimmed item strings, stored once and referenced by
+-- key (record.gearSet, read through Loadouts.GearOf, which also takes a sample's inline gear), and the
 -- talents are stored once and referenced by key (record.loadout, Loadouts.Get).
 --
 -- THE GEAR is a row of item icons in the character frame's order, wrapping across the pane, each
@@ -53,7 +54,7 @@ local SEP = " \194\183 "
 --- @param record table|nil
 --- @return table|nil
 function Loadout.Order(record)
-    local gear = type(record) == "table" and record.gear or nil
+    local gear = NS.Loadouts.GearOf(record)
     if type(gear) ~= "table" then return nil end
     local out = {}
     for _, slot in ipairs(Loadout.ORDER) do

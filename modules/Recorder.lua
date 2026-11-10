@@ -31,7 +31,7 @@ local _, NS = ...
 -- boardKey, damage = { merged, player, pet? }, dps, meterDps?, spells (CastCodec.EncodeSpells'
 -- packed string; Recorder.Spells unpacks it to { { spellID, total, isPet } }), casts (CastCodec's
 -- packed string), cooldowns ({ [spellID] = ms }, the timeline's),
--- gear ({ [slot] = item string }), stats, loadout (Loadouts' key), usage, note?, client, build,
+-- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, note?, client, build,
 -- version, status = "final" }.
 
 local Recorder = {}
@@ -257,10 +257,11 @@ local function castsOf(fight)
     return NS.CastCodec.Encode(casts), cooldowns, usage
 end
 
+-- The talents' key (stored now, once) and the gear set's (interned at the pull, modules/Loadouts.lua).
 local function loadoutOf(fight)
     local lo = type(fight.loadout) == "table" and fight.loadout or {}
     local key = lo.talents and NS.Loadouts.Store(plainCopy(lo.talents, 0)) or nil
-    return lo.gear, key
+    return Secrets.PlainString(fight.gearSet), key
 end
 
 local function buildOf()
@@ -275,7 +276,7 @@ function Recorder.Build(fight, final, identity, duration)
     local merged = final.merged or {}
     local total = Secrets.PlainNumber(merged.total) or 0
     local casts, cooldowns, usage = castsOf(fight)
-    local gear, loadout = loadoutOf(fight)
+    local gearSet, loadout = loadoutOf(fight)
     local raw = {
         schema = Recorder.CT_SCHEMA, t = startEpoch(fight), duration = duration,
         who = type(fight.snapshot) == "table" and fight.snapshot.who or nil,
@@ -283,7 +284,7 @@ function Recorder.Build(fight, final, identity, duration)
         damage = { merged = total, player = final.player and final.player.total,
                    pet = final.pet and final.pet.total },
         dps = duration > 0 and round1(total / duration) or 0, meterDps = round1(merged.dps),
-        spells = spellsOf(merged), casts = casts, cooldowns = cooldowns, gear = gear,
+        spells = spellsOf(merged), casts = casts, cooldowns = cooldowns, gearSet = gearSet,
         stats = NS.Stats.Fill(plainCopy(fight.stats, 0)), loadout = loadout, usage = usage,
         client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version, status = "final",
     }

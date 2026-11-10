@@ -44,8 +44,8 @@ end
 
 -- The store: stored configuration, so it prints stood down too.
 local function store(out)
-    out:add("Diag", "fights stored=%s loadouts=%s bytes~%s", NS.Recorder.Count(), NS.Loadouts.Count(),
-        NS.Retention.EstimateBytes())
+    out:add("Diag", "fights stored=%s loadouts=%s gearSets=%s bytes~%s", NS.Recorder.Count(),
+        NS.Loadouts.Count(), NS.Loadouts.GearCount(), NS.Retention.EstimateBytes())
 end
 
 local function lanes(out)

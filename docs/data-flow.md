@@ -50,9 +50,9 @@ PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
 FIGHT_ENDED
   -> modules/Recorder.lua   Filters.Passes(identity, duration): short or filtered -> FIGHT_SKIPPED
        no readable character -> FIGHT_SKIPPED "unknown"; lost -> FIGHT_SKIPPED "lost"
-       else Recorder.Build: identity and board key (Identity), casts packed (CastCodec), gear trimmed
-       and the loadout interned (Loadouts), stats completed (Stats.Fill), usage (Usage), every value
-       copied through plainCopy so nothing sealed survives
+       else Recorder.Build: identity and board key (Identity), casts packed (CastCodec), the gear set
+       taken at the pull and the loadout interned (Loadouts), stats completed (Stats.Fill), usage
+       (Usage), every value copied through plainCopy so nothing sealed survives
   -> db.global.fights[id], fightOrder; FIGHT_SAVED(record)
   -> Bests recomputes the board; Slices adopts the record id for the chart; the HUD's card shows
        Saved and New best; the Results window redraws

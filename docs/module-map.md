@@ -64,7 +64,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |
 | `modules/Usage.lua` | What a fight used: on-use gear and consumables |
 | `modules/Stats.lua` | The character's stats at the fight's start, completed after combat |
-| `modules/Loadouts.lua` | The gear and the interned talent loadout of a fight |
+| `modules/Loadouts.lua` | The interned equipment sets (and their recon) and talent loadouts a fight refers to |
 | `modules/Filters.lua` | The recording filters a fight must pass to be stored |
 | `modules/Bests.lua` | Personal bests, worked out from the stored fights |
 | `modules/Recorder.lua` | The fight record and the store |

@@ -451,7 +451,7 @@ Total.
 - stats: Groups lays out Primary, Secondary and Tertiary with each value's text
 - stats: deltas against the compared fight, signed, the percent deciding a rated row
 
-### test_loadouts.lua (8)
+### test_loadouts.lua (20)
 
 - loadouts: an item link trims to its item string, and back
 - loadouts: Snapshot reads the gear as item strings without the shirt or the tabard, and the talents
@@ -461,6 +461,18 @@ Total.
 - loadouts: loadout dedupes by hash
 - loadouts: two loadouts with one hash are told apart; the same one finds its own key
 - loadouts: Sweep drops the loadouts no stored fight refers to
+- gear sets: one changed slot (an enchant) is a second set; the stored set is a plain copy
+- gear sets: two sets with one hash are told apart by their canonical form
+- gear sets: a burst of six PLAYER_EQUIPMENT_CHANGED in one frame interns one set
+- gear sets: a login with unchanged gear makes no new set
+- gear sets: recon runs on PLAYER_ENTERING_WORLD, on the equipment change and on UNIT_INVENTORY_CHANGED
+- gear sets: a stand-down drops the events and the pending recon; the stand-up reconciles
+- gear sets: the fight takes the set current at combat start, even with a swap pending or in combat
+- gear sets: a recon in combat over sealed links is read again once combat ends
+- gear sets: with no set known yet, the pull reconciles once
+- gear sets: GearOf reads the record's set, else an inline gear (sample fights)
+- gear sets: Sweep drops the orphaned sets, keeping the referenced and the current one
+- gear sets: the stored size estimate counts the sets
 
 ### test_filters.lua (10)
 
@@ -503,7 +515,7 @@ Total.
 - retention: /ct purge purges now and says how many went
 - retention: EstimateBytes sizes the store as SavedVariables writes it
 
-### test_record.lua (15)
+### test_record.lua (16)
 
 - record: a real fight becomes a stored record with the spec §5 fields
 - record: 22 s fight skipped as short
@@ -520,6 +532,7 @@ Total.
 - reload mid-fight leaves store valid
 - no secret reaches the record
 - record: a short fight with no readable character is skipped as short, the filters first
+- record: three fights in the same gear share one gear set; a swap between fights is a second
 
 ### test_slices.lua (18)
 
@@ -693,7 +706,7 @@ Total.
 - timeline: the empty cases
 - timeline: a stand-down refuses the open
 
-### test_compare.lua (7)
+### test_compare.lua (8)
 
 - compare: vs best, runner-up when best
 - compare: session pick overrides until cleared
@@ -701,12 +714,14 @@ Total.
 - compare: different loadout mark
 - compare: the window opens over the Results window, follows the detail and closes with it
 - compare: an upgraded item is on the gear line
+- compare: the gear line reads stored sets, a sample's inline gear, and one set on both says no change
 - compare: Escape closes the compare first and the Results window stays
 
-### test_gear.lua (5)
+### test_gear.lua (6)
 
 - gear: the stored item strings parsed for their enchant and gems
 - gear: gear changed slots detected
+- gear: a stored gear set and a sample's inline gear read alike through Loadouts.GearOf
 - gear: the character panel's layout and its size
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
@@ -941,11 +956,11 @@ Total.
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 7 |
-| test_loadouts.lua | 8 |
+| test_loadouts.lua | 20 |
 | test_filters.lua | 10 |
 | test_bests.lua | 9 |
 | test_retention.lua | 13 |
-| test_record.lua | 15 |
+| test_record.lua | 16 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 24 |
 | test_hud_pace.lua | 5 |
@@ -958,8 +973,8 @@ Total.
 | test_results_detail.lua | 14 |
 | test_share.lua | 5 |
 | test_timeline.lua | 12 |
-| test_compare.lua | 7 |
-| test_gear.lua | 5 |
+| test_compare.lua | 8 |
+| test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 15 |
 | test_preview.lua | 7 |
@@ -977,4 +992,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **747** |
+| **Total** | **762** |

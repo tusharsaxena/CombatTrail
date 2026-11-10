@@ -158,6 +158,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-T6 | Both | The gear view: file id 136244 for the enchant mark, Shift-click links | The mark draws; links post |
 | SM-CT-T7 | Forever | The gear view's primary stat | A dash, by design |
 | SM-CT-T8 | Both | The Never show menu in the Usage edit | The item leaves the list and joins History → Usage |
+| SM-CT-T9 | Both | Fight twice in the same gear, swap a full equipment set (the Equipment Manager), fight again, `/reload`, fight again, then `/ct diag` | `gearSets=2`, not one per fight or per slot; the gear view and Compare's *Gear changed* show the swap; nothing new after the reload |
 
 ## 7. Settings pages
 
