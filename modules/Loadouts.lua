@@ -6,7 +6,7 @@ local _, NS = ...
 --
 -- THE SNAPSHOT (Loadouts.Snapshot, at FIGHT_STARTED, riding the fight table as `fight.loadout`): every
 -- equipped item but the shirt and the tabard (cosmetic), each as its item string with the link's
--- colour, name and trailing empty fields trimmed ("212001::::::::80:267::6:2:10390:1540"; about a
+-- color, name and trailing empty fields trimmed ("212001::::::::80:267::6:2:10390:1540"; about a
 -- third of a full link), and the active talent loadout: its spec, name (the player's saved loadout's,
 -- else the active config's), hero tree and import string. Each client value passes through NS.Secrets;
 -- a sealed one is absent. Each client function is read bare at CALL time and pcall'd.
