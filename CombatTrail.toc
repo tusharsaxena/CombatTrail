@@ -150,6 +150,7 @@ modules\Recorder.lua
 # The purge (at login, daily, `/kct purge`) and the store's size. Reaches NS.Recorder, NS.Bests,
 # NS.Loadouts and NS.db at CALL time only; its daily timer is the addon object's AceTimer.
 modules\Retention.lua
+modules\Slices.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

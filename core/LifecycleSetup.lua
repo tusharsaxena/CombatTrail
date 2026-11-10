@@ -12,7 +12,8 @@ local L = NS.L
 -- 4). A module carries `Suspend` (nothing on screen, no timer, no registration) and `Resume` (rebuilt
 -- from CURRENT settings).
 local MODULES = { "LaneCasts", "LaneAnchor", "LaneVisibility", "LaneRender", "Probe", "Meter", "Fight",
-                  "Watchers", "Casts", "Usage", "Retention" }
+                  "Watchers", "Casts", "Usage", "Retention",
+                  "Slices" }
 
 --- Disabled means NOT RUNNING. Every registration goes -- not gated -- every timer is canceled, and
 --- every frame is hidden at the source of its show decision.

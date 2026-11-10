@@ -318,6 +318,8 @@ function Recorder.OnFightEnded(fight, final, reason)
     local ok, why = NS.Filters.Passes(identity, duration)
     if not ok then return skip(fight, why) end
     local record = Recorder.Build(fight, final, identity, duration)
+    -- The fight remembers its record, so the chart's in-session store (modules/Slices.lua) answers it.
+    fight.recordID = record.id
     if Recorder.Save(record) then debug("fight %s stored as %s (%.1f s)", fight.id, record.id, duration) end
 end
 
