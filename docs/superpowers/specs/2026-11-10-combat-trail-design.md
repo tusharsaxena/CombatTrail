@@ -266,8 +266,13 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
 - **Detail:** header (who and spec, then three meta lines since v0.2: realm, ilvl and the place; the target and its
   level, difficulty, tier, length and pet; the date, build and version), stat boxes (damage,
   DPS, meter DPS, a Delta or "Leads by" box), the damage chart (this session only), the spell breakdown with pet
-  spells tagged, Gear and Talents (Gear view, View talents, Copy import string), Usage (Edit), and buttons for Timeline,
-  Compare vs best, Add note, Share and Delete. A fold arrow hides the detail.
+  spells tagged, Gear and Talents (View gear, View Talents), Usage (Edit), and the note. Since v0.2 every section
+  heading (Damage profile, Spell breakdown, Gear and Talents, Usage, Note) folds by its own arrow, chevron-down open
+  and chevron-right folded, per profile in `results.collapsedSections`, which Reset position keeps. The talents line
+  names the loadout and its hero tree on Retail, and the class and its points per tree on WoW Forever ("Talents:
+  Hunter (31/20/0)"); the import string's Copy button is gone, since View Talents posts the link that carries it.
+  The footer follows DPS Race: Add Note, Share, Timeline and Compare as plain buttons, with Delete at the right. The
+  window's fold arrow hides the whole detail.
 - **Window (v0.2):** it closes when combat starts (`results.closeInCombat`, on by default); one reopened mid-fight
   stays open. The fold arrow shows a right chevron collapsed and a left one expanded (DPS Race's). Character is a
   fixed 104 px column its header's edge drags, and the encounter or target column takes the window's slack.

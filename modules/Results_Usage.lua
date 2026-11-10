@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Results_Usage.lua — what a fight used (spec §7, mockup §5), as the fight detail shows it,
 -- and the player's edit of it. Adapted from DPS Race @045f479 (modules/Results_Usage.lua) without its
--- race and without its folding heading (spec §7 names one fold arrow, the window's). The fight list's
--- Used column (v0.2 Task C2) reads Count and Icons.
+-- race; its heading folds as DPS Race's does (v0.2 Task C3: the "usage" key, Pane:AddHeading in
+-- modules/Results_Detail.lua; folded, the heading alone, Edit and Save hidden and an edit under way
+-- kept out of sight). The fight list's Used column (v0.2 Task C2) reads Count and Icons.
 --
 -- THE SECTION shows what was used: one row per used entry, the item's icon and its name with a dim
 -- detail after it ("x2 at 0:09, 1:12", "active at the start", "time unknown"), or a dim *Nothing
@@ -349,6 +350,7 @@ function ResultsUsage.Build(p, c)
     x.edit:SetSize(ResultsUsage.EDIT_W, ResultsUsage.BUTTON_H)
     x.edit.tip = { L["Edit"], L["Tick what the fight really used: an item the detection missed, or one it got wrong."] }
     x.none = Style.Text(c, FONT.TEXT, Tbl().COLORS.dim)
+    x.titleHover = p:AddHeading("usage", x.title).click
     return x
 end
 
@@ -464,18 +466,24 @@ local function layoutRow(p, row, y, cw)
     row:Show()
 end
 
---- The section at `y` across `cw`, *Edit* at the heading's right and *Save* (in the edit) left of
---- it; answers the y beneath.
+--- The section at `y` across `cw` (its heading INDENT in after its arrow), *Edit* at the heading's
+--- right and *Save* (in the edit) left of it; folded, the heading alone. Answers the y beneath.
 function ResultsUsage.Layout(p, y, cw)
     local x = p.usage
     y = y - Style.SECTION_GAP
-    place(x.title, p.content, 0, y)
+    place(x.title, p.content, NS.ResultsDetail.INDENT, y)
+    local body = not p:Heading("usage", true)
+    x.edit:SetShown(body)
     place(x.edit, p.content, cw - ResultsUsage.EDIT_W, y)
-    x.save:SetShown(x.editing)
+    x.save:SetShown(body and x.editing)
     place(x.save, p.content, cw - ResultsUsage.EDIT_W - ResultsUsage.BUTTON_GAP - ResultsUsage.SAVE_W, y)
     y = y - Style.SECTION_H
     local n = x.rows and #x.rows or 0
-    x.none:SetShown(n == 0)
+    x.none:SetShown(body and n == 0)
+    if not body then
+        for _, row in ipairs(x.items) do row:Hide() end
+        return y
+    end
     if n == 0 then
         place(x.none, p.content, 0, y)
         x.none:SetWidth(cw)

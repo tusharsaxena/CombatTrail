@@ -7,13 +7,19 @@ local _, NS = ...
 --
 -- THE GEAR is a row of item icons in the character frame's order, wrapping across the pane, each
 -- with its quality edge and item level (mockup §5's gear row); hovering one shows the client's own
--- item tooltip from the stored item string, and Shift-click links it in chat. *Gear view* (the gear
+-- item tooltip from the stored item string, and Shift-click links it in chat. *View gear* (the gear
 -- and the stats laid out as the character panel does) opens modules/Results_Gear.lua's window; it is
 -- grayed for a fight with no gear. A fight with no gear says *Not recorded*.
 --
--- THE TALENTS line names the loadout and its hero tree, with *View* (the `talentbuild` link posted to
--- the player's own chat window, and the tree opened read-only through SetItemRef; the Results window
--- steps aside for the tree, modules/Results.lua) and *Copy* (the import string in the copy window).
+-- THE TALENTS line names the loadout and its hero tree on Retail; on WoW Forever, where a fight
+-- stores its points per talent tree (who.trees, v0.2 plan Task A4), it names the class and those
+-- points, "Hunter (31/20/0)" (Task C3). *View Talents* posts the `talentbuild` link to the player's
+-- own chat window and opens the tree read-only through SetItemRef (the Results window steps aside for
+-- the tree, modules/Results.lua). The import string's Copy button is gone (Task C3): the posted link
+-- carries it.
+--
+-- THE SECTION FOLDS (Task C3): its heading's arrow (Pane:AddHeading, modules/Results_Detail.lua)
+-- folds the gear, the talents line and both buttons under the "loadout" key.
 --
 -- THE TAINT RISK IS DPS RACE'S OWNER'S CALL (2026-10-25), kept: SetItemRef from this button shows the
 -- talent frame from this addon's execution, and its OnShow writes the action bars' show-grid state
@@ -21,8 +27,8 @@ local _, NS = ...
 -- Clicking the posted chat link instead opens the tree without that risk, which is why it is posted.
 --
 -- PLAIN DATA ONLY: item strings, names and import strings stored out of combat. The row is laid out
--- from the constants here, never from a size read back. Order, ItemID, LinkData, Hyperlink, CanView
--- and TalentsText are pure.
+-- from the constants here, never from a size read back. Order, ItemID, LinkData, Hyperlink, CanView,
+-- Points and TalentsText are pure.
 
 local Loadout = {}
 NS.ResultsLoadout = Loadout
@@ -34,8 +40,8 @@ local FONT = Style.FONT
 Loadout.ICON = 24          -- an item's icon, inside its 1px quality edge
 Loadout.PITCH = 28         -- one icon's step across, and one row's down
 Loadout.BUTTON_H = 18
-Loadout.GEAR_W = 76        -- the Gear view button
-Loadout.TALENT_W = 52      -- View and Copy
+Loadout.GEAR_W = 76        -- the View gear button
+Loadout.TALENT_W = 84      -- the View Talents button
 Loadout.LINE_H = 14
 -- The color the client draws a talentbuild link in (NORMAL_FONT_COLOR): a DATA hue, the link's own
 -- under every skin, since it is what another player's chat draws.
@@ -109,8 +115,28 @@ function Loadout.CanView(t)
     return Loadout.LinkData(t) ~= nil
 end
 
---- The talents line: the loadout's name, then its hero tree; "Not recorded" with none.
-function Loadout.TalentsText(t)
+--- A fight's points per talent tree, "31/20/0", from `who.trees` (WoW Forever's, plain numbers), or
+--- nil with none.
+--- @param w table|nil  record.who
+--- @return string|nil
+function Loadout.Points(w)
+    local trees = type(w) == "table" and w.trees or nil
+    if type(trees) ~= "table" or #trees == 0 then return nil end
+    local out = {}
+    for i, n in ipairs(trees) do
+        if type(n) ~= "number" then return nil end
+        out[i] = ("%d"):format(n)
+    end
+    return table.concat(out, "/")
+end
+
+--- The talents line: on WoW Forever (a fight with points per tree) the class and its points,
+--- "Hunter (31/20/0)"; else the loadout's name, then its hero tree; "Not recorded" with neither.
+--- @param t table|nil  the stored loadout
+--- @param w table|nil  record.who
+function Loadout.TalentsText(t, w)
+    local points = Loadout.Points(w)
+    if points then return ("%s (%s)"):format(NS.ResultsTable.ClassName(w.class), points) end
     if type(t) ~= "table" then return L["Not recorded"] end
     local parts = { t.name or L["Unnamed loadout"] }
     if t.heroName then parts[#parts + 1] = t.heroName end
@@ -156,15 +182,6 @@ function Loadout.View(t, level, label)
     local ok = pcall(open, Loadout.LinkData(t, level), link, "LeftButton")
     if ok and NS.Results and NS.Results.StepAsideForTree then NS.Results.StepAsideForTree() end
     return ok
-end
-
---- The loadout's import string in the copy window (in chat without the library).
---- @return boolean shown
-function Loadout.Copy(t, anchor)
-    if type(t) ~= "table" or type(t.importString) ~= "string" then return false end
-    if NS.ShowCopy(t.importString, L["Talent loadout"], anchor) then return true end
-    NS.Print(t.importString)
-    return true
 end
 
 --- The fight View names in its chat line: its character and date.
@@ -224,7 +241,7 @@ function Loadout.Build(p, c)
     x.title:SetText(L["Gear and Talents"])
     x.ilvl = Style.Text(c, FONT.CAPTION, C.text)
     x.ilvl:SetPoint("BOTTOMLEFT", x.title, "BOTTOMRIGHT", 6, 2)
-    x.gearView = Style.Button(c, L["Gear view"], function()
+    x.gearView = Style.Button(c, L["View gear"], function()
         if hasGearView() and p.record then NS.ResultsGear.Open(p) end
     end)
     x.gearView:SetSize(Loadout.GEAR_W, Loadout.BUTTON_H)
@@ -232,16 +249,13 @@ function Loadout.Build(p, c)
     x.none:SetText(L["Gear not recorded"])
     x.grid = CreateFrame("Frame", nil, c)
     x.talents = Style.Text(c, FONT.TEXT, C.text)
-    x.view = Style.Button(c, L["View"], function()
+    x.view = Style.Button(c, L["View Talents"], function()
         Loadout.View(x.talentsData, Loadout.Level(p.record), Loadout.Label(p.record))
     end)
-    x.copy = Style.Button(c, L["Copy"], function()
-        Loadout.Copy(x.talentsData, NS.ResultsTable.WindowOf(p.frame))
-    end)
-    for _, b in ipairs({ x.view, x.copy }) do b:SetSize(Loadout.TALENT_W, Loadout.BUTTON_H) end
-    x.gearView.tip = { L["Gear view"], L["The fight's gear and stats, laid out as the character panel does."] }
-    x.view.tip = { L["View"], L["Posts the loadout's link to your chat and opens the talent tree, read-only."] }
-    x.copy.tip = { L["Copy"], L["The loadout's import string, to paste into the talent frame."] }
+    x.view:SetSize(Loadout.TALENT_W, Loadout.BUTTON_H)
+    x.gearView.tip = { L["View gear"], L["The fight's gear and stats, laid out as the character panel does."] }
+    x.view.tip = { L["View Talents"], L["Posts the loadout's link to your chat and opens the talent tree, read-only."] }
+    x.titleHover = p:AddHeading("loadout", x.title).click
     return x
 end
 
@@ -267,9 +281,8 @@ function Loadout.Fill(p)
     local w = type(record) == "table" and type(record.who) == "table" and record.who or {}
     x.ilvl:SetText(type(w.ilvl) == "number" and L["ilvl %s"]:format(NS.ResultsTable.Ilvl(w.ilvl)) or "")
     x.talentsData = Loadout.TalentsOf(record)
-    x.talents:SetText(L["Talents: %s"]:format(Loadout.TalentsText(x.talentsData)))
+    x.talents:SetText(L["Talents: %s"]:format(Loadout.TalentsText(x.talentsData, w)))
     Style.SetEnabled(x.view, Loadout.CanView(x.talentsData))
-    Style.SetEnabled(x.copy, x.talentsData ~= nil)
     Style.SetEnabled(x.gearView, hasGearView() and x.items ~= nil)
 end
 
@@ -295,15 +308,22 @@ local function layoutGrid(p, x, y, cw)
     return y - rows * Loadout.PITCH
 end
 
---- The section at `y` across `cw` (its heading SECTION_GAP under the block above it, Gear view at
---- the heading's right), the gear row and the talents line; answers the y beneath.
+--- The section at `y` across `cw` (its heading SECTION_GAP under the block above it, INDENT in after
+--- its arrow, View gear at the heading's right), the gear row and the talents line; folded, the
+--- heading alone. Answers the y beneath.
 function Loadout.Layout(p, y, cw)
     local x = p.lo
     y = y - Style.SECTION_GAP
-    place(x.title, p.content, 0, y)
+    place(x.title, p.content, NS.ResultsDetail.INDENT, y)
+    local body = not p:Heading("loadout", true)
     place(x.gearView, p.content, cw - Loadout.GEAR_W, y)
     y = y - Style.SECTION_H
-    x.none:SetShown(x.items == nil)
+    for _, part in ipairs({ x.gearView, x.talents, x.view }) do part:SetShown(body) end
+    x.none:SetShown(body and x.items == nil)
+    if not body then
+        x.grid:Hide()
+        return y
+    end
     if x.items then
         y = layoutGrid(p, x, y, cw) - 4
     else
@@ -313,8 +333,7 @@ function Loadout.Layout(p, y, cw)
     end
     local tw = Loadout.TALENT_W
     place(x.talents, p.content, 0, y - 3)
-    x.talents:SetWidth(math.max(40, cw - 2 * tw - 12))
-    place(x.view, p.content, cw - 2 * tw - 4, y)
-    place(x.copy, p.content, cw - tw, y)
+    x.talents:SetWidth(math.max(40, cw - tw - 8))
+    place(x.view, p.content, cw - tw, y)
     return y - Loadout.BUTTON_H - 8
 end

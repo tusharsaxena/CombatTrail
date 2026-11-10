@@ -142,6 +142,7 @@ local SUITES = {
     "test_sizing",
     "test_results_table",
     "test_results_detail",
+    "test_results_sections",
     "test_share",
     "test_timeline",
     "test_compare",

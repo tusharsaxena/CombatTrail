@@ -46,6 +46,7 @@ default; the file's comments say what each value means.
 | `results.view` | the saved filters, grouping and sort (`group = "board"`, `days = 7`) | (named state, below) |
 | `results.window` | `{ point, relPoint, x, y, width = 1100, height = 520, view = "collapsed" }`; the list's least width is `Results.MIN_WIDTH` (1038 with the Status, Used and Note columns), and a stored width below it is held to it | (named state, below) |
 | `results.columns` | `{}`; a dragged column's width, `{ character = px }` (Character ships at 104, held to 70–240) | (named state, below) |
+| `results.collapsedSections` | `{}`; the fight detail's folded sections, `{ [section] = true }` over `chart`, `spells`, `loadout`, `usage` and `note` (`NS.ResultsDetail.SECTIONS`), open stored as nothing | (named state, below) |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
@@ -82,6 +83,7 @@ name and the icons.
 | The HUD's place | `hud.position` | modules/Hud.lua | `normalizeAnchor` (the title bar's drag and the grip's release, a change of `hud.sizeMode` or `hud.grow`, and a Refresh that finds the stored point off that edge: TOPLEFT, or BOTTOMLEFT for an auto window growing up, on UIParent's BOTTOMLEFT), else `savePosition`; `Hud.ResetPosition` |
 | The Results window's place, size and fold | `results.window` | modules/Results.lua | `savePosition` (drag, the grip's release, the fold arrow through `Results.SetView`); `Results.ResetPosition` |
 | The Results columns' dragged widths | `results.columns` | modules/Results_Fights.lua | `Fights.StoreColumnWidth` (a header edge's release, through the table's `onColumnResize`); `Fights.ClearColumnWidths` (`Results.ResetPosition`) |
+| The detail's folded sections | `results.collapsedSections` | modules/Results_Detail.lua | `Detail.SetCollapsed` (a heading's arrow or text, through `Pane:ToggleSection`; Add Note opens the Note); kept by `Results.ResetPosition` |
 | The saved Results view | `results.view` | modules/Results_Fights.lua | `writeView` (the Save view button) |
 | The fight store | `global.fights`, `global.fightOrder` | modules/Recorder.lua | `Recorder.Save`, `Recorder.Delete`, `Recorder.SetNote`; `Retention.Purge` (modules/Retention.lua) |
 | Interned loadouts | `global.loadouts` | modules/Loadouts.lua | `Loadouts.Store`; `Loadouts.Sweep`, called by the purge |

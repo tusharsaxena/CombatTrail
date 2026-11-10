@@ -177,10 +177,8 @@ end)
 
 -- ── gear, talents and usage ─────────────────────────────────────────────────────────────────────
 
-test("detail: gear in the character frame's order, talents with View and Copy", function()
-    local copied
+test("detail: gear in the character frame's order, talents with View Talents and no Copy (C3)", function()
     local NS, M = fresh()
-    NS.ShowCopy = function(text) copied = text return true end
     local r = rec(NS, { id = "a" })
     r.gear = { [13] = "212001", [1] = "212002::::::::80", [16] = "212003" }
     r.loadout = NS.Loadouts.Store({ importString = "CQQAAAAAA", specID = 253, name = "Raid", heroName = "Pack Leader" })
@@ -190,9 +188,14 @@ test("detail: gear in the character frame's order, talents with View and Copy", 
     assertEqual(order[2].slot, 13)
     assertEqual(order[3].slot, 16)
     local pane = detailOn(NS, "a")
-    assertEqual(pane.lo.talents:GetText(), "Talents: Raid \194\183 Pack Leader")
-    assertTrue(pane.lo.view:IsEnabled(), "View with an import string")
-    assertTrue(pane.lo.copy:IsEnabled())
+    assertEqual(pane.lo.talents:GetText(), "Talents: Raid \194\183 Pack Leader", "Retail keeps the loadout's name")
+    assertEqual(pane.lo.gearView.label:GetText(), "View gear")
+    assertEqual(pane.lo.gearView.tip[1], "View gear")
+    assertEqual(pane.lo.view.label:GetText(), "View Talents")
+    assertEqual(pane.lo.view.tip[1], "View Talents")
+    assertNil(pane.lo.copy, "no Copy button")
+    assertNil(NS.ResultsLoadout.Copy, "and no Copy code")
+    assertTrue(pane.lo.view:IsEnabled(), "View Talents with an import string")
     -- View opens the tree at the fight's level (the record's, here the mock character's 80).
     assertEqual(NS.Identity.Who().level, 80, "who records the character's level")
     local ref
@@ -200,9 +203,7 @@ test("detail: gear in the character frame's order, talents with View and Copy", 
     pane.lo.view:__fire("OnClick")
     M.SetItemRef = nil
     assertEqual(ref, "talentbuild:253:80:CQQAAAAAA", "View's link carries the level")
-    pane.lo.copy:__fire("OnClick")
-    assertEqual(copied, "CQQAAAAAA")
-    assertTrue(pane.lo.gearView:IsEnabled(), "Gear view for a fight with gear (plan Task 4.4)")
+    assertTrue(pane.lo.gearView:IsEnabled(), "View gear for a fight with gear (plan Task 4.4)")
     local link = NS.ResultsLoadout.Hyperlink(NS.Loadouts.Get(r.loadout), 80, "Raid")
     assertTrue(link:find("|Htalentbuild:253:80:CQQAAAAAA|h[Raid]|h|r", 1, true) ~= nil, link)
     -- Nothing recorded.
@@ -212,7 +213,25 @@ test("detail: gear in the character frame's order, talents with View and Copy", 
     assertTrue(pane.lo.none:IsShown(), "Gear not recorded")
     assertEqual(pane.lo.talents:GetText(), "Talents: Not recorded")
     assertFalse(pane.lo.view:IsEnabled())
-    assertFalse(pane.lo.copy:IsEnabled())
+end)
+
+test("detail: forever: the talents line names the class and its points per tree (C3)", function()
+    local NS, m = fresh(function(m) m.LOCALIZED_CLASS_NAMES_MALE = { HUNTER = "Hunter" } end)
+    T.Loader.MockClient.apply(m, "forever")
+    local Lo = NS.ResultsLoadout
+    local t = { importString = "CQQAAAAAA", name = "Hunter" }
+    assertEqual(Lo.TalentsText(t, { class = "HUNTER", trees = { 31, 20, 0 } }), "Hunter (31/20/0)")
+    assertEqual(Lo.TalentsText(nil, { class = "HUNTER", trees = { 0, 41, 10 } }), "Hunter (0/41/10)",
+        "the points with no loadout stored")
+    assertEqual(Lo.TalentsText(t, { class = "HUNTER" }), "Hunter", "no trees: the loadout's name alone")
+    assertEqual(Lo.TalentsText(nil, {}), "Not recorded")
+    local r = rec(NS, { id = "tree" })
+    r.who.class, r.who.trees = "HUNTER", { 31, 20, 0 }
+    r.loadout = NS.Loadouts.Store(t)
+    save(NS, r)
+    local pane = detailOn(NS, "tree")
+    assertEqual(pane.lo.talents:GetText(), "Talents: Hunter (31/20/0)")
+    T.Loader.MockClient.apply(m)
 end)
 
 test("detail: usage rows, and Edit for a fight with a usage record", function()
@@ -274,6 +293,48 @@ test("detail: the buttons and their seams", function()
     NS.ResultsSource.Use({ fights = { rec(NS, { id = "sample" }) } })
     pane = detailOn(NS, "sample")
     assertFalse(pane.w.share:IsEnabled(), "no Share on a sample fight")
+end)
+
+test("detail: the footer in DPS Race's order: Add Note, Share, Timeline, Compare, Delete at the right (C3)", function()
+    local placed = {}
+    local NS = fresh(function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, ...)
+            local f = create(kind, ...)
+            if kind == "Button" then
+                rawset(f, "SetPoint", function(self, ...) placed[self] = { ... } end)
+                rawset(f, "SetSize", function(self, w, h) rawset(self, "__w", w); rawset(self, "__h", h) end)
+            end
+            return f
+        end
+    end)
+    local D = NS.ResultsDetail
+    local keys = {}
+    for i, spec in ipairs(D.BUTTONS) do keys[i] = spec.key end
+    assertEqual(table.concat(keys, ","), "addNote,share,timeline,compare")
+    save(NS, rec(NS, { id = "a" }))
+    local pane = detailOn(NS, "a")
+    local w = pane.w
+    local want = { { "addNote", "Add Note", 12, 84 }, { "share", "Share", 102, 84 },
+                   { "timeline", "Timeline", 192, 72 }, { "compare", "Compare", 270, 70 } }
+    for _, e in ipairs(want) do
+        local b = w[e[1]]
+        assertEqual(b.label:GetText(), e[2], e[1])
+        assertEqual(b.styleName, "normal", e[1] .. " is a plain button (no primary Timeline)")
+        local pt = placed[b]
+        assertEqual(pt[1], "BOTTOMLEFT", e[1])
+        assertEqual(pt[4], e[3], e[1] .. "'s x")
+        assertEqual(pt[5], 8, e[1] .. "'s y")
+        assertEqual(rawget(b, "__w"), e[4], e[1] .. "'s width")
+        assertEqual(rawget(b, "__h"), D.BUTTON_H, e[1])
+    end
+    assertEqual(w.delete.label:GetText(), "Delete")
+    assertEqual(w.delete.styleName, "danger")
+    assertEqual(placed[w.delete][1], "BOTTOMRIGHT")
+    assertEqual(placed[w.delete][4], -D.PADX)
+    assertEqual(rawget(w.delete, "__w"), 78)
+    -- Compare's right edge clears Delete's left on the 440 px pane.
+    assertTrue(270 + 70 < NS.Results.DETAIL_WIDTH - D.PADX - 78, "Compare clears Delete")
 end)
 
 test("detail: delete asks to confirm, then FIGHTS_CHANGED", function()

@@ -747,7 +747,7 @@ Total.
 - results: a note's escape codes and control characters are neutralized
 - results: the Damage and DPS bars are the palette's blue, not the class color, under every skin
 
-### test_results_detail.lua (15)
+### test_results_detail.lua (17)
 
 - detail: the header meta is three lines: where and who, what, the stamp (plan A2)
 - detail: an open-world fight names its zone, not the continent, and the target's level
@@ -755,15 +755,25 @@ Total.
 - detail: a fight the filters leave out falls back to its board
 - detail: missing slices shows the session-only note
 - detail: pet spells tagged
-- detail: gear in the character frame's order, talents with View and Copy
+- detail: gear in the character frame's order, talents with View Talents and no Copy (C3)
+- detail: forever: the talents line names the class and its points per tree (C3)
 - detail: usage rows, and Edit for a fight with a usage record
 - detail: the buttons and their seams
+- detail: the footer in DPS Race's order: Add Note, Share, Timeline, Compare, Delete at the right (C3)
 - detail: delete asks to confirm, then FIGHTS_CHANGED
 - detail: collapsed puts the detail in the list's place; the fold arrow sets it beside
 - detail: ShowFight on a fight the view filters out shows its detail
 - detail: the popups the window opened close with it
 - detail: the window steps aside for the talent tree and comes back
 - detail: forever: the header's second icon is the predominant tree's, hidden with none (D5)
+
+### test_results_sections.lua (5)
+
+- sections: every heading has an arrow, open (chevron-down) by default, its text after it
+- sections: the arrow folds a section, hides its body, stores it, and moves the next heading up
+- sections: a left click on the heading's text folds it; a right click does not
+- sections: a rebuilt pane reads the folds back; Reset position keeps them
+- sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
 ### test_share.lua (6)
 
@@ -1057,7 +1067,8 @@ Total.
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 38 |
-| test_results_detail.lua | 15 |
+| test_results_detail.lua | 17 |
+| test_results_sections.lua | 5 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
 | test_compare.lua | 8 |
@@ -1079,4 +1090,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **837** |
+| **Total** | **844** |

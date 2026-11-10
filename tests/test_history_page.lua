@@ -116,7 +116,8 @@ test("history page: every history.* key, the Results window's settings and the h
     -- The window's place, size and fold, and its saved view, are window state (architecture-§5's
     -- named non-setting state): no control sets them, so no row addresses them.
     for _, p in ipairs({ "results.view", "results.view.group", "results.window", "results.window.width",
-                        "results.columns", "results.columns.character" }) do
+                        "results.columns", "results.columns.character", "results.collapsedSections",
+                        "results.collapsedSections.spells" }) do
         assertNil(NS.FindSchemaRow(p), p .. " is window state")
     end
     local errors, _, unresolved = NS.ValidateSchema()

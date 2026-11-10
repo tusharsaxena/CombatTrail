@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/Results_Gear.lua — the gear view (spec §7, mockup §8): a window from the Results detail's
--- *Gear view* button that lays the fight's gear out as the character panel does, without the model,
+-- *View gear* button that lays the fight's gear out as the character panel does, without the model,
 -- with the stats the fight was pulled with where the model would be. Ported from DPS Race @045f479
 -- (modules/Results_Gear.lua) for Combat Trail's record: its gear is an equipment set of trimmed item
 -- strings (record.gearSet, read through Loadouts.GearOf), each handed to the client as "item:<string>".
@@ -645,7 +645,7 @@ end
 
 -- ── the public surface ──────────────────────────────────────────────────────────────────────────
 
---- Open the view on the detail pane `p` (the detail's Gear view button) and follow it from now on.
+--- Open the view on the detail pane `p` (the detail's View gear button) and follow it from now on.
 --- Another modal over the Results window closes first (one cover, one modal).
 --- @return boolean opened
 function Gear.Open(p)

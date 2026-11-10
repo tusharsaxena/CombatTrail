@@ -824,19 +824,18 @@ L["Unnamed loadout"] = "Unnamed loadout"
 L["Talents for %s: %s. Click the link to see the tree."] =
     "Talents for %s: %s. Click the link to see the tree."
 L["this fight"] = "this fight"
-L["Talent loadout"] = "Talent loadout"
 L["Item %d"] = "Item %d"
 L["Gear and Talents"] = "Gear and Talents"
 L["Gear view"] = "Gear view"
 L["Gear not recorded"] = "Gear not recorded"
-L["View"] = "View"
-L["Copy"] = "Copy"
+L["View gear"] = "View gear"
+L["View Talents"] = "View Talents"
+L["Collapse this section"] = "Collapse this section"
+L["Expand this section"] = "Expand this section"
 L["The fight's gear and stats, laid out as the character panel does."] =
     "The fight's gear and stats, laid out as the character panel does."
 L["Posts the loadout's link to your chat and opens the talent tree, read-only."] =
     "Posts the loadout's link to your chat and opens the talent tree, read-only."
-L["The loadout's import string, to paste into the talent frame."] =
-    "The loadout's import string, to paste into the talent frame."
 L["ilvl %s"] = "ilvl %s"
 L["Talents: %s"] = "Talents: %s"
 L["at %s"] = "at %s"
@@ -881,7 +880,6 @@ L["Fold the detail away: the list alone (a click opens a fight in its place)"] =
     "Fold the detail away: the list alone (a click opens a fight in its place)"
 L["Unfold the detail beside the list"] = "Unfold the detail beside the list"
 L["Timeline"] = "Timeline"
-L["Compare vs best"] = "Compare vs best"
 L["Every cast of the fight along its length, beside the fight it is compared with."] =
     "Every cast of the fight along its length, beside the fight it is compared with."
 L["A short note of your own on this fight."] = "A short note of your own on this fight."
@@ -936,8 +934,6 @@ L["Runner-up"] = "Runner-up"
 -- The compare (modules/Results_Compare.lua)
 L["This fight beside the best on its board, the runner-up when it is the best, or the fight you picked with Compare With This Fight."] =
     "This fight beside the best on its board, the runner-up when it is the best, or the fight you picked with Compare With This Fight."
-L["Compare vs runner-up"] = "Compare vs runner-up"
-L["Compare vs pick"] = "Compare vs pick"
 L["Compare"] = "Compare"
 L["Clear pick"] = "Clear pick"
 L["Compare with the best on this fight's board again."] = "Compare with the best on this fight's board again."

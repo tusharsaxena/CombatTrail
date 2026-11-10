@@ -3,11 +3,17 @@ local _, NS = ...
 -- against what, where and when; the figures (Damage, DPS, Blizzard's Meter DPS, and the Delta or
 -- "Leads by" box); the damage chart while this session holds it; the spell breakdown with each
 -- spell's share and the pet's spells marked by the paw; Gear and Talents (modules/Results_Loadout.lua);
--- Usage (modules/Results_Usage.lua); the note; and the buttons Timeline, Compare vs best, Add note,
--- Share and Delete. Placed by the shell (modules/Results.lua) beside the list, or in its place with a
--- Back control. Adapted from DPS Race @045f479 (modules/Results_Detail.lua) without its race: no
--- timing strip, no flags, no late casts; and without its folding sections (spec §7 asks for one fold
--- arrow, the window's, which hides the whole detail).
+-- Usage (modules/Results_Usage.lua); the note; and the footer in DPS Race's order, Add Note, Share,
+-- Timeline and Compare, with Delete at the right edge. Placed by the shell (modules/Results.lua)
+-- beside the list, or in its place with a Back control. Adapted from DPS Race @045f479
+-- (modules/Results_Detail.lua) without its race: no timing strip, no flags, no late casts.
+--
+-- THE FOLDING SECTIONS (v0.2 plan Task C3, DPS Race's mechanism): every section heading (Damage
+-- profile, Spell breakdown, Gear and Talents, Usage, Note) has an arrow left of its text, chevron-down
+-- open and chevron-right folded; a click on the arrow or a left click on the heading's text folds or
+-- opens it, and a folded section is its heading line alone, the sections under it moved up. The folds
+-- are per profile in `results.collapsedSections` (Detail.SECTIONS' keys, true = folded, open stored
+-- as nothing), beside `results.window`, so Reset position keeps them. Add Note opens a folded Note.
 --
 -- PLAIN NUMBERS ONLY. A stored fight went through NS.Secrets on its way in (spec §5), so its figures
 -- may be divided and compared here: the shares, the Delta. The chart's columns are the in-session
@@ -21,7 +27,7 @@ local _, NS = ...
 -- The trophy chip beside the name marks a fight that holds the personal best on its board.
 --
 -- THE SEAMS. Timeline (NS.ResultsTimeline) is live for a fight with casts; Compare (NS.ResultsCompare)
--- for a fight with a fight to compare with, its label saying which (the best, the runner-up or the
+-- for a fight with a fight to compare with, labeled just "Compare" (the best, the runner-up or the
 -- picked fight: Pane:CompareTarget, the one answer the timeline, the gear view and the compare read);
 -- Share while modules/Share.lua answers (never on a sample fight); Add note and Delete are the
 -- shell's (the note box and the delete's confirmation).
@@ -43,14 +49,23 @@ Detail.KPI_GAP = 6
 Detail.ICON = 28
 Detail.LINE_H = 14
 Detail.CHIP_ICON = 14
--- The buttons along the foot, left to right (Delete at the right edge), and their widths.
+-- The buttons along the foot, left to right, DPS Race's order, sizes and plain style (v0.2 plan Task
+-- C3), with Combat Trail's Compare after Timeline; BUTTON_GAP apart (DPS Race's 90 px pitch for its
+-- 84 px buttons), and Delete (danger) at the right edge: on the 440 px pane Compare ends 10 px clear
+-- of it.
 Detail.BUTTONS = {
-    { key = "timeline", label = "Timeline", width = 70, style = "primary" },
-    { key = "compare", label = "Compare vs best", width = 126 },
-    { key = "addNote", label = "Add Note", width = 70 },
-    { key = "share", label = "Share", width = 58 },
+    { key = "addNote", label = "Add Note", width = 84 },
+    { key = "share", label = "Share", width = 84 },
+    { key = "timeline", label = "Timeline", width = 72 },
+    { key = "compare", label = "Compare", width = 70 },
 }
-Detail.DELETE_W = 60
+Detail.BUTTON_GAP = 6
+Detail.DELETE_W = 78
+-- The folding sections, in the pane's order, and their heading's arrow: ARROW px square, the text
+-- INDENT in from the left edge (the arrow and 2 px).
+Detail.SECTIONS = { "chart", "spells", "loadout", "usage", "note" }
+Detail.ARROW = 14
+Detail.INDENT = Detail.ARROW + 2
 
 local DASH = "\226\128\148"
 local SEP = " \194\183 "
@@ -163,10 +178,82 @@ function Detail.ChartView(record)
     return NS.HudChart.OverView({ id = record.id }, nil, final, cooldowns)
 end
 
+-- ── the folded sections (stored) ────────────────────────────────────────────────────────────────
+
+-- The profile's set of folded sections, made on first use (an old profile has none).
+local function foldedSet()
+    local prof = NS.db and NS.db.profile
+    if not prof then return nil end
+    prof.results = prof.results or {}
+    local r = prof.results
+    if type(r.collapsedSections) ~= "table" then r.collapsedSections = {} end
+    return r.collapsedSections
+end
+
+--- Whether section `key` (one of Detail.SECTIONS) is folded in this profile.
+--- @param key string
+--- @return boolean
+function Detail.IsCollapsed(key)
+    local set = foldedSet()
+    return set ~= nil and set[key] == true
+end
+
+--- Fold section `key` (`on`) or open it; an open section is stored as nothing.
+--- @param key string
+--- @param on boolean
+function Detail.SetCollapsed(key, on)
+    local set = foldedSet()
+    if set then set[key] = on and true or nil end
+end
+
 -- ── the pane ────────────────────────────────────────────────────────────────────────────────────
 
 local Pane = {}
 Pane.__index = Pane
+
+--- Give section `key`'s heading `title` its arrow, anchored left of the text so it follows the
+--- heading wherever it is placed; a click on the arrow, or a left click on `click` (the heading's
+--- hover frame, a plain one over the text when none is given), folds or opens the section.
+--- @param key string  one of Detail.SECTIONS
+--- @param title table  the heading's FontString
+--- @param click table|nil
+--- @return table arrow  its `click` the heading's frame
+function Pane:AddHeading(key, title, click)
+    local arrow = Style.ControlButton(self.content, "chevron-down", "-", L["Collapse this section"],
+        function() self:ToggleSection(key) end)
+    arrow:SetSize(Detail.ARROW, Detail.ARROW)
+    Style.Vertex(arrow.icon, "icon.arrow")
+    arrow:SetPoint("RIGHT", title, "LEFT", Detail.ARROW - Detail.INDENT, 0)
+    if not click then
+        click = CreateFrame("Frame", nil, self.content)
+        click:SetAllPoints(title)
+    end
+    click:EnableMouse(true)
+    click:HookScript("OnMouseUp", function(_, button)
+        if button ~= "RightButton" then self:ToggleSection(key) end
+    end)
+    arrow.click = click
+    self.heads[key] = arrow
+    return arrow
+end
+
+--- Show section `key`'s arrow (`shown`: its heading is drawn) in the stored state: chevron-down open,
+--- chevron-right folded. Each layout calls it after placing the section's heading.
+--- @return boolean folded
+function Pane:Heading(key, shown)
+    local arrow, folded = self.heads[key], Detail.IsCollapsed(key)
+    arrow:SetShown(shown and true or false)
+    if arrow.click then arrow.click:SetShown(shown and true or false) end
+    Style.SetControlIcon(arrow, folded and "chevron-right" or "chevron-down", folded and "+" or "-")
+    arrow.tip = folded and L["Expand this section"] or L["Collapse this section"]
+    return folded
+end
+
+--- Fold or open section `key` (stored in the profile) and lay the pane out again, the scroll kept.
+function Pane:ToggleSection(key)
+    Detail.SetCollapsed(key, not Detail.IsCollapsed(key))
+    if self.record then self:Layout(self.width, self.height, self.narrow) end
+end
 
 -- A hover frame laid over `region` (a text or a texture takes no mouse of its own), its tooltip the
 -- lines `lines()` answers at hover time, under it.
@@ -277,6 +364,14 @@ local function buildNote(p, c)
     w.note:SetJustifyV("TOP")
 end
 
+-- The pane's own sections' arrows (Gear and Talents and Usage add theirs in their Build).
+local function buildHeadings(p)
+    local w = p.w
+    p:AddHeading("chart", w.chartTitle, w.chartHover)
+    p:AddHeading("spells", w.spellsTitle, w.spellsHover)
+    w.noteHover = p:AddHeading("note", w.noteTitle).click
+end
+
 local BUTTON_TIPS = {
     timeline = { "Timeline", "Every cast of the fight along its length, beside the fight it is compared with." },
     compare = { "Compare", "This fight beside the best on its board, the runner-up when it is the best, or the fight you picked with Compare With This Fight." },
@@ -295,7 +390,11 @@ local function buildButtons(p)
     local act = {
         timeline = function() if hooks.timeline then hooks.timeline(p) end end,
         compare = function() if hooks.compare then hooks.compare(p) end end,
-        addNote = function() if hooks.note then hooks.note(p.record) end end,
+        -- A note written into a folded Note opens it, as DPS Race's note box does.
+        addNote = function()
+            Detail.SetCollapsed("note", false)
+            if hooks.note then hooks.note(p.record) end
+        end,
         share = function(b) if hooks.share then hooks.share(p.record, b) end end,
     }
     local x = Detail.PADX
@@ -305,7 +404,7 @@ local function buildButtons(p)
         b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", x, 8)
         b.tip = tipOf(spec.key)
         w[spec.key] = b
-        x = x + spec.width + 4
+        x = x + spec.width + Detail.BUTTON_GAP
     end
     w.delete = Style.Button(f, L["Delete"], function()
         if p.record and hooks.delete then hooks.delete(p.record) end
@@ -330,7 +429,8 @@ function Detail.Build(parent, hooks)
     -- built so every child is born in it.
     frame:SetFrameLevel((parent:GetFrameLevel() or 0) + NS.Constants.LAYERS.LEVEL.DETAIL)
     NS.Skin.Card(frame, { tokens = { bg = "ct.pane.bg", border = "divider" } })
-    local p = setmetatable({ frame = frame, hooks = hooks or {}, w = {}, scroll = 0, width = 400, height = 400 }, Pane)
+    local p = setmetatable({ frame = frame, hooks = hooks or {}, w = {}, heads = {}, scroll = 0, width = 400,
+                             height = 400 }, Pane)
     p.scrollFrame = CreateFrame("ScrollFrame", nil, frame)
     p.content = CreateFrame("Frame", nil, p.scrollFrame)
     p.scrollFrame:SetScrollChild(p.content)
@@ -346,6 +446,7 @@ function Detail.Build(parent, hooks)
     NS.ResultsLoadout.Build(p, c)
     NS.ResultsUsage.Build(p, c)
     buildNote(p, c)
+    buildHeadings(p)
     buildButtons(p)
     return p
 end
@@ -397,9 +498,6 @@ function Pane:fillSpells(record)
     self.w.petShare:SetText(pet and L["Pet %s"]:format(NS.Format.Pct(pet)) or "")
 end
 
--- The Compare button's label by what the compare target is.
-local COMPARE_LABELS = { best = "Compare vs best", runnerUp = "Compare vs runner-up", picked = "Compare vs pick" }
-
 --- The fight this one is compared with and what it is ("picked", "best" or "runnerUp"), or nil: the
 --- compare's answer (NS.ResultsCompare.Pick), the one the timeline, the gear view and the compare
 --- window all read. `_resolve` is the timeline's call shape (always resolved here).
@@ -416,8 +514,7 @@ function Pane:fillButtons(record)
     local TL, CMP = NS.ResultsTimeline, NS.ResultsCompare
     local hasCasts = type(record.casts) == "string" and record.casts ~= ""
     Style.SetEnabled(w.timeline, TL ~= nil and type(TL.Open) == "function" and hasCasts)
-    local other, kind = self:CompareTarget()
-    w.compare.label:SetText(L[COMPARE_LABELS[kind] or "Compare vs best"])
+    local other = self:CompareTarget()
     Style.SetEnabled(w.compare, CMP ~= nil and type(CMP.Open) == "function" and other ~= nil)
     Style.SetEnabled(w.share, hooks.canShare ~= nil and hooks.canShare() == true)
     local hasNote = type(record.note) == "string" and record.note ~= ""
@@ -495,10 +592,11 @@ function Pane:layoutHeader(y, cw)
     return y - Detail.KPI_H
 end
 
--- A section's heading at `y` (SECTION_GAP under the block above), its caption at the right edge.
+-- A section's heading at `y` (SECTION_GAP under the block above), its text INDENT in (after its
+-- arrow), its caption at the right edge.
 function Pane:heading(title, caption, y, cw)
     y = y - Style.SECTION_GAP
-    place(title, self.content, 0, y)
+    place(title, self.content, Detail.INDENT, y)
     if caption then
         caption:ClearAllPoints()
         caption:SetPoint("TOPRIGHT", self.content, "TOPLEFT", cw, y - 4)
@@ -506,13 +604,16 @@ function Pane:heading(title, caption, y, cw)
     return y - Style.SECTION_H
 end
 
--- The chart while this session holds it; the session-only note when it does not.
+-- The chart while this session holds it; the session-only note when it does not; folded, the
+-- heading alone.
 function Pane:layoutChart(y, cw)
     local w, view = self.w, self.chartView
     y = self:heading(w.chartTitle, w.chartCaption, y, cw)
+    local folded = self:Heading("chart", true)
     w.chartCaption:SetText(view and L["this session only"] or "")
-    w.chart:SetShown(view ~= nil)
-    w.chartNote:SetShown(view == nil)
+    w.chart:SetShown(view ~= nil and not folded)
+    w.chartNote:SetShown(view == nil and not folded)
+    if folded then return y end
     if not view then
         place(w.chartNote, self.content, 0, y)
         w.chartNote:SetWidth(cw)
@@ -528,6 +629,9 @@ end
 function Pane:layoutSpells(y, cw)
     local w = self.w
     y = self:heading(w.spellsTitle, w.petShare, y, cw)
+    local folded = self:Heading("spells", true)
+    w.listHost:SetShown(not folded)
+    if folded then return y end
     local n = self.spellCount or 0
     place(w.listHost, self.content, 0, y)
     w.listHost:SetSize(cw, math.max(1, NS.HudBreakdown.Height(n)))
@@ -538,9 +642,11 @@ end
 function Pane:layoutNote(y, cw)
     local w, note = self.w, self.noteText or ""
     w.noteTitle:SetShown(note ~= "")
-    w.note:SetShown(note ~= "")
+    local folded = self:Heading("note", note ~= "")
+    w.note:SetShown(note ~= "" and not folded)
     if note == "" then return y end
     y = self:heading(w.noteTitle, nil, y, cw)
+    if folded then return y end
     place(w.note, self.content, 0, y)
     w.note:SetWidth(cw)
     local lines = wrappedLines(note, cw, 5.4)

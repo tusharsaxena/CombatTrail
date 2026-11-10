@@ -193,7 +193,9 @@ NS.defaults = {
         -- it closes when combat starts (v0.2 Task C1); and `columns`, the widths a header's edge was
         -- dragged to (`{ character = px }`; empty is the shipped width), put back by Reset position. The
         -- list's width clears its least (Results.MIN_WIDTH, 1038 with v0.2 Task C2's Status, Used and
-        -- Note columns) with room for the target column and a Character drag.
+        -- Note columns) with room for the target column and a Character drag; and `collapsedSections`, the
+        -- fight detail's folded sections (v0.2 Task C3: `{ [section] = true }`, keys
+        -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps.
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
                      days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
@@ -202,6 +204,7 @@ NS.defaults = {
             scale = 1, rowHeight = 18,
             shareTalents = true, closeInCombat = true,
             columns = {},
+            collapsedSections = {},
         },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
