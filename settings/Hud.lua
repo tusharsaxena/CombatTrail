@@ -124,7 +124,7 @@ at(TAB.behavior, L["When it shows"])
 row("show", { type = "string", label = L["Show the HUD"], values = SHOWS, validate = SHOW_OK,
     tooltip = L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."] })
 row("instancesOnly", { type = "bool", label = L["Only in instances"], startsLine = true,
-    tooltip = L["Open the HUD on a fight's first hit only inside a dungeon, raid, delve or other instance."] })
+    tooltip = L["Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."] })
 row("fadeAfter", { type = "number", label = L["Fade after the fight (seconds, 0 = never)"], min = 0, max = 60, step = 1,
     startsLine = true,
     tooltip = L["How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."] })
@@ -203,12 +203,13 @@ row("chart.cooldownMin", { type = "number", label = L["Shortest cooldown (second
     tooltip = L["The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."] })
 
 -- Spell rows
-at(TAB.spells, L["Rows"])
+at(TAB.spells, L["Size"])
 row("spells.rows", { type = "number", label = L["Spell rows shown (0 = all)"], min = 0, max = 40, step = 1,
     startsLine = true,
     tooltip = L["How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."] })
 row("spells.rowHeight", { type = "number", label = L["Row height (px)"], min = 12, max = 40, step = 1,
     tooltip = L["The height of each spell row, in pixels."] })
+at(TAB.spells, L["Icons"])
 row("spells.icons", { type = "bool", label = L["Show spell icons"], startsLine = true,
     tooltip = L["Draw each spell's icon at the start of its row."] })
 row("spells.paw", { type = "bool", label = L["Show pet paw"],

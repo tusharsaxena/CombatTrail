@@ -383,8 +383,8 @@ L["Show the HUD"] = "Show the HUD"
 L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."] =
     "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."
 L["Only in instances"] = "Only in instances"
-L["Open the HUD on a fight's first hit only inside a dungeon, raid, delve or other instance."] =
-    "Open the HUD on a fight's first hit only inside a dungeon, raid, delve or other instance."
+L["Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."] =
+    "Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."
 L["Fade after the fight (seconds, 0 = never)"] = "Fade after the fight (seconds, 0 = never)"
 L["How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."] =
     "How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."
@@ -469,7 +469,6 @@ L["Mark each cast of a spell with a long cooldown with its icon along the top of
 L["Shortest cooldown (seconds)"] = "Shortest cooldown (seconds)"
 L["The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."] =
     "The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."
-L["Rows"] = "Rows"
 L["Spell rows shown (0 = all)"] = "Spell rows shown (0 = all)"
 L["How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."] =
     "How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."

@@ -212,6 +212,18 @@ test("hud page: the words follow options-ui-§21: (px), (seconds), never (s)", f
         "a dependent row names the row it needs")
 end)
 
+test("hud page: no subsection restates its tab (options-ui-§7) and no row names a Retail-only feature (clients-§4)", function()
+    local NS = T.load().NS
+    for _, r in ipairs(NS.SchemaForPage("hud")) do
+        local tab, sub = (r.group or ""):lower(), (r.subgroup or ""):lower()
+        assertFalse(sub ~= "" and tab:find(sub, 1, true) ~= nil, "'" .. r.subgroup .. "' restates '" .. r.group .. "'")
+        local words = ((r.label or "") .. " " .. (type(r.tooltip) == "string" and r.tooltip or "")):lower()
+        for _, retailOnly in ipairs({ "delve", "mythic+", "arena", "keystone" }) do
+            assertFalse(words:find(retailOnly, 1, true) ~= nil, r.path .. " names " .. retailOnly)
+        end
+    end
+end)
+
 test("hud page: the value checks refuse what the HUD cannot draw", function()
     local NS = T.load().NS
     assertFalse(NS.SetByPath("hud.show", "sometimes"))
