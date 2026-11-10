@@ -27,7 +27,7 @@ Update your row, with the commit SHA, in your task's final commit. A resumed ses
 | Task | Title | Status | Commit |
 |---|---|---|---|
 | A1 | Schema 2 wipe, History rename, HUD "always" wins | done | c5a6a8f: SCHEMA_VERSION 2 wipe step, CT_SCHEMA 2, always returns early in autoAllowed, tab "History" / "Purge history…" (key `retention` kept) |
-| A2 | Target identity: name + level + NPC ID, board key, detail meta | todo | |
+| A2 | Target identity: name + level + NPC ID, board key, detail meta | done | 32481c2: key `t:<npcID>:<level\|?>:<name>:<diff>` (+tier), `n:<name>:<diff>` fallback, world boss stays `c:`; fields `targetLevel` (existing `targetCreatureID` is the NPC ID), `zone`, `subzone`; level from the entry snapshot only; Detail.Meta returns 3 lines |
 | A3 | Equipment sets with recon | todo | |
 | A4 | Forever: predominant talent tree stands in for spec | todo | |
 | A5 | Live DPS formatter: no raw decimals | todo | |
