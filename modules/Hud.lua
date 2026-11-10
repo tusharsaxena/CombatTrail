@@ -45,6 +45,14 @@ local _, NS = ...
 -- bar and footer follow `hud.window.titleBar` and `footer`; its place is `hud.position`, written by
 -- the title bar's drag (not while `general.locked`) and put back by Master controls' Reset position.
 -- Built on first show.
+--
+-- A SAMPLE FIGHT (test mode and the sim, modules/Preview.lua and modules/Sim.lua) comes to the same
+-- receivers, handed over directly rather than on the bus, flagged `sample`. Its live and cast reads
+-- come from its plan (modules/MockFights.lua), never the meter or the cast list; it is paced and
+-- judged against the sample history (modules/Results_Source.lua); it opens the window whatever the
+-- show mode, never fades, and a `frozen` one holds its clock at that many seconds. The window says
+-- so with the library's strip under the title bar (the sim's while a sim runs), and EndSample drops
+-- it.
 
 local Hud = {}
 NS.Hud = Hud
@@ -152,18 +160,19 @@ local function identityOf(fight)
     return {}
 end
 
--- The board's newest stored fight, for `hud.paceAgainst` "last".
-local function lastOnBoard(probe)
+-- The board's newest fight in `list` (newest first), for `hud.paceAgainst` "last".
+local function lastOnBoard(probe, list)
     local boardKey = NS.Bests.Key(probe)
     if not boardKey then return nil end
-    for _, r in ipairs(NS.Recorder.List()) do
+    for _, r in ipairs(list) do
         if r.status == "final" and NS.Bests.Key(r) == boardKey then return r end
     end
     return nil
 end
 
 --- The stored fight the live fight is paced against (`hud.paceAgainst`): its board's best, its
---- board's newest fight, or nil (none, an unknown target, a board with nothing on it).
+--- board's newest fight, or nil (none, an unknown target, a board with nothing on it). A sample
+--- fight is paced against the sample history.
 --- @param fight table
 --- @param ident table|nil  the fight's identity (Identity.Resolve), read when nil
 --- @return table|nil record
@@ -173,7 +182,12 @@ function Hud.PaceRecord(fight, ident)
     ident = ident or identityOf(fight)
     local snap = type(fight.snapshot) == "table" and fight.snapshot or {}
     local probe = { who = snap.who, boardKey = NS.Identity.BoardKey(ident), identity = ident, status = "final" }
-    if against == "last" then return lastOnBoard(probe) end
+    if fight.sample then
+        local Source = NS.ResultsSource
+        if against == "last" then return lastOnBoard(probe, Source.All()) end
+        return Source.BestFor(probe)
+    end
+    if against == "last" then return lastOnBoard(probe, NS.Recorder.List()) end
     return NS.Bests.For(probe)
 end
 
@@ -191,16 +205,19 @@ local function newView(fight)
     local ident = identityOf(fight)
     local pace = Hud.PaceRecord(fight, ident)
     return { fight = fight, ident = ident, targetLine = targetLine(ident), pace = pace,
-             curve = pace and NS.HudBest.Curve(pace.id) or nil }
+             curve = pace and NS.HudBest.Curve(pace.id, pace) or nil }
 end
 
 -- The over card's best: is the saved fight its board's best now, and by how much over the one before.
+-- A sample record is judged against the sample history.
 local function judge(record)
     NS.Bests.Invalidate()   -- the bus keeps no order between receivers: the board must hold `record`
-    view.newBest = NS.Bests.IsBest(record) and true or false
+    local isBest, bestFor = NS.Bests.IsBest, NS.Bests.For
+    if record.sample then isBest, bestFor = NS.ResultsSource.IsBest, NS.ResultsSource.BestFor end
+    view.newBest = isBest(record) and true or false
     view.delta = nil
     if not view.newBest then return end
-    local before = NS.Bests.For(record, true)
+    local before = bestFor(record, true)
     local a, b = record.dps, before and before.dps
     if type(a) == "number" and type(b) == "number" and b > 0 then view.delta = (a - b) * 100 / b end
 end
@@ -213,7 +230,7 @@ local function cancelFade()
 end
 
 local function canFade()
-    return wanted and not byPlayer and not pinned and setting("hud.show") ~= "always"
+    return wanted and not byPlayer and not pinned and setting("hud.show") ~= "always" and not (cur and cur.sample)
 end
 
 local fadeCheck
@@ -253,7 +270,8 @@ end
 
 -- The content's insets from the window's top and bottom: the title bar's and the footer's, each
 -- only while shown (`hud.window.titleBar`, `hud.window.footer`).
-local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 8 or PAD end
+local function stripHeight() return ui and ui.stripMode and ui.stripShown and NS.TEST_STRIP_HEIGHT or 0 end
+local function contentTop() return (setting("hud.window.titleBar") ~= false and HEADER_H + 8 or PAD) + stripHeight() end
 local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 6 or PAD end
 
 local function applyPlacement()
@@ -356,6 +374,47 @@ local function applyLock()
     NS.Style.SetControlIcon(ui.lock, locked and "lock" or "unlock", locked and "L" or "U")
 end
 
+-- The strip a sample fight wears: the sim's while a sim runs, else test mode's; nil before it is
+-- built or with no Widgets library (the title then says it). Born hidden.
+local STRIP_TEXT = { test = "Test mode: sample data. Nothing here is saved.",
+                     sim = "Sim: a made-up fight, not your data. /kct sim ends it." }
+local STRIP_MAKER = { test = "MakeTestStrip", sim = "MakeSimStrip" }
+
+local function stripFor(which)
+    local field = which .. "Strip"
+    if not ui[field .. "Tried"] then
+        ui[field .. "Tried"] = true
+        ui[field] = NS[STRIP_MAKER[which]](ui.frame, L[STRIP_TEXT[which]])
+    end
+    return ui[field]
+end
+
+-- The strip on screen, under the title bar (at the window's top with the title bar hidden).
+local function placeStrip()
+    local strip = ui.stripMode and ui[ui.stripMode .. "Strip"]
+    if not strip then return end
+    local top = setting("hud.window.titleBar") ~= false and HEADER_H or 0
+    strip:ClearAllPoints()
+    strip:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", 1, -top)
+    strip:SetPoint("TOPRIGHT", ui.frame, "TOPRIGHT", -1, -top)
+end
+
+-- The strip for the fight on screen shown (and the other hidden); a change moves the content, so the
+-- window's look is laid out again (applyWindow places the strip).
+local function applyStrip()
+    local P = NS.Preview
+    local want = cur and cur.sample and P and P.Mode() or nil
+    if want == ui.stripMode then return end
+    ui.stripMode, ui.stamp = want, nil
+    local shown = want and stripFor(want) or nil
+    for _, which in ipairs({ "test", "sim" }) do
+        local strip = ui[which .. "Strip"]
+        if strip then strip:SetShown(strip == shown) end
+    end
+    ui.stripShown = shown ~= nil
+    ui.frame.title:SetText(want and not shown and L["Combat Trail (sample)"] or L["Combat Trail"])
+end
+
 -- The window's configured look (modules/Hud_Appearance.lua), once per Appearance stamp: the title
 -- bar and its title, the footer, the content's insets, the background, border, strata and opacity.
 local function applyWindow()
@@ -372,6 +431,7 @@ local function applyWindow()
     ui.content:ClearAllPoints()
     ui.content:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -contentTop())
     ui.content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, contentBottom())
+    placeStrip()
     A.ApplyWindow(f)
 end
 
@@ -400,6 +460,7 @@ local function clockOf()
     local fight = cur
     if not fight then return 0 end
     local first = fight.firstHitT or fight.startT
+    if fight.frozen and key ~= "over" then return fight.frozen end
     if key == "over" then
         local final = view.final
         local d = final and Secrets.PlainNumber(final.duration)
@@ -419,6 +480,18 @@ local function hasPet()
     return type(live) == "table" and live.pet ~= nil
 end
 
+-- Seconds since the fight's combat entry: the slices' and the casts' zero (the chart's time axis).
+local function sinceStart()
+    local t = cur and cur.startT
+    if type(t) ~= "number" then return 0 end
+    if cur.frozen and key ~= "over" then return cur.frozen + ((cur.firstHitT or t) - t) end
+    if key == "over" then
+        local d = view.final and Secrets.PlainNumber(view.final.duration)
+        if d then return d end
+    end
+    return math.max(0, GetTime() - t)
+end
+
 -- The fight's casts and their base cooldowns, read again at most every Hud.CAST_READ seconds while
 -- it is live (the chart's icons); the over card keeps the last read, or the record's own.
 local function readCasts(v)
@@ -426,19 +499,10 @@ local function readCasts(v)
     local now = GetTime()
     if v.castsAt and now - v.castsAt < Hud.CAST_READ then return end
     v.castsAt = now
-    local casts, spells = NS.Casts.Live(cur.id)
+    local casts, spells
+    if cur.sample then casts, spells = NS.MockFights.CastsAt(cur.plan, sinceStart())
+    else casts, spells = NS.Casts.Live(cur.id) end
     if casts then v.casts, v.castSpells = casts, spells end
-end
-
--- Seconds since the fight's combat entry: the slices' and the casts' zero (the chart's time axis).
-local function sinceStart()
-    local t = cur and cur.startT
-    if type(t) ~= "number" then return 0 end
-    if key == "over" then
-        local d = view.final and Secrets.PlainNumber(view.final.duration)
-        if d then return d end
-    end
-    return math.max(0, GetTime() - t)
 end
 
 -- The pace bar's view: the live totals (opaque) or the plain final ones, against the curve.
@@ -514,6 +578,7 @@ local function footer(v)
 end
 
 function render()
+    applyStrip()
     applyWindow()
     local v = fill()
     local body = showBody(v.key)
@@ -650,6 +715,20 @@ function Hud.Suspend()
     hideWindow()
 end
 
+--- Drop the sample fight on screen (test mode or the sim ended, modules/Preview.lua): its body goes,
+--- and with `release` a window the preview opened is let go too, unless the player opened it, pinned
+--- it or keeps it always up. A real fight on screen or waiting for its first hit is left alone.
+--- @param release boolean|nil
+function Hud.EndSample(release)
+    if pending and pending.sample then pending = nil end
+    if cur and cur.sample then
+        cancelFade()
+        cur, key, view, live = nil, nil, {}, nil
+    end
+    if release and not (byPlayer or pinned) and setting("hud.show") ~= "always" then wanted = false end
+    Hud.Refresh()
+end
+
 --- The login and the stand-up (core/CombatTrail.lua NS.RegisterGameEvents): "always" opens it.
 function Hud.Sync()
     if setting("hud.show") == "always" then wanted = true end
@@ -662,6 +741,10 @@ Hud.Resume = Hud.Sync
 
 local function readLive()
     local fight = cur
+    if fight.sample then
+        live = NS.MockFights.LiveAt(fight.plan, sinceStart())
+        return
+    end
     local sessions = fight.sessions
     local id = (type(sessions) == "table" and sessions[#sessions]) or fight.sessionID
     live = NS.Meter.ReadLive(id)
@@ -672,7 +755,11 @@ local function goLive(fight)
     pending, cur, key, live, dismissed = nil, fight, "live", nil, nil
     view = newView(fight)
     cancelFade()
-    if not (byPlayer or pinned) then wanted = autoAllowed(fight) end
+    if fight.sample then
+        wanted = true
+    elseif not (byPlayer or pinned) then
+        wanted = autoAllowed(fight)
+    end
     debug("fight %s live (pace %s)", tostring(fight.id), view.pace and tostring(view.pace.id) or "none")
     if Hud.IsShown() then readLive() end
     Hud.Refresh()
@@ -701,6 +788,7 @@ end
 
 local function closesWithFight()
     return setting("hud.overCard") == false and not (byPlayer or pinned) and setting("hud.show") ~= "always"
+        and not (cur and cur.sample)
 end
 
 function Hud.OnFightEnded(fight, final, reason)

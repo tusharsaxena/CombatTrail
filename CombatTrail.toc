@@ -196,6 +196,14 @@ modules\Results_Timeline.lua
 modules\Results_Gear.lua
 modules\Results_Compare.lua
 modules\Results.lua
+# Test mode and the sim (plan Task 5.1). The rotation is data picked per client at FILE SCOPE (reads
+# NS.Compat); the sample history and fights reach every other module at CALL time. LOAD-BEARING:
+# modules\Preview.lua registers its bus receiver at FILE SCOPE, and modules\Sim.lua builds its step
+# session at FILE SCOPE from NS.SimLib and NS.SimSeam (core\SimSetup.lua) and NS.L.
+modules\MockRotations.lua
+modules\MockFights.lua
+modules\Preview.lua
+modules\Sim.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua

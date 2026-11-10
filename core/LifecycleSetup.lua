@@ -11,7 +11,7 @@ local L = NS.L
 -- that builds it: the lanes, the fight watchers, the HUD and the Results window (plan milestones 1 to
 -- 4). A module carries `Suspend` (nothing on screen, no timer, no registration) and `Resume` (rebuilt
 -- from CURRENT settings).
-local MODULES = { "LaneCasts", "LaneAnchor", "LaneVisibility", "LaneRender", "Probe", "Meter", "Fight",
+local MODULES = { "Preview", "LaneCasts", "LaneAnchor", "LaneVisibility", "LaneRender", "Probe", "Meter", "Fight",
                   "Watchers", "Casts", "Usage", "Retention",
                   "Slices", "Hud", "Results" }
 

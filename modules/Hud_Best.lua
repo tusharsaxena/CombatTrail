@@ -112,9 +112,11 @@ end
 --- playerRate, damageAt(t), playerAt(t) }, or nil when it has no plain damage and duration to pace
 --- from (no such record, a lost one, an empty one).
 --- @param recordID string
+--- @param held table|nil  the record itself when the caller holds it (a sample fight's, which the
+---   store does not)
 --- @return table|nil curve
-function Best.Curve(recordID)
-    local record = recordID ~= nil and NS.Recorder.Get(recordID) or nil
+function Best.Curve(recordID, held)
+    local record = type(held) == "table" and held or (recordID ~= nil and NS.Recorder.Get(recordID) or nil)
     if type(record) ~= "table" or record.status ~= "final" then return nil end
     local duration = positive(record.duration)
     local merged, player = damageOf(record)

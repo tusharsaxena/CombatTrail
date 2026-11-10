@@ -588,6 +588,7 @@ function onHide()
         return
     end
     Results.wanted = false
+    if NS.Preview then NS.Preview.ResultsClosed() end
     hideFollowers()
     closePopups()
     if not talentTreeShown() and C_Timer and C_Timer.After then C_Timer.After(0, reopenUnderTree) end
@@ -693,6 +694,7 @@ end
 function Results.Hide()
     stopTreeWait()
     Results.wanted = false
+    if NS.Preview then NS.Preview.ResultsClosed() end
     Results.Refresh()
 end
 

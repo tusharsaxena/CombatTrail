@@ -13,6 +13,8 @@ local _, NS = ...
 --
 -- AN UNLOCKED LANE ALWAYS SHOWS, at full opacity (modules/LaneAnchor.lua IsUnlocked): the player
 -- has to see a lane to move it.
+-- So does every lane while test mode or the sim is on (modules/Preview.lua): they play their sample
+-- casts there.
 --
 -- EVENTS ONLY WHILE A RULE IS USED (performance). Each rule names the events that can change its
 -- answer, and the frame is registered for a rule's events only while some lane switched on, and not
@@ -154,6 +156,9 @@ end
 function LaneVisibility.Decide(laneKey)
     local anchor = NS.LaneAnchor
     if anchor and anchor.IsUnlocked() then return true, 1 end
+    -- Test mode and the sim play their sample casts on the lanes, so a lane shows while either is on.
+    local preview = NS.Preview
+    if preview and preview.IsActive() then return true, 1 end
     local v = visOf(laneKey)
     if v and showMode(v) == "never" then return false, 1 end
     local ctx = LaneVisibility.Context()

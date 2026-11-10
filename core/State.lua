@@ -4,7 +4,4 @@ local _, NS = ...
 NS.State = NS.State or {
     -- The debug-logging flag (debug-logging-§5): default off, window-independent, never persisted.
     debug = false,
-    -- Test mode and Sim mode until their modules arrive (core/CombatTrail.lua, plan Task 5.1).
-    testMode = false,
-    simMode = false,
 }

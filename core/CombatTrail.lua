@@ -128,25 +128,17 @@ function NS.IsHudShown()
 end
 
 -- ── Test mode and Sim mode ──────────────────────────────────────────────────────────────────────
--- Session state, never stored (preview-mode). Until test mode's sample data and the sim's made-up
--- fight arrive (plan Task 5.1, modules/Preview.lua and modules/Sim.lua), each is a session flag the
--- Master controls' box, the launcher's entry and the verb all read and write, so the three already
--- agree; that task moves each read and write onto its module and keeps these names.
+-- Session state, never stored (preview-mode): modules/Preview.lua owns the switch and its end
+-- conditions, modules/Sim.lua the sim's grammar and its step window. The Master controls' boxes, the
+-- launcher's entries and the verbs all read and write through these names, so the three agree.
 
 function NS.IsTestMode()
-    local P = NS.Preview
-    if P and P.Mode then return P.Mode() == "test" end
-    return NS.State.testMode == true
+    return NS.Preview.Mode() == "test"
 end
 
 --- The Test mode row's own set: start or stop test mode.
 function NS.SetTestMode(on)
-    local P = NS.Preview
-    if P and P.Start then
-        if on then P.Start() else P.Stop() end
-        return
-    end
-    NS.State.testMode = on and true or false
+    if on then NS.Preview.Start({ mode = "test" }) else NS.Preview.Stop() end
 end
 
 --- `/kct test` and the launcher's Test mode entry: through the row's write seam, so the box follows.
@@ -155,26 +147,19 @@ function NS.ToggleTestMode()
     return NS.SetByPath("general.testMode", not NS.IsTestMode())
 end
 
+--- Whether Sim mode reads on: the sim's step window shown or a sim running (modules/Sim.lua).
 function NS.IsSimMode()
-    local session = NS.Sim and NS.Sim.session
-    if session then return session:IsPanelShown() == true or session:IsActive() == true end
-    return NS.State.simMode == true
+    return NS.Sim.IsOn()
 end
 
 --- The launcher's Sim mode entry and the Master controls' Sim mode box: the one act.
 function NS.ToggleSim()
     if refused() then return false end
-    local Sim = NS.Sim
-    if Sim and Sim.Toggle then return Sim.Toggle() end
-    NS.State.simMode = not NS.IsSimMode()
-    return true
+    return NS.Sim.Toggle()
 end
 
---- `/kct sim [line]`: the sim's own grammar once it exists; until then a bare `sim` is the toggle.
+--- `/kct sim [line]`: the library's sim grammar (modules/Sim.lua Sim.RunVerb).
 function NS.RunSimVerb(line)
     if refused() then return false end
-    local Sim = NS.Sim
-    if Sim and Sim.RunVerb then return Sim.RunVerb(line) end
-    if tostring(line or ""):match("^%s*$") then return NS.ToggleSim() end
-    return notBuilt()
+    return NS.Sim.RunVerb(line)
 end

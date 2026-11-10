@@ -61,11 +61,20 @@ local function settleSkinLogin(mocks)
     if retry and retry.__fire then retry:__fire("OnEvent", "PLAYER_LOGIN") end
 end
 
+--- Mark the skin notice and this profile's first-run picker seen, before the login fuse asks.
+local function seenPicker(NS, mocks)
+    local O = mocks.LibStub("LibKa0s-Options-1.0", true)
+    if not (NS.db and O) then return end
+    NS.db.global.skinNotice = O.SKIN_NOTICE_VERSION
+    NS.db.profile.skin.pickerSeen = true
+end
+
 --- One isolated instance: a fresh mock, a fresh NS, the client's lifecycle.
 ---   opts.libFiles  the LibKa0s files to load ({} = the library-absent load)
 ---   opts.mutate    function(mocks) run before anything loads
 ---   opts.init      false = load the files only (no OnInitialize)
 ---   opts.enable    false = initialize but do not enable
+---   opts.loginPicker  true = the profile has not seen the skin picker, so the login fuse shows it
 local function loadInstance(opts)
     opts = opts or {}
     local mocks = mockmod.build()
@@ -80,6 +89,11 @@ local function loadInstance(opts)
         local AceAddon = mocks.LibStub("AceAddon-3.0")
         AceAddon:InitializeAddon(NS)                 -- OnInitialize: DB, migrations, latch
         if opts.enable ~= false then
+            -- The login fuse shows the skin picker (the account's one-time skin notice, else the
+            -- first-run picker on an unseen profile), and the picker shown with the HUD hidden turns
+            -- test mode on (core/SkinSetup.lua's spec.preview). The suites start from a player who
+            -- has seen both on this profile; `loginPicker` keeps them unseen.
+            if not opts.loginPicker then seenPicker(NS, mocks) end
             settleSkinLogin(mocks)                   -- PLAYER_LOGIN, to the skin's retry frame
             AceAddon:EnableAddon(NS)                 -- OnEnable: the game events
             if mocks.__fireTimers then mocks.__fireTimers() end
@@ -131,6 +145,8 @@ local SUITES = {
     "test_gear",
     "test_usage_edit",
     "test_history_page",
+    "test_preview",
+    "test_sim",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

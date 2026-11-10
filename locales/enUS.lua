@@ -1005,3 +1005,41 @@ L["An item ID, a shift-clicked item link, or the name of an item a fight listed.
 L["No item is hidden."] = "No item is hidden."
 L["Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."] =
     "Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."
+
+-- Test mode and the sim (modules/Preview.lua, modules/Sim.lua, modules/MockFights.lua). The sample
+-- history's difficulty and spec names stand in for the client's own; its boss, place and character
+-- names are made up and stay as they are.
+L["Test mode: sample data. Nothing here is saved."] = "Test mode: sample data. Nothing here is saved."
+L["Combat Trail (sample)"] = "Combat Trail (sample)"
+L["Test mode ended: you entered combat."] = "Test mode ended: you entered combat."
+L["Test mode is not available in combat."] = "Test mode is not available in combat."
+L["Test mode is not available while a fight is being read."] =
+    "Test mode is not available while a fight is being read."
+L["Combat Trail - SIM"] = "Combat Trail - SIM"
+L["Combat starts"] = "Combat starts"
+L["Fighting (%d s)"] = "Fighting (%d s)"
+L["Combat ends"] = "Combat ends"
+L["The fight is still on."] = "The fight is still on."
+L["Waiting for the meter's final read."] = "Waiting for the meter's final read."
+L["The fight-over card holds."] = "The fight-over card holds."
+L["  %s: %s"] = "  %s: %s"
+L["Usage: %s sim [%s]"] = "Usage: %s sim [%s]"
+L["Behind the best"] = "Behind the best"
+L["First fight"] = "First fight"
+L["Too short"] = "Too short"
+L["Lost fight"] = "Lost fight"
+L["beats your best on the board"] = "beats your best on the board"
+L["saved, behind your best"] = "saved, behind your best"
+L["the first fight on its board: no best, no pace bar"] = "the first fight on its board: no best, no pace bar"
+L["shorter than the recording filters' minimum: not saved"] =
+    "shorter than the recording filters' minimum: not saved"
+L["the meter loses the fight: not saved"] = "the meter loses the fight: not saved"
+L["Normal"] = "Normal"
+L["Heroic"] = "Heroic"
+L["Mythic"] = "Mythic"
+L["Mythic Keystone"] = "Mythic Keystone"
+L["40 Player"] = "40 Player"
+L["Beast Mastery"] = "Beast Mastery"
+L["Sample note: every cooldown in the opener"] = "Sample note: every cooldown in the opener"
+L["Sample note: tier 8 with the bountiful key"] = "Sample note: tier 8 with the bountiful key"
+L["Sample note: a clean dummy pull"] = "Sample note: a clean dummy pull"

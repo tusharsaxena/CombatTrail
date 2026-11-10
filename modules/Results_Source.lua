@@ -125,6 +125,24 @@ function Source.IsBest(record)
     return held ~= nil and held.id == record.id
 end
 
+--- The best on `record`'s board (modules/Bests.lua For), among the store's fights or the sample's.
+--- With `exclude`, `record` itself is left out: the best before it, or the runner-up.
+--- @return table|nil best
+function Source.BestFor(record, exclude)
+    if not mock then return NS.Bests.For(record, exclude) end
+    local key = NS.Bests.Key(record)
+    if not key then return nil end
+    if not exclude then
+        board = board or NS.Bests.Compute(mock.fights)
+        return board[key]
+    end
+    local others = {}
+    for _, r in ipairs(mock.fights) do
+        if r ~= record and r.id ~= record.id then others[#others + 1] = r end
+    end
+    return NS.Bests.Compute(others)[key]
+end
+
 --- Store a note. The sample's note lives in memory.
 --- @return boolean stored
 function Source.SetNote(id, note)
