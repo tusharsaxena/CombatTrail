@@ -34,7 +34,8 @@ local _, NS = ...
 -- there the predominant talent tree stands in for it (v0.2 plan Task A4, D5): who.trees holds each
 -- tree's points, and who.specID ("tree:<class>:<index>"), specName and specIcon are the tree with
 -- the most points (a tie goes to the first; none with points, no spec). NS.Compat.TalentTrees reads
--- the trees; a read sealed in combat keeps the session's last plain one.
+-- the trees; a read sealed in combat (a secret ID or point count, or an inaccessible table) keeps the
+-- session's last plain one, which Identity.Prime takes at login and every stand-up.
 --
 -- CLIENTS (clients-§4). Delves, Mythic+ and arenas are Retail-only: on WoW Forever isDelve,
 -- delveTier and keystoneLevel are never set, and an arena is filed as "bg" content. NS.Compat answers
@@ -164,6 +165,14 @@ local function readTrees(who)
     who.specID = ("tree:%s:%d"):format(tostring(who.class or "?"), best)
     who.specName = trees[best].name
     who.specIcon = trees[best].icon
+end
+
+--- WoW Forever: read the talent trees now, so the session's first sealed read (the combat-entry
+--- snapshot) has a last plain one to keep. At login and every stand-up (NS.RegisterGameEvents).
+--- Nothing on Retail; a read that is itself sealed or absent keeps what was there.
+function Identity.Prime()
+    if NS.Compat.ForClient(RETAIL) then return end
+    readTrees({})
 end
 
 local function readPet(who)

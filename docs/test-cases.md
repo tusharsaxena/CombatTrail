@@ -381,7 +381,7 @@ Total.
 - fight: COMBAT_ENTERED is sent on the regen edge from idle, on the grace carry-on and on park+begin
 - fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in combat, or while stood down
 
-### test_identity.lua (45)
+### test_identity.lua (47)
 
 - identity: boss fight key e:3176:15
 - identity: M+ trash key carries :k12
@@ -427,6 +427,8 @@ Total.
 - identity: forever: a sealed tree ID keeps the last plain read and never raises
 - identity: forever: a sealed group list keeps the last plain read and never raises
 - identity: forever: a sealed currency row keeps the last plain read and never raises
+- identity: forever: Prime reads the trees out of combat, so the session's first sealed read has one
+- identity: the stand-up primes the trees (core/CombatTrail.lua RegisterGameEvents)
 - identity: retail: the talent trees are absent and the spec is the client's
 
 ### test_cast_codec.lua (7)
@@ -1076,7 +1078,7 @@ Total.
 | test_meter.lua | 33 |
 | test_format.lua | 10 |
 | test_fight.lua | 30 |
-| test_identity.lua | 45 |
+| test_identity.lua | 47 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
@@ -1121,4 +1123,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **871** |
+| **Total** | **873** |

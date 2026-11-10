@@ -45,8 +45,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   with the most points is the fight's spec (v0.2 plan A4). The probe (build 70862, out of combat)
   found the trees in C_Traits' trait groups, with the talent-tab API absent (midnight-quirks.md);
   whether the config, tree or group IDs or a group's points read secret in combat is not measured.
-  A tree read sealed in combat (any of those) keeps the session's last plain read, so a respec
-  followed by a pull before any out-of-combat read could file that fight under the old tree.
+  A tree read sealed in combat (any of those) keeps the session's last plain read, primed at login
+  and every stand-up and refreshed by every out-of-combat read, so a respec followed by a pull
+  before any out-of-combat read could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.
 - **Spell and item IDs in the sample rotation are unverified** in game.
 

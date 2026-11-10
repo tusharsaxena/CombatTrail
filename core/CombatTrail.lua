@@ -53,6 +53,9 @@ function NS.RegisterGameEvents()
     -- The meter's session list, read once as the baseline a new fight's session is told apart from
     -- (modules/Meter.lua). It registers nothing.
     if NS.Meter then NS.Meter.Prime() end
+    -- WoW Forever's talent trees, read once out of combat as the last plain read a sealed in-combat
+    -- snapshot keeps (modules/Identity.lua). It registers nothing.
+    if NS.Identity then NS.Identity.Prime() end
     -- The fight watchers' events for the fight state machine's current state (modules/Watchers.lua).
     if NS.Watchers then NS.Watchers.Sync() end
     -- The equipment recon's events, and one recon now: at login and every stand-up, whatever the gear

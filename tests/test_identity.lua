@@ -688,6 +688,30 @@ for _, case in ipairs(SEALINGS) do
     end)
 end
 
+test("identity: forever: Prime reads the trees out of combat, so the session's first sealed read has one", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local _, NS, m = fresh("forever")
+        groups(m, MARKS)
+        NS.Identity.Prime()
+        m.C_ClassTalents.GetActiveConfigID = function() return T.secret(7001) end
+        local who = NS.Identity.Snapshot().who
+        assertEqual(who.specName, "Marksmanship", "the primed read stands in")
+    end)
+    restore()
+    restoreProfile()
+    assertTrue(ok, tostring(err))
+end)
+
+test("identity: the stand-up primes the trees (core/CombatTrail.lua RegisterGameEvents)", function()
+    local _, NS = fresh()
+    local primed = 0
+    NS.Identity.Prime = function() primed = primed + 1 end
+    NS.RegisterGameEvents()
+    assertEqual(primed, 1)
+    restoreProfile()
+end)
+
 test("identity: retail: the talent trees are absent and the spec is the client's", function()
     local _, NS, m = fresh("retail")
     tabs(m, HUNTER)
