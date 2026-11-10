@@ -26,7 +26,7 @@ Update your row, with the commit SHA, in your task's final commit. A resumed ses
 
 | Task | Title | Status | Commit |
 |---|---|---|---|
-| A1 | Schema 2 wipe, History rename, HUD "always" wins | todo | |
+| A1 | Schema 2 wipe, History rename, HUD "always" wins | done | c5a6a8f: SCHEMA_VERSION 2 wipe step, CT_SCHEMA 2, always returns early in autoAllowed, tab "History" / "Purge history…" (key `retention` kept) |
 | A2 | Target identity: name + level + NPC ID, board key, detail meta | todo | |
 | A3 | Equipment sets with recon | todo | |
 | A4 | Forever: predominant talent tree stands in for spec | todo | |
