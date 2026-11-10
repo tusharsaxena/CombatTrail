@@ -32,15 +32,16 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261110-130352`](20261110-130352/) | `d8ce97c` | clean | 0.1.0 | 0/0 | 131 | 726/1/727 | skip | 29566 | 3736 | 7.1 | 2.7 | 15 | 0 | **green** |
 | [`20261110-130020`](20261110-130020/) | `6e81fa8` | clean | 0.1.0 | 0/0 | 131 | 726/1/727 | skip | 29563 | 3735 | 7.1 | 2.7 | 17 | 1 | **green** |
 
 ## Test suite
 
 **727 cases** — 726 passed, 0 failed, 1 skipped. The generated inventory
-[`20261110-130020/test-cases.md`](20261110-130020/test-cases.md) is the authority on which cases existed at this run;
+[`20261110-130352/test-cases.md`](20261110-130352/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-This is the first recorded run, so there is no trend to read yet.
+Unchanged from the previous run at 727 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -64,8 +65,8 @@ never asked.
 
 ## Complexity watch list
 
-Current as of [`20261110-130020`](20261110-130020/) — **this run's measurement, not its diff.** Max CCN **17** across 3735
-functions, **1** of them warned on; 2 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261110-130352`](20261110-130352/) — **this run's measurement, not its diff.** Max CCN **15** across 3736
+functions, **0** of them warned on; 2 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -77,7 +78,8 @@ cell is this file saying something crossed and nobody has ruled on it yet.
 
 | Function | CCN | Location | Disposition |
 |---|---|---|---|
-| `rec` | 17 | `tests/test_results_table.lua` | **Peel next**: its identity defaults move to a helper in the commit that records this run |
+
+None.
 
 ### Files by `layout-§1` band
 
