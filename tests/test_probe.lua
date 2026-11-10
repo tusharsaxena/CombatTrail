@@ -1,4 +1,4 @@
--- tests/test_probe.lua — `/kct probe` (plan Task 1.5, spec §3 and §10): the report's lines with and
+-- tests/test_probe.lua — `/ct probe` (plan Task 1.5, spec §3 and §10): the report's lines with and
 -- without C_DamageMeter, the function list, the in-combat meter samples at +5 s and +2 s after combat,
 -- the cast secrecy counts, secrets printed as <secret> and never handed to tostring, the pet-source
 -- split, the pace bar's pet-fill anchor check, the debug console, the arming words and the stand-down.
@@ -220,7 +220,7 @@ test("probe: in-combat samples recorded via kit combat toggle", function()
     assertTrue(ok, tostring(err))
 end)
 
-test("probe: a second /kct probe after the fight reports without arming again", function()
+test("probe: a second /ct probe after the fight reports without arming again", function()
     local inst, meter = withMeter()
     session(meter)
     slash(inst, "probe")
@@ -421,7 +421,7 @@ test("probe: Disarm and a fresh Arm cancel the samples still pending", function(
     assertEqual(table.concat(delays(inst), ","), "5", "a fresh arm cancels the old one: one timer, not two")
 end)
 
-test("probe: a plain /kct probe in combat schedules the +5 s sample, one per combat", function()
+test("probe: a plain /ct probe in combat schedules the +5 s sample, one per combat", function()
     local inst, meter = withMeter()
     session(meter)
     inst.mocks.InCombatLockdown = function() return true end

@@ -7,7 +7,7 @@ NS.Schema = NS.Schema or {}
 -- The Minimap button row (launcher-§3). Its CLI name says SHOWN, because the composed checkbox reads
 -- "Minimap button" and ticks while the button shows; it stores at LibDBIcon's own `global.minimap.hide`
 -- through the row's get/set (settings/General.lua), never in the profile, and no reset ever touches it
--- (anti-pattern #83). It sits under `general.` with the rest of Master controls so `/kct list` groups it
+-- (anti-pattern #83). It sits under `general.` with the rest of Master controls so `/ct list` groups it
 -- there.
 NS.MINIMAP_PATH = "general.minimap.shown"
 local RESET_EXEMPT = { [NS.MINIMAP_PATH] = true }

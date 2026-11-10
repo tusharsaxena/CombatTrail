@@ -227,7 +227,7 @@ test("lanes page: ignore tab add by ID, by name, remove, reset to seed", functio
     assertTrue(widget(inst, ctx, "Add a spell") ~= nil, "the add box is drawn")
 end)
 
-test("lanes page: slash: /kct lane pet off disables the pet lane", function()
+test("lanes page: slash: /ct lane pet off disables the pet lane", function()
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
     NS.Slash:OnSlash("lane pet off")
@@ -242,7 +242,7 @@ test("lanes page: slash: /kct lane pet off disables the pet lane", function()
     assertTrue(anyLine(M, "Usage"))
 end)
 
-test("lanes page: slash: /kct ignore add 2649 pet", function()
+test("lanes page: slash: /ct ignore add 2649 pet", function()
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
     NS.Slash:OnSlash("ignore add 2649 pet")

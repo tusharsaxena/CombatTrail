@@ -58,7 +58,7 @@ FIGHT_ENDED
        Saved and New best; the Results window redraws
 ```
 
-`modules/Retention.lua` purges at login, every stand-up, once a day and on `/kct purge`: older than
+`modules/Retention.lua` purges at login, every stand-up, once a day and on `/ct purge`: older than
 `history.days`, except a fight holding a best while `history.keepBests` is on, then the cap
 `history.maxFights`. It sends FIGHTS_CHANGED when it removed anything.
 

@@ -1,7 +1,7 @@
 local _, NS = ...
 -- settings/Lanes.lua — the Lanes page (spec §4, options-ui-§13/§14): the lane picker in the band,
 -- and seven tabs under it that edit the lane it names: General, Size and position, Icons, Background
--- and border, Ticks and labels, Visibility and Ignored spells. Also the `/kct lane` verb
+-- and border, Ticks and labels, Visibility and Ignored spells. Also the `/ct lane` verb
 -- (NS.Lanes.OnVerb), which writes the same Enable row.
 --
 -- ONE ROW PER LANE AND SETTING. Every setting is registered twice, `lanes.player.<key>` and
@@ -463,7 +463,7 @@ function LanesPage.Preview(lane)
     return n
 end
 
--- ── `/kct lane player|pet on|off` ──────────────────────────────────────────────────────────────
+-- ── `/ct lane player|pet on|off` ──────────────────────────────────────────────────────────────
 
 --- The `lane` verb (settings/Slash.lua): the lane's Enable row, through the seam. With no on or off,
 --- it flips the lane.
@@ -475,7 +475,7 @@ function NS.Lanes.OnVerb(rest)
     elseif state == "off" then want = false
     elseif state == "" then want = NS.GetSetting(path) == false end
     if not IS_LANE[lane] or want == nil then
-        return NS.Print(L["Usage: /kct lane player|pet on|off"])
+        return NS.Print(L["Usage: /ct lane player|pet on|off"])
     end
     NS.SetByPath(path, want)
     NS.Print((want and L["The %s is on."] or L["The %s is off."]):format(LANE_NAME[lane]))
@@ -486,7 +486,7 @@ end
 -- The General tab: the lane's rows, then its acts (options-ui-§14's General escape).
 local UNLOCK_ROW = {
     type = "bool", page = PAGE, group = TAB.general, subgroup = L["Lane"], label = L["Unlock the lanes"],
-    tooltip = L["Show the lanes' move boxes so you can drag them, as /kct unlock does. Both lanes unlock together."],
+    tooltip = L["Show the lanes' move boxes so you can drag them, as /ct unlock does. Both lanes unlock together."],
     get = function() return NS.LaneAnchor ~= nil and NS.LaneAnchor.IsUnlocked() end,
     set = function(on) if NS.LaneAnchor then NS.LaneAnchor.SetUnlocked(on and true or false) end end,
 }

@@ -103,7 +103,7 @@ HUD directly, so the recorder, the casts, the slices reader and the bests never 
 
 ## Slash Commands
 
-`/kct` and `/combattrail` reach one LibKa0s-Slash-1.0 dispatcher over the ordered `NS.COMMANDS` in
+`/ct` and `/combattrail` reach one LibKa0s-Slash-1.0 dispatcher over the ordered `NS.COMMANDS` in
 `settings/Slash.lua`: the thirteen reserved verbs plus `skin`, then the feature verbs `results`,
 `hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane` and `ignore`. Feature verbs refuse
 while stood down; `lane` and `ignore` stay live. The full table and the dispatch rules are in
@@ -197,9 +197,9 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
+| slash-commands-§2 | The primary slash is `/ct`, which CTMod has long used (it opens CTMod's settings panel), against the MUST NOT on colliding with a well-known addon's slash. `/combattrail` is the long alias. If both addons load, whichever registers `/ct` last owns it. | Owner's choice: "No one uses ctmod nowadays". | 2026-11-10, owner | CTMod (or another addon using `/ct`) is reported in use alongside Combat Trail |
 
-None. This addon follows the Ka0s WoW Addon Standard at the pinned revision with no ratified
-deviation. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
+One ratified deviation, above. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
 addon, so the history is the README's `## Version History` alone (a plan correction, not a
 deviation).
 

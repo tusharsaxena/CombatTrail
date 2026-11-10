@@ -17,7 +17,7 @@ local _, NS = ...
 -- `hud.instancesOnly` keeps it shut outside an instance. It fades `hud.fadeAfter` seconds after the
 -- fight ends (0 keeps the card up), held while the pointer is over it (`hud.holdOnMouse`) and never
 -- while pinned (Hud.Pin). "always": up at login and after a stand-up, and never fades. "toggle":
--- only the player opens it. A HUD the player opened (Show, the toggle, the launcher, `/kct hud`) never
+-- only the player opens it. A HUD the player opened (Show, the toggle, the launcher, `/ct hud`) never
 -- fades; one the player closed stays closed for the rest of that fight. `hud.overCard` off closes an
 -- auto-opened HUD when its fight ends instead of showing the card.
 --
@@ -377,7 +377,7 @@ end
 -- The strip a sample fight wears: the sim's while a sim runs, else test mode's; nil before it is
 -- built or with no Widgets library (the title then says it). Born hidden.
 local STRIP_TEXT = { test = "Test mode: sample data. Nothing here is saved.",
-                     sim = "Sim: a made-up fight, not your data. /kct sim ends it." }
+                     sim = "Sim: a made-up fight, not your data. /ct sim ends it." }
 local STRIP_MAKER = { test = "MakeTestStrip", sim = "MakeSimStrip" }
 
 local function stripFor(which)
@@ -892,12 +892,12 @@ local VERBS = {
     unpin = function() Hud.Pin(false) end,
 }
 
---- `/kct hud show|hide|toggle|pin|unpin`.
+--- `/ct hud show|hide|toggle|pin|unpin`.
 function Hud.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word]
     if fn then return fn() end
-    NS.Print(L["Usage: /kct hud show, hide, toggle, pin or unpin"])
+    NS.Print(L["Usage: /ct hud show, hide, toggle, pin or unpin"])
 end
 
 --- What the HUD is doing, for the diagnostics report.

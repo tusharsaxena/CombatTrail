@@ -268,7 +268,7 @@ Each needs an in-game probe, recorded with the build, before any section of this
 
 ## CombatTrail-specific quirks
 
-Each entry follows client-quirks-§1's shape. The probe findings come first; `/kct probe` exists to
+Each entry follows client-quirks-§1's shape. The probe findings come first; `/ct probe` exists to
 extend them (its steps are in `smoke-tests.md`, *The probe*).
 
 **Registering `COMBAT_LOG_EVENT_UNFILTERED` is forbidden on WoW Forever.** *Client:* Forever (build

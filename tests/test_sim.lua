@@ -1,4 +1,4 @@
--- tests/test_sim.lua — modules/Sim.lua, `/kct sim [scenario]` (spec §8 "Sim mode", plan Task 5.1): a
+-- tests/test_sim.lua — modules/Sim.lua, `/ct sim [scenario]` (spec §8 "Sim mode", plan Task 5.1): a
 -- made-up 45 s fight played in real time through the lanes, the HUD's live view and its fight-over
 -- card, then the Results window on the sim's fight beside the sample history. Each scenario reaches
 -- its card and its chips; nothing reaches the bus's fight messages or SavedVariables; the step

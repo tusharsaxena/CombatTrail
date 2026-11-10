@@ -63,7 +63,7 @@ local GENERAL = {
 
 for _, case in ipairs(GENERAL) do
     local path, typed, want = case[1], case[2], case[3]
-    test("settings: " .. path .. " round-trips through /kct set and /kct get", function()
+    test("settings: " .. path .. " round-trips through /ct set and /ct get", function()
         local inst = T.load()
         local NS, M = inst.NS, inst.mocks
         assertTrue(NS.FindSchemaRow(path) ~= nil, "no schema row " .. path)

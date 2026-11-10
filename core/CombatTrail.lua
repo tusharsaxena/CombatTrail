@@ -127,7 +127,7 @@ function NS.IsHudShown()
     return NS.Hud ~= nil and NS.Hud.IsShown ~= nil and NS.Hud.IsShown() == true
 end
 
---- The Results window key and `/kct results`: show or hide the Results window.
+--- The Results window key and `/ct results`: show or hide the Results window.
 function NS.ToggleResults()
     if refused() then return false end
     if not (NS.Results and NS.Results.Toggle) then return notBuilt() end
@@ -136,7 +136,7 @@ function NS.ToggleResults()
 end
 
 -- ── the lanes key ───────────────────────────────────────────────────────────────────────────────
--- The Toggle lanes key writes each lane's Enable row through the seam, so the Lanes page, `/kct lane`
+-- The Toggle lanes key writes each lane's Enable row through the seam, so the Lanes page, `/ct lane`
 -- and the CLI read what the key did. Off remembers which lanes were on, for this session only, so the
 -- key brings back exactly those; with no memory (both were off), it turns both on.
 
@@ -183,7 +183,7 @@ function NS.SetTestMode(on)
     if on then NS.Preview.Start({ mode = "test" }) else NS.Preview.Stop() end
 end
 
---- `/kct test` and the launcher's Test mode entry: through the row's write seam, so the box follows.
+--- `/ct test` and the launcher's Test mode entry: through the row's write seam, so the box follows.
 function NS.ToggleTestMode()
     if refused() then return false end
     return NS.SetByPath("general.testMode", not NS.IsTestMode())
@@ -200,7 +200,7 @@ function NS.ToggleSim()
     return NS.Sim.Toggle()
 end
 
---- `/kct sim [line]`: the library's sim grammar (modules/Sim.lua Sim.RunVerb).
+--- `/ct sim [line]`: the library's sim grammar (modules/Sim.lua Sim.RunVerb).
 function NS.RunSimVerb(line)
     if refused() then return false end
     return NS.Sim.RunVerb(line)

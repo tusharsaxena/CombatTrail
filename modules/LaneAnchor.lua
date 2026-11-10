@@ -32,7 +32,7 @@ local _, NS = ...
 --
 -- THE EDIT OVERLAY (frame-layering-§2): one mouse-live box per lane, shown while Blizzard's Edit
 -- Mode is open (EventRegistry "EditMode.Enter"/"EditMode.Exit") and the Locked row is off, or after
--- `/kct unlock` (NS.Lanes.SetLocked, from the Locked row's reaction) until `/kct lock`. It is chrome:
+-- `/ct unlock` (NS.Lanes.SetLocked, from the Locked row's reaction) until `/ct lock`. It is chrome:
 -- floored at LAYERS.STRATA.CHROME over a lower lane, fixed and re-lifted after every strata the lane
 -- takes, at lane level + LEVEL.LANE_EDIT over the whole icon band, and blind to the lane's alpha. An
 -- unlocked lane shows whatever its visibility rules say (modules/LaneVisibility.lua asks
@@ -279,7 +279,7 @@ end
 
 -- ── the edit overlay ───────────────────────────────────────────────────────────────────────────
 
---- Whether the lanes show their edit overlay now: after `/kct unlock`, or in Edit Mode while the
+--- Whether the lanes show their edit overlay now: after `/ct unlock`, or in Edit Mode while the
 --- Locked row is off. Never while stood down.
 --- @return boolean
 function LaneAnchor.IsUnlocked()
@@ -399,7 +399,7 @@ local function refreshAll()
     for _, laneKey in ipairs(LANES) do refreshOverlay(laneKey) end
 end
 
---- Show or hide the edit overlay outside Edit Mode (`/kct unlock`, `/kct lock`).
+--- Show or hide the edit overlay outside Edit Mode (`/ct unlock`, `/ct lock`).
 --- @param on boolean
 function LaneAnchor.SetUnlocked(on)
     state.unlocked = on == true

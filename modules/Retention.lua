@@ -3,7 +3,7 @@ local _, NS = ...
 -- every fight older than `history.days` days (0 keeps them for ever), except a fight holding a best
 -- while `history.keepBests` is on (modules/Bests.lua), then caps the store at `history.maxFights`
 -- (0 is no cap): the oldest non-best fights go first. It runs at login (and every stand-up), once a
--- day while logged in (out of combat), and from `/kct purge`. Each run also puts db.global.fightOrder back in step
+-- day while logged in (out of combat), and from `/ct purge`. Each run also puts db.global.fightOrder back in step
 -- with the store (newest first, no id without its record), and sweeps the talent loadouts no fight
 -- refers to any more (modules/Loadouts.lua). FIGHTS_CHANGED fires once when anything was removed.
 --
@@ -170,7 +170,7 @@ function Retention.Timer()
     return timer
 end
 
---- `/kct purge`: purge now and say how many fights went, in one line.
+--- `/ct purge`: purge now and say how many fights went, in one line.
 function Retention.OnVerb()
     local removed = Retention.Purge(time())
     if removed == 0 then

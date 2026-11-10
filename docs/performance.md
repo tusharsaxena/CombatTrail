@@ -14,7 +14,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 |---|---|---|
 | `laneCast` | every `UNIT_SPELLCAST_*` a lane hears (modules/LaneCasts.lua) | runs on every cast and pet cast, in combat |
 | `laneRender` | each lane's `OnUpdate` and push (modules/LaneRender.lua) | runs every frame while icons are visible |
-| `probe` | the armed probe's cast and combat events (modules/Probe.lua) | only while `/kct probe` is armed |
+| `probe` | the armed probe's cast and combat events (modules/Probe.lua) | only while `/ct probe` is armed |
 | `meter` | the live read of the player's and the pet's sources (modules/Meter.lua) | every HUD tick in combat |
 | `fight` | every combat, encounter and meter event (modules/Watchers.lua) | the meter's session events fire often in combat |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
@@ -38,8 +38,8 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
 
 ## Taking a capture
 
-`/kct perf help` prints the library's grammar. The usual run: `/kct perf start`, fight the pull you
-want measured, `/kct perf finish`, then copy the report and the JSON dump from the console. The
+`/ct perf help` prints the library's grammar. The usual run: `/ct perf start`, fight the pull you
+want measured, `/ct perf finish`, then copy the report and the JSON dump from the console. The
 in-game captures and their write-ups live in [`perf-analysis/README.md`](perf-analysis/README.md).
 
 ## Offline

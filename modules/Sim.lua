@@ -1,13 +1,13 @@
 local _, NS = ...
--- modules/Sim.lua — `/kct sim` (spec §8 "Sim mode", plan Task 5.1): a made-up fight played in real
+-- modules/Sim.lua — `/ct sim` (spec §8 "Sim mode", plan Task 5.1): a made-up fight played in real
 -- time through the lanes, the HUD's live view and its fight-over card, then the Results window on
 -- the sim's fight beside the sample history, so the best, the pace and the compare have something
 -- to stand on. Adapted from DPS Race @045f479 (modules/Sim.lua) without its race: no arm, no
 -- buzzer, no countdown, no late cast; the fight is 45 s against the main sample hunter's board.
 --
--- `/kct sim` is the library's sim grammar (LibKa0s-Sim-1.0 RunVerb): a bare line opens the step
--- panel idle (the scenario dropdown and Start, the steps previewed, nothing run); Start (or `/kct
--- sim start <scenario>`, or the bare `/kct sim <scenario>`) starts the session, whose prepare turns
+-- `/ct sim` is the library's sim grammar (LibKa0s-Sim-1.0 RunVerb): a bare line opens the step
+-- panel idle (the scenario dropdown and Start, the steps previewed, nothing run); Start (or `/ct
+-- sim start <scenario>`, or the bare `/ct sim <scenario>`) starts the session, whose prepare turns
 -- the preview on (Preview.Start) and parks the fight until the first step. With no library the sim
 -- plays at once.
 --
@@ -397,7 +397,7 @@ function Sim.Start(word)
     return NS.Preview.Start({ mode = "sim", scenario = word })
 end
 
---- `/kct sim [line]`: the library's sim grammar. A bare line prints the status and the usage and
+--- `/ct sim [line]`: the library's sim grammar. A bare line prints the status and the usage and
 --- opens the step panel idle; `start <scenario>`, `step`, `run`, `pause`, `resume`, `restart`,
 --- `stop`, `status` and `panel` are the panel's own verbs. A bare scenario word starts it at once,
 --- switching a live sim in place. With no library session: Sim.Start.
@@ -419,7 +419,7 @@ function Sim.IsOn()
     return NS.Preview.Mode() == "sim"
 end
 
---- The Sim mode toggle. Off, it is the bare `/kct sim` (the idle sim window), so it picks no
+--- The Sim mode toggle. Off, it is the bare `/ct sim` (the idle sim window), so it picks no
 --- scenario. On, it stops a running sim and closes the window, so one untick or one launcher click
 --- leaves it off. With no library session: the preview off, or Sim.Start.
 --- @return boolean ok

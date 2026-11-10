@@ -13,12 +13,12 @@ owner runs them; an agent never marks a row passed. Every check names its client
 
 ## How to run it
 
-- Set `/console scriptErrors 1` first, and keep `/kct debug on` for the whole pass. Most failures
-  leave their evidence in the debug console (`/kct debug`).
+- Set `/console scriptErrors 1` first, and keep `/ct debug on` for the whole pass. Most failures
+  leave their evidence in the debug console (`/ct debug`).
 - Run **The probe** first on each client: its answers decide what several later rows expect.
 - Work down the page. Mark each row passed or failed, with the date, the client and its build
-  (`/kct version`, and the build from the login screen).
-- A failure report carries the row ID, what happened instead, and `/kct diagnostics` copied from the
+  (`/ct version`, and the build from the login screen).
+- A failure report carries the row ID, what happened instead, and `/ct diagnostics` copied from the
   console right after the failure (the report follows the trace, so one **Copy** carries both).
 - A class is named where a check needs one: a Hunter (pet, Feign Death), a Warlock (a second pet
   family), any caster with a channel and a cast-time spell, and an Evoker for empowered casts
@@ -26,28 +26,28 @@ owner runs them; an agent never marks a row passed. Every check names its client
 
 ## The probe
 
-`/kct probe` writes a plain-text report to the debug console; **Copy** lifts it out. Run these steps
+`/ct probe` writes a plain-text report to the debug console; **Copy** lifts it out. Run these steps
 on **each** client, on a Hunter with a pet out, then again on a Warlock with a demon out:
 
-- Out of combat, type `/kct probe`. Copy the report. It names the client, version, build and
+- Out of combat, type `/ct probe`. Copy the report. It names the client, version, build and
   interface; says "combat log: protected, not used"; lists `C_DamageMeter`'s functions against the
   eight expected, `IsDamageMeterAvailable`, both enums and the session count; and reads the player's
   and the pet's sources in the Current session.
-- Type `/kct probe start`, then pull a training dummy (or any target) and fight for at least ten
+- Type `/ct probe start`, then pull a training dummy (or any target) and fight for at least ten
   seconds. The probe takes one sample 5 s into combat and one 2 s after it ends, then disarms itself.
-- Type `/kct probe` again and copy the whole report. Check its lines: **pet is separate source** (yes
+- Type `/ct probe` again and copy the whole report. Check its lines: **pet is separate source** (yes
   or no), **pace pet-fill anchor** (whether the anchored SetPoint raised), the cast secrecy counts
   in and out of combat, and the meter's secrecy samples.
-- `/kct probe stop` disarms it early.
+- `/ct probe stop` disarms it early.
 
 Hand the reports back for `midnight-quirks.md`. A "no" on the pet line, or a raise on the pet-fill
 line, is a fix on the branch before the merge (spec §12's fallbacks).
 
 | ID | Client | Check | Expect |
 |---|---|---|---|
-| SM-CT-P1 | Both | `/kct probe` out of combat on a Hunter with a pet | The report prints in the console; every one of the eight functions is present; "combat log: protected, not used" |
-| SM-CT-P2 | Both | `/kct probe start`, then ten seconds of combat | One +5 s sample and one sample 2 s after combat, then the probe disarms |
-| SM-CT-P3 | Both | `/kct probe` typed while already in combat | It schedules the +5 s sample; a combat takes one in-combat sample however often it is armed |
+| SM-CT-P1 | Both | `/ct probe` out of combat on a Hunter with a pet | The report prints in the console; every one of the eight functions is present; "combat log: protected, not used" |
+| SM-CT-P2 | Both | `/ct probe start`, then ten seconds of combat | One +5 s sample and one sample 2 s after combat, then the probe disarms |
+| SM-CT-P3 | Both | `/ct probe` typed while already in combat | It schedules the +5 s sample; a combat takes one in-combat sample however often it is armed |
 | SM-CT-P4 | Both | The "pet is separate source" verdict, Hunter and Warlock | "yes" on both classes, with the note that it cannot detect double counting |
 | SM-CT-P5 | Both | The "pace pet-fill anchor" line | The SetPoint did not raise |
 | SM-CT-P6 | Forever | The cast secrecy counts in combat | Recorded either way: whether cast spell IDs and castGUIDs are secret in combat on WoW Forever |
@@ -57,9 +57,9 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | ID | Client | Check | Expect |
 |---|---|---|---|
 | SM-CT-L1 | Both | Log in with the addon enabled | No Lua error; the first-run skin picker shows once, in test mode |
-| SM-CT-L2 | Both | `/kct version` and `/kct help` | The version line; the full command list |
+| SM-CT-L2 | Both | `/ct version` and `/ct help` | The version line; the full command list |
 | SM-CT-L3 | Both | Settings → AddOns → Ka0s Combat Trail | The landing page with the logo, then General, Lanes, DPS HUD, History and Profiles |
-| SM-CT-L4 | Both | `/kct disable`, then `/kct results` and `/kct enable` | Lanes and HUD hide; the feature verb answers the disabled line; enable brings everything back |
+| SM-CT-L4 | Both | `/ct disable`, then `/ct results` and `/ct enable` | Lanes and HUD hide; the feature verb answers the disabled line; enable brings everything back |
 | SM-CT-L5 | Both | Hover and right-click the minimap button | Status tooltip; menu with Enabled, Locked, Test mode, Sim mode, Show window |
 | SM-CT-L6 | Both | The three bindings (Toggle DPS HUD, Toggle Results window, Toggle lanes) pressed in game | Each toggles its target; the lanes key brings back exactly the lanes it turned off |
 | SM-CT-L7 | Both | The bindings under Options → Keybindings → Ka0s Combat Trail and General → Keybindings | The same keys in both places |
@@ -73,7 +73,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-N3 | Both | A channel: does it fire `UNIT_SPELLCAST_SUCCEEDED` per tick? | Recorded either way; the lane shows one icon per press |
 | SM-CT-N4 | Retail | An Evoker's empowered cast | One icon per cast |
 | SM-CT-N5 | Both | A cooldown of 29 s or more | The icon glows |
-| SM-CT-N6 | Both | `/kct unlock`, drag both lanes, `/kct lock`, `/reload` | The places hold; the docked Pet lane follows the Player lane |
+| SM-CT-N6 | Both | `/ct unlock`, drag both lanes, `/ct lock`, `/reload` | The places hold; the docked Pet lane follows the Player lane |
 | SM-CT-N7 | Retail | Edit Mode open | The lanes show their edit overlay while the Locked row is off |
 | SM-CT-N8 | Both | Anchor the Player lane to the unit frame with ElvUI, then Shadowed Unit Frames, then Blizzard's frames | The lane sits on the frame each time; strata and level follow the host |
 | SM-CT-N9 | Both | The unit-frame names in `LaneAnchor.UNIT_FRAMES` (ElvUI, SUF, Cell, PitBull4, UnhaltedUnitFrames, Blizzard) | Each name exists on the client that ships the frame addon; a missing one falls back to free with one line |
@@ -85,7 +85,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-N15 | Both | Visibility: In combat only, hide after combat 5 s, hidden while mounted | The lane follows each rule |
 | SM-CT-N16 | Retail | The Visibility tab's where rows | Delves and Arenas are present |
 | SM-CT-N17 | Forever | The Visibility tab's where rows | Delves and Arenas are absent on WoW Forever |
-| SM-CT-N18 | Both | `/kct ignore add` a spell by name, by shift-clicked link, then `/kct ignore reset` | The spell stops showing; reset brings the seed back |
+| SM-CT-N18 | Both | `/ct ignore add` a spell by name, by shift-clicked link, then `/ct ignore reset` | The spell stops showing; reset brings the seed back |
 | SM-CT-N19 | Both | Dismiss the pet mid-fight, then summon another | The Pet lane label dims, then reads the new pet's name; no error |
 
 ## 3. Fights and the meter
@@ -122,14 +122,14 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-H4 | Both | `SetMinMaxValues` with a secret max on the spell bars | The bars scale; no error |
 | SM-CT-H5 | Both | `IsInInstance()` in combat with Only in instances on | The HUD opens only inside |
 | SM-CT-H6 | Both | Beat the best on a board | The card shows New best with the delta, and Saved |
-| SM-CT-H7 | Both | The HUD's fade 8 s after combat, held by the mouse, and `/kct hud pin` | It fades, waits while hovered, stays pinned |
+| SM-CT-H7 | Both | The HUD's fade 8 s after combat, held by the mouse, and `/ct hud pin` | It fades, waits while hovered, stays pinned |
 | SM-CT-H8 | Both | The test and sim strips under the title bar on both skins, and the body at small HUD heights | The strip sits under the title bar; the body is not clipped |
 
 ## 5. Results
 
 | ID | Client | Check | Expect |
 |---|---|---|---|
-| SM-CT-R1 | Both | `/kct results` after a few saved fights | The list, filters, grouping by board; a click opens the detail |
+| SM-CT-R1 | Both | `/ct results` after a few saved fights | The list, filters, grouping by board; a click opens the detail |
 | SM-CT-R2 | Both | The standalone-windows resize check: drag the grip | The list follows without lag; the size survives `/reload` |
 | SM-CT-R3 | Both | Add a note (the StaticPopup edit box) | The note saves |
 | SM-CT-R4 | Both | The dropdowns with 500 fights | They open without a hitch |
@@ -167,23 +167,23 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-S5 | Retail | History → Recording filters | Mythic+, Delves and Arenas rows present |
 | SM-CT-S6 | Forever | History → Recording filters | Mythic+, Delves and Arenas rows absent on WoW Forever |
 | SM-CT-S7 | Both | Switch, copy and reset a profile | Every window redraws from the new profile; fights stay |
-| SM-CT-S8 | Both | `/kct skin`, preview a skin, Apply; then close the picker without Apply | Apply keeps it; closing puts everything back |
+| SM-CT-S8 | Both | `/ct skin`, preview a skin, Apply; then close the picker without Apply | Apply keeps it; closing puts everything back |
 
 ## 8. Test mode and the sim
 
 | ID | Client | Check | Expect |
 |---|---|---|---|
-| SM-CT-M1 | Both | `/kct test` | Sample casts loop on the lanes, the HUD holds a sample fight, the Results window shows the sample history, each under its strip |
+| SM-CT-M1 | Both | `/ct test` | Sample casts loop on the lanes, the HUD holds a sample fight, the Results window shows the sample history, each under its strip |
 | SM-CT-M2 | Both | Enter combat in test mode | Test mode ends; nothing was saved |
-| SM-CT-M3 | Both | `/kct sim newbest`, then `short` and `lost` | The fight plays in real time; the card says New best, then Not saved |
-| SM-CT-M4 | Both | `/kct sim` step window | Anchored beside the HUD |
+| SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays in real time; the card says New best, then Not saved |
+| SM-CT-M4 | Both | `/ct sim` step window | Anchored beside the HUD |
 | SM-CT-M5 | Forever | The WoW Forever mock spell and item IDs | Every sample icon draws |
 
 ## In-game verification list
 
 The items the build assumed and the owner confirms, each answered by a row above:
 
-- `/kct probe` on both clients, in combat with a pet: SM-CT-P1 to SM-CT-P6.
+- `/ct probe` on both clients, in combat with a pet: SM-CT-P1 to SM-CT-P6.
 - The pet source split, and that the player's source excludes the pet: SM-CT-P4, SM-CT-F12,
   SM-CT-F13.
 - The pace bar's pet fill: SM-CT-P5, SM-CT-H2.

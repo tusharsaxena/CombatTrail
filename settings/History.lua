@@ -182,7 +182,7 @@ StaticPopupDialogs[HistoryPage.POPUP] = {
     OnAccept     = function() NS.Retention.OnVerb() end,
 }
 
---- Purge now…: asks first, through the one popup. The answer runs `/kct purge`'s purge.
+--- Purge now…: asks first, through the one popup. The answer runs `/ct purge`'s purge.
 function HistoryPage.ConfirmPurge()
     return StaticPopup_Show(HistoryPage.POPUP)
 end
@@ -237,7 +237,7 @@ NS.RegisterTabbedPage({
 })
 
 -- The stored count repaints when the store changes, and the hidden-items list when it changes from
--- anywhere (the detail's right-click, `/kct set` or `reset`); a hidden page is only flagged, and
+-- anywhere (the detail's right-click, `/ct set` or `reset`); a hidden page is only flagged, and
 -- repaints on its next show (the library's RefreshPanel).
 local function repaint()
     local ctx = NS.pageCtx[PAGE]

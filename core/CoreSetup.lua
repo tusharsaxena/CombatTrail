@@ -17,7 +17,7 @@ local lib = LibStub and LibStub("LibKa0s-Core-1.0", true)
 
 if not lib then
     -- Degrade, never error. A nil printer takes every settings file with it, and a silent one makes
-    -- /kct answer nothing, so keep a short fallback and say "missing" ONCE, on the first line printed.
+    -- /ct answer nothing, so keep a short fallback and say "missing" ONCE, on the first line printed.
     local function probeConcat(v) return table.concat({ v }) end
     function NS.IsConcatSafe(v) return (pcall(probeConcat, v)) end
     function NS.SafeToString(v)

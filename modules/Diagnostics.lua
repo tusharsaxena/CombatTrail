@@ -1,5 +1,5 @@
 local _, NS = ...
--- modules/Diagnostics.lua — this addon's sections of `/kct diagnostics` (debug-logging-§14, plan Task
+-- modules/Diagnostics.lua — this addon's sections of `/ct diagnostics` (debug-logging-§14, plan Task
 -- 5.2), ported from DPS Race @045f479 and cut to Combat Trail's state. The library writes the markers,
 -- the identity header (brand, version, client build, locale, the running LibKa0s minors, the state
 -- flags), the per-section pcall and the cap; core/DebugLogSetup.lua hands it these sections at RUN

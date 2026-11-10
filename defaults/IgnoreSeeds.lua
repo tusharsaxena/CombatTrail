@@ -10,7 +10,7 @@ local _, NS = ...
 -- player  Auto Attack 6603, Auto Shot 75, Shoot 5019 (a wand), on both clients.
 -- pet     Auto Attack 6603, on both clients. The pet's own melee swings do not fire SUCCEEDED on
 --         Retail; any further pet auto-attack ID a client turns out to send is added to that client's
---         list when `/kct probe` reports it (spec §10's in-game check list).
+--         list when `/ct probe` reports it (spec §10's in-game check list).
 --
 -- LOAD-BEARING: reads NS.Compat (core/Compat.lua) at FILE SCOPE, and defaults/Profile.lua reads
 -- NS.IGNORE_SEEDS at FILE SCOPE, so this file sits between them.

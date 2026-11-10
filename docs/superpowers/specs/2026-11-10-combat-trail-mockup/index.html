@@ -319,7 +319,7 @@ table.runs tbody tr.sel td{background:#2a2410 !important}
 <!-- 5. RESULTS -->
 <section class="stage" id="results">
   <div class="stage-head"><h2><small>5 · Results window</small>Fight history and fight detail</h2>
-  <p>Opens from the HUD's chart button, <span class="mono">/kct results</span>, a key binding or the minimap menu. It lists every stored fight, newest first, grouped by encounter or target and difficulty. Click a row to see its detail.</p></div>
+  <p>Opens from the HUD's chart button, <span class="mono">/ct results</span>, a key binding or the minimap menu. It lists every stored fight, newest first, grouped by encounter or target and difficulty. Click a row to see its detail.</p></div>
   <div class="scene"><div class="hscroll"><div class="win results" id="resultsWin"></div></div></div>
 </section>
 
@@ -350,7 +350,7 @@ table.runs tbody tr.sel td{background:#2a2410 !important}
 <section class="stage" id="chat">
   <div class="stage-head"><h2><small>9 · Chat</small>Slash commands and the shared summary</h2></div>
   <div class="scene"><div class="chat" id="chatBox"></div>
-    <div class="notes"><h3>Same as every Ka0s addon</h3><ul><li>Every setting is also a slash path, for example <span class="mono">/kct set lanes.pet.width 360</span>.</li><li>The debug console, diagnostics, test mode and sim mode work as they do in DPS Race.</li><li>Test mode fills the lanes, the HUD and the Results window with sample data, behind a strip saying so.</li></ul></div>
+    <div class="notes"><h3>Same as every Ka0s addon</h3><ul><li>Every setting is also a slash path, for example <span class="mono">/ct set lanes.pet.width 360</span>.</li><li>The debug console, diagnostics, test mode and sim mode work as they do in DPS Race.</li><li>Test mode fills the lanes, the HUD and the Results window with sample data, behind a strip saying so.</li></ul></div>
   </div>
 </section>
 </div>
@@ -662,12 +662,12 @@ $('#resultsWin').addEventListener('click',e=>{ const tr=e.target.closest('tr.run
 
 // ---- chat -------------------------------------------------------------------------------
 $('#chatBox').innerHTML = [
-  `<span class="c">Combat Trail</span>: slash commands (<span class="k">/kct</span> or <span class="k">/combattrail</span>):`,
-  `  <span class="k">/kct</span> — open settings · <span class="k">/kct results</span> — Results window · <span class="k">/kct hud</span> show|hide`,
-  `  <span class="k">/kct unlock</span> | <span class="k">lock</span> — move the lanes · <span class="k">/kct test</span> — sample data · <span class="k">/kct sim</span> — play a made-up fight`,
-  `  <span class="k">/kct lane player|pet</span> on|off · <span class="k">/kct ignore add|remove &lt;spell&gt;</span> [player|pet]`,
-  `  <span class="k">/kct set &lt;path&gt; &lt;value&gt;</span> — any setting · <span class="k">/kct get &lt;path&gt;</span> · <span class="k">/kct reset</span>`,
-  `  <span class="k">/kct purge</span> — apply retention now · <span class="k">/kct debug</span> · <span class="k">/kct diagnostics</span> · <span class="k">/kct probe</span>`,
+  `<span class="c">Combat Trail</span>: slash commands (<span class="k">/ct</span> or <span class="k">/combattrail</span>):`,
+  `  <span class="k">/ct</span> — open settings · <span class="k">/ct results</span> — Results window · <span class="k">/ct hud</span> show|hide`,
+  `  <span class="k">/ct unlock</span> | <span class="k">lock</span> — move the lanes · <span class="k">/ct test</span> — sample data · <span class="k">/ct sim</span> — play a made-up fight`,
+  `  <span class="k">/ct lane player|pet</span> on|off · <span class="k">/ct ignore add|remove &lt;spell&gt;</span> [player|pet]`,
+  `  <span class="k">/ct set &lt;path&gt; &lt;value&gt;</span> — any setting · <span class="k">/ct get &lt;path&gt;</span> · <span class="k">/ct reset</span>`,
+  `  <span class="k">/ct purge</span> — apply retention now · <span class="k">/ct debug</span> · <span class="k">/ct diagnostics</span> · <span class="k">/ct probe</span>`,
   `&nbsp;`,
   `<span class="c">Combat Trail</span>: fight saved — Vorasius (Heroic) 4:12 · 186.9K DPS · <span style="color:var(--gold)">new best +2.1%</span>`,
   `<span style="color:#ff7eff">[Party] Ka0shunter</span>: Combat Trail · Vorasius HC · 4:12 · 186.9K DPS · BM 721.4 · top: Kill Command 25.4%, Barbed Shot 17.1% · <span style="color:#71d5ff">[talents]</span>`

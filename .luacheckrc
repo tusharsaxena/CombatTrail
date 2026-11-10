@@ -21,7 +21,7 @@ read_globals = {
     "time",
     -- combat state: InCombatLockdown() gates secure writes; UnitAffectingCombat() drives display
     "InCombatLockdown", "UnitAffectingCombat",
-    -- units: the pet's presence and name (modules/LaneCasts.lua), and the GUIDs `/kct probe` asks the meter by
+    -- units: the pet's presence and name (modules/LaneCasts.lua), and the GUIDs `/ct probe` asks the meter by
     "UnitExists", "UnitName", "UnitGUID",
     -- the lanes' visibility context (modules/LaneVisibility.lua)
     "IsMounted", "IsResting", "IsInInstance",
@@ -64,7 +64,7 @@ files["core/Compat.lua"] = {
 }
 
 -- The meter reader is the only file that names C_DamageMeter (tests/test_meter.lua holds it to that).
--- `/kct probe` reaches the meter through NS.Meter and reads the meter enums itself, for the report.
+-- `/ct probe` reaches the meter through NS.Meter and reads the meter enums itself, for the report.
 files["modules/Meter.lua"] = { read_globals = { "C_DamageMeter", "Enum" } }
 files["modules/Probe.lua"] = { read_globals = { "Enum" } }
 -- A fight's identity: the player, the target and the instance (the version-variant reads are Compat's).

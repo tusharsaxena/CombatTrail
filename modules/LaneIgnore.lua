@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/LaneIgnore.lua — each lane's ignore list (spec §4, Ignored spells): add a spell by ID,
--- name or link, remove one, put the list back to its seed, and the `/kct ignore` verb. The Lanes
+-- name or link, remove one, put the list back to its seed, and the `/ct ignore` verb. The Lanes
 -- page's Ignored spells tab (settings/Lanes.lua) and the verb both go through here, so the two
 -- cannot store it two ways.
 --
@@ -118,7 +118,7 @@ local function parse(rest)
 end
 
 local function usage()
-    NS.Print(L["Usage: /kct ignore add|remove <spell> [player|pet], /kct ignore list [player|pet] or /kct ignore reset [player|pet]"])
+    NS.Print(L["Usage: /ct ignore add|remove <spell> [player|pet], /ct ignore list [player|pet] or /ct ignore reset [player|pet]"])
 end
 
 local function listVerb(lane)
@@ -149,7 +149,7 @@ local function changeVerb(act, text, lane)
     NS.Print(L["The %s does not ignore %s."]:format(LANE_NAME[lane], label))
 end
 
---- `/kct ignore add|remove <spell> [player|pet]`, `list [lane]` and `reset [lane]`.
+--- `/ct ignore add|remove <spell> [player|pet]`, `list [lane]` and `reset [lane]`.
 function LaneIgnore.OnVerb(rest)
     local act, text, lane = parse(rest)
     if act == "add" or act == "remove" then return changeVerb(act, text, lane) end

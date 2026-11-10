@@ -7,7 +7,7 @@ local lib = LibStub and LibStub("LibKa0s-DebugLog-1.0", true)
 
 if not lib then
     -- Degrade, never error. Every member the addon calls, and SetEnabled still flips OUR flag and
-    -- still acknowledges, because a player who types `/kct debug on` must not be told nothing. What
+    -- still acknowledges, because a player who types `/ct debug on` must not be told nothing. What
     -- is lost is the window, said once.
     local missing = NS.LIBKA0S_MISSING .. ", so the debug console window is unavailable."
     local announced = false
@@ -82,7 +82,7 @@ NS.DebugLog = lib:New({
             NS.SafeToString(schema), NS.SafeToString(profile), NS.SafeToString(fights))
     end,
 
-    -- So a console opened by `/kct debug` moves the checkbox on an already-open options panel.
+    -- So a console opened by `/ct debug` moves the checkbox on an already-open options panel.
     onVisibilityChanged = function()
         local H = NS.Helpers
         if H and H.RefreshAllPanels then H.RefreshAllPanels() end

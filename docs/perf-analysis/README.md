@@ -9,7 +9,7 @@ next. Offline runs live in [`../automated-tests/README.md`](../automated-tests/R
 One frozen, dated bundle per capture at `docs/perf-analysis/<YYYYMMDD-HHMMSS>/`, stamped in local
 time from the record's own timestamp. Each carries three files:
 
-- `report.md`, the report the console printed after `/kct perf finish`;
+- `report.md`, the report the console printed after `/ct perf finish`;
 - `dump.json`, the verbatim one-line JSON dump;
 - `ANALYSIS.md`, the write-up.
 
@@ -19,8 +19,8 @@ covered (in and out of combat), and per bucket the call count, total and peak mi
 
 ## Taking one
 
-- `/kct perf start`, then play the fight to measure.
-- `/kct perf finish`, then press **Copy** in the debug console for the report and the dump.
+- `/ct perf start`, then play the fight to measure.
+- `/ct perf finish`, then press **Copy** in the debug console for the report and the dump.
 - Hand both to `/dev-copilot:wow-perf-analysis`, which writes the bundle and its analysis.
 
 The buckets and what each brackets are in [`../performance.md`](../performance.md).

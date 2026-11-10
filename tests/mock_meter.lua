@@ -2,7 +2,7 @@
 -- on Retail and Combat Trail assumes on WoW Forever (spec §3): every number, spell ID, GUID and flag is
 -- SECRET while the combat restriction is on and plain after; sessions are addressable by ID; the
 -- Current session is the newest one set. Ported from DPS Race @045f479 (tests/mock_meter.lua) for
--- `/kct probe` (plan Task 1.5); the meter adapter (plan Task 2.1) reads it too.
+-- `/ct probe` (plan Task 1.5); the meter adapter (plan Task 2.1) reads it too.
 --
 -- What differs from DPS Race's: the client's full list of eight functions (GetSessionDurationSeconds
 -- and ResetAllCombatSessions join the six the adapter calls, as the kit's client_globals_live.lua and

@@ -1,4 +1,4 @@
--- tests/test_diagnostics.lua — this addon's sections of `/kct diagnostics` (debug-logging-§14, plan
+-- tests/test_diagnostics.lua — this addon's sections of `/ct diagnostics` (debug-logging-§14, plan
 -- Task 5.2; modules/Diagnostics.lua). The dispatcher half (the two forms, the markers, the append,
 -- the logging edge) is the kit's contract suite; this file holds what only Combat Trail writes: the
 -- schema and store line, the settings that differ from their defaults, the lanes, the fight, the

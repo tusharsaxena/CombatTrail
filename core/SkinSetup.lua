@@ -11,7 +11,7 @@ local addonName, NS = ...
 --                           NS.DEFAULT_SKIN before NS:InitDB has built the profile store.
 --   NS.DEFAULT_SKIN         the client's default skin, Skin:DefaultSkin(): "forever" on WoW Forever,
 --                           "ka0s" on Retail (spec §8).
---   NS.WriteSkinChoice(s,k,i,m) the write seam: every half through NS.SetByPath, the one seam `/kct set`
+--   NS.WriteSkinChoice(s,k,i,m) the write seam: every half through NS.SetByPath, the one seam `/ct set`
 --                           and the panel already write through (architecture-§5); `i`, the Scope's
 --                           `{ panel, fonts }`, writes the two exceptions, and `m`, the Font and
 --                           texture section's `{ font, texture }`, the two overrides ("" for false);
@@ -51,7 +51,7 @@ local addonName, NS = ...
 --   NS.HideSkinPicker()     takes a shown or queued picker down WITHOUT marking it seen (the
 --                           stand-down, a profile event) and drops a held combat start.
 --   NS.SkinPickerSpec()     the spec MaybeShowSkinPicker hands O.SkinPicker.
---   NS.RunSkinVerb()        the reserved `/kct skin` verb's act (LibKa0s v1.82.0, O.SkinVerb, D-16): the
+--   NS.RunSkinVerb()        the reserved `/ct skin` verb's act (LibKa0s v1.82.0, O.SkinVerb, D-16): the
 --                           picker a new profile shows, whatever `skin.pickerSeen` says.
 --
 -- ── WHERE IT LOADS ───────────────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ local addonName, NS = ...
 -- would apply the half-written one in between: a second repaint, to a skin the player never picked.
 -- Applying only the row's own half against the applied choice makes each write a no-op (SetChoice is
 -- idempotent), so a pick is ONE effective SetChoice and one repaint, while a bare
--- `/kct set skin.skin obsidian` still repaints.
+-- `/ct set skin.skin obsidian` still repaints.
 --
 -- Nothing skin-related keys off SETTINGS_CHANGED. A surface that has to rebuild on a skin change
 -- (markup built once, a pooled row) subscribes to NS.Skin.OnLooksChanged, which fires after the new
@@ -209,7 +209,7 @@ NS.SKIN_TOKENS = {
     ["ct.danger.hover"]  = { default = GOLD, follow = "btn.hover" },
     -- The ✕ a lane draws over an interrupted or canceled cast (modules/LaneRender.lua).
     ["ct.lane.cross"] = { default = rgba(RED, 1), follow = "sem.statusBad" },
-    -- A lane's edit overlay in Edit Mode and after /kct unlock (modules/LaneAnchor.lua): an info-blue
+    -- A lane's edit overlay in Edit Mode and after /ct unlock (modules/LaneAnchor.lua): an info-blue
     -- wash with its edge, and its label.
     ["ct.lane.edit.bg"]     = { default = { 0.25, 0.5, 1, 0.3 }, follow = "list.hover", skins = wash("sem.info", 0.3) },
     ["ct.lane.edit.border"] = { default = { 0.25, 0.5, 1, 0.9 }, follow = "section.rule", skins = wash("sem.info", 0.9) },
@@ -399,7 +399,7 @@ end
 -- call 2): the picker shown while the DPS HUD is hidden turns it on, so the HUD and the Results
 -- window show sample data in the skin; the eye turns it off and on; and every close (Apply, the gear,
 -- the close control, Escape, a hide) puts back what the picker or its eye moved, after the skin's own
--- put-back. Enter and exit are NS.ToggleTestMode, the handler `/kct test` and the launcher's Test mode
+-- put-back. Enter and exit are NS.ToggleTestMode, the handler `/ct test` and the launcher's Test mode
 -- entry call, so the Master controls' checkbox follows and its refusals (combat, the
 -- stand-down) hold; isActive and isShown read what the launcher's isTestMode and isWindowShown read.
 -- A playing sim is not test mode and is never toggled: the toggle would read it as on and end it.
@@ -543,7 +543,7 @@ function NS.MaybeShowSkinPicker()
     return pickerFirstRun()
 end
 
---- The reserved `/kct skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
+--- The reserved `/ct skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
 --- O.SkinVerb with the spec the first-run start builds, so it shows the picker a new profile shows
 --- whatever skin.pickerSeen says, and writes nothing itself (the player's close marks it seen, as
 --- for the first-run picker). The library prints its own lines (combat on every call, queued,
@@ -558,7 +558,7 @@ function NS.RunSkinVerb()
         local L = NS.L or {}
         local line = L["%s is unavailable: the LibKa0s library did not load."]
             or "%s is unavailable: the LibKa0s library did not load."
-        NS.Print(line:format((NS.SLASH_CMD or "/kct") .. " skin"))
+        NS.Print(line:format((NS.SLASH_CMD or "/ct") .. " skin"))
     end
     return win, why
 end

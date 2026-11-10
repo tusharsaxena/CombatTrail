@@ -403,7 +403,7 @@ end)
 
 -- ── the verb, the lock, the stand-down ──────────────────────────────────────────────────────────
 
-test("hud: /kct hud show, hide, pin and unpin", function()
+test("hud: /ct hud show, hide, pin and unpin", function()
     local inst, _, Hud = fresh()
     local NS, M = inst.NS, inst.mocks
     NS.Slash:OnSlash("hud show")

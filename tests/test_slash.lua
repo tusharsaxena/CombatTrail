@@ -1,5 +1,5 @@
 -- tests/test_slash.lua — the slash dispatcher (plan Task 0.2): the spec §8 verb list in help, bare
--- /kct, unknown verbs, enable/disable and lock/unlock through the seam, the debug verb, both chat
+-- /ct, unknown verbs, enable/disable and lock/unlock through the seam, the debug verb, both chat
 -- commands, and the library-absent dispatcher.
 
 local T = _G.CT_TEST
@@ -27,10 +27,10 @@ test("slash: help lists every verb spec §8 names", function()
     inst.NS.Slash:OnSlash("help")
     local out = text(inst.mocks)
     for _, verb in ipairs(SPEC_VERBS) do
-        assertTrue(out:find("/kct " .. verb, 1, true) ~= nil, "help names " .. verb)
+        assertTrue(out:find("/ct " .. verb, 1, true) ~= nil, "help names " .. verb)
     end
     for _, verb in ipairs(RESERVED) do
-        assertTrue(out:find("/kct " .. verb, 1, true) ~= nil, "help names the reserved " .. verb)
+        assertTrue(out:find("/ct " .. verb, 1, true) ~= nil, "help names the reserved " .. verb)
     end
 end)
 
@@ -40,7 +40,7 @@ test("slash: help lists every COMMANDS verb, in order", function()
     inst.NS.Slash:OnSlash("help")
     local out, last = text(inst.mocks), 0
     for _, row in ipairs(inst.NS.COMMANDS) do
-        local at = out:find("/kct " .. row[1], 1, true)
+        local at = out:find("/ct " .. row[1], 1, true)
         assertTrue(at ~= nil and at > last, row[1] .. " is in COMMANDS order")
         last = at
     end
@@ -52,10 +52,10 @@ test("slash: an unknown verb says so and prints the help", function()
     M.__resetPrinted()
     inst.NS.Slash:OnSlash("frobnicate")
     assertTrue(anyLine(M, "unknown command 'frobnicate'"), text(M))
-    assertTrue(anyLine(M, "/kct help"), "the help follows")
+    assertTrue(anyLine(M, "/ct help"), "the help follows")
 end)
 
-test("slash: bare /kct opens the settings panel", function()
+test("slash: bare /ct opens the settings panel", function()
     local inst = T.load()
     local opened = 0
     inst.NS.OpenOptionsPanel = function() opened = opened + 1 end
@@ -63,10 +63,10 @@ test("slash: bare /kct opens the settings panel", function()
     assertEqual(opened, 1)
 end)
 
-test("slash: /kct and /combattrail are both registered on the one dispatcher", function()
+test("slash: /ct and /combattrail are both registered on the one dispatcher", function()
     local inst = T.load()
     local known = inst.mocks.LibStub("AceConsole-3.0").commands
-    assertTrue(known.kct ~= nil, "kct is registered")
+    assertTrue(known.ct ~= nil, "ct is registered")
     assertTrue(known.combattrail ~= nil, "combattrail is registered")
 end)
 
@@ -205,7 +205,7 @@ test("slash: the stub's refusal format is byte-equal to the live library's", fun
     assertEqual(degraded.NS.Slash.__stubFormat, live.DISABLED_LINE_FORMAT)
 end)
 
-test("slash: library absent, /kct still answers, and enable/disable still land", function()
+test("slash: library absent, /ct still answers, and enable/disable still land", function()
     local inst = T.load{ libFiles = {} }
     local NS, M = inst.NS, inst.mocks
     M.__resetPrinted()

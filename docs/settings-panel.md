@@ -4,7 +4,7 @@ How the addon is configured (documentation-§3, Tier 1; options-ui). Everything 
 **Settings → AddOns → Ka0s Combat Trail**, built with LibKa0s-Options-1.0. The landing page carries
 the logo, the version and the command list; every page under it is a tab strip with a Defaults button
 that resets that page on the current profile. Every row is a schema row (`settings/*.lua` through
-`NS.RegisterSchemaRows`), so each is also reachable as `/kct get` and `/kct set` with the key shown.
+`NS.RegisterSchemaRows`), so each is also reachable as `/ct get` and `/ct set` with the key shown.
 
 | Page | Covers |
 |---|---|
@@ -182,7 +182,7 @@ The tab also carries the host-drawn acts on the lane: unlock it, copy the other 
 ### Ignored spells
 
 A host-drawn list over `lanes.<k>.ignore` (modules/LaneIgnore.lua): add a spell by ID, name or
-shift-clicked link, remove one, or reset the list to the client's seed. `/kct ignore` does the same.
+shift-clicked link, remove one, or reset the list to the client's seed. `/ct ignore` does the same.
 
 ## DPS HUD
 

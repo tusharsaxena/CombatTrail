@@ -39,14 +39,14 @@ Total.
 - settings: every page is a subcategory under its player-facing name
 - settings: every page renders without printing
 - settings: the General page's tabs are Master controls, Look and skin and Keybindings
-- settings: general.enabled round-trips through /kct set and /kct get
-- settings: general.locked round-trips through /kct set and /kct get
-- settings: general.testMode round-trips through /kct set and /kct get
-- settings: general.simMode round-trips through /kct set and /kct get
-- settings: general.hudInCombat round-trips through /kct set and /kct get
-- settings: general.minimap.shown round-trips through /kct set and /kct get
-- settings: general.debug round-trips through /kct set and /kct get
-- settings: general.fontScale round-trips through /kct set and /kct get
+- settings: general.enabled round-trips through /ct set and /ct get
+- settings: general.locked round-trips through /ct set and /ct get
+- settings: general.testMode round-trips through /ct set and /ct get
+- settings: general.simMode round-trips through /ct set and /ct get
+- settings: general.hudInCombat round-trips through /ct set and /ct get
+- settings: general.minimap.shown round-trips through /ct set and /ct get
+- settings: general.debug round-trips through /ct set and /ct get
+- settings: general.fontScale round-trips through /ct set and /ct get
 - settings: the minimap row stores LibDBIcon's own hide key in the global store
 - settings: general.enabled false stands the addon down, true stands it up
 - settings: the session rows never reach the profile
@@ -60,8 +60,8 @@ Total.
 - slash: help lists every verb spec §8 names
 - slash: help lists every COMMANDS verb, in order
 - slash: an unknown verb says so and prints the help
-- slash: bare /kct opens the settings panel
-- slash: /kct and /combattrail are both registered on the one dispatcher
+- slash: bare /ct opens the settings panel
+- slash: /ct and /combattrail are both registered on the one dispatcher
 - slash: disable and enable write general.enabled through the seam
 - slash: a feature verb refuses with the one line while disabled; settings verbs still answer
 - slash: disabled, each feature verb answers one refusal line; lane and ignore still act
@@ -73,7 +73,7 @@ Total.
 - slash: a verb whose feature is not built yet says so in one line
 - slash: the stub's live-verb set is the library's LIVE_VERBS
 - slash: the stub's refusal format is byte-equal to the live library's
-- slash: library absent, /kct still answers, and enable/disable still land
+- slash: library absent, /ct still answers, and enable/disable still land
 - launcher: the menu carries Enabled, Locked, Test mode, Sim mode and Show window
 - launcher: the menu's toggles are the slash verbs' handlers
 
@@ -195,7 +195,7 @@ Total.
 - lane anchor: a secret host strata or level is never used
 - lane anchor: Edit Mode shows each lane's overlay and closing it hides them
 - lane anchor: the Locked row keeps Edit Mode from showing the overlay
-- lane anchor: /kct unlock shows the overlay and /kct lock hides it
+- lane anchor: /ct unlock shows the overlay and /ct lock hides it
 - lane anchor: an unlocked lane shows even when its visibility says never
 - lane anchor: the overlay is chrome over the icon band, mouse-live at MEDIUM or above
 - lane anchor: dragging a free lane saves its place
@@ -251,8 +251,8 @@ Total.
 - lanes page: Size and position has Frame strata (BACKGROUND to HIGH, + Match host in unit-frame mode) and Frame level 0-50
 - lanes page: the dock gap and the frame name show only in the modes that use them
 - lanes page: ignore tab add by ID, by name, remove, reset to seed
-- lanes page: slash: /kct lane pet off disables the pet lane
-- lanes page: slash: /kct ignore add 2649 pet
+- lanes page: slash: /ct lane pet off disables the pet lane
+- lanes page: slash: /ct ignore add 2649 pet
 - lanes page: the lane and ignore verbs answer while the addon is disabled
 - lanes page: the page's Defaults resets both lanes and their ignore lists
 - lanes page: preview fills the picked lane with sample casts
@@ -272,7 +272,7 @@ Total.
 - probe: the report is written to the debug console in one chat line
 - probe never registers COMBAT_LOG_EVENT_UNFILTERED
 - probe: in-combat samples recorded via kit combat toggle
-- probe: a second /kct probe after the fight reports without arming again
+- probe: a second /ct probe after the fight reports without arming again
 - probe: start in combat takes the +5 s sample now
 - probe: start resets the counts and samples; stop disarms
 - probe: an unknown word answers the usage line
@@ -286,7 +286,7 @@ Total.
 - probe: stand-down drops its registrations; stand-up brings them back while armed
 - probe: nothing is registered until the probe is armed
 - probe: Disarm and a fresh Arm cancel the samples still pending
-- probe: a plain /kct probe in combat schedules the +5 s sample, one per combat
+- probe: a plain /ct probe in combat schedules the +5 s sample, one per combat
 - probe: a function the client lacks reads missing, not raised
 - probe: the pet verdict says it cannot see double counting
 
@@ -484,7 +484,7 @@ Total.
 - retention: the purge runs at login and on a daily timer
 - retention: the daily run waits out combat and a fight in progress
 - retention: the stand-down cancels the daily timer, the stand-up arms it again
-- retention: /kct purge purges now and says how many went
+- retention: /ct purge purges now and says how many went
 - retention: EstimateBytes sizes the store as SavedVariables writes it
 
 ### test_record.lua (15)
@@ -546,7 +546,7 @@ Total.
 - hud: always mode is up at login and after a stand-up, and never fades
 - hud: instancesOnly hides in world
 - hud: a HUD the player closed mid-fight stays closed for that fight
-- hud: /kct hud show, hide, pin and unpin
+- hud: /ct hud show, hide, pin and unpin
 - hud: Locked stops the drag; Reset position puts it back
 - hud: disabled addon: hidden, no timer, and no fight opens it
 
@@ -596,7 +596,7 @@ Total.
 - hud page: the words follow options-ui-§21: (px), (seconds), never (s)
 - hud page: no subsection restates its tab (options-ui-§7) and no row names a Retail-only feature (clients-§4)
 - hud page: the value checks refuse what the HUD cannot draw
-- hud page: /kct set reaches a hud path, and hud.show always opens the HUD
+- hud page: /ct set reaches a hud path, and hud.show always opens the HUD
 - hud page: the page's Defaults puts every hud row back
 
 ### test_sizing.lua (7)
@@ -713,7 +713,7 @@ Total.
 - history page: the words follow options-ui-§21 and no subsection restates its tab (options-ui-§7)
 - history page: every tab renders without printing
 - history page: the page's Defaults puts every row back and leaves the fights
-- history page: /kct set reaches a history path
+- history page: /ct set reaches a history path
 
 ### test_preview.lua (7)
 

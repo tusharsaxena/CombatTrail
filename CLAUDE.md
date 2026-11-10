@@ -30,7 +30,7 @@ Start here, then read the docs:
   messages, the event wiring per state, the secret-value invariants, the Documentation map and the
   deviation register. **`docs/module-map.md`** lists every file and the load order.
 - **`docs/testing.md`** — how to verify: both kit profiles, lint, complexity, the commit gate.
-- **`docs/smoke-tests.md`** — the in-game suite and the `/kct probe` steps the owner runs.
+- **`docs/smoke-tests.md`** — the in-game suite and the `/ct probe` steps the owner runs.
 - Then the topic docs the hub's Documentation map lists: `docs/scope.md`, `docs/schema.md`,
   `docs/settings-panel.md`, `docs/data-flow.md`, `docs/common-tasks.md`, `docs/slash-dispatch.md`,
   `docs/compat-layer.md`, `docs/profiles.md`, `docs/debug.md`, `docs/known-limitations.md`,

@@ -13,7 +13,7 @@ end)
 
 test("load: the identity constants", function()
     assertEqual(T.NS.BRAND, "Ka0s Combat Trail")
-    assertEqual(T.NS.SLASH, "kct")
+    assertEqual(T.NS.SLASH, "ct")
     assertEqual(T.NS.SLASH_LONG, "combattrail")
     assertEqual(T.NS.version, "0.1.0")
 end)

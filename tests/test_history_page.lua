@@ -336,7 +336,7 @@ test("history page: the page's Defaults puts every row back and leaves the fight
     assertEqual(stored(NS), 1, "stored fights are not touched")
 end)
 
-test("history page: /kct set reaches a history path", function()
+test("history page: /ct set reaches a history path", function()
     local NS = T.load().NS
     NS.Slash:OnSlash("set history.days 14")
     assertEqual(NS.GetSetting("history.days"), 14)

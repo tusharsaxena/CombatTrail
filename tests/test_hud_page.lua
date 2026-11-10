@@ -237,7 +237,7 @@ test("hud page: the value checks refuse what the HUD cannot draw", function()
     assertEqual(range.max, 2.0)
 end)
 
-test("hud page: /kct set reaches a hud path, and hud.show always opens the HUD", function()
+test("hud page: /ct set reaches a hud path, and hud.show always opens the HUD", function()
     local inst = T.load({ mutate = installPaint })
     local NS = inst.NS
     NS.Slash:OnSlash("set hud.chart.height 120")

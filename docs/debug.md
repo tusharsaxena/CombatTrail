@@ -5,7 +5,7 @@ set up in `core/DebugLogSetup.lua`; the library documents the console itself.
 
 ## The console and the flag
 
-- `/kct debug` opens and closes the console; `/kct debug on` and `/kct debug off` set the logging
+- `/ct debug` opens and closes the console; `/ct debug on` and `/ct debug off` set the logging
   flag, which is session-only (`NS.State.debug`) and off after every reload. General → Master
   controls carries the same two as *Debug console* and *Debug logging*.
 - Every line goes through the gated sink `NS.Debug(tag, fmt, ...)`, which costs nothing while the flag
@@ -27,7 +27,7 @@ set up in `core/DebugLogSetup.lua`; the library documents the console itself.
 
 ## The diagnostics report
 
-`/kct diagnostics` writes a plain-text report into the console after the trace (debug-logging-§14),
+`/ct diagnostics` writes a plain-text report into the console after the trace (debug-logging-§14),
 so one **Copy** carries both; it turns logging on first. The library writes the markers and the
 identity header (brand, version, client build, locale, the running LibKa0s minors, the state);
 `modules/Diagnostics.lua` adds this addon's sections:
@@ -48,5 +48,5 @@ store still print. The README's *Reporting a bug* tells players how to send it.
 
 ## The probe
 
-`/kct probe` is a debug surface too: it writes its report to the console. Its steps are in
+`/ct probe` is a debug surface too: it writes its report to the console. Its steps are in
 [`smoke-tests.md`](smoke-tests.md), *The probe*.

@@ -2,11 +2,11 @@ local _, NS = ...
 -- modules/Preview.lua — test mode and the sim's shared shell (spec §7 "Test mode", §8 "Sim mode",
 -- preview-mode; plan Task 5.1). Two modes, one switch:
 --
---   test  `/kct test`, the Master controls' Test mode row and the launcher's entry: sample data in
+--   test  `/ct test`, the Master controls' Test mode row and the launcher's entry: sample data in
 --         every view. The HUD holds one moment of a sample fight still (its clock, live figures,
 --         pace bar, chart and spell rows), the lanes play the sample rotation on a loop, and the
 --         Results window opens on a made-up fight history (modules/MockFights.lua).
---   sim   `/kct sim`'s Start: a made-up 45 s fight played in real time through the lanes, the HUD's
+--   sim   `/ct sim`'s Start: a made-up 45 s fight played in real time through the lanes, the HUD's
 --         live view and its fight-over card, then the Results window on the sim's fight beside the
 --         same history (modules/Sim.lua holds the scenarios and the clock; with the library its
 --         step session starts first, and its prepare comes back here).

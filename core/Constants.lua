@@ -23,7 +23,7 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 --                                    its host's strata instead (host-matched surfaces); its icons stay in
 --                                    the bounded band LEVEL.ICON_BAND above the lane, never a climbing count
 --   max(lane, MEDIUM)  CHROME        a lane's edit overlay (modules/LaneAnchor.lua), shown in Edit Mode
---                                    and after /kct unlock: mouse-live chrome, so floored at MEDIUM over
+--                                    and after /ct unlock: mouse-live chrome, so floored at MEDIUM over
 --                                    a LOW lane (frame-layering-§2), fixed and re-lifted after every
 --                                    strata the lane takes, at lane level + LEVEL.LANE_EDIT
 --   MEDIUM             HUD           the DPS HUD (modules/Hud.lua): the persistent display, a movable

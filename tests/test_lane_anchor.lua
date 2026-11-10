@@ -1,7 +1,7 @@
 -- tests/test_lane_anchor.lua — where a lane sits (plan Task 1.3, spec §4 Anchoring and Layering):
 -- free, docked to the other lane and on a unit frame, the dock cycle refused, the unit frames found
 -- in order with a fallback to free, the strata and level read off the host, the edit overlay of
--- Edit Mode and `/kct unlock` with its chrome layering, the drag that saves a free lane's place, the
+-- Edit Mode and `/ct unlock` with its chrome layering, the drag that saves a free lane's place, the
 -- reset, and the stand-down.
 
 local T = _G.CT_TEST
@@ -383,7 +383,7 @@ test("lane anchor: the Locked row keeps Edit Mode from showing the overlay", fun
     assertFalse(A.__overlay("player"):IsShown())
 end)
 
-test("lane anchor: /kct unlock shows the overlay and /kct lock hides it", function()
+test("lane anchor: /ct unlock shows the overlay and /ct lock hides it", function()
     local inst, A = setup()
     inst.NS.Slash:OnSlash("lock")
     assertFalse(A.__overlay("player"):IsShown())

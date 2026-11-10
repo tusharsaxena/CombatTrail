@@ -84,7 +84,7 @@ test("docs: README names every slash verb", function()
     local s = mustRead("README.md")
     local missing = {}
     for _, entry in ipairs(T.NS.COMMANDS) do
-        if not contains(s, "/kct " .. entry[1]) then missing[#missing + 1] = entry[1] end
+        if not contains(s, "/ct " .. entry[1]) then missing[#missing + 1] = entry[1] end
     end
     assertEqual(table.concat(missing, ", "), "", "verbs the README never names")
     assertTrue(contains(s, "/combattrail"), "the long slash form")
@@ -95,9 +95,9 @@ test("docs: README carries the fixed bug-report body and the first version row",
     local body = table.concat({
         "## Reporting a bug",
         "",
-        "- Type `/kct debug on` and reproduce the bug.",
-        "- Type `/kct diagnostics`.",
-        "- If the debug window isn't open, open it with `/kct debug`. Press **Copy**, copy the entire output, and include it with your bug report.",
+        "- Type `/ct debug on` and reproduce the bug.",
+        "- Type `/ct diagnostics`.",
+        "- If the debug window isn't open, open it with `/ct debug`. Press **Copy**, copy the entire output, and include it with your bug report.",
         "",
         "The report is added after the debug trace in the same window, so one copy carries both.",
     }, "\n")
@@ -121,7 +121,7 @@ test("docs: README has no numbered list, no placeholder, no logo and no library 
     assertFalse(contains(s, "media/logos"), "the README carries no logo")
     assertFalse(contains(s, "Ace3") or contains(s, "LibKa0s") or contains(s, "LibSharedMedia"),
         "the README carries no library inventory")
-    assertTrue(contains(s, "/kct skin"), "Usage names the skin verb")
+    assertTrue(contains(s, "/ct skin"), "Usage names the skin verb")
 end)
 
 -- ── the root doc set (documentation-§1, §2, §4, §7) ──────────────────────────────────────────────
@@ -296,7 +296,7 @@ end)
 test("docs: the smoke suite carries the in-game verification list and the probe steps", function()
     local s = mustRead("docs/smoke-tests.md")
     for _, needle in ipairs({
-        "/kct probe", "/kct probe start", "pet is separate source", "pace pet-fill anchor",
+        "/ct probe", "/ct probe start", "pet is separate source", "pace pet-fill anchor",
         "Feign Death", "ElvUI", "Shadowed Unit Frames", "unit-frame names", "sourceCreatureID",
         'UnitGUID("pet")', "PET_SEPARATE", "UNIT_SPELLCAST_SUCCEEDED", "delve tier", "ENCOUNTER_START",
         "DAMAGE_METER_COMBAT_SESSION_UPDATED", "resize", "19705", "absent on WoW Forever",

@@ -455,7 +455,7 @@ local function ensureStrip(sim)
     if ui[key .. "Tried"] then return ui[key] end
     ui[key .. "Tried"] = true
     if sim then
-        ui[key] = anchorStrip(NS.MakeSimStrip(ui.frame, L["Sim: a made-up fight, not your data. /kct sim ends it."]))
+        ui[key] = anchorStrip(NS.MakeSimStrip(ui.frame, L["Sim: a made-up fight, not your data. /ct sim ends it."]))
     else
         ui[key] = anchorStrip(NS.MakeTestStrip(ui.frame, L["Test mode: sample fights. Nothing here is saved."]))
     end
@@ -762,12 +762,12 @@ local VERBS = {
     hide = function() Results.Hide() end,
 }
 
---- `/kct results [show|hide|toggle]`: bare toggles the window; anything else is one usage line.
+--- `/ct results [show|hide|toggle]`: bare toggles the window; anything else is one usage line.
 function Results.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word]
     if fn then return fn() end
-    NS.Print(L["Usage: /kct results, or /kct results show, hide or toggle"])
+    NS.Print(L["Usage: /ct results, or /ct results show, hide or toggle"])
 end
 
 -- ── the row menu ────────────────────────────────────────────────────────────────────────────────

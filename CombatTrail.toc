@@ -118,7 +118,7 @@ modules\LaneIgnore.lua
 # The ONLY reader of C_DamageMeter. LOAD-BEARING: captures NS.Secrets and NS.Perf and resolves the
 # meter enums at FILE SCOPE; registers nothing (core\CombatTrail.lua primes its session list).
 modules\Meter.lua
-# `/kct probe`: the in-game checks of the meter, the casts and the pet. Registers nothing until armed;
+# `/ct probe`: the in-game checks of the meter, the casts and the pet. Registers nothing until armed;
 # reaches NS.Meter, NS.DebugLog, NS.Compat and NS.db at CALL time only.
 modules\Probe.lua
 # Who, where and against what a fight was, and its board key. Captures NS.Secrets and NS.L at FILE
@@ -147,7 +147,7 @@ modules\Loadouts.lua
 modules\Filters.lua
 modules\Bests.lua
 modules\Recorder.lua
-# The purge (at login, daily, `/kct purge`) and the store's size. Reaches NS.Recorder, NS.Bests,
+# The purge (at login, daily, `/ct purge`) and the store's size. Reaches NS.Recorder, NS.Bests,
 # NS.Loadouts and NS.db at CALL time only; its daily timer is the addon object's AceTimer.
 modules\Retention.lua
 modules\Slices.lua
@@ -204,7 +204,7 @@ modules\MockRotations.lua
 modules\MockFights.lua
 modules\Preview.lua
 modules\Sim.lua
-# `/kct diagnostics`'s own sections (debug-logging-§14): read at RUN time by core\DebugLogSetup.lua's
+# `/ct diagnostics`'s own sections (debug-logging-§14): read at RUN time by core\DebugLogSetup.lua's
 # descriptor; reaches every module above at CALL time only.
 modules\Diagnostics.lua
 

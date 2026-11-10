@@ -35,7 +35,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/CoreSetup.lua` | `NS.Print`, the secret-safe stringifier, the safe-register family and the window chrome |
 | `core/SkinSetup.lua` | The LibKa0s-Skin seam: which skin this addon wears, its owner tokens and the first-run picker |
 | `core/Compat.lua` | The compat family's only file: every version-variant client call behind `NS.Compat` |
-| `core/SimSetup.lua` | The LibKa0s-Sim seam the `/kct sim` step session is built on |
+| `core/SimSetup.lua` | The LibKa0s-Sim seam the `/ct sim` step session is built on |
 | `core/Secrets.lua` | The only file that inspects a value that may be secret |
 | `core/Bus.lua` | Every message name, declared once, and the record of the bus receivers |
 | `core/PoolSetup.lua` | `NS.Pool`, the widget pool the lanes, the HUD and the Results window use |
@@ -54,9 +54,9 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/LaneRender.lua` | Each lane's frame, ticks, label and pooled icons, and its `OnUpdate` while icons show |
 | `modules/LaneAnchor.lua` | Where a lane sits (free, docked, unit frame), its strata and level, and the edit overlay |
 | `modules/LaneVisibility.lua` | When a lane shows and how opaque it is |
-| `modules/LaneIgnore.lua` | Each lane's ignore list and the `/kct ignore` verb |
+| `modules/LaneIgnore.lua` | Each lane's ignore list and the `/ct ignore` verb |
 | `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read and the after-combat read |
-| `modules/Probe.lua` | `/kct probe`, the in-game report of what the client answers |
+| `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers |
 | `modules/Identity.lua` | Who fought, where and against what, and the board key |
 | `modules/Fight.lua` | The fight state machine, one fight per meter session |
 | `modules/Watchers.lua` | The fight's game events, one set per fight state |
@@ -68,7 +68,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Filters.lua` | The recording filters a fight must pass to be stored |
 | `modules/Bests.lua` | Personal bests, worked out from the stored fights |
 | `modules/Recorder.lua` | The fight record and the store |
-| `modules/Retention.lua` | The purge, its daily timer and `/kct purge`, and the store's size |
+| `modules/Retention.lua` | The purge, its daily timer and `/ct purge`, and the store's size |
 | `modules/Slices.lua` | The damage chart's in-session store |
 | `modules/Format.lua` | Every number the UI draws, secret-safe |
 | `modules/Style.lua` | The look the HUD and the Results window share |
@@ -96,13 +96,13 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/MockRotations.lua` | The sample rotation per client, data only |
 | `modules/MockFights.lua` | The sample history and the sample fight |
 | `modules/Preview.lua` | Test mode and the sim's shared shell |
-| `modules/Sim.lua` | `/kct sim`: a made-up fight in real time, its scenarios and its step session |
-| `modules/Diagnostics.lua` | This addon's sections of `/kct diagnostics` |
+| `modules/Sim.lua` | `/ct sim`: a made-up fight in real time, its scenarios and its step session |
+| `modules/Diagnostics.lua` | This addon's sections of `/ct diagnostics` |
 | `settings/Schema.lua` | The schema array and the one write seam |
 | `settings/Slash.lua` | `NS.COMMANDS` and the slash descriptor |
 | `settings/OptionsSetup.lua` | The LibKa0s-Options descriptor (`NS.Helpers`) and `NS.RegisterTabbedPage` |
 | `settings/General.lua` | The General page: Master controls, Look and skin, Keybindings |
-| `settings/Lanes.lua` | The Lanes page and the `/kct lane` verb |
+| `settings/Lanes.lua` | The Lanes page and the `/ct lane` verb |
 | `settings/Hud.lua` | The DPS HUD page |
 | `settings/History.lua` | The History page |
 | `settings/Profiles.lua` | The Profiles page |

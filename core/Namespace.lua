@@ -13,7 +13,7 @@ NS.BRAND = "Ka0s Combat Trail"
 
 -- The primary slash word and its long alias, without the slash, both registered on the one
 -- dispatcher (settings/Slash.lua, plan Task 0.2). NS.SLASH_CMD is the primary as a player types it.
-NS.SLASH = "kct"
+NS.SLASH = "ct"
 NS.SLASH_LONG = "combattrail"
 NS.SLASH_CMD = "/" .. NS.SLASH
 

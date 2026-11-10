@@ -362,7 +362,7 @@ function Compat.PvpRules()
 end
 
 -- ---------------------------------------------------------------------------
--- The client line of `/kct probe` (modules/Probe.lua)
+-- The client line of `/ct probe` (modules/Probe.lua)
 -- ---------------------------------------------------------------------------
 
 --- The client's version string, build number and interface number (GetBuildInfo), or nothing where

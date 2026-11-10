@@ -1,5 +1,5 @@
 local _, NS = ...
--- settings/Slash.lua — the ordered NS.COMMANDS table and the LibKa0s-Slash-1.0 descriptor; `/kct` and
+-- settings/Slash.lua — the ordered NS.COMMANDS table and the LibKa0s-Slash-1.0 descriptor; `/ct` and
 -- `/combattrail` both reach the one dispatcher.
 
 NS.Slash = NS.Slash or {}
@@ -37,20 +37,20 @@ NS.COMMANDS = {
     { "enable",      L["Turn the addon on"],                       function() doEnabled(true) end },
     { "disable",     L["Turn the addon off without unloading it"], function() doEnabled(false) end },
     { "list",        L["List every setting"],                      function() cli:CliList() end },
-    { "get",         L["Read one setting: /kct get path"],         function(rest) cli:CliGet(rest) end },
-    { "set",         L["Write one setting: /kct set path value"],  function(rest) cli:CliSet(rest) end },
-    { "reset",       L["Reset one setting: /kct reset path"],      function(rest) cli:CliReset(rest) end },
+    { "get",         L["Read one setting: /ct get path"],         function(rest) cli:CliGet(rest) end },
+    { "set",         L["Write one setting: /ct set path value"],  function(rest) cli:CliSet(rest) end },
+    { "reset",       L["Reset one setting: /ct reset path"],      function(rest) cli:CliReset(rest) end },
     { "resetall",    L["Reset every setting (asks first)"],        function() NS.ShowResetAll() end },
     { "debug",       L["Debug console; on/off set logging, diagnostics writes the report"],
                                                                    function(rest) doDebug(rest) end },
     { "diagnostics", L["Write the diagnostics report to the debug console"],
                                                                    function() NS.DebugLog:RunDiagnostics() end },
-    { "perf",        L["Performance capture; try /kct perf help"], function(rest) doPerf(rest) end },
+    { "perf",        L["Performance capture; try /ct perf help"], function(rest) doPerf(rest) end },
     { "version",     L["Print the addon version"],                 function() cli:CliVersion() end },
     -- Feature verbs (spec §8). Each handler sits behind feature(), below.
     { "results",     L["Open the Results window, with your fight history"],
                                                                    feature(function(rest) doResults(rest) end) },
-    { "hud",         L["The DPS HUD: /kct hud show or hide"],      feature(function(rest) doHud(rest) end) },
+    { "hud",         L["The DPS HUD: /ct hud show or hide"],      feature(function(rest) doHud(rest) end) },
     { "lock",        L["Lock the lanes and the DPS HUD in place"], feature(function() doLock(true) end) },
     { "unlock",      L["Unlock the lanes and the DPS HUD to move them"],
                                                                    feature(function() doLock(false) end) },
@@ -64,9 +64,9 @@ NS.COMMANDS = {
                                                                    feature(function(rest) doProbe(rest) end) },
     -- Settings verbs over the lanes' own rows: not behind feature(), and live while disabled
     -- (HOST_LIVE_VERBS below), as the schema CLI that writes the same rows is.
-    { "lane",        L["Turn a lane on or off: /kct lane player|pet on|off"],
+    { "lane",        L["Turn a lane on or off: /ct lane player|pet on|off"],
                                                                    function(rest) doLane(rest) end },
-    { "ignore",      L["A lane's ignore list: /kct ignore add|remove <spell> [player|pet]"],
+    { "ignore",      L["A lane's ignore list: /ct ignore add|remove <spell> [player|pet]"],
                                                                    function(rest) doIgnore(rest) end },
 }
 
@@ -98,7 +98,7 @@ local SlashLib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
 local degraded = false
 
 if not SlashLib then
-    -- Degrade, never error: `/kct` is registered unconditionally, so something must answer it. The
+    -- Degrade, never error: `/ct` is registered unconditionally, so something must answer it. The
     -- host verbs keep working; the schema CLI names the missing library. The ONE library string this
     -- stub carries is DISABLED_LINE_FORMAT, pinned by tests/test_slash.lua against the live major;
     -- every other line below is the stub's own plain wording, never a copy of the library's.

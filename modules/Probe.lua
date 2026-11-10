@@ -1,5 +1,5 @@
 local _, NS = ...
--- modules/Probe.lua — `/kct probe` (spec §3 and §10, plan Task 1.5): the built-in version of the
+-- modules/Probe.lua — `/ct probe` (spec §3 and §10, plan Task 1.5): the built-in version of the
 -- owner's throwaway KCTProbe, for the in-game checks the run could not make headless. It writes a
 -- plain-text report to the debug console, where the console's Copy button lifts it out:
 --   * the client line (client, version, build, interface) and which version-variant APIs exist
@@ -15,9 +15,9 @@ local _, NS = ...
 --     RIGHT, and whether that SetPoint raised (the pace bar's pet fill, plan Task 3.2)
 --   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it.
 --
--- ARMING. Nothing is registered until the probe is armed. `/kct probe` writes the report and, while
--- no fight has been sampled, arms the probe for the next combat; `/kct probe start` arms it now with
--- fresh counts; `/kct probe stop` disarms it. Armed in combat, either way, the +5 s sample is
+-- ARMING. Nothing is registered until the probe is armed. `/ct probe` writes the report and, while
+-- no fight has been sampled, arms the probe for the next combat; `/ct probe start` arms it now with
+-- fresh counts; `/ct probe stop` disarms it. Armed in combat, either way, the +5 s sample is
 -- scheduled from then, and a combat schedules one in-combat sample however many edges it sees.
 -- An armed probe hears UNIT_SPELLCAST_SUCCEEDED for the player and the pet and the two
 -- PLAYER_REGEN_* edges, and disarms itself after the sample 2 s past the end of one combat.
@@ -554,11 +554,11 @@ local VERBS = {
     end,
 }
 
---- `/kct probe [start|stop]`.
+--- `/ct probe [start|stop]`.
 --- @param rest string|nil
 function Probe.OnVerb(rest)
     local word = (type(rest) == "string" and rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word]
     if fn then return fn() end
-    NS.Print(L["Usage: /kct probe, /kct probe start or /kct probe stop"])
+    NS.Print(L["Usage: /ct probe, /ct probe start or /ct probe stop"])
 end

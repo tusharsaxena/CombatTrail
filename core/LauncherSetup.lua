@@ -38,7 +38,7 @@ end
 local function clickCommand(button) return "CLICK " .. button .. ":LeftButton" end
 NS.BINDINGS = {
     { command = clickCommand(NS.TOGGLE_HUD_BUTTON),
-      tooltip = L["Shows or hides the DPS HUD, as the launcher's Show window entry and /kct hud do."] },
+      tooltip = L["Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."] },
     { command = clickCommand(NS.TOGGLE_RESULTS_BUTTON),
       tooltip = L["Shows or hides the Results window, with your fight history."] },
     { command = clickCommand(NS.TOGGLE_LANES_BUTTON),

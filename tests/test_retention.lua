@@ -1,7 +1,7 @@
 -- tests/test_retention.lua — modules/Retention.lua (plan Task 2.5, spec §5): the purge drops fights
 -- older than `history.days` (0 keeps them for ever) except those holding a best (`history.keepBests`),
 -- then caps the store at `history.maxFights`, the oldest non-best first; it runs at login, on a daily
--- timer while logged in and from `/kct purge`, and fires FIGHTS_CHANGED once. EstimateBytes sizes the
+-- timer while logged in and from `/ct purge`, and fires FIGHTS_CHANGED once. EstimateBytes sizes the
 -- store as SavedVariables writes it.
 
 local T = _G.CT_TEST
@@ -215,7 +215,7 @@ test("retention: the stand-down cancels the daily timer, the stand-up arms it ag
     assertTrue(NS.Retention.Timer() ~= nil)
 end)
 
-test("retention: /kct purge purges now and says how many went", function()
+test("retention: /ct purge purges now and says how many went", function()
     local NS, M = fresh()
     NS.Recorder.Save(rec({ t = 1000 }))
     NS.Recorder.Save(rec({ t = 1001 }))

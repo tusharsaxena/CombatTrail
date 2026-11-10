@@ -4,7 +4,7 @@ local _, NS = ...
 -- arm), plain-number conversion and the bounded array walk.
 --
 -- THE CONTRACT (WoW 12.0 secret values), measured by DPS Race's probe on Retail and assumed on WoW
--- Forever until `/kct probe` reports (spec §3): while the Combat addon restriction is active, meter
+-- Forever until `/ct probe` reports (spec §3): while the Combat addon restriction is active, meter
 -- numbers, spell IDs, GUIDs and the isLocalPlayer flag arrive SECRET, and a value captured then STAYS
 -- secret after combat. Tainted code may store one, pass it,
 -- put it in a table VALUE, hand it to a widget setter or NumericRuleFormatter:FormatNumber, and

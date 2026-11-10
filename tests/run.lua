@@ -8,7 +8,7 @@ package.path = root .. "/tests/?.lua;" .. package.path
 local Kit     = dofile(root .. "/tests/_kit/framework.lua")
 local Loader  = dofile(root .. "/tests/_kit/loader.lua")
 local mockmod = assert(loadfile(root .. "/tests/wow_mock.lua"))(root)
--- The scripted C_DamageMeter, built on the kit's secret wrappers (`/kct probe` and the meter adapter).
+-- The scripted C_DamageMeter, built on the kit's secret wrappers (`/ct probe` and the meter adapter).
 local MockMeter = dofile(root .. "/tests/mock_meter.lua")(Kit)
 
 Loader.addonName = "CombatTrail"

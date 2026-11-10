@@ -50,7 +50,7 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   tab (issue #2).
 - **The retention settings are per profile while the store is global**, and the 500-fight cap is
   enforced when the purge runs, not on each save.
-- **The HUD has no Pin control in its title bar** (the icon catalog has none); `/kct hud pin` pins
+- **The HUD has no Pin control in its title bar** (the icon catalog has none); `/ct hud pin` pins
   it. The fade hides at once, the pace bar has no ahead or behind color, and the best line is solid.
 - **Results:** the detail ships collapsed, there are no `results.*` look keys for the table, and the
   Delta column measures against the group's best.

@@ -1,5 +1,5 @@
 local addonName, NS = ...
--- core/SimSetup.lua — the LibKa0s-Sim-1.0 seam (library-stack-§7). `/kct sim` plays a made-up fight
+-- core/SimSetup.lua — the LibKa0s-Sim-1.0 seam (library-stack-§7). `/ct sim` plays a made-up fight
 -- through the lanes, the HUD and into Results (plan Task 5.1). It drives the addon's own modules with
 -- made-up data rather than faking a client answer, so every NS.Compat member is declared pure and the
 -- seam wraps nothing. The seam still has to exist, because the library's session (the stepper window)

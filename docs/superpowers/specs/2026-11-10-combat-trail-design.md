@@ -110,7 +110,7 @@ Delves and Arenas are Retail-only, and so are Mythic+ in History.
 
 **Anchoring (owner).** There are three modes per lane, and the default is **Free** (not anchored):
 1. **Free:** the lane is positioned by Edit Mode (one Edit Mode system per lane, like CastTrail's blue box) or by the
-   offsets on the tab. When Blizzard's Edit Mode isn't available, `/kct unlock` shows the drag overlay instead.
+   offsets on the tab. When Blizzard's Edit Mode isn't available, `/ct unlock` shows the drag overlay instead.
 2. **Dock to the other lane:** set a point, relative point and gap. Moving the host moves the docked lane, and a lane
    can't dock to a lane that is docked to it.
 3. **Unit frame:** the Player lane anchors to the player frame and the Pet lane to the pet frame. The frame is auto-detected
@@ -189,7 +189,7 @@ unreadable). Bests are recomputed from the stored fights, not stored separately.
 
 **Retention (owner):** purge fights older than **7 days** (setting: 0 = keep forever), and keep any fight that
 holds a best (toggle, default on). There's also a **500-fight cap (Claude)**: the oldest non-best fights go first. The purge
-runs at login, once a day while logged in, and from `/kct purge`.
+runs at login, once a day while logged in, and from `/ct purge`.
 
 **Fight record** (account-wide, `db.global.fights`; versioned with migrations like DpsRace's run record):
 id, time, duration, who, identity, content, board key, damage (merged, player, pet), DPS, meter DPS,
@@ -263,7 +263,7 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
   (Master controls, Look and skin, Keybindings), **Lanes** (lane dropdown and seven tabs), DPS HUD (Behavior,
   Layout, Clock and figures, Damage chart, Spell rows, Window), History (Recording filters, Retention, Results
   window, Usage) and Profiles. Headers, Defaults and Reset follow the Panel Master pattern **(owner)**.
-- **Slash (Claude):** `/kct` and `/combattrail` through `LibKa0s-Slash-1.0`. The verbs are help, results, hud
+- **Slash (Claude):** `/ct` and `/combattrail` through `LibKa0s-Slash-1.0`. The verbs are help, results, hud
   show|hide, unlock, lock, test, sim, lane player|pet on|off, ignore add|remove <spell> [lane], set, get, reset,
   purge, debug, diagnostics, and **probe** (a built-in version of KCTProbe for the in-game checks). Every setting is reachable
   by `set <path>`.
@@ -273,7 +273,7 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
 - **Skins:** LibKa0s skins. The default is per client (WoW Forever on Forever, Ka0s Default on Retail), answered by the
   library. Every element has its own overrides on top of the skin.
 - **Keybindings:** Toggle DPS HUD, Toggle Results window, Toggle lanes.
-- **Debug and diagnostics:** the standard debug console and `/kct diagnostics` report, as in DpsRace.
+- **Debug and diagnostics:** the standard debug console and `/ct diagnostics` report, as in DpsRace.
 - **Sim mode:** a made-up 45 s fight played in real time through the lanes, the HUD and into Results **(Claude)**.
 
 ## 9. Architecture outline (Claude)
@@ -303,7 +303,7 @@ The per-client feature table goes in `docs/ARCHITECTURE.md` (clients-§4).
 - An in-game check list for the unverified items: Forever in-combat secrecy, pet source in combat, cast
   events, pet-fill anchoring on the pace bar, and the unit-frame anchors.
 - **The run does not stop for in-game input (Claude).** It builds to the "assume Retail" design, with the §12
-  fallbacks behind small seams (one place each for the pet-source split and the pace-bar pet fill). `/kct probe`
+  fallbacks behind small seams (one place each for the pet-source split and the pace-bar pet fill). `/ct probe`
   ships in M1. The owner runs it and the smoke tests when they can, and the merge to `main` already waits on the
   owner's go-ahead. Any "no" from the probe becomes a fix commit on the branch before the merge. **No release tag is cut
   in this run.** v0.1.0 is tagged after the owner's smoke tests pass.
@@ -319,7 +319,7 @@ lists; locale strings; Edit Mode integration details; the sample data for test a
 
 | Risk | Mitigation |
 |---|---|
-| Forever behaves differently in combat | M1 in-game probe (`/kct probe`); design for secrets regardless |
+| Forever behaves differently in combat | M1 in-game probe (`/ct probe`); design for secrets regardless |
 | The pet isn't a separate meter source on one client | the probe confirms it; if the pet is folded into the player, drop the pet split and tag pet spells by the IDs seen from `UNIT_SPELLCAST_SUCCEEDED` unit=pet |
 | The pace bar's pet-fill anchoring fails | fall back to player-only pace |
 | Scope is large (DpsRace is about 24k lines) | milestones with a pushed checkpoint each; the plan's status ledger makes the run resumable |

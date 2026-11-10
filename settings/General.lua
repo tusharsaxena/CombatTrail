@@ -36,7 +36,7 @@ StaticPopupDialogs["COMBATTRAIL_RESET_ALL"] = {
     end,
 }
 
---- `Reset all settings` and `/kct resetall` both ask first, through this one popup.
+--- `Reset all settings` and `/ct resetall` both ask first, through this one popup.
 function NS.ShowResetAll()
     return StaticPopup_Show("COMBATTRAIL_RESET_ALL")
 end
@@ -45,7 +45,7 @@ end
 -- Composed from ONE declaration, the canonical rows in canonical order (options-ui-§15), under the
 -- `general.` prefix. No General visibility, Master scale or Master opacity: the lanes and the HUD each
 -- carry their own (spec §4, §6). The session rows (debug console, test mode, sim mode) take their
--- paths verbatim under `general.` too, so `/kct list` shows Master controls as one group.
+-- paths verbatim under `general.` too, so `/ct list` shows Master controls as one group.
 local G = D.general
 local DEBUG_CONSOLE_PATH = "general.debugConsole"
 local TEST_MODE_PATH = "general.testMode"
@@ -60,7 +60,7 @@ local masterRows, masterTail = H.MasterControls({
     minimapPath      = NS.MINIMAP_PATH,
     testModePath     = TEST_MODE_PATH,
     -- Sim mode beside Test mode (LibKa0s compose minor 19): the launcher's own pair, so the box, the
-    -- launcher's Sim mode entry and `/kct sim` are one act. The row's get / set are its own.
+    -- launcher's Sim mode entry and `/ct sim` are one act. The row's get / set are its own.
     simPath          = SIM_MODE_PATH,
     isSimMode        = function() return NS.IsSimMode() end,
     toggleSim        = function() return NS.ToggleSim() end,
@@ -127,12 +127,12 @@ NS.RegisterSchemaRows(masterRows)
 -- tab is the library's O.AppearanceTab, relabeled, which draws every `skin.*` row below itself (its
 -- choice grids, the Scope's check boxes, the Font and texture dropdowns), so each carries
 -- `skipRender`; they stay schema rows so the defaults resolve, every reset reaches them, and
--- `/kct get|set skin.skin` validates against `values`. The global font is the tab's Font dropdown
+-- `/ct get|set skin.skin` validates against `values`. The global font is the tab's Font dropdown
 -- (`skin.font`). The global font scale is this addon's own row, drawn under the library's controls.
 --
 -- Each onChange applies ONLY its own half (core/SkinSetup.lua says why): the tab and another addon's
 -- "Copy to every Ka0s addon" call Skin:SetChoice before they write, so the write is a no-op, and a
--- bare `/kct set` still repaints.
+-- bare `/ct set` still repaints.
 local SKIN = NS.SKIN_TAB_KEY
 local SKIN_SPEC = {
     owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice, key = SKIN,
@@ -169,7 +169,7 @@ NS.RegisterSchemaRows({
       tooltip = L["Keep every font in this addon as the game draws it. The skin still colors the text."],
       onChange = function(v) NS.ApplySkinIgnore(nil, v) end },
     -- The Font and texture overrides (LibKa0s-Skin-1.0 minor 6): free text, not a list of `values`,
-    -- because a media pack may register its keys after this file loads and `/kct set` takes any key;
+    -- because a media pack may register its keys after this file loads and `/ct set` takes any key;
     -- "" is the skin's own.
     { path = "skin.font", page = PAGE, group = SKIN, type = "string", skipRender = true,
       label = L["Font"], default = SD.font,
@@ -180,7 +180,7 @@ NS.RegisterSchemaRows({
       tooltip = L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."],
       onChange = function(v) NS.ApplySkinOverride(nil, v) end },
     -- The Font outline (LibKa0s-Skin-1.0 minor 9, ruling D-06), drawn by the tab as its "Font outline"
-    -- dropdown. The library's three modes, in its order, so `/kct set skin.outline` validates them.
+    -- dropdown. The library's three modes, in its order, so `/ct set skin.outline` validates them.
     { path = "skin.outline", page = PAGE, group = SKIN, type = "string", skipRender = true,
       label = L["Font outline"], default = SD.outline, values = NS.SKIN_OUTLINE_OPTIONS,
       validate = oneOf(NS.SKIN_OUTLINE_OPTIONS),

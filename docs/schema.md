@@ -2,7 +2,7 @@
 
 What the addon persists (documentation-§3, Tier 1; savedvariables). Two SavedVariables globals, both
 declared in `CombatTrail.toc`: `CombatTrailDB` (AceDB, everything below) and `CombatTrailPerfDB`
-(LibKa0s-Perf's capture record, written only by `/kct perf`).
+(LibKa0s-Perf's capture record, written only by `/ct perf`).
 
 Every default is written once, in `defaults/Profile.lua`. The tables below name each key and its
 default; the file's comments say what each value means.
@@ -17,7 +17,7 @@ default; the file's comments say what each value means.
   `settings/` (General, Lanes, Hud, History) as the TOC loads them, so the load pass is the TOC's own
   settings pass. `NS.SchemaForPage` filters it per page.
 - **The one write seam:** `NS.SetByPath(path, value)` (settings/Schema.lua). The pages, the CLI
-  (`/kct set`), the verbs (`enable`, `lock`, `lane`, `ignore`) and the launcher all write through it,
+  (`/ct set`), the verbs (`enable`, `lock`, `lane`, `ignore`) and the launcher all write through it,
   and it sends `SETTINGS_CHANGED`. Reads go through `NS.GetSetting(path)`.
 
 ## The profile tree
@@ -73,7 +73,7 @@ The debug flag, test mode and the sim are session-only (`NS.State`), never store
 | The Usage hidden list | `global.usage.hidden` | modules/Usage.lua | `Usage.Hide`, `Usage.Unhide` and the History page's Usage tab, all through `NS.SetByPath` |
 | The skin picker seen | `skin.pickerSeen`, `global.skinNotice` | core/SkinSetup.lua (LibKa0s-Options writes the notice) | the picker's close |
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
-| The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/kct perf` |
+| The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |
 
 ## The fight record (CT_SCHEMA 1)
 

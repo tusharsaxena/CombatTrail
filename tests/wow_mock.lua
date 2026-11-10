@@ -42,7 +42,7 @@ local function build()
         return M.__unitNames[unit]
     end
 
-    -- A unit's GUID (`/kct probe` asks the meter for the player's and the pet's sources by GUID). The
+    -- A unit's GUID (`/ct probe` asks the meter for the player's and the pet's sources by GUID). The
     -- scripted meter (tests/mock_meter.lua) answers its own player and pet GUIDs over this one.
     M.__unitGUIDs = { player = "Player-1-00000001" }
     M.UnitGUID = function(unit) return M.__unitGUIDs[unit] end

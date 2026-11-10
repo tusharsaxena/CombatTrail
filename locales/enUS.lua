@@ -33,8 +33,8 @@ L["The %s cannot use the unit frame %s, so it sits at its own place."] =
 L["Toggle DPS HUD"] = "Toggle DPS HUD"
 L["Toggle Results window"] = "Toggle Results window"
 L["Toggle lanes"] = "Toggle lanes"
-L["Shows or hides the DPS HUD, as the launcher's Show window entry and /kct hud do."] =
-    "Shows or hides the DPS HUD, as the launcher's Show window entry and /kct hud do."
+L["Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."] =
+    "Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."
 L["Shows or hides the Results window, with your fight history."] =
     "Shows or hides the Results window, with your fight history."
 L["Shows or hides the Player and Pet cast lanes."] = "Shows or hides the Player and Pet cast lanes."
@@ -119,17 +119,17 @@ L["Choose a skin: open the skin picker"] = "Choose a skin: open the skin picker"
 L["Turn the addon on"] = "Turn the addon on"
 L["Turn the addon off without unloading it"] = "Turn the addon off without unloading it"
 L["List every setting"] = "List every setting"
-L["Read one setting: /kct get path"] = "Read one setting: /kct get path"
-L["Write one setting: /kct set path value"] = "Write one setting: /kct set path value"
-L["Reset one setting: /kct reset path"] = "Reset one setting: /kct reset path"
+L["Read one setting: /ct get path"] = "Read one setting: /ct get path"
+L["Write one setting: /ct set path value"] = "Write one setting: /ct set path value"
+L["Reset one setting: /ct reset path"] = "Reset one setting: /ct reset path"
 L["Reset every setting (asks first)"] = "Reset every setting (asks first)"
 L["Debug console; on/off set logging, diagnostics writes the report"] =
     "Debug console; on/off set logging, diagnostics writes the report"
 L["Write the diagnostics report to the debug console"] = "Write the diagnostics report to the debug console"
-L["Performance capture; try /kct perf help"] = "Performance capture; try /kct perf help"
+L["Performance capture; try /ct perf help"] = "Performance capture; try /ct perf help"
 L["Print the addon version"] = "Print the addon version"
 L["Open the Results window, with your fight history"] = "Open the Results window, with your fight history"
-L["The DPS HUD: /kct hud show or hide"] = "The DPS HUD: /kct hud show or hide"
+L["The DPS HUD: /ct hud show or hide"] = "The DPS HUD: /ct hud show or hide"
 L["Lock the lanes and the DPS HUD in place"] = "Lock the lanes and the DPS HUD in place"
 L["Unlock the lanes and the DPS HUD to move them"] = "Unlock the lanes and the DPS HUD to move them"
 L["Test mode: sample data in the lanes, the HUD and the Results window"] =
@@ -139,9 +139,9 @@ L["Delete stored fights older than the History page's limit"] =
     "Delete stored fights older than the History page's limit"
 L["Check what this client reports for the meter, casts and your pet"] =
     "Check what this client reports for the meter, casts and your pet"
-L["Turn a lane on or off: /kct lane player|pet on|off"] = "Turn a lane on or off: /kct lane player|pet on|off"
-L["A lane's ignore list: /kct ignore add|remove <spell> [player|pet]"] =
-    "A lane's ignore list: /kct ignore add|remove <spell> [player|pet]"
+L["Turn a lane on or off: /ct lane player|pet on|off"] = "Turn a lane on or off: /ct lane player|pet on|off"
+L["A lane's ignore list: /ct ignore add|remove <spell> [player|pet]"] =
+    "A lane's ignore list: /ct ignore add|remove <spell> [player|pet]"
 L["%s version %s"] = "%s version %s"
 L["%s commands (reduced: the LibKa0s library is missing)"] =
     "%s commands (reduced: the LibKa0s library is missing)"
@@ -335,12 +335,12 @@ L["The %s is switched off. Enable it to see the preview."] =
     "The %s is switched off. Enable it to see the preview."
 L["The %s is hidden by its Visibility tab right now. Unlock the lanes to see it."] =
     "The %s is hidden by its Visibility tab right now. Unlock the lanes to see it."
-L["Usage: /kct lane player|pet on|off"] = "Usage: /kct lane player|pet on|off"
+L["Usage: /ct lane player|pet on|off"] = "Usage: /ct lane player|pet on|off"
 L["The %s is on."] = "The %s is on."
 L["The %s is off."] = "The %s is off."
 L["Unlock the lanes"] = "Unlock the lanes"
-L["Show the lanes' move boxes so you can drag them, as /kct unlock does. Both lanes unlock together."] =
-    "Show the lanes' move boxes so you can drag them, as /kct unlock does. Both lanes unlock together."
+L["Show the lanes' move boxes so you can drag them, as /ct unlock does. Both lanes unlock together."] =
+    "Show the lanes' move boxes so you can drag them, as /ct unlock does. Both lanes unlock together."
 L["Copy from %s"] = "Copy from %s"
 L["Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."] =
     "Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."
@@ -389,8 +389,8 @@ L["Draw this text with the skin's shadow. Font shadow is not read while this is 
     "Draw this text with the skin's shadow. Font shadow is not read while this is on."
 L["When it shows"] = "When it shows"
 L["Show the HUD"] = "Show the HUD"
-L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."] =
-    "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."
+L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] =
+    "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."
 L["Only in instances"] = "Only in instances"
 L["Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."] =
     "Open the HUD on a fight's first hit only inside a dungeon, raid or other instance."
@@ -522,8 +522,8 @@ L["HUD opacity"] = "HUD opacity"
 L["How opaque the whole HUD is."] = "How opaque the whole HUD is."
 
 -- The lanes' ignore lists (modules/LaneIgnore.lua) and the `ignore` verb
-L["Usage: /kct ignore add|remove <spell> [player|pet], /kct ignore list [player|pet] or /kct ignore reset [player|pet]"] =
-    "Usage: /kct ignore add|remove <spell> [player|pet], /kct ignore list [player|pet] or /kct ignore reset [player|pet]"
+L["Usage: /ct ignore add|remove <spell> [player|pet], /ct ignore list [player|pet] or /ct ignore reset [player|pet]"] =
+    "Usage: /ct ignore add|remove <spell> [player|pet], /ct ignore list [player|pet] or /ct ignore reset [player|pet]"
 L["The %s ignores no spells."] = "The %s ignores no spells."
 L["The %s ignores %s."] = "The %s ignores %s."
 L["No spell named '%s'."] = "No spell named '%s'."
@@ -561,7 +561,7 @@ L["Leech"] = "Leech"
 L["Avoidance"] = "Avoidance"
 L["Speed"] = "Speed"
 
--- `/kct probe` (modules/Probe.lua)
+-- `/ct probe` (modules/Probe.lua)
 L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
     "The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."
 L["The probe report is in the debug console (%d lines)."] = "The probe report is in the debug console (%d lines)."
@@ -569,9 +569,9 @@ L["The probe watches your next fight. Fight for 20 seconds or more, then type %s
     "The probe watches your next fight. Fight for 20 seconds or more, then type %s."
 L["The probe stopped watching."] = "The probe stopped watching."
 L["The probe sampled your fight. Type %s to see the report."] = "The probe sampled your fight. Type %s to see the report."
-L["Usage: /kct probe, /kct probe start or /kct probe stop"] = "Usage: /kct probe, /kct probe start or /kct probe stop"
+L["Usage: /ct probe, /ct probe start or /ct probe stop"] = "Usage: /ct probe, /ct probe start or /ct probe stop"
 
--- `/kct purge` (modules/Retention.lua)
+-- `/ct purge` (modules/Retention.lua)
 L["No stored fight was old enough to remove."] = "No stored fight was old enough to remove."
 L["Removed 1 stored fight."] = "Removed 1 stored fight."
 L["Removed %d stored fights."] = "Removed %d stored fights."
@@ -601,7 +601,7 @@ L["Your best DPS on this boss or target, for this character and spec."] =
 L["Stored in your fight history."] = "Stored in your fight history."
 L["Every fight is tracked live; only the ones that pass History > Recording filters are stored."] =
     "Every fight is tracked live; only the ones that pass History > Recording filters are stored."
-L["Usage: /kct hud show, hide, toggle, pin or unpin"] = "Usage: /kct hud show, hide, toggle, pin or unpin"
+L["Usage: /ct hud show, hide, toggle, pin or unpin"] = "Usage: /ct hud show, hide, toggle, pin or unpin"
 
 -- The DPS HUD's pace bar, damage chart, spell rows and tooltips (modules/Hud_Chart.lua,
 -- modules/Hud_Breakdown.lua, modules/Hud_States.lua, modules/Hud_Tips.lua)
@@ -644,12 +644,12 @@ L["Right-click a fight for options"] = "Right-click a fight for options"
 L["Combat Trail \226\128\148 Results"] = "Combat Trail \226\128\148 Results"
 L["Fights are kept for %d days"] = "Fights are kept for %d days"
 L["Fights are kept until you delete them"] = "Fights are kept until you delete them"
-L["Sim: a made-up fight, not your data. /kct sim ends it."] =
-    "Sim: a made-up fight, not your data. /kct sim ends it."
+L["Sim: a made-up fight, not your data. /ct sim ends it."] =
+    "Sim: a made-up fight, not your data. /ct sim ends it."
 L["Test mode: sample fights. Nothing here is saved."] = "Test mode: sample fights. Nothing here is saved."
 L["Combat Trail \226\128\148 Results \194\183 Test"] = "Combat Trail \226\128\148 Results \194\183 Test"
-L["Usage: /kct results, or /kct results show, hide or toggle"] =
-    "Usage: /kct results, or /kct results show, hide or toggle"
+L["Usage: /ct results, or /ct results show, hide or toggle"] =
+    "Usage: /ct results, or /ct results show, hide or toggle"
 L["Edit Note"] = "Edit Note"
 L["Add Note"] = "Add Note"
 L["Share"] = "Share"
