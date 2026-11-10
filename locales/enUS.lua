@@ -442,3 +442,39 @@ L["Stored in your fight history."] = "Stored in your fight history."
 L["Every fight is tracked live; only the ones that pass History > Recording filters are stored."] =
     "Every fight is tracked live; only the ones that pass History > Recording filters are stored."
 L["Usage: /kct hud show, hide, toggle, pin or unpin"] = "Usage: /kct hud show, hide, toggle, pin or unpin"
+
+-- The DPS HUD's pace bar, damage chart, spell rows and tooltips (modules/Hud_Chart.lua,
+-- modules/Hud_Breakdown.lua, modules/Hud_States.lua, modules/Hud_Tips.lua)
+L["% of total"] = "% of total"
+L["%d cooldowns"] = "%d cooldowns"
+L["+%d"] = "+%d"
+L["Cast at %s"] = "Cast at %s"
+L["Damage profile"] = "Damage profile"
+L["Fight clock"] = "Fight clock"
+L["How long this fight has run, from your first hit."] = "How long this fight has run, from your first hit."
+L["How your damage built up over the fight, one column per slice of time. The line is your best's average pace, and icons mark your long cooldowns."] =
+    "How your damage built up over the fight, one column per slice of time. The line is your best's average pace, and icons mark your long cooldowns."
+L["Pace bar"] = "Pace bar"
+L["Spell breakdown"] = "Spell breakdown"
+L["Target"] = "Target"
+L["The boss or target this fight is against, with the instance and difficulty its bests group by."] =
+    "The boss or target this fight is against, with the instance and difficulty its bests group by."
+L["This fight's damage per second, yours and your pet's."] =
+    "This fight's damage per second, yours and your pet's."
+L["This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."] =
+    "This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."
+L["This fight's spells, highest damage first, with each one's share."] =
+    "This fight's spells, highest damage first, with each one's share."
+L["This fight's total damage, yours and your pet's."] = "This fight's total damage, yours and your pet's."
+L["Unknown spell"] = "Unknown spell"
+L["Your damage against your best's at this point in the fight. The tick in the middle is on pace; your pet's damage carries on from the end of yours."] =
+    "Your damage against your best's at this point in the fight. The tick in the middle is on pace; your pet's damage carries on from the end of yours."
+L["Your damage per second so far this fight, as the damage meter reports it."] =
+    "Your damage per second so far this fight, as the damage meter reports it."
+L["Your damage so far this fight, as the damage meter reports it. Your pet's shows beside it."] =
+    "Your damage so far this fight, as the damage meter reports it. Your pet's shows beside it."
+L["Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over."] =
+    "Your spells, then your pet's, in the damage meter's order. Shares appear once the fight is over."
+L["first fight on this board"] = "first fight on this board"
+L["live order"] = "live order"
+L["vs best pace"] = "vs best pace"

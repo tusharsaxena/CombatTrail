@@ -57,14 +57,17 @@ local alias = {}     -- [record id] = fight id, filled on the first lookup
 
 -- ── the plain math ──────────────────────────────────────────────────────────────────────────────
 
---- How many steps each column spans for a chart of `length` seconds.
+--- How many steps each column spans for a chart of `length` seconds drawing at most `max` columns
+--- (default MAX).
 --- @param length number|nil
+--- @param max number|nil
 --- @return number k
-local function stepsPerColumn(length)
+local function stepsPerColumn(length, max)
+    max = math.max(1, math.min(Slices.MAX, math.floor(tonumber(max) or Slices.MAX)))
     local n = math.max(0, tonumber(length) or 0)
     local width = math.max(1, math.floor(n / Slices.MAX) + 1)
     local k = math.ceil(width / Slices.STEP)
-    while math.ceil(n / Slices.STEP / k) > Slices.MAX do k = k + 1 end
+    while math.ceil(n / Slices.STEP / k) > max do k = k + 1 end
     return k
 end
 
@@ -183,8 +186,8 @@ local function latestFilled(values, from, to)
     return nil
 end
 
-local function buildColumns(rec, k, length)
-    local count = math.min(Slices.MAX, math.max(1, math.ceil(length / (k * Slices.STEP))))
+local function buildColumns(rec, k, length, max)
+    local count = math.min(max, math.max(1, math.ceil(length / (k * Slices.STEP))))
     local view = { step = k * Slices.STEP, count = count, values = {}, pet = {}, filled = 0,
                    k = k, steps = rec.count }
     for j = 1, math.min(count, math.ceil(rec.count / k)) do
@@ -202,16 +205,20 @@ end
 --- the longer of the expected length and the steps so far. Cached until the next capture.
 --- @param id any  a fight id or a record id
 --- @param length number|nil  seconds the chart spans
+--- @param maxColumns number|nil  the most columns drawn (default MAX; the HUD's `hud.chart.columns`)
 --- @return table|nil view  { step (seconds a column), count, values, pet, filled }
-function Slices.Columns(id, length)
+function Slices.Columns(id, length, maxColumns)
     local rec = Slices.Get(id)
     if not rec then return nil end
     local span = plainLength(length) or math.max(rec.expected or 0, rec.count * Slices.STEP)
-    local k = stepsPerColumn(span)
+    local max = math.max(1, math.min(Slices.MAX, math.floor(tonumber(maxColumns) or Slices.MAX)))
+    local k = stepsPerColumn(span, max)
     local view = rec.view
-    if view and view.k == k and view.steps == rec.count and view.span == span then return view end
-    view = buildColumns(rec, k, span)
-    view.span = span
+    if view and view.k == k and view.steps == rec.count and view.span == span and view.max == max then
+        return view
+    end
+    view = buildColumns(rec, k, span, max)
+    view.span, view.max = span, max
     rec.view = view
     return view
 end

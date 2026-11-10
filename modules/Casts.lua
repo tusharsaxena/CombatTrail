@@ -162,13 +162,14 @@ local function listOf(cap, to)
     return casts, spells, dropped
 end
 
---- The fight's casts so far (the HUD's cooldown icons), without ending its capture; nil when it has
---- none open.
---- @return table|nil casts
+--- The fight's casts so far and their known base cooldowns (the HUD's cooldown icons), without
+--- ending its capture; nil when it has none open.
+--- @return table|nil casts, table|nil spells  { [id] = ms }
 function Casts.Live(fightID)
     local cap = captures[fightID]
     if not cap then return nil end
-    return (listOf(cap, endOf(cap.fight) or GetTime()))
+    local casts, spells = listOf(cap, endOf(cap.fight) or GetTime())
+    return casts, spells
 end
 
 -- The capture closes into its list; the buffer lets it go.

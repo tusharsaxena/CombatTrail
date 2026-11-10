@@ -1,7 +1,10 @@
 local _, NS = ...
--- modules/Hud.lua — the DPS HUD's shell (spec §6, plan Task 3.1): the window, its title bar and
--- footer, which body shows for the fight on screen, when it opens and when it fades. The two bodies
--- are modules/Hud_States.lua. Adapted from DPS Race @045f479 (modules/Hud.lua) without its race: no
+-- modules/Hud.lua — the DPS HUD's shell (spec §6, plan Tasks 3.1 and 3.2): the window, its title bar
+-- and footer, which body shows for the fight on screen, when it opens and when it fades, and the view
+-- the bodies draw (the figures, the pace bar's range, the damage chart's columns, the spell rows).
+-- The two bodies are modules/Hud_States.lua; the pace data modules/Hud_Best.lua, the chart and the
+-- pace bar modules/Hud_Chart.lua, the rows modules/Hud_Breakdown.lua, the look
+-- modules/Hud_Appearance.lua and the tooltips' words modules/Hud_Tips.lua. Adapted from DPS Race @045f479 (modules/Hud.lua) without its race: no
 -- arm, buzzer, countdown, auto-arm, race length or dummy auto-show; the fight is modules/Fight.lua's.
 --
 -- THE STATES. Hud.State() answers "hidden" while the window is not up, else "live" for the fight in
@@ -28,11 +31,20 @@ local _, NS = ...
 -- (modules/Hud_States.lua); every decision here comes from GetTime(), the fight's plain stamps, the
 -- plain after-combat read and the stored records.
 --
+-- THE PACE (spec §6 and §12). The pace record's curve (HudBest.Curve) is read once when the fight goes
+-- live; each redraw sets the fight's live totals against it at the clock's time (from the first hit):
+-- the player's total on the bar's player fill, the pet's on the pet fill anchored to it, against the
+-- best's merged pace. Hud.PACE_PET_FILL is the seam (one place, spec §10): false, and the pet fill
+-- hides and the player's total is set against the best's player damage alone. The over card draws
+-- the same bar from the plain after-combat read at the fight's length.
+--
 -- THE WINDOW is a plain, non-secure frame (standalone-windows): skinned through NS.ApplySkin, closed
 -- through NS.MakeCloseButton, in UISpecialFrames, clamped, toplevel in the MEDIUM tier
--- (LAYERS.STRATA.HUD). Its width is `hud.width` and its height the body's stack, so it has no resize
--- grip; its scale is `hud.scale`; its place is `hud.position`, written by the title bar's drag (not
--- while `general.locked`) and put back by Master controls' Reset position. Built on first show.
+-- (LAYERS.STRATA.HUD, or `hud.window.strata`). Its width is `hud.width` and its height the body's
+-- stack, so it has no resize grip; its scale is `hud.scale`, its opacity `hud.window.alpha`; its title
+-- bar and footer follow `hud.window.titleBar` and `footer`; its place is `hud.position`, written by
+-- the title bar's drag (not while `general.locked`) and put back by Master controls' Reset position.
+-- Built on first show.
 
 local Hud = {}
 NS.Hud = Hud
@@ -42,6 +54,12 @@ local Perf = NS.Perf
 local Secrets = NS.Secrets
 
 Hud.STATE = { HIDDEN = "hidden", LIVE = "live", OVER = "over", NO_BEST = "noBest" }
+--- The pace bar's pet-fill seam (spec §12): true draws the pet's live total on from the end of the
+--- player's fill against the best's merged pace; false is the fallback, player-only against the
+--- best's player damage, if the anchoring does not hold up in game.
+Hud.PACE_PET_FILL = true
+-- Seconds between two reads of the fight's casts for the chart's cooldown icons.
+Hud.CAST_READ = 1
 Hud.FRAME_NAME = "CombatTrailHud"
 Hud.MIN_WIDTH = 220
 -- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade (and
@@ -50,8 +68,6 @@ Hud.LEAVE_DELAY = 2
 
 local STATE = Hud.STATE
 local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 10
-local CONTENT_TOP = HEADER_H + 8
-local CONTENT_BOTTOM = FOOTER_H + 6
 
 local ui                         -- the built window
 local wanted = false             -- the window should be up
@@ -171,7 +187,9 @@ end
 
 local function newView(fight)
     local ident = identityOf(fight)
-    return { fight = fight, ident = ident, targetLine = targetLine(ident), pace = Hud.PaceRecord(fight, ident) }
+    local pace = Hud.PaceRecord(fight, ident)
+    return { fight = fight, ident = ident, targetLine = targetLine(ident), pace = pace,
+             curve = pace and NS.HudBest.Curve(pace.id) or nil }
 end
 
 -- The over card's best: is the saved fight its board's best now, and by how much over the one before.
@@ -231,6 +249,11 @@ local function width()
     return math.max(Hud.MIN_WIDTH, tonumber(setting("hud.width")) or Hud.MIN_WIDTH)
 end
 
+-- The content's insets from the window's top and bottom: the title bar's and the footer's, each
+-- only while shown (`hud.window.titleBar`, `hud.window.footer`).
+local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 8 or PAD end
+local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 6 or PAD end
+
 local function applyPlacement()
     local f, p = ui.frame, position() or {}
     local d = shipped("hud.position") or {}
@@ -280,6 +303,7 @@ end
 
 local function buildFooter(f)
     local line = f:CreateTexture(nil, "ARTWORK")
+    ui.footLine = line
     line:SetHeight(1)
     NS.Skin.Divider(line)
     line:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1, FOOTER_H)
@@ -316,8 +340,6 @@ local function ensureWindow()
     buildHeader(f)
     buildFooter(f)
     ui.content = CreateFrame("Frame", nil, f)
-    ui.content:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -CONTENT_TOP)
-    ui.content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, CONTENT_BOTTOM)
     NS.ApplySkin(f)
     f:SetScript("OnHide", function() onHide() end)
     hookPointer(f)
@@ -332,12 +354,34 @@ local function applyLock()
     NS.Style.SetControlIcon(ui.lock, locked and "lock" or "unlock", locked and "L" or "U")
 end
 
+-- The window's configured look (modules/Hud_Appearance.lua), once per Appearance stamp: the title
+-- bar and its title, the footer, the content's insets, the background, border, strata and opacity.
+local function applyWindow()
+    local A = NS.HudAppearance
+    if ui.stamp == A.stamp then return end
+    ui.stamp = A.stamp
+    local f = ui.frame
+    local bar, foot = A.On("hud.window.titleBar"), A.On("hud.window.footer")
+    for _, part in ipairs({ ui.close, ui.lock, ui.settings, ui.results, ui.drag, NS.Style.Band(f) }) do
+        part:SetShown(bar)
+    end
+    f.title:SetShown(bar and A.On("hud.window.title"))
+    for _, part in ipairs({ ui.footLine, ui.footLeft, ui.footRight }) do part:SetShown(foot) end
+    ui.content:ClearAllPoints()
+    ui.content:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -contentTop())
+    ui.content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, contentBottom())
+    A.ApplyWindow(f)
+end
+
+local render
+
 local function showBody(which)
     local body = ui.body[which]
     if not body then
         body = NS.HudStates.Build(which, ui.content)
         ui.body[which] = body
     end
+    body.onScroll = render
     if ui.current ~= which then
         local old = ui.current and ui.body[ui.current]
         if old then old.frame:Hide() end
@@ -373,6 +417,68 @@ local function hasPet()
     return type(live) == "table" and live.pet ~= nil
 end
 
+-- The fight's casts and their base cooldowns, read again at most every Hud.CAST_READ seconds while
+-- it is live (the chart's icons); the over card keeps the last read, or the record's own.
+local function readCasts(v)
+    if v.key ~= "live" or not cur or not NS.Casts then return end
+    local now = GetTime()
+    if v.castsAt and now - v.castsAt < Hud.CAST_READ then return end
+    v.castsAt = now
+    local casts, spells = NS.Casts.Live(cur.id)
+    if casts then v.casts, v.castSpells = casts, spells end
+end
+
+-- Seconds since the fight's combat entry: the slices' and the casts' zero (the chart's time axis).
+local function sinceStart()
+    local t = cur and cur.startT
+    if type(t) ~= "number" then return 0 end
+    if key == "over" then
+        local d = view.final and Secrets.PlainNumber(view.final.duration)
+        if d then return d end
+    end
+    return math.max(0, GetTime() - t)
+end
+
+-- The pace bar's view: the live totals (opaque) or the plain final ones, against the curve.
+local function paceView(v)
+    local curve = v.curve
+    if not curve or v.pace == nil then return nil end
+    local withPet = Hud.PACE_PET_FILL == true
+    if v.key == "over" then return NS.HudBest.OverView(curve, v.final, v.clock, withPet) end
+    return NS.HudBest.LiveView(curve, v.clock, v.live, withPet)
+end
+
+-- The over card's spell rows: the merged plain read, highest first, and its total.
+local function finalSpells(v)
+    local merged = v.final and v.final.merged
+    if type(merged) ~= "table" then
+        v.finalSpells, v.finalTotal = v.record and NS.Recorder.Spells(v.record) or {}, v.record and v.record.damage
+            and v.record.damage.merged or 0
+        return
+    end
+    local out = {}
+    for _, sp in ipairs(type(merged.spells) == "table" and merged.spells or {}) do
+        local id, total = Secrets.PlainNumber(sp.spellID), Secrets.PlainNumber(sp.total)
+        if id and total then out[#out + 1] = { spellID = id, total = total, isPet = sp.isPet == true } end
+    end
+    v.finalSpells, v.finalTotal = out, Secrets.PlainNumber(merged.total) or 0
+end
+
+-- The extras' views (plan Task 3.2): the pace bar, the damage chart, the over card's rows.
+local function fillExtras(v)
+    readCasts(v)
+    local cooldowns = NS.HudChart.Cooldowns(v.casts, v.castSpells)
+    v.paceView = paceView(v)
+    if not cur then
+        v.chartView = nil
+    elseif v.key == "over" then
+        v.chartView = NS.HudChart.OverView(cur, v.curve, v.final, cooldowns)
+        finalSpells(v)
+    else
+        v.chartView = NS.HudChart.LiveView(cur, v.curve, v.live, sinceStart(), cooldowns)
+    end
+end
+
 -- The view the bodies draw: the fight's facts plus this moment's settings and figures.
 local function fill()
     local v = view
@@ -384,6 +490,7 @@ local function fill()
     v.width = width() - 2 * PAD
     v.showSkipReason = setting("hud.showSkipReason") ~= false
     v.minLength = setting("history.minLength")
+    fillExtras(v)
     return v
 end
 
@@ -404,11 +511,12 @@ local function footer(v)
     ui.footRight:SetText(right)
 end
 
-local function render()
+function render()
+    applyWindow()
     local v = fill()
     local body = showBody(v.key)
     body:Update(v)
-    ui.frame:SetSize(width(), CONTENT_TOP + (body.height or 0) + CONTENT_BOTTOM)
+    ui.frame:SetSize(width(), contentTop() + (body.height or 0) + contentBottom())
     footer(v)
     return v
 end
@@ -515,6 +623,12 @@ end
 --- The view the bodies draw now, for the suites and the parts that stack under it (plan Task 3.2).
 function Hud.View() return view end
 
+--- A `hud.*` look or layout changed: every part restyles (HudAppearance.Changed) and the HUD
+--- redraws now. The DPS HUD page's rows (plan Task 3.3) and the settings seam call it.
+function Hud.Apply()
+    NS.HudAppearance.Changed()
+end
+
 --- The over card's chip texts on screen, in order (the suites read these).
 function Hud.Chips()
     local body = ui and ui.body.over
@@ -608,6 +722,9 @@ end
 function Hud.OnFightSaved(record)
     if isDown() or type(record) ~= "table" or not cur or cur.recordID ~= record.id then return end
     view.saved, view.skipReason, view.record = true, nil, record
+    -- The stored casts are the whole fight's: the chart's icons take them over the last live read.
+    local casts = type(record.casts) == "string" and NS.CastCodec.Decode(record.casts) or nil
+    if casts then view.casts, view.castSpells = casts, record.cooldowns or {} end
     -- The stored identity names the meter's primary target, which the live line could only guess.
     if type(record.identity) == "table" then view.targetLine = targetLine(record.identity) end
     judge(record)
@@ -623,7 +740,7 @@ end
 local function onSettings(path, value)
     if type(path) ~= "string" then return end
     if path == "hud.show" and value == "always" then wanted = true end
-    if path == "profile" or path:find("^hud%.") then Hud.Refresh() end
+    if path == "profile" or path:find("^hud%.") then Hud.Apply() end
 end
 
 do

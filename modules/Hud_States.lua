@@ -8,17 +8,19 @@ local _, NS = ...
 -- bar's controls are the HUD's acts).
 --
 -- THE STACK, top down, each part switched by its `hud.layout.*` key: the clock, the target line, the
--- Damage and DPS boxes, and on the over card the chips. Every position is a constant offset worked
--- out from the parts shown; Update answers the stack's height (body.height), which the shell sizes
--- the window from. The pace bar, the damage chart and the spell rows (plan Task 3.2) stack under it
--- from body.height down. No body reads the size or position of anything that has displayed a meter
+-- Damage and DPS boxes, on the over card the chips, then the pace bar (only with a fight to pace
+-- against), the damage chart (modules/Hud_Chart.lua) and the spell rows (modules/Hud_Breakdown.lua).
+-- Every position is a constant offset worked out from the parts shown and the configured sizes
+-- (modules/Hud_Appearance.lua); Update answers the stack's height (body.height), which the shell
+-- sizes the window from. No body reads the size or position of anything that has displayed a meter
 -- value; the chips measure their own text (GetStringWidth on a label that only ever holds plain
 -- copy), never a value.
 --
 -- SECRETS. The live body hands each opaque meter value to NS.Format.Number and the result straight
--- to SetText: no concatenation, no comparison but the nil test spec §3 allows. The pet's figure is a
--- label and a value side by side, never one joined string. The over card's values are plain (the
--- after-combat read, or the stored record).
+-- to SetText, and to the pace bar's, the chart's and the rows' StatusBars: no concatenation, no
+-- comparison but the nil test spec §3 allows. The pet's figure is a label and a value side by side,
+-- never one joined string. The over card's values are plain (the after-combat read, or the stored
+-- record), except the chart's columns, which keep the totals captured in combat.
 
 local States = {}
 NS.HudStates = States
@@ -44,43 +46,22 @@ States.COLORS = C
 -- The flat box a figure stands in: a faint wash under a faint edge (the skin's Card, D-3).
 local BOX = { bg = "list.boxDim", border = "ct.box.border" }
 
--- The clock (mockup: 44px, centered) and the stack's pitches.
-local CLOCK_SIZE = 40
-local CLOCK_H = CLOCK_SIZE + 10
+-- The stack's pitches. The clock's and the figures' heights follow their configured sizes.
+local CLOCK_PAD = 10
 local TARGET_H = 18
-local KPI_HEIGHT = 46
+local KPI_CHROME = 26          -- a box's caption and padding around its figure
 local KPI_PAD, KPI_CAPTION_H = 5, 14
 local GAP = 8
 local CHIP_HEIGHT, CHIP_GAP = 18, 5
-States.CLOCK_SIZE, States.KPI_HEIGHT, States.GAP = CLOCK_SIZE, KPI_HEIGHT, GAP
+local SECTION_H = 16           -- a section's heading line (the spell rows')
+--- How many rows `hud.spells.rows` 0 shows at once (the wheel scrolls the rest).
+States.ALL_ROWS = 12
+States.GAP = GAP
 local DASH = "\226\128\148"   -- "no figure"
 
+local function appearance() return NS.HudAppearance end
+
 -- ── widgets ─────────────────────────────────────────────────────────────────────────────────────
-
--- The fight clock: the one label kept in its own monospace face and size, the skin's `font.mono`
--- (Ka0s Default's JetBrains Mono), drawn again on a skin change. HUD Appearance (plan Task 3.2)
--- takes its face, size and color over.
-local bigTexts = setmetatable({}, { __mode = "k" })   -- fs -> its size
-
-local function monoFace()
-    local name = NS.Skin.Token("font.mono")
-    return (type(name) == "string" and NS.MediaFont and NS.MediaFont(name))
-        or (NS.Constants and NS.Constants.FONT_MONO) or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF"
-end
-
-Style.OnLooks(function()
-    local face = monoFace()
-    for fs, size in pairs(bigTexts) do fs:SetFont(face, size, "") end
-end)
-
-local function bigText(parent, size, color)
-    local fs = parent:CreateFontString(nil, "OVERLAY")
-    fs:SetFont(monoFace(), size, "")
-    bigTexts[fs] = size
-    fs:SetTextColor(Style.Rgb(color))
-    fs:SetJustifyH("CENTER")
-    return fs
-end
 
 --- A flat box through the skin's Card, its slots remapped to `tokens` (default BOX).
 local function card(parent, tokens)
@@ -100,21 +81,22 @@ end
 
 --- A figure in a box: a small caption over a large value (LootHistory's Insights card), and a row
 --- under the value for the pet's figure, shown only while there is one: a "Pet" label and the
---- value beside it, two strings, so a secret value is never joined to text.
-local function kpi(parent, label, valueColor)
+--- value beside it, two strings, so a secret value is never joined to text. The value's face is
+--- the `hud.figures` block's.
+local function kpi(parent, label, tip)
     local f = card(parent)
-    f:SetHeight(KPI_HEIGHT)
     local k = { frame = f, petRow = false }
     k.label = Style.Text(f, FONT.CAPTION, nil, "CENTER")
     k.label:SetPoint("TOPLEFT", f, "TOPLEFT", 8, -7)
     k.label:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -7)
     k.label:SetText(label)
-    k.value = Style.Text(f, FONT.FIGURE, valueColor or C.text, "CENTER")
+    k.value = Style.PlainText(f, FONT.FIGURE, "CENTER")
     k.petLabel = Style.Text(f, FONT.CAPTION, nil, "RIGHT")
     k.petLabel:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -2, KPI_PAD)
     k.petLabel:SetText(L["Pet"])
     k.petValue = Style.Text(f, FONT.CAPTION, C.green, "LEFT")
     k.petValue:SetPoint("BOTTOMLEFT", f, "BOTTOM", 2, KPI_PAD)
+    NS.HudTips.Attach(f, tip)
     return k
 end
 
@@ -129,10 +111,6 @@ local function setPetRow(k, on)
     k.value:ClearAllPoints()
     k.value:SetPoint("BOTTOMLEFT", k.frame, "BOTTOMLEFT", 8, y)
     k.value:SetPoint("BOTTOMRIGHT", k.frame, "BOTTOMRIGHT", -8, y)
-end
-
-local function kpiHeight(petRow)
-    return KPI_HEIGHT + (petRow and KPI_CAPTION_H or 0)
 end
 
 -- Two boxes side by side at `y`, halves by anchor (no width needed), `h` high.
@@ -259,27 +237,53 @@ local function newBody(parent, key)
     local f = CreateFrame("Frame", nil, parent)
     f:SetAllPoints(parent)
     f:Hide()
-    return { key = key, frame = f, w = {}, height = 0 }
+    return { key = key, frame = f, w = {}, parts = {}, height = 0, offset = 0 }
 end
 
 -- The clock, the target line and the two boxes every body has.
-local function buildTop(body, dpsLabel, dpsColor)
+local function buildTop(body, dpsLabel, tips)
     local f, w = body.frame, body.w
-    w.clock = bigText(f, CLOCK_SIZE, C.text)
+    w.clock = Style.PlainText(f, FONT.FIGURE, "CENTER")
+    w.clockZone = CreateFrame("Frame", nil, f)
+    w.clockZone:SetAllPoints(w.clock)
+    NS.HudTips.Attach(w.clockZone, "clock")
     w.target = Style.Text(f, FONT.TEXT, C.dim, "CENTER")
-    w.damage = kpi(f, L["Damage"])
-    w.dps = kpi(f, dpsLabel, dpsColor)
+    w.damage = kpi(f, L["Damage"], tips[1])
+    w.dps = kpi(f, dpsLabel, tips[2])
+end
+
+-- The top's look, once per Appearance stamp: the clock's and the figures' blocks, the boxes, and on
+-- the over card the DPS figure's color.
+local function restyleTop(body)
+    local A = appearance()
+    if body.topStamp == A.stamp then return end
+    body.topStamp = A.stamp
+    local w = body.w
+    local clock, figures = A.Font("clock"), A.Font("figures")
+    A.ApplyFont(w.clock, clock)
+    A.ApplyFont(w.damage.value, figures)
+    local over
+    if body.key == "over" then
+        local r, g, b, a = A.Swatch("figures", "overColor")
+        over = { r = r, g = g, b = b, a = a }
+    end
+    A.ApplyFont(w.dps.value, figures, over)
+    A.ApplyBox(w.damage.frame)
+    A.ApplyBox(w.dps.frame)
+    body.clockH, body.kpiH = clock.size + CLOCK_PAD, figures.size + KPI_CHROME
 end
 
 -- Lay the top out for the view's layout toggles; answers the y (positive, down) under it.
 local function placeTop(body, v)
+    restyleTop(body)
     local f, w, layout = body.frame, body.w, v.layout or {}
     local y = 0
     w.clock:SetShown(layout.clock ~= false)
+    w.clockZone:SetShown(layout.clock ~= false)
     if layout.clock ~= false then
         w.clock:ClearAllPoints()
         w.clock:SetPoint("TOP", f, "TOP", 0, -4)
-        y = y + CLOCK_H
+        y = y + body.clockH
     end
     w.target:SetShown(layout.target ~= false)
     if layout.target ~= false then
@@ -292,7 +296,7 @@ local function placeTop(body, v)
     w.damage.frame:SetShown(figures)
     w.dps.frame:SetShown(figures)
     if figures then
-        local h = kpiHeight(v.hasPet)
+        local h = body.kpiH + (v.hasPet and KPI_CAPTION_H or 0)
         placePair(w.damage, w.dps, f, -y, h)
         y = y + h + GAP
     end
@@ -303,25 +307,145 @@ local function setValue(fs, value)
     if value == nil then fs:SetText(DASH) else fs:SetText(NS.Format.Number(value)) end
 end
 
+-- ── the extras: pace bar, damage chart, spell rows ──────────────────────────────────────────────
+
+-- The pace bar at `y` when the view carries one (and the layout shows it); answers the y under it.
+local function placePace(body, v, y)
+    local pv = v.paceView
+    local on = (v.layout or {}).pace ~= false and v.pace ~= nil and pv ~= nil
+    body.paceShown = on
+    local pace = body.parts.pace
+    if not on then
+        if pace then pace:SetShown(false) end
+        return y
+    end
+    if not pace then
+        pace = NS.HudChart.NewPace(body.frame)
+        body.parts.pace = pace
+    end
+    NS.HudTips.Attach(pace.bar, body.key == "over" and "overPace" or "pace")
+    pace:SetShown(true)
+    local h = pace:Place(body.frame, -y, v.width or 276)
+    pace:Set(pv.lo, pv.hi, pv.player, pv.pet, pv.withPet)
+    return y + h + GAP
+end
+
+-- The damage chart at `y` when the view carries one; answers the y under it.
+local function placeChart(body, v, y)
+    local view = v.chartView
+    local on = (v.layout or {}).chart ~= false and view ~= nil
+    local chart = body.parts.chart
+    body.chartShown = on
+    if not on then
+        if chart then chart:SetShown(false) end
+        return y
+    end
+    if not chart then
+        chart = NS.HudChart.New(body.frame)
+        body.parts.chart = chart
+    end
+    chart:SetShown(true)
+    local h = chart:Place(body.frame, -y, v.width or 276)
+    chart:Draw(view)
+    return y + h + GAP
+end
+
+-- The spell rows' frame, heading and list, built on first need. The frame takes the wheel, which
+-- scrolls the list while `hud.spells.rows` is 0 (every spell).
+local function spellsPart(body)
+    local s = body.parts.spells
+    if s then return s end
+    s = {}
+    s.title = Style.Text(body.frame, FONT.HEADER)
+    s.title:SetText(L["Spell breakdown"])
+    s.note = Style.Text(body.frame, FONT.CAPTION, nil, "RIGHT")
+    s.frame = CreateFrame("Frame", nil, body.frame)
+    s.list = NS.HudBreakdown.New(s.frame)
+    s.frame:EnableMouseWheel(true)
+    s.frame:SetScript("OnMouseWheel", function(_, delta)
+        body.offset = math.max(0, (body.offset or 0) - (tonumber(delta) or 0))
+        if body.onScroll then body.onScroll() end
+    end)
+    NS.HudTips.Attach(s.frame, body.key == "over" and "overSpells" or "liveSpells")
+    body.parts.spells = s
+    return s
+end
+
+local function setSpellsShown(s, on)
+    s.title:SetShown(on)
+    s.note:SetShown(on)
+    s.frame:SetShown(on)
+end
+
+-- How many rows show (`hud.spells.rows`, 0: ALL_ROWS with the wheel) of `total`, and from where.
+local function window(body, total)
+    local rows = math.floor(appearance().Number("hud.spells.rows", 0, 40))
+    local visible = rows == 0 and States.ALL_ROWS or rows
+    local maxOffset = rows == 0 and math.max(0, total - visible) or 0
+    body.offset = math.max(0, math.min(body.offset or 0, maxOffset))
+    return math.min(visible, total - body.offset), body.offset
+end
+
+-- The spell rows at `y`: the live read's (player then pet) or the over card's plain ones; answers
+-- the y under them.
+local function placeSpells(body, v, y)
+    local on = (v.layout or {}).spells ~= false
+    local s = (on or body.parts.spells) and spellsPart(body) or nil
+    if not on then
+        if s then setSpellsShown(s, false) end
+        return y
+    end
+    setSpellsShown(s, true)
+    local width = v.width or 276
+    s.title:ClearAllPoints()
+    s.title:SetPoint("TOPLEFT", body.frame, "TOPLEFT", 0, -y)
+    s.note:ClearAllPoints()
+    s.note:SetPoint("TOPRIGHT", body.frame, "TOPLEFT", width, -y)
+    local Breakdown = NS.HudBreakdown
+    local drawn
+    if body.key == "over" then
+        local list = v.finalSpells or {}
+        local n, offset = window(body, #list)
+        drawn = s.list:ShowFinal(list, v.finalTotal, n, offset)
+        s.note:SetText(L["% of total"])
+    else
+        local n, offset = window(body, Breakdown.LiveCount(v.live))
+        drawn = s.list:ShowLive(v.live, n, offset)
+        s.note:SetText(L["live order"])
+    end
+    local h = Breakdown.Height(drawn)
+    s.frame:ClearAllPoints()
+    s.frame:SetPoint("TOPLEFT", body.frame, "TOPLEFT", 0, -(y + SECTION_H))
+    s.frame:SetSize(width, math.max(1, h))
+    return y + SECTION_H + h + GAP
+end
+
+-- Everything under the top, from `y`; answers the stack's height.
+local function placeExtras(body, v, y)
+    y = placePace(body, v, y)
+    y = placeChart(body, v, y)
+    y = placeSpells(body, v, y)
+    return y
+end
+
 -- ── LIVE ────────────────────────────────────────────────────────────────────────────────────────
 
 local Builders = {}
 
 function Builders.live(parent)
     local body = newBody(parent, "live")
-    buildTop(body, L["DPS \194\183 Live"])
+    buildTop(body, L["DPS \194\183 Live"], { "liveDamage", "liveDps" })
 
     function body.Update(self, v)
         setPetRow(self.w.damage, v.hasPet)
         setPetRow(self.w.dps, v.hasPet)
         self.w.dps.petLabel:SetShown(false)
         self.w.dps.petValue:SetShown(false)
-        self.height = placeTop(self, v)
+        local y = placeTop(self, v)
         self.w.clock:SetText(NS.Format.Clock(v.clock))
         self.w.target:SetText(v.targetLine or "")
-        -- The pace bar's slot (plan Task 3.2): shown only while there is a fight to pace against.
-        self.paceShown = v.pace ~= nil
         self:SetLive(v.live)
+        self.height = placeExtras(self, v, y)
     end
 
     --- The live figures: opaque values, straight to the formatter and the labels.
@@ -349,7 +473,7 @@ end
 
 function Builders.over(parent)
     local body = newBody(parent, "over")
-    buildTop(body, L["DPS"], C.green)
+    buildTop(body, L["DPS"], { "overDamage", "overDps" })
     body.w.chips = chips(body.frame)
 
     function body.Update(self, v)
@@ -364,8 +488,7 @@ function Builders.over(parent)
         overFigures(w, v)
         w.chips.width = v.width or w.chips.width
         w.chips:Set(States.OverChips(v), -y)
-        self.height = y + w.chips:Height()
-        self.paceShown = v.pace ~= nil
+        self.height = placeExtras(self, v, y + w.chips:Height())
     end
     return body
 end
@@ -373,7 +496,7 @@ end
 --- Build one body into `parent`.
 --- @param key string  "live" | "over"
 --- @param parent table
---- @return table|nil body  { key, frame, w, height, Update(view), SetLive(live)? }
+--- @return table|nil body  { key, frame, w, parts, height, paceShown, Update(view), SetLive(live)? }
 function States.Build(key, parent)
     local builder = Builders[key]
     if not builder then return nil end
