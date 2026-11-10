@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "CombatTrail",
+  "addonVersion": "0.1.0",
+  "run": "20261110-130020",
+  "startedAt": "2026-11-10T13:00:20+05:30",
+  "durationMs": 28525,
+  "label": null,
+  "release": null,
+  "git": { "sha": "6e81fa888f4e50282fcc14b0238d92b53f3fe54e", "branch": "feat/2026-11-10-combat-trail-v0.1.0", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 2604, "warnings": 0, "errors": 0, "files": 131, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 22545, "passed": 726, "failed": 0, "skipped": 1, "total": 727, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "skip", "durationMs": 2, "skipReason": "no tests/perf.lua — this addon ships no offline scenarios", "scenarios": 0, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 2722, "warnings": 1, "maxCcn": 17, "nloc": 29563, "functions": 3735, "avgCcn": 2.7, "avgNloc": 7.1, "avgToken": 65.6, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 2, "overCapFiles": 0, "blindFiles": 0, "crashedFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "green"
+}

@@ -225,7 +225,7 @@ local FROZEN = { "^docs/superpowers/", "^docs/audits/", "^docs/reviews/", "^docs
 
 --- Docs the register names that a LATER task writes: `path -> the task`. The test refuses a row
 --- here once its file exists, so the allowance cannot outlive its reason.
-local PENDING = { ["automated-tests/RESULTS.md"] = "plan Task 5.4, the first automated-test bundle" }
+local PENDING = {}
 
 test("docs: the Documentation map registers every doc under docs/, each once, each on disk", function()
     local hub = mustRead("docs/ARCHITECTURE.md")

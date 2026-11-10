@@ -29,6 +29,14 @@ end
 local n = 0
 --- A stored-shape record. `o` overrides: mine (default true), name, specID, dps, days (ago), boss,
 --- content, creatureID, encounterID, difficultyID, difficultyName, keystone.
+-- The record's identity from the overrides (rec's half that defaults the board fields).
+local function identOf(o)
+    return { content = o.content or "world", targetName = o.target or "Angry Boar",
+             targetCreatureID = o.creatureID or 1985, difficultyID = o.difficultyID or 0,
+             difficultyName = o.difficultyName, isBoss = o.boss or false, keystoneLevel = o.keystone,
+             encounterID = o.encounterID, encounterName = o.encounterID and (o.target or "Boss") or nil }
+end
+
 local function rec(NS, o)
     o = o or {}
     n = n + 1
@@ -36,10 +44,7 @@ local function rec(NS, o)
     local who = { name = me.name, realm = me.realm, client = me.client, class = me.class or "MAGE",
                   specID = o.specID or me.specID, specName = me.specName, ilvl = 640.5 }
     if o.mine == false then who.name, who.class = o.name or "Altchar", "WARLOCK" end
-    local ident = { content = o.content or "world", targetName = o.target or "Angry Boar",
-                    targetCreatureID = o.creatureID or 1985, difficultyID = o.difficultyID or 0,
-                    difficultyName = o.difficultyName, isBoss = o.boss or false, keystoneLevel = o.keystone,
-                    encounterID = o.encounterID, encounterName = o.encounterID and (o.target or "Boss") or nil }
+    local ident = identOf(o)
     local dps = o.dps or 1000
     return {
         schema = 1, id = o.id or ("f-" .. n), t = NOW - (o.days or 0) * DAY - n, duration = 60, status = "final",
