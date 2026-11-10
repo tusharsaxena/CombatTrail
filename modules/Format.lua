@@ -9,7 +9,9 @@ local _, NS = ...
 -- hands its values to the client's own formatter (C_StringUtil's abbreviated-number formatter, which
 -- takes a secret and does the arithmetic natively) and to nothing else. This file owns the one
 -- instance: built on first use, its breakpoints set and checked once, and given up for the session
--- if the client refuses them. A formatter that renders a check value wrongly is not used at all.
+-- if the client refuses them. A formatter that renders a check value wrongly is not used at all;
+-- the next constructor is tried (core/Compat.lua lists them). A PLAIN number never reaches the
+-- client formatter: Lua abbreviates it, truncating, so no fraction is ever drawn raw (plan v0.2 A5).
 --
 -- WHAT A RETURN VALUE IS. Format.Number answers "something FontString:SetText takes": a string, or,
 -- on a client with no formatter at all, the secret itself (SetText accepts one). A caller may SetText
@@ -36,36 +38,69 @@ local LADDER = {
     { breakpoint = 1000000000, abbreviation = "B", significandDivisor = 10000000, fractionDivisor = 100,
       abbreviationIsGlobal = false },
 }
--- The check a formatter must pass before it is trusted: what the ladder above renders this as.
-local CHECK_VALUE, CHECK_TEXT = 2763000, "2.76M"
+-- The checks a formatter must pass before it is trusted: what the ladder above renders each as. The
+-- integer check proves the breakpoints took; the fractional one proves the formatter truncates a
+-- fraction too. A client formatter measured passing an unfloored fraction through ("30.1904761904K",
+-- docs/midnight-quirks.md) passes the first and fails the second.
+local CHECKS = {
+    { value = 2763000, text = "2.76M" },
+    { value = 30190.4761904, text = "30.1K" },
+}
 
 -- nil = not built yet, false = this client has none that works, else the instance.
 local formatter
+-- The constructor that built it, for the debug line naming the path.
+local formatterName
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Format", fmt, ...) end
 end
 
--- The client's constructor is version-variant: core/Compat.lua owns it (compat).
-local function newFormatter()
-    local f = NS.Compat.NewNumberFormatter()
-    if f == nil or type(f.SetBreakpoints) ~= "function" then return nil end
+-- Which path served a number, written when it changes (debug-logging-§8: no line per redraw).
+local function servedBy(path)
+    if NS.DebugChanged then NS.DebugChanged("format:path", "Format", "numbers served by %s", path) end
+end
+
+-- The first check `f` renders wrongly, as (value, what it drew), or nil when it passes them all.
+-- The values are plain constants and the outputs plain strings, so comparing them is legal.
+local function failedCheck(f)
+    for _, check in ipairs(CHECKS) do
+        local ok, out = pcall(f.FormatNumber, f, check.value)
+        if not ok or out ~= check.text then return check.value, tostring(out) end
+    end
+    return nil
+end
+
+-- One constructor built, its breakpoints set and checked: the instance, or nil (logged why).
+local function tryCandidate(c)
+    local ok, f = pcall(c.make)
+    if not ok or type(f) ~= "table" or type(f.SetBreakpoints) ~= "function" then
+        debug("%s built no formatter; trying the next", c.name)
+        return nil
+    end
+    if not pcall(f.SetBreakpoints, f, LADDER) then
+        debug("%s refused the breakpoints; trying the next", c.name)
+        return nil
+    end
+    local value, out = failedCheck(f)
+    if value then
+        debug("%s rendered the check value %s as %s; not used", c.name, tostring(value), out)
+        return nil
+    end
     return f
 end
 
+-- The client's constructors are version-variant: core/Compat.lua owns the list (compat).
 local function build()
-    local f = newFormatter()
-    if not f then return false end
-    if not pcall(f.SetBreakpoints, f, LADDER) then
-        debug("the client refused the breakpoints; numbers fall back")
-        return false
+    for _, c in ipairs(NS.Compat.NumberFormatterCandidates()) do
+        local f = tryCandidate(c)
+        if f then
+            formatterName = c.name
+            return f
+        end
     end
-    local ok, out = pcall(f.FormatNumber, f, CHECK_VALUE)
-    if not ok or out ~= CHECK_TEXT then
-        debug("the formatter rendered the check value as %s; numbers fall back", tostring(out))
-        return false
-    end
-    return f
+    debug("no client formatter passed its checks; secret numbers go to AbbreviateNumbers")
+    return false
 end
 
 local function instance()
@@ -75,7 +110,7 @@ end
 
 --- Drop the formatter so the next number builds a fresh one (the harness's seam between instances).
 function Format.Reset()
-    formatter = nil
+    formatter, formatterName = nil, nil
 end
 
 -- A plain number abbreviated in Lua, truncated as the client truncates.
@@ -88,23 +123,44 @@ local function abbreviate(n)
     return ("%s%d"):format(sign, math.floor(a))
 end
 
---- A meter number as short text ("2.76M"), secret or plain. "" for nil.
+-- A secret through the client: the trusted formatter, then AbbreviateNumbers, both in pcall. Either
+-- answer goes to SetText untouched. nil when neither answered.
+local function native(v)
+    local f = instance()
+    if f then
+        local ok, out = pcall(f.FormatNumber, f, v)
+        if ok and out ~= nil then
+            servedBy("the client formatter (" .. tostring(formatterName) .. ")")
+            return out
+        end
+    end
+    local client = AbbreviateNumbers
+    if type(client) == "function" then
+        local ok, out = pcall(client, v)
+        if ok and out ~= nil then
+            servedBy("AbbreviateNumbers")
+            return out
+        end
+    end
+    return nil
+end
+
+--- A meter number as short text ("2.76M"), secret or plain, never a raw decimal. "" for nil.
+--- A plain number abbreviates in Lua (legal on a plain value, and it truncates); a secret goes to
+--- the client (`native`); the raw secret is the last resort, where the client offers nothing.
 --- @param v any  a number, possibly secret
 --- @return any  a string, or the secret itself where no formatter exists (SetText takes either)
 function Format.Number(v)
     if v == nil then return "" end
-    local f = instance()
-    if f then
-        local ok, out = pcall(f.FormatNumber, f, v)
-        if ok and out ~= nil then return out end
-    end
+    -- PlainNumber tests IsSealed before type(), so a secret never meets a Lua operator here.
     local plain = Secrets.PlainNumber(v)
-    if plain then return abbreviate(plain) end
-    local client = AbbreviateNumbers
-    if type(client) == "function" then
-        local ok, out = pcall(client, v)
-        if ok and out ~= nil then return out end
+    if plain then
+        servedBy("Lua (plain)")
+        return abbreviate(plain)
     end
+    local out = native(v)
+    if out ~= nil then return out end
+    servedBy("nothing: the raw value")
     return v
 end
 

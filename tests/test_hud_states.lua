@@ -160,6 +160,23 @@ test("hud: the live figures are the meter's handles, copied and never inspected"
     meter.SetSecret(false)
 end)
 
+test("hud: a fractional secret DPS draws the trusted formatter's text, never a raw decimal", function()
+    local Formatter = dofile(T.root .. "/tests/mock_formatter.lua")(T)
+    local inst, meter, Hud = fresh(function(m) Formatter.install(m, { abbreviated = "raw", numeric = "floor" }) end)
+    meter.SetSession(1, { damage = 634000, dps = 30190.4761904, duration = 21,
+                          spells = { { id = 133, dmg = 634000, dps = 30190.4761904 } },
+                          enemies = { { name = "Angry Boar", creatureID = 1985, damage = 634000 } } })
+    enter(inst, 10)
+    meter.SetSecret(true)
+    hit(inst, 11, 1)
+    run(inst, 11.25)
+    run(inst, 11.5)
+    local body = Hud.__ui().body.live
+    assertEqual(body.w.dps.value:GetText(), "30.1K", "the raw-fraction formatter was passed over")
+    assertEqual(body.w.damage.value:GetText(), "634.0K")
+    meter.SetSecret(false)
+end)
+
 -- ── noBest and live ─────────────────────────────────────────────────────────────────────────────
 
 test("hud: noBest when Bests.For is nil hides pace; a stored best makes it live with pace", function()

@@ -334,6 +334,17 @@ Total.
 - meter: Call reports a missing function and a raising one without throwing
 - meter: ReadFinal keeps the player's part when only the pet's read raises
 
+### test_format.lua (8)
+
+- format: a plain fractional DPS abbreviates in Lua, never through the client formatter
+- format: a secret goes to a formatter that passes both checks
+- format: a formatter that renders a fraction raw fails the check, and the next constructor answers
+- format: a secret with no trusted formatter goes to AbbreviateNumbers
+- format: a secret with no client formatter at all is handed back untouched
+- format: the debug log names the path that served a number, once per change
+- format: a refused or failing constructor is skipped
+- format: Clock, Length, Pct and SignedPct take plain numbers
+
 ### test_fight.lua (28)
 
 - fight: the states and the timing constants are the plan's
@@ -568,11 +579,12 @@ Total.
 - slices: Seed fills in the step, count and filled a store leaves out
 - slices: a saved fight's store keeps its record id, not the fight table
 
-### test_hud_states.lua (24)
+### test_hud_states.lua (25)
 
 - hud: the states and the defaults are the plan's
 - hud: auto: hidden -> live on FIGHT_STARTED's first hit
 - hud: the live figures are the meter's handles, copied and never inspected
+- hud: a fractional secret DPS draws the trusted formatter's text, never a raw decimal
 - hud: noBest when Bests.For is nil hides pace; a stored best makes it live with pace
 - hud: the live pace key is the stored boardKey, level and NPC ID included (plan A2)
 - hud: paceAgainst none is always noBest; last paces against the newest fight on the board
@@ -967,6 +979,7 @@ Total.
 | test_lanes_page.lua | 21 |
 | test_probe.lua | 28 |
 | test_meter.lua | 33 |
+| test_format.lua | 8 |
 | test_fight.lua | 28 |
 | test_identity.lua | 39 |
 | test_cast_codec.lua | 7 |
@@ -979,7 +992,7 @@ Total.
 | test_retention.lua | 13 |
 | test_record.lua | 16 |
 | test_slices.lua | 18 |
-| test_hud_states.lua | 24 |
+| test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 5 |
@@ -1009,4 +1022,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **779** |
+| **Total** | **788** |

@@ -18,7 +18,7 @@ set up in `core/DebugLogSetup.lua`; the library documents the console itself.
 | `Lanes` | LaneCasts, LaneRender, LaneAnchor, LaneVisibility: registration rebuilds, refused events, the stand-down's dropped casts, the guards that keep a cast off a lane, a listener that raised |
 | `Casts`, `Identity`, `Fight`, `Meter` | The fight pipeline: a cast list, an identity read, the state machine's edges, a meter read that failed |
 | `Recorder`, `Retention`, `Loadouts` | A save or skip with its reason, a purge, a loadout interned |
-| `Hud`, `Format` | The HUD's open and fade decisions, a formatter fallback |
+| `Hud`, `Format` | The HUD's open and fade decisions; a formatter constructor passed over and why, and which path served a number (written when it changes) |
 | `Results`, `Timeline`, `Compare`, `Gear`, `Share` | The Results window and its modals, a share refused |
 | `Probe` | The probe's arm, samples and disarm |
 | `Test` | Test mode and the sim starting and stopping |

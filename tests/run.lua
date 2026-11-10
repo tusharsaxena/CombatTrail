@@ -118,6 +118,7 @@ local SUITES = {
     "test_lanes_page",
     "test_probe",
     "test_meter",
+    "test_format",
     "test_fight",
     "test_identity",
     "test_cast_codec",

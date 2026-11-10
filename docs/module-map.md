@@ -112,7 +112,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | Path | Job |
 |---|---|
 | `tests/run.lua` | The runner: load list, lifecycle kick, suite list |
-| `tests/wow_mock.lua`, `tests/mock_meter.lua`, `tests/hud_fixture.lua` | The client mock, the scripted meter and a HUD fixture |
+| `tests/wow_mock.lua`, `tests/mock_meter.lua`, `tests/mock_formatter.lua`, `tests/hud_fixture.lua` | The client mock, the scripted meter, the scripted number formatters and a HUD fixture |
 | `tests/skin_surfaces.lua` | The painted surfaces the skin-switch gate walks |
 | `tests/test_*.lua` | The suites ([`test-cases.md`](test-cases.md) lists every case) |
 | `tools/make_logo.py` | Draws the logo files in `media/logos/` |

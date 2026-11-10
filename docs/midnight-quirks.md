@@ -295,6 +295,21 @@ meter values, cast spell IDs, castGUIDs and the pet's GUID are secret in combat 
 match Retail. *Do:* treat every one as possibly secret (spec §3); the probe's in-combat sample
 answers it. Listed in `smoke-tests.md`.
 
+**The client number formatter may draw a fractional value raw.** *Client:* Retail (both clients
+unmeasured directly). *Measured:* not measured by probe; inferred from the owner's report,
+2026-11-10. The live DPS tile drew `77.142857...` and `30.1904761...`, which are 540/7 and 634/21:
+a raw per-second rate with its "K" lost to the tile's ellipsis. The C_StringUtil formatter's ladder
+truncates through the integer significand, so an integer check value (2763000 -> "2.76M") passes
+while a fractional input can come back unfloored. *Cost:* a DPS figure with a long tail of
+decimals. *Do:* `modules/Format.lua` checks each constructor
+(`Compat.NumberFormatterCandidates`) against a fractional value too (30190.4761904 -> "30.1K") and
+uses the first that passes. A plain number never reaches the client formatter; Lua abbreviates and
+truncates it. A secret with no trusted formatter goes to `AbbreviateNumbers` in pcall, and the raw
+secret is the last resort. `/ct debug` writes which path served the numbers. Settle it with the
+out-of-combat probe in recon R:hud-sizing#4 on both clients (each constructor's `FormatNumber(30190.4761904)`
+and `AbbreviateNumbers(30190.4761904)`). *Source:* this repo, `modules/Format.lua` header; plan v0.2
+Task A5.
+
 **An off-GCD instant closes the cast in flight while castGUIDs are secret.** *Client:* Retail.
 *Measured:* not measured in game; follows from the GUID being unreadable in combat. *Cost:* a cast
 interrupted after an instant went off between its START and its end is not marked. *Do:* never key

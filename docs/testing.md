@@ -49,7 +49,8 @@ Work is test-first: a failing case that pins the behavior, then the code. The wo
   `OnInitialize` and `OnEnable`. The runner cannot drift from what the client loads.
 - `_G.CT_TEST` is the suite's handle: `T.NS`, `T.mocks`, `T.load(opts)`, the secret helpers
   (`T.secret`, `T.isSecret`, `T.reveal`) and `T.mockMeter`, the scripted `C_DamageMeter`
-  (`tests/mock_meter.lua`).
+  (`tests/mock_meter.lua`). `tests/mock_formatter.lua` scripts the client's number formatters (a
+  truncating one, and one that passes a fraction through raw) and `AbbreviateNumbers`.
 - The suites start from a player who has seen the skin picker; `T.load({ loginPicker = true })`
   keeps it unseen.
 - `KA0S_KIT_CLIENT=forever` loads the kit's WoW Forever client globals, so `NS.Compat.IsForever()`

@@ -20,8 +20,9 @@ local _, NS = ...
 --                                untouched, so the caller runs it in pcall (it may be secret)
 --   Compat.CanAccessTable(t)     canaccesstable, then issecrettable, then "readable"
 --   Compat.ChatSender()          C_ChatInfo.SendChatMessage, then the bare global (deprecated 11.2.0)
---   Compat.NewNumberFormatter()  C_StringUtil's abbreviated-number formatter constructor, then its
---                                numeric-rule constructor
+--   Compat.NumberFormatterCandidates()  C_StringUtil's abbreviated-number formatter constructor,
+--                                then its numeric-rule constructor, every one present (Format
+--                                checks each and takes the first that passes)
 --   Compat.PopupEditBox(dialog)  a StaticPopup's edit box: the GetEditBox method, then the editBox /
 --                                EditBox field
 --   Compat.KeystoneLevel()  Compat.DelveTierText()  Compat.PvpRules()
@@ -638,16 +639,23 @@ function Compat.ChatLocked()
     return ok and locked == true
 end
 
---- A new instance of the client's number formatter (it takes a secret and abbreviates natively), or
---- nil where the client has none or refuses to build one. modules/Format.lua sets its breakpoints.
---- @return table|nil
-function Compat.NewNumberFormatter()
+-- The client's number-formatter constructors, in the order modules/Format.lua tries them.
+local FORMATTER_CONSTRUCTORS = { "CreateAbbreviatedNumberFormatter", "CreateNumericRuleFormatter" }
+
+--- The client's number-formatter constructors that exist here, in order, as { name, make } (make
+--- takes no argument and answers a new instance that takes a secret and abbreviates natively). An
+--- empty list where the client has none. modules/Format.lua builds each in pcall, sets its
+--- breakpoints and checks it, and uses the first that passes.
+--- @return table
+function Compat.NumberFormatterCandidates()
     local util = C_StringUtil
-    local make = util and (util.CreateAbbreviatedNumberFormatter or util.CreateNumericRuleFormatter)
-    if type(make) ~= "function" then return nil end
-    local ok, f = pcall(make)
-    if not ok then return nil end
-    return f
+    local out = {}
+    if type(util) ~= "table" then return out end
+    for _, name in ipairs(FORMATTER_CONSTRUCTORS) do
+        local make = util[name]
+        if type(make) == "function" then out[#out + 1] = { name = name, make = make } end
+    end
+    return out
 end
 
 --- A StaticPopup dialog's edit box, or nil: the GetEditBox method on current clients, the editBox
