@@ -26,13 +26,20 @@ When in doubt, treat standard conformance as a hard requirement and ask.
 
 Start here, then read the docs:
 
+- **`docs/ARCHITECTURE.md`** — the hub: the module map, the per-client feature table, the bus
+  messages, the event wiring per state, the secret-value invariants, the Documentation map and the
+  deviation register. **`docs/module-map.md`** lists every file and the load order.
+- **`docs/testing.md`** — how to verify: both kit profiles, lint, complexity, the commit gate.
+- **`docs/smoke-tests.md`** — the in-game suite and the `/kct probe` steps the owner runs.
+- Then the topic docs the hub's Documentation map lists: `docs/scope.md`, `docs/schema.md`,
+  `docs/settings-panel.md`, `docs/data-flow.md`, `docs/common-tasks.md`, `docs/slash-dispatch.md`,
+  `docs/compat-layer.md`, `docs/profiles.md`, `docs/debug.md`, `docs/known-limitations.md`,
+  `docs/midnight-quirks.md` and `docs/performance.md`.
 - **`docs/superpowers/specs/2026-11-10-combat-trail-design.md`** — the v0.1.0 design: Player and Pet
   cast lanes, the live DPS HUD and the fight history. Damage comes only from `C_DamageMeter`, and a
   secret value is only ever copied into a C-side widget, never inspected (spec §3).
 - **`docs/superpowers/plans/2026-11-10-combat-trail-v0.1.0.md`** — the build plan and its status
   ledger. A resumed session continues from the first row that is not `done`.
-- **`docs/ARCHITECTURE.md`**, **`docs/testing.md`** and **`docs/smoke-tests.md`** arrive with the
-  docs task (plan Task 5.3).
 
 Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua` (the
 addon serves Retail and WoW Forever, so the suite runs under both kit profiles, clients-§6) and

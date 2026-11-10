@@ -2,7 +2,7 @@
 
 What you need installed to build, run, test or release this addon. Commands are for
 **WSL2 / Ubuntu** (the collection's development environment). How to *verify* the addon once you are
-set up is `docs/testing.md` (written in plan Task 5.3); this file only covers *what to install*.
+set up is `docs/testing.md`; this file only covers *what to install*.
 
 Every entry says what needs it and how that is known. Anything only plausibly required is marked as
 such rather than listed as a requirement.
@@ -86,4 +86,4 @@ lua tests/run.lua -j auto                                     # the same, across
 bash tests/_kit/run-automated-tests.sh --suite complexity     # the sighted complexity report (release-time)
 ```
 
-`docs/testing.md` (plan Task 5.3) will say what those commands mean and when each is run.
+`docs/testing.md` says what those commands mean and when each is run.

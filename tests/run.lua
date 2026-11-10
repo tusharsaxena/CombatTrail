@@ -150,6 +150,7 @@ local SUITES = {
     "test_bindings",
     "test_diagnostics",
     "test_skin_surfaces",
+    "test_docs",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },
