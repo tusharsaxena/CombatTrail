@@ -3,7 +3,9 @@
 The engineer-context hub (documentation-§3). Each section summarizes and links its topic doc; the
 design is [`superpowers/specs/2026-11-10-combat-trail-design.md`](superpowers/specs/2026-11-10-combat-trail-design.md)
 (cited below as "spec §N") and the build order is
-[`superpowers/plans/2026-11-10-combat-trail-v0.1.0.md`](superpowers/plans/2026-11-10-combat-trail-v0.1.0.md).
+[`superpowers/plans/2026-11-10-combat-trail-v0.1.0.md`](superpowers/plans/2026-11-10-combat-trail-v0.1.0.md); the first
+in-game feedback batch is [`superpowers/plans/2026-11-10-combat-trail-v0.2-feedback.md`](superpowers/plans/2026-11-10-combat-trail-v0.2-feedback.md)
+(cited as "v0.2 plan" or "v0.2 Task N").
 
 ## Overview
 

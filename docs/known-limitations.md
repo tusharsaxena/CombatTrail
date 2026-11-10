@@ -26,7 +26,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   the trash before the boss is part of the boss fight. *Unverified* on both clients.
 - **The pet is its own source.** `Meter.PET_SEPARATE = true` assumes the meter reports the pet beside
   the player and that the player's total does not already hold the pet's damage. The probe cannot see
-  double counting. *Unverified* in combat, and on WoW Forever entirely.
+  double counting. *Unverified* in combat. On WoW Forever, out of combat, the pet's source came back
+  empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage looks folded
+  into the player's, so the pet's own figure is empty there until the in-combat probe says more.
 - **A meter reset mid-fight loses the fight.** It is marked lost and not stored, and the rest of that
   combat is not tracked. DPS Race's shared-session netting is not ported.
 - **Nothing after the settle is read.** Damage that lands more than the settle window after combat
@@ -40,9 +42,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **No training dummies.** No dummy creature ID has been measured, so a dummy fight reads as open
   world.
 - **The talent tree stands in for a spec.** WoW Forever answers one class-wide spec, so the tree
-  with the most points is the fight's spec (v0.2 plan A4). Which talent API the client answers
-  (`GetTalentTabInfo`, or C_Traits' trait groups) and the field that carries a group's icon are
-  unverified until the probe's talent-tree section reports (SM-CT-P7). A tree read sealed in combat
+  with the most points is the fight's spec (v0.2 plan A4). The probe (build 70862, out of combat)
+  found the trees in C_Traits' trait groups, with the talent-tab API absent (midnight-quirks.md);
+  whether a group's points read secret in combat is not measured. A tree read sealed in combat
   keeps the session's last plain read, so a respec followed by a pull before any out-of-combat read
   could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.

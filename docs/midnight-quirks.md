@@ -290,6 +290,29 @@ read from the field alone is nil after combat. *Do:* derive DPS from the total a
 duration; keep the meter's own figure only when it answers (`meterDps` is optional on the record).
 *Source:* spec §3, `modules/Meter.lua`.
 
+**WoW Forever's talent trees come from C_Traits; its specialization is class-wide.** *Client:*
+Forever (1.60.1, build 70862). *Measured:* `/ct probe`'s talent-tree lines, 2026-11-10, out of
+combat, on a Hunter. `GetNumTalentTabs` and `GetTalentTabInfo` are absent. `GetSpecialization`
+answers 1 and `GetSpecializationInfo` a class-wide pseudo spec (ID 1485, name "Hunter", no icon)
+whatever the points. The classic trees are C_Traits' groups: the active config (272689) names one
+tree (1091), and `C_Traits.GetGroupDisplayInfoByTreeID` answers its three groups (Beast Mastery,
+Marksmanship, Survival, each with its own icon and an `orderIndex` 0-2), with the points spent per
+group from `C_Traits.GetGroupCurrencyInfo` (10/3/0 on the probe's character). *Cost:* the
+specialization API would file every fight of a class under one "spec". *Do:* never read
+`GetSpecializationInfo` on Forever; `Compat.TalentTrees` reads the C_Traits groups (the talent-tab
+pair stays first in its ladder in case a build adds it) and Identity's predominant tree stands in
+for the spec; the probe's pick read "Beast Mastery (10/3/0)". *Source:* this repo, `core/Compat.lua`
+(TalentTrees), `modules/Identity.lua` (readTrees); plan v0.2 Task A4.
+
+**The pet is not its own meter source on WoW Forever out of combat.** *Client:* Forever (build
+70862). *Measured:* `/ct probe`, 2026-11-10, out of combat, a 3 s session. The Current session lists
+one source, the player; the pet's GUID answers an empty source (total 0, no spells), and the
+player's spell list holds no pet spells. *Cost:* the HUD's pet figure and the pet's spell rows are
+empty there. The pet's damage is most likely folded into the player's total (the owner's read of
+the probe); that it is not simply uncounted is not measured. *Do:* nothing yet; `Meter.PET_SEPARATE` stays true (a zero pet adds nothing). In combat is
+unmeasured: the probe's "pet is separate source" line in combat (SM-CT-P4 on Forever) settles it.
+*Source:* this repo, `modules/Meter.lua`.
+
 **In combat on WoW Forever is not measured.** *Client:* Forever. *Measured:* not measured. Whether
 meter values, cast spell IDs, castGUIDs and the pet's GUID are secret in combat there is assumed to
 match Retail. *Do:* treat every one as possibly secret (spec §3); the probe's in-combat sample
