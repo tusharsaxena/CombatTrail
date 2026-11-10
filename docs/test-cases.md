@@ -451,7 +451,7 @@ Total.
 - stats: Groups lays out Primary, Secondary and Tertiary with each value's text
 - stats: deltas against the compared fight, signed, the percent deciding a rated row
 
-### test_loadouts.lua (20)
+### test_loadouts.lua (21)
 
 - loadouts: an item link trims to its item string, and back
 - loadouts: Snapshot reads the gear as item strings without the shirt or the tabard, and the talents
@@ -469,6 +469,7 @@ Total.
 - gear sets: a stand-down drops the events and the pending recon; the stand-up reconciles
 - gear sets: the fight takes the set current at combat start, even with a swap pending or in combat
 - gear sets: a recon in combat over sealed links is read again once combat ends
+- gear sets: a recon the pull runs in combat over a sealed link is read again once combat ends
 - gear sets: with no set known yet, the pull reconciles once
 - gear sets: GearOf reads the record's set, else an inline gear (sample fights)
 - gear sets: Sweep drops the orphaned sets, keeping the referenced and the current one
@@ -956,7 +957,7 @@ Total.
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 7 |
-| test_loadouts.lua | 20 |
+| test_loadouts.lua | 21 |
 | test_filters.lua | 10 |
 | test_bests.lua | 9 |
 | test_retention.lua | 13 |
@@ -992,4 +993,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **762** |
+| **Total** | **763** |

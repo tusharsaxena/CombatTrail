@@ -362,11 +362,16 @@ local function cancelRecon()
     reconTimer = nil
 end
 
+-- A recon now; one in combat (the debounce's or the pull's) is owed a re-read once combat ends.
+local function reconNow()
+    if Secrets.PlainTruth(ask(InCombatLockdown)) == true then owed = true end
+    return Loadouts.Recon()
+end
+
 local function runRecon()
     reconTimer = nil
     if NS.IsStoodDown and NS.IsStoodDown() then return end
-    if Secrets.PlainTruth(ask(InCombatLockdown)) == true then owed = true end
-    Loadouts.Recon()
+    reconNow()
 end
 
 --- Ask for a recon RECON_DELAY from now; a second ask while one is pending joins it.
@@ -414,9 +419,9 @@ local function onFightStarted(_, fight)
     fight.loadout = talents and { talents = talents } or nil
     if reconTimer then
         cancelRecon()
-        Loadouts.Recon()
+        reconNow()
     end
-    fight.gearSet = Loadouts.CurrentGearSet() or Loadouts.Recon()
+    fight.gearSet = Loadouts.CurrentGearSet() or reconNow()
 end
 
 local busTarget = NS.NewBusTarget()

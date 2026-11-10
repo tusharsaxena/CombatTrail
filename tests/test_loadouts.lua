@@ -287,6 +287,25 @@ test("gear sets: a recon in combat over sealed links is read again once combat e
     assertEqual(stores.v, 0, "no recon owed")
 end)
 
+test("gear sets: a recon the pull runs in combat over a sealed link is read again once combat ends", function()
+    local meter
+    local NS, M = fresh(function(m) meter = T.mockMeter.install(m) end)
+    meter.SetSession(1, { damage = 10, dps = 1, duration = 10, spells = {} })
+    -- A swap just before the pull, its debounce still pending: the pull reads it in combat.
+    M.InCombatLockdown = function() return true end
+    M.__gear[16] = T.secret(link(800016))
+    M.__fire("PLAYER_EQUIPMENT_CHANGED", 16, false)
+    M.__now = 100
+    M.__fire("PLAYER_REGEN_DISABLED")
+    assertNil(NS.Loadouts.GetGear(NS.Loadouts.CurrentGearSet())[16], "the sealed weapon is absent")
+    M.__gear[16] = link(800016)
+    M.InCombatLockdown = function() return false end
+    M.__fire("PLAYER_REGEN_ENABLED")
+    M.__fireTimers()
+    assertEqual(NS.Loadouts.GetGear(NS.Loadouts.CurrentGearSet())[16], "800016::::::::80:267",
+        "the pull's in-combat recon is owed a re-read too")
+end)
+
 test("gear sets: with no set known yet, the pull reconciles once", function()
     local meter
     local NS, M = fresh(function(m) meter = T.mockMeter.install(m) end)
