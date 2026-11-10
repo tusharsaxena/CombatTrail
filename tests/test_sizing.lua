@@ -146,7 +146,8 @@ local function seeded()
             damage = { merged = 60000 + k }, dps = 1000 + k,
         })
     end
-    NS.Results.ShowFight("f1")
+    -- The list on screen (ShowFight would open the collapsed view on the fight's detail instead).
+    NS.Results.Show()
     local u = NS.Results.__ui()
     u.list:SetFilter("group", "none")
     return i, u

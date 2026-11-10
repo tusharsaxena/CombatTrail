@@ -755,3 +755,88 @@ L["Damage over the fight's length. The bar runs from the smallest fight in its g
     "Damage over the fight's length. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list)."
 L["How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best shows a trophy."] =
     "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best shows a trophy."
+
+-- The fight detail (modules/Results_Detail.lua, Results_Loadout.lua, Results_Usage.lua, Results.lua's
+-- fold arrow) and Share (modules/Share.lua)
+L["M+ %d"] = "M+ %d"
+L["T%d"] = "T%d"
+L["top: %s"] = "top: %s"
+L["Talents"] = "Talents"
+L["You can share a fight once you are out of combat."] = "You can share a fight once you are out of combat."
+L["Whisper this fight to:"] = "Whisper this fight to:"
+L["Send"] = "Send"
+L["Share to"] = "Share to"
+L["Not recorded"] = "Not recorded"
+L["Unnamed loadout"] = "Unnamed loadout"
+L["Talents for %s: %s. Click the link to see the tree."] =
+    "Talents for %s: %s. Click the link to see the tree."
+L["this fight"] = "this fight"
+L["Talent loadout"] = "Talent loadout"
+L["Item %d"] = "Item %d"
+L["Gear and Talents"] = "Gear and Talents"
+L["Gear view"] = "Gear view"
+L["Gear not recorded"] = "Gear not recorded"
+L["View"] = "View"
+L["Copy"] = "Copy"
+L["The fight's gear and stats, laid out as the character panel does."] =
+    "The fight's gear and stats, laid out as the character panel does."
+L["Posts the loadout's link to your chat and opens the talent tree, read-only."] =
+    "Posts the loadout's link to your chat and opens the talent tree, read-only."
+L["The loadout's import string, to paste into the talent frame."] =
+    "The loadout's import string, to paste into the talent frame."
+L["ilvl %s"] = "ilvl %s"
+L["Talents: %s"] = "Talents: %s"
+L["at %s"] = "at %s"
+L["x%d %s"] = "x%d %s"
+L["active at the start"] = "active at the start"
+L["x%d, time unknown"] = "x%d, time unknown"
+L["time unknown"] = "time unknown"
+L["Usage"] = "Usage"
+L["Edit"] = "Edit"
+L["Tick what the fight really used: an item the detection missed, or one it got wrong."] =
+    "Tick what the fight really used: an item the detection missed, or one it got wrong."
+L["Nothing used"] = "Nothing used"
+L["pet %s"] = "pet %s"
+L["Leads by"] = "Leads by"
+L["Personal best"] = "Personal best"
+L["Meter DPS"] = "Meter DPS"
+L["This fight holds your best DPS on its board."] = "This fight holds your best DPS on its board."
+L["Damage chart is only kept for fights recorded this session."] =
+    "Damage chart is only kept for fights recorded this session."
+L["Note"] = "Note"
+L["Back"] = "Back"
+L["Back to the list of fights."] = "Back to the list of fights."
+L["Select a fight to see its detail."] = "Select a fight to see its detail."
+L["Pet %s"] = "Pet %s"
+L["this session only"] = "this session only"
+L["What Blizzard's damage meter said the fight's DPS was."] =
+    "What Blizzard's damage meter said the fight's DPS was."
+L["The meter did not say."] = "The meter did not say."
+L["Your damage over the fight, one column a stretch of time; long cooldowns sit along its top."] =
+    "Your damage over the fight, one column a stretch of time; long cooldowns sit along its top."
+L["The chart lives in memory only, so a fight recorded before your last reload or login has none."] =
+    "The chart lives in memory only, so a fight recorded before your last reload or login has none."
+L["1 spell, highest first, with its share of the fight's damage."] =
+    "1 spell, highest first, with its share of the fight's damage."
+L["%d spells, highest first, each with its share of the fight's damage."] =
+    "%d spells, highest first, each with its share of the fight's damage."
+L["Your pet's spells carry the paw."] = "Your pet's spells carry the paw."
+L["Click a fight for its detail \194\183 right-click for options"] =
+    "Click a fight for its detail \194\183 right-click for options"
+L["Fold the detail away: the list alone (a click opens a fight in its place)"] =
+    "Fold the detail away: the list alone (a click opens a fight in its place)"
+L["Unfold the detail beside the list"] = "Unfold the detail beside the list"
+L["Timeline"] = "Timeline"
+L["Compare vs best"] = "Compare vs best"
+L["Every cast of the fight along its length, beside the fight it is compared with."] =
+    "Every cast of the fight along its length, beside the fight it is compared with."
+L["This fight beside the best on its board, or the runner-up when it is the best."] =
+    "This fight beside the best on its board, or the runner-up when it is the best."
+L["A short note of your own on this fight."] = "A short note of your own on this fight."
+L["One line about this fight in a chat channel you pick."] =
+    "One line about this fight in a chat channel you pick."
+L["Delete this fight. It asks first."] = "Delete this fight. It asks first."
+L["Say"] = "Say"
+L["Party"] = "Party"
+L["Guild"] = "Guild"
+L["Whisper\226\128\166"] = "Whisper\226\128\166"

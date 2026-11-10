@@ -101,6 +101,15 @@ files["modules/Results_Table.lua"] = {
 }
 -- The fight list's date range: today from local midnight (the client's date formatter).
 files["modules/Results_Fights.lua"] = { read_globals = { "date" } }
+-- The Results window: the popups it closes with it, and the talent tree it steps aside for (read
+-- bare at CALL time, type-checked).
+files["modules/Results.lua"] = { read_globals = { "StaticPopup_Hide", "PlayerSpellsFrame" } }
+-- The fight detail's gear, talents and usage: the item data, the talent tree's link and an item's
+-- Shift-click (each read bare at CALL time and pcall'd).
+files["modules/Results_Loadout.lua"] = { read_globals = { "C_Item", "SetItemRef", "HandleModifiedItemClick" } }
+files["modules/Results_Usage.lua"] = { read_globals = { "C_Item" } }
+-- Share's whisper offers the targeted player's name.
+files["modules/Share.lua"] = { read_globals = { "UnitIsPlayer" } }
 
 -- ---------------------------------------------------------------------------
 -- The narrowed 212s: every stanza names ONE file and every entry the code AND the variable.

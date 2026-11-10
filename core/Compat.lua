@@ -403,6 +403,16 @@ function Compat.ChatSender()
     return nil
 end
 
+--- Whether the client refuses chat messages now (Midnight's chat lockdown: encounters, rated PvP);
+--- false where the client has no such lockdown.
+--- @return boolean
+function Compat.ChatLocked()
+    local info = C_ChatInfo
+    if not (info and type(info.InChatMessagingLockdown) == "function") then return false end
+    local ok, locked = pcall(info.InChatMessagingLockdown)
+    return ok and locked == true
+end
+
 --- A new instance of the client's number formatter (it takes a secret and abbreviates natively), or
 --- nil where the client has none or refuses to build one. modules/Format.lua sets its breakpoints.
 --- @return table|nil

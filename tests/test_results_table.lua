@@ -311,7 +311,7 @@ local function menuOf(NS, record)
         function root.CreateButton(_, text, onClick)
             local item = { label = text, onClick = onClick, enabled = true }
             function item.SetEnabled(_, on) item.enabled = on and true or false end
-            function item.CreateButton() return item end
+            function item.CreateButton() return { SetEnabled = function() end } end
             items[#items + 1] = item
             return item
         end
@@ -335,7 +335,7 @@ test("results: right-click menu has Note, Share, Compare With This Fight, Delete
     assertEqual(labels[3], "Share")
     assertEqual(labels[4], "Compare With This Fight")
     assertEqual(labels[5], "Delete")
-    assertFalse(items[3].enabled, "Share waits for the share line (plan Task 4.2)")
+    assertTrue(items[3].enabled, "Share is live for a stored fight (plan Task 4.2)")
     assertTrue(items[4].enabled, "b can be compared with the selected a")
     assertFalse(menuOf(NS, NS.Recorder.Get("a"))[4].enabled, "not the selected fight with itself")
     -- Compare: a session pick.

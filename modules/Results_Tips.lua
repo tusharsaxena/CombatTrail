@@ -3,8 +3,8 @@ local _, NS = ...
 -- every cell, beside the window (modules/Results_Table.lua's SideTip), one for every group header,
 -- and one for every column header, LootHistory's way (the column's name in gold, then what it
 -- shows). Adapted from DPS Race @045f479 (modules/Results_Tips.lua) without its race: no race
--- length, tail or late-cast lines, no dummy category. The fight detail's, the compare's, the
--- loadout's and the usage's hovers join with their panes (plan Tasks 4.2 to 4.4).
+-- length, tail or late-cast lines, no dummy category. The fight detail's figures, chart and
+-- breakdown are Tips.Detail's (below); the compare's hovers join with its pane (plan Task 4.4).
 --
 -- PURE OVER THE STORED RECORD. Each builder takes a fight record and answers its lines, { title,
 -- line, ... }, a line a string or { text, r, g, b }; nothing here reads a meter or a frame. A column
@@ -170,4 +170,64 @@ function Tips.About(col)
     local text = col.about or ABOUT[col.key]
     if not text then return nil end
     return { title = col.label, text = L[text] }
+end
+
+-- ── the fight detail (modules/Results_Detail.lua) ───────────────────────────────────────────────
+
+local DETAIL = {}
+
+function DETAIL.meta(record)
+    local lines = CELL.target(record)
+    local stamp = CELL.date(record)
+    for i = 1, #stamp do lines[#lines + 1] = stamp[i] end
+    return lines
+end
+
+function DETAIL.damage(record)
+    return CELL.damage(record)
+end
+
+function DETAIL.dps(record)
+    return CELL.dps(record)
+end
+
+function DETAIL.meterDps(record)
+    local lines = { L["Meter DPS"], L["What Blizzard's damage meter said the fight's DPS was."] }
+    if type(record.meterDps) ~= "number" then lines[#lines + 1] = dimLine(L["The meter did not say."]) end
+    return lines
+end
+
+function DETAIL.delta(record, ctx)
+    -- The detail's best is a group's: the list's group for the fight, or its board when the list's
+    -- filters leave it out.
+    return Fights().DeltaTip(record, ctx, true)
+end
+
+function DETAIL.chart(record)
+    local lines = { L["Damage profile"], L["Your damage over the fight, one column a stretch of time; long cooldowns sit along its top."] }
+    if not NS.Slices.Drawable(record) then
+        lines[#lines + 1] = dimLine(L["The chart lives in memory only, so a fight recorded before your last reload or login has none."])
+    end
+    return lines
+end
+
+function DETAIL.breakdown(record)
+    local n = #NS.Recorder.Spells(record)
+    return { L["Spell breakdown"], n == 1 and L["1 spell, highest first, with its share of the fight's damage."]
+        or L["%d spells, highest first, each with its share of the fight's damage."]:format(n),
+        dimLine(L["Your pet's spells carry the paw."]) }
+end
+
+--- A detail element's tooltip lines (`key` one of meta, damage, dps, meterDps, delta, chart,
+--- breakdown), or nil.
+--- @param key string
+--- @param record table
+--- @param ctx table|nil  the Delta box's context
+--- @return table|nil
+function Tips.Detail(key, record, ctx)
+    local fn = DETAIL[key]
+    if not (fn and type(record) == "table") then return nil end
+    local ok, lines = pcall(fn, record, ctx)
+    if not ok or type(lines) ~= "table" then return nil end
+    return compact(lines)
 end

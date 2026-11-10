@@ -1,22 +1,31 @@
 local _, NS = ...
 -- modules/Results.lua — the Results window's shell (spec §7, mockup §5): the window, its title bar,
--- the fight list in its body (modules/Results_Fights.lua over modules/Results_Table.lua), the footer,
--- the row menu, and the window's public surface (Show, Hide, Toggle, Open, ShowFight). Adapted from
--- DPS Race @045f479 (modules/Results.lua) without its race and without its Insights tab (deferred,
--- spec §2): one list, so no tab strip. The fight detail (Task 4.2) places itself beside the list.
+-- the fight list in its body (modules/Results_Fights.lua over modules/Results_Table.lua), where the
+-- fight detail sits (modules/Results_Detail.lua), the footer, the row menu, and the window's public
+-- surface (Show, Hide, Toggle, Open, ShowFight). Adapted from DPS Race @045f479 (modules/Results.lua)
+-- without its race and without its Insights tab (deferred, spec §2): one list, so no tab strip.
 --
 -- THE WINDOW is a plain, non-secure frame (standalone-windows): skinned through NS.ApplySkin, closed
 -- through NS.MakeCloseButton, in UISpecialFrames, clamped, toplevel in the HIGH tier
 -- (LAYERS.STRATA.WINDOW: a browser opened to read and closed), movable by its title bar and
 -- resizable from the library's grip (modules/Sizing.lua: a cheap layout while the grip is held, the
--- full redraw once on release), its place and size in `results.window` and its scale `results.scale`.
+-- full redraw once on release), its place, size and view in `results.window` and its scale
+-- `results.scale`.
 -- General > Lock frame does not lock it (the lock is the lanes' and the HUD's, the displays the player
 -- places for combat), and nothing opens it but the player. Built on first show.
 --
+-- EXPANDED OR COLLAPSED (DPS Race's owner's calls, 2026-10-25 and 2026-10-27, kept). Collapsed, the
+-- default, shows the list alone, and a click puts the fight's detail in its place with a Back control;
+-- expanded sets the detail beside the list, Results.DETAIL_WIDTH wide. Only the title bar's fold
+-- arrow switches them (spec §7: "a fold arrow hides the detail"), never the width. `results.window`'s
+-- width is the LIST's in both: expanded adds the detail's width beside it, so each view keeps its own
+-- minimum (Results.MinWidth) and neither view's size is lost to the other.
+--
 -- WHAT RUNS. Nothing while hidden but its bus receiver: FIGHT_SAVED and FIGHTS_CHANGED redraw a
--- shown list (a hidden one redraws in full on its next show), SETTINGS_CHANGED redraws the footer or,
--- on a profile change, takes the new profile's view. No game event, no OnUpdate but a hovered row's
--- (modules/Results_Table.lua), no timer.
+-- shown list and detail (a hidden one redraws in full on its next show), SETTINGS_CHANGED redraws
+-- the footer or, on a profile change, takes the new profile's view. No game event, no OnUpdate but a
+-- hovered row's (modules/Results_Table.lua); the one timer is the talent tree's (below), the ticker
+-- that waits for the tree to close while the window has stepped aside for it.
 
 local Results = { wanted = false }
 NS.Results = Results
@@ -27,6 +36,8 @@ local Source = NS.ResultsSource
 
 Results.FRAME_NAME = "CombatTrailResults"
 Results.MIN_HEIGHT = 360
+-- The detail's width beside the list in the expanded view.
+Results.DETAIL_WIDTH = 440
 -- The least width: the filter bar's and the table's, whichever is wider, and the window's border
 -- (the suite holds it to both).
 Results.MIN_WIDTH = math.max(NS.ResultsFights.BarMinWidth(),
@@ -34,10 +45,14 @@ Results.MIN_WIDTH = math.max(NS.ResultsFights.BarMinWidth(),
 
 local FOOTER_H = 20
 -- The footer's hint; the fight count goes before it.
-local HINT = L["Right-click a fight for options"]
+local HINT = L["Click a fight for its detail \194\183 right-click for options"]
+
+-- The popups the window opens: each closes with it (frame-layering-§4, standalone-windows).
+Results.POPUPS = { "COMBATTRAIL_DELETE_FIGHT", "COMBATTRAIL_FIGHT_NOTE", "COMBATTRAIL_SHARE_WHISPER" }
 
 local ui                 -- the built window
 local selected           -- the fight id the window has selected
+local detailOpen = false -- the collapsed view: the detail stands in the list's place
 local pick               -- the fight a "Compare With This Fight" picked (session only, plan Task 4.4)
 local hiding = false     -- true while the addon hides the frame itself
 
@@ -59,9 +74,27 @@ local function store()
     return p.results.window
 end
 
+--- The view shown: "collapsed" (the default, the list alone) or "expanded" (the detail beside it).
+function Results.View()
+    local w = store() or {}
+    return w.view == "expanded" and "expanded" or "collapsed"
+end
+
+--- The least frame width of `view` (the view shown by default): the list's, and the detail's beside
+--- it when expanded.
+function Results.MinWidth(view)
+    view = view or Results.View()
+    return Results.MIN_WIDTH + (view == "expanded" and Results.DETAIL_WIDTH or 0)
+end
+
+-- The frame's width for a stored LIST width: the detail's added when expanded.
+local function frameWidth(listWidth)
+    return listWidth + (Results.View() == "expanded" and Results.DETAIL_WIDTH or 0)
+end
+
 local function storedSize()
     local w, d = store() or {}, shippedWindow()
-    return math.max(Results.MIN_WIDTH, tonumber(w.width) or d.width),
+    return frameWidth(math.max(Results.MIN_WIDTH, tonumber(w.width) or d.width)),
         math.max(Results.MIN_HEIGHT, tonumber(w.height) or d.height)
 end
 
@@ -79,13 +112,16 @@ end
 local function saveSize(width, height)
     local w = store()
     if not w then return end
-    if type(width) == "number" then w.width = math.floor(math.max(Results.MIN_WIDTH, width) + 0.5) end
+    if type(width) == "number" then
+        local list = width - frameWidth(0)
+        w.width = math.floor(math.max(Results.MIN_WIDTH, list) + 0.5)
+    end
     if type(height) == "number" then w.height = math.floor(math.max(Results.MIN_HEIGHT, height) + 0.5) end
 end
 
 -- ── the parts ───────────────────────────────────────────────────────────────────────────────────
 
-local layout, resize, render, footer
+local layout, resize, render, renderDetail, footer
 
 local function fight(id)
     return id and Source.Get(id) or nil
@@ -93,7 +129,23 @@ end
 
 local function selectFight(record)
     selected = record and record.id or nil
-    if ui and ui.list then ui.list.list:SetSelected(selected) end
+    detailOpen = selected ~= nil
+    if not ui then return end
+    ui.list.list:SetSelected(selected)
+    renderDetail()
+    layout()
+end
+
+-- The fold arrow's icon and tooltip for the view shown: expanded shows chevron-right (fold the detail
+-- away), collapsed chevron-left (open it beside the list).
+local function paintToggle()
+    local b = ui and ui.viewToggle
+    if not b then return end
+    local expanded = Results.View() == "expanded"
+    Style.SetControlIcon(b, expanded and "chevron-right" or "chevron-left", expanded and ">" or "<")
+    b.tip = expanded and L["Fold the detail away: the list alone (a click opens a fight in its place)"]
+        or L["Unfold the detail beside the list"]
+    Style.PaintStrip(ui.controls)
 end
 
 local function buildChrome(f)
@@ -105,6 +157,8 @@ local function buildChrome(f)
     ui.close = NS.MakeCloseButton(f, function() Results.Hide() end)
     ui.settings = Style.AddToStrip(ui.controls, Style.ControlButton(f, "settings", "S", L["Settings"],
         function() NS.OpenSettings() end))
+    ui.viewToggle = Style.AddToStrip(ui.controls, Style.ControlButton(f, "chevron-left", "<", "",
+        function() Results.ToggleView() end))
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -114,7 +168,7 @@ local function buildChrome(f)
         savePosition()
     end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings }, n = 2 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.viewToggle, ui.settings }, n = 3 })
 end
 
 local function buildFooter(f)
@@ -134,8 +188,14 @@ local onHide
 
 -- Every size change, the grip's or not: the tracked size the layouts read, never under the minimums.
 local function trackSize(width, height)
-    if type(width) == "number" then ui.width = math.max(Results.MIN_WIDTH, width) end
+    if type(width) == "number" then ui.width = math.max(Results.MinWidth(), width) end
     if type(height) == "number" then ui.height = math.max(Results.MIN_HEIGHT, height) end
+end
+
+-- The grip's minimum for the view shown.
+local function applyBounds()
+    local f = ui.frame
+    if f.SetResizeBounds then f:SetResizeBounds(Results.MinWidth(), Results.MIN_HEIGHT) end
 end
 
 local function applyPlacement()
@@ -144,7 +204,8 @@ local function applyPlacement()
     f:ClearAllPoints()
     f:SetPoint(w.point or d.point, UIParent, w.relPoint or d.relPoint, tonumber(w.x) or d.x, tonumber(w.y) or d.y)
     f:SetSize(ui.width, ui.height)
-    if f.SetResizeBounds then f:SetResizeBounds(Results.MIN_WIDTH, Results.MIN_HEIGHT) end
+    applyBounds()
+    paintToggle()
 end
 
 local function buildList()
@@ -153,8 +214,36 @@ local function buildList()
         selected = function() return selected end,
         menu = function(record, row) Results.RowMenu(record, row) end,
         count = function(text) ui.count = text end,
+        -- The detail's Delta box reads the list's groups: a new filter or grouping redraws it.
+        changed = function() if ui.detail then ui.detail:RefreshDelta() end end,
     })
     if Source.IsMock() then ui.list:SampleView(true) end
+end
+
+-- A sample fight is never shared: its numbers are made up.
+local function canShare()
+    return NS.Share ~= nil and type(NS.Share.FillMenu) == "function" and not Source.IsMock()
+end
+
+local function buildDetail()
+    ui.detail = NS.ResultsDetail.Build(ui.body, {
+        back = function() Results.Back() end,
+        note = function(record) Results.EditNote(record.id) end,
+        share = function(record, owner) if canShare() then NS.Share.Prompt(record, owner) end end,
+        delete = function(record) Results.ConfirmDelete(record.id) end,
+        canShare = canShare,
+        timeline = function(p)
+            local TL = NS.ResultsTimeline
+            if TL and type(TL.Open) == "function" then TL.Open(p) end
+        end,
+        compare = function(p)
+            local CMP = NS.ResultsCompare
+            if CMP and type(CMP.Open) == "function" then CMP.Open(p) end
+        end,
+        -- The list's Delta for the fight (its group, or the view), nil when its filters leave the
+        -- fight out (the detail falls back to the fight's board).
+        deltaContext = function(record) return ui.list:DeltaContext(record) end,
+    })
 end
 
 local function ensureWindow()
@@ -173,6 +262,7 @@ local function ensureWindow()
     ui.body:SetPoint("TOPLEFT", Style.Band(f), "BOTTOMLEFT", 0, -1)
     ui.body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, FOOTER_H + 1)
     buildList()
+    buildDetail()
     NS.ApplySkin(f)
     f:SetScript("OnHide", function() onHide() end)
     -- Escape closes it with the standard close stack (standalone-windows).
@@ -180,7 +270,7 @@ local function ensureWindow()
     -- Smooth resizing (modules/Sizing.lua): while the grip is dragged only `resize` runs, once a frame;
     -- the full `layout` (every row rebound) runs once on release.
     NS.Sizing.MakeResizable(f, {
-        minWidth = Results.MIN_WIDTH, minHeight = Results.MIN_HEIGHT,
+        minWidth = Results.MinWidth(), minHeight = Results.MIN_HEIGHT,
         size = trackSize, layout = function() resize() end, redraw = function() layout() end, done = saveSize,
     })
     applyPlacement()
@@ -197,18 +287,99 @@ local function bodySize()
     return ui.width - 1 - inset, ui.height - inset - bandH - FOOTER_H - 2 - (ui.drop or 0)
 end
 
+--- "wide" (the detail beside the list: the expanded view) or "narrow" (the detail in its place: the
+--- collapsed view). The view decides, never the width.
+function Results.Mode()
+    return Results.View() == "expanded" and "wide" or "narrow"
+end
+
+-- The list's frame and the detail's, placed for the view: beside each other when wide; in the narrow
+-- view one of the two, the detail while a fight is open in it.
 function layout()
     if not ui then return end
     local width, height = bodySize()
-    ui.list:Layout(width, height)
+    local detail = ui.detail
+    detail.frame:ClearAllPoints()
+    if Results.Mode() == "wide" then
+        local dw = Results.DETAIL_WIDTH
+        ui.list.frame:Show()
+        ui.list:Layout(width - dw, height)
+        detail.frame:SetPoint("TOPRIGHT", ui.body, "TOPRIGHT", 0, 0)
+        detail.frame:SetSize(dw, height)
+        detail.frame:Show()
+        detail:Layout(dw, height, false)
+        return
+    end
+    ui.list.frame:SetShown(not detailOpen)
+    detail.frame:SetShown(detailOpen)
+    if detailOpen then
+        detail.frame:SetPoint("TOPLEFT", ui.body, "TOPLEFT", 0, 0)
+        detail.frame:SetSize(width, height)
+        detail:Layout(width, height, true)
+    else
+        ui.list:Layout(width, height)
+    end
 end
 
 -- The cheap half of a resize (modules/Sizing.lua): what layout places, at the tracked size, with
--- nothing rebound.
+-- nothing rebound or redrawn.
 function resize()
     if not ui then return end
     local width, height = bodySize()
-    ui.list:Resize(width, height)
+    local detail = ui.detail
+    if Results.Mode() == "wide" then
+        local dw = Results.DETAIL_WIDTH
+        ui.list:Resize(width - dw, height)
+        detail.frame:SetSize(dw, height)
+        detail:Resize(dw, height)
+    elseif detailOpen then
+        detail.frame:SetSize(width, height)
+        detail:Resize(width, height)
+    else
+        ui.list:Resize(width, height)
+    end
+end
+
+--- Switch to `view` ("expanded" | "collapsed"): its own size and minimum, the window's top-left
+--- corner kept where it is, and the detail closed in a collapsed view (it opens on the list).
+--- @return boolean switched
+function Results.SetView(view)
+    if view ~= "expanded" and view ~= "collapsed" then return false end
+    local w = store()
+    if not w or Results.View() == view then return false end
+    w.view = view
+    detailOpen = false
+    if not ui then return true end
+    local f = ui.frame
+    local left, top = NS.Secrets.PlainNumber(f:GetLeft()), NS.Secrets.PlainNumber(f:GetTop())
+    ui.width, ui.height = storedSize()
+    applyBounds()
+    f:SetSize(ui.width, ui.height)
+    if left and top then
+        f:ClearAllPoints()
+        f:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+        savePosition()
+    end
+    paintToggle()
+    renderDetail()
+    layout()
+    return true
+end
+
+--- The title bar's fold arrow.
+function Results.ToggleView()
+    return Results.SetView(Results.View() == "expanded" and "collapsed" or "expanded")
+end
+
+--- The detail's Back (the collapsed view): the list again, the fight still selected.
+function Results.Back()
+    detailOpen = false
+    layout()
+end
+
+--- Whether the collapsed view shows the detail in the list's place now.
+function Results.DetailOpen()
+    return detailOpen
 end
 
 function footer()
@@ -219,12 +390,21 @@ function footer()
         or L["Fights are kept until you delete them"])
 end
 
-function render()
+function renderDetail()
     if not ui then return end
-    if selected and not fight(selected) then selected = nil end
+    if selected and not fight(selected) then selected, detailOpen = nil, false end
+    ui.detail:Show(fight(selected))
+end
+
+-- `reveal` scrolls the list to the selected fight (the window opened on it): a store change alone
+-- leaves the list where the player scrolled it.
+function render(reveal)
+    if not ui then return end
+    if selected and not fight(selected) then selected, detailOpen = nil, false end
     if pick and not fight(pick) then pick = nil end
     ui.list:Refresh()
-    if selected then ui.list.list:Reveal(selected) end
+    if selected and reveal then ui.list.list:Reveal(selected) end
+    renderDetail()
     layout()
     footer()
 end
@@ -291,13 +471,88 @@ local function applySampleMarker()
         or L["Combat Trail \226\128\148 Results"])
 end
 
+-- The popups the window opened close with it (frame-layering-§4).
+local function closePopups()
+    if type(StaticPopup_Hide) ~= "function" then return end
+    for _, name in ipairs(Results.POPUPS) do StaticPopup_Hide(name) end
+end
+
+-- The windows that follow the detail (the ability timeline, the gear view: plan Tasks 4.3, 4.4)
+-- close with it.
+local function hideFollowers()
+    for _, name in ipairs({ "ResultsTimeline", "ResultsGear", "ResultsCompare" }) do
+        local m = NS[name]
+        if m and type(m.Hide) == "function" then m.Hide() end
+    end
+end
+
 local function hideWindow()
+    hideFollowers()
     if windowShown() then
         hiding = true
         ui.frame:Hide()
         hiding = false
     end
+    closePopups()
     NS.CloseMenu()
+end
+
+-- THE WINDOW STEPS ASIDE FOR THE TALENT TREE AND COMES BACK WHEN IT CLOSES (DPS Race's owner's call,
+-- 2026-10-25, kept). Blizzard shows its talent frame (`PlayerSpellsFrame`: the detail's View, the
+-- talentbuild link it posts to chat, or the N key) as a "center" UI panel, and showing one runs the
+-- close stack, which hides every UISpecialFrames entry: this window among them, just before the tree
+-- shows. The frame stays in UISpecialFrames (standalone-windows: Escape and the close stack), so the
+-- close is answered rather than prevented: a close-stack close looks again on the next frame, and a
+-- tree up by then is what closed it, so the window waits, polling IsShown every Results.TREE_POLL
+-- seconds, and comes back once the tree is down. It does not come back OVER the tree: this window
+-- sits at HIGH strata and the tree is a MEDIUM panel, and a runtime strata switch is forbidden
+-- (frame-layering-§4). The player opening or closing the window while it waits ends the wait. The
+-- one read of a Blizzard frame is IsShown; nothing is hooked, shown or hidden on Blizzard's side. A
+-- client with no such frame (WoW Forever's tree is another frame) never waits.
+Results.TREE_POLL = 0.25
+local treeWait
+
+local function talentTreeShown()
+    local f = PlayerSpellsFrame
+    return type(f) == "table" and type(f.IsShown) == "function" and f:IsShown() == true
+end
+
+local function stopTreeWait()
+    if treeWait then treeWait:Cancel() end
+    treeWait = nil
+end
+
+local function backAfterTree()
+    if talentTreeShown() then return end
+    stopTreeWait()
+    if Results.wanted then return end
+    debug("the talent tree closed; back")
+    Results.Show()
+end
+
+local function awaitTree()
+    if treeWait or not (C_Timer and C_Timer.NewTicker) then return end
+    debug("stepped aside for the talent tree")
+    treeWait = C_Timer.NewTicker(Results.TREE_POLL, backAfterTree)
+end
+
+local function reopenUnderTree()
+    if Results.wanted or not talentTreeShown() then return end
+    awaitTree()
+end
+
+--- The detail's View just opened the talent tree: when the window is still up (another panel was
+--- already open, so the close stack did not run), it steps aside and comes back when the tree closes.
+function Results.StepAsideForTree()
+    if not (Results.wanted and talentTreeShown()) then return end
+    Results.wanted = false
+    Results.Refresh()
+    awaitTree()
+end
+
+--- Whether the window is waiting for the talent tree to close (the suites).
+function Results.AwaitingTree()
+    return treeWait ~= nil
 end
 
 -- The frame went away by Escape (UISpecialFrames): the player closed it. A frame still shown in its
@@ -306,6 +561,9 @@ function onHide()
     NS.CloseMenu()
     if hiding or (ui and ui.frame:IsShown()) then return end
     Results.wanted = false
+    hideFollowers()
+    closePopups()
+    if not talentTreeShown() and C_Timer and C_Timer.After then C_Timer.After(0, reopenUnderTree) end
 end
 
 -- ── the public surface ──────────────────────────────────────────────────────────────────────────
@@ -316,22 +574,25 @@ function Results.IsShown()
 end
 
 --- Re-decide and redraw. The one place the frame follows the decision.
-function Results.Refresh()
+function Results.Refresh(reveal)
     if not Results.IsShown() then return hideWindow() end
     ensureWindow()
     local scale = tonumber(NS.GetSetting("results.scale"))
     if scale and scale > 0 then ui.frame:SetScale(scale) end
-    if not windowShown() then ui.frame:Show() end
+    local opening = not windowShown()
+    if opening then ui.frame:Show() end
     applySampleMarker()
-    render()
+    render(reveal or opening)
 end
 
 function Results.Show()
+    stopTreeWait()
     Results.wanted = true
     Results.Refresh()
 end
 
 function Results.Hide()
+    stopTreeWait()
     Results.wanted = false
     Results.Refresh()
 end
@@ -345,13 +606,17 @@ function Results.Select(id)
     selectFight(fight(id))
 end
 
---- Open the window on fight `id` (the HUD's chart control): selected and scrolled into view. A fight
---- the filters hide still opens the window; an id no longer stored opens the list alone.
+--- Open the window on fight `id` (the HUD's chart control): selected, scrolled into view and its
+--- detail shown (in the list's place when collapsed), a fight the filters hide included; an id no
+--- longer stored opens the list alone.
 --- @param id string|nil
 --- @return boolean shown
 function Results.ShowFight(id)
     selected = fight(id) and id or nil
-    Results.Show()
+    detailOpen = selected ~= nil
+    stopTreeWait()
+    Results.wanted = true
+    Results.Refresh(true)
     return Results.IsShown()
 end
 
@@ -379,8 +644,10 @@ function Results.ResetPosition()
         for k in pairs(w) do w[k] = nil end
         for k, v in pairs(shippedWindow()) do w[k] = v end
     end
+    detailOpen = false
     if ui then
         applyPlacement()
+        renderDetail()
         layout()
     end
 end
@@ -401,11 +668,6 @@ function Results.OnVerb(rest)
 end
 
 -- ── the row menu ────────────────────────────────────────────────────────────────────────────────
-
--- A sample fight is never shared: its numbers are made up.
-local function canShare()
-    return NS.Share ~= nil and type(NS.Share.FillMenu) == "function" and not Source.IsMock()
-end
 
 --- Compare the selected fight with fight `id` (the row menu's Compare With This Fight): a session-only
 --- pick, never stored, that holds until it is cleared or the fight is deleted (plan Task 4.4 draws it).
@@ -428,7 +690,7 @@ function Results.Pick()
 end
 
 --- A row's right-click menu (LootHistory's): Add Note (Edit Note once it has one), Share with its
---- channels as a submenu (grayed until the share line exists, plan Task 4.2, and on sample fights),
+--- channels as a submenu (grayed on sample fights, whose numbers are made up),
 --- Compare With This Fight (grayed on the selected fight itself), and Delete behind its confirmation.
 --- @param record table  the fight
 --- @param owner table  the row
@@ -499,7 +761,7 @@ end
 --- Delete a fight from the store (Recorder.Delete fires FIGHTS_CHANGED, which redraws the window), or
 --- a sample fight from the sample history (the source redraws it).
 function Results.DeleteFight(id)
-    if selected == id then selected = nil end
+    if selected == id then selected, detailOpen = nil, false end
     if pick == id then pick = nil end
     return Source.Delete(id)
 end
@@ -527,7 +789,7 @@ end
 --- hidden window redraws in full on its next show.
 function Results.OnSourceChanged(swapped)
     if swapped then
-        selected, pick = nil, nil
+        selected, pick, detailOpen = nil, nil, false
         if ui then ui.list:SampleView(Source.IsMock()) end
     end
     if windowShown() then
@@ -538,6 +800,7 @@ end
 
 --- The lifecycle's stand-down: the window hides (it decides not to show while stood down).
 function Results.Suspend()
+    stopTreeWait()
     hideWindow()
 end
 
@@ -548,7 +811,8 @@ end
 
 --- What the window is doing, for the diagnostics report.
 function Results.Diagnose()
-    return { shown = Results.IsShown(), selected = selected or "none", rows = ui and ui.list:Count() or 0 }
+    return { shown = Results.IsShown(), selected = selected or "none", rows = ui and ui.list:Count() or 0,
+             view = Results.View(), detailOpen = detailOpen }
 end
 
 --- The built window, for the suites (nil until first shown).
@@ -561,11 +825,13 @@ local function onStoreChanged()
     if windowShown() then render() end
 end
 
--- A profile change takes the new profile's view whether the window is up or not (a hidden list keeps
--- its filters for its next show).
+-- A profile change takes the new profile's view, place, size and fold whether the window is up or not
+-- (a hidden list keeps its filters for its next show).
 local function onSettings(path)
     if path == "profile" and ui then
         ui.list:ApplyView(NS.ResultsFights.SavedView())
+        detailOpen = false
+        applyPlacement()
         if windowShown() then render() end
         return
     end

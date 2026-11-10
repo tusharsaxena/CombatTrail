@@ -161,13 +161,17 @@ NS.defaults = {
         },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view
         -- (the filters, the grouping and the sort Save view stores; "current" is the logged-in
-        -- character, `days` 0 is all time), where the window stands and its size (written by its drag
-        -- and its grip, put back by Master controls' Reset position), and its scale.
+        -- character, `days` 0 is all time), where the window stands, its list's width and its height,
+        -- and its fold (the detail in the list's place, "collapsed", or beside it, "expanded"), written
+        -- by its drag, its grip and its fold arrow and put back by Master controls' Reset position;
+        -- its scale; and whether Share appends the fight's talents link.
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
                      days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
-            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 920, height = 520 },
+            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 920, height = 520,
+                       view = "collapsed" },
             scale = 1,
+            shareTalents = true,
         },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on

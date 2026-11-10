@@ -176,12 +176,18 @@ modules\Hud.lua
 # at FILE SCOPE (so they follow modules\Hud_States.lua) and reach the others at CALL time, except as
 # noted. LOAD-BEARING: modules\Results_Fights.lua reads NS.ResultsTable and NS.Identity.CONTENT at
 # FILE SCOPE; modules\Results.lua reads NS.ResultsFights and NS.ResultsTable at FILE SCOPE (its minimum
-# width) and builds its bus receiver there.
+# width) and builds its bus receiver there. The detail's parts (the loadout, the usage, the detail pane)
+# and the share line register nothing and reach each other at CALL time; modules\Share.lua defines its
+# whisper popup at FILE SCOPE.
 modules\Sizing.lua
 modules\Results_Source.lua
 modules\Results_Table.lua
 modules\Results_Tips.lua
 modules\Results_Fights.lua
+modules\Results_Loadout.lua
+modules\Results_Usage.lua
+modules\Results_Detail.lua
+modules\Share.lua
 modules\Results.lua
 
 # Settings (last -- depend on everything else being initialized)
