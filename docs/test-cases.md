@@ -633,11 +633,15 @@ Total.
 - breakdown: hud.spells.rows caps the rows; 0 shows every one and the wheel scrolls
 - breakdown: the layout's spell rows off hides them
 
-### test_hud_appearance.lua (3)
+### test_hud_appearance.lua (7)
 
 - every hud appearance key applies (one assertion per key via Apply)
 - appearance: every look key in the defaults has a case
 - appearance: Hud.Apply bumps the stamp, so a part restyles once, not on every tick
+- palette: NS.Constants.PALETTE holds the shared bar colors
+- palette: the HUD's bar defaults equal the palette entries
+- palette: each block's swatch is its own table, never the palette's
+- palette: the live HUD draws the palette with no setting touched
 
 ### test_hud_page.lua (14)
 
@@ -996,7 +1000,7 @@ Total.
 | test_hud_pace.lua | 5 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 5 |
-| test_hud_appearance.lua | 3 |
+| test_hud_appearance.lua | 7 |
 | test_hud_page.lua | 14 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 23 |
@@ -1022,4 +1026,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **788** |
+| **Total** | **792** |

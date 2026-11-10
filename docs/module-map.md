@@ -29,7 +29,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `locales/enUS.lua` | `NS.L`, the canonical locale with the key-is-the-string fallback |
 | `core/Namespace.lua` | The chat tag, folder name, brand, slash words and version fallback |
 | `core/MediaSetup.lua` | `NS.Icon` and `NS.MediaFont` from LibKa0s-Media, and the one LibSharedMedia registration |
-| `core/Constants.lua` | Fixed values: the mono face, the logo path, the frame-layering table, the fight timing |
+| `core/Constants.lua` | Fixed values: the mono face, the logo path, the frame-layering table, the fight timing, the shared bar palette (`PALETTE`, every bar default's source) |
 | `core/State.lua` | Session-only state, never stored |
 | `core/EnvSetup.lua` | TOC metadata and the addon version, from LibKa0s-Env |
 | `core/CoreSetup.lua` | `NS.Print`, the secret-safe stringifier, the safe-register family and the window chrome |

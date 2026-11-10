@@ -1,6 +1,6 @@
 local addonName, NS = ...
 -- core/Constants.lua — fixed values resolved at load: the monospace face, the logo path and the
--- frame-layering table.
+-- frame-layering table, the fight timing and the shared bar palette.
 
 NS.Constants = NS.Constants or {}
 local C = NS.Constants
@@ -57,4 +57,27 @@ C.FIGHT = { GRACE = 4, SETTLE = 2, TICK = 0.25 }
 C.LAYERS = {
     STRATA = { LANE = "LOW", CHROME = "MEDIUM", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG" },
     LEVEL  = { LANE = 1, DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8, LANE_EDIT = 10 },
+}
+
+-- THE BAR PALETTE (v0.2, DPS Race parity): the source of every bar default, shared with DPS Race's
+-- BAR_BLUE family so the two addons draw the same bars. Arrays {r, g, b[, a]} as Style takes them.
+-- defaults/Profile.lua copies them into each block (its own table, so a written swatch never reaches
+-- another block or this one). No skin overrides a fill: these are host and data hues, the same in
+-- every skin (R:palette#9).
+--   BAR, BAR_A       the player's bars and chart columns, and the opacity every bar fill takes
+--   PET              the pet's rows and pace fill: the green darkened so white row text keeps ~3.5:1
+--   PLAYER_LINE,     lifted shades of the two hues for 1-2 px lines (icon edges, timeline ticks),
+--   PET_LINE         where the bar shade reads too dark
+--   THIS_BAR,        the compare's bars: this fight (gold) and the other side (blue), DPS Race's bytes,
+--   BEST_BAR         at BAR_A
+--   THIS_TEXT,       the same two sides as text hues
+--   BEST_TEXT
+--   PACE             the pace line over the chart: DPS Race's neutral (the ct.chart.diag value, D13)
+C.PALETTE = {
+    BAR = { 0.36, 0.37, 0.84, 1 }, BAR_A = 0.9,
+    PET = { 0.24, 0.60, 0.30, 1 },
+    PLAYER_LINE = { 0.50, 0.52, 1.0, 1 }, PET_LINE = { 0.40, 0.85, 0.45, 1 },
+    THIS_BAR = { 0.682, 0.569, 0, 1 }, BEST_BAR = { 0.329, 0.549, 0.839, 1 },
+    THIS_TEXT = { 1, 0.82, 0 }, BEST_TEXT = { 0.35, 0.66, 1 },
+    PACE = { 0.9, 0.9, 0.92, 0.4 },
 }

@@ -259,3 +259,68 @@ test("appearance: Hud.Apply bumps the stamp, so a part restyles once, not on eve
     assertEqual(calls, 0, "no restyle on a tick")
     assertEqual(row.stamp, A.stamp)
 end)
+
+-- ── the shared bar palette (v0.2 Task B1, R:palette#1-#3) ───────────────────────────────────────
+-- Every bar default reads NS.Constants.PALETTE, DPS Race's BAR_BLUE family: one blue for the player's
+-- bars and columns at one opacity, one green for the pet's, and DPS Race's neutral pace line (D13).
+
+local PALETTE_WANT = {
+    BAR = { 0.36, 0.37, 0.84, 1 }, BAR_A = 0.9, PET = { 0.24, 0.60, 0.30, 1 },
+    PLAYER_LINE = { 0.50, 0.52, 1.0, 1 }, PET_LINE = { 0.40, 0.85, 0.45, 1 },
+    THIS_BAR = { 0.682, 0.569, 0, 1 }, BEST_BAR = { 0.329, 0.549, 0.839, 1 },
+    THIS_TEXT = { 1, 0.82, 0 }, BEST_TEXT = { 0.35, 0.66, 1 }, PACE = { 0.9, 0.9, 0.92, 0.4 },
+}
+
+local function swatchIs(got, c, a, msg)
+    near(got.r, c[1], msg .. " r")
+    near(got.g, c[2], msg .. " g")
+    near(got.b, c[3], msg .. " b")
+    near(got.a, a or c[4], msg .. " a")
+end
+
+test("palette: NS.Constants.PALETTE holds the shared bar colors", function()
+    local inst = H.fresh()
+    local P = inst.NS.Constants.PALETTE
+    assertTrue(type(P) == "table", "no NS.Constants.PALETTE")
+    for key, want in pairs(PALETTE_WANT) do
+        if type(want) == "number" then
+            near(P[key], want, key)
+        else
+            assertEqual(#P[key], #want, key .. " length")
+            for i = 1, #want do near(P[key][i], want[i], key .. "[" .. i .. "]") end
+        end
+    end
+end)
+
+test("palette: the HUD's bar defaults equal the palette entries", function()
+    local inst = H.fresh()
+    local P, hud = inst.NS.Constants.PALETTE, inst.NS.defaults.profile.hud
+    swatchIs(hud.chart.barColor, P.BAR, nil, "chart.barColor")
+    near(hud.chart.barAlpha, P.BAR_A, "chart.barAlpha")
+    swatchIs(hud.chart.bestColor, P.PACE, nil, "chart.bestColor (the pace line, D13)")
+    swatchIs(hud.spells.barColor, P.BAR, nil, "spells.barColor")
+    near(hud.spells.barAlpha, P.BAR_A, "spells.barAlpha")
+    swatchIs(hud.spells.petColor, P.PET, P.BAR_A, "spells.petColor (as opaque as the player's rows)")
+end)
+
+test("palette: each block's swatch is its own table, never the palette's", function()
+    local inst = H.fresh()
+    local P, hud = inst.NS.Constants.PALETTE, inst.NS.defaults.profile.hud
+    assertTrue(hud.chart.barColor ~= hud.spells.barColor, "chart and spells share one barColor table")
+    hud.chart.barColor.r = 0
+    near(hud.spells.barColor.r, P.BAR[1], "spells.barColor after chart's was written")
+    near(P.BAR[1], 0.36, "the palette after a block was written")
+end)
+
+test("palette: the live HUD draws the palette with no setting touched", function()
+    local inst, _, Hud = stage()
+    local P = inst.NS.Constants.PALETTE
+    local function drawn(r, g, b, a) return { r = r, g = g, b = b, a = a } end
+    swatchIs(drawn(playerRowBar(Hud):GetStatusBarColor()), P.BAR, P.BAR_A, "a player row")
+    swatchIs(drawn(rows(Hud)[3].bar:GetStatusBarColor()), P.PET, P.BAR_A, "a pet row")
+    swatchIs(drawn(plainColumn(Hud):GetStatusBarColor()), P.BAR, P.BAR_A, "a chart column")
+    swatchIs(drawn(unpack(chart(Hud).line.__color)), P.PACE, nil, "the pace line")
+    local pace = live(Hud).parts.pace
+    swatchIs(drawn(pace.player:GetStatusBarColor()), P.BAR, P.BAR_A, "the pace bar's player fill")
+    swatchIs(drawn(pace.pet:GetStatusBarColor()), P.PET, P.BAR_A, "the pace bar's pet fill")
+end)

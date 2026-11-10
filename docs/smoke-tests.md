@@ -129,6 +129,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-H8 | Both | The test and sim strips under the title bar on both skins, and the body at small HUD heights | The strip sits under the title bar; the body is not clipped |
 | SM-CT-H9 | Both | Show the HUD Always with Only in instances on, two fights in the open world | The HUD stays up through and after both fights |
 | SM-CT-H10 | Both | `/ct debug on`, a 20 s fight on a dummy, then the over card; out of combat, the formatter probe in `midnight-quirks.md` (each `C_StringUtil` constructor's `FormatNumber(30190.4761904)` and `AbbreviateNumbers(30190.4761904)`) | The DPS tile, Damage and spell amounts never show a long decimal tail; the console names the path ("numbers served by ...") and any constructor passed over; the probe's answers are recorded in `midnight-quirks.md` |
+| SM-CT-H11 | Both | A fresh profile (or the swatches reset), a fight with a pet, side by side with DPS Race on the same skin | The spell rows, chart columns and the pace fill are DPS Race's blue at the same opacity; the pet rows and pet pace fill are a darker green with legible white text; the pace line is a pale neutral gray, not light blue; switching the skin leaves the fill colors as they are |
 
 ## 5. Results
 

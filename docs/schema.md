@@ -35,8 +35,8 @@ default; the file's comments say what each value means.
 | `hud.show`, `fadeAfter`, `holdOnMouse`, `instancesOnly`, `paceAgainst`, `paceRange`, `overCard`, `showSkipReason` | `"auto"`, `8`, `true`, `false`, `"best"`, `1.5`, `true`, `true` | DPS HUD → Behavior |
 | `hud.width`, `hud.scale`, `hud.layout.*` | `300`, `1`, every part `true` | DPS HUD → Layout |
 | `hud.clock.*`, `hud.figures.*` | font blocks and the boxes' colors | DPS HUD → Clock and figures |
-| `hud.chart.*` | `height = 90`, `columns = 48`, bar, colors, `cooldowns = true`, `cooldownMin = 29`, `zeroLine = true` | DPS HUD → Damage chart |
-| `hud.spells.*` | `rows = 8`, `rowHeight = 22`, icons, paw, bars, font | DPS HUD → Spell rows |
+| `hud.chart.*` | `height = 90`, `columns = 48`, bar, colors (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `bestColor` = `PALETTE.PACE`, the pace line), `cooldowns = true`, `cooldownMin = 29`, `zeroLine = true` | DPS HUD → Damage chart |
+| `hud.spells.*` | `rows = 8`, `rowHeight = 22`, icons, paw, bars (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `petColor` = `PALETTE.PET` at `BAR_A`), font | DPS HUD → Spell rows |
 | `hud.window.*` | title bar, colors, footer, `strata = "MEDIUM"`, `alpha = 1` | DPS HUD → Window |
 | `hud.position` | `{ point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 }` | DPS HUD → Window, and the title bar's drag (named state, below) |
 | `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
@@ -47,6 +47,14 @@ default; the file's comments say what each value means.
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
+
+The bar colors come from one place, `NS.Constants.PALETTE` in `core/Constants.lua`. It is DPS Race's
+`BAR_BLUE` family: `BAR` {0.36, 0.37, 0.84} and `BAR_A` 0.9 for the player's bars and chart columns,
+`PET` {0.24, 0.60, 0.30} for the pet's, `PLAYER_LINE` and `PET_LINE` for thin lines, `THIS_BAR` /
+`BEST_BAR` and `THIS_TEXT` / `BEST_TEXT` for the compare's two sides, and `PACE` {0.9, 0.9, 0.92, 0.4}
+for the pace line. `defaults/Profile.lua` copies each entry into its block as a table of its own. AceDB
+stores only what differs from the defaults, so a profile that never set a swatch draws the palette
+and one that did keeps its own. No migration step is needed. No skin overrides a fill color.
 
 ## The global tree
 

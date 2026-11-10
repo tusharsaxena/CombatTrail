@@ -5,9 +5,15 @@ local _, NS = ...
 -- The skeleton (plan Task 0.1): one sub-table per settings page, each filled by the task that builds
 -- its feature: `general` (Task 0.2), `lanes` (1.1), `hud` (3.1), `history` (2.5) and `results` (4.1).
 --
--- LOAD-BEARING: reads NS.IGNORE_SEEDS (defaults/IgnoreSeeds.lua) and NS.Compat at FILE SCOPE.
+-- LOAD-BEARING: reads NS.IGNORE_SEEDS (defaults/IgnoreSeeds.lua), NS.Compat and NS.Constants.PALETTE
+-- (core/Constants.lua) at FILE SCOPE.
 
 local function rgba(r, g, b, a) return { r = r, g = g, b = b, a = a } end
+
+-- A swatch copied out of the shared bar palette (core/Constants.lua): a fresh table per call, so
+-- each block owns its own; `a` replaces the palette entry's alpha.
+local PALETTE = NS.Constants.PALETTE
+local function swatch(c, a) return rgba(c[1], c[2], c[3], a or c[4]) end
 
 -- Where a lane may show (spec §4, Visibility). Delves and arenas are Retail-only, so on WoW Forever
 -- the keys are ABSENT, not false (clients-§4): the Lanes page builds its rows from these keys.
@@ -152,15 +158,15 @@ NS.defaults = {
                         boxBorder = rgba(0.16, 0.17, 0.2, 1), useClassColorBoxBorder = false,
                         boxBorderFromSkin = true },
             chart = { height = 90, columns = 48,
-                      barTexture = "Ka0s Default", barAlpha = 1, barColor = rgba(0.35, 0.37, 0.66, 1),
+                      barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                       useClassColorBar = false, barTextureFromSkin = true,
                       burstColor = rgba(0.79, 0.65, 0.23, 1), useClassColorBurstColor = false,
-                      bestColor = rgba(0.62, 0.82, 1, 0.55), useClassColorBestColor = false,
+                      bestColor = swatch(PALETTE.PACE), useClassColorBestColor = false,
                       cooldowns = true, cooldownMin = 29, zeroLine = true },
             spells = { rows = 8, rowHeight = 22, icons = true, paw = true,
-                       barTexture = "Ka0s Default", barAlpha = 0.6, barColor = rgba(0.43, 0.43, 0.71, 1),
+                       barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                        useClassColorBar = false, barTextureFromSkin = true,
-                       petColor = rgba(0.31, 0.67, 0.35, 0.55), useClassColorPetColor = false,
+                       petColor = swatch(PALETTE.PET, PALETTE.BAR_A), useClassColorPetColor = false,
                        font = "Ka0s Prototype", fontSize = 12, fontColor = rgba(1, 1, 1, 1),
                        useClassColorFont = false, fontFlags = "@skin", fontShadow = false, fontFromSkin = true,
                        fontColorFromSkin = true, fontShadowFromSkin = true },
