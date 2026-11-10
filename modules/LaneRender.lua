@@ -747,3 +747,4 @@ end
 function LaneRender.__label(laneKey) return lanes[laneKey] and lanes[laneKey].label end
 function LaneRender.__bg(laneKey) return lanes[laneKey] and lanes[laneKey].bg end
 function LaneRender.__now(laneKey) return lanes[laneKey] and lanes[laneKey].now end
+function LaneRender.__edges(laneKey) return lanes[laneKey] and lanes[laneKey].edges end
