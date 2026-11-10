@@ -121,6 +121,7 @@ local SUITES = {
     "test_hud_chart",
     "test_hud_breakdown",
     "test_hud_appearance",
+    "test_hud_page",
     { name = "test_eol", dir = "tests/_kit/" },
     { name = "test_prose", dir = "tests/_kit/" },
     { name = "test_layout_cap", dir = "tests/_kit/" },

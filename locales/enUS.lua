@@ -55,7 +55,6 @@ L["DPS HUD"] = "DPS HUD"
 L["History"] = "History"
 L["Profiles"] = "Profiles"
 L["Slash Commands"] = "Slash Commands"
-L["The DPS HUD settings arrive with the HUD."] = "The DPS HUD settings arrive with the HUD."
 L["The History settings arrive with the fight history."] =
     "The History settings arrive with the fight history."
 L["Restore every Lanes setting on this profile to its addon default."] =
@@ -360,6 +359,159 @@ L["Put this lane's list back to the spells it ignores out of the box."] =
 L["Restore every setting of both lanes on this profile to its addon default, their ignore lists included."] =
     "Restore every setting of both lanes on this profile to its addon default, their ignore lists included."
 L["The lane every tab below edits."] = "The lane every tab below edits."
+
+-- The DPS HUD page (settings/Hud.lua): its tabs, rows and the skin companions' words
+L["Behavior"] = "Behavior"
+L["Layout"] = "Layout"
+L["Clock and figures"] = "Clock and figures"
+L["Damage chart"] = "Damage chart"
+L["Spell rows"] = "Spell rows"
+L["Window"] = "Window"
+L["On each fight's first hit"] = "On each fight's first hit"
+L["Only when you open it"] = "Only when you open it"
+L["Your best on this boss or target"] = "Your best on this boss or target"
+L["Your last fight there"] = "Your last fight there"
+L["Nothing"] = "Nothing"
+L["Use the skin's color"] = "Use the skin's color"
+L["Draw this text in the skin's HUD text color. The Font color swatch is not read while this is on, and Use class color comes first."] =
+    "Draw this text in the skin's HUD text color. The Font color swatch is not read while this is on, and Use class color comes first."
+L["Use the skin's shadow"] = "Use the skin's shadow"
+L["Draw this text with the skin's shadow. Font shadow is not read while this is on."] =
+    "Draw this text with the skin's shadow. Font shadow is not read while this is on."
+L["When it shows"] = "When it shows"
+L["Show the HUD"] = "Show the HUD"
+L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."] =
+    "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /kct hud, the launcher or its key binding."
+L["Only in instances"] = "Only in instances"
+L["Open the HUD on a fight's first hit only inside a dungeon, raid, delve or other instance."] =
+    "Open the HUD on a fight's first hit only inside a dungeon, raid, delve or other instance."
+L["Fade after the fight (seconds, 0 = never)"] = "Fade after the fight (seconds, 0 = never)"
+L["How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."] =
+    "How long the fight-over card stays after the fight ends before the HUD closes. 0 keeps it up until you close it."
+L["Stay open while the mouse is over it"] = "Stay open while the mouse is over it"
+L["Hold the HUD open while the pointer is over it, and fade it a moment after the pointer leaves."] =
+    "Hold the HUD open while the pointer is over it, and fade it a moment after the pointer leaves."
+L["Pace"] = "Pace"
+L["Pace compares against"] = "Pace compares against"
+L["The stored fight the pace bar measures you against: your best on the same boss or target, the last fight you had there, or none, which hides the pace bar."] =
+    "The stored fight the pace bar measures you against: your best on the same boss or target, the last fight you had there, or none, which hides the pace bar."
+L["Pace bar range"] = "Pace bar range"
+L["How far either side of the pace the bar reaches: 1.5 runs from half the pace's damage so far to half again. The tick in the middle is the pace."] =
+    "How far either side of the pace the bar reaches: 1.5 runs from half the pace's damage so far to half again. The tick in the middle is the pace."
+L["Fight-over card"] = "Fight-over card"
+L["Show fight-over card"] = "Show fight-over card"
+L["Show the final damage, DPS and spell percentages once the fight ends. Off, a HUD that opened by itself closes when the fight ends."] =
+    "Show the final damage, DPS and spell percentages once the fight ends. Off, a HUD that opened by itself closes when the fight ends."
+L["Show why a fight was not saved"] = "Show why a fight was not saved"
+L["Say on the card why a fight was not stored, such as too short or filtered out. Needs Show fight-over card."] =
+    "Say on the card why a fight was not stored, such as too short or filtered out. Needs Show fight-over card."
+L["Parts"] = "Parts"
+L["Show clock"] = "Show clock"
+L["Show the fight's clock, counting up from the first hit."] =
+    "Show the fight's clock, counting up from the first hit."
+L["Show target line"] = "Show target line"
+L["Show the encounter or target, the instance and the difficulty under the clock."] =
+    "Show the encounter or target, the instance and the difficulty under the clock."
+L["Show damage and DPS boxes"] = "Show damage and DPS boxes"
+L["Show the Damage and DPS boxes, with your pet's figure beside them."] =
+    "Show the Damage and DPS boxes, with your pet's figure beside them."
+L["Show pace bar"] = "Show pace bar"
+L["Show the bar that measures your damage so far against the pace. Hidden while there is nothing to pace against."] =
+    "Show the bar that measures your damage so far against the pace. Hidden while there is nothing to pace against."
+L["Show damage chart"] = "Show damage chart"
+L["Show your damage over the fight as columns, with the pace as a line and your long cooldowns as icons."] =
+    "Show your damage over the fight as columns, with the pace as a line and your long cooldowns as icons."
+L["Show spell rows"] = "Show spell rows"
+L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] =
+    "Show your spells and your pet's, one row each, in the order the damage meter gives them."
+L["HUD width (px)"] = "HUD width (px)"
+L["How wide the HUD is, in pixels. Its height follows the parts it shows."] =
+    "How wide the HUD is, in pixels. Its height follows the parts it shows."
+L["HUD scale"] = "HUD scale"
+L["The size of the whole HUD, its text included."] = "The size of the whole HUD, its text included."
+L["Clock font"] = "Clock font"
+L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."] =
+    "The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."
+L["Figures font"] = "Figures font"
+L["The face the Damage and DPS figures are drawn in."] = "The face the Damage and DPS figures are drawn in."
+L["Final DPS color"] = "Final DPS color"
+L["The color of the DPS figure on the fight-over card."] =
+    "The color of the DPS figure on the fight-over card."
+L["Box background"] = "Box background"
+L["The fill behind the Damage and DPS boxes."] = "The fill behind the Damage and DPS boxes."
+L["Use the skin's background"] = "Use the skin's background"
+L["Fill the boxes in the skin's own color. The background swatch is not read while this is on."] =
+    "Fill the boxes in the skin's own color. The background swatch is not read while this is on."
+L["Box border"] = "Box border"
+L["Border color"] = "Border color"
+L["The edge around the Damage and DPS boxes."] = "The edge around the Damage and DPS boxes."
+L["Draw the boxes' edge in the skin's own color. The border swatch is not read while this is on."] =
+    "Draw the boxes' edge in the skin's own color. The border swatch is not read while this is on."
+L["Chart height (px)"] = "Chart height (px)"
+L["The height of the chart's plot, in pixels."] = "The height of the chart's plot, in pixels."
+L["Maximum columns"] = "Maximum columns"
+L["The most columns the chart draws. A long fight folds more seconds into each column."] =
+    "The most columns the chart draws. A long fight folds more seconds into each column."
+L["Columns"] = "Columns"
+L["Burst windows"] = "Burst windows"
+L["Burst column color"] = "Burst column color"
+L["The color of the columns in the seconds after you use a long cooldown."] =
+    "The color of the columns in the seconds after you use a long cooldown."
+L["Lines"] = "Lines"
+L["Pace line color"] = "Pace line color"
+L["The color of the line that marks the pace."] = "The color of the line that marks the pace."
+L["Show zero line"] = "Show zero line"
+L["Draw a thin line along the chart's bottom edge."] = "Draw a thin line along the chart's bottom edge."
+L["Cooldowns"] = "Cooldowns"
+L["Show cooldown icons"] = "Show cooldown icons"
+L["Mark each cast of a spell with a long cooldown with its icon along the top of the chart."] =
+    "Mark each cast of a spell with a long cooldown with its icon along the top of the chart."
+L["Shortest cooldown (seconds)"] = "Shortest cooldown (seconds)"
+L["The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."] =
+    "The shortest base cooldown, in seconds, that earns an icon. Needs Show cooldown icons."
+L["Rows"] = "Rows"
+L["Spell rows shown (0 = all)"] = "Spell rows shown (0 = all)"
+L["How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."] =
+    "How many spells the HUD lists. 0 lists every one: as many as fit show, and the mouse wheel scrolls through the rest."
+L["Row height (px)"] = "Row height (px)"
+L["The height of each spell row, in pixels."] = "The height of each spell row, in pixels."
+L["Show spell icons"] = "Show spell icons"
+L["Draw each spell's icon at the start of its row."] = "Draw each spell's icon at the start of its row."
+L["Show pet paw"] = "Show pet paw"
+L["Mark your pet's spells with a paw."] = "Mark your pet's spells with a paw."
+L["Player bars"] = "Player bars"
+L["The texture your spell rows' bars and the pace bar's fills are drawn with."] =
+    "The texture your spell rows' bars and the pace bar's fills are drawn with."
+L["Pet bars"] = "Pet bars"
+L["Pet bar color"] = "Pet bar color"
+L["The color of your pet's spell rows and of its part of the pace bar."] =
+    "The color of your pet's spell rows and of its part of the pace bar."
+L["Row font"] = "Row font"
+L["The face the spell names and amounts are drawn in."] = "The face the spell names and amounts are drawn in."
+L["Title bar and footer"] = "Title bar and footer"
+L["Show title bar"] = "Show title bar"
+L["Show the bar along the top with the HUD's buttons, where you drag it from."] =
+    "Show the bar along the top with the HUD's buttons, where you drag it from."
+L["Show title"] = "Show title"
+L["Write Combat Trail in the title bar. Needs Show title bar."] =
+    "Write Combat Trail in the title bar. Needs Show title bar."
+L["Show footer"] = "Show footer"
+L["Show the line along the bottom that says what the HUD is doing."] =
+    "Show the line along the bottom that says what the HUD is doing."
+L["The fill behind the whole HUD."] = "The fill behind the whole HUD."
+L["Fill the HUD in the skin's own color. The background swatch is not read while this is on."] =
+    "Fill the HUD in the skin's own color. The background swatch is not read while this is on."
+L["The edge around the whole HUD."] = "The edge around the whole HUD."
+L["Draw the HUD's edge in the skin's own color. The border swatch is not read while this is on."] =
+    "Draw the HUD's edge in the skin's own color. The border swatch is not read while this is on."
+L["The point of the HUD that is placed."] = "The point of the HUD that is placed."
+L["The point of the screen it is placed at."] = "The point of the screen it is placed at."
+L["Horizontal offset of the HUD from its point, in pixels. Dragging the title bar sets it too."] =
+    "Horizontal offset of the HUD from its point, in pixels. Dragging the title bar sets it too."
+L["Vertical offset of the HUD from its point, in pixels. Dragging the title bar sets it too."] =
+    "Vertical offset of the HUD from its point, in pixels. Dragging the title bar sets it too."
+L["HUD opacity"] = "HUD opacity"
+L["How opaque the whole HUD is."] = "How opaque the whole HUD is."
 
 -- The lanes' ignore lists (modules/LaneIgnore.lua) and the `ignore` verb
 L["Usage: /kct ignore add|remove <spell> [player|pet], /kct ignore list [player|pet] or /kct ignore reset [player|pet]"] =

@@ -109,8 +109,9 @@ NS.defaults = {
         -- composer's shapes (options-ui-§16 and §17: a font block, a bar block, a swatch with its
         -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own, and every font
         -- block's text color and shadow follow the skin by default, skinning-§6). Clock and
-        -- figures: the clock's font (the mono role, no outline), the figures' font, the over card's
-        -- DPS color and the boxes' background and border. Damage chart: the plot's height and most
+        -- figures: the clock's font (the mono role, no outline, 32 points: the composed Font size
+        -- row's top), the figures' font, the over card's DPS color and the boxes' background and
+        -- border. Damage chart: the plot's height and most
         -- columns, the columns' bar, the burst-window and best-line colors, the cooldown icons (and
         -- their minimum base cooldown, seconds) and the zero line. Spell rows: how many (0 = every
         -- one, the wheel scrolls), their height, the icons and the pet's paw, the player's bar, the
@@ -122,7 +123,7 @@ NS.defaults = {
             width = 300, scale = 1,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
-            clock = { font = "JetBrains Mono", fontSize = 40, fontColor = rgba(0.92, 0.91, 0.88, 1),
+            clock = { font = "JetBrains Mono", fontSize = 32, fontColor = rgba(0.92, 0.91, 0.88, 1),
                       useClassColorFont = false, fontFlags = "", fontShadow = false, fontFromSkin = false,
                       fontColorFromSkin = true, fontShadowFromSkin = true },
             figures = { font = "Ka0s Prototype", fontSize = 20, fontColor = rgba(0.93, 0.93, 0.95, 1),

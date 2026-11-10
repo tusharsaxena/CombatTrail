@@ -105,8 +105,10 @@ local function shipped(path)
     return node
 end
 
--- A profile value by path, read straight off the profile (the hud.* rows arrive with the DPS HUD
--- page, plan Task 3.3), else its shipped default.
+-- A profile value by path, read straight off the profile, else its shipped default. Every `hud.*`
+-- key has its row on the DPS HUD page (settings/Hud.lua), which writes through the seam; the read
+-- stays direct because it runs many times on every 4 Hz draw, where a schema lookup per key would
+-- cost a row search each.
 local function setting(path)
     local node = NS.db and NS.db.profile
     for part in path:gmatch("[^.]+") do
