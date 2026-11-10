@@ -706,7 +706,7 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (30)
+### test_results_table.lua (31)
 
 - results: default view: current character, last 7 days, grouped by board
 - results: the date range and the character filter
@@ -737,6 +737,7 @@ Total.
 - results: Character is a fixed 104 px column and the target column takes the rest
 - results: a stored Character width wins, within the room the target column leaves
 - results: dragging the Character header's edge resizes it and stores the width on release
+- results: a window hidden while the Character edge is held ends the drag and stores the width
 - results: no spec: the row draws its class icon and no second icon
 
 ### test_results_detail.lua (15)
@@ -1048,7 +1049,7 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 30 |
+| test_results_table.lua | 31 |
 | test_results_detail.lua | 15 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
@@ -1071,4 +1072,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **829** |
+| **Total** | **830** |

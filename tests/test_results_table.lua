@@ -612,6 +612,11 @@ test("results: a stored Character width wins, within the room the target column 
     local tight = Tbl.Columns(cols, NS.Results.MIN_WIDTH, { character = 200 })
     assertTrue(tight[ti].w >= F.TARGET_W, "the target keeps its minimum")
     assertTrue(tight[ci].w >= F.CHARACTER_W, "the character gives back only what it took")
+    local least = Tbl.MinWidth(cols)
+    local full = Tbl.Columns(cols, least, { character = 200 })
+    assertEqual(full[ci].w, F.CHARACTER_W, "at the least width the drag gives back all it took")
+    assertEqual(full[ti].w, F.TARGET_W, "and the target sits at its minimum")
+    assertTrue(full[#full].x + full[#full].w <= least - Tbl.SCROLLBAR_W - Tbl.PAD, "the columns still fit")
     NS.db.profile.results.columns.character = 150
     local _, view = open(NS)
     assertEqual(view.list.place[ci].w, 150, "the window lays out the stored width")
@@ -637,6 +642,25 @@ test("results: dragging the Character header's edge resizes it and stores the wi
     NS.ResetPositions()
     assertNil(NS.db.profile.results.columns.character, "Reset position puts the shipped width back")
     assertEqual(view.list.place[ci].w, 104)
+end)
+
+test("results: a window hidden while the Character edge is held ends the drag and stores the width", function()
+    local cursor = 0
+    local NS = fresh(function(m) m.GetCursorPosition = function() return cursor, 0 end end)
+    local ci = indexOf(NS.ResultsFights.Columns(), "character")
+    local _, view = open(NS)
+    local grip = view.list.heads[ci].grip
+    cursor = 500
+    grip:__fire("OnMouseDown", "LeftButton")
+    cursor = 520
+    grip:__fire("OnUpdate", 0.01)
+    grip:__fire("OnHide")                 -- no mouse-up reaches a hidden grip
+    assertEqual(NS.db.profile.results.columns.character, 124, "stored as a release would")
+    assertNil(view.list.dragging, "the drag is over")
+    assertNil(grip:GetScript("OnUpdate"), "the cursor no longer drives the column")
+    cursor = 700
+    view.list:Layout(view.list.width, view.list.height)
+    assertEqual(view.list.place[ci].w, 124, "a later layout keeps the stored width")
 end)
 
 test("results: no spec: the row draws its class icon and no second icon", function()

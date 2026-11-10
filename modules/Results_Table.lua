@@ -491,7 +491,8 @@ end
 
 -- A resizable column's grip: the header's right edge, over the gap to the next column, with a rule
 -- that shows under the pointer and while held. Held, the column follows the cursor (Table:DragColumn,
--- nothing stored); released, it stays and the table's onColumnResize stores the width it reached.
+-- nothing stored); released, or hidden while held, it stays and the table's onColumnResize stores
+-- the width it reached.
 local function newGrip(t, b, col)
     local g = CreateFrame("Frame", nil, t.header)
     g:SetWidth(Tbl.PAD + 2)
@@ -512,13 +513,17 @@ local function newGrip(t, b, col)
         g.from = { x = cursorX(g), w = t:ColumnWidth(col.key) }
         g:SetScript("OnUpdate", function() t:DragColumn(col.key, g.from.w + cursorX(g) - g.from.x) end)
     end)
-    g:SetScript("OnMouseUp", function()
+    local function release()
         if not g.from then return end
         g:SetScript("OnUpdate", nil)
         g.from = nil
         g.rule:Hide()
         t:EndColumnDrag(col.key)
-    end)
+    end
+    g:SetScript("OnMouseUp", release)
+    -- A window hidden while the edge is held (Escape, or Close when combat starts) never sees the
+    -- mouse-up; the hide ends the drag as a release would (modules/Sizing.lua's hookHide, the grip's).
+    g:SetScript("OnHide", release)
     return g
 end
 
