@@ -1012,6 +1012,9 @@ L["The size of the Results window, its text included, and of the ability timelin
     "The size of the Results window, its text included, and of the ability timeline, the gear view and the compare that open over it."
 L["The height of each row in the Results window's list of fights, in pixels."] =
     "The height of each row in the Results window's list of fights, in pixels."
+L["Close when combat starts"] = "Close when combat starts"
+L["Close the Results window, and the timeline, gear view and compare over it, when you enter combat. Open it again mid-fight and it stays open until the next pull."] =
+    "Close the Results window, and the timeline, gear view and compare over it, when you enter combat. Open it again mid-fight and it stays open until the next pull."
 L["Sharing"] = "Sharing"
 L["Include talents link when sharing"] = "Include talents link when sharing"
 L["Add the fight's talents to the shared line as a link others can click to see the talent tree. When the line and the link would be too long for one chat message, the link follows as a second one."] =

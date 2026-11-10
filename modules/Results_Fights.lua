@@ -563,6 +563,39 @@ end
 
 Fights.TARGET_W = 150
 Fights.CONTENT_W = 90
+-- The Character column (v0.2 Task C1): a fixed width a twelve-letter name fits, the target column
+-- taking the window's slack; its header's right edge drags it between the least and the most.
+Fights.CHARACTER_W = 104
+Fights.CHARACTER_MIN = 70
+Fights.CHARACTER_MAX = 240
+
+-- `results.columns`, the widths the header edges were dragged to (named state, docs/schema.md), or nil.
+local function columnStore()
+    local p = NS.db and NS.db.profile
+    local r = p and p.results
+    if type(r) ~= "table" then return nil end
+    if type(r.columns) ~= "table" then r.columns = {} end
+    return r.columns
+end
+
+--- The dragged column widths, `{ [key] = px }` (empty: every column at its shipped width).
+--- @return table
+function Fights.ColumnWidths()
+    return columnStore() or {}
+end
+
+--- A header edge's release: column `key` stays `w` px wide.
+function Fights.StoreColumnWidth(key, w)
+    local store = columnStore()
+    if store and type(w) == "number" then store[key] = math.floor(w + 0.5) end
+end
+
+--- Every column back to its shipped width (Reset position).
+function Fights.ClearColumnWidths()
+    local store = columnStore()
+    if not store then return end
+    for k in pairs(store) do store[k] = nil end
+end
 
 --- The fight table's columns (mockup §5): date, class and spec icons, character, item level,
 --- encounter or target, content, length, damage, DPS and delta. `view` (optional) keeps the Delta
@@ -577,13 +610,14 @@ function Fights.Columns(view)
           sort = function(r) return r.t end,
           text = function(r) return Tbl.Date(r.t, "%d %b %H:%M") end },
         { key = "clsSpec", label = L["Class"], width = 40, kind = "icons" },
-        { key = "character", label = L["Character"], flex = true, min = 70, desc = false,
+        { key = "character", label = L["Character"], width = Fights.CHARACTER_W, desc = false,
+          resize = { min = Fights.CHARACTER_MIN, max = Fights.CHARACTER_MAX },
           sort = function(r) return tostring(who(r).name or ""):lower() end,
           text = function(r) return who(r).name or "?", Tbl.ClassColor(who(r).class) end },
         { key = "ilvl", label = L["iLvl"], width = 40, desc = true,
           sort = function(r) return who(r).ilvl end,
           text = function(r) return Tbl.Ilvl(who(r).ilvl) end },
-        { key = "target", label = L["Encounter or target"], width = Fights.TARGET_W, desc = false,
+        { key = "target", label = L["Encounter or target"], flex = true, min = Fights.TARGET_W, desc = false,
           sort = function(r) return Fights.TargetName(r):lower() end,
           text = targetText },
         { key = "content", label = L["Content"], width = Fights.CONTENT_W, kind = "badge", desc = false,
@@ -665,6 +699,7 @@ function Fights.Build(parent, hooks)
         onClick = function(r) if view.hooks.select then view.hooks.select(r) end end,
         onRightClick = function(r, row) if view.hooks.menu then view.hooks.menu(r, row) end end,
         empty = L["No fights match these filters."],
+        widths = Fights.ColumnWidths, onColumnResize = Fights.StoreColumnWidth,
     })
     view:ApplyView(Fights.SavedView())
     return view

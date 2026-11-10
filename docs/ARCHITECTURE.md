@@ -92,12 +92,13 @@ non-setting state with its owner and writers are in [`schema.md`](schema.md).
 ## Message Bus
 
 Every name is declared once in `core/Bus.lua` (`NS.MSG`) and sent with `NS.SendBus`; wire names are
-`Ka0s_CombatTrail_<Event>`. Eight messages, so `message-bus.md` is not required.
+`Ka0s_CombatTrail_<Event>`. Nine messages, so `message-bus.md` is not required.
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
 | `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | Hud, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page |
 | `LANE_PUSH` | LaneCasts | `(laneKey, item)` | LaneRender |
+| `COMBAT_ENTERED` | Fight, on the `PLAYER_REGEN_DISABLED` edge only (never a split or a mid-combat `ENCOUNTER_START`) | `(t)` | Results (closes while `results.closeInCombat` is on) |
 | `FIGHT_STARTED` | Fight | `(fight)` | Casts, Hud, Loadouts, Preview (ends test mode), Slices, Stats, Usage |
 | `FIGHT_TICK` | Fight, every 0.25 s in combat | `(fight)` | Hud, Slices |
 | `FIGHT_ENDED` | Fight | `(fight, final, reason)` | Casts, Hud, Recorder, Slices, Usage |
@@ -134,7 +135,8 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one
   too. `PLAYER_REGEN_ENABLED` asks for one only after a recon ran in combat, where a sealed link is
   left out of the set. The stand-down drops the events and the timer.
-- **HUD and Results:** no game events; they hear the bus.
+- **HUD and Results:** no game events; they hear the bus. Results closes on `COMBAT_ENTERED`, the
+  Fight's regen edge, never on a game event of its own.
 
 Every registration goes through `NS.SafeRegisterEvent`, so a name a client does not know costs only
 itself. The pipeline from event to screen is [`data-flow.md`](data-flow.md).
@@ -182,7 +184,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 | `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands |
 | `midnight-quirks.md` | Present | Always, from v2.102.0 of the standard |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more addon-specific shims |
-| `message-bus.md` | Not applicable | Eight messages, not more than ten |
+| `message-bus.md` | Not applicable | Nine messages, not more than ten |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `known-limitations.md` | Present | The Known Limitations material passes sixty lines |
 | `taint.md` | Not applicable | Taint Notes stays under sixty lines |

@@ -42,9 +42,10 @@ default; the file's comments say what each value means.
 | `hud.position` | `{ point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 }` | DPS HUD → Window, and the title bar's drag (named state, below) |
 | `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
 | `history.days`, `keepBests`, `maxFights` | `7`, `true`, `500` | History → History |
-| `results.scale`, `rowHeight`, `shareTalents` | `1`, `18`, `true` | History → Results window |
+| `results.scale`, `rowHeight`, `shareTalents`, `closeInCombat` | `1`, `18`, `true`, `true` | History → Results window |
 | `results.view` | the saved filters, grouping and sort (`group = "board"`, `days = 7`) | (named state, below) |
 | `results.window` | `{ point, relPoint, x, y, width = 920, height = 520, view = "collapsed" }` | (named state, below) |
+| `results.columns` | `{}`; a dragged column's width, `{ character = px }` (Character ships at 104, held to 70–240) | (named state, below) |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
@@ -77,6 +78,7 @@ and one that did keeps its own. No migration step is needed. No skin overrides a
 | A lane's dragged place | `lanes.<k>.anchor.x` / `.y` (and `point`) | modules/LaneAnchor.lua | `dragStop` (the edit overlay's drag) through `write`; `NS.Lanes.ResetPosition` (Master controls' Reset position) |
 | The HUD's place | `hud.position` | modules/Hud.lua | `normalizeAnchor` (the title bar's drag and the grip's release, a change of `hud.sizeMode` or `hud.grow`, and a Refresh that finds the stored point off that edge: TOPLEFT, or BOTTOMLEFT for an auto window growing up, on UIParent's BOTTOMLEFT), else `savePosition`; `Hud.ResetPosition` |
 | The Results window's place, size and fold | `results.window` | modules/Results.lua | `savePosition` (drag, the grip's release, the fold arrow through `Results.SetView`); `Results.ResetPosition` |
+| The Results columns' dragged widths | `results.columns` | modules/Results_Fights.lua | `Fights.StoreColumnWidth` (a header edge's release, through the table's `onColumnResize`); `Fights.ClearColumnWidths` (`Results.ResetPosition`) |
 | The saved Results view | `results.view` | modules/Results_Fights.lua | `writeView` (the Save view button) |
 | The fight store | `global.fights`, `global.fightOrder` | modules/Recorder.lua | `Recorder.Save`, `Recorder.Delete`, `Recorder.SetNote`; `Retention.Purge` (modules/Retention.lua) |
 | Interned loadouts | `global.loadouts` | modules/Loadouts.lua | `Loadouts.Store`; `Loadouts.Sweep`, called by the purge |

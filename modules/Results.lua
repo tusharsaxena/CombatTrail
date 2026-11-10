@@ -23,9 +23,12 @@ local _, NS = ...
 --
 -- WHAT RUNS. Nothing while hidden but its bus receiver: FIGHT_SAVED and FIGHTS_CHANGED redraw a
 -- shown list and detail (a hidden one redraws in full on its next show), SETTINGS_CHANGED redraws
--- the footer or, on a profile change, takes the new profile's view. No game event, no OnUpdate but a
--- hovered row's (modules/Results_Table.lua); the one timer is the talent tree's (below), the ticker
--- that waits for the tree to close while the window has stepped aside for it.
+-- the footer or, on a profile change, takes the new profile's view, and COMBAT_ENTERED (the regen
+-- edge, modules/Fight.lua) closes a shown window while `results.closeInCombat` is on; one reopened
+-- mid-fight stays open, since a split or an encounter start sends no COMBAT_ENTERED. No game event, no
+-- OnUpdate but a hovered row's and a dragged column edge's (modules/Results_Table.lua); the one timer
+-- is the talent tree's (below), the ticker that waits for the tree to close while the window has
+-- stepped aside for it.
 
 local Results = { wanted = false }
 NS.Results = Results
@@ -136,13 +139,13 @@ local function selectFight(record)
     layout()
 end
 
--- The fold arrow's icon and tooltip for the view shown: expanded shows chevron-right (fold the detail
--- away), collapsed chevron-left (open it beside the list).
+-- The fold arrow's icon and tooltip for the view shown (DPS Race's): expanded shows chevron-left (fold
+-- the detail away), collapsed chevron-right (open it beside the list, to the right).
 local function paintToggle()
     local b = ui and ui.viewToggle
     if not b then return end
     local expanded = Results.View() == "expanded"
-    Style.SetControlIcon(b, expanded and "chevron-right" or "chevron-left", expanded and ">" or "<")
+    Style.SetControlIcon(b, expanded and "chevron-left" or "chevron-right", expanded and "<" or ">")
     b.tip = expanded and L["Fold the detail away: the list alone (a click opens a fight in its place)"]
         or L["Unfold the detail beside the list"]
     Style.PaintStrip(ui.controls)
@@ -157,7 +160,7 @@ local function buildChrome(f)
     ui.close = NS.MakeCloseButton(f, function() Results.Hide() end)
     ui.settings = Style.AddToStrip(ui.controls, Style.ControlButton(f, "settings", "S", L["Settings"],
         function() NS.OpenSettings() end))
-    ui.viewToggle = Style.AddToStrip(ui.controls, Style.ControlButton(f, "chevron-left", "<", "",
+    ui.viewToggle = Style.AddToStrip(ui.controls, Style.ControlButton(f, "chevron-right", ">", "",
         function() Results.ToggleView() end))
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
@@ -745,6 +748,8 @@ function Results.ResetPosition()
         for k in pairs(w) do w[k] = nil end
         for k, v in pairs(shippedWindow()) do w[k] = v end
     end
+    -- The columns' dragged widths go back to the shipped ones with the window's size.
+    NS.ResultsFights.ClearColumnWidths()
     detailOpen = false
     if ui then
         applyPlacement()
@@ -955,5 +960,9 @@ do
         bus:RegisterMessage(NS.MSG.FIGHT_SAVED, onStoreChanged)
         bus:RegisterMessage(NS.MSG.FIGHTS_CHANGED, onStoreChanged)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path) onSettings(path) end)
+        -- Hide is legal in combat: the frame is non-secure (the header's note).
+        bus:RegisterMessage(NS.MSG.COMBAT_ENTERED, function()
+            if Results.wanted and NS.GetSetting("results.closeInCombat") then Results.Hide() end
+        end)
     end
 end

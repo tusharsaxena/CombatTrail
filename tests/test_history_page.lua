@@ -98,7 +98,8 @@ end)
 test("history page: every history.* key, the Results window's settings and the hidden list have a row", function()
     local NS = T.load().NS
     local paths = leaves(NS.defaults.profile.history, "history", {})
-    for _, p in ipairs({ "results.scale", "results.shareTalents", "results.rowHeight", NS.Usage.HIDDEN_PATH }) do
+    for _, p in ipairs({ "results.scale", "results.shareTalents", "results.rowHeight", "results.closeInCombat",
+                        NS.Usage.HIDDEN_PATH }) do
         paths[#paths + 1] = p
     end
     local missing = {}
@@ -114,7 +115,8 @@ test("history page: every history.* key, the Results window's settings and the h
     assertEqual(table.concat(missing, ", "), "", "keys with no row")
     -- The window's place, size and fold, and its saved view, are window state (architecture-§5's
     -- named non-setting state): no control sets them, so no row addresses them.
-    for _, p in ipairs({ "results.view", "results.view.group", "results.window", "results.window.width" }) do
+    for _, p in ipairs({ "results.view", "results.view.group", "results.window", "results.window.width",
+                        "results.columns", "results.columns.character" }) do
         assertNil(NS.FindSchemaRow(p), p .. " is window state")
     end
     local errors, _, unresolved = NS.ValidateSchema()
@@ -135,6 +137,7 @@ test("history page: the rows sit on their tabs, the hidden list on Usage", funct
     assertEqual(tab("results.scale"), TAB.results)
     assertEqual(tab("results.rowHeight"), TAB.results)
     assertEqual(tab("results.shareTalents"), TAB.results)
+    assertEqual(tab("results.closeInCombat"), TAB.results)
     local hidden = NS.FindSchemaRow(NS.Usage.HIDDEN_PATH)
     assertEqual(hidden.group, TAB.usage)
     assertTrue(hidden.skipRender, "drawn as the ID list, not as a text box")
@@ -199,7 +202,7 @@ test("history page: a content row stores its kind and the filter follows", funct
     assertFalse(NS.SetByPath("history.maxFights", 99999), "past the slider's range is refused")
 end)
 
-test("history page: the Retention tab shows the stored count and size", function()
+test("history page: the History tab shows the stored count and size", function()
     local inst, ctx = shownPage()
     local NS = inst.NS
     local now = os.time()

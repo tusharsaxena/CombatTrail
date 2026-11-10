@@ -416,20 +416,47 @@ end
 local Table = {}
 Table.__index = Table
 
---- Column widths for `width`: each its configured width, the flex column what is left (never below
---- its minimum). Answers the x of each column and its width, in column order.
-function Tbl.Columns(columns, width)
-    local fixed, flex = 0, nil
-    for _, col in ipairs(columns) do
-        if col.flex then flex = col else fixed = fixed + col.width end
+-- A fixed column's width: a resizable one's dragged width from `widths` (held to its resize range),
+-- else its configured one.
+local function fixedWidth(col, widths)
+    local stored = col.resize and widths and tonumber(widths[col.key])
+    if not stored then return col.width end
+    return math.max(col.resize.min, math.min(col.resize.max, math.floor(stored + 0.5)))
+end
+
+-- Where the flex column would fall below its minimum, the resizable columns give back what their
+-- drag took past their configured width, in column order, so the table still fits Tbl.MinWidth.
+local function giveBack(columns, ws, short)
+    for i, col in ipairs(columns) do
+        if short <= 0 then return end
+        local over = col.resize and ws[i] - col.width or 0
+        if over > 0 then
+            local take = math.min(over, short)
+            ws[i], short = ws[i] - take, short - take
+        end
+    end
+end
+
+--- Column widths for `width`: each its configured width (a resizable column's dragged width from
+--- `widths`, `{ [key] = px }`, when it has one), the flex column what is left (never below its
+--- minimum). Answers the x of each column and its width, in column order.
+function Tbl.Columns(columns, width, widths)
+    local ws, fixed, flexAt = {}, 0, nil
+    for i, col in ipairs(columns) do
+        if col.flex then flexAt = i else ws[i] = fixedWidth(col, widths); fixed = fixed + ws[i] end
     end
     local inner = width - 2 * Tbl.PAD - Tbl.SCROLLBAR_W - Tbl.PAD * (#columns - 1)
+    if flexAt then
+        local min = columns[flexAt].min or 40
+        giveBack(columns, ws, min - (inner - fixed))
+        fixed = 0
+        for i in pairs(ws) do fixed = fixed + ws[i] end
+        ws[flexAt] = math.max(min, inner - fixed)
+    end
     local out, x = {}, Tbl.PAD
-    for i, col in ipairs(columns) do
-        local w = col.width
-        if col == flex then w = math.max(col.min or 40, inner - fixed) end
-        out[i] = { x = x, w = w }
-        x = x + w + Tbl.PAD
+    for i = 1, #columns do
+        out[i] = { x = x, w = ws[i] }
+        x = x + ws[i] + Tbl.PAD
     end
     return out
 end
@@ -455,6 +482,46 @@ end
 buildArrows()
 Style.OnLooks(buildArrows)
 
+-- The cursor's x in `frame`'s scale.
+local function cursorX(frame)
+    if not GetCursorPosition then return 0 end
+    local scale = frame.GetEffectiveScale and tonumber(frame:GetEffectiveScale()) or 1
+    return (tonumber((GetCursorPosition())) or 0) / (scale > 0 and scale or 1)
+end
+
+-- A resizable column's grip: the header's right edge, over the gap to the next column, with a rule
+-- that shows under the pointer and while held. Held, the column follows the cursor (Table:DragColumn,
+-- nothing stored); released, it stays and the table's onColumnResize stores the width it reached.
+local function newGrip(t, b, col)
+    local g = CreateFrame("Frame", nil, t.header)
+    g:SetWidth(Tbl.PAD + 2)
+    g:SetPoint("TOP", b, "TOPRIGHT", Tbl.PAD / 2, 0)
+    g:SetPoint("BOTTOM", b, "BOTTOMRIGHT", Tbl.PAD / 2, 0)
+    g:SetFrameLevel((b:GetFrameLevel() or 0) + 2)
+    g:EnableMouse(true)
+    g.rule = g:CreateTexture(nil, "OVERLAY")
+    g.rule:SetWidth(1)
+    g.rule:SetPoint("TOP", g, "TOP", 0, -2)
+    g.rule:SetPoint("BOTTOM", g, "BOTTOM", 0, 2)
+    Style.Fill(g.rule, "ct.scroll.thumbAlt")
+    g.rule:Hide()
+    g:SetScript("OnEnter", function() g.rule:Show() end)
+    g:SetScript("OnLeave", function() if not g.from then g.rule:Hide() end end)
+    g:SetScript("OnMouseDown", function(_, button)
+        if button and button ~= "LeftButton" then return end
+        g.from = { x = cursorX(g), w = t:ColumnWidth(col.key) }
+        g:SetScript("OnUpdate", function() t:DragColumn(col.key, g.from.w + cursorX(g) - g.from.x) end)
+    end)
+    g:SetScript("OnMouseUp", function()
+        if not g.from then return end
+        g:SetScript("OnUpdate", nil)
+        g.from = nil
+        g.rule:Hide()
+        t:EndColumnDrag(col.key)
+    end)
+    return g
+end
+
 -- A column header: GameFontNormalSmall in the header gold, Title Case, the sort mark after its label.
 local function newHeader(t, i, col)
     local b = CreateFrame("Button", nil, t.header)
@@ -476,6 +543,7 @@ local function newHeader(t, i, col)
         GameTooltip:Show()
     end)
     b:SetScript("OnLeave", hideTip)
+    if col.resize then b.grip = newGrip(t, b, col) end
     t.heads[i] = b
     return b
 end
@@ -564,8 +632,11 @@ end
 --- @param columns table  { key, label, kind = "text"|"icons"|"badge", width | flex+min,
 ---                         tip = fn(record) -> lines, about = header text, justify,
 ---                         sort = fn(record) -> value, desc = default direction, text = fn(record),
----                         bar = fn(record) -> value, scan = fn(list, groupOf) on SetData and SetGroup }
---- @param opts table  { sortKey, sortDesc, onClick(record), onRightClick(record, row), empty = text }
+---                         bar = fn(record) -> value, scan = fn(list, groupOf) on SetData and SetGroup,
+---                         resize = { min, max } (a fixed column its header's edge drags) }
+--- @param opts table  { sortKey, sortDesc, onClick(record), onRightClick(record, row), empty = text,
+---                      widths = fn() -> { [key] = px } (the dragged widths of the `resize` columns),
+---                      onColumnResize(key, px) (a header edge's release) }
 function Tbl.New(parent, columns, opts)
     opts = opts or {}
     local frame = CreateFrame("Frame", nil, parent)
@@ -575,6 +646,7 @@ function Tbl.New(parent, columns, opts)
         data = {}, rows = {}, offset = 0, width = 600, height = 300,
         sortKey = opts.sortKey, sortDesc = opts.sortDesc ~= false,
         onClick = opts.onClick, onRightClick = opts.onRightClick,
+        widthsOf = opts.widths, onColumnResize = opts.onColumnResize,
     }, Table)
     t.header = CreateFrame("Frame", nil, frame)
     t.header:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
@@ -923,10 +995,20 @@ function Table:Bind()
     self:syncScrollbar()
 end
 
+-- The dragged widths in force: the live drag's over the stored ones.
+function Table:widths()
+    local stored = self.widthsOf and self.widthsOf() or {}
+    if not self.dragging then return stored end
+    local out = {}
+    for k, v in pairs(stored) do out[k] = v end
+    for k, v in pairs(self.dragging) do out[k] = v end
+    return out
+end
+
 -- The columns at `width` and the header's labels on them; a row's cells follow on its next placeRow.
 function Table:placeColumns(width)
     self.width = width
-    self.place = Tbl.Columns(self.columns, width)
+    self.place = Tbl.Columns(self.columns, width, self:widths())
     self.layoutVersion = (self.layoutVersion or 0) + 1
     for i, b in ipairs(self.heads) do
         local spot = self.place[i]
@@ -936,6 +1018,32 @@ function Table:placeColumns(width)
         b.label:ClearAllPoints()
         b.label:SetAllPoints(b)
     end
+end
+
+--- Column `key`'s width as laid out now, or nil.
+function Table:ColumnWidth(key)
+    for i, col in ipairs(self.columns) do
+        if col.key == key then return self.place and self.place[i] and self.place[i].w or col.width end
+    end
+end
+
+--- While a header edge is held: column `key` at `w` px (held to its range and the room the flex
+--- column leaves), the header and the rows shown re-placed, nothing stored and nothing rebound.
+function Table:DragColumn(key, w)
+    if type(w) ~= "number" then return end
+    self.dragging = { [key] = w }
+    self:placeColumns(self.width)
+    for i, row in ipairs(self.shown) do self:placeRow(row, i) end
+end
+
+--- A header edge's release: the width the column reached is handed to onColumnResize to store.
+function Table:EndColumnDrag(key)
+    if not self.dragging then return end
+    local w = self:ColumnWidth(key)
+    self.dragging = nil
+    if self.onColumnResize and w then self.onColumnResize(key, w) end
+    self:placeColumns(self.width)
+    for i, row in ipairs(self.shown) do self:placeRow(row, i) end
 end
 
 --- Lay the header and the rows out for `width` x `height`.

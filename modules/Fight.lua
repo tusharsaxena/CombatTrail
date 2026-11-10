@@ -379,6 +379,7 @@ end
 --- else the settling one is parked and a new one starts.
 function Fight.OnCombatStart(t)
     if isDown() or state == STATE.COMBAT then return end
+    NS.SendBus(NS.MSG.COMBAT_ENTERED, t)
     if state == STATE.IDLE then return begin(t) end
     stopSettle()
     if t - cur.combatEndT <= C.GRACE then

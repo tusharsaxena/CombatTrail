@@ -345,7 +345,7 @@ Total.
 - format: a refused or failing constructor is skipped
 - format: Clock, Length, Pct and SignedPct take plain numbers
 
-### test_fight.lua (28)
+### test_fight.lua (30)
 
 - fight: the states and the timing constants are the plan's
 - fight: normal combat → started, ticks, ended final
@@ -375,6 +375,8 @@ Total.
 - fight: disabled addon registers nothing
 - fight: a stand-down mid-fight drops the fight, its timers and every registration
 - fight: an encounter that starts in combat while idle starts a fight
+- fight: COMBAT_ENTERED is sent on the regen edge from idle, on the grace carry-on and on park+begin
+- fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in combat, or while stood down
 
 ### test_identity.lua (39)
 
@@ -704,7 +706,7 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (23)
+### test_results_table.lua (30)
 
 - results: default view: current character, last 7 days, grouped by board
 - results: the date range and the character filter
@@ -729,6 +731,13 @@ Total.
 - results: the stand-down hides the window and the stand-up brings it back
 - results: a saved fight redraws a shown list
 - results: every cell and header has a tooltip
+- results: entering combat closes the window when Close when combat starts is on, and not when off
+- results: a window reopened mid-combat stays open through a split or an encounter start
+- results: the fold arrow shows chevron-right collapsed and chevron-left expanded
+- results: Character is a fixed 104 px column and the target column takes the rest
+- results: a stored Character width wins, within the room the target column leaves
+- results: dragging the Character header's edge resizes it and stores the width on release
+- results: no spec: the row draws its class icon and no second icon
 
 ### test_results_detail.lua (15)
 
@@ -807,7 +816,7 @@ Total.
 - history page: every row's default is the shipped one (defaults/Profile.lua is the only source)
 - history page: forever: no delve/arena/mplus rows
 - history page: a content row stores its kind and the filter follows
-- history page: the Retention tab shows the stored count and size
+- history page: the History tab shows the stored count and size
 - history page: purge now confirm
 - history page: the Usage tab draws the hidden items as the ID list
 - history page: Window scale reaches the Results window and every follower
@@ -1018,7 +1027,7 @@ Total.
 | test_probe.lua | 28 |
 | test_meter.lua | 33 |
 | test_format.lua | 8 |
-| test_fight.lua | 28 |
+| test_fight.lua | 30 |
 | test_identity.lua | 39 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
@@ -1039,7 +1048,7 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 23 |
+| test_results_table.lua | 30 |
 | test_results_detail.lua | 15 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
@@ -1062,4 +1071,4 @@ Total.
 | test_skin_switch.lua | 38 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **820** |
+| **Total** | **829** |

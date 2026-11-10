@@ -189,14 +189,17 @@ NS.defaults = {
         -- character, `days` 0 is all time), where the window stands, its list's width and its height,
         -- and its fold (the detail in the list's place, "collapsed", or beside it, "expanded"), written
         -- by its drag, its grip and its fold arrow and put back by Master controls' Reset position;
-        -- its scale, its list's row height (px); and whether Share appends the fight's talents link.
+        -- its scale, its list's row height (px); whether Share appends the fight's talents link; whether
+        -- it closes when combat starts (v0.2 Task C1); and `columns`, the widths a header's edge was
+        -- dragged to (`{ character = px }`; empty is the shipped width), put back by Reset position.
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
                      days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
             window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 920, height = 520,
                        view = "collapsed" },
             scale = 1, rowHeight = 18,
-            shareTalents = true,
+            shareTalents = true, closeInCombat = true,
+            columns = {},
         },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on

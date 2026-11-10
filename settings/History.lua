@@ -5,12 +5,14 @@ local _, NS = ...
 -- content kind this client has). History (internal key `retention`, plan decision D6) holds how long
 -- and how many are kept (modules/Retention.lua and modules/Bests.lua: `history.days`,
 -- `history.keepBests`, `history.maxFights`), then the stored count and size, then Purge history…
--- last. Results window holds the window's scale, its list's row height and whether Share appends the
--- talents link (`results.scale`, `results.rowHeight`, `results.shareTalents`). Usage holds the "never show" list (`global.usage.hidden`), drawn as the
--- library's ID list.
+-- last. Results window holds the window's scale, its list's row height, whether it closes when combat
+-- starts and whether Share appends the talents link (`results.scale`, `results.rowHeight`,
+-- `results.closeInCombat`, `results.shareTalents`). Usage holds the "never show" list
+-- (`global.usage.hidden`), drawn as the library's ID list.
 --
 -- NOT ROWS: `results.view` (the filters, the grouping and the sort Save view captures) and
--- `results.window` (the place and size the drag and the grip set, and the fold the arrow sets) are
+-- `results.window` (the place and size the drag and the grip set, and the fold the arrow sets) and
+-- `results.columns` (the widths a column header's edge was dragged to) are
 -- window state, architecture-§5's named non-setting state (a remembered view, geometry only a drag or
 -- a resize determines): no control here sets them, so no row addresses them, and Save view and the
 -- drag keep writing them whole. The mockup's Default grouping, Default date range and Open on current
@@ -125,6 +127,9 @@ row("results.rowHeight", { type = "number", label = L["Row height (px)"],
     min = NS.ResultsTable.ROW_H_MIN, max = NS.ResultsTable.ROW_H_MAX, step = 1,
     validate = whole(NS.ResultsTable.ROW_H_MIN, NS.ResultsTable.ROW_H_MAX),
     tooltip = L["The height of each row in the Results window's list of fights, in pixels."] })
+at(TAB.results, L["Behavior"])
+row("results.closeInCombat", { type = "bool", label = L["Close when combat starts"], startsLine = true,
+    tooltip = L["Close the Results window, and the timeline, gear view and compare over it, when you enter combat. Open it again mid-fight and it stays open until the next pull."] })
 at(TAB.results, L["Sharing"])
 row("results.shareTalents", { type = "bool", label = L["Include talents link when sharing"], startsLine = true,
     tooltip = L["Add the fight's talents to the shared line as a link others can click to see the talent tree. When the line and the link would be too long for one chat message, the link follows as a second one."] })

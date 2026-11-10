@@ -526,3 +526,126 @@ test("results: every cell and header has a tooltip", function()
         assertTrue(Tips.About(col) ~= nil, col.key .. " header tooltip")
     end
 end)
+
+-- ── v0.2 Task C1: close on combat, the fold arrow, the Character width, the second icon ─────────
+
+-- A fresh instance on the scripted meter, so the regen edge runs the real fight state machine.
+local function freshFight()
+    return fresh(function(m) T.mockMeter.install(m) end)
+end
+
+local function enterCombat(M, t)
+    M.__now = t
+    M.InCombatLockdown = function() return true end
+    M.__inCombat = true
+    M.__fire("PLAYER_REGEN_DISABLED")
+end
+
+test("results: entering combat closes the window when Close when combat starts is on, and not when off", function()
+    local NS, M = freshFight()
+    assertEqual(NS.defaults.profile.results.closeInCombat, true, "on by default")
+    local ui = open(NS)
+    enterCombat(M, 10)
+    assertFalse(NS.Results.IsShown(), "closed on the regen edge")
+    assertFalse(ui.frame:IsShown(), "the frame follows")
+    local NS2, M2 = freshFight()
+    assertTrue(NS2.SetByPath("results.closeInCombat", false))
+    local ui2 = open(NS2)
+    enterCombat(M2, 10)
+    assertTrue(NS2.Results.IsShown(), "the option off keeps it open")
+    assertTrue(ui2.frame:IsShown())
+end)
+
+test("results: a window reopened mid-combat stays open through a split or an encounter start", function()
+    local NS, M = freshFight()
+    open(NS)
+    enterCombat(M, 10)
+    assertFalse(NS.Results.IsShown())
+    NS.Results.Show()
+    M.__now = 15
+    M.__fire("ENCOUNTER_START", 2002, "Grobbulus", 15, 20)
+    M.__fireTimers()
+    assertTrue(NS.Results.IsShown(), "only the regen edge closes it")
+end)
+
+test("results: the fold arrow shows chevron-right collapsed and chevron-left expanded", function()
+    local NS = fresh()
+    local ui = open(NS)
+    assertEqual(NS.Results.View(), "collapsed")
+    assertEqual(ui.viewToggle.iconName, "chevron-right", "collapsed: open the detail to the right")
+    NS.Results.ToggleView()
+    assertEqual(NS.Results.View(), "expanded")
+    assertEqual(ui.viewToggle.iconName, "chevron-left", "expanded: fold the detail away")
+    NS.Results.ToggleView()
+    assertEqual(ui.viewToggle.iconName, "chevron-right")
+end)
+
+local function indexOf(columns, key)
+    for i, col in ipairs(columns) do if col.key == key then return i end end
+end
+
+test("results: Character is a fixed 104 px column and the target column takes the rest", function()
+    local NS = fresh()
+    local F, Tbl = NS.ResultsFights, NS.ResultsTable
+    local cols = F.Columns()
+    local ci, ti = indexOf(cols, "character"), indexOf(cols, "target")
+    assertEqual(F.CHARACTER_W, 104)
+    for _, width in ipairs({ NS.Results.MIN_WIDTH, 920, 1400 }) do
+        local place = Tbl.Columns(cols, width)
+        assertEqual(place[ci].w, 104, "Character at " .. width)
+        assertTrue(place[ti].w >= F.TARGET_W, "the target column keeps its minimum at " .. width)
+        local last = place[#place]
+        assertTrue(last.x + last.w <= width - Tbl.SCROLLBAR_W - Tbl.PAD, "the columns fit at " .. width)
+    end
+    assertTrue(Tbl.Columns(cols, 1400)[ti].w > Tbl.Columns(cols, 920)[ti].w, "a wider window widens the target")
+    assertTrue(NS.defaults.profile.results.window.width >= NS.Results.MIN_WIDTH, "the shipped width fits")
+end)
+
+test("results: a stored Character width wins, within the room the target column leaves", function()
+    local NS = fresh()
+    local F, Tbl = NS.ResultsFights, NS.ResultsTable
+    local cols = F.Columns()
+    local ci, ti = indexOf(cols, "character"), indexOf(cols, "target")
+    assertEqual(Tbl.Columns(cols, 1400, { character = 160 })[ci].w, 160, "the stored width")
+    assertEqual(Tbl.Columns(cols, 1400, { character = 9999 })[ci].w, F.CHARACTER_MAX, "held to the most")
+    assertEqual(Tbl.Columns(cols, 1400, { character = 1 })[ci].w, F.CHARACTER_MIN, "held to the least")
+    local tight = Tbl.Columns(cols, NS.Results.MIN_WIDTH, { character = 200 })
+    assertTrue(tight[ti].w >= F.TARGET_W, "the target keeps its minimum")
+    assertTrue(tight[ci].w >= F.CHARACTER_W, "the character gives back only what it took")
+    NS.db.profile.results.columns.character = 150
+    local _, view = open(NS)
+    assertEqual(view.list.place[ci].w, 150, "the window lays out the stored width")
+end)
+
+test("results: dragging the Character header's edge resizes it and stores the width on release", function()
+    local cursor = 0
+    local NS = fresh(function(m) m.GetCursorPosition = function() return cursor, 0 end end)
+    local cols = NS.ResultsFights.Columns()
+    local ci = indexOf(cols, "character")
+    local _, view = open(NS)
+    local grip = view.list.heads[ci].grip
+    assertTrue(grip ~= nil, "the Character header has a grip")
+    assertNil(view.list.heads[indexOf(cols, "date")].grip, "a fixed column has none")
+    cursor = 500
+    grip:__fire("OnMouseDown", "LeftButton")
+    cursor = 530
+    grip:__fire("OnUpdate", 0.01)
+    assertEqual(view.list.place[ci].w, 134, "live while dragged")
+    assertNil(NS.db.profile.results.columns.character, "nothing stored mid-drag")
+    grip:__fire("OnMouseUp", "LeftButton")
+    assertEqual(NS.db.profile.results.columns.character, 134, "stored on release")
+    NS.ResetPositions()
+    assertNil(NS.db.profile.results.columns.character, "Reset position puts the shipped width back")
+    assertEqual(view.list.place[ci].w, 104)
+end)
+
+test("results: no spec: the row draws its class icon and no second icon", function()
+    local NS = fresh(function(m) m.CLASS_ICON_TCOORDS = { MAGE = { 0, 0.25, 0, 0.25 } } end)
+    local r = rec(NS, { id = "nospec" })
+    r.who.specID, r.who.specName, r.who.specIcon = nil, nil, nil
+    save(NS, r)
+    local _, view = open(NS)
+    local cell = drawn(view).nospec.cells.clsSpec
+    assertTrue(cell.class:IsShown(), "the class icon")
+    assertFalse(cell.spec:IsShown(), "no second icon, never the class icon twice")
+end)

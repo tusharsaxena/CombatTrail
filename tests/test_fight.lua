@@ -21,8 +21,11 @@ local function fresh()
     local meter
     local inst = T.load{ mutate = function(m) meter = T.mockMeter.install(m) end }
     local NS = inst.NS
-    local heard = { started = {}, ticks = 0, ended = {} }
+    local heard = { started = {}, ticks = 0, ended = {}, entered = {} }
     local rx = NS.NewBusTarget()
+    if NS.MSG.COMBAT_ENTERED then
+        rx:RegisterMessage(NS.MSG.COMBAT_ENTERED, function(_, t) heard.entered[#heard.entered + 1] = t end)
+    end
     rx:RegisterMessage(NS.MSG.FIGHT_STARTED, function(_, fight) heard.started[#heard.started + 1] = fight end)
     rx:RegisterMessage(NS.MSG.FIGHT_TICK, function() heard.ticks = heard.ticks + 1 end)
     rx:RegisterMessage(NS.MSG.FIGHT_ENDED, function(_, fight, final, reason)
@@ -565,4 +568,45 @@ test("fight: an encounter that starts in combat while idle starts a fight", func
     inst.mocks.__fire("ENCOUNTER_START", 2001, "Patchwerk", 15, 20)
     assertEqual(#heard.started, 1)
     assertEqual(inst.NS.Fight.Current().encounter.id, 2001)
+end)
+
+-- ── COMBAT_ENTERED (v0.2 Task C1): the regen edge alone ───────────────────────────────────────────
+
+test("fight: COMBAT_ENTERED is sent on the regen edge from idle, on the grace carry-on and on park+begin", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    assertTrue(NS.MSG.COMBAT_ENTERED ~= nil, "declared in the bus catalog")
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)                       -- from idle
+    assertEqual(#heard.entered, 1)
+    assertEqual(heard.entered[1], 10, "the payload is the entry time")
+    leave(inst, 20)
+    enter(inst, 22)                       -- within the grace: the fight carries on
+    assertEqual(#heard.started, 1, "no new fight")
+    assertEqual(#heard.entered, 2, "but combat was entered again")
+    leave(inst, 30)
+    update(inst, 33, 1)                   -- the tail keeps it unsettled
+    at(inst, 35)
+    meter.SetSession(2, SECOND)
+    enter(inst, 35)                       -- past the grace: parked, a new fight begins
+    assertEqual(#heard.started, 2)
+    assertEqual(#heard.entered, 3)
+end)
+
+test("fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in combat, or while stood down", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    at(inst, 15)
+    inst.mocks.__fire("ENCOUNTER_START", 2002, "Grobbulus", 15, 20)
+    meter.SetSession(2, SECOND)
+    update(inst, 15.2, 2)
+    assertEqual(#heard.started, 2, "a split and an encounter start a fight")
+    assertEqual(#heard.entered, 1, "only the regen edge entered combat")
+    leave(inst, 40)
+    settle(inst, 44.5)
+    NS.SetByPath("general.enabled", false)
+    enter(inst, 50)
+    assertEqual(#heard.entered, 1, "nothing while stood down")
 end)

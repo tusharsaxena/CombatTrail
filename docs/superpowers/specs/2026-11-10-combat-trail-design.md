@@ -262,6 +262,9 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
   DPS, meter DPS, a Delta or "Leads by" box), the damage chart (this session only), the spell breakdown with pet
   spells tagged, Gear and Talents (Gear view, View talents, Copy import string), Usage (Edit), and buttons for Timeline,
   Compare vs best, Add note, Share and Delete. A fold arrow hides the detail.
+- **Window (v0.2):** it closes when combat starts (`results.closeInCombat`, on by default); one reopened mid-fight
+  stays open. The fold arrow shows a right chevron collapsed and a left one expanded (DPS Race's). Character is a
+  fixed 104 px column its header's edge drags, and the encounter or target column takes the window's slack.
 - **Ability timeline (owner: same as DpsRace):** opens over the Results window. It shows two icon strips (this fight in gold,
   the compared fight in blue), per-ability rows with two tick lanes, cooldown length under the name, cast counts, long
   cooldowns first, pet abilities (toggle), zoom and pan (buttons, Ctrl+wheel, Shift+wheel), and a help "?".

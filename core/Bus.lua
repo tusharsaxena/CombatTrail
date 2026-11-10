@@ -18,6 +18,11 @@ NS.MSG = {
     -- { id, sessionID, sessions, startT, firstHitT, encounter, snapshot }; the same table rides every
     -- message of that fight, and fields fill in as they become known (sessionID, firstHitT).
     FIGHT_STARTED = "Ka0s_CombatTrail_FightStarted",
+    -- Sender: modules/Fight.lua, on the PLAYER_REGEN_DISABLED edge only (from idle, on the grace
+    -- carry-on and on a re-entry that parks the last fight), never on a meter split or an encounter
+    -- start mid-combat, so a window the player reopens in combat stays open (v0.2 Task C1).
+    -- Payload: (t), the entry time.
+    COMBAT_ENTERED = "Ka0s_CombatTrail_CombatEntered",
     -- Sender: modules/Fight.lua, every Constants.FIGHT.TICK seconds while in combat. Payload: (fight).
     FIGHT_TICK = "Ka0s_CombatTrail_FightTick",
     -- Sender: modules/Fight.lua, once per fight after the settle (or at once, on a meter reset).

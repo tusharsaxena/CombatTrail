@@ -151,6 +151,8 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-R12 | Retail | The Spec dropdown, column and grouping | Present |
 | SM-CT-R13 | Forever | The Mythic+, delve and arena content filters | Absent on WoW Forever |
 | SM-CT-R15 | Forever | A fight with points spent, then `/ct results` | The row's second icon is the predominant tree's (never the class icon twice); the dropdown reads "All talent trees" / "Current talent tree"; "Group: Talent tree" groups by it; Share names the tree |
+| SM-CT-R16 | Both | `/ct results` open, then pull a mob; reopen it mid-fight; then turn History → Results window → Close when combat starts off and pull again | The window and its timeline, gear view and compare close on the pull; reopened mid-fight it stays open; with the option off it stays open |
+| SM-CT-R17 | Both | `/ct results`: the title bar's fold arrow, then the Character column's header edge | Collapsed shows a right chevron, expanded a left one; Character opens at 104 px and the target column takes the slack; dragging the header edge resizes it, the width survives `/reload`, and Reset position puts it back |
 | SM-CT-R14 | Both | An open-world fight, then the same mob at another level (or a Retail mob after a level-up), then `/ct results` | The detail's three meta lines name the realm, ilvl and the zone (never the continent), the target with its level, and the stamp; the two levels group as two boards, and a second fight at one level paces against the first on the HUD |
 
 ## 6. Timeline, compare and gear view

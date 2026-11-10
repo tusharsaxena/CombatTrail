@@ -358,6 +358,7 @@ the stored count and its estimated size, and carries *Purge history…*.
 |---|---|
 | Window scale | `results.scale` |
 | Row height (px) | `results.rowHeight` |
+| Close when combat starts | `results.closeInCombat` |
 | Include talents link when sharing | `results.shareTalents` |
 
 ### Usage
