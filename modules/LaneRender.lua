@@ -67,11 +67,53 @@ local lanes = {}     -- [laneKey] = { key, frame, pool, factory, icons = {newest
 local cdCache = {}   -- [plain spellID] = base cooldown in ms (plain, read out of combat)
 local haste          -- the last plain spell haste, in percent
 
-local function cfgOf(laneKey)
+local function rawCfg(laneKey)
     local db = NS.db
     local all = db and db.profile and db.profile.lanes
     return all and all[laneKey]
 end
+
+-- THE PET LANE'S LINK (owner, 2026-11-11, after KickCD's Focus-mirrors-Target): with
+-- `lanes.pet.link` on, the Pet lane reads every look and visibility setting from the Player lane.
+-- What it keeps of its own is LINK_OWN: its switch, where it sits (the anchor, the strata and the
+-- level), its label text, its ignore list and the link itself. Nothing is copied: the read is
+-- redirected, so a change to the Player lane reaches the Pet lane on its next Apply.
+LaneRender.LINK_OWN = { enabled = true, anchor = true, strata = true, levelOffset = true, labelText = true,
+                        ignore = true, link = true }
+
+--- Whether lane `laneKey` mirrors the Player lane (only the Pet lane can).
+--- @param laneKey string
+--- @return boolean
+function LaneRender.IsLinked(laneKey)
+    if laneKey ~= "pet" then return false end
+    local cfg = rawCfg(laneKey)
+    return cfg ~= nil and cfg.link == true
+end
+
+local proxies = {}   -- [laneKey] = { own, src, view }: the linked view, rebuilt when a table changes
+
+--- A lane's settings as its look reads them: its own table, or while linked a read-only view that
+--- answers LINK_OWN from it and everything else from the Player lane's.
+--- @param laneKey string
+--- @return table|nil
+function LaneRender.Config(laneKey)
+    local own = rawCfg(laneKey)
+    if own == nil or not LaneRender.IsLinked(laneKey) then return own end
+    local src = rawCfg("player")
+    if src == nil then return own end
+    local p = proxies[laneKey]
+    if not (p and p.own == own and p.src == src) then
+        local own_ = LaneRender.LINK_OWN
+        p = { own = own, src = src, view = setmetatable({}, { __index = function(_, k)
+            if own_[k] then return own[k] end
+            return src[k]
+        end, __newindex = function() error("a linked lane's view is read-only", 2) end }) }
+        proxies[laneKey] = p
+    end
+    return p.view
+end
+
+local cfgOf = LaneRender.Config
 
 local function enabledNow(laneKey)
     local cfg = cfgOf(laneKey)
@@ -743,6 +785,8 @@ function LaneRender.Frame(laneKey)
 end
 
 function LaneRender.__pool(laneKey) return lanes[laneKey] and lanes[laneKey].pool end
+-- The settings the lane last applied (a linked Pet lane's: the view, LaneRender.Config).
+function LaneRender.__cfg(laneKey) return lanes[laneKey] and lanes[laneKey].cfg end
 
 --- The lane's shown ticks, nearest the now edge first.
 function LaneRender.__ticks(laneKey)

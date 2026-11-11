@@ -57,7 +57,11 @@ local combat = false    -- between PLAYER_REGEN_DISABLED and PLAYER_REGEN_ENABLE
 local lastCombatEnd     -- GetTime() at the last PLAYER_REGEN_ENABLED
 local timers = {}       -- the hide-after AceTimer handles
 
+-- Through modules/LaneRender.lua's resolver: a linked Pet lane shows when the Player lane's
+-- Visibility says (LaneRender.Config, LINK_OWN).
 local function cfgOf(laneKey)
+    local R = NS.LaneRender
+    if R and R.Config then return R.Config(laneKey) end
     local db = NS.db
     local all = db and db.profile and db.profile.lanes
     return all and all[laneKey]
@@ -332,7 +336,8 @@ local function onSettingsChanged(_, path)
     if type(path) ~= "string" then return end
     local laneKey, rest = path:match("^lanes%.([^.]+)%.(.+)$")
     local relevant = path == "profile"
-        or (IS_LANE[laneKey] and (rest == "enabled" or rest == "visibility" or rest:match("^visibility%.") ~= nil))
+        or (IS_LANE[laneKey] and (rest == "enabled" or rest == "link" or rest == "visibility"
+            or rest:match("^visibility%.") ~= nil))
     if not relevant then return end
     LaneVisibility.Sync()
     LaneVisibility.Refresh()

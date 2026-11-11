@@ -22,7 +22,13 @@ local descriptor = {
     set          = function(path, value) return NS.SetByPath(path, value) end,   -- the single write seam
     applyDefault = function(row) return NS.ApplyDefault(row) end,
     allRows      = function() return NS.Schema end,
-    rowsForPage  = function(pageKey, filter) return NS.SchemaForPage(pageKey, filter) end,
+    -- The Lanes page leaves a linked Pet lane's mirrored rows off its tabs (LanesPage.ShownRows).
+    rowsForPage  = function(pageKey, filter)
+        local rows = NS.SchemaForPage(pageKey, filter)
+        local page = NS.LanesPage
+        if page and page.ShownRows then rows = page.ShownRows(pageKey, filter, rows) end
+        return rows
+    end,
 
     skipRestoreAll = vetoedFromResetAll,
     resetProfile   = function()

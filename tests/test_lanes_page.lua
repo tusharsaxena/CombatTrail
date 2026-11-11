@@ -374,3 +374,81 @@ test("lanes page: the Frame level tooltip says lanes at one level mix their icon
     local tip = NS.FindSchemaRow("lanes.pet.levelOffset").tooltip
     assertTrue(tip:find(NS.L["Two lanes at the same level that overlap mix their icons. Give one a higher level to draw it whole over the other."], 1, true) ~= nil, tip)
 end)
+
+-- ── the Pet lane's link (owner, 2026-11-11, after KickCD's Focus-mirrors-Target) ───────────────
+
+test("lanes link: off by default; on, the Pet lane reads the Player lane's look but keeps its own place", function()
+    local inst = T.load({ mutate = installPaint })
+    local NS, R = inst.NS, inst.NS.LaneRender
+    assertEqual(lane(inst, "pet").link, false, "off out of the box: the Pet lane keeps its own look")
+    assertFalse(R.IsLinked("pet"))
+    assertFalse(R.IsLinked("player"), "only the Pet lane links")
+    assertEqual(R.Config("pet").iconSize, 24, "unlinked: its own")
+    NS.SetByPath("lanes.player.iconSize", 40)
+    NS.SetByPath("lanes.pet.link", true)
+    assertTrue(R.IsLinked("pet"))
+    local cfg = R.Config("pet")
+    assertEqual(cfg.iconSize, 40, "the Player lane's size")
+    assertEqual(cfg.borderColor.g, lane(inst, "player").borderColor.g, "the Player lane's border color")
+    assertEqual(cfg.anchor.mode, "dock", "its own place")
+    assertEqual(cfg.labelText, "", "its own label text")
+    assertEqual(cfg.enabled, true, "its own switch")
+    assertTrue(not pcall(function() cfg.iconSize = 10 end), "the linked view is read-only")
+    assertEqual(lane(inst, "pet").iconSize, 24, "nothing is copied into the Pet lane's table")
+    -- A later change to the Player lane reaches the Pet lane's frame.
+    NS.SetByPath("lanes.player.iconSize", 50)
+    assertEqual(R.__cfg("pet").iconSize, 50, "the Pet lane applied the Player lane's new size")
+    NS.SetByPath("lanes.pet.link", false)
+    assertEqual(R.Config("pet").iconSize, 24, "unlinked again: its own look back, untouched")
+end)
+
+test("lanes link: a linked Pet lane follows the Player lane's Visibility", function()
+    local inst = T.load({ mutate = installPaint })
+    local NS = inst.NS
+    NS.SetByPath("lanes.pet.link", true)
+    NS.SetByPath("lanes.player.visibility.show", "never")
+    assertEqual(NS.LaneRender.Config("pet").visibility.show, "never")
+    assertEqual(lane(inst, "pet").visibility.show, "always", "the Pet lane's own setting is kept")
+end)
+
+test("lanes link: the Pet lane's tabs show only the rows it keeps while linked, with a note", function()
+    local inst, ctx = shownPage()
+    local NS = inst.NS
+    NS.LanesPage.Select("pet")
+    NS.Helpers.RefreshPanel(ctx, true)
+    assertTrue(widget(inst, ctx, "Link to Player lane") ~= nil, "the Pet lane's General tab has the link")
+    NS.SetByPath("lanes.pet.link", true)
+    local shown = NS.LanesPage.ShownRows("lanes", "pet", NS.SchemaForPage("lanes", "pet"))
+    local roots = {}
+    for _, row in ipairs(shown) do roots[row.path:match("^lanes%.pet%.([^.]+)")] = true end
+    assertTrue(roots.enabled and roots.link and roots.anchor and roots.labelText and roots.strata, "its own rows")
+    assertTrue(not roots.iconSize and not roots.visibility and not roots.borderColor, "no mirrored row")
+    local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "lanes", nil, nil, { tabs = NS.LanesPage.HOST_TABS })
+    local list = table.concat(keys or {}, ",")
+    assertTrue(list:find(NS.LANES_TABS.icons, 1, true) == nil, "Icons drops off the strip: " .. list)
+    assertTrue(list:find(NS.LANES_TABS.size, 1, true) ~= nil, "Size and position stays for the place rows")
+    NS.Helpers.SelectTab("lanes", NS.LANES_TABS.general)
+    NS.Helpers.RefreshPanel(ctx, true)
+    local note = NS.L["Linked to the Player lane. Only where this lane sits and its label text are set here; untick Link to Player lane to give it its own look."]
+    assertTrue(widget(inst, ctx, note) ~= nil, "the note says why")
+    -- The schema keeps every row: the CLI and the resets reach them.
+    assertTrue(NS.FindSchemaRow("lanes.pet.iconSize") ~= nil)
+    assertTrue(#NS.LanesPage.Rows("pet") > #shown, "Reset lane still covers every row")
+    -- The Player lane's page is untouched and has no link row.
+    NS.LanesPage.Select("player")
+    NS.Helpers.RefreshPanel(ctx, true)
+    assertTrue(widget(inst, ctx, "Link to Player lane") == nil)
+    assertEqual(NS.FindSchemaRow("lanes.player.link"), nil)
+end)
+
+test("lanes link: Copy from Player lane gives the Pet lane its own copy and unlinks it", function()
+    local inst = T.load()
+    local NS = inst.NS
+    NS.SetByPath("lanes.player.iconSize", 44)
+    NS.SetByPath("lanes.pet.link", true)
+    assertTrue(NS.LanesPage.CopyFrom("player", "pet"))
+    assertEqual(lane(inst, "pet").link, false, "unlinked")
+    assertEqual(lane(inst, "pet").iconSize, 44, "its own copy of the look")
+    NS.SetByPath("lanes.player.iconSize", 30)
+    assertEqual(NS.LaneRender.Config("pet").iconSize, 44, "drifts apart from here")
+end)

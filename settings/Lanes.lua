@@ -10,6 +10,12 @@ local _, NS = ...
 -- (NS.SchemaForPage), so every control on screen is bound to the picked lane's own path, and the
 -- CLI, the resets and the Defaults reach both lanes as ordinary rows. Picking a lane keeps the tab.
 --
+-- THE LINK (Pet lane only, after KickCD's Focus-mirrors-Target): "Link to Player lane" on the
+-- General tab. While it is on, the Pet lane's mirrored rows are left off its tabs (a tab with none
+-- left drops off the strip) and a note says why; only the rows it keeps of its own draw
+-- (modules/LaneRender.lua LINK_OWN). The schema keeps every row, so the CLI, Reset lane and the
+-- Defaults still reach them.
+--
 -- THE ACTS on the lane (unlock, copy from the other lane, reset, preview) sit on the General tab,
 -- the page's first (options-ui-§14's escape). The ignore list is no schema row: the Ignored spells
 -- tab draws it through modules/LaneIgnore.lua, and the page's Defaults and Reset lane put it back to
@@ -182,6 +188,10 @@ local function laneRows(lane)
     at(TAB.general, L["Lane"])
     row("enabled", { type = "bool", label = L["Enable this lane"],
         tooltip = L["Show this lane and listen for its casts. Off, it draws nothing and listens for nothing."] })
+    if lane == "pet" then
+        row("link", { type = "bool", label = L["Link to Player lane"],
+            tooltip = L["The Pet lane mirrors the Player lane's size, icons, background and border, ticks, label look and visibility. Where it sits, its label text, its switch and its ignored spells stay its own. Untick to give the Pet lane its own look."] })
+    end
 
     -- Size and position
     at(TAB.size, L["Size"])
@@ -382,6 +392,33 @@ local function copy(v)
     return out
 end
 
+--- The rows the page draws for lane `filter`: all of them, but while the Pet lane is linked only the
+--- ones it keeps of its own (LaneRender.LINK_OWN). The panel's rowsForPage asks this; the schema
+--- itself, and every reset and CLI path, keep every row.
+--- @param pageKey string
+--- @param filter string|nil  the picked lane
+--- @param rows table  NS.SchemaForPage's
+--- @return table
+function LanesPage.ShownRows(pageKey, filter, rows)
+    if pageKey ~= PAGE or filter ~= "pet" or not (NS.LaneRender and NS.LaneRender.IsLinked("pet")) then
+        return rows
+    end
+    local own, out = NS.LaneRender.LINK_OWN, {}
+    for _, row in ipairs(rows) do
+        local root = type(row.path) == "string" and row.path:match("^lanes%.pet%.([^.]+)")
+        if row.lane ~= "pet" or (root and own[root]) then out[#out + 1] = row end
+    end
+    return out
+end
+
+-- A link flip redraws the page: its tabs change (a CLI write included).
+local linkBus = NS.NewBusTarget and NS.NewBusTarget()
+if linkBus then
+    linkBus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
+        if path == "lanes.pet.link" then redraw() end
+    end)
+end
+
 --- The lane the band's picker names.
 function LanesPage.Selected() return selected end
 
@@ -393,9 +430,9 @@ function LanesPage.Select(lane)
     return true
 end
 
--- What Copy from leaves alone: where the lane sits, its own words, its switch. The ignore list is
--- no row, so it stays the lane's own too.
-local COPY_SKIP = { enabled = true, labelText = true }
+-- What Copy from leaves alone: where the lane sits, its own words, its switch, the link. The ignore
+-- list is no row, so it stays the lane's own too.
+local COPY_SKIP = { enabled = true, labelText = true, link = true }
 
 --- Copy every setting of lane `from` onto lane `to`, but its place (anchor), its label text and its
 --- switch, through the write seam.
@@ -409,6 +446,8 @@ function LanesPage.CopyFrom(from, to)
                 NS.SetByPath(row.path, copy(NS.GetSetting("lanes." .. from .. "." .. rel)))
             end
         end
+        -- A copy is a look of the lane's own from here on (KickCD's Copy from Target): it unlinks.
+        if NS.LaneRender and NS.LaneRender.IsLinked(to) then NS.SetByPath("lanes." .. to .. ".link", false) end
     end)
     redraw()
     NS.Print(L["The %s now looks like the %s."]:format(LANE_NAME[to], LANE_NAME[from]))
@@ -503,6 +542,9 @@ local GENERAL_TAB = {
         drawn[#drawn + 1] = UNLOCK_ROW
         H.RenderRows(ctx, drawn, nil, nil, { noHeadings = true })
         local lane = selected
+        if NS.LaneRender and NS.LaneRender.IsLinked(lane) then
+            H.TextRow(ctx, L["Linked to the Player lane. Only where this lane sits and its label text are set here; untick Link to Player lane to give it its own look."])
+        end
         H.InlineButtonPair(ctx,
             { text = L["Copy from %s"]:format(LANE_NAME[OTHER[lane]]),
               tooltip = L["Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."],
