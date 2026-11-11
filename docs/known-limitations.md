@@ -61,8 +61,8 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 
 ## Design limits of v0.1.0
 
-- **Two lanes only**, Player and Pet (target, focus and party lanes are issue #1), and no Insights
-  tab (issue #2).
+- **Two lanes only**, Player and Pet (target, focus and party lanes are issue #1). The Insights tab
+  (issue #2) came with Race mode.
 - **The retention settings are per profile while the store is global**, and the 500-fight cap is
   enforced when the purge runs, not on each save.
 - **Your own training dummies are per profile, and a fight's content is decided when it is saved.**

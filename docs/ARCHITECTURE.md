@@ -48,6 +48,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | The race's countdown and buzzer (`modules/Countdown.lua`, returns at once off Retail) and its chat lines on the arm and at the result (`modules/Share.lua`'s receivers under `ForClient`) | present | absent: nothing loads or registers; a saved race still shares |
 | The new-best toast (`modules/BestToast.lua`, History > New-best toast) | a fight's (`toast.fights`) and a race's (`toast.races`) | a fight's only: no `toast.races` key, row or receiver |
 | Races in the Results window (`modules/Results_Races.lua`, `Results_RaceDetail.lua`: the Fights / Races / All filter, the race filters, the race groupings, a race row's length and flag chips, the detail's Timing and Flags, the late-cast right-click, `/ct results races`; each asks `NS.ResultsRaces.On()`, `ForClient({ "retail" })`) | present, whether Race mode is on or off (the filter reads the record) | absent: a saved race lists as a fight, with its race DPS, score and time raced, and no race control |
+| The Insights tab (`modules/Results_Insights.lua`, `Results_InsightsData.lua`, `/ct results insights`): the cards, DPS Progression, the board tabs with Spec Comparison and Consistency, By Character, By Character x Content, Recent New Bests over every saved fight | present, plus the Fights / Races / All filter, Clean only and Include incomplete, the Clean races card, and under Races the race length and dummy kind filters and the race-only sections (Races By Character x Length, Late Casts, Races Per Day, Damage Tail After The Buzzer; ruling X12) | present with no race control: a saved race counts as a fight, with its race DPS |
 | The DPS HUD opening for a race whatever `hud.show`, `hud.instancesOnly` and `general.hudInCombat` say (ruling X7) | present | absent: there is no race |
 | Sample history (test mode and the sim) | 40 fights | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
@@ -80,9 +81,9 @@ Load order is the TOC's: libraries, the locale, `core/` in dependency order, `de
 scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
-  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
+  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
   LauncherSetup, CombatTrail, Database.
-- **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race.
+- **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race, enUS_Insights.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
 - **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
@@ -92,7 +93,7 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Races, Results_Loadout,
   Results_Usage, Results_Targets, Results_RaceDetail, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
-  Results_Gear, Results_Compare, Results.
+  Results_Gear, Results_Compare, Results_InsightsData, Results_Insights, Results.
 - **Preview and support:** MockRotations, MockFights, Preview, Sim, Diagnostics.
 - **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, History, Race (the Race mode page, Retail), Profiles.
 

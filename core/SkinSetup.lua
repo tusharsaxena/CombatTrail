@@ -240,6 +240,8 @@ NS.SKIN_TOKENS = {
     ["ct.figures.text"] = { default = { 0.93, 0.93, 0.95, 1 }, follow = "hud.text" },
     ["ct.hud.shadow"]   = { default = { 0, 0, 0, 1 }, follow = "hud.shadow" },
     ["ct.chart.bg"]     = { default = { 0, 0, 0, 0.35 }, follow = "chart.track" },
+    -- The Insights charts' bar blue (DPS Race's), where a row names no color of its own.
+    ["ct.chart.bar"]    = { default = { 0.40, 0.66, 1.0, 1 }, follow = "chart.bar" },
     ["ct.box.border"]   = { default = { 1, 1, 1, 0.10 }, follow = "list.boxEdge" },
     -- The Results list (and the spell rows that share it): the stripe, the hover and selection
     -- washes, and the scroll thumb.

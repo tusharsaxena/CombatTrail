@@ -125,6 +125,8 @@ files["modules/Results_Table.lua"] = {
 }
 -- The fight list's date range: today from local midnight (the client's date formatter).
 files["modules/Results_Fights.lua"] = { read_globals = { "date" } }
+-- The Insights tab's local days: midnight and the next one (the client's date formatter).
+files["modules/Results_InsightsData.lua"] = { read_globals = { "date" } }
 -- The Results window: the popups it closes with it, and the talent tree it steps aside for (read
 -- bare at CALL time, type-checked).
 files["modules/Results.lua"] = { read_globals = { "StaticPopup_Hide", "PlayerSpellsFrame" } }

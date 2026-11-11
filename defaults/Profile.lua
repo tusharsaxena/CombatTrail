@@ -238,6 +238,10 @@ NS.defaults = {
                      days = 7, bossesOnly = false, group = "datechar", sort = "date", desc = true,
                      kind = "all", length = "all", dummyKind = "all", hideFlagged = false,
                      includeIncomplete = true, onlyBest = false },
+            -- The Insights tab's stock view (modules/Results_Insights.lua, Race mode plan Task D2): every
+            -- character, spec, content and date, fights and races; Clean only and Include incomplete off.
+            insights = { character = "all", spec = "all", content = "all", days = 0, kind = "all",
+                         length = "all", dummyKind = "all", cleanOnly = false, includeIncomplete = false },
             window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, height = 520,
                        view = "collapsed" },
             scale = 1, rowHeight = 18,

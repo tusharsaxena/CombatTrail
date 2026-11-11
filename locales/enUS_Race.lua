@@ -324,8 +324,8 @@ L["Combat ended before the buzzer."] = "Combat ended before the buzzer."
 L["Race %s"] = "Race %s"
 L["The race length you picked."] = "The race length you picked."
 L["Damage stopped %ss after the buzzer."] = "Damage stopped %ss after the buzzer."
-L["Usage: /ct results, or /ct results show, hide, toggle or races"] =
-    "Usage: /ct results, or /ct results show, hide, toggle or races"
+L["Usage: /ct results, or /ct results show, hide, toggle, insights or races"] =
+    "Usage: /ct results, or /ct results show, hide, toggle, insights or races"
 
 -- A race's detail: the Timing and Flags sections, its figures, the late-cast menu
 L["Timing"] = "Timing"

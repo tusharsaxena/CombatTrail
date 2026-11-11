@@ -10,7 +10,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
   line (its own file list), then LibSharedMedia, LibDataBroker and LibDBIcon. Panel Master's copies,
   the set that loads on both clients.
 - **The locale** next: `locales/enUS.lua` creates `NS.L`, which several `core/` files read at file
-  scope; its topic file `locales/enUS_Race.lua` fills it directly after (localization-§6).
+  scope; its topic files `locales/enUS_Race.lua` and `locales/enUS_Insights.lua` fill it directly after
+  (localization-§6).
 - **`core/`** in dependency order: the namespace and media first, then the skin seam (before any
   frame-building file), the compat root (before the secret guards bind), the latch (before the perf
   harness, which raises without it), and the AceAddon promotion after the printer exists.
@@ -28,6 +29,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `Bindings.xml` | The three `CLICK` key bindings in the addon's own category |
 | `locales/enUS.lua` | `NS.L`, the canonical locale with the key-is-the-string fallback |
 | `locales/enUS_Race.lua` | Race mode's strings, a topic file filling `NS.L` (ruling X13) |
+| `locales/enUS_Insights.lua` | The Insights tab's strings, a topic file filling `NS.L` (Race mode plan D2) |
 | `core/Namespace.lua` | The chat tag, folder name, brand, slash words and version fallback |
 | `core/MediaSetup.lua` | `NS.Icon` and `NS.MediaFont` from LibKa0s-Media, and the one LibSharedMedia registration |
 | `core/Constants.lua` | Fixed values: the mono face, the logo path, the frame-layering table, the fight timing, the shared bar palette (`PALETTE`, every bar default's source) |
@@ -42,6 +44,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/PoolSetup.lua` | `NS.Pool`, the widget pool the lanes, the HUD and the Results window use |
 | `core/WidgetsSetup.lua` | Dropdowns, menus, the test and sim strips and the copy box, from LibKa0s-Widgets |
 | `core/ToastSetup.lua` | `NS.NewToast`, the alert-toast shell from LibKa0s-Toast, and its degraded stub |
+| `core/ChartsSetup.lua` | `NS.Charts` (LibKa0s-Charts) and `NS.ChartsHost()`, the Results window's look for the Insights charts |
 | `core/LifecycleSetup.lua` | The one stand-down latch and the modules it suspends and resumes |
 | `core/PerfSetup.lua` | `NS.Perf`, the performance harness and its buckets |
 | `core/DebugLogSetup.lua` | `NS.DebugLog`, the gated `NS.Debug` sink and the diagnostics descriptor |
@@ -114,7 +117,9 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_TimelineMarks.lua` | The timeline's cast marks on the same `NS.ResultsTimeline`: By ability's icons or ticks (`results.timelineMarks`), the caster colors and every cast icon's art and edge |
 | `modules/Results_Gear.lua` | The gear view window |
 | `modules/Results_Compare.lua` | The compare window |
-| `modules/Results.lua` | The Results window's shell, the row menu and its public toggles |
+| `modules/Results_InsightsData.lua` | The Insights tab's pure half: its filters, the faceted options with counts, the one stats pass (Race mode plan D2) |
+| `modules/Results_Insights.lua` | The Insights tab: its filter bar, the stat cards and the chart sections over every saved fight, races as a filter (Race mode plan D2) |
+| `modules/Results.lua` | The Results window's shell, its Fights and Insights tabs, the row menu and its public toggles |
 | `modules/MockRotations.lua` | The sample rotation per client, data only |
 | `modules/MockFights.lua` | The sample history and the sample fight |
 | `modules/Preview.lua` | Test mode and the sim's shared shell |

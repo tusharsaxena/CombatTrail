@@ -2,8 +2,10 @@ local _, NS = ...
 -- modules/Results.lua — the Results window's shell (spec §7, mockup §5): the window, its title bar,
 -- the fight list in its body (modules/Results_Fights.lua over modules/Results_Table.lua), where the
 -- fight detail sits (modules/Results_Detail.lua), the footer, the row menu, and the window's public
--- surface (Show, Hide, Toggle, Open, ShowFight). Adapted from DPS Race @045f479 (modules/Results.lua)
--- without its race and without its Insights tab (deferred, spec §2): one list, so no tab strip.
+-- surface (Show, Hide, Toggle, Open, ShowFight, ShowTab). Adapted from DPS Race @045f479
+-- (modules/Results.lua). TWO TABS under the title band (Race mode plan Task D2): Fights, the fight
+-- list with its detail, and Insights (modules/Results_Insights.lua), built on its first show. The tab
+-- shown is session-only, never saved: the window opens on Fights.
 --
 -- THE WINDOW is a plain, non-secure frame (standalone-windows): skinned through NS.ApplySkin, closed
 -- through NS.MakeCloseButton, in UISpecialFrames, clamped, toplevel in the HIGH tier
@@ -58,6 +60,12 @@ local selected           -- the fight id the window has selected
 local detailOpen = false -- the collapsed view: the detail stands in the list's place
 local pick               -- the fight a "Compare With This Fight" picked (session only, plan Task 4.4)
 local hiding = false     -- true while the addon hides the frame itself
+local tab = "fights"     -- the tab shown (session only)
+
+--- The window's tabs, left to right.
+Results.TABS = { "fights", "insights" }
+local TAB_LABELS = { fights = "Fights", insights = "Insights" }
+local TAB_H = Style.TAB_STRIP_H
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Results", fmt, ...) end
@@ -126,7 +134,7 @@ end
 
 -- ── the parts ───────────────────────────────────────────────────────────────────────────────────
 
-local layout, resize, render, renderDetail, footer, applyScale
+local layout, resize, render, renderDetail, footer, applyScale, buildTabs
 
 local function fight(id)
     return id and Source.Get(id) or nil
@@ -153,6 +161,37 @@ local function paintToggle()
     Style.PaintStrip(ui.controls)
 end
 
+-- LootHistory's tab (its Browser tabs, not the skin's Tab primitive, which would lay a backing under
+-- it): Style.FONT.TAB, the skin's `tab.onText` and its `tab.onLine` underline when active, `tab.text`
+-- when not; flush under the title band, a rule under the strip.
+local function tabButton(f, name, i)
+    local b = CreateFrame("Button", nil, f)
+    b:SetSize(Style.TAB_W, TAB_H)
+    b:SetPoint("TOPLEFT", Style.Band(f), "BOTTOMLEFT", 6 + (i - 1) * Style.TAB_PITCH, 0)
+    b.label = Style.Text(b, Style.FONT.TAB, nil, "CENTER")
+    b.label:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b.label:SetText(L[TAB_LABELS[name]])
+    b.underline = b:CreateTexture(nil, "OVERLAY")
+    Style.Fill(b.underline, "tab.onLine")
+    b.underline:SetHeight(2)
+    b.underline:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 8, 0)
+    b.underline:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -8, 0)
+    b:SetScript("OnClick", function() Results.ShowTab(name) end)
+    ui.tabs[name] = b
+end
+
+function buildTabs(f)
+    ui.tabs = {}
+    for i, name in ipairs(Results.TABS) do tabButton(f, name, i) end
+    local line = f:CreateTexture(nil, "ARTWORK")
+    line:SetHeight(1)
+    NS.Skin.Divider(line)
+    local band = Style.Band(f)
+    line:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, -TAB_H)
+    line:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, -TAB_H)
+    ui.tabRule = line
+end
+
 local function buildChrome(f)
     -- The title on the title band by the skin's `title.align`: the skin's Shell paints it, Style.Header
     -- places it and the controls on the band's middle.
@@ -174,6 +213,7 @@ local function buildChrome(f)
     end)
     ui.drag = drag
     Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.viewToggle, ui.settings }, n = 3 })
+    buildTabs(f)
 end
 
 local function buildFooter(f)
@@ -264,7 +304,7 @@ local function ensureWindow()
     buildChrome(f)
     buildFooter(f)
     ui.body = CreateFrame("Frame", nil, f)
-    ui.body:SetPoint("TOPLEFT", Style.Band(f), "BOTTOMLEFT", 0, -1)
+    ui.body:SetPoint("TOPLEFT", Style.Band(f), "BOTTOMLEFT", 0, -(1 + TAB_H))
     ui.body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, FOOTER_H + 1)
     buildList()
     buildDetail()
@@ -289,7 +329,7 @@ end
 -- geometry (the skin's inset and `title.height`), worked out, never read back off a frame.
 local function bodySize()
     local inset, bandH = Style.BandGeometry()
-    return ui.width - 1 - inset, ui.height - inset - bandH - FOOTER_H - 2 - (ui.drop or 0)
+    return ui.width - 1 - inset, ui.height - inset - bandH - TAB_H - FOOTER_H - 2 - (ui.drop or 0)
 end
 
 --- "wide" (the detail beside the list: the expanded view) or "narrow" (the detail in its place: the
@@ -300,9 +340,47 @@ end
 
 -- The list's frame and the detail's, placed for the view: beside each other when wide; in the narrow
 -- view one of the two, the detail while a fight is open in it.
+-- The Insights tab, built on its first show (it reads the source then).
+local function buildInsights()
+    if ui.insights then return ui.insights end
+    ui.insights = NS.ResultsInsights.Build(ui.body, {
+        open = function(record) Results.ShowFight(record.id) end,
+        menu = function(record, row) Results.RowMenu(record, row) end,
+        -- A filter change redraws the footer's count at once.
+        count = function(text)
+            ui.insightsCount = text
+            if tab == "insights" then footer() end
+        end,
+    })
+    -- Built while the sample history is shown: it opens on the sample's view.
+    if Source.IsMock() then ui.insights:SampleView(true) end
+    debug("insights built")
+    return ui.insights
+end
+
+-- Each tab's label and underline for the tab shown, and the panes it hides.
+local function paintTabs()
+    for _, name in ipairs(Results.TABS) do
+        local b, on = ui.tabs[name], name == tab
+        Style.Paint(b.label, on and "tab.onText" or "tab.text", Style.FONT.TAB)
+        b.underline:SetShown(on)
+    end
+    if ui.insights then ui.insights.frame:SetShown(tab == "insights") end
+end
+
+-- The Insights tab across the body: the list and the detail hidden.
+local function layoutInsights(width, height)
+    ui.list.frame:Hide()
+    ui.detail.frame:Hide()
+    local pane = buildInsights()
+    pane.frame:Show()
+    pane:Layout(width, height)
+end
+
 function layout()
     if not ui then return end
     local width, height = bodySize()
+    if tab == "insights" then return layoutInsights(width, height) end
     local detail = ui.detail
     detail.frame:ClearAllPoints()
     if Results.Mode() == "wide" then
@@ -331,6 +409,10 @@ end
 function resize()
     if not ui then return end
     local width, height = bodySize()
+    if tab == "insights" then
+        if ui.insights then ui.insights:Resize(width, height) end
+        return
+    end
     local detail = ui.detail
     if Results.Mode() == "wide" then
         local dw = Results.DETAIL_WIDTH
@@ -388,7 +470,9 @@ function Results.DetailOpen()
 end
 
 function footer()
-    ui.footLeft:SetText(ui.count and (ui.count .. " \194\183 " .. HINT) or HINT)
+    -- The tab's count before the hint.
+    local count = tab == "insights" and ui.insightsCount or ui.count
+    ui.footLeft:SetText(count and (count .. " \194\183 " .. HINT) or HINT)
     -- GetSetting answers the shipped default itself (settings/Schema.lua); no second literal here.
     local days = tonumber(NS.GetSetting("history.days"))
     ui.footRight:SetText(days and days > 0 and L["Fights are kept for %d days"]:format(days)
@@ -429,6 +513,13 @@ function render(reveal)
     if not ui then return end
     if selected and not fight(selected) then selected, detailOpen = nil, false end
     if pick and not fight(pick) then pick = nil end
+    paintTabs()
+    if tab == "insights" then
+        buildInsights():Refresh()
+        layout()
+        footer()
+        return
+    end
     ui.list:Refresh()
     if selected and reveal then ui.list.list:Reveal(selected) end
     renderDetail()
@@ -449,8 +540,8 @@ end
 local function anchorStrip(strip)
     if strip then
         local band = Style.Band(ui.frame)
-        strip:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, -1)
-        strip:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, -1)
+        strip:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, -(1 + TAB_H))
+        strip:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, -(1 + TAB_H))
     end
     return strip
 end
@@ -491,7 +582,7 @@ local function applySampleMarker()
     local drop = strip and NS.TEST_STRIP_HEIGHT or 0
     if ui.drop ~= drop then
         ui.drop = drop
-        ui.body:SetPoint("TOPLEFT", Style.Band(ui.frame), "BOTTOMLEFT", 0, -(1 + drop))
+        ui.body:SetPoint("TOPLEFT", Style.Band(ui.frame), "BOTTOMLEFT", 0, -(1 + TAB_H + drop))
     end
     local marked = mode ~= nil and not strip
     ui.frame.title:SetText(marked and L["Combat Trail \226\128\148 Results \194\183 Test"]
@@ -720,6 +811,7 @@ end
 function Results.ShowFight(id)
     selected = fight(id) and id or nil
     detailOpen = selected ~= nil
+    tab = "fights"
     stopTreeWait()
     Results.wanted = true
     Results.Refresh(true)
@@ -731,6 +823,22 @@ function Results.Open(id)
     if id ~= nil then return Results.ShowFight(id) end
     Results.Show()
     return Results.IsShown()
+end
+
+--- Open the window on tab `name` ("fights" | "insights"); a switch closes an open filter menu.
+--- @return boolean shown
+function Results.ShowTab(name)
+    if not TAB_LABELS[name] then return false end
+    if name ~= tab then NS.CloseMenu() end
+    tab = name
+    if tab == "insights" then Results.CloseModals(nil) end
+    Results.Show()
+    return Results.IsShown()
+end
+
+--- The tab shown ("fights" | "insights").
+function Results.Tab()
+    return tab
 end
 
 --- The fight the window has selected, or nil.
@@ -767,6 +875,7 @@ end
 --- @return boolean shown
 function Results.ShowRaces()
     if not NS.ResultsRaces.On() then return false end
+    tab = "fights"
     Results.Show()
     if not ui then return false end
     detailOpen = false
@@ -779,19 +888,22 @@ local VERBS = {
     toggle = function() Results.Toggle() end,
     show = function() Results.Show() end,
     hide = function() Results.Hide() end,
+    insights = function() Results.ShowTab("insights") end,
 }
 -- The Races verb is Retail's, as the filter it opens (clients-§4).
 local RACE_VERBS = { races = function() Results.ShowRaces() end }
 
---- `/ct results [show|hide|toggle|races]`: bare toggles the window; anything else is one usage line.
+--- `/ct results [show|hide|toggle|insights|races]`: bare toggles the window, `insights` opens the
+--- Insights tab (both clients), `races` the list under the Races filter (Retail); anything else is one
+--- usage line.
 function Results.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word] or (NS.ResultsRaces.On() and RACE_VERBS[word])
     if fn then return fn() end
     if NS.ResultsRaces.On() then
-        return NS.Print(L["Usage: /ct results, or /ct results show, hide, toggle or races"])
+        return NS.Print(L["Usage: /ct results, or /ct results show, hide, toggle, insights or races"])
     end
-    NS.Print(L["Usage: /ct results, or /ct results show, hide or toggle"])
+    NS.Print(L["Usage: /ct results, or /ct results show, hide, toggle or insights"])
 end
 
 -- ── the row menu ────────────────────────────────────────────────────────────────────────────────
@@ -933,6 +1045,7 @@ function Results.OnSourceChanged(swapped)
         hideFollowers()
         selected, pick, detailOpen = nil, nil, false
         if ui then ui.list:SampleView(Source.IsMock()) end
+        if ui and ui.insights then ui.insights:SampleView(Source.IsMock()) end
     end
     if windowShown() then
         applySampleMarker()
@@ -953,8 +1066,8 @@ end
 
 --- What the window is doing, for the diagnostics report.
 function Results.Diagnose()
-    return { shown = Results.IsShown(), selected = selected or "none", rows = ui and ui.list:Count() or 0,
-             view = Results.View(), detailOpen = detailOpen }
+    return { shown = Results.IsShown(), tab = tab, selected = selected or "none",
+             rows = ui and ui.list:Count() or 0, view = Results.View(), detailOpen = detailOpen }
 end
 
 --- The built window, for the suites (nil until first shown).
@@ -972,14 +1085,16 @@ end
 -- profile's dragged widths (Fights.ColumnWidths reads the live profile) and, through renderDetail's
 -- DetailChanged, redraws an open timeline in the new profile's mark mode; a hidden window does both on
 -- its next show (tests/test_results_table.lua, tests/test_timeline_marks.lua).
+local function onProfile()
+    ui.list:ApplyView(NS.ResultsFights.SavedView())
+    if ui.insights then ui.insights:ApplyView(NS.ResultsInsights.SavedView()) end
+    detailOpen = false
+    applyPlacement()
+    if windowShown() then render() end
+end
+
 local function onSettings(path)
-    if path == "profile" and ui then
-        ui.list:ApplyView(NS.ResultsFights.SavedView())
-        detailOpen = false
-        applyPlacement()
-        if windowShown() then render() end
-        return
-    end
+    if path == "profile" and ui then return onProfile() end
     if path == "history.days" and windowShown() then footer() end
     -- History > Results window: the scale on the window and its followers, the row height on the list.
     if path == "results.scale" then Results.ApplyScale() end

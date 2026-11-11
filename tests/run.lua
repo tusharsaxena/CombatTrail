@@ -32,6 +32,8 @@ do
         "Skin.lua", "SkinOwnerTokens.lua", "SkinDefs.lua", "SkinDefsOthers.lua", "SkinPaint.lua",
         "SkinPaintExtras.lua", "SkinPaintHud.lua", "SkinAceConfirm.lua", "SkinPaintControls.lua",
         "SkinEUI.lua", "SkinAce.lua",
+        -- The Insights charts (core/ChartsSetup.lua, Race mode plan Task D2).
+        "Charts.lua", "ChartsRender.lua",
     }
     local present = {}
     for _, path in ipairs(LIB_FILES) do present[path:match("([^/]+)$")] = true end
@@ -155,6 +157,8 @@ local SUITES = {
     "test_results_detail",
     "test_results_sections",
     "test_results_races",
+    "test_insights_data",
+    "test_insights",
     "test_share",
     "test_timeline",
     "test_timeline_marks",

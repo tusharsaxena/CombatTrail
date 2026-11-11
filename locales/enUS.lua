@@ -665,8 +665,8 @@ L["Sim: a made-up fight, not your data. /ct sim ends it."] =
     "Sim: a made-up fight, not your data. /ct sim ends it."
 L["Test mode: sample fights. Nothing here is saved."] = "Test mode: sample fights. Nothing here is saved."
 L["Combat Trail \226\128\148 Results \194\183 Test"] = "Combat Trail \226\128\148 Results \194\183 Test"
-L["Usage: /ct results, or /ct results show, hide or toggle"] =
-    "Usage: /ct results, or /ct results show, hide or toggle"
+L["Usage: /ct results, or /ct results show, hide, toggle or insights"] =
+    "Usage: /ct results, or /ct results show, hide, toggle or insights"
 L["Edit Note"] = "Edit Note"
 L["Add Note"] = "Add Note"
 L["Share"] = "Share"

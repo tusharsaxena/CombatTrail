@@ -19,7 +19,8 @@ test("load order: the locale and the namespace come first, the AceAddon promotio
     -- The canonical locale's topic files directly after it, contiguous (localization-§6), then the
     -- namespace before every other file.
     assertEqual(at["locales/enUS_Race.lua"], 2, "Race mode's topic file directly after enUS.lua")
-    assertEqual(at["core/Namespace.lua"], 3, "NS.PREFIX, NS.name and NS.BRAND before everything else")
+    assertEqual(at["locales/enUS_Insights.lua"], 3, "the Insights tab's topic file after it")
+    assertEqual(at["core/Namespace.lua"], 4, "NS.PREFIX, NS.name and NS.BRAND before everything else")
     assertTrue(at["core/MediaSetup.lua"] < at["core/Constants.lua"], "FONT_MONO resolves from NS.MediaFont")
     assertTrue(at["core/Compat.lua"] < at["core/Secrets.lua"], "Secrets binds Compat's guards at file scope")
     assertTrue(at["core/CoreSetup.lua"] < at["core/CombatTrail.lua"], "the printer before its reclaim")

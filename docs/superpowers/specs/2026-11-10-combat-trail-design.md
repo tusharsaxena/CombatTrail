@@ -45,7 +45,8 @@ window to check rotations and gear changes after real pulls.
 
 **Non-goals (v0.1.0)**
 - Lanes other than Player and Pet. Target, Focus and Party 1-5 come later (issue #1) **(owner)**.
-- The Insights tab, deferred to v2 (issue #2) **(owner)**.
+- The Insights tab, deferred to v2 (issue #2) **(owner)**. It landed with Race mode (Race mode plan Task D2):
+  a Results tab over every saved fight, races as a filter.
 - Creating new lanes. The dropdown only selects between the fixed lanes **(owner)**.
 - Parsing the combat log for damage. Every number comes from `C_DamageMeter`, as in DPS Race and Multi Meters.
 - Importing CastTrail's settings **(Claude)**.
