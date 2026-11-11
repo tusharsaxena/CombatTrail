@@ -102,7 +102,7 @@ end
 
 test("load: the settings stamp is 2 and the fight record's format is 2", function()
     assertEqual(T.NS.SCHEMA_VERSION, 2)
-    assertEqual(T.NS.Recorder.CT_SCHEMA, 2)
+    assertEqual(T.NS.Recorder.CT_SCHEMA, 3)
 end)
 
 test("load: a schema 1 store loads empty at version 2, keeping the account's other state", function()

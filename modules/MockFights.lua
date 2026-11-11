@@ -435,6 +435,17 @@ local function copy(t)
     return out
 end
 
+-- A sample fight's targets (issue #6): its primary target with most of the damage, and two adds of one
+-- kind merged into one row, as Recorder.Targets stores them.
+local function targetsOf(ident, merged)
+    local main = math.floor(merged * 0.7 + 0.5)
+    return NS.Recorder.Targets({
+        { name = type(ident.targetName) == "string" and ident.targetName or NS.L["Unknown target"], total = main },
+        { name = NS.L["Sample add"], total = math.floor((merged - main) / 2) },
+        { name = NS.L["Sample add"], total = merged - main - math.floor((merged - main) / 2) },
+    })
+end
+
 --- A sample fight's record in the stored shape (modules/Recorder.lua's header), never stored, and
 --- the plan it was read from.
 --- @param o table  { id, t (epoch), who, board, length, damage | dps, note?, noMajor?, noPet?, dry? }
@@ -453,6 +464,7 @@ function MockFights.Record(o, plan)
         dps = round1(merged / o.length), meterDps = round1(merged / math.ceil(o.length)),
         spells = NS.CastCodec.EncodeSpells(final.merged.spells), casts = NS.CastCodec.Encode(plan.casts),
         cooldowns = plan.cooldowns, gear = copy(CLIENT.gear), stats = copy(CLIENT.stats), usage = usageOf(plan),
+        targets = targetsOf(ident, merged),
         note = o.note, client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version,
         status = "final", sample = true,
     }

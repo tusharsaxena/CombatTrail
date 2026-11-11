@@ -31,8 +31,9 @@ local _, NS = ...
 -- boardKey, damage = { merged, player, pet? }, dps, meterDps?, spells (CastCodec.EncodeSpells'
 -- packed string; Recorder.Spells unpacks it to { { spellID, total, isPet } }), casts (CastCodec's
 -- packed string), cooldowns ({ [spellID] = ms }, the timeline's),
--- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, note?, client, build,
--- version, status = "final" }.
+-- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, targets? (CT_SCHEMA
+-- 3: Recorder.Targets, the enemies your damage reached), note?, client, build, version,
+-- status = "final" }.
 
 local Recorder = {}
 NS.Recorder = Recorder
@@ -41,7 +42,10 @@ local Secrets = NS.Secrets
 local L = NS.L
 
 --- The fight record's format version (spec §5). Distinct from NS.SCHEMA_VERSION, the settings'.
-Recorder.CT_SCHEMA = 2
+-- 3 (issue #6) adds the optional `targets`; a CT_SCHEMA 2 record reads the same, with no targets.
+Recorder.CT_SCHEMA = 3
+--- The most targets a record keeps (the highest).
+Recorder.TARGETS_MAX = 10
 --- The longest note a record keeps.
 Recorder.NOTE_MAX = 200
 
@@ -234,6 +238,35 @@ local function enemiesOf(fight)
     return rows
 end
 
+--- The record's `targets` out of the fight's enemies (enemiesOf: plain, highest first): { name, total }
+--- each, enemies of one name merged (as the meter shows them on WoW Forever, and as the owner wants
+--- them everywhere, 2026-11-11), a nameless one under "Unknown target", at most TARGETS_MAX, highest
+--- first. nil when none took damage.
+--- @param enemies table|nil
+--- @return table|nil targets
+function Recorder.Targets(enemies)
+    local out, index = {}, {}
+    for _, e in ipairs(type(enemies) == "table" and enemies or {}) do
+        local total = type(e) == "table" and Secrets.PlainNumber(e.total) or nil
+        if total and total > 0 then
+            local name = Secrets.PlainString(e.name) or L["Unknown target"]
+            local row = index[name]
+            if row then
+                row.total = row.total + total
+            else
+                row = { name = name, total = total }
+                index[name] = row
+                out[#out + 1] = row
+            end
+        end
+    end
+    if #out == 0 then return nil end
+    table.sort(out, function(a, b) return a.total > b.total end)
+    for i = #out, Recorder.TARGETS_MAX + 1, -1 do out[i] = nil end
+    for _, row in ipairs(out) do row.total = math.floor(row.total + 0.5) end
+    return out
+end
+
 -- The fight's length: the meter's session duration, else its own combat-entry-to-end clock.
 local function durationOf(fight, final)
     local d = Secrets.PlainNumber(final.duration)
@@ -288,9 +321,10 @@ local function buildOf()
 end
 
 --- The record for a fight that ended "final" and passed the filters (`identity` and `duration`
---- already resolved). Takes the fight's casts (Casts.Finish) and stores its talents (Loadouts.Store).
+--- already resolved; `enemies`, enemiesOf's list, for the targets). Takes the fight's casts
+--- (Casts.Finish) and stores its talents (Loadouts.Store).
 --- @return table record  plain throughout
-function Recorder.Build(fight, final, identity, duration)
+function Recorder.Build(fight, final, identity, duration, enemies)
     local merged = final.merged or {}
     local total = Secrets.PlainNumber(merged.total) or 0
     local casts, cooldowns, usage = castsOf(fight)
@@ -304,6 +338,7 @@ function Recorder.Build(fight, final, identity, duration)
         dps = duration > 0 and round1(total / duration) or 0, meterDps = round1(merged.dps),
         spells = spellsOf(merged), casts = casts, cooldowns = cooldowns, gearSet = gearSet,
         stats = NS.Stats.Fill(plainCopy(fight.stats, 0)), loadout = loadout, usage = usage,
+        targets = Recorder.Targets(enemies),
         client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version, status = "final",
     }
     local record = plainCopy(raw, 0)
@@ -332,12 +367,13 @@ end
 function Recorder.OnFightEnded(fight, final, reason)
     if type(fight) ~= "table" then return end
     if reason ~= "final" or type(final) ~= "table" then return skip(fight, "lost") end
-    local identity = NS.Identity.Resolve(fight, final, enemiesOf(fight))
+    local enemies = enemiesOf(fight)
+    local identity = NS.Identity.Resolve(fight, final, enemies)
     local duration = durationOf(fight, final)
     local ok, why = NS.Filters.Passes(identity, duration)
     if not ok then return skip(fight, why) end
     if not hasWho(fight) then return skip(fight, "unknown") end
-    local record = Recorder.Build(fight, final, identity, duration)
+    local record = Recorder.Build(fight, final, identity, duration, enemies)
     -- The fight remembers its record, so the chart's in-session store (modules/Slices.lua) answers it.
     fight.recordID = record.id
     if Recorder.Save(record) then debug("fight %s stored as %s (%.1f s)", fight.id, record.id, duration) end

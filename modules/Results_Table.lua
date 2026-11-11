@@ -39,7 +39,7 @@ Tbl.WHEEL_ROWS = 3          -- rows one notch of the mouse wheel moves
 -- (core/Constants.lua), at its opacity; never the class color, which stays on the name and the icons.
 Tbl.BAR_COLOR = NS.Constants.PALETTE.BAR
 Tbl.BAR_ALPHA = NS.Constants.PALETTE.BAR_A
-Tbl.BADGE_ICON = 11         -- an icon inside a badge (the Status column's trophy)
+Tbl.BADGE_ICON = 11         -- an icon inside a badge (a column whose text answers one)
 Tbl.ICON_GAP = 2            -- between two icons of an items cell (the Used column)
 
 --- The list's row height now (px): `results.rowHeight`, else the shipped one.
@@ -63,7 +63,7 @@ local C = {
     amber = HC.amber,
     green = HC.green,
     red   = HC.red,
-    blue  = NS.Constants.PALETTE.BEST_TEXT,   -- a best's tag (the Status column, D15's best blue)
+    blue  = NS.Constants.PALETTE.BEST_TEXT,   -- a best's mark (D15's best blue)
 }
 Tbl.COLORS = C
 
@@ -312,7 +312,7 @@ function Cells.items(row, col)
 end
 
 -- A chip or a tag: its icon (where the column's text names one) before its word, both in the tag's
--- color, in a 1px box tinted that color (the Content and Status columns).
+-- color, in a 1px box tinted that color (the Content column).
 function Cells.badge(row)
     local cell = { box = Style.FlatBox(row) }
     cell.box:SetHeight(Tbl.CHIP_H)

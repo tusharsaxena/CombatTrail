@@ -280,7 +280,7 @@ test("results: the table's columns are the plan's", function()
     local NS = fresh()
     local keys = {}
     for i, col in ipairs(NS.ResultsFights.Columns()) do keys[i] = col.key end
-    assertEqual(table.concat(keys, ","), "date,clsSpec,character,ilvl,target,content,len,damage,dps,delta,status,used,note")
+    assertEqual(table.concat(keys, ","), "date,clsSpec,character,ilvl,target,content,len,damage,dps,delta,used,note")
 end)
 
 test("results: table builds 500 rows via pooled rows", function()
@@ -712,37 +712,25 @@ local function usageOf(count)
     return { v = 1, edited = false, used = used, candidates = {} }
 end
 
-test("results: the Status badge reads Best with the trophy on the board's top only", function()
+test("results: no Status column; the best is only compared against (owner, 2026-11-10)", function()
     local NS = fresh()
+    local cols = NS.ResultsFights.Columns()
+    assertNil(indexOf(cols, "status"), "no Status column")
+    assertNil(NS.ResultsFights.StatusText, "no Status cell")
     local slow, fast = rec(NS, { id = "slow", dps = 1000 }), rec(NS, { id = "fast", dps = 1500 })
     save(NS, slow, fast)
     local _, view = open(NS)
     local rows = drawn(view)
-    local top, other = rows.fast.cells.status, rows.slow.cells.status
-    assertEqual(top.fs:GetText(), "Best")
-    assertTrue(top.box:IsShown(), "the badge's box")
-    assertTrue(top.icon:IsShown(), "the trophy inside it")
-    assertEqual(top.icon:GetTexture(), NS.Icon("ph:trophy"))
-    assertEqual(other.fs:GetText(), "", "no tag below the top")
-    assertFalse(other.box:IsShown(), "no box below the top")
-    local cols = NS.ResultsFights.Columns()
-    local status = cols[indexOf(cols, "status")]
-    assertEqual(status.kind, "badge")
-    assertTrue(status.sort(fast) < 99 and status.sort(slow) == nil, "the best sorts first, the rest after it")
-    assertTrue(NS.ResultsTips.Cell(status, fast)[1] ~= nil, "the best's tooltip")
-    assertTrue(NS.ResultsTips.Cell(status, slow)[1] ~= nil, "every fight's tooltip")
-end)
-
-test("results: the Status header names a spec on Retail and a talent tree on Forever (clients-§4)", function()
-    local NS = fresh()
-    local cols = NS.ResultsFights.Columns()
-    local about = NS.ResultsTips.About(cols[indexOf(cols, "status")])
-    if NS.Compat.ForClient({ "retail" }) then
-        assertTrue(about.text:find("spec", 1, true) ~= nil, about.text)
-    else
-        assertTrue(about.text:find("talent tree", 1, true) ~= nil, about.text)
-        assertNil(about.text:lower():find("spec", 1, true), "no specialization named on Forever: " .. about.text)
+    assertNil(rows.fast.cells.status, "no Status cell drawn")
+    -- The best still reads in its Delta tooltip, in the best blue.
+    local found
+    for _, line in ipairs(NS.ResultsFights.DeltaTip(fast, { top = 1500 }, false)) do
+        if type(line) == "table" and line[1] == "Your best on this board." then found = line end
     end
+    assertTrue(found ~= nil, "the best's Delta tooltip names it")
+    local blue = NS.Constants.PALETTE.BEST_TEXT
+    assertEqual(found[2], blue[1])
+    assertEqual(found[4], blue[3])
 end)
 
 test("results: the Used column lists the fight's usage as icons, +n past what fits, a dash for none", function()

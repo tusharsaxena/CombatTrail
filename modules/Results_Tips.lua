@@ -183,10 +183,6 @@ local ABOUT = {
     damage = "Your damage and your pet's, read from Blizzard's meter after combat. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list).",
     dps = "Damage over the fight's length. The bar runs from the smallest fight in its group to the largest (with no grouping, the whole list).",
     delta = "How far this fight's DPS is from the best fight in its group (with no grouping, the whole list). The best reads 0.0%.",
-    -- Forever names no specialization (clients-§4, D11): there the talent tree stands in for it.
-    status = NS.Compat.ForClient({ "retail" })
-        and "Best: your best fight on its board (this character and spec against this encounter or target), whatever the filters show."
-        or "Best: your best fight on its board (this character and talent tree against this encounter or target), whatever the filters show.",
     used = "What the fight used: on-use gear (trinkets first), then potions, flasks, food and the rest. Hover for when; sorted by how many.",
     note = "The note you kept with the fight. Click to sort.",
 }

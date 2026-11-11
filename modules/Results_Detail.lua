@@ -64,7 +64,7 @@ Detail.BUTTON_GAP = 6
 Detail.DELETE_W = 78
 -- The folding sections, in the pane's order, and their heading's arrow: ARROW px square, the text
 -- INDENT in from the left edge (the arrow and 2 px).
-Detail.SECTIONS = { "chart", "spells", "loadout", "usage", "note" }
+Detail.SECTIONS = { "chart", "spells", "loadout", "usage", "targets", "note" }
 Detail.ARROW = 14
 Detail.INDENT = Detail.ARROW + 2
 
@@ -314,8 +314,8 @@ local function buildHeader(p, c)
     w.bestIcon:SetSize(Detail.CHIP_ICON, Detail.CHIP_ICON)
     w.bestIcon:SetPoint("RIGHT", w.best, "RIGHT", 0, 0)
     w.bestIcon:SetTexture(NS.Icon("ph:trophy"))
-    Style.Vertex(w.bestIcon, C.gold, 1)
-    w.bestText = Style.Text(w.best, FONT.TEXT, C.gold, "RIGHT")
+    Style.Vertex(w.bestIcon, C.blue, 1)   -- the best blue, as every best mark (owner, 2026-11-10)
+    w.bestText = Style.Text(w.best, FONT.TEXT, C.blue, "RIGHT")
     w.bestText:SetPoint("RIGHT", w.bestIcon, "LEFT", -4, 0)
     w.bestText:SetText(L["Personal best"])
     w.meta, w.metaHover = {}, {}
@@ -334,15 +334,12 @@ local function buildHeader(p, c)
 end
 
 local function buildChart(p, c)
-    local w, C = p.w, Tbl().COLORS
+    local w = p.w
     w.chartTitle = Style.Text(c, FONT.SECTION)
     w.chartTitle:SetText(L["Damage profile"])
     w.chartCaption = Style.Text(c, FONT.CAPTION, nil, "RIGHT")
     w.chart = NS.HudChart.New(c)
     w.chart:SetShown(false)
-    w.chartNote = Style.Text(c, FONT.TEXT, C.dim)
-    w.chartNote:SetWordWrap(true)
-    w.chartNote:SetText(L["Damage chart is only kept for fights recorded this session."])
     w.chartHover = hoverOver(p, w.chartTitle, function(r) return NS.ResultsTips.Detail("chart", r) end)
 end
 
@@ -460,6 +457,7 @@ function Detail.Build(parent, hooks)
     buildBreakdown(p, c)
     NS.ResultsLoadout.Build(p, c)
     NS.ResultsUsage.Build(p, c)
+    NS.ResultsTargets.Build(p, c)
     buildNote(p, c)
     buildHeadings(p)
     buildButtons(p)
@@ -555,6 +553,7 @@ function Pane:Show(record)
     self.chartView = Detail.ChartView(record)
     NS.ResultsLoadout.Fill(self)
     NS.ResultsUsage.Fill(self, same)
+    NS.ResultsTargets.Fill(self)
     self.noteText = type(record.note) == "string" and record.note or ""
     self.w.note:SetText(self.noteText)
     self:fillButtons(record)
@@ -620,21 +619,24 @@ function Pane:heading(title, caption, y, cw)
     return y - Style.SECTION_H
 end
 
--- The chart while this session holds it; the session-only note when it does not; folded, the
--- heading alone.
+-- The chart while this session holds it; folded, the heading alone. A fight whose chart this session
+-- does not hold (a stored fight from an earlier session) has no section at all: no heading, arrow or
+-- note (owner, 2026-11-11), the way a fight with no note has no Note section.
 function Pane:layoutChart(y, cw)
     local w, view = self.w, self.chartView
-    y = self:heading(w.chartTitle, w.chartCaption, y, cw)
-    local folded = self:Heading("chart", true)
-    w.chartCaption:SetText(view and L["this session only"] or "")
-    w.chart:SetShown(view ~= nil and not folded)
-    w.chartNote:SetShown(view == nil and not folded)
-    if folded then return y end
-    if not view then
-        place(w.chartNote, self.content, 0, y)
-        w.chartNote:SetWidth(cw)
-        return y - Detail.LINE_H - 4
+    local shown = view ~= nil
+    w.chartTitle:SetShown(shown)
+    w.chartCaption:SetShown(shown)
+    w.chartHover:SetShown(shown)
+    local folded = self:Heading("chart", shown)
+    if not shown then
+        w.chart:SetShown(false)
+        return y
     end
+    y = self:heading(w.chartTitle, w.chartCaption, y, cw)
+    w.chartCaption:SetText(L["this session only"])
+    w.chart:SetShown(not folded)
+    if folded then return y end
     -- The chart's own heading line is the section's: its plot starts under this heading.
     local h = w.chart:Place(self.content, y + NS.HudChart.HEAD_H, cw)
     w.chart.title:Hide()
@@ -692,6 +694,7 @@ function Pane:Layout(width, height, narrow)
     y = self:layoutSpells(y, cw)
     y = NS.ResultsLoadout.Layout(self, y, cw)
     y = NS.ResultsUsage.Layout(self, y, cw)
+    y = NS.ResultsTargets.Layout(self, y, cw)
     y = self:layoutNote(y, cw)
     self.contentH = -y + 8
     self.content:SetHeight(math.max(1, self.contentH))

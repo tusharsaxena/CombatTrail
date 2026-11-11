@@ -112,7 +112,7 @@ test("record: a real fight becomes a stored record with the spec §5 fields", fu
     assertEqual(NS.Recorder.Get(r.id), r, "stored under its id")
     assertEqual(NS.db.global.fightOrder[1], r.id)
     assertEqual(r.schema, NS.Recorder.CT_SCHEMA)
-    assertEqual(NS.Recorder.CT_SCHEMA, 2)
+    assertEqual(NS.Recorder.CT_SCHEMA, 3)
     assertEqual(r.status, "final")
     assertEqual(r.duration, 40)
     assertEqual(r.damage.merged, 40000)
@@ -240,6 +240,25 @@ test("record: the enemies are summed across a merged fight's sessions", function
     local r = heard.saved[1]
     assertEqual(r.identity.targetName, "Boss", "1400 across both sessions beats 600")
     assertEqual(r.identity.otherTargets, 1)
+end)
+
+test("record: the stored fight keeps its targets, summed across sessions (issue #6)", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    meter.SetSession(1, { damage = 100, dps = 1, duration = 30, spells = {},
+                          enemies = { { name = "Add", creatureID = 7, damage = 600 },
+                                      { name = "Boss", creatureID = 9, damage = 500 } } })
+    meter.SetSession(2, { damage = 100, dps = 1, duration = 30, spells = {},
+                          enemies = { { name = "Boss", creatureID = 9, damage = 900 } } })
+    local f = fakeFight(NS)
+    f.sessions, f.sessionSet = { 1, 2 }, { [1] = true, [2] = true }
+    finish(NS, f, fakeFinal())
+    local t = heard.saved[1].targets
+    assertEqual(#t, 2)
+    assertEqual(t[1].name, "Boss")
+    assertEqual(t[1].total, 1400)
+    assertEqual(t[2].name, "Add")
+    assertEqual(t[2].total, 600)
 end)
 
 test("record: 5-min raid record < 6 KB", function()
@@ -432,4 +451,27 @@ test("record: three fights in the same gear share one gear set; a swap between f
     for i = 1, 3 do NS.Recorder.Delete(heard.saved[i].id) end
     assertNil(NS.Loadouts.GetGear(key), "the orphaned set swept with its last fight")
     assertTrue(NS.Loadouts.GetGear(heard.saved[4].gearSet) ~= nil)
+end)
+
+-- ── the targets (issue #6, CT_SCHEMA 3) ─────────────────────────────────────────────────────────
+
+test("record: targets merge enemies of one name, highest first, whole, capped", function()
+    local NS = T.load().NS
+    local R = NS.Recorder
+    local t = R.Targets({ { name = "Redridge Brute", creatureID = 426, total = 600.4 },
+                          { name = "Redridge Mystic", creatureID = 430, total = 602 },
+                          { name = "Redridge Brute", creatureID = 426, total = 463 },
+                          { name = nil, total = 10 }, { name = "Nothing", total = 0 } })
+    assertEqual(#t, 3)
+    assertEqual(t[1].name, "Redridge Brute")
+    assertEqual(t[1].total, 1063, "two Brutes, one row, whole")
+    assertEqual(t[2].name, "Redridge Mystic")
+    assertEqual(t[3].name, "Unknown target")
+    assertEqual(R.Targets({}), nil, "none: no field")
+    assertEqual(R.Targets(nil), nil)
+    local many = {}
+    for i = 1, R.TARGETS_MAX + 5 do many[i] = { name = "Mob " .. i, total = 1000 - i } end
+    local capped = R.Targets(many)
+    assertEqual(#capped, R.TARGETS_MAX)
+    assertEqual(capped[1].name, "Mob 1", "the highest kept")
 end)
