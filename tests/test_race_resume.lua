@@ -257,8 +257,13 @@ end)
 test("resume: after a restart of the machine the clock comes from the stored date", function()
     if forever() then return end
     local S = raceTo(105)
-    F.slot(S).date = os.time() - 5              -- the first hit was 5 s ago, on a clock that started over
-    local G = F.reload(S, { now = 50, inCombat = true })
+    local wall = os.time()
+    F.slot(S).date = wall - 5                   -- the first hit was 5 s ago, on a clock that started over
+    -- The wall clock frozen at this read: a second ticking over before the resume reads time() again
+    -- would put the elapsed a second out.
+    local G = F.reload(S, { now = 50, inCombat = true, mutate = function(m)
+        m.time = function() return wall end
+    end })
     local R = G.NS.Race
     assertEqual(R.State(), "running")
     F.near(R.Elapsed(), 5)
