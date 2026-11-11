@@ -52,13 +52,20 @@ end
 -- both clients, as a saved race re-scores there too. The switch (Race mode on, which stops new races
 -- only), auto-show near a dummy (on) and auto-arm on targeting one (off), the race clock's mode
 -- ("both", "left" or "elapsed"), the countdown's cue, its center numbers and where they start (s),
--- and the buzzer's raid warning (DPS Race's defaults; the countdown and the buzzer are Task C2's).
+-- and the buzzer's raid warning (DPS Race's defaults; modules/Countdown.lua reads the last four).
 local function raceMode(r)
     if NS.Compat.ForClient({ "retail" }) then
         r.enabled, r.autoShow, r.autoArm, r.clock = true, true, false, "both"
         r.countdownCue, r.centerCountdown, r.finalCountdown, r.buzzer = true, true, 10, true
     end
     return r
+end
+
+-- The new-best toast's keys: `races` only on Retail, where a race can be run (clients-§4).
+local function toastDefaults()
+    local t = { fights = true, duration = 10, sound = true, soundKey = "Default", scale = 1.0 }
+    if NS.Compat.ForClient({ "retail" }) then t.races = true end
+    return t
 end
 
 -- One lane's every setting (spec §4's table, tab by tab). The two lanes differ only where `over` says.
@@ -256,6 +263,12 @@ NS.defaults = {
         -- bar's drag and put back by Master controls' Reset position.
         raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT",
             position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
+        -- The new-best toast (modules/BestToast.lua, race plan Task C2; History > New-best toast): a
+        -- fight's new best toasts on both clients (`fights`), a race's on Retail only (`races`, ABSENT
+        -- on WoW Forever, clients-§4); how long it stays (s), its sound (on, and which: "Default" is
+        -- the toast shell's alert, any other a LibSharedMedia key) and its scale. `point` (no default)
+        -- is where *Test toast*'s drag put it, cleared by Master controls' Reset position.
+        toast = toastDefaults(),
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the

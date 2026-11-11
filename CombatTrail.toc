@@ -74,6 +74,7 @@ core\Bus.lua
 core\PoolSetup.lua
 # Reads LibStub (LibKa0s-Widgets-1.0) at FILE SCOPE and NS.Icon at CALL time only.
 core\WidgetsSetup.lua
+core\ToastSetup.lua
 # LOAD-BEARING: core\PerfSetup.lua hands NS.lifecycle to LibKa0s-Perf-1.0, which RAISES at :New
 # without it, so the latch is built first.
 core\LifecycleSetup.lua
@@ -215,6 +216,8 @@ modules\Hud.lua
 modules\RaceWindow_Best.lua
 modules\RaceWindow_States.lua
 modules\RaceWindow.lua
+modules\Countdown.lua
+modules\BestToast.lua
 # The Results window (spec §7). Sizing is the resize helper every resizable window shares; the source,
 # the table, the tooltips' words and the fight list each capture NS.L, NS.Style or NS.HudStates.COLORS
 # at FILE SCOPE (so they follow modules\Hud_States.lua) and reach the others at CALL time, except as

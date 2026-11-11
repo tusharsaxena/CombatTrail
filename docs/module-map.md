@@ -41,6 +41,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/Bus.lua` | Every message name, declared once, and the record of the bus receivers |
 | `core/PoolSetup.lua` | `NS.Pool`, the widget pool the lanes, the HUD and the Results window use |
 | `core/WidgetsSetup.lua` | Dropdowns, menus, the test and sim strips and the copy box, from LibKa0s-Widgets |
+| `core/ToastSetup.lua` | `NS.NewToast`, the alert-toast shell from LibKa0s-Toast, and its degraded stub |
 | `core/LifecycleSetup.lua` | The one stand-down latch and the modules it suspends and resumes |
 | `core/PerfSetup.lua` | `NS.Perf`, the performance harness and its buckets |
 | `core/DebugLogSetup.lua` | `NS.DebugLog`, the gated `NS.Debug` sink and the diagnostics descriptor |
@@ -94,6 +95,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked (Race mode, Retail) |
 | `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card (Race mode, Retail) |
 | `modules/RaceWindow.lua` | The Race window's shell: attached beside the DPS HUD or on its own, when it shows, the view and the acts (Race mode, Retail) |
+| `modules/Countdown.lua` | A race's final seconds: the countdown cue, the center-screen numbers, and the buzzer's raid warning (Race mode, Retail) |
+| `modules/BestToast.lua` | The new-best toast: a race's (Retail) or a fight's (both clients) new best on its board |
 | `modules/Sizing.lua` | The one smooth-resize pattern every resizable window uses |
 | `modules/Results_Source.lua` | Where the Results window reads fights: the store, or the sample history |
 | `modules/Results_Table.lua` | The sortable pooled list and the small drawing helpers |
@@ -103,7 +106,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_Usage.lua` | The detail's Usage list and its edit, and the list's Used icons |
 | `modules/Results_Targets.lua` | The detail's Targets list: each enemy your damage reached and how much it took (issue #6) |
 | `modules/Results_Detail.lua` | One fight in full |
-| `modules/Share.lua` | The one-line chat summary of a fight |
+| `modules/Share.lua` | The one-line chat summary of a fight or a race, and the race's own lines on the arm and at its result |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |
 | `modules/Results_Timeline.lua` | The ability timeline window |
 | `modules/Results_TimelineMarks.lua` | The timeline's cast marks on the same `NS.ResultsTimeline`: By ability's icons or ticks (`results.timelineMarks`), the caster colors and every cast icon's art and edge |

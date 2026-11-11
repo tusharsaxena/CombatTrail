@@ -339,7 +339,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 
 ## History
 
-Tabs: *Recording filters*, *History*, *Results window*, *Usage*, *Training dummies* (settings/History.lua,
+Tabs: *Recording filters*, *History*, *Results window*, *Usage*, *Training dummies*, *New-best toast* (settings/History.lua,
 `NS.HISTORY_TAB_ORDER`; the History tab's internal key stays `retention`). The History tab also shows
 the stored count and its estimated size, and carries *Purge history…*.
 
@@ -398,14 +398,31 @@ none on WoW Forever, whose seed is empty), then *Reset list* last.
 |---|---|
 | Your training dummies | `dummies.custom` (skipRender: drawn as the tab's body, not a text box) |
 
+### New-best toast
+
+On both clients (race plan Task C2, ruling X19: the section sits on a page both clients have, with only
+the races row Retail's). The rows, then *Test toast* last (a sample toast run as a real one; drag it to
+place it while it shows, and General > Master controls' *Reset position* puts it back). Duration and sound
+are read as each toast shows; the scale re-anchors a shown toast.
+
+| Row | Key |
+|---|---|
+| Toast a race's new best (Retail only) | `toast.races` |
+| Toast a fight's new best | `toast.fights` |
+| Play a sound | `toast.sound` |
+| Toast sound | `toast.soundKey` |
+| Toast duration (seconds) | `toast.duration` |
+| Toast scale | `toast.scale` |
+
 ## Race mode
 
 Retail only (race plan Task B3). Tabs: *Race*, *Late-cast ignore list*, *Race window*
 (settings/Race.lua, `NS.RACE_TABS`). The Race tab opens on the page's one note on where Race mode came
 from, then the switch; the race clock's two colored clocks and the window's look are the DPS HUD page's
 appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
-page's. The New-best toast's section is not on the page yet: where it stands waits for the owner (the
-fights' toast is on both clients, this page is Retail's), and it lands with the toast (Task C2).
+page's, and the New-best toast's section is History's too (ruling X19). The countdown rows and the
+buzzer row carry no reaction of their own: modules/Countdown.lua re-arms a race's marks off their
+SETTINGS_CHANGED.
 
 ### Race
 

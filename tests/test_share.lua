@@ -1,6 +1,8 @@
 -- tests/test_share.lua — Share (plan Task 4.2, spec §7, mockup §9): the one-line chat summary of a
 -- stored fight, at most one chat message long, the talents link after it when the setting is on,
--- the channel menu, the refusal in combat, and the row menu's Share now live.
+-- the channel menu, the refusal in combat, and the row menu's Share now live. Race mode (race plan
+-- Task C2, DPS Race @f8078c7's test_share.lua race cases): a race's line in the same shape, and the
+-- race's own lines printed on the arm and at its result.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -183,4 +185,104 @@ test("share: forever: the line names the predominant talent tree (D5)", function
     assertTrue(line:find(NS.ResultsTable.ClassName(r.who.class) .. " 66.2", 1, true) ~= nil,
                "no tree: the class names the player: " .. line)
     T.Loader.MockClient.apply(m)
+end)
+
+-- ── Race mode (race plan Task C2) ──────────────────────────────────────────────────────────────
+
+local F = dofile(T.root .. "/tests/race_fixture.lua")(T)
+
+local function forever() return T.NS.Compat.IsForever() end
+
+--- A stored race of the record's shape: 30 s on the boss dummy, a late cast, a tail.
+local function raceRec(NS, over)
+    local r = rec(NS)
+    r.identity = { content = "dummy", targetName = "Raider's Training Dummy", targetCreatureID = 31146 }
+    r.boardKey = NS.Identity.BoardKey(r.identity)
+    r.race = { length = 30, kind = "boss", status = "complete", score = 1539711, dps = 51323.7, tail = 3.1,
+               grace = 1, restartGap = 6, flags = { lateCasts = { { t = 1.4, spellID = 29722 } } } }
+    for k, v in pairs(over or {}) do r.race[k] = v end
+    return r
+end
+
+local function capture(NS)
+    local lines = {}
+    NS.Print = function(line) lines[#lines + 1] = line end
+    return lines
+end
+
+test("share: a race's line names its race length and race DPS, and an incomplete race says so", function()
+    local NS = fresh()
+    local r = raceRec(NS)
+    local line = NS.Share.Line(r, false)
+    assertTrue(line:find(SEP .. "0:30" .. SEP, 1, true) ~= nil, "the race length, not the fight's: " .. line)
+    assertTrue(line:find(NS.Format.Number(51323.7) .. " DPS", 1, true) ~= nil, "the race DPS: " .. line)
+    assertTrue(line:find("incomplete", 1, true) == nil)
+    local inc = raceRec(NS, { status = "incomplete", endedAt = 20, dps = 76985.6 })
+    line = NS.Share.Line(inc, false)
+    assertTrue(line:find(NS.Format.Number(76985.6) .. " DPS" .. SEP .. "incomplete" .. SEP, 1, true) ~= nil, line)
+    assertTrue(line:find("DPS Race", 1, true) == nil and line:find("run", 1, true) == nil, "Combat Trail's words")
+end)
+
+test("share: arming prints the armed line with the length and the target", function()
+    if forever() then return end
+    local S = F.fresh()
+    local lines = capture(S.NS)
+    assertTrue(F.arm(S, 60))
+    assertEqual(lines[#lines], "Armed: 1:00 on Raider's Training Dummy. First hit starts the clock.")
+end)
+
+test("share: a result prints the score line with the delta, the flags and the tail", function()
+    local NS = fresh()
+    local r = raceRec(NS)
+    local line = NS.Share.ResultLine(r, 2.4, true)
+    assertEqual(line, NS.Format.Number(1539711) .. " damage \194\183 " .. NS.Format.Number(51323.7)
+        .. " DPS in 0:30 on Raider's Training Dummy \226\128\148 new best (+2.4%) \194\183 1 late cast \194\183 tail +3.1s")
+    local slower = NS.Share.ResultLine(raceRec(NS, { flags = { lateCasts = {} } }), -3.2, false)
+    assertTrue(slower:find("\226\128\148 -3.2% vs best \194\183 tail +3.1s", 1, true) ~= nil, slower)
+    local early = raceRec(NS, { status = "incomplete", endedAt = 20, flags = { lateCasts = {} } })
+    early.race.tail = nil
+    local inc = NS.Share.ResultLine(early, nil, nil)
+    assertTrue(inc:find("\226\128\148 incomplete$") ~= nil, inc)
+end)
+
+test("share: the score line counts only the late casts the ignore list leaves", function()
+    local NS = fresh()
+    local r = raceRec(NS, { flags = { lateCasts = { { t = 1.2, spellID = 5384 }, { t = 1.4, spellID = 29722 } } } })
+    assertTrue(NS.Share.ResultLine(r, 2.4, true):find("\194\183 1 late cast \194\183", 1, true) ~= nil)
+    r.race.flags.lateCasts[2].spellID = 1856
+    assertNil(NS.Share.ResultLine(r, 2.4, true):find("late", 1, true), "all ignored: no late casts")
+end)
+
+test("share: the race's own result is printed once, when it resolves", function()
+    if forever() then return end
+    local S = F.fresh()
+    assert(S.NS.SetByPath("race.autoShow", false))
+    local lines = capture(S.NS)
+    F.whole(S, 30)
+    assertEqual(S.NS.Race.State(), "result")
+    local n = 0
+    for _, l in ipairs(lines) do
+        if l:find(" damage \194\183 ", 1, true) then n = n + 1 end
+    end
+    assertEqual(n, 1, "one score line")
+    assertTrue(lines[#lines]:find("new best", 1, true) ~= nil, "a board's first race is a new best: " .. lines[#lines])
+end)
+
+test("share: a lost race prints that it could not be read, and has no score line", function()
+    local NS = fresh()
+    local lines = capture(NS)
+    assertEqual(NS.Share.OnRaceResult(nil, { status = "lost", length = 30 }),
+        "Couldn't read the race's result, so it is not saved as a race.")
+    assertEqual(#lines, 1)
+    assertNil(NS.Share.OnRaceResult(nil, nil), "nothing to say about nothing")
+end)
+
+test("share: on WoW Forever a saved race still shares, and no race line is printed", function()
+    if not forever() then return end
+    local NS = fresh()
+    local lines = capture(NS)
+    assertTrue(NS.Share.Line(raceRec(NS), false) ~= nil, "a saved race in the shared history shares")
+    NS.SendBus(NS.MSG.RACE_ARMED, { length = 30 })
+    NS.SendBus(NS.MSG.RACE_RESULT, raceRec(NS), { status = "complete" })
+    assertEqual(#lines, 0, "no race receiver on WoW Forever")
 end)

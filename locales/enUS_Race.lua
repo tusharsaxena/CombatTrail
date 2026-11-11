@@ -281,3 +281,18 @@ L["Your target"] = "Your target"
 L["not paced: shared session"] = "not paced: shared session"
 L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."] =
     "Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."
+
+-- The center countdown and the buzzer (modules/Countdown.lua) use STOP above; the race toast's row
+-- (settings/History.lua) and the race's own chat lines (modules/Share.lua), race plan Task C2
+L["Toast a race's new best"] = "Toast a race's new best"
+L["When a race sets a new best on its board (character, spec, dummy kind and length), a toast near the top of the screen says by how much. A board's first race has nothing to beat and shows none."] =
+    "When a race sets a new best on its board (character, spec, dummy kind and length), a toast near the top of the screen says by how much. A board's first race has nothing to beat and shows none."
+L["Armed: %s on %s. First hit starts the clock."] = "Armed: %s on %s. First hit starts the clock."
+L["your target"] = "your target"
+L["new best (+%.1f%%)"] = "new best (+%.1f%%)"
+L["new best"] = "new best"
+L["%+.1f%% vs best"] = "%+.1f%% vs best"
+L["tail +%.1fs"] = "tail +%.1fs"
+L["%s damage · %s DPS in %s on %s"] = "%s damage · %s DPS in %s on %s"
+L["Couldn't read the race's result, so it is not saved as a race."] =
+    "Couldn't read the race's result, so it is not saved as a race."

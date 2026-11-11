@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/History.lua — the History page (spec §5, §7 and §8, the mockup's History tabs, plan Task
--- 4.5; race plan Task A2): five tabs in strip order. Recording filters holds what a fight must pass to be stored
+-- 4.5; race plan Tasks A2 and C2): six tabs in strip order. Recording filters holds what a fight must pass to be stored
 -- (modules/Filters.lua: `history.minLength`, `history.bossesOnly`, one `history.content.<kind>` per
 -- content kind this client has). History (internal key `retention`, plan decision D6) holds how long
 -- and how many are kept (modules/Retention.lua and modules/Bests.lua: `history.days`,
@@ -12,6 +12,10 @@ local _, NS = ...
 -- (`global.usage.hidden`), drawn as the library's ID list. Training dummies holds the player's own
 -- dummies (`dummies.custom`, modules/Dummies.lua) on both clients: Add your target, the library's ID
 -- list, one checkbox per built-in (none on WoW Forever, whose seed is empty) and the list's reset.
+-- New-best toast (modules/BestToast.lua) holds the alert for a new best: a fight's on both clients
+-- (`toast.fights`) and a race's on Retail only (`toast.races`, race plan ruling X19: the section is on a
+-- page both clients have, with only the races row Retail's), its sound and which one, how long it
+-- stays and its scale, then *Test toast*.
 --
 -- NOT ROWS: `results.view` (the filters, the grouping and the sort Save view captures) and
 -- `results.window` (the place and size the drag and the grip set, and the fold the arrow sets) and
@@ -34,11 +38,11 @@ local L = NS.L
 local PAGE = "history"
 local D = NS.defaults.profile
 
---- The five tabs, by the plan's key, in strip order.
-NS.HISTORY_TAB_ORDER = { "recording", "retention", "results", "usage", "dummies" }
+--- The six tabs, by the plan's key, in strip order.
+NS.HISTORY_TAB_ORDER = { "recording", "retention", "results", "usage", "dummies", "toast" }
 NS.HISTORY_TABS = {
     recording = L["Recording filters"], retention = L["History"], results = L["Results window"], usage = L["Usage"],
-    dummies = L["Training dummies"],
+    dummies = L["Training dummies"], toast = L["New-best toast"],
 }
 local TAB = NS.HISTORY_TABS
 
@@ -172,6 +176,33 @@ out[#out + 1] = {
     normalize = function(v) return NS.Dummies.Normalize(v) end,
     tooltip = L["The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."],
 }
+
+-- New-best toast (race plan Task C2, modules/BestToast.lua): which new bests toast, then its sound
+-- and which one, how long it stays and its scale. Duration and sound are read as each toast shows,
+-- so they need no reaction; the scale re-anchors a shown toast. Its place is *Test toast*'s (drag the
+-- sample there), stored outside the seam (`toast.point`).
+at(TAB.toast, nil)
+if NS.Compat.ForClient(RETAIL) then
+    row("toast.races", { type = "bool", label = L["Toast a race's new best"], clients = RETAIL, startsLine = true,
+        tooltip = L["When a race sets a new best on its board (character, spec, dummy kind and length), a toast near the top of the screen says by how much. A board's first race has nothing to beat and shows none."] })
+end
+row("toast.fights", { type = "bool", label = L["Toast a fight's new best"], startsLine = true,
+    tooltip = NS.Compat.ForClient(RETAIL)
+        and L["When a stored fight sets a new best on its board (character and spec on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."]
+        or L["When a stored fight sets a new best on its board (character and talent tree on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."] })
+row("toast.sound", { type = "bool", label = L["Play a sound"], startsLine = true,
+    tooltip = L["Play an alert sound as the toast appears."] })
+-- Which sound: Play a sound stays the switch, so this row is live with it off. Free of `validate`: a
+-- key a media pack dropped still reads, and plays Default (BestToast.SoundFile).
+row("toast.soundKey", { type = "string", label = L["Toast sound"], dialogControl = "Ka0sMedia_Sound",
+    values = function() return NS.BestToast.SoundValues() end,
+    tooltip = L["The sound the toast plays. Default is the game's alert; every other entry comes from LibSharedMedia. Play a sound turns it on and off."] })
+row("toast.duration", { type = "number", label = L["Toast duration (seconds)"], min = 3, max = 30, step = 1,
+    validate = whole(3, 30), startsLine = true,
+    tooltip = L["How long the toast stays before it closes by itself. It waits while the pointer is over it, and closes at once on its X or a right-click. 3 to 30."] })
+row("toast.scale", { type = "number", label = L["Toast scale"], min = 0.5, max = 2, step = 0.05,
+    validate = within(0.5, 2), onChange = function() NS.BestToast.Refresh() end,
+    tooltip = L["The toast's size. It grows and shrinks about the place you dragged it to. 0.5 to 2.0."] })
 
 for i, r in ipairs(out) do r.order = i end
 NS.RegisterSchemaRows(out)
@@ -337,12 +368,22 @@ local function afterDummies(ctx)
     })
 end
 
+-- After the toast's rows: a sample toast, run as a real one is (options-ui-§21's *Test <thing>*).
+local function afterToast(ctx)
+    NS.Helpers.InlineButtonPair(ctx, {
+        text    = L["Test toast"],
+        tooltip = L["Show a sample new-best toast with the duration, sound and scale above. Drag it to place it while it shows; Reset position (General > Master controls) puts it back."],
+        onClick = function() NS.BestToast.Test() end,
+    })
+end
+
 NS.RegisterTabbedPage({
     key             = PAGE,
     title           = L["History"],
     panelName       = "CombatTrailHistoryPanel",
     defaultsTooltip = L["Restore every History setting on this profile to its addon default, your training dummies among them, and empty the account-wide hidden items. Stored fights are not touched."],
-    afterGroup      = { [TAB.retention] = afterRetention, [TAB.usage] = afterUsage, [TAB.dummies] = afterDummies },
+    afterGroup      = { [TAB.retention] = afterRetention, [TAB.usage] = afterUsage, [TAB.dummies] = afterDummies,
+                        [TAB.toast] = afterToast },
     beforeGroup     = { [TAB.recording] = beforeRecording },
 })
 

@@ -63,7 +63,8 @@ return function(T)
     --- A /reload (Task B2): a new instance on the SAME SavedVariables, the client's meter still holding
     --- `opts.sessions` ({ [id] = session }; session 25 = F.SESSION by default, {} for none), the clock
     --- at `opts.now` (S's clock by default) and in combat when `opts.inCombat`. The new state table is
-    --- listening before OnEnable runs, so it hears what the resume sends. opts.target as F.fresh's.
+    --- listening before OnEnable runs, so it hears what the resume sends. opts.target and opts.mutate
+    --- as F.fresh's.
     function F.reload(S, opts)
         opts = opts or {}
         local saved = _G.CombatTrailDB
@@ -79,6 +80,7 @@ return function(T)
             m.__now = now
             m.__inCombat = opts.inCombat and true or false
             m.InCombatLockdown = function() return m.__inCombat end
+            if opts.mutate then opts.mutate(m) end
         end }
         for id, session in pairs(opts.sessions or { [25] = F.SESSION }) do meter.SetSession(id, session) end
         _G.CombatTrailDB = saved

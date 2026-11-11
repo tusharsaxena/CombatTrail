@@ -31,11 +31,15 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 --   HIGH               WINDOW        the Results window (modules/Results.lua): the on-demand browser,
 --                                    toplevel; Blizzard's Settings panel shares this strata, and the
 --                                    last one clicked is in front
+--   HIGH               (library)     the new-best toast (modules/BestToast.lua, LibKa0s-Toast-1.0's
+--                                    T5 alert tier)
 --   DIALOG             MODAL         the ability timeline and the gear view, opened from the Results
 --                                    window, so one strata above it, toplevel and clamped; each
 --                                    re-raises a shown StaticPopup when it opens (frame-layering-§4)
 --   DIALOG             (library)     Blizzard StaticPopups (reset, delete), the LibKa0s debug console
 --                                    and perf panel
+--   FULLSCREEN         SCREEN_ALERT  the race's center-screen countdown (modules/Countdown.lua, Race
+--                                    mode): over every window, below every menu, never taking the mouse
 --   FULLSCREEN_DIALOG  (library)     the LibKa0s dropdown menu (the Results filter bars)
 --   TOOLTIP            (Blizzard)    GameTooltip
 --
@@ -55,7 +59,8 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 C.FIGHT = { GRACE = 4, SETTLE = 2, TICK = 0.25 }
 
 C.LAYERS = {
-    STRATA = { LANE = "LOW", CHROME = "MEDIUM", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG" },
+    STRATA = { LANE = "LOW", CHROME = "MEDIUM", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG",
+                SCREEN_ALERT = "FULLSCREEN" },
     LEVEL  = { LANE = 1, DETAIL = 2, CHART_OVERLAY = 2, COVER = 30, ICON_BAND = 8, LANE_EDIT = 10 },
 }
 

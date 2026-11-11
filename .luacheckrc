@@ -88,6 +88,13 @@ files["modules/Dummies.lua"] = {
 -- Auto-show and auto-arm near a training dummy (Race mode): the instance type that keeps both off, and
 -- the nameplates up now (each pcall'd at CALL time).
 files["modules/AutoArm.lua"] = { read_globals = { "GetInstanceInfo", "C_NamePlate" } }
+-- A race's final seconds (Race mode): the countdown cue and the buzzer's sound, and the raid warning's
+-- STOP (each read bare at CALL time, type-checked and pcall'd).
+files["modules/Countdown.lua"] = {
+    read_globals = { "PlaySound", "SOUNDKIT", "RaidNotice_AddMessage", "RaidWarningFrame", "ChatTypeInfo" },
+}
+-- The new-best toast's scaled text: a named copy of a font object (type-checked at CALL time).
+files["modules/Style.lua"] = { read_globals = { "CreateFont" } }
 
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
 -- time, so a client without one leaves the field absent).

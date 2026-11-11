@@ -9,21 +9,21 @@ stand-down drops it and the stand-up replays it (slash-commands-§7).
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | AutoArm, Bests, Hud, RaceWindow, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page, Race mode page |
+| `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | AutoArm, Bests, BestToast, Countdown, Hud, RaceWindow, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page, Race mode page |
 | `LANE_PUSH` | LaneCasts | `(laneKey, item)` | LaneRender |
 | `COMBAT_ENTERED` | Fight, on the `PLAYER_REGEN_DISABLED` edge only (never a split or a mid-combat `ENCOUNTER_START`) | `(t)` | Results (closes while `results.closeInCombat` is on) |
 | `FIGHT_STARTED` | Fight | `(fight)` | Casts, Hud, Loadouts, Preview (ends test mode), Race, Slices, Stats, Usage |
 | `FIGHT_FIRST_HIT` | Fight, once per fight, on its first damage update for a bound session | `(fight)`, `fight.firstHitT` set | Race (the race clock, ruling X2) |
 | `FIGHT_TICK` | Fight, every 0.25 s in combat | `(fight)` | Hud, RaceWindow (the race's live total for its pace bar), Slices |
 | `FIGHT_ENDED` | Fight | `(fight, final, reason)` | Casts, Hud, Recorder (which pulls `Race.Finalize` first, ruling X1), Slices, Usage |
-| `FIGHT_SAVED` | Recorder | `(record)` | Bests, Hud, Race, Results, Slices, History page |
+| `FIGHT_SAVED` | Recorder | `(record)` | Bests, BestToast (a fight's new best; never a race), Hud, Race, Results, Slices, History page |
 | `FIGHT_SKIPPED` | Recorder | `(fight, reason)` | Hud, Race, Slices |
 | `FIGHTS_CHANGED` | Recorder, Retention | none | Bests, RaceWindow (a deleted result card goes back to Arm Race), Results, History page |
-| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | AutoArm, RaceWindow (the body on screen, the arm's and the resume's opening, the idle edge's close) |
-| `RACE_ARMED` | Race.Arm | `(race)` | (the chat lines, Task C2); the Race window reacts to the state change |
+| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | AutoArm, Countdown (the marks armed on `running`, gone on any other state), RaceWindow (the body on screen, the arm's and the resume's opening, the idle edge's close) |
+| `RACE_ARMED` | Race.Arm | `(race)` | Share (the armed line); the Race window reacts to the state change |
 | `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | Hud (a race's fight opens the HUD whatever its own rules say, ruling X7) |
-| `RACE_BUZZER` | Race, at the race length | `(race)` | (the buzzer's warning, Task C2) |
-| `RACE_RESULT` | Race, inside the race fight's `FIGHT_SAVED` or `FIGHT_SKIPPED`; or from `Race.Resume` itself for a resumed race whose session is gone | `(record, race)`; `record` nil when nothing was stored (a lost race) | RaceWindow (opens on the result card); (the toast and the chat line, Task C2) |
+| `RACE_BUZZER` | Race, at the race length | `(race)` | Countdown (the raid warning's STOP and its sound) |
+| `RACE_RESULT` | Race, inside the race fight's `FIGHT_SAVED` or `FIGHT_SKIPPED`; or from `Race.Resume` itself for a resumed race whose session is gone | `(record, race)`; `record` nil when nothing was stored (a lost race) | RaceWindow (opens on the result card), BestToast (a race's new best), Share (the score line, or the lost line) |
 | `RACE_CANCELED` | Race.Cancel, or a pull not on a training dummy | `(reason)`: `"canceled"` or `"not_dummy"` | none yet; the Race window reacts to the state change |
 
 The race messages are Retail's (Race mode is absent on WoW Forever, clients-§4): nothing sends them

@@ -10,9 +10,9 @@ local _, NS = ...
 -- DPS HUD page's appearance blocks (spec §8), so it has no styling rows here; its lock is Master
 -- controls' Lock frame (general.locked), as every placed frame's is.
 --
--- NOT HERE (each its task): the training dummies are the History page's (Task A2); the New-best toast
--- section waits for the owner's call on where it stands (the fights' toast is on both clients, and
--- this page is Retail's: race plan recon settings#4), and lands with the toast (Task C2).
+-- NOT HERE: the training dummies are the History page's (Task A2), and so is the New-best toast section
+-- (Task C2, ruling X19: a fight's toast is on both clients and this page is Retail's, so the section
+-- stands on a page both have, with only its races row Retail's).
 --
 -- CLIENTS (clients-§4). The page is declared `clients = { "retail" }` (the library never builds it on
 -- WoW Forever), and its rows are registered only on Retail, each declared retail too: WoW Forever has
@@ -24,7 +24,8 @@ local _, NS = ...
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
 -- one armed (Race.ForgetLength); auto-show, auto-arm and the switch re-sync AutoArm's registrations,
 -- and the switch going off (or a profile that has it off) cancels a race still armed.
--- The countdown, the buzzer and the Race window read their keys off SETTINGS_CHANGED (Tasks C1, C2).
+-- The countdown re-arms a race's marks off its rows' SETTINGS_CHANGED and the buzzer reads its row as
+-- it sounds (modules/Countdown.lua); the Race window reads its keys off SETTINGS_CHANGED (Task C1).
 
 local L = NS.L
 local PAGE = "race"

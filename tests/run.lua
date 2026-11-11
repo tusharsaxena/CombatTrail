@@ -139,6 +139,8 @@ local SUITES = {
     "test_race_settings",
     "test_autoarm",
     "test_race_window",
+    "test_countdown",
+    "test_toast",
     "test_slices",
     "test_hud_states",
     "test_hud_pace",

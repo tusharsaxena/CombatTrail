@@ -2,8 +2,8 @@ local _, NS = ...
 -- modules/Style.lua — the look the HUD and the Results window share with the other Ka0s windows
 -- (LootHistory's browser is the reference; BankLedger and MultiMeters agree): Blizzard's font objects
 -- for every label, the header gold, the title-bar geometry, and the title-bar controls that turn gold
--- under the pointer. Ported from DPS Race @045f479 (modules/Style.lua) without the new-best toast's
--- scaled text (no toast in Combat Trail).
+-- under the pointer. Ported from DPS Race @045f479 (modules/Style.lua); the new-best toast's scaled
+-- text (Style.ScaledText) came with the toast (race plan Task C2, DPS Race @f8078c7).
 --
 -- FONT OBJECTS, NOT FONT FILES. A label takes one of Blizzard's font objects (`GameFontNormal` and its
 -- family), never a path and a size, so it reads at the size and weight the rest of the collection
@@ -335,6 +335,64 @@ end
 function Style.PlainText(parent, font, justify)
     local fs = parent:CreateFontString(nil, "OVERLAY", font or Style.FONT.TEXT)
     fontOf[fs] = font or Style.FONT.TEXT
+    fs:SetJustifyH(justify or "LEFT")
+    fs:SetWordWrap(false)
+    return fs
+end
+
+-- The pixel height of the two font objects a scaled surface draws at a multiple of (Style.ScaledText:
+-- the new-best toast, modules/BestToast.lua), as the client defines them. A config table, never read
+-- off a string.
+Style.FONT_SIZE = {
+    GameFontNormal         = 12,
+    GameFontHighlightSmall = 10,
+}
+
+-- The scaled copies of the font objects, by "<font>@<scale>": a font object's name, or false where the
+-- client has no CreateFont (the string then carries the size itself).
+local scaledFonts = {}
+
+--- A named copy of `font` at `scale` times its Style.FONT_SIZE height, or nil. Named, so the skin's
+--- Ignore fonts puts a string back on THIS object, at the scaled size, rather than on the stock one.
+local function scaledFont(font, scale)
+    local key = font .. "@" .. scale
+    if scaledFonts[key] == nil then
+        scaledFonts[key] = false
+        local base, size = rawget(_G, font), Style.FONT_SIZE[font]
+        if size and type(CreateFont) == "function" and type(base) == "table" and base.GetFont then
+            local name = ("CombatTrail_%s_%d"):format(font, math.floor(scale * 100 + 0.5))
+            local obj = CreateFont(name)
+            if type(obj) == "table" then
+                if obj.CopyFontObject then obj:CopyFontObject(base) end
+                local path, _, flags = base:GetFont()
+                obj:SetFont(path or STANDARD_TEXT_FONT, size * scale, flags or "")
+                scaledFonts[key] = name
+            end
+        end
+    end
+    return scaledFonts[key] or nil
+end
+
+--- Style.Text at `scale` times `font`'s height (Style.FONT_SIZE): the same role and color, so the skin
+--- paints it as it paints Style.Text, keeping the scale. Used where a whole surface is drawn larger:
+--- the new-best toast (ported from DPS Race @f8078c7, its Style.ScaledText).
+--- @param parent table
+--- @param font string  a Style.FONT value that Style.FONT_SIZE names
+--- @param scale number
+--- @param color table|string|nil
+--- @param justify string|nil
+--- @return table
+function Style.ScaledText(parent, font, scale, color, justify)
+    font = font or Style.FONT.TEXT
+    local obj = scaledFont(font, scale)
+    local fs = parent:CreateFontString(nil, "OVERLAY", obj or font)
+    local size = Style.FONT_SIZE[font]
+    if not obj and size then
+        local path, _, flags = fs:GetFont()
+        fs:SetFont(path or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size * scale, flags or "")
+    end
+    fontOf[fs] = font
+    Style.Paint(fs, color, font)
     fs:SetJustifyH(justify or "LEFT")
     fs:SetWordWrap(false)
     return fs

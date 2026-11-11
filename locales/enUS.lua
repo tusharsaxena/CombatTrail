@@ -1201,3 +1201,31 @@ L["Your training dummies are cleared: only the built-in ones count."] =
     "Your training dummies are cleared: only the built-in ones count."
 L["Your training dummies: /ct dummy show|add|remove|capture|defaults"] =
     "Your training dummies: /ct dummy show|add|remove|capture|defaults"
+
+-- The new-best toast (modules/BestToast.lua, race plan Task C2): its History tab, its words, and the
+-- incomplete word a shared race line carries (modules/Share.lua), on both clients
+L["New-best toast"] = "New-best toast"
+L["Toast a fight's new best"] = "Toast a fight's new best"
+L["When a stored fight sets a new best on its board (character and spec on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."] =
+    "When a stored fight sets a new best on its board (character and spec on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."
+L["When a stored fight sets a new best on its board (character and talent tree on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."] =
+    "When a stored fight sets a new best on its board (character and talent tree on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."
+L["Play a sound"] = "Play a sound"
+L["Play an alert sound as the toast appears."] = "Play an alert sound as the toast appears."
+L["Toast sound"] = "Toast sound"
+L["The sound the toast plays. Default is the game's alert; every other entry comes from LibSharedMedia. Play a sound turns it on and off."] =
+    "The sound the toast plays. Default is the game's alert; every other entry comes from LibSharedMedia. Play a sound turns it on and off."
+L["Toast duration (seconds)"] = "Toast duration (seconds)"
+L["How long the toast stays before it closes by itself. It waits while the pointer is over it, and closes at once on its X or a right-click. 3 to 30."] =
+    "How long the toast stays before it closes by itself. It waits while the pointer is over it, and closes at once on its X or a right-click. 3 to 30."
+L["Toast scale"] = "Toast scale"
+L["The toast's size. It grows and shrinks about the place you dragged it to. 0.5 to 2.0."] =
+    "The toast's size. It grows and shrinks about the place you dragged it to. 0.5 to 2.0."
+L["Test toast"] = "Test toast"
+L["Show a sample new-best toast with the duration, sound and scale above. Drag it to place it while it shows; Reset position (General > Master controls) puts it back."] =
+    "Show a sample new-best toast with the duration, sound and scale above. Drag it to place it while it shows; Reset position (General > Master controls) puts it back."
+L["New best:"] = "New best:"
+L["%s DPS, %s better than previous best (%s)"] = "%s DPS, %s better than previous best (%s)"
+L["Default"] = "Default"
+L["Training Dummy"] = "Training Dummy"
+L["incomplete"] = "incomplete"

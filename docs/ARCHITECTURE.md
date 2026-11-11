@@ -45,6 +45,8 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | The `/ct race` verb (`settings/Slash.lua`: the triple declared `clients = { "retail" }`, gated by the library and, degraded, by the stub and `NS.RunVerb`) | present | absent: not in the help, typing it is an unknown verb |
 | Auto-show and auto-arm (`modules/AutoArm.lua`: its bus receivers under `ForClient`, its events only while `NS.RaceMode.On()`) | present | absent: nothing registers |
 | The Race window (`modules/RaceWindow.lua`, `RaceWindow_States.lua`, `RaceWindow_Best.lua`: each returns at once off Retail, so `NS.RaceWindow` is nil) | present | absent: nothing loads, the toggle refuses |
+| The race's countdown and buzzer (`modules/Countdown.lua`, returns at once off Retail) and its chat lines on the arm and at the result (`modules/Share.lua`'s receivers under `ForClient`) | present | absent: nothing loads or registers; a saved race still shares |
+| The new-best toast (`modules/BestToast.lua`, History > New-best toast) | a fight's (`toast.fights`) and a race's (`toast.races`) | a fight's only: no `toast.races` key, row or receiver |
 | The DPS HUD opening for a race whatever `hud.show`, `hud.instancesOnly` and `general.hudInCombat` say (ruling X7) | present | absent: there is no race |
 | Sample history (test mode and the sim) | 40 fights | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
@@ -77,7 +79,7 @@ Load order is the TOC's: libraries, the locale, `core/` in dependency order, `de
 scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
-  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
+  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
   LauncherSetup, CombatTrail, Database.
 - **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
@@ -85,7 +87,8 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
 - **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, AutoArm, RaceVerb.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
-- **Race window (Retail):** RaceWindow_Best, RaceWindow_States, RaceWindow.
+- **Race window (Retail):** RaceWindow_Best, RaceWindow_States, RaceWindow, Countdown; and BestToast (the
+  new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Loadout,
   Results_Usage, Results_Targets, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
   Results_Gear, Results_Compare, Results.

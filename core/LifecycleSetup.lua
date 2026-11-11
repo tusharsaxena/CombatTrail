@@ -13,7 +13,7 @@ local L = NS.L
 -- from CURRENT settings).
 local MODULES = { "Preview", "LaneCasts", "LaneAnchor", "LaneVisibility", "LaneRender", "Probe", "Meter", "Fight",
                   "Watchers", "Race", "RaceWatchers", "AutoArm", "Casts", "Usage", "Loadouts", "Retention",
-                  "Slices", "Hud", "RaceWindow", "Results" }
+                  "Slices", "Hud", "RaceWindow", "Countdown", "BestToast", "Results" }
 
 --- Disabled means NOT RUNNING. Every registration goes -- not gated -- every timer is canceled, and
 --- every frame is hidden at the source of its show decision.

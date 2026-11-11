@@ -880,6 +880,49 @@ Total.
 - race window: the clock's timer runs only while racing and shown, and the stand-down drops all of it
 - race window: a race opens the DPS HUD whatever its own rules say; a plain fight does not
 
+### test_countdown.lua (21)
+
+- countdown: absent on WoW Forever
+- countdown: 10..1 show one per second in the last 10 s, then go at the buzzer
+- countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu
+- countdown: the digits are Blizzard's BigGold set, cut by texcoord
+- countdown: without the digit art it falls back to a large outlined number
+- countdown: finalCountdown 3 starts at 3
+- countdown: switched off, no frame is ever built and only the cue marks sound
+- countdown: switching it off mid-countdown hides the number at once
+- countdown: works with the DPS HUD and the Race window closed
+- countdown: one cue per second of the numbers, never two in a second
+- countdown: the cue off keeps the numbers and silences every second
+- countdown: switching the cue off mid-race silences the marks still ahead
+- countdown: a cancel at 5 s left hides it and nothing more shows or sounds
+- countdown: combat ending before the buzzer hides it
+- countdown: the stand-down takes the number and every mark, and nothing re-arms them
+- countdown: a /reload with 4 s left resumes at 4 and counts 3, 2, 1
+- countdown: a /reload before the window shows nothing until it opens
+- countdown: a /reload past the buzzer shows nothing
+- countdown: the buzzer raises the raid warning's STOP with its sound, once, only when enabled
+- countdown: a canceled race and a race ending early raise no buzzer
+- countdown: never broadcasts a pull timer nor drives Blizzard's TimerTracker
+
+### test_toast.lua (16)
+
+- toast: a complete race that beats its board's best toasts once, whatever the windows show
+- toast: none for an incomplete or lost race, a race that is no best, or with races off
+- toast: a race's payload names the spec and class, its dummy kind and length, the DPS and the gain
+- toast: a flagged race may toast, its flags on the last line as the Race window words them
+- toast: a new fight best raises the toast; a board's first fight does not
+- toast: each toggle silences its kind
+- toast: with no previous best to name, the DPS line is the DPS alone in the text color
+- toast: two real races, the second faster, toast once on its result
+- toast sound: Default plays the shell's alert; another key its file; an unknown key falls back
+- toast sound: the list leads with Default, then every LibSharedMedia sound in order
+- toast: Test toast queues a sample, and a second click replaces it
+- toast: Reset position (Master controls) clears the stored place
+- toast: the stand-down takes the toast down and drops what waits; a best while down shows none
+- toast: DPS Race's size: 25% larger, the trophy as tall as the three rows
+- toast: the History page's New-best toast tab, the races row on Retail only
+- toast: the stub answers every member a live toast has, as an empty toast does
+
 ### test_slices.lua (18)
 
 - slices: a 2 s step, at most 60 columns, a column that grows with the fight
@@ -1109,7 +1152,7 @@ Total.
 - sections: a rebuilt pane reads the folds back; Reset position keeps them
 - sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
-### test_share.lua (6)
+### test_share.lua (13)
 
 - share: line format and length <= 255
 - share: talents link appended when enabled
@@ -1117,6 +1160,13 @@ Total.
 - share: the row menu's Share is live for a stored fight
 - share: the whisper box offers the target as the client addresses them (realm on Retail, full regional name on Forever)
 - share: forever: the line names the predominant talent tree (D5)
+- share: a race's line names its race length and race DPS, and an incomplete race says so
+- share: arming prints the armed line with the length and the target
+- share: a result prints the score line with the delta, the flags and the tail
+- share: the score line counts only the late casts the ignore list leaves
+- share: the race's own result is printed once, when it resolves
+- share: a lost race prints that it could not be read, and has no score line
+- share: on WoW Forever a saved race still shares, and no race line is printed
 
 ### test_timeline.lua (12)
 
@@ -1180,7 +1230,7 @@ Total.
 
 ### test_history_page.lua (17)
 
-- history page: five tabs, Recording filters first and Training dummies last
+- history page: six tabs, Recording filters first and New-best toast last
 - history page: every history.* key, the Results window's settings and the hidden list have a row
 - history page: the rows sit on their tabs, the hidden list on Usage
 - history page: every row's default is the shipped one (defaults/Profile.lua is the only source)
@@ -1428,6 +1478,8 @@ Total.
 | test_race_settings.lua | 18 |
 | test_autoarm.lua | 27 |
 | test_race_window.lua | 36 |
+| test_countdown.lua | 21 |
+| test_toast.lua | 16 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1441,7 +1493,7 @@ Total.
 | test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
-| test_share.lua | 6 |
+| test_share.lua | 13 |
 | test_timeline.lua | 12 |
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
@@ -1463,4 +1515,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1177** |
+| **Total** | **1221** |
