@@ -135,6 +135,7 @@ local SUITES = {
     "test_race_scoring",
     "test_late_ignore",
     "test_race",
+    "test_race_resume",
     "test_slices",
     "test_hud_states",
     "test_hud_pace",

@@ -58,6 +58,11 @@ Race.Arm(length)  out of combat, Fight idle: the meter's sessions now (Meter.Ses
   the buzzer -> STOPPING, RACE_BUZZER; Stop Now -> Fight.Hurry (no settle wait)
   FIGHT_ENDED -> Recorder pulls Race.Finalize: a shared read netted against the baseline, then the
      score, DPS, timing and status on the part -> the record (below), RACE_RESULT inside FIGHT_SAVED
+  the slot: db.global.pendingRaces[charKey] written at the first hit, cleared at the result or a cancel
+  /reload or stand-up -> Race.Resume (after Meter.Prime): a session gone -> lost; else Fight.Adopt
+     rebuilds the fight on the kept sessions: in combat with time left RUNNING (the buzzer re-armed),
+     else STOPPING (reloaded past the buzzer; out of combat read on the next timer, incomplete before
+     the buzzer) -> FIGHT_ENDED as above
 ```
 
 ## 3. The record

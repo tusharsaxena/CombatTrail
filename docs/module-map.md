@@ -67,7 +67,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceTimeline.lua` | A race's damage-update stamps: the tail after the buzzer and the restart, pure (Race mode) |
 | `modules/LateIgnore.lua` | The late-cast ignore list, read when a race is scored (Race mode, both clients) |
 | `modules/RaceScoring.lua` | A race's scoring rules: the late-cast test, the race DPS and its flags (Race mode) |
-| `modules/Race.lua` | The race engine on the fight: arm, the first-hit clock, the buzzer, the late casts, the race part (Race mode, Retail) |
+| `modules/Race.lua` | The race engine on the fight: arm, the first-hit clock, the buzzer, the late casts, the race part, the pending slot and the resume after a `/reload` (Race mode, Retail) |
 | `modules/RaceWatchers.lua` | The race's game events, one set per race state (Race mode, Retail) |
 | `modules/CastCodec.lua` | The packed cast-list string a record stores, pure |
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |

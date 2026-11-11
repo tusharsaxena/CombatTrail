@@ -115,6 +115,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-F17 | Both | The FIGHT_STARTED snapshots at `PLAYER_REGEN_DISABLED` | No hitch on the pull (a perf capture if one is felt) |
 | SM-CT-F18 | Both | Spell 19705 is named Well Fed | Usage marks food on both clients; a current Retail food buff matches it by name |
 | SM-CT-F19 | Both | A merged fight when the meter split a session into it | The chart drops back cleanly |
+| SM-CT-F20 | Retail | Race mode: arm a 60 s race, `/reload` before the first hit; arm again, hit the dummy, `/reload` at about 0:20 still in combat; then a third race, `/reload` past the buzzer in combat; then a fourth, leave combat at 0:20 and `/reload` | No race after the first reload; the second carries on with the time it had left and its buzzer sounds on time; the third is read after combat and saved flagged reloaded; the fourth is saved incomplete at about 0:20, read right after the load; no Lua error |
 
 ## 4. The DPS HUD
 

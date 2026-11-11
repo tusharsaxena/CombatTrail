@@ -34,11 +34,12 @@ local _, NS = ...
 -- addon object's AceTimers, so the stand-down's CancelAllTimers takes them too; Suspend drops the fight
 -- in memory without a message (no record was opened), and the stand-up starts IDLE.
 --
--- THE RACE'S TWO SEAMS (Race mode, modules/Race.lua). Fight.ShareSessions(set): while a race is armed,
+-- THE RACE'S THREE SEAMS (Race mode, modules/Race.lua). Fight.ShareSessions(set): while a race is armed,
 -- an in-combat update naming a session of `set` (the ones the client held at the arm) binds an unbound
 -- fight to it, marked `sharedSession` (ruling X3: a pull that carried on a session alive at the arm;
 -- plain fights never bind one). Fight.Hurry(id): *Stop Now* reads the race's fight without the settle's
--- wait (ruling X5), at once while settling, at the combat end while in combat.
+-- wait (ruling X5), at once while settling, at the combat end while in combat. Fight.Adopt(spec): a race
+-- resumed after a /reload gets back the fight its meter session belongs to (Task B2).
 
 local Fight = {}
 NS.Fight = Fight
@@ -519,6 +520,47 @@ function Fight.Hurry(id)
     return true
 end
 
+-- The resumed fight's table: the race's kept fields, on a fresh id. New sessions are looked for from
+-- the resume (the sessions the stand-up primed are older than any).
+local function adoptedFight(spec, now)
+    seq = seq + 1
+    local f = { id = ("%d-%d"):format(time(), seq), startT = spec.startT or now, scanFrom = now, sessions = {},
+                sessionSet = {}, snapshot = spec.snapshot, stats = spec.stats, gearSet = spec.gearSet,
+                firstHitT = spec.firstHitT, lastUpdateT = spec.lastUpdateT, sharedSession = spec.sharedSession,
+                raceBaseline = spec.raceBaseline, boundBy = spec.boundBy or "resume", resumed = true }
+    if spec.talents ~= nil then f.loadout = { talents = spec.talents } end
+    for _, id in ipairs(spec.sessions) do addSession(f, id) end
+    return f
+end
+
+--- A race resumed after a /reload or a stand-up (Race.Resume, race plan Task B2): the fight it rode,
+--- rebuilt from what the race kept and bound to its sessions. In combat it is the current fight
+--- (COMBAT, the tick on, the combat end settling it as ever); out of combat the combat ended unheard,
+--- so it is read now, without the settle's wait (as Hurry reads), on the next timer. No FIGHT_STARTED
+--- or FIGHT_FIRST_HIT: the fight began before the reload, and its casts, usage and chart went with it.
+--- @param spec table  { sessions (plain IDs, at least one), startT, firstHitT, lastUpdateT?, snapshot,
+---                    stats?, talents?, gearSet?, sharedSession?, raceBaseline?, boundBy?, inCombat }
+--- @return table|nil fight  nil while stood down, while a fight is in progress, or with no session
+function Fight.Adopt(spec)
+    if isDown() or state ~= STATE.IDLE or type(spec) ~= "table" or type(spec.sessions) ~= "table"
+        or spec.sessions[1] == nil then
+        return nil
+    end
+    local now = GetTime()
+    cur, parked, sealedTries = adoptedFight(spec, now), {}, 0
+    debug("fight %s resumed on session %s (%s)", cur.id, tostring(cur.sessionID),
+        spec.inCombat and "in combat" or "read now")
+    if spec.inCombat then
+        setState(STATE.COMBAT)
+        startTick()
+    else
+        cur.combatEndT, cur.hurry = now, true
+        setState(STATE.SETTLING)
+        scheduleSettle(0)
+    end
+    return cur
+end
+
 -- ── the lifecycle (core/LifecycleSetup.lua) ─────────────────────────────────────────────────────
 
 --- The stand-down: the fight in memory goes, silently, with its timers; the state is IDLE.
@@ -529,7 +571,8 @@ function Fight.Suspend()
     state = STATE.IDLE
 end
 
---- The stand-up: nothing to rebuild; a combat already under way is not picked up (Review Focus 4).
+--- The stand-up: nothing to rebuild; a combat already under way is not picked up (Review Focus 4),
+--- unless a race was under way: Race.Resume adopts its fight (Fight.Adopt).
 function Fight.Resume()
     state = STATE.IDLE
 end

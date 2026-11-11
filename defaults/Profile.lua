@@ -260,6 +260,10 @@ NS.defaults = {
         -- (modules/Dummies.lua): data, not a setting. Global, as a creature is the same on every
         -- profile.
         dummies = { captures = {} },
+        -- The race under way, per character (modules/Race.lua, race plan Task B2): written at its first
+        -- hit and cleared at its result or a cancel, so Race.Resume carries it on after a /reload.
+        -- Keyed by Bests.CharKey ("name|realm|client"); plain fields only. Data, not a setting.
+        pendingRaces = {},
         -- LibDBIcon's own table, handed straight to :Register (launcher-§3). Global, because the
         -- button belongs to the installation and a profile switch must not move it.
         minimap = { hide = false },

@@ -36,9 +36,20 @@ local _, NS = ...
 -- passes through NS.Secrets before it is compared or kept; a sealed late cast keeps its offset only.
 --
 -- RETAIL ONLY (clients-§4). The bus receivers below register only on Retail, Arm refuses on WoW
--- Forever, and modules/RaceWatchers.lua registers no event there. NOTHING IS WRITTEN mid-race: the
--- part lives on the in-memory fight until Recorder saves it. Timers are the addon object's AceTimers,
--- so the stand-down's CancelAllTimers takes the buzzer; Suspend drops the race silently.
+-- Forever, and modules/RaceWatchers.lua registers no event there. Timers are the addon object's
+-- AceTimers, so the stand-down's CancelAllTimers takes the buzzer; Suspend drops the race silently.
+--
+-- AFTER A /RELOAD (Task B2). Nothing reaches the fight store mid-race (modules/Recorder.lua), but at
+-- its first hit the race is written to db.global.pendingRaces[charKey] (Bests.CharKey of the pull's
+-- `who`), one slot per character: its part (the SAME table, so every status and flag set on it is in
+-- SavedVariables at once, as DPS Race's run was) and the fight's plain fields a record needs (its
+-- sessions, combat entry, snapshot, stats, talents, gear set, a shared session's baseline). Each damage
+-- update moves the slot's `lastDamage`; the result and a cancel clear it; an arm (never written) is
+-- dropped by a /reload. Race.Resume (OnEnable and the stand-up) carries this character's slot on:
+-- a session gone is lost; still in combat with time left it runs on with the buzzer re-armed; else it
+-- waits for its read, flagged `reloaded` past the buzzer, incomplete before it when combat is already
+-- over. Fight.Adopt gives it back the fight its session belongs to, which ends on the normal path
+-- (FIGHT_ENDED, Recorder, Finalize). The casts, the usage and the chart before the reload are gone.
 
 local Race = {}
 NS.Race = Race
@@ -62,7 +73,9 @@ local state = STATE.IDLE
 -- armSet (session IDs held at the arm), baseline (the newest of them, read at the arm), snaps (the
 -- arm's snapshots), startedAt (the fight's firstHitT), buzzerAt, combatEndedAt (the regen edge after
 -- the buzzer), lastDamage (s from the start), timeline, inFlight (the cast begun and not yet finished:
--- its plain spell ID and castGUID, either nil when sealed), buzzer (the timer), stopNow, record.
+-- its plain spell ID and castGUID, either nil when sealed), buzzer (the timer), stopNow, record,
+-- date (time() at the first hit), slot and slotKey (the pending slot, Task B2), resumedAt (the resume's
+-- GetTime(): a restart gap never spans it).
 local cur = {}
 
 local function debug(fmt, ...)
@@ -176,6 +189,69 @@ function Race.DefaultLength()
     return setting("defaultLength")
 end
 
+-- ── the pending slot (db.global.pendingRaces, Task B2) ──────────────────────────────────────────
+
+local function slots()
+    local db = NS.db
+    local g = db and db.global
+    if type(g) ~= "table" then return nil end
+    if type(g.pendingRaces) ~= "table" then g.pendingRaces = {} end
+    return g.pendingRaces
+end
+
+local function plain(v)
+    local Recorder = NS.Recorder
+    if v == nil or not (Recorder and Recorder.PlainCopy) then return nil end
+    return Recorder.PlainCopy(v)
+end
+
+-- The logged-in character's slot key, or nil with no readable name.
+local function myKey()
+    local Identity = NS.Identity
+    if not (Identity and Identity.Who) then return nil end
+    return NS.Bests.CharKey(Identity.Who())
+end
+
+-- Whether this character's slot holds a race not yet resumed.
+local function slotWaiting()
+    local store = slots()
+    if store == nil or next(store) == nil then return false end
+    local key = myKey()
+    return key ~= nil and store[key] ~= nil
+end
+
+-- The race at its first hit (and again when it follows a split): the slot, written whole. A pull whose
+-- character cannot be read is never written (no key; it could not be a record either).
+local function persist()
+    local f, store = cur.fight, slots()
+    local snap = plain(f.snapshot)
+    local key = NS.Bests.CharKey(type(snap) == "table" and snap.who or nil)
+    if not (store and key) then return end
+    local lo = type(f.loadout) == "table" and f.loadout or {}
+    cur.slotKey = key
+    cur.slot = { race = cur.race, startedAt = cur.startedAt, date = cur.date, lastDamage = cur.lastDamage,
+                 sessions = plain(f.sessions), boundBy = Secrets.PlainString(f.boundBy),
+                 sharedSession = f.sharedSession and true or nil, startT = Secrets.PlainNumber(f.startT),
+                 snapshot = snap, stats = plain(f.stats), talents = plain(lo.talents),
+                 gearSet = Secrets.PlainString(f.gearSet), baseline = plain(f.raceBaseline) }
+    store[key] = cur.slot
+end
+
+-- The race is over (its result) or canceled: its slot goes.
+local function unpersist()
+    local store, key = slots(), cur.slotKey
+    if store and key and store[key] == cur.slot then store[key] = nil end
+    cur.slot, cur.slotKey = nil, nil
+end
+
+-- A damage update: the slot's last offset, and its sessions when the fight merged one.
+local function persistStamp()
+    local slot, f = cur.slot, cur.fight
+    if not slot then return end
+    slot.lastDamage = cur.lastDamage
+    if f and type(slot.sessions) == "table" and #f.sessions ~= #slot.sessions then slot.sessions = plain(f.sessions) end
+end
+
 -- ── arming ──────────────────────────────────────────────────────────────────────────────────────
 
 local function validLength(length)
@@ -185,7 +261,7 @@ end
 -- Why the race's own state refuses a new arm, or nil.
 local function stateRefusal()
     if state == STATE.ARMED or state == STATE.RUNNING then return "busy" end
-    if state == STATE.STOPPING then return "pending" end
+    if state == STATE.STOPPING or slotWaiting() then return "pending" end
     return nil
 end
 
@@ -280,6 +356,7 @@ end
 -- Back to IDLE; `why` is RACE_CANCELED's reason, nil for a dismissed result.
 local function drop(why)
     stopBuzzer()
+    unpersist()
     if cur.fight and state ~= STATE.RESULT then cur.fight.race = nil end
     NS.Fight.ShareSessions(nil)
     setState(STATE.IDLE)
@@ -328,6 +405,7 @@ local function unshare(fight)
     cur.fight = fight
     fight.race = cur.race
     cur.race.flags.sharedSession = nil
+    persist()
     debug("fight %s split off the shared session: the race follows it", tostring(fight.id))
 end
 
@@ -368,6 +446,8 @@ local function begin(fight)
     handOver(fight)
     cur.timeline:AddDamage(t)
     cur.lastDamage = 0
+    cur.date = time()
+    persist()
     scheduleBuzzer(cur.race.length - (GetTime() - t))
     debug("clock started at %.2f (fight %s)", t, tostring(fight.id))
     setState(STATE.RUNNING)
@@ -433,8 +513,9 @@ local function stamp(t)
     local race, buzzerAt = cur.race, cur.buzzerAt
     cur.timeline:AddDamage(t)
     cur.lastDamage = round2(t - cur.startedAt)
+    persistStamp()
     if buzzerAt and not race.flags.restartedAt then
-        race.flags.restartedAt = round2(cur.timeline:RestartAt(buzzerAt, race.restartGap))
+        race.flags.restartedAt = round2(cur.timeline:RestartAt(buzzerAt, race.restartGap, cur.resumedAt))
         if race.flags.restartedAt then debug("damage restarted at +%.2f", race.flags.restartedAt) end
     end
 end
@@ -608,6 +689,7 @@ end
 -- The race's fight was saved (its record) or skipped (nil): the result.
 local function toResult(record)
     stopBuzzer()
+    unpersist()
     cur.record = record
     NS.Fight.ShareSessions(nil)
     setState(STATE.RESULT)
@@ -626,7 +708,8 @@ end
 
 -- ── the lifecycle (core/LifecycleSetup.lua) ─────────────────────────────────────────────────────
 
---- The stand-down: the race in memory goes, silently, with its timer; the state is IDLE.
+--- The stand-down: the race in memory goes, silently, with its timer; the state is IDLE. Its slot
+--- stays, so the stand-up's Resume carries a race under way on (an arm, never written, is dropped).
 function Race.Suspend()
     stopBuzzer()
     cur = {}
@@ -634,9 +717,115 @@ function Race.Suspend()
     if NS.Fight and NS.Fight.ShareSessions then NS.Fight.ShareSessions(nil) end
 end
 
---- The stand-up: IDLE (a race is never rebuilt from memory; resuming after a /reload is Task B2's).
+-- ── the resume (Task B2) ────────────────────────────────────────────────────────────────────────
+
+local RESUMABLE = { running = true, stopping = true }
+
+-- Whether a slot holds a race that can be carried on: a part with a valid length, running or
+-- stopping, a session, and a clock (the first hit's GetTime() or its date). Its flags are made whole.
+local function resumable(slot)
+    if type(slot) ~= "table" or type(slot.race) ~= "table" or type(slot.sessions) ~= "table" then return false end
+    local race = slot.race
+    if not (validLength(race.length) and RESUMABLE[race.status]) then return false end
+    if type(slot.sessions[1]) ~= "number" then return false end
+    if type(slot.startedAt) ~= "number" and type(slot.date) ~= "number" then return false end
+    if type(race.flags) ~= "table" then race.flags = {} end
+    if type(race.flags.lateCasts) ~= "table" then race.flags.lateCasts = {} end
+    return true
+end
+
+-- The start on this session's clock. GetTime() survives a /reload; after a restart of the machine it
+-- does not, and the stored date stands in.
+local function startOf(slot, now)
+    local s = slot.startedAt
+    if type(s) == "number" and s <= now then return s end
+    local date = type(slot.date) == "number" and slot.date or time()
+    return now - math.max(0, time() - date)
+end
+
+local function sessionsHeld(sessions)
+    for _, id in ipairs(sessions) do
+        if not NS.Meter.HasSession(id) then return false end
+    end
+    return true
+end
+
+-- A race resumed that cannot go on: lost, shown as its result, nothing stored.
+local function lose(why)
+    debug("the resumed race is lost: %s", why)
+    cur.race.status = "lost"
+    toResult(nil)
+end
+
+-- A race kept as running: still racing with `left` seconds (true), or now waiting for its read. Before
+-- the buzzer and out of combat, combat ended while nothing listened: incomplete, ended no later than
+-- now (the combat end's real time is unknowable).
+local function resumeRunning(race, now, inCombat)
+    local elapsed = now - cur.startedAt
+    local left = race.length - elapsed
+    if left > 0 and inCombat then return true, left end
+    if left > 0 then race.endedAt = round2(elapsed) end
+    race.status = "stopping"
+    return false
+end
+
+-- The fight the race's session belongs to, back through Fight's seam, on the resumed clock.
+local function adoptFight(slot, inCombat)
+    local shift = cur.startedAt - (type(slot.startedAt) == "number" and slot.startedAt or cur.startedAt)
+    local startT = type(slot.startT) == "number" and slot.startT + shift or cur.startedAt
+    return NS.Fight.Adopt({
+        sessions = slot.sessions, startT = startT, firstHitT = cur.startedAt,
+        lastUpdateT = cur.lastDamage and cur.startedAt + cur.lastDamage or nil, snapshot = slot.snapshot,
+        stats = slot.stats, talents = slot.talents, gearSet = slot.gearSet, sharedSession = slot.sharedSession,
+        raceBaseline = slot.baseline, boundBy = slot.boundBy, inCombat = inCombat,
+    })
+end
+
+local function resumeRace(slot, key, now)
+    local race = slot.race
+    cur = { race = race, timeline = NS.RaceTimeline.New(), slot = slot, slotKey = key, resumedAt = now,
+            date = slot.date }
+    cur.startedAt = startOf(slot, now)
+    -- The last update before the reload, so the tail and a restart gap still measure from it.
+    local last = Secrets.PlainNumber(slot.lastDamage)
+    if last then
+        cur.timeline:AddDamage(cur.startedAt + last)
+        cur.lastDamage = last
+    end
+    if not sessionsHeld(slot.sessions) then return lose("session gone") end
+    local inCombat = UnitAffectingCombat("player") and true or false
+    local running, left = false, nil
+    if race.status == "running" then running, left = resumeRunning(race, now, inCombat) end
+    -- Past its buzzer and not yet read: what was cast during the reload went unseen.
+    if not running and race.endedAt == nil then
+        cur.buzzerAt = cur.startedAt + race.length
+        race.flags.reloaded = true
+    end
+    local fight = adoptFight(slot, inCombat)
+    if not fight then return lose("no fight to carry it") end
+    cur.fight, fight.race, slot.startedAt = fight, race, cur.startedAt
+    debug("resumed %s (%s)", running and "running" or "stopping", cur.buzzerAt and "past the buzzer" or "before it")
+    if running then
+        scheduleBuzzer(left)
+        return setState(STATE.RUNNING)
+    end
+    setState(STATE.STOPPING)
+end
+
+--- Carry on this character's race a /reload (or a stand-down) left running or stopping: from OnEnable
+--- (core/CombatTrail.lua) and the stand-up (core/LifecycleSetup.lua), after the meter's priming. Another
+--- character's slot waits for that character; a slot that cannot be raced is cleared. Retail only.
 function Race.Resume()
-    state = STATE.IDLE
+    if isDown() or state ~= STATE.IDLE or not NS.Compat.ForClient(RETAIL) then return end
+    local store, key = slots(), myKey()
+    local slot = store and key and store[key]
+    if slot == nil then return end
+    if not resumable(slot) then
+        debug("the stored race cannot be resumed: cleared")
+        store[key] = nil
+        return
+    end
+    resumeRace(slot, key, GetTime())
 end
 
 -- The bus, on Retail only (clients-§4): a receiver of this module's own (architecture-§4).

@@ -110,5 +110,14 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   longer (ruling X4).
 - **The late-cast judge works by spell ID.** A late cast whose spell ID is sealed always counts, and a
   sealed success is taken as no press only while Auto Shot or Shoot is repeating.
+- **A race resumed after a `/reload` keeps no casts, usage or chart from before it.** The race's own
+  fields are in `db.global.pendingRaces` from its first hit, so `Race.Resume` carries it on, but the
+  casts (and so the cooldowns and the late-cast judge while the loading screen was up), the usage
+  snapshot and the chart's samples were in memory. A race read after the reload is flagged
+  `reloaded` past its buzzer; one whose combat ended unseen is incomplete at the resume, its real
+  combat end unknowable. A resume after a restart of the machine takes its clock from the stored date.
+- **A `/reload` mid-fight still drops a plain fight.** Only a race is written before its read; a
+  fight in memory is gone with the reload and the rest of that combat is not tracked (the race's
+  `Fight.Adopt` seam could carry plain fights too; not done).
 - **The late-cast ignore list is per profile while the store is account-wide,** as the Training
   dummies list is: a profile switch re-scores every saved race by the other profile's list.

@@ -109,6 +109,9 @@ order rules are in [`message-bus.md`](message-bus.md). By sender:
   `RACE_CANCELED`.
 
 The bus gives no receiver order: Recorder pulls `Race.Finalize` before it judges a fight (ruling X1).
+A race under way is the one thing written before its read: `db.global.pendingRaces[charKey]` from its
+first hit, so `Race.Resume` (OnEnable and the stand-up) carries it on after a `/reload` through
+`Fight.Adopt`, which rebinds the fight to the race's kept sessions.
 
 ## Slash Commands
 

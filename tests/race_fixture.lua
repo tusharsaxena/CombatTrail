@@ -4,7 +4,8 @@
 -- bus messages, and the steps of a pull through the REAL state machines: the events fire (the regen
 -- edges, the meter's session updates, the player's casts), never a Race.On* call, so Fight and Race
 -- each hear what the client would send them. Loaded by tests/test_race.lua as
--- `dofile(T.root .. "/tests/race_fixture.lua")(T)`; Tasks B2, B3, C1, C2 and E1 reuse it.
+-- `dofile(T.root .. "/tests/race_fixture.lua")(T)`; Tasks B2, B3, C1, C2 and E1 reuse it. F.reload is
+-- the /reload (B2): a new instance on the same SavedVariables.
 --
 -- THE CLOCK. The kit's timer queue fires every queued timer at once, whatever its delay; Fight's settle
 -- and the race's buzzer each re-check GetTime() and wait again when serviced early, so F.run(t) (set
@@ -57,6 +58,43 @@ return function(T)
         S.heard = listen(inst.NS)
         S.M.__now = 100
         return S
+    end
+
+    --- A /reload (Task B2): a new instance on the SAME SavedVariables, the client's meter still holding
+    --- `opts.sessions` ({ [id] = session }; session 25 = F.SESSION by default, {} for none), the clock
+    --- at `opts.now` (S's clock by default) and in combat when `opts.inCombat`. The new state table is
+    --- listening before OnEnable runs, so it hears what the resume sends. opts.target as F.fresh's.
+    function F.reload(S, opts)
+        opts = opts or {}
+        local saved = _G.CombatTrailDB
+        local now = opts.now or (S and S.M.__now) or 100
+        local meter
+        local inst = T.load{ init = false, mutate = function(m)
+            meter = T.mockMeter.install(m)
+            if opts.target ~= false then
+                m.__unitExists.target = true
+                m.__unitGUIDs.target = opts.target or F.DUMMY_GUID
+                m.__unitNames.target = opts.target and "Angry Boar" or "Raider's Training Dummy"
+            end
+            m.__now = now
+            m.__inCombat = opts.inCombat and true or false
+            m.InCombatLockdown = function() return m.__inCombat end
+        end }
+        for id, session in pairs(opts.sessions or { [25] = F.SESSION }) do meter.SetSession(id, session) end
+        _G.CombatTrailDB = saved
+        local AceAddon = inst.mocks.LibStub("AceAddon-3.0")
+        AceAddon:InitializeAddon(inst.NS)
+        local R = { inst = inst, NS = inst.NS, M = inst.mocks, meter = meter }
+        R.heard = listen(inst.NS)
+        AceAddon:EnableAddon(inst.NS)
+        return R
+    end
+
+    --- This character's pending race slot (db.global.pendingRaces), or nil.
+    function F.slot(S)
+        local slots = S.NS.db.global.pendingRaces
+        local key = S.NS.Bests.CharKey(S.NS.Identity.Who())
+        return type(slots) == "table" and key and slots[key] or nil
     end
 
     function F.at(S, t) S.M.__now = t end

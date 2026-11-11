@@ -370,7 +370,7 @@ Total.
 - format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain
 - format: Clock, Length, Pct and SignedPct take plain numbers
 
-### test_fight.lua (34)
+### test_fight.lua (36)
 
 - fight: the states and the timing constants are the plan's
 - fight: normal combat → started, ticks, ended final
@@ -405,6 +405,8 @@ Total.
 - fight: FIGHT_FIRST_HIT is sent once, on the first damage update of a bound session
 - fight: Hurry reads a settling fight at once; idle or another fight's id does nothing
 - fight: Hurry in combat settles at the combat end with no wait
+- fight: Adopt rebuilds a resumed race's fight in combat, with no FIGHT_STARTED; refused while busy
+- fight: Adopt out of combat reads the fight on the next timer, without the settle's wait
 - fight: ShareSessions lets an unbound fight bind a listed session, marked shared; none by default
 
 ### test_identity.lua (47)
@@ -759,6 +761,32 @@ Total.
 - race: inputs in the wrong state change nothing
 - race: the watchers register only what the race's state needs
 - race: a stand-down drops the armed race silently, with its registrations
+
+### test_race_resume.lua (23)
+
+- resume: the slot is written at the first hit, plain, and nothing reaches the fight store
+- resume: the slot is cleared at the result and at a cancel
+- resume: arming refuses while this character's slot waits to be resumed
+- resume: running past buzzer becomes stopping+reloaded
+- resume: running before buzzer keeps running with remaining time
+- resume: stopping out of combat reads immediately
+- resume: stopping in combat waits for the combat end
+- resume: an incomplete race waiting for its read stays incomplete
+- resume: running before the buzzer with combat already over is incomplete and read at once
+- resume: session gone becomes lost
+- resume: a slot that cannot be raced is cleared, and a new race can be armed
+- resume: nothing stored leaves the race idle and touches nothing
+- resume: an armed race with no first hit is dropped and the window is idle
+- resume: a slot another character left is not resumed here and does not block the arm
+- resume: after a restart of the machine the clock comes from the stored date
+- resume: a reload that outlasts the restart gap while DoTs tick is not a restart
+- resume: the tail and a restart heard before a /reload survive it
+- resume: the stamps before a /reload keep a DoT tail across it from looking like a restart
+- resume: a shared session resumed is still netted against the arm's baseline, saved once
+- resume: a stand-down mid-race whose combat ends unseen never hangs in stopping
+- resume: an armed race is dropped by the stand-down and not resumed
+- resume: a stood-down login resumes nothing until the addon is enabled
+- resume: nothing is resumed on WoW Forever
 
 ### test_slices.lua (18)
 
@@ -1280,7 +1308,7 @@ Total.
 | test_probe.lua | 33 |
 | test_meter.lua | 37 |
 | test_format.lua | 19 |
-| test_fight.lua | 34 |
+| test_fight.lua | 36 |
 | test_identity.lua | 47 |
 | test_dummies.lua | 29 |
 | test_cast_codec.lua | 7 |
@@ -1296,6 +1324,7 @@ Total.
 | test_race_scoring.lua | 20 |
 | test_late_ignore.lua | 12 |
 | test_race.lua | 56 |
+| test_race_resume.lua | 23 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1331,4 +1360,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1061** |
+| **Total** | **1086** |

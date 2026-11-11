@@ -943,5 +943,8 @@ test("race: a stand-down drops the armed race silently, with its registrations",
     assertEqual(F.count(S, "RACE_BUZZER"), 0, "the buzzer went with the stand-down")
     assertTrue(#S.heard == before, "nothing sent")
     S.NS.SetByPath("general.enabled", true)
-    assertEqual(R.State(), "idle", "a stand-up does not bring it back")
+    -- Past its first hit the race was written to its slot: the stand-up carries it on (Task B2), past
+    -- its buzzer and flagged reloaded, since what was cast while stood down went unseen.
+    assertEqual(R.State(), "stopping", "the stand-up resumes the race from its slot")
+    assertTrue(R.Current().flags.reloaded)
 end)

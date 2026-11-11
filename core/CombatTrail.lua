@@ -30,6 +30,8 @@ end
 function NS:OnEnable()
     if NS.IsStoodDown() then return end
     NS.RegisterGameEvents()
+    -- A race a /reload cut off, carried on once the meter is primed (modules/Race.lua, Task B2).
+    if NS.Race then NS.Race.Resume() end
     -- The first-run skin picker (core/SkinSetup.lua), once per session on a profile that has not
     -- closed it: two seconds in, off the login spike, on an AceTimer the stand-down cancels. The
     -- stored skin was applied in OnInitialize; in combat the show holds for PLAYER_REGEN_ENABLED.
