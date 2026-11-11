@@ -217,15 +217,22 @@ function NS.IsTestMode()
     return NS.Preview.Mode() == "test"
 end
 
---- The Test mode row's own set: start or stop test mode.
+--- The Test mode row's own set: start or stop test mode (a start takes the options queued for it:
+--- `/ct test race`'s, modules/Preview.lua TestRace).
 function NS.SetTestMode(on)
-    if on then NS.Preview.Start({ mode = "test" }) else NS.Preview.Stop() end
+    if on then NS.Preview.Start() else NS.Preview.Stop() end
 end
 
 --- `/ct test` and the launcher's Test mode entry: through the row's write seam, so the box follows.
 function NS.ToggleTestMode()
     if refused() then return false end
     return NS.SetByPath("general.testMode", not NS.IsTestMode())
+end
+
+--- `/ct test race [armed|running|result]` (Race mode, Retail): test mode holding a sample race.
+function NS.TestRace(word)
+    if refused() then return false end
+    return NS.Preview.TestRace(word)
 end
 
 --- Whether Sim mode reads on: the sim's step window shown or a sim running (modules/Sim.lua).

@@ -9,6 +9,11 @@ local _, NS = ...
 -- through the modules' own query and Diagnose functions. `out:add` formats %s-only and runs every
 -- argument through safeToString, so the values go in RAW. While stood down a runtime section says so
 -- in one line and reads nothing; the stored settings and the store's counts still print.
+--
+-- RACE MODE (Retail, race plan Task E1): a `race` section after the fight's, absent on WoW Forever
+-- (clients-§4): the race state, its fight and session, the pending races (db.global.pendingRaces), the
+-- race boards held, the Race window, the countdown and the sample race. The toast's line is in the
+-- windows section, on both clients.
 
 NS.Diagnostics = NS.Diagnostics or {}
 local Diag = NS.Diagnostics
@@ -81,6 +86,39 @@ local function windows(out)
     local tl = NS.ResultsTimeline.Diagnose()
     out:add("Diag", "timeline shown=%s rows=%s zoom=%s", tl.shown, tl.rows, tl.zoom)
     out:add("Diag", "compare shown=%s gear shown=%s", NS.ResultsCompare.IsShown(), NS.ResultsGear.IsShown())
+    local toast = NS.BestToast.Diagnose()
+    out:add("Diag", "toast shown=%s waiting=%s key=%s", toast.shown, toast.waiting, toast.key)
+end
+
+-- The pending races (one slot per character) and the race boards the store's bests hold.
+local function pendingCount()
+    local g = NS.db and NS.db.global
+    local n = 0
+    for _ in pairs(g and type(g.pendingRaces) == "table" and g.pendingRaces or {}) do n = n + 1 end
+    return n
+end
+
+local function raceBoards()
+    local n = 0
+    for key in pairs(NS.Bests.Board()) do
+        if tostring(key):find("|race:", 1, true) then n = n + 1 end
+    end
+    return n
+end
+
+local function race(out)
+    if down(out) then return end
+    local R = NS.Race
+    local f = R.Fight()
+    out:add("Diag", "race state=%s mode=%s fight=%s session=%s pending=%s boards=%s", R.State(),
+        onOff(NS.RaceMode.On()), f and f.id, f and f.sessionID, pendingCount(), raceBoards())
+    local w = NS.RaceWindow.Diagnose()
+    out:add("Diag", "race window shown=%s body=%s attached=%s side=%s ticking=%s", w.shown, w.body, w.attached,
+        w.side, w.ticking)
+    local c = NS.Countdown.Diagnose()
+    out:add("Diag", "countdown shown=%s scheduled=%s owner=%s", c.shown, c.scheduled, c.owner)
+    local sample = NS.RaceSample.Diagnose()
+    out:add("Diag", "race sample=%s state=%s live=%s", sample.on, sample.state, sample.live)
 end
 
 local function preview(out)
@@ -97,7 +135,7 @@ end
 --- The sections, in report order (debug-logging-§14's content order: identity, settings, domain
 --- state, rejected events).
 function Diag.Sections()
-    return {
+    local out = {
         { "identity", identity },
         { "settings", settings },
         { "store", store },
@@ -107,4 +145,7 @@ function Diag.Sections()
         { "preview", preview },
         { "rejected", rejected },
     }
+    -- Race mode's section, after the fight's, on Retail only (clients-§4).
+    if NS.Compat.ForClient({ "retail" }) then table.insert(out, 6, { "race", race }) end
+    return out
 end

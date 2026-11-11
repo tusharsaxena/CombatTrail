@@ -63,8 +63,10 @@ NS.COMMANDS = {
     { "lock",        L["Lock the lanes and the DPS HUD in place"], feature(function() doLock(true) end) },
     { "unlock",      L["Unlock the lanes and the DPS HUD to move them"],
                                                                    feature(function() doLock(false) end) },
-    { "test",        L["Test mode: sample data in the lanes, the HUD and the Results window"],
-                                                                   feature(function() doTest() end) },
+    { "test",        NS.Compat.ForClient(RETAIL)
+                         and L["Test mode: sample data in the lanes, the HUD and the Results window; /ct test race [armed|running|result] holds a sample race"]
+                         or L["Test mode: sample data in the lanes, the HUD and the Results window"],
+                                                                   feature(function(rest) doTest(rest) end) },
     { "sim",         L["Sim mode: a made-up fight played in real time"],
                                                                    feature(function(rest) doSim(rest) end) },
     { "purge",       L["Delete stored fights older than the History page's limit"],
@@ -284,8 +286,11 @@ function doLock(want)
     doSetVerb("general.locked", want, NS.ApplyLocked)
 end
 
---- `test`: test mode on or off, through the Master controls' row.
-function doTest()
+--- `test`: test mode on or off, through the Master controls' row. On Retail `test race [state]` holds
+--- a sample race (Race mode, plan Task E1); the word is absent on WoW Forever, where `test` ignores it.
+function doTest(rest)
+    local word, more = tostring(rest or ""):match("^%s*(%S*)%s*(%S*)")
+    if word:lower() == "race" and NS.Compat.ForClient(RETAIL) then return NS.TestRace(more) end
     NS.ToggleTestMode()
 end
 

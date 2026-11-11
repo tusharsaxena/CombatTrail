@@ -117,8 +117,9 @@ local function boards()
 end
 
 --- The board `key` as a fight carries it ({ where, encounter?, target }), or nil when this client
---- has no such board.
+--- has no such board. A table is taken as the board itself (a race sample's dummy, modules/MockRaces.lua).
 function MockFights.Board(key)
+    if type(key) == "table" then return key end
     return boards()[key]
 end
 
@@ -183,7 +184,8 @@ function MockFights.Character(key)
              specIcon = CLIENT.specIcon, trees = CLIENT.trees, ilvl = c.ilvl, petName = c.pet, petFamily = "Wolf" }
 end
 
---- The identity a fight against board `key` resolves to (modules/Identity.lua's own Resolve).
+--- The identity a fight against board `key` (a key or a board table) resolves to (modules/Identity.lua's
+--- own Resolve).
 --- @return table|nil identity
 function MockFights.Identity(key)
     local b = MockFights.Board(key)
@@ -472,7 +474,8 @@ function MockFights.Record(o, plan)
     return record, plan
 end
 
---- The sample history for the Results window: { fights, slices }, built fresh (Source.Use's shape).
+--- The sample history for the Results window: { fights, slices }, built fresh (Source.Use's shape),
+--- the sample races among the fights on Retail.
 --- @return table dataset
 function MockFights.Dataset()
     local now, have = time(), boards()
@@ -488,6 +491,8 @@ function MockFights.Dataset()
             if h.chart then data.slices[record.id] = MockFights.Slices(plan) end
         end
     end
+    -- Race mode's sample races beside the fights (Retail only: modules/MockRaces.lua loads nowhere else).
+    if NS.MockRaces then NS.MockRaces.AddTo(data, now) end
     return data
 end
 

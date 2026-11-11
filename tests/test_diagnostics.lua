@@ -61,6 +61,40 @@ test("diagnostics: test mode shows in the preview line", function()
     inst.NS.Preview.Stop()
 end)
 
+test("diagnostics: Retail's race section names the race, the pending races, the boards and its windows", function()
+    local inst = T.load()
+    local lines = report(inst)
+    assertTrue(has(lines, "toast shown=false waiting=0"), "the toast's line, on both clients:\n" .. dump(lines))
+    if inst.NS.Compat.IsForever() then
+        assertFalse(has(lines, "race state="), "no race section on WoW Forever:\n" .. dump(lines))
+        assertFalse(has(lines, "race window "), dump(lines))
+        return
+    end
+    for _, needle in ipairs({ "race state=idle mode=on", "pending=0 boards=0", "race window shown=false",
+                              "countdown shown=none scheduled=0 owner=none", "race sample=false" }) do
+        assertTrue(has(lines, needle), "missing '" .. needle .. "' in:\n" .. dump(lines))
+    end
+    -- After the fight's section, before the windows'.
+    local fightAt, raceAt, windowsAt
+    for i, l in ipairs(lines) do
+        if l:find("fight state=", 1, true) then fightAt = i end
+        if l:find("race state=", 1, true) then raceAt = i end
+        if l:find("hud state=", 1, true) then windowsAt = i end
+    end
+    assertTrue(fightAt < raceAt and raceAt < windowsAt, dump(lines))
+end)
+
+test("diagnostics: test mode's held sample race shows in the preview and race lines", function()
+    local inst = T.load()
+    if inst.NS.Compat.IsForever() then return end
+    assertTrue(inst.NS.Preview.TestRace("result"))
+    local lines = report(inst)
+    assertTrue(has(lines, "phase=race result"), dump(lines))
+    assertTrue(has(lines, "race sample=true state=result live=false"), dump(lines))
+    assertTrue(has(lines, "race state=idle"), "the real race stays idle:\n" .. dump(lines))
+    inst.NS.Preview.Stop()
+end)
+
 test("diagnostics: stood down, the runtime sections say so and the stored ones still print", function()
     local inst = T.load()
     inst.NS.SetByPath("hud.width", 360)

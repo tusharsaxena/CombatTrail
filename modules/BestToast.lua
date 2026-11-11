@@ -419,6 +419,24 @@ function BestToast.Test()
     return toast:Show(BestToast.Payload(record, 4.2, { dps = dps }), { key = BestToast.SAMPLE }) == true
 end
 
+--- Test mode's held sample race (`/ct test race result`, modules/Preview.lua): its toast as the shell's
+--- preview (sticky, movable), when it is a new best over an earlier race in the sample history, with
+--- `toast.races` on. EndPreview takes it down.
+--- @param record table  the sample race's record
+--- @return boolean shown
+function BestToast.ShowPreview(record)
+    if not racesOn() or not isRace(record) or record.race.status ~= "complete" then return false end
+    local pct, isNew, prev = NS.Bests.Delta(record)
+    if not (isNew and pct ~= nil) then return false end
+    toast:Preview(BestToast.Payload(record, pct, prev))
+    return true
+end
+
+--- The preview's end: its toast goes, a real one waiting or on screen stays.
+function BestToast.EndPreview()
+    toast:Remove(NS.TOAST_PREVIEW)
+end
+
 --- Re-read the scale and the stored point.
 function BestToast.Refresh() toast:Refresh() end
 

@@ -1355,6 +1355,27 @@ Total.
 - sim: the verb starts it through the step session, and stop ends it
 - sim: combat ends it; a refused start leaves nothing on
 
+### test_race_preview.lua (8)
+
+- race preview: /ct test race holds the sample race running on the Race window and the HUD
+- race preview: each state word holds its body, and in test mode switches it in place
+- race preview: an unknown word prints the usage; Race mode off refuses the race word
+- race preview: arming a real race ends test mode and hands it the Race window
+- race preview: a start during a real race is refused
+- race preview: the sample card's acts never touch the real race
+- race preview: the sample history holds races beside the fights, every status, kind and length
+- race preview: on WoW Forever there is no sample race, no race word and no race in the history
+
+### test_sim_race.lua (7)
+
+- sim race: race-newbest arms, races on its clock, buzzes, reads after the quiet; nothing on the bus
+- sim race: incomplete and died end before the buzzer, with no buzzer, and read out of combat
+- sim race: race-flagged's late cast flags the card; race-shared has no pace
+- sim race: race-sticky's wait says combat holds on, the hint shows after its delay
+- sim race: the gate holds the race, the read, then the card; Stop Now reads at the combat end
+- sim race: the eight follow the fight scenarios; Race mode off refuses them
+- sim race: WoW Forever has no race scenario
+
 ### test_bindings.lua (11)
 
 - bindings: NS.BINDINGS is Bindings.xml's order, Show window first, each with a tooltip
@@ -1369,11 +1390,13 @@ Total.
 - bindings: stood down, each key answers the refusal line and changes nothing
 - bindings: the General Defaults tooltip says it leaves key bindings alone
 
-### test_diagnostics.lua (6)
+### test_diagnostics.lua (8)
 
 - diagnostics: the report carries every section of this addon's own
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
+- diagnostics: Retail's race section names the race, the pending races, the boards and its windows
+- diagnostics: test mode's held sample race shows in the preview and race lines
 - diagnostics: stood down, the runtime sections say so and the stored ones still print
 - diagnostics: the report arms no timer and registers no event
 - diagnostics: a rejected event is listed
@@ -1594,8 +1617,10 @@ Total.
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 5 |
+| test_race_preview.lua | 8 |
+| test_sim_race.lua | 7 |
 | test_bindings.lua | 11 |
-| test_diagnostics.lua | 6 |
+| test_diagnostics.lua | 8 |
 | test_skin_surfaces.lua | 5 |
 | test_docs.lua | 15 |
 | test_eol.lua | 2 |
@@ -1607,4 +1632,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1301** |
+| **Total** | **1318** |

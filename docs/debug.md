@@ -43,8 +43,9 @@ identity header (brand, version, client build, locale, the running LibKa0s minor
 | `store` | The stored fights, the loadouts, the gear sets, the estimated size |
 | `lanes` | Each lane on or off, the cast registrations and listeners, and per lane: shown, the visibility decision, the icons showing, the anchor mode, unlocked |
 | `fight` | The fight state machine's state, the current fight's id and session, the meter, the fights the chart holds, the probe armed |
-| `windows` | The HUD's state, body, pin and lock; the Results window, the timeline, the compare and the gear view |
-| `preview` | Test mode and the sim: active, mode, phase, scenario (`Preview.Diagnose`, `Sim.Diagnose`) |
+| `race` | Retail only, after `fight`: the race state, Race mode on or off, the race's fight and session, the pending races (`db.global.pendingRaces`), the race boards the bests hold; the Race window (shown, body, attached, side, ticking); the countdown (the number shown, the marks armed, the owner); the sample race (`RaceSample.Diagnose`) |
+| `windows` | The HUD's state, body, pin and lock; the Results window, the timeline, the compare and the gear view; the new-best toast (shown, waiting, key) |
+| `preview` | Test mode and the sim: active, mode, phase (`race <state>` while test mode holds a sample race), scenario (`Preview.Diagnose`, `Sim.Diagnose`) |
 | `rejected` | Event names the client refused (`NS.rejectedEvents`) |
 
 While stood down, the runtime sections print "stood down: runtime state released"; the settings and

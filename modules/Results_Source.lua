@@ -36,11 +36,14 @@ local function newerFirst(a, b)
     return tostring(a.id) > tostring(b.id)
 end
 
--- The shell redraws on every change of source or sample (modules/Results.lua).
+-- The shell redraws on every change of source or sample (modules/Results.lua); a change to the sample
+-- history in place reaches the Race window's sample card too (a deleted sample race's card goes).
 local function changed(swapped)
     board, clean = nil, nil
     local R = NS.Results
     if R and type(R.OnSourceChanged) == "function" then R.OnSourceChanged(swapped) end
+    local RW = NS.RaceWindow
+    if not swapped and RW and RW.SampleChanged then RW.SampleChanged() end
 end
 
 local function forgetCharts(dataset)

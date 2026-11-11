@@ -266,10 +266,17 @@ modules\Results.lua
 # Test mode and the sim (plan Task 5.1). The rotation is data picked per client at FILE SCOPE (reads
 # NS.Compat); the sample history and fights reach every other module at CALL time. LOAD-BEARING:
 # modules\Preview.lua registers its bus receiver at FILE SCOPE, and modules\Sim.lua builds its step
-# session at FILE SCOPE from NS.SimLib and NS.SimSeam (core\SimSetup.lua) and NS.L.
+# session at FILE SCOPE from NS.SimLib and NS.SimSeam (core\SimSetup.lua) and NS.L. Race mode's parts
+# (race plan Task E1; Retail only, each returns at once on WoW Forever): the sample races and the sample
+# race the Race window reads (reached at CALL time), and the sim's race scenarios. LOAD-BEARING:
+# modules\SimRace.lua publishes NS.SimRace.SCENARIOS, which modules\Sim.lua appends at FILE SCOPE, so it
+# precedes it.
 modules\MockRotations.lua
 modules\MockFights.lua
+modules\MockRaces.lua
+modules\RaceSample.lua
 modules\Preview.lua
+modules\SimRace.lua
 modules\Sim.lua
 # `/ct diagnostics`'s own sections (debug-logging-§14): read at RUN time by core\DebugLogSetup.lua's
 # descriptor; reaches every module above at CALL time only.

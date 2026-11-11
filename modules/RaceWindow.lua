@@ -45,6 +45,11 @@ local _, NS = ...
 -- back to the Arm Race screen at that race's length, as New Race does. One behavior for both, since the
 -- Results window's confirmation takes no callback (R:hud#10).
 --
+-- A SAMPLE RACE (test mode's `/ct test race`, the sim's race scenarios, plan Task E1): while one is on
+-- (NS.RaceSample.On()), every read and act below goes to it instead of NS.Race (src()), so its bodies
+-- are drawn by the same path; its live figures come from its plan (MockFights.LiveAt), its best from the
+-- sample history (Results_Source). ShowSample and EndSample open and let go a window the preview opened.
+--
 -- RETAIL ONLY (clients-§4): nothing here loads on WoW Forever, so NS.RaceWindow is absent there.
 
 if not NS.Compat.ForClient({ "retail" }) then return end
@@ -97,6 +102,14 @@ end
 local function isDown() return NS.IsStoodDown ~= nil and NS.IsStoodDown() end
 local function setting(path) return NS.Hud.Setting(path) end
 local function S() return NS.Race.STATE end
+
+-- The race the window draws: the sample race while one stands in (modules/RaceSample.lua), else Race.
+local function src()
+    local RS = NS.RaceSample
+    if RS and RS.On() then return RS end
+    return NS.Race
+end
+local function sampled() return src() ~= NS.Race end
 
 local function shipped(path)
     local node = NS.defaults and NS.defaults.profile
@@ -281,11 +294,14 @@ end
 
 -- ── the view ────────────────────────────────────────────────────────────────────────────────────
 
-local function inCombat() return UnitAffectingCombat("player") and true or false end
+local function inCombat()
+    if sampled() then return src().InCombat() end
+    return UnitAffectingCombat("player") and true or false
+end
 
 --- The length an arm takes now: the idle body's pick, else the length the next race arms at.
 local function currentLength()
-    return pick.length or NS.Race.DefaultLength()
+    return pick.length or src().DefaultLength()
 end
 
 -- Why Arm would refuse right now, for the idle body: what Race.Arm checks of the world.
@@ -324,19 +340,20 @@ end
 
 local function armedView(v)
     v.length = v.race and v.race.length
-    v.target = fightTarget(NS.Race.Fight()) or targetNow()
+    v.target = fightTarget(src().Fight()) or targetNow()
 end
 
 -- The race board's best the race paces on, read once per race: its fight's character and spec, the
 -- dummy's kind, the race length.
 local function bestFor(race)
     if paceBest.race == race then return paceBest.record end
-    local fight = NS.Race.Fight()
+    local fight = src().Fight()
     local snap = type(fight) == "table" and fight.snapshot or {}
     local target = fightTarget(fight) or {}
     local probe = { who = snap.who, identity = { targetCreatureID = target.creatureID },
                     race = { kind = race.kind, length = race.length } }
-    paceBest = { race = race, record = NS.Bests.For(probe) }
+    local best = race.sample and NS.ResultsSource.BestFor or NS.Bests.For
+    paceBest = { race = race, record = best(probe) }
     return paceBest.record
 end
 
@@ -350,10 +367,18 @@ local function runningPace(race, elapsed)
     return NS.HudBest.LiveView(line, elapsed, live), nil
 end
 
+-- A sample race's live read: its plan's, at the race clock (plain, where a real one is opaque).
+local function sampleLive(elapsed)
+    local fight = src().Fight()
+    if type(fight) ~= "table" or not fight.plan then return end
+    live = NS.MockFights.LiveAt(fight.plan, (NS.MockFights.FIRST_HIT or 0) + (elapsed or 0))
+end
+
 local function runningView(v)
-    local R, race = NS.Race, v.race
+    local R, race = src(), v.race
     local elapsed = R.Elapsed()
     if elapsed and race.length then elapsed = math.min(elapsed, race.length) end
+    if race.sample then sampleLive(elapsed) end
     v.elapsed, v.timeLeft = elapsed, R.TimeLeft()
     v.clockMode = setting("race.clock")
     v.pace, v.paceWhy = runningPace(race, elapsed or 0)
@@ -362,7 +387,7 @@ end
 
 -- Seconds since the race's last damage update, or since the buzzer when none came.
 local function quietFor()
-    local R = NS.Race
+    local R = src()
     local elapsed, last = R.Elapsed(), R.LastDamage()
     if not elapsed then return 0 end
     if type(last) ~= "number" then return R.SinceBuzzer() or 0 end
@@ -372,7 +397,7 @@ end
 --- STOPPING is shown in two phases: Stop! while damage may still land, waiting once the tail went
 --- quiet (for combat to end, or for the read); a race that ended before its buzzer waits for its read.
 local function stopPhase()
-    if NS.Race.SinceBuzzer() == nil then return "waiting" end
+    if src().SinceBuzzer() == nil then return "waiting" end
     if quietFor() >= NS.RaceScoring.QUIET_BEFORE_READ then return "waiting" end
     return "stop"
 end
@@ -385,7 +410,7 @@ local function hintFor(v)
 end
 
 local function stopView(v)
-    local R, race = NS.Race, v.race
+    local R, race = src(), v.race
     v.key = stopPhase()
     local last = R.LastDamage()
     v.tail = (type(last) == "number" and race.length) and math.max(0, last - race.length) or 0
@@ -410,7 +435,7 @@ local function resultPace(record, race)
 end
 
 local function resultView(v)
-    local record = NS.Race.Result()
+    local record = src().Result()
     v.record = record
     v.race = record and type(record.race) == "table" and record.race or v.race
     v.dps = record and NS.RaceRecord.Dps(record) or (v.race and v.race.dps)
@@ -426,7 +451,7 @@ local BODY_OF = { idle = "idle", armed = "armed", running = "running", result = 
 local FILL = { idle = idleView, armed = armedView, running = runningView, result = resultView }
 
 local function fill()
-    local R = NS.Race
+    local R = src()
     local state = R.State()
     local v = { state = state, race = R.Current(), inCombat = inCombat(), width = RW.WIDTH - 2 * PAD }
     if state == S().STOPPING and v.race then
@@ -454,7 +479,7 @@ local function showBody(which)
 end
 
 local function footer(v)
-    local fight = NS.Race.Fight()
+    local fight = src().Fight()
     local snap = type(fight) == "table" and fight.snapshot or nil
     local who = type(snap) == "table" and snap.who or (not ticker and NS.Identity.Who()) or ui.who or {}
     ui.who = who
@@ -482,7 +507,7 @@ end
 -- ── what runs while shown ───────────────────────────────────────────────────────────────────────
 
 local function racing()
-    local st = NS.Race.State()
+    local st = src().State()
     return st == S().RUNNING or st == S().STOPPING
 end
 
@@ -541,7 +566,7 @@ function onHide()
     closes = closes + 1
     syncTicker()
     syncEvents()
-    if NS.Race.State() == S().RESULT and not isDown() then NS.Race.Cancel() end
+    if src().State() == S().RESULT and not isDown() then src().Cancel() end
 end
 
 -- ── the public surface ──────────────────────────────────────────────────────────────────────────
@@ -590,6 +615,41 @@ end
 local function autoShow()
     if wanted then return end
     wanted, autoShown = true, true
+end
+
+local sampleOpened = false      -- the sample race opened the window (let go at its end)
+local backToIdle                 -- the result card's New Race (below)
+
+--- A sample race stands in now (modules/RaceSample.lua: test mode, the sim): the window shows it,
+--- opened for it when it was not up.
+function RW.ShowSample()
+    if not wanted then sampleOpened, wanted = true, true end
+    live, paceBest = nil, {}
+    RW.Refresh()
+end
+
+--- The sample race went (test mode or the sim ended): the window reads the real race again, and one the
+--- sample opened is let go, unless a real race now holds it (its arm ended the preview): then it is
+--- that race's, and closes with it.
+function RW.EndSample()
+    live, paceBest = nil, {}
+    if sampleOpened and not autoShown then
+        if NS.Race.State() == S().IDLE then wanted = false else autoShown = true end
+    end
+    sampleOpened = false
+    RW.Refresh()
+end
+
+--- The sample history changed (modules/Results_Source.lua): a sample result card whose race left it
+--- goes, as a deleted race's card goes back to the Arm Race screen.
+function RW.SampleChanged()
+    local RS = NS.RaceSample
+    if isDown() or not (RS and RS.On()) or RS.State() ~= S().RESULT then return end
+    local record = RS.Result()
+    if record and NS.ResultsSource.Get(record.id) == nil then
+        debug("the sample result card's race %s was deleted", tostring(record.id))
+        backToIdle()
+    end
 end
 
 --- Auto-show's opening (modules/AutoArm.lua): a training dummy is near. A window already wanted is
@@ -709,20 +769,19 @@ local function readLive(fight)
 end
 
 local function onFightTick(fight)
-    if isDown() or NS.Race.State() ~= S().RUNNING or fight ~= NS.Race.Fight() or not windowShown() then return end
+    if isDown() or sampled() or NS.Race.State() ~= S().RUNNING or fight ~= NS.Race.Fight() or not windowShown() then return end
     local t0 = Perf.on and debugprofilestop()
     readLive(fight)
     if t0 then Perf.Note("raceWindow", debugprofilestop() - t0) end
 end
 
-local backToIdle
 
 -- The store changed: the idle body's best may have moved; a result card whose race left the store
 -- goes back to the Arm Race screen.
 local function onFightsChanged()
     if isDown() then return end
-    local R = NS.Race
-    if R.State() == S().RESULT then
+    local R = src()
+    if R.State() == S().RESULT and not sampled() then
         local record = R.Result()
         if record and NS.Recorder.Get(record.id) == nil then
             debug("the result card's race %s was deleted", tostring(record.id))
@@ -796,10 +855,10 @@ function Act.customLength(text)
     return true
 end
 
-function Act.cancel() return NS.Race.Cancel() end
+function Act.cancel() return src().Cancel() end
 
 function Act.stopNow()
-    local acted = NS.Race.StopNow()
+    local acted = src().StopNow()
     RW.Refresh()
     return acted
 end
@@ -834,11 +893,17 @@ end
 function Act.openBest(record) return openRecord(record) end
 
 --- Open: the race's fight detail in the Results window (its chart and its spells, spec §4.2).
-function Act.open() return openRecord(NS.Race.Result()) end
+function Act.open() return openRecord(src().Result()) end
 
 --- New Race: back to the Arm Race screen at the same length, the window the player's; the result card
 --- is dismissed and the race stays saved.
 function backToIdle()
+    -- A sample's card goes, and the window reads the real race again; the player's length is left alone.
+    if sampled() then
+        NS.RaceSample.Clear()
+        RW.Refresh()
+        return true
+    end
     local race = NS.Race.Current()
     local length = race and race.length
     autoShown, dummyShown = false, false
@@ -854,13 +919,13 @@ function Act.newRace() return backToIdle() end
 --- Delete: the Results window's own confirmation; the store's FIGHTS_CHANGED then takes the card back
 --- to the Arm Race screen.
 function Act.delete()
-    local record, R = NS.Race.Result(), NS.Results
+    local record, R = src().Result(), NS.Results
     if not (record and R and type(R.ConfirmDelete) == "function") then return false end
     R.ConfirmDelete(record.id)
     return true
 end
 
 function Act.share()
-    local record = NS.Race.Result()
+    local record = src().Result()
     if record and not record.sample and NS.Share and type(NS.Share.Prompt) == "function" then NS.Share.Prompt(record) end
 end

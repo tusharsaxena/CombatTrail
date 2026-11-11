@@ -15,6 +15,10 @@ local _, NS = ...
 -- mark inside the numbers' window sounds once, never twice. Leaving running (the buzzer, a cancel,
 -- combat ending early) cancels every timer and hides the number; so does the stand-down.
 --
+-- THE SIM'S RACE (plan Task E1): while its sample race's clock runs (modules/RaceSample.lua Live), the
+-- marks count it instead, armed by the sim's own Countdown.Refresh at each step; test mode's held sample
+-- counts nothing.
+--
 -- A RESUME mid-window (a /reload, a stand-up, a countdown row changed mid-race) shows the number of
 -- the moment at once, silently, and counts on from the next mark. The rows carry no onChange: their
 -- SETTINGS_CHANGED (and a profile change) re-arm the marks here.
@@ -279,8 +283,16 @@ local function cancel()
     end
 end
 
+-- The race the marks count: the sim's sample race while its clock runs (modules/RaceSample.lua; a
+-- held test-mode sample counts nothing), else Race.
+local function src()
+    local RS = NS.RaceSample
+    if RS and RS.Live() then return RS end
+    return NS.Race
+end
+
 local function racing()
-    return not NS.IsStoodDown() and NS.Race.State() == NS.Race.STATE.RUNNING
+    return not NS.IsStoodDown() and src().State() == NS.Race.STATE.RUNNING
 end
 
 local mark
@@ -294,7 +306,7 @@ end
 mark = function(m)
     timers[m] = nil
     if not racing() then return end
-    local left = NS.Race.TimeLeft()
+    local left = src().TimeLeft()
     if not left then return end
     if left > m + EPS then return arm(m, left - m) end
     local numbers = numbersOn() and m <= window()
@@ -314,7 +326,7 @@ end
 local function schedule()
     cancel()
     if not racing() then return stopRace() end
-    local left = NS.Race.TimeLeft()
+    local left = src().TimeLeft()
     if not left then return stopRace() end
     owner = "race"
     local numbers = numbersOn()
@@ -348,7 +360,8 @@ end
 function Countdown.Shown() return shown end
 
 --- The countdown rows' reaction (race.centerCountdown, race.finalCountdown, race.countdownCue, a
---- profile change): re-arm the race's marks from the new values.
+--- profile change), and the sim's sample race moving on (modules/SimRace.lua): re-arm the race's
+--- marks from the new values, or take them down when it no longer runs.
 function Countdown.Refresh()
     if racing() then schedule() else stopRace() end
 end

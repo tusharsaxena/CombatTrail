@@ -122,7 +122,10 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results.lua` | The Results window's shell, its Fights and Insights tabs, the row menu and its public toggles |
 | `modules/MockRotations.lua` | The sample rotation per client, data only |
 | `modules/MockFights.lua` | The sample history and the sample fight |
-| `modules/Preview.lua` | Test mode and the sim's shared shell |
+| `modules/MockRaces.lua` | The sample races beside the sample fights, and the sample race test mode and the sim race (Retail only, Race mode plan E1) |
+| `modules/RaceSample.lua` | The sample race: the stand-in for `NS.Race` the Race window and the countdown read in test mode and the sim (Retail only, Race mode plan E1) |
+| `modules/Preview.lua` | Test mode and the sim's shared shell; `/ct test race` |
+| `modules/SimRace.lua` | The sim's eight race scenarios: their script, steps and gate (Retail only, Race mode plan E1) |
 | `modules/Sim.lua` | `/ct sim`: a made-up fight in real time, its scenarios and its step session |
 | `modules/Diagnostics.lua` | This addon's sections of `/ct diagnostics` |
 | `settings/Schema.lua` | The schema array and the one write seam |

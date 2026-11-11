@@ -50,7 +50,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `hud` | `show`, `hide`, `toggle`, `pin`, `unpin` | no | `Hud.OnVerb` |
 | `lock` | none | no | writes `general.locked` true; `NS.ApplyLocked` |
 | `unlock` | none | no | writes `general.locked` false; the lanes' edit overlay and the HUD's drag |
-| `test` | none | no | `NS.ToggleTestMode` (modules/Preview.lua) |
+| `test` | none; on Retail `race [armed\|running\|result]` (test mode holding a sample race in that state, running when none; Race mode off refuses it in one line) | no | `NS.ToggleTestMode`; `NS.TestRace` (modules/Preview.lua) |
 | `sim` | nothing (the step panel), `start scenario`, a scenario, or `stop` | no | `NS.RunSimVerb` (modules/Sim.lua, the library's sim grammar) |
 | `purge` | none | no | `Retention.OnVerb` |
 | `probe` | nothing, `start`, `stop` | no | `Probe.OnVerb` |
@@ -59,7 +59,9 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `dummy` | nothing or `show`; `add [category]` (the target; `single` when none is typed), `remove [creature ID or name]` (the target when none), `capture` (the target, not marked), `defaults`. Both clients | yes | `Dummies.OnVerb` (modules/Dummies.lua) |
 | `race` | Retail only. `arm [length]` (`90`, `1:30`, `3m`, `1m30s`; 0:10 to 15:00; none: the length the next race arms at), `cancel`, `show`, `hide`, `toggle` (the Race window, through `NS.SetRaceWindowShown`), `ignore [show\|add\|remove\|defaults] <spell>` (the late-cast ignore list). Race mode off refuses the arm and the window in one line | `ignore` only | `RaceVerb.OnVerb` (modules/RaceVerb.lua) |
 
-The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`.
+The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`, then on Retail
+Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,
+`race-died`, `race-flagged`, `race-shared` and `race-sticky`, refused in one line with Race mode off.
 
 ## Adding a verb
 
