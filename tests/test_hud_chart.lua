@@ -2,8 +2,8 @@
 -- time bucket of the fight's in-session slices (modules/Slices.lua), each handed the player's total
 -- captured at its step (the meter's secret, untouched), scaled to the paced best's player damage
 -- (plain) or, with no best, to the live total itself; the best's line; the cooldown icons for every
--- cast whose base cooldown is at least `hud.chart.cooldownMin` (29 s) and the burst columns after
--- them; and the fight-over card's chart from the same store.
+-- cast whose base cooldown is at least `hud.chart.cooldownMin` (29 s), which never recolor a column;
+-- and the fight-over card's chart from the same store.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -46,15 +46,15 @@ test("chart cooldown icons for base CD >= 29 s", function()
         assertEqual(icon.frame.tex:GetTexture(), 136000 + icon.cast.spellID, "the spell's own icon")
     end
 
-    -- The burst window: the column Wrath was cast in draws in the burst color.
+    -- A cooldown marks the chart with its icon only: the column Wrath was cast in keeps the bar color.
     local view = Hud.View().chartView
     local col = math.floor(1.5 / view.step) + 1
-    assertTrue(view.burst[col] == true, "Wrath's column is a burst column")
-    local want = inst.NS.db.profile.hud.chart.burstColor
+    local want = inst.NS.db.profile.hud.chart.barColor
     local r, g, b = chart:Columns()[col]:GetStatusBarColor()
     near(r, want.r)
     near(g, want.g)
     near(b, want.b)
+    assertNil(view.burst, "no burst window")
 
     H.setHud(inst, "chart.cooldownMin", 100)
     assertEqual(iconIDs(chart), tostring(WRATH), "the threshold is the setting's")
@@ -177,6 +177,5 @@ test("chart: the pure layout helpers", function()
     assertEqual(rows[4], 1)
     assertEqual(#marks, 1, "two crowded casts on the overflow row become one mark")
     assertEqual(#marks[1].members, 2)
-    local burst = Chart.BurstColumns({ { t = 3 } }, 2, 20)
-    assertTrue(burst[2] and burst[10] and not burst[1] and not burst[11], "from the cast's column to the one starting 15 s after it")
+    assertNil(Chart.BurstColumns, "the burst window is gone")
 end)

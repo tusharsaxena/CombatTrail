@@ -54,6 +54,8 @@ local C = {
     red   = Style.Tok("sem.statusBad"),
     green = Style.Tok("ct.ahead"),
     info  = Style.Tok("ct.info"),
+    best  = NS.Constants.PALETTE.BEST_TEXT,   -- every best mark's blue (owner, 2026-11-10)
+    pet   = Style.Tok("ct.pet.figure"),   -- the boxes' Pet figures, damage and DPS (a softer skin hue)
 }
 States.COLORS = C
 
@@ -126,7 +128,7 @@ local function kpi(parent, label, tip)
     k.petLabel = Style.Text(f, FONT.CAPTION, nil, "RIGHT")
     k.petLabel:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -2, KPI_PAD)
     k.petLabel:SetText(L["Pet"])
-    k.petValue = Style.Text(f, FONT.CAPTION, C.green, "LEFT")
+    k.petValue = Style.Text(f, FONT.CAPTION, C.pet, "LEFT")
     k.petValue:SetPoint("BOTTOMLEFT", f, "BOTTOM", 2, KPI_PAD)
     NS.HudTips.Attach(f, tip)
     return k
@@ -252,7 +254,7 @@ function States.OverChips(v)
     if v.newBest then
         local text = L["New best"]
         if type(v.delta) == "number" then text = L["New best %s"]:format(NS.Format.SignedPct(v.delta)) end
-        list[#list + 1] = { text = text, color = C.gold, tip = NS.Compat.ForClient({ "retail" })
+        list[#list + 1] = { text = text, color = C.best, tip = NS.Compat.ForClient({ "retail" })
             and L["Your best DPS on this boss or target, for this character and spec."]
             or L["Your best DPS on this boss or target, for this character and talent tree."] }
     end
@@ -304,12 +306,14 @@ local function restyleTop(body)
     clock.size = States.ClockSize(clock.size)
     A.ApplyFont(w.clock, clock)
     A.ApplyFont(w.damage.value, figures)
-    local over
-    if body.key == "over" then
+    -- The DPS figure: your Damage figure's color, live and over, while its companion is on (the
+    -- default, owner 2026-11-11); else the over card's swatch, and the live figure its font's color.
+    local dps
+    if not A.On("hud.figures.overColorMatchDamage") and body.key == "over" then
         local r, g, b, a = A.Swatch("figures", "overColor")
-        over = { r = r, g = g, b = b, a = a }
+        dps = { r = r, g = g, b = b, a = a }
     end
-    A.ApplyFont(w.dps.value, figures, over)
+    A.ApplyFont(w.dps.value, figures, dps)
     A.ApplyBox(w.damage.frame)
     A.ApplyBox(w.dps.frame)
     body.clockH, body.kpiH = States.TopSizes()
@@ -345,8 +349,13 @@ local function placeTop(body, v)
     return y
 end
 
-local function setValue(fs, value)
-    if value == nil then fs:SetText(DASH) else fs:SetText(NS.Format.Number(value)) end
+-- `rate`: a per-second figure, written whole (Format.Rate: a secret live DPS has no decimal tail).
+local function setValue(fs, value, rate)
+    if value == nil then
+        fs:SetText(DASH)
+    else
+        fs:SetText(rate and NS.Format.Rate(value) or NS.Format.Number(value))
+    end
 end
 
 -- ── the extras: pace bar, damage chart, spell rows ──────────────────────────────────────────────
@@ -496,8 +505,9 @@ local function placeSpells(body, v, y)
     y = y + HEAD_GAP
     s.title:ClearAllPoints()
     s.title:SetPoint("TOPLEFT", body.frame, "TOPLEFT", 0, -y)
+    -- On the heading's bottom edge, as the chart's note (owner, 2026-11-11).
     s.note:ClearAllPoints()
-    s.note:SetPoint("TOPRIGHT", body.frame, "TOPLEFT", width, -y)
+    s.note:SetPoint("BOTTOMRIGHT", s.title, "BOTTOMLEFT", width, 0)
     local Breakdown = NS.HudBreakdown
     local drawn, base
     if body.key == "over" then
@@ -568,8 +578,6 @@ function Builders.live(parent)
     function body.Update(self, v)
         setPetRow(self.w.damage, v.hasPet)
         setPetRow(self.w.dps, v.hasPet)
-        self.w.dps.petLabel:SetShown(false)
-        self.w.dps.petValue:SetShown(false)
         local y = placeTop(self, v)
         self.w.clock:SetText(NS.Format.Clock(v.clock))
         self.w.target:SetText(v.targetLine or "")
@@ -582,8 +590,10 @@ function Builders.live(parent)
         local player = type(live) == "table" and live.player or nil
         local pet = type(live) == "table" and live.pet or nil
         setValue(self.w.damage.value, player and player.total)
-        setValue(self.w.dps.value, player and player.dps)
+        setValue(self.w.dps.value, player and player.dps, true)
         setValue(self.w.damage.petValue, pet and pet.total)
+        -- The pet's own rate, opaque: a dash where the meter folds the pet into you (WoW Forever).
+        setValue(self.w.dps.petValue, pet and pet.dps, true)
     end
     return body
 end
@@ -596,8 +606,9 @@ local function overFigures(w, v)
     local merged = v.final and v.final.merged or nil
     local pet = v.final and v.final.pet or nil
     setValue(w.damage.value, merged and Secrets.PlainNumber(merged.total))
-    setValue(w.dps.value, merged and Secrets.PlainNumber(merged.dps))
+    setValue(w.dps.value, merged and Secrets.PlainNumber(merged.dps), true)
     setValue(w.damage.petValue, pet and Secrets.PlainNumber(pet.total))
+    setValue(w.dps.petValue, pet and Secrets.PlainNumber(pet.dps), true)
 end
 
 function Builders.over(parent)
@@ -609,8 +620,6 @@ function Builders.over(parent)
         local w = self.w
         setPetRow(w.damage, v.hasPet)
         setPetRow(w.dps, v.hasPet)
-        w.dps.petLabel:SetShown(false)
-        w.dps.petValue:SetShown(false)
         local y = placeTop(self, v)
         w.clock:SetText(NS.Format.Clock(v.clock))
         w.target:SetText(v.targetLine or "")

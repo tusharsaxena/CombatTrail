@@ -197,6 +197,9 @@ NS.SKIN_TOKENS = {
     ["ct.ahead"]   = { default = { 0.36, 0.86, 0.46, 1 }, follow = "sem.good" },
     ["ct.caution"] = { default = rgba(AMBER, 1), follow = "sem.warn" },
     ["ct.info"]    = { default = { 0.56, 0.72, 1.0, 1 }, follow = "sem.info" },
+    -- The HUD boxes' Pet figures, damage and DPS alike (owner, 2026-11-11): the skin's softer heading
+    -- hue, apart from your own figures and from the caption gray.
+    ["ct.pet.figure"] = { default = { 0.91, 0.77, 0.42, 1 }, follow = "text.headingAlt" },
     -- The caution callout (the HUD's "Not saved" chip, a fight detail's note box): an amber wash, its
     -- edge and the cream text.
     ["ct.callout.bg"]     = { default = rgba(AMBER, 0.07), follow = "list.hover", skins = wash("sem.warn", 0.07) },

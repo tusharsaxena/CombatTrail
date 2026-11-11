@@ -177,7 +177,7 @@ test("hud page: every color is a ColorPair with its Use class color companion", 
             assertTrue(r.disabledIf == nil, r.path .. " is never disabled (anti-pattern #74)")
         end
     end
-    assertEqual(colors, 13)
+    assertEqual(colors, 12)
 end)
 
 test("hud page: Frame strata offers BACKGROUND to HIGH and never DIALOG (frame-layering-§1)", function()

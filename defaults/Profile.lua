@@ -118,6 +118,10 @@ NS.defaults = {
                                 target = "player", gap = 4, frameName = "" },
                 borderColor = rgba(0.4, 1, 0.4, 0.9),
                 labelText   = "",
+                -- Link to Player lane (modules/LaneRender.lua LINK_OWN): off, the Pet lane keeps its
+                -- own look; on, it mirrors the Player lane's but where it sits, its label text, its
+                -- switch and its ignore list.
+                link        = false,
             }),
         },
         -- The live DPS HUD (spec §6, modules/Hud.lua). Behavior: when it opens ("auto" on every fight's first
@@ -137,7 +141,7 @@ NS.defaults = {
         -- (the mono role, no outline; the skin's HUD face and 26 points, which the HUD draws at DPS Race's
         -- single-clock 40, v0.2 Task B2), the figures' font, the over card's DPS color and the boxes'
         -- background and border. Damage chart: the plot's height and most columns, the columns' bar, the
-        -- burst-window and best-line colors, the cooldown icons (and their minimum base cooldown, seconds)
+        -- pace-line color, the cooldown icons (and their minimum base cooldown, seconds)
         -- and the zero line. Spell rows: their height (how many is the Layout's `bars`), the icons and the
         -- pet's paw, the player's bar, the pet's color and the rows' font. Window: the title bar and its
         -- title, the background and border, the footer, the strata and the opacity. ("Lock position" is
@@ -155,13 +159,13 @@ NS.defaults = {
                         useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
                         fontColorFromSkin = true, fontShadowFromSkin = true,
                         overColor = rgba(0.29, 0.82, 0.42, 1), useClassColorOverColor = false,
+                        overColorMatchDamage = true,
                         boxBg = rgba(0.06, 0.07, 0.09, 0.8), useClassColorBoxBg = false, boxBgFromSkin = true,
                         boxBorder = rgba(0.16, 0.17, 0.2, 1), useClassColorBoxBorder = false,
                         boxBorderFromSkin = true },
             chart = { height = 80, columns = 48,
                       barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                       useClassColorBar = false, barTextureFromSkin = true,
-                      burstColor = rgba(0.79, 0.65, 0.23, 1), useClassColorBurstColor = false,
                       bestColor = swatch(PALETTE.PACE), useClassColorBestColor = false,
                       cooldowns = true, cooldownMin = 29, zeroLine = true },
             spells = { rowHeight = 18, icons = true, paw = true,
@@ -192,7 +196,7 @@ NS.defaults = {
         -- its scale, its list's row height (px); whether Share appends the fight's talents link; whether
         -- it closes when combat starts (v0.2 Task C1); and `columns`, the widths a header's edge was
         -- dragged to (`{ character = px }`; empty is the shipped width), put back by Reset position. The
-        -- list's width clears its least (Results.MIN_WIDTH, 1038 with v0.2 Task C2's Status, Used and
+        -- list's width clears its least (Results.MIN_WIDTH, 972 with v0.2 Task C2's Used and
         -- Note columns) with room for the target column and a Character drag; and `collapsedSections`, the
         -- fight detail's folded sections (v0.2 Task C3: `{ [section] = true }`, keys
         -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps; and

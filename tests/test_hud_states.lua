@@ -253,6 +253,9 @@ test("hud: a faster fight on the board says New best with its gain", function()
     assertEqual(Hud.View().delta, 20, "(1200 - 1000) / 1000")
     local chips = table.concat(Hud.Chips(), "|")
     assertTrue(chips:find("+20.0%", 1, true) ~= nil, chips)
+    -- Every best mark is the best blue (owner, 2026-11-10), never the header gold.
+    local chip = inst.NS.HudStates.OverChips(Hud.View())[1]
+    assertEqual(chip.color, inst.NS.Constants.PALETTE.BEST_TEXT, "the New best chip is the best blue")
 end)
 
 test("hud: skip reason chip on FIGHT_SKIPPED short", function()

@@ -191,7 +191,9 @@ fontBlock("clock", false, { font = L["The face the clock is drawn in. A face wit
 at(TAB.clock, L["Figures font"])
 fontBlock("figures", true, { font = L["The face the Damage and DPS figures are drawn in."] })
 at(TAB.clock, L["Fight-over card"])
-colorPair("figures", "overColor", L["Final DPS color"], L["The color of the DPS figure on the fight-over card."])
+colorPair("figures", "overColor", L["Final DPS color"], L["The color of the DPS figure on the fight-over card."], {
+    companion("figures", "overColorMatchDamage", L["Same color as Damage"],
+        L["Draw your DPS, live and after the fight, in the same color as your Damage. The swatch is not read while this is on."]) })
 at(TAB.clock, L["Box background"])
 colorPair("figures", "boxBg", L["Background color"], L["The fill behind the Damage and DPS boxes."], {
     companion("figures", "boxBgFromSkin", L["Use the skin's background"],
@@ -209,9 +211,6 @@ row("chart.columns", { type = "number", label = L["Maximum columns"], min = 8, m
     tooltip = L["The most columns the chart draws. A long fight folds more seconds into each column."] })
 at(TAB.chart, L["Columns"])
 block(H.BarGroup(spec("chart", { fromSkin = true })))
-at(TAB.chart, L["Burst windows"])
-colorPair("chart", "burstColor", L["Burst column color"],
-    L["The color of the columns in the seconds after you use a long cooldown."])
 at(TAB.chart, L["Lines"])
 colorPair("chart", "bestColor", L["Pace line color"], L["The color of the line that marks the pace."])
 row("chart.zeroLine", { type = "bool", label = L["Show zero line"], startsLine = true,

@@ -68,14 +68,22 @@ local function assertStack(inst, body)
     assertEqual(spells.title.__template, F.SECTION)
     assertTrue(chart.title:IsShown() and spells.title:IsShown())
     assertEqual(y(chart.title), -(top + HEAD_GAP), "HEAD_GAP of clear space over the heading")
-    assertEqual(y(chart.note), y(chart.title), "the note on the heading's line")
+    -- The note on the heading's line: its bottom edge on the heading's, so the small caption lines up
+    -- with the larger heading's text (owner, 2026-11-11).
+    local np = chart.note.__points[1]
+    assertEqual(np[1], "BOTTOMRIGHT")
+    assertEqual(np[2], chart.title, "the note on the heading's line")
+    assertEqual(np[3], "BOTTOMLEFT")
+    assertEqual(np[5], 0)
     assertEqual(y(pace.bar), y(chart.title) - SECTION_H - 2, "the pace bar directly under the heading")
     assertEqual(pace.bar.__h, 12 - 4, "the bar 8px tall on its 12px line")
     assertEqual(y(chart.plot), y(pace.bar) + 2 - PACE_LINE, "the plot under the pace bar")
     assertEqual(chart.frameH, PLOT_H + RESERVE, "the plot frame: its 80px and the icons' row on top")
     assertEqual(y(chart.axis[1]), y(chart.plot) - PLOT_H - RESERVE - 2, "the time labels under the plot")
     assertEqual(y(spells.title), y(chart.axis[1]) - AXIS_H - GAP - HEAD_GAP, "Spell breakdown under the labels")
-    assertEqual(y(spells.note), y(spells.title), "its note on its heading's line")
+    assertEqual(spells.note.__points[1][2], spells.title, "its note on its heading's line")
+    assertEqual(spells.note.__points[1][1], "BOTTOMRIGHT")
+    assertEqual(spells.note.__points[1][5], 0)
     assertEqual(y(spells.frame), y(spells.title) - SECTION_H, "the rows under their heading")
 end
 
@@ -135,7 +143,7 @@ test("hud layout: with nothing to pace against the plot sits right under its hea
     assertTrue(chart.title:IsShown() and chart.plot:IsShown())
     assertEqual(y(chart.title), -(body.stackTop + HEAD_GAP))
     assertEqual(y(chart.plot), y(chart.title) - SECTION_H, "no pace line under the heading")
-    assertEqual(chart.note.__text, "first fight on this board")
+    assertEqual(chart.note.__text, "no best yet")
 end)
 
 -- ── the sizes ───────────────────────────────────────────────────────────────────────────────────

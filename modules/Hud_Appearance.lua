@@ -17,8 +17,8 @@ local addonName, NS = ...
 --   hud.figures  the Damage and DPS figures' font block, the over card's DPS color (`overColor`),
 --                and the boxes' background and border (`boxBg`, `boxBorder`, each with a
 --                `<key>FromSkin` companion: on, the skin's Card draws it)
---   hud.chart    the plot's height and its most columns, the columns' bar block, the burst-window
---                and best-line colors, the cooldown icons and their threshold, the zero line
+--   hud.chart    the plot's height and its most columns, the columns' bar block, the
+--                pace-line color, the cooldown icons and their threshold, the zero line
 --   hud.spells   the rows shown (0: every one, the wheel scrolls), the row height, the icons, the
 --                pet's paw, the player rows' bar block, the pet rows' color, the rows' font block
 --   hud.window   the title bar and its title, the background and border (each with its

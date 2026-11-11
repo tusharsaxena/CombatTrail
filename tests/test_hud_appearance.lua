@@ -50,13 +50,7 @@ end
 local function live(Hud) return H.body(Hud, "live") end
 local function rows(Hud) return live(Hud).parts.spells.list:Rows() end
 local function chart(Hud) return live(Hud).parts.chart end
-local function plainColumn(Hud)
-    local view, cols = Hud.View().chartView, chart(Hud):Columns()
-    for i = view.count, 1, -1 do
-        if not view.burst[i] then return cols[i] end
-    end
-end
-local function burstColumn(Hud) return chart(Hud):Columns()[1] end
+local function plainColumn(Hud) return chart(Hud):Columns()[1] end
 local function face(fs) return (fs:GetFont()) end
 local function size(fs) return select(2, fs:GetFont()) end
 local function flags(fs) return select(3, fs:GetFont()) end
@@ -168,8 +162,6 @@ local LIVE_CASES = join(
     },
     barCases("chart", plainColumn),
     {
-        { "chart.burstColor", RED, function(_, Hud) rgb(RED, burstColumn(Hud):GetStatusBarColor()) end },
-        { "chart.useClassColorBurstColor", true, function(_, Hud) rgb(MAGE, burstColumn(Hud):GetStatusBarColor()) end },
         { "chart.bestColor", RED, function(_, Hud) rgb(RED, unpack(chart(Hud).line.__color)) end },
         { "chart.useClassColorBestColor", true, function(_, Hud) rgb(MAGE, unpack(chart(Hud).line.__color)) end },
         { "chart.cooldownMin", 200, function(_, Hud) assertEqual(#chart(Hud):Icons(), 0, "Wrath is 120 s") end },
@@ -204,9 +196,16 @@ local LIVE_CASES = join(
     backdropCases("window", "bg", window, "GetBackdropColor"),
     backdropCases("window", "border", window, "GetBackdropBorderColor")
 )
--- The over card's own: the DPS figure's color.
+-- The over card's own: the DPS figure's color. Out of the box it is the Damage figure's; the
+-- companion off, the swatch is read.
 local OVER_CASES = {
-    { "figures.overColor", RED, function(_, Hud) rgb(RED, H.body(Hud, "over").w.dps.value:GetTextColor()) end },
+    { "figures.overColor", RED, function(_, Hud)
+        local w = H.body(Hud, "over").w
+        local r, g, b = w.dps.value:GetTextColor()
+        local dr, dg, db = w.damage.value:GetTextColor()
+        rgb({ r = dr, g = dg, b = db }, r, g, b, "the Damage figure's color")
+    end },
+    { "figures.overColorMatchDamage", false, function(_, Hud) rgb(RED, H.body(Hud, "over").w.dps.value:GetTextColor()) end },
     { "figures.useClassColorOverColor", true, function(_, Hud)
         rgb(MAGE, H.body(Hud, "over").w.dps.value:GetTextColor())
     end },

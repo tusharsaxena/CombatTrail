@@ -17,8 +17,8 @@ local _, NS = ...
 --     column is always full; no line;
 --   * the fight-over card: the plain final player damage, or with a best the larger of it and the
 --     best's at the fight's length, x HEADROOM, with the best's line.
--- Burst windows: a column a long cooldown was cast in, or that starts within Chart.BURST_WINDOW
--- seconds after one, is drawn in `hud.chart.burstColor` (plain cast times, never a value).
+-- Every column draws in the chart's own bar look: a cooldown marks the chart with its icon only, and
+-- never recolors a column (owner, 2026-11-10: DPS Race parity, "don't change the chart color").
 --
 -- THE PACE BAR (spec §6, the pet-fill seam Hud.PACE_PET_FILL, spec §12). Two StatusBars over one
 -- track. The player's spans the bar from lo to hi (HudBest.Bounds: the best's pace in the middle,
@@ -52,7 +52,6 @@ Chart.LINE_W = 2        -- the best line's thickness
 Chart.ICON = 12         -- a cooldown icon's size
 Chart.ICON_GAP = 1      -- between two rows of icons
 Chart.RESERVE = Chart.ICON + Chart.ICON_GAP   -- the plot's headroom on top: one row of icons
-Chart.BURST_WINDOW = 15 -- seconds after a long cooldown's cast its columns draw as a burst
 Chart.PACE_H = 12       -- the pace bar's line: the bar 8px tall, 2px clear over and under it
 
 local ICON_CROP = { 0.08, 0.92, 0.08, 0.92 }
@@ -174,19 +173,6 @@ function Chart.Cooldowns(casts, spells)
     return out
 end
 
---- The columns a burst window covers: { [j] = true } for each column of `step` seconds that a
---- cooldown in `cooldowns` was cast in or that starts within BURST_WINDOW seconds after one.
-function Chart.BurstColumns(cooldowns, step, count)
-    local set = {}
-    if type(cooldowns) ~= "table" or type(step) ~= "number" or step <= 0 then return set end
-    for _, c in ipairs(cooldowns) do
-        local first = math.max(1, math.floor(math.max(0, c.t) / step) + 1)
-        local last = math.min(count, math.floor((math.max(0, c.t) + Chart.BURST_WINDOW) / step) + 1)
-        for j = first, last do set[j] = true end
-    end
-    return set
-end
-
 -- The view's columns from the fight's store, over `span` seconds.
 local function columnsOf(fightID, span)
     local cols = NS.Slices.Columns(fightID, span, Chart.MaxColumns())
@@ -213,13 +199,13 @@ end
 --- @param live table|nil  NS.Meter.ReadLive's
 --- @param elapsed number  plain seconds since the fight's combat entry (the slices' zero)
 --- @param cooldowns table|nil  Chart.Cooldowns'
---- @return table|nil view  { count, step, span, values, max, best, note, cooldowns, burst }
+--- @return table|nil view  { count, step, span, values, max, best, note, cooldowns }
 function Chart.LiveView(fight, curve, live, elapsed, cooldowns)
     local span = math.max(tonumber(elapsed) or 0, curve and curve.duration or 0, NS.Slices.STEP)
     local view = columnsOf(fight.id, span)
     if not view then return nil end
     view.cooldowns = cooldowns
-    view.note = L["first fight on this board"]
+    view.note = L["no best yet"]   -- short beside the heading (owner, 2026-11-11), "vs best pace"'s pair
     if curve then
         withBest(view, curve:playerAt(view.span), nil)
     else
@@ -227,7 +213,6 @@ function Chart.LiveView(fight, curve, live, elapsed, cooldowns)
         local player = type(live) == "table" and live.player
         if type(player) == "table" then view.max = player.total end
     end
-    view.burst = Chart.BurstColumns(cooldowns, view.step, view.count)
     return view
 end
 
@@ -249,7 +234,6 @@ function Chart.OverView(fight, curve, final, cooldowns)
     if not player or player <= 0 then return nil end
     view.cooldowns, view.note = cooldowns, ""
     withBest(view, curve and curve:playerAt(view.span) or nil, player)
-    view.burst = Chart.BurstColumns(cooldowns, view.step, view.count)
     return view
 end
 
@@ -342,8 +326,10 @@ function Strip:Place(anchor, y, width, midH)
     self.width, self.plotH = width, plotH
     self.title:ClearAllPoints()
     self.title:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y)
+    -- The note sits on the heading's bottom edge, so the small caption lines up with the larger
+    -- heading's text instead of hanging from its top (owner, 2026-11-11).
     self.note:ClearAllPoints()
-    self.note:SetPoint("TOPRIGHT", anchor, "TOPLEFT", width, y)
+    self.note:SetPoint("BOTTOMRIGHT", self.title, "BOTTOMLEFT", width, 0)
     local py = y - Chart.HEAD_H - (midH or 0)
     self.frameH = Chart.FrameHeight(plotH)
     self.plot:ClearAllPoints()
@@ -359,7 +345,8 @@ function Strip:Place(anchor, y, width, midH)
         fs:SetPoint(points[i][1], anchor, "TOPLEFT", points[i][2], ay)
     end
     self.geometry = nil
-    return Chart.BlockHeight(plotH, midH)
+    self.blockH = Chart.BlockHeight(plotH, midH)   -- what Place answered last (the suites read it)
+    return self.blockH
 end
 
 -- The columns' and the line's look, once per Appearance stamp.
@@ -368,8 +355,6 @@ function Strip:restyle()
     if self.stamp == A.stamp then return end
     self.stamp = A.stamp
     self.look = A.Bar("chart")
-    local r, g, b, a = A.Swatch("chart", "burstColor")
-    self.burstLook = { r = r, g = g, b = b, a = a }
     self.line:SetColorTexture(A.Swatch("chart", "bestColor"))
     self.zero:SetShown(A.On("hud.chart.zeroLine"))
     for _, col in ipairs(self.cols) do col.stamp = nil end
@@ -400,13 +385,12 @@ function Strip:layoutColumns(count)
     self.lineKey = nil
 end
 
--- One column's fill: its look (burst or not) when it changed, then its value against `max`, both
--- opaque, straight to the widget.
-function Strip:fill(i, col, value, max, burst)
-    local want = burst and "b" or "n"
-    if col.stamp ~= self.stamp or col.kind ~= want then
-        col.stamp, col.kind = self.stamp, want
-        NS.HudAppearance.PaintBar(col, self.look, burst and self.burstLook or nil)
+-- One column's fill: its look when the stamp changed, then its value against `max`, both opaque,
+-- straight to the widget.
+function Strip:fill(i, col, value, max)
+    if col.stamp ~= self.stamp then
+        col.stamp = self.stamp
+        NS.HudAppearance.PaintBar(col, self.look)
     end
     if value == nil or max == nil then
         col:SetMinMaxValues(0, 1)
@@ -437,8 +421,7 @@ function Strip:Draw(view)
     self:restyle()
     local count = view and view.count or 0
     self:layoutColumns(count)
-    local burst = view and view.burst or {}
-    for i = 1, count do self:fill(i, self.cols[i], view.values[i], view.max, burst[i] == true) end
+    for i = 1, count do self:fill(i, self.cols[i], view.values[i], view.max) end
     for i = count + 1, #self.cols do self.cols[i]:Hide() end
     self:drawLine(view and view.best or nil)
     local span = view and view.span or 0
