@@ -10,7 +10,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
   line (its own file list), then LibSharedMedia, LibDataBroker and LibDBIcon. Panel Master's copies,
   the set that loads on both clients.
 - **The locale** next: `locales/enUS.lua` creates `NS.L`, which several `core/` files read at file
-  scope.
+  scope; its topic file `locales/enUS_Race.lua` fills it directly after (localization-§6).
 - **`core/`** in dependency order: the namespace and media first, then the skin seam (before any
   frame-building file), the compat root (before the secret guards bind), the latch (before the perf
   harness, which raises without it), and the AceAddon promotion after the printer exists.
@@ -27,6 +27,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `CombatTrail.toc` | Both interface numbers, the metadata and the load order |
 | `Bindings.xml` | The three `CLICK` key bindings in the addon's own category |
 | `locales/enUS.lua` | `NS.L`, the canonical locale with the key-is-the-string fallback |
+| `locales/enUS_Race.lua` | Race mode's strings, a topic file filling `NS.L` (ruling X13) |
 | `core/Namespace.lua` | The chat tag, folder name, brand, slash words and version fallback |
 | `core/MediaSetup.lua` | `NS.Icon` and `NS.MediaFont` from LibKa0s-Media, and the one LibSharedMedia registration |
 | `core/Constants.lua` | Fixed values: the mono face, the logo path, the frame-layering table, the fight timing, the shared bar palette (`PALETTE`, every bar default's source) |
@@ -49,6 +50,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `defaults/IgnoreSeeds.lua` | Each lane's ignored spells out of the box, per client |
 | `defaults/Profile.lua` | The AceDB defaults tree, the only place a default is written |
 | `defaults/Dummies.lua` | The measured training dummies' seed, per client, with each dummy's category |
+| `defaults/Hearthstones.lua` | Every hearthstone variant's spell ID, which the late-cast ignore list's 8690 stands for |
 | `modules/LaneCasts.lua` | The lanes' cast capture: one `LANE_PUSH` per shown cast, dedupe and interrupt marks |
 | `modules/LaneLayout.lua` | The lanes' layout math, pure |
 | `modules/LaneRender.lua` | Each lane's frame, ticks, label and pooled icons, and its `OnUpdate` while icons show |
@@ -62,6 +64,11 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Identity.lua` | Who fought, where and against what, and the board key |
 | `modules/Fight.lua` | The fight state machine, one fight per meter session |
 | `modules/Watchers.lua` | The fight's game events, one set per fight state |
+| `modules/RaceTimeline.lua` | A race's damage-update stamps: the tail after the buzzer and the restart, pure (Race mode) |
+| `modules/LateIgnore.lua` | The late-cast ignore list, read when a race is scored (Race mode, both clients) |
+| `modules/RaceScoring.lua` | A race's scoring rules: the late-cast test, the race DPS and its flags (Race mode) |
+| `modules/Race.lua` | The race engine on the fight: arm, the first-hit clock, the buzzer, the late casts, the race part (Race mode, Retail) |
+| `modules/RaceWatchers.lua` | The race's game events, one set per race state (Race mode, Retail) |
 | `modules/CastCodec.lua` | The packed cast-list string a record stores, pure |
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |
 | `modules/Usage.lua` | What a fight used: on-use gear and consumables |

@@ -35,6 +35,9 @@ libs\LibDBIcon-1.0\lib.xml
 # LOAD-BEARING: creates NS.L, which core\LifecycleSetup.lua, core\DebugLogSetup.lua and
 # core\LauncherSetup.lua read at FILE SCOPE.
 locales\enUS.lua
+# LOAD-BEARING: Race mode's topic file (localization-§6) fills NS.L, which it reads at FILE SCOPE from
+# locales\enUS.lua, so it sits directly after it.
+locales\enUS_Race.lua
 
 # Core -- dependency-correct order (layout-§1). Every LOAD-BEARING note says what resolves at load;
 # core\State.lua, core\Bus.lua, core\PoolSetup.lua and core\Database.lua are conventional and may
@@ -96,6 +99,9 @@ defaults\Profile.lua
 # The training dummies' seed, per client. LOAD-BEARING: reads NS.Compat at FILE SCOPE and publishes
 # NS.DUMMY_SEED; modules\Dummies.lua reads it at CALL time.
 defaults\Dummies.lua
+# Every hearthstone variant (Race mode). LOAD-BEARING: publishes NS.HEARTHSTONE_SPELLS, which
+# modules\LateIgnore.lua reads at FILE SCOPE.
+defaults\Hearthstones.lua
 
 # Modules -- conventional order: each reaches the others at CALL time, except as noted.
 # The lanes' cast capture. LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus
@@ -139,6 +145,18 @@ modules\Fight.lua
 # The fight's event wiring, one set per fight state. Captures NS.Perf at FILE SCOPE; reaches NS.Fight
 # at CALL time only.
 modules\Watchers.lua
+# Race mode's engine (Retail only), on the fight above: the race's damage timeline (pure), the late-cast
+# ignore list (LOAD-BEARING: reads NS.defaults and NS.HEARTHSTONE_SPELLS at FILE SCOPE), the scoring
+# rules (pure; NS.L, NS.LateIgnore and NS.RaceRecord at CALL time), the race state machine
+# (LOAD-BEARING: captures NS.Secrets and registers its bus receiver at FILE SCOPE, on Retail; reaches
+# NS.Fight, NS.Meter, NS.Dummies, NS.RaceTimeline, NS.RaceScoring and NS.addon at CALL time) and its
+# event wiring (captures NS.Perf at FILE SCOPE; reaches NS.Race at CALL time). Before
+# modules\Recorder.lua, which pulls NS.Race.Finalize at CALL time.
+modules\RaceTimeline.lua
+modules\LateIgnore.lua
+modules\RaceScoring.lua
+modules\Race.lua
+modules\RaceWatchers.lua
 # The stored cast list's format: pure.
 modules\CastCodec.lua
 # Each fight's cast list. LOAD-BEARING: calls NS.LaneCasts.Listen and registers its bus receiver at FILE

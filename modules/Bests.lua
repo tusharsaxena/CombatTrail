@@ -21,7 +21,8 @@ local _, NS = ...
 -- PURE over plain stored records (every value went through NS.Secrets on its way into the record,
 -- modules/Recorder.lua), apart from THE CACHE: one board over the whole store, built on first ask and
 -- dropped on FIGHT_SAVED and FIGHTS_CHANGED, and on a change to the Training dummies list or the
--- profile (SETTINGS_CHANGED: a race's board is its kind read now); the clean view is cached apart.
+-- profile (SETTINGS_CHANGED: a race's board is its kind read now), or to the late-cast ignore list
+-- (a race's flags are read against it now); the clean view is cached apart.
 -- The receiver is this module's own bus target, so the latch drops and replays it with the rest
 -- (slash-commands-§7).
 
@@ -268,7 +269,8 @@ if receiver then
     receiver:RegisterMessage(NS.MSG.FIGHTS_CHANGED, function() Bests.Invalidate() end)
     -- A race's board is its kind read from the Training dummies list now, the profile's.
     receiver:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
-        local Dummies = NS.Dummies
-        if path == "profile" or (Dummies and path == Dummies.PATH) then Bests.Invalidate() end
+        local Dummies, LateIgnore = NS.Dummies, NS.LateIgnore
+        if path == "profile" or (Dummies and path == Dummies.PATH)
+            or (LateIgnore and path == LateIgnore.PATH) then Bests.Invalidate() end
     end)
 end

@@ -223,6 +223,18 @@ NS.defaults = {
         -- `id:category` (a dummy of the player's) and `-id` (a built-in switched off) entries, written
         -- whole through the seam. Empty: the client's seed alone (defaults/Dummies.lua).
         dummies = { custom = "" },
+        -- Race mode (modules/Race.lua, race plan Task B1; Retail only, its page is Task B3's): the
+        -- length a race arms at until the player picks one (s; `lastLength`, no default, is the last
+        -- one armed, state the race writes, not a setting), the grace after the buzzer before a cast
+        -- start is late (s) and the quiet after the buzzer before damage counts as restarted (s), both
+        -- frozen into each race as it arms, and the seconds in combat after the buzzer before the
+        -- Race window's drop-combat hint (DPS Race's). The late-cast ignore list (modules/LateIgnore.lua)
+        -- is the one read at score time, never frozen, so an edit re-scores every saved race: spell
+        -- IDs, ascending and comma-separated, 8690 standing for every hearthstone
+        -- (defaults/Hearthstones.lua): Invisibility, Vanish, Feign Death, Hearthstone, Shadowmeld,
+        -- Greater Invisibility. On both clients: a saved race (account-wide) re-scores on WoW Forever too.
+        race = { defaultLength = 60, grace = 1.0, restartGap = 6, hintDelay = 15,
+                 lateIgnore = "66,1856,5384,8690,58984,110959" },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the

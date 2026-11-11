@@ -17,6 +17,7 @@ a library-absent load and are documented by the library, not here.
 | `CanAccessTable(t)` | Whether a table may be read (`canaccesstable`, else readable) | No LibKa0s major carries it |
 | `SpellTexture(id)` | A spell's icon, the id passed through untested | `C_Spell.GetSpellTexture`, else `GetSpellTexture`; may answer secret in combat |
 | `SpellName(id)` | A spell's name | `C_Spell.GetSpellName`, else `GetSpellInfo` |
+| `IsAutoRepeatSpell(id)` | Whether an auto-repeat spell (Auto Shot, Shoot) is repeating now: Race mode's late-cast judge takes a sealed success as no press while one does (modules/Race.lua) | `C_Spell.IsAutoRepeatSpell`, nil without it; may answer secret in combat, read through `NS.Secrets` |
 | `SpellBaseCooldown(id)` | A spell's base cooldown in ms (the lanes' glow) | May answer secret in combat; read through `NS.Secrets` |
 | `SpellHaste()` | The player's spell haste (the haste-adjusted ticks) | Read only out of combat |
 | `InPetBattle()` | Whether a pet battle is on | False where the client has none |

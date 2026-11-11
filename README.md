@@ -3,7 +3,7 @@
 ![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5_and_Forever_1.60.1-purple)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-968%2F968_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1059%2F1059_passing-green)
 
 Supports Retail and WoW Forever. Combat Trail shows what you and your pet just cast as a row of icons sliding along two lanes, with tick marks for the global cooldown, so you can see your rotation as you play it. Every time you fight, a small DPS window climbs with your damage, draws it as a chart and sets it against your best fight on the same boss or target. When the fight is over it is saved, with its spells, casts, gear, talents and the consumables you used, so you can look back at a pull and see what changed.
 

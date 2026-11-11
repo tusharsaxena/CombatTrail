@@ -17,6 +17,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `probe` | the armed probe's cast and combat events (modules/Probe.lua) | only while `/ct probe` is armed |
 | `meter` | the live read of the player's and the pet's sources (modules/Meter.lua) | every HUD tick in combat |
 | `fight` | every combat, encounter and meter event (modules/Watchers.lua) | the meter's session events fire often in combat |
+| `race` | every race event: both regen edges, `PLAYER_DEAD`, the meter's session updates and the player's casts (modules/RaceWatchers.lua) | only while a race runs or waits for its read (Retail) |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
 | `hud` | the HUD's read and redraw on each `FIGHT_TICK` (modules/Hud.lua), holding `meter` | four times a second in combat |

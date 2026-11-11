@@ -24,10 +24,11 @@ Total.
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
 
-### test_loadorder.lua (4)
+### test_loadorder.lua (5)
 
 - load order: the runner loaded exactly the TOC's files, in the TOC's order
 - load order: the locale and the namespace come first, the AceAddon promotion after the printer
+- load order: the hearthstones and the defaults load before the ignore list, and the race before the recorder
 - load order: every derived path exists on disk
 - load order: no libs/ path leaked into the addon's own list
 
@@ -369,7 +370,7 @@ Total.
 - format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain
 - format: Clock, Length, Pct and SignedPct take plain numbers
 
-### test_fight.lua (30)
+### test_fight.lua (34)
 
 - fight: the states and the timing constants are the plan's
 - fight: normal combat → started, ticks, ended final
@@ -401,6 +402,10 @@ Total.
 - fight: an encounter that starts in combat while idle starts a fight
 - fight: COMBAT_ENTERED is sent on the regen edge from idle, on the grace carry-on and on park+begin
 - fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in combat, or while stood down
+- fight: FIGHT_FIRST_HIT is sent once, on the first damage update of a bound session
+- fight: Hurry reads a settling fight at once; idle or another fight's id does nothing
+- fight: Hurry in combat settles at the combat end with no wait
+- fight: ShareSessions lets an unbound fight bind a listed session, marked shared; none by default
 
 ### test_identity.lua (47)
 
@@ -657,6 +662,101 @@ Total.
 - race record: ScoreDps is the score over the length, over endedAt when incomplete
 - race record: Flagged reads the race part's flags and its status
 - database: schema 3 records load unchanged under 4
+
+### test_race_scoring.lua (20)
+
+- race scoring: late cast boundaries
+- race scoring: QUIET_BEFORE_READ is 2.5s
+- race scoring: Dps complete = score / length
+- race scoring: Dps incomplete = score / endedAt
+- race scoring: Flags order and text
+- race scoring: Flags names late-cast spells through an optional resolver
+- race scoring: SplitLate keeps the recorded order and splits by the ignore set; a sealed cast always counts
+- race scoring: Flags flags only the counted late casts and carries the count, the casts and the ignored
+- race scoring: IgnoredText names the ignored casts in one line, nil with none
+- race scoring: a clean complete race has no flags; lost stands alone at the end
+- race timeline: tail from probe run 4 = 3.03
+- race timeline: tail from probe run 6 = 8.49
+- race timeline: restart detected after 10s quiet at gap 6
+- race timeline: DoT ticks every 2s are not a restart
+- race timeline: the quiet stretch starts at the buzzer when the last damage was before it
+- race timeline: a gap of exactly the setting counts as a restart
+- race timeline: no damage after the buzzer gives tail 0 and no restart
+- race timeline: a gap that spans a resume is measured from the resume
+- race timeline: an out-of-order or non-number update is handled
+- race timeline: two timelines are independent
+
+### test_late_ignore.lua (11)
+
+- late ignore: the hearthstone table holds 59 positive IDs, once each, with 8690, Dalaran and Garrison, never 556
+- late ignore: the setting parses sorted and once each, refuses anything else, and joins back
+- late ignore: Normalize drops a variant while 8690 is listed and keeps it alone
+- late ignore: the default is the profile's, and 8690 stands for every hearthstone in Set only
+- late ignore: Resolve takes a number, a link, a hearthstone's name and a default the character does not know
+- late ignore: a variant's name resolves to that variant when it is listed on its own, else to 8690
+- late ignore: on a degraded load a number, a link and a hearthstone still resolve
+- late ignore: the known spells are every late cast's spell, newest race first, then the defaults
+- late ignore: a profile switch re-scores the flags by the other profile's list and drops the clean board
+- late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
+- late ignore: Label names a spell, the hearthstones' entry and an unknown one
+
+### test_race.lua (55)
+
+- race: the states, the lengths and the timings are the plan's
+- race: arming refuses on WoW Forever and registers nothing there
+- race: arm refuses while armed or racing, out of range, in combat, settling, and with the meter unavailable
+- race: arm refuses while a fight is still settling
+- race: arm refuses while stood down
+- race: an arm remembers its length, and the next arm defaults to it
+- race: the first hit on a dummy starts the clock, on the fight's firstHitT
+- race: an armed race cancels when a non-dummy pull starts, and that pull is a normal fight
+- race: a pull with no target cancels the arm
+- race: an armed pull that never hits keeps the arm for the next pull
+- race: buzzer at start+length moves to stopping and emits RACE_BUZZER, never early
+- race: a complete race is read after the settle and saved once, as a race with its score and DPS
+- race: the race part is on the fight before Recorder builds it, and RACE_RESULT follows FIGHT_SAVED
+- race: a race is saved however short, past the minimum length
+- race: combat end before the buzzer -> incomplete with endedAt
+- race: Feign Death before the buzzer ends the race as incomplete while the fight carries on
+- race: death -> incomplete, died flag
+- race: death after the buzzer flags died and the race stays complete
+- race: tail and combat end are stored relative to the buzzer
+- race: restart after a 10s gap sets flags.restartedAt
+- race: updates for another session never move the timeline
+- race: a sealed meter type or session ID is taken as the race's own, and nothing secret is kept
+- race: cast started 0.5s after buzzer is not late at grace 1.0
+- race: cast started 1.4s after buzzer is recorded as late with spellID
+- race: a late cast of an ignored spell is still stored raw; the list is read, never applied, at capture
+- race: cast that started before buzzer and succeeded after is not late
+- race: an empowered cast held across the buzzer is never late
+- race: a channel begun after the grace is late once; its stop clears it
+- race: an interrupted cast leaves nothing open; a later instant of the same spell is late
+- race: a cast matches its own success by castGUID, not by spell
+- race: secret spell IDs and castGUIDs are judged without ever being stored
+- race: auto-repeat successes after the buzzer are never late casts
+- race: a pet's cast is never judged
+- race: the grace in force is the race's own, not the profile's
+- race: a meter reset while running loses the race; nothing is saved and the buzzer never goes
+- race: a meter reset while stopping -> lost
+- race: a meter reset while armed forgets the arm-time sessions and keeps the arm
+- race: a shared session is flagged and netted against the arm baseline, saved once
+- race: a plain fight never binds a session alive before it
+- race: a fresh session heard after a shared start replaces the shared one
+- race: a split mid-race keeps the race on its first fight
+- race: a session bound only on a tick's look at the list flags sessionFromList
+- race: Stop Now acts only while stopping
+- race: Stop Now after combat ends reads at once
+- race: Stop Now in combat waits for combat to end and skips the quiet
+- race: Stop Now on a race that ended before the buzzer reads it as incomplete
+- race: Cancel while armed stores nothing and arms again
+- race: Cancel after the first hit leaves a plain dummy fight
+- race: Cancel after the first hit of a short pull saves nothing under the minimum length
+- race: cancel on a result dismisses it and keeps the record; race again arms
+- race: an arm from a result arms a new race
+- race: the arm's snapshots replace the fight's combat-entry reads
+- race: inputs in the wrong state change nothing
+- race: the watchers register only what the race's state needs
+- race: a stand-down drops the armed race silently, with its registrations
 
 ### test_slices.lua (18)
 
@@ -1165,7 +1265,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_load.lua | 13 |
-| test_loadorder.lua | 4 |
+| test_loadorder.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
 | test_slash.lua | 19 |
@@ -1178,7 +1278,7 @@ Total.
 | test_probe.lua | 33 |
 | test_meter.lua | 37 |
 | test_format.lua | 19 |
-| test_fight.lua | 30 |
+| test_fight.lua | 34 |
 | test_identity.lua | 47 |
 | test_dummies.lua | 29 |
 | test_cast_codec.lua | 7 |
@@ -1191,6 +1291,9 @@ Total.
 | test_retention.lua | 14 |
 | test_record.lua | 18 |
 | test_race_record.lua | 13 |
+| test_race_scoring.lua | 20 |
+| test_late_ignore.lua | 11 |
+| test_race.lua | 55 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1226,4 +1329,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **968** |
+| **Total** | **1059** |

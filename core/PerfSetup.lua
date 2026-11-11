@@ -34,6 +34,7 @@ NS.Perf = lib:New({
         { key = "probe" },           -- the armed probe's cast and combat events, in modules/Probe.lua
         { key = "meter" },           -- the live read of the player's and the pet's sources, in modules/Meter.lua
         { key = "fight" },           -- every combat, encounter and meter event, in modules/Watchers.lua
+        { key = "race" },            -- every race event (regen, death, meter update, cast), in modules/RaceWatchers.lua
         { key = "casts" },           -- each cast the fight record keeps, in modules/Casts.lua (inside laneCast)
         { key = "slices" },          -- the damage chart's once-a-step live read, in modules/Slices.lua (holds meter)
         { key = "hud" },             -- the HUD's live read and redraw on each FIGHT_TICK, in modules/Hud.lua (holds meter)

@@ -1,0 +1,47 @@
+# Message bus — Ka0s Combat Trail
+
+Every message the addon sends on its bus (documentation-§3, Tier 2: more than ten distinct messages).
+Each name is declared once in `core/Bus.lua` (`NS.MSG`) and sent with `NS.SendBus`; wire names are
+`Ka0s_CombatTrail_<Event>`. Every receiver is a target of its module's own (`NS.NewBusTarget`), so the
+stand-down drops it and the stand-up replays it (slash-commands-§7).
+
+## Messages
+
+| Message | Sender | Payload | Consumers |
+|---|---|---|---|
+| `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | Bests, Hud, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page |
+| `LANE_PUSH` | LaneCasts | `(laneKey, item)` | LaneRender |
+| `COMBAT_ENTERED` | Fight, on the `PLAYER_REGEN_DISABLED` edge only (never a split or a mid-combat `ENCOUNTER_START`) | `(t)` | Results (closes while `results.closeInCombat` is on) |
+| `FIGHT_STARTED` | Fight | `(fight)` | Casts, Hud, Loadouts, Preview (ends test mode), Race, Slices, Stats, Usage |
+| `FIGHT_FIRST_HIT` | Fight, once per fight, on its first damage update for a bound session | `(fight)`, `fight.firstHitT` set | Race (the race clock, ruling X2) |
+| `FIGHT_TICK` | Fight, every 0.25 s in combat | `(fight)` | Hud, Slices |
+| `FIGHT_ENDED` | Fight | `(fight, final, reason)` | Casts, Hud, Recorder (which pulls `Race.Finalize` first, ruling X1), Slices, Usage |
+| `FIGHT_SAVED` | Recorder | `(record)` | Bests, Hud, Race, Results, Slices, History page |
+| `FIGHT_SKIPPED` | Recorder | `(fight, reason)` | Hud, Race, Slices |
+| `FIGHTS_CHANGED` | Recorder, Retention | none | Bests, Results, History page |
+| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | (the Race window, Task C1) |
+| `RACE_ARMED` | Race.Arm | `(race)` | (the Race window and the chat lines, Tasks C1 and C2) |
+| `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | (the Race window, Task C1) |
+| `RACE_BUZZER` | Race, at the race length | `(race)` | (the buzzer's warning, Task C2) |
+| `RACE_RESULT` | Race, inside the race fight's `FIGHT_SAVED` or `FIGHT_SKIPPED` | `(record, race)`; `record` nil when nothing was stored (a lost race) | (the result card, the toast and the chat line, Tasks C1 and C2) |
+| `RACE_CANCELED` | Race.Cancel, or a pull not on a training dummy | `(reason)`: `"canceled"` or `"not_dummy"` | (the Race window, Task C1) |
+
+The race messages are Retail's (Race mode is absent on WoW Forever, clients-§4): nothing sends them
+there. A consumer in parentheses arrives with the task named.
+
+## Order and nesting
+
+CallbackHandler dispatches a message to its receivers in no fixed order, so nothing here relies on
+one receiver running before another:
+
+- **Recorder pulls the race in.** `FIGHT_ENDED`'s Recorder receiver calls `NS.Race.Finalize` itself
+  before it judges the fight (ruling X1), so the race part is final when the record is built.
+- **Nested sends.** `RACE_STARTED` is sent from inside `FIGHT_FIRST_HIT`'s dispatch, and `RACE_RESULT`
+  from inside `FIGHT_SAVED`'s (or `FIGHT_SKIPPED`'s), itself inside `FIGHT_ENDED`'s. A receiver of
+  `RACE_RESULT` therefore finds the record already stored and the bests already counting it.
+- **One race on the bus:** `RACE_ARMED` → `FIGHT_STARTED` → `FIGHT_FIRST_HIT` / `RACE_STARTED` →
+  `FIGHT_TICK`… → `RACE_BUZZER` → `FIGHT_ENDED` → `FIGHT_SAVED` / `RACE_RESULT`, with a
+  `RACE_STATE_CHANGED` at each transition.
+
+The sample fight of test mode and the sim is never sent on the bus: Preview and Sim hand it to the
+HUD directly, so the recorder, the casts, the slices reader and the bests never hear it.

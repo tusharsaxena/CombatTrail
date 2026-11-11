@@ -40,6 +40,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Recording filters' default minimum length (`history.minLength`) | 30 s | 15 s (Race mode spec §3) |
 | Spec in Results (the column's second icon, the dropdown, the Spec grouping, the bests' board, the Share line) | the specialization | the predominant talent tree (most points, a tie to the first) stands in, worded "talent tree" (v0.2 plan A4, D5 and D11); none with no points or no talent API, so the class icon never shows twice |
 | The talent-tree section of `/ct probe` | absent | every talent API's answer and the tree picked |
+| Race mode's engine (`modules/Race.lua`: its bus receivers and `Race.Arm`; `modules/RaceWatchers.lua`: its events), gated with `NS.Compat.ForClient({ "retail" })` | present | absent: `Race.Arm` refuses (`"client"`), nothing registers; a saved race still lists and re-scores (`modules/LateIgnore.lua`, both clients) |
 | Sample history (test mode and the sim) | 40 fights | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
@@ -73,10 +74,11 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
   SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
   LauncherSetup, CombatTrail, Database.
-- **Defaults and locale:** IgnoreSeeds, Profile, Dummies; enUS.
+- **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
 - **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
+- **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Loadout,
   Results_Usage, Results_Targets, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
@@ -97,22 +99,16 @@ non-setting state with its owner and writers are in [`schema.md`](schema.md).
 ## Message Bus
 
 Every name is declared once in `core/Bus.lua` (`NS.MSG`) and sent with `NS.SendBus`; wire names are
-`Ka0s_CombatTrail_<Event>`. Nine messages, so `message-bus.md` is not required.
+`Ka0s_CombatTrail_<Event>`. Sixteen messages, so the table, the payloads, the consumers and the
+order rules are in [`message-bus.md`](message-bus.md). By sender:
 
-| Message | Sender | Payload | Consumers |
-|---|---|---|---|
-| `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | Bests, Hud, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page |
-| `LANE_PUSH` | LaneCasts | `(laneKey, item)` | LaneRender |
-| `COMBAT_ENTERED` | Fight, on the `PLAYER_REGEN_DISABLED` edge only (never a split or a mid-combat `ENCOUNTER_START`) | `(t)` | Results (closes while `results.closeInCombat` is on) |
-| `FIGHT_STARTED` | Fight | `(fight)` | Casts, Hud, Loadouts, Preview (ends test mode), Slices, Stats, Usage |
-| `FIGHT_TICK` | Fight, every 0.25 s in combat | `(fight)` | Hud, Slices |
-| `FIGHT_ENDED` | Fight | `(fight, final, reason)` | Casts, Hud, Recorder, Slices, Usage |
-| `FIGHT_SAVED` | Recorder | `(record)` | Bests, Hud, Results, Slices, History page |
-| `FIGHT_SKIPPED` | Recorder | `(fight, reason)` | Hud, Slices |
-| `FIGHTS_CHANGED` | Recorder, Retention | none | Bests, Results, History page |
+- **Settings:** `SETTINGS_CHANGED`. **Lanes:** `LANE_PUSH`.
+- **Fight:** `COMBAT_ENTERED`, `FIGHT_STARTED`, `FIGHT_FIRST_HIT`, `FIGHT_TICK`, `FIGHT_ENDED`.
+- **Recorder and Retention:** `FIGHT_SAVED`, `FIGHT_SKIPPED`, `FIGHTS_CHANGED`.
+- **Race (Retail):** `RACE_STATE_CHANGED`, `RACE_ARMED`, `RACE_STARTED`, `RACE_BUZZER`, `RACE_RESULT`,
+  `RACE_CANCELED`.
 
-The sample fight of test mode and the sim is never sent on the bus: Preview and Sim hand it to the
-HUD directly, so the recorder, the casts, the slices reader and the bests never hear it.
+The bus gives no receiver order: Recorder pulls `Race.Finalize` before it judges a fight (ruling X1).
 
 ## Slash Commands
 
@@ -134,6 +130,10 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   (plus `ENCOUNTER_END` while an encounter is active); combat and settling add `PLAYER_REGEN_ENABLED`,
   `ENCOUNTER_END` and the meter's `DAMAGE_METER_COMBAT_SESSION_UPDATED`, `_CURRENT_SESSION_UPDATED`
   and `_RESET`; stood down hears nothing.
+- **Race, by state (RaceWatchers, Retail only):** idle and result hear nothing; armed hears
+  `DAMAGE_METER_RESET`; running and stopping hear both regen edges, `PLAYER_DEAD`,
+  `DAMAGE_METER_COMBAT_SESSION_UPDATED` and, on a frame filtered to `player`, `UNIT_SPELLCAST_START`,
+  `_EMPOWER_START`, `_CHANNEL_START`, `_SUCCEEDED`, `_INTERRUPTED` and `_CHANNEL_STOP`.
 - **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges.
 - **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
   `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an
@@ -189,7 +189,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 | `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands |
 | `midnight-quirks.md` | Present | Always, from v2.102.0 of the standard |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more addon-specific shims |
-| `message-bus.md` | Not applicable | Nine messages, not more than ten |
+| `message-bus.md` | Present | Sixteen messages, more than ten |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `known-limitations.md` | Present | The Known Limitations material passes sixty lines |
 | `taint.md` | Not applicable | Taint Notes stays under sixty lines |

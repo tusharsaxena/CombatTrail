@@ -97,3 +97,18 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   to separate them.
 - **The lanes' skin-following defaults** change their look under Ka0s Default (a gold label, a black
   icon border, the skin's glow and background); the owner rules on these at the smoke test.
+
+## Race mode (Retail)
+
+- **A race is read on Combat Trail's settle, not DPS Race's quiet.** The fight owns the read, so a race
+  is read 4 s after combat ends at the earliest (the grace), against DPS Race's 2.5 s of quiet (ruling
+  X5); *Stop Now* reads at once.
+- **A race's score is the session's merged total, the pet's damage included,** so the record's damage
+  and the race agree; DPS Race scored the player's own row, so a pet class races higher here.
+- **A race ends at the first combat end before the buzzer,** even when Combat Trail's grace carries
+  the fight on (Feign Death): the race is incomplete at that moment while the fight's own record runs
+  longer (ruling X4).
+- **The late-cast judge works by spell ID.** A late cast whose spell ID is sealed always counts, and a
+  sealed success is taken as no press only while Auto Shot or Shoot is repeating.
+- **The late-cast ignore list is per profile while the store is account-wide,** as the Training
+  dummies list is: a profile switch re-scores every saved race by the other profile's list.

@@ -58,6 +58,8 @@ function NS.RegisterGameEvents()
     if NS.Identity then NS.Identity.Prime() end
     -- The fight watchers' events for the fight state machine's current state (modules/Watchers.lua).
     if NS.Watchers then NS.Watchers.Sync() end
+    -- The race's events for the race's current state, Retail only (modules/RaceWatchers.lua).
+    if NS.RaceWatchers then NS.RaceWatchers.Sync() end
     -- The equipment recon's events, and one recon now: at login and every stand-up, whatever the gear
     -- became while the addon was not watching is interned as the current set (modules/Loadouts.lua).
     if NS.Loadouts then NS.Loadouts.Sync() end

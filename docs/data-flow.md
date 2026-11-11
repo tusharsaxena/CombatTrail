@@ -44,6 +44,22 @@ PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
   -> FIGHT_ENDED(fight, final, "final")  (or "lost" on DAMAGE_METER_RESET)
 ```
 
+### A race on the fight (Race mode, Retail)
+
+```
+Race.Arm(length)  out of combat, Fight idle: the meter's sessions now (Meter.SessionIDs) are the arm's
+     set, the newest one's plain read its baseline; stats, talents, gear set and usage snapshot taken
+  FIGHT_STARTED(fight) on a training dummy -> the fight carries the race part; else RACE_CANCELED
+  FIGHT_FIRST_HIT(fight)  (Fight, the first update of a bound session; a session of the arm's set may
+     be bound as shared, Fight.ShareSessions) -> RUNNING, the buzzer at firstHitT + length, the arm's
+     snapshots replace the fight's
+  modules/RaceWatchers.lua: the regen edges and PLAYER_DEAD (an early end: incomplete), the meter's
+     updates (the timeline's tail and restart), the player's casts (the late-cast judge)
+  the buzzer -> STOPPING, RACE_BUZZER; Stop Now -> Fight.Hurry (no settle wait)
+  FIGHT_ENDED -> Recorder pulls Race.Finalize: a shared read netted against the baseline, then the
+     score, DPS, timing and status on the part -> the record (below), RACE_RESULT inside FIGHT_SAVED
+```
+
 ## 3. The record
 
 ```
