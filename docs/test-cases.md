@@ -1366,9 +1366,10 @@ Total.
 - race preview: the sample history holds races beside the fights, every status, kind and length
 - race preview: on WoW Forever there is no sample race, no race word and no race in the history
 
-### test_sim_race.lua (7)
+### test_sim_race.lua (8)
 
 - sim race: race-newbest arms, races on its clock, buzzes, reads after the quiet; nothing on the bus
+- sim race: race-behind reads behind the best on its board: no new best, no toast
 - sim race: incomplete and died end before the buzzer, with no buzzer, and read out of combat
 - sim race: race-flagged's late cast flags the card; race-shared has no pace
 - sim race: race-sticky's wait says combat holds on, the hint shows after its delay
@@ -1390,12 +1391,13 @@ Total.
 - bindings: stood down, each key answers the refusal line and changes nothing
 - bindings: the General Defaults tooltip says it leaves key bindings alone
 
-### test_diagnostics.lua (8)
+### test_diagnostics.lua (9)
 
 - diagnostics: the report carries every section of this addon's own
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
 - diagnostics: Retail's race section names the race, the pending races, the boards and its windows
+- diagnostics: the race line counts a real race's pending slot while it runs, then its race board
 - diagnostics: test mode's held sample race shows in the preview and race lines
 - diagnostics: stood down, the runtime sections say so and the stored ones still print
 - diagnostics: the report arms no timer and registers no event
@@ -1618,9 +1620,9 @@ Total.
 | test_preview.lua | 7 |
 | test_sim.lua | 5 |
 | test_race_preview.lua | 8 |
-| test_sim_race.lua | 7 |
+| test_sim_race.lua | 8 |
 | test_bindings.lua | 11 |
-| test_diagnostics.lua | 8 |
+| test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
 | test_docs.lua | 15 |
 | test_eol.lua | 2 |
@@ -1632,4 +1634,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1318** |
+| **Total** | **1320** |

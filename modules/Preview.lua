@@ -236,12 +236,13 @@ end
 
 -- ── the switch ──────────────────────────────────────────────────────────────────────────────────
 
---- The line refusing a start now, or nil: in combat, and while a real fight is still being read
---- (its settle). The sim's step session reads it as its refusal (modules/Sim.lua).
---- @return string|nil
 -- A real race armed or racing (Retail): the windows are its.
 local RACING = { armed = true, running = true, stopping = true }
 
+--- The line refusing a start now, or nil: in combat, while a real fight is still being read (its
+--- settle), and while a real race is armed or racing. The sim's step session reads it as its refusal
+--- (modules/Sim.lua).
+--- @return string|nil
 function Preview.Refusal()
     if NS.Secrets.PlainTruth(UnitAffectingCombat("player")) then return L["Test mode is not available in combat."] end
     if NS.Fight and NS.Fight.Current() then return L["Test mode is not available while a fight is being read."] end
@@ -266,7 +267,7 @@ local function enter(opts)
 end
 
 --- Turn the preview on, or switch an active one to `opts`' mode in place. Refused (one line) in
---- combat and while a real fight is read; silent while stood down, where the caller's own hold-aware
+--- combat, while a real fight is read and during a real race; silent while stood down, where the caller's own hold-aware
 --- refusal has already spoken. A sim start with the library goes through the sim's step session
 --- (Sim.Open), whose prepare calls back here with `session` set.
 --- @param opts table|nil  { mode = "test" | "sim", scenario?, arm?, session?, race? }; nil is the queued

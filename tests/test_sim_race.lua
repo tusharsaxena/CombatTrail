@@ -124,6 +124,24 @@ test("sim race: race-newbest arms, races on its clock, buzzes, reads after the q
     assertFalse(NS.RaceWindow.IsShown(), "the window the sim opened closes")
 end)
 
+test("sim race: race-behind reads behind the best on its board: no new best, no toast", function()
+    if forever() then return end
+    local S = fresh()
+    local NS = S.NS
+    local lines = prints(S)
+    local t0 = sim(S, "race-behind")
+    playTo(S, t0, 45)
+    assertEqual(current(S), "result", "the result card")
+    local v = NS.RaceWindow.View()
+    assertTrue(v.isNew == false, "not a new best")
+    assertTrue(type(v.delta) == "number" and math.abs(v.delta - (0.93 - 1) * 100) < 0.5,
+        "its factor behind the best: " .. tostring(v.delta))
+    assertTrue(has(lines, "% vs best"), "the result line says how far behind")
+    assertNil(NS.BestToast.Diagnose().key, "no new-best toast")
+    untouched(S)
+    NS.Preview.Stop()
+end)
+
 test("sim race: incomplete and died end before the buzzer, with no buzzer, and read out of combat", function()
     if forever() then return end
     for _, key in ipairs({ "race-incomplete", "race-died" }) do
