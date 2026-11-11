@@ -111,7 +111,8 @@ local function boards()
                             difficultyID = 0, maxPlayers = 3, pvpBracket = "r3" },
                   target = { name = "Samplerogue" } }
     out.dummy = { where = { instanceType = "none", instanceName = "Silvermoon City", difficultyID = 0 },
-                  target = { name = NS.Dummies.Name(31146), creatureID = 31146 } }
+                  -- The seed's name, not the player's list's: a switched-off built-in keeps its name here.
+                  target = { name = (NS.Dummies.BuiltIn(31146) or {}).name, creatureID = 31146 } }
     return out
 end
 

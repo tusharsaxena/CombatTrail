@@ -452,7 +452,7 @@ Total.
 - identity: the stand-up primes the trees (core/CombatTrail.lua RegisterGameEvents)
 - identity: retail: the talent trees are absent and the spec is the client's
 
-### test_dummies.lua (28)
+### test_dummies.lua (29)
 
 - dummies: the seed is picked once per client; Forever's is empty by decision
 - dummies: Lookup answers the seed by creature ID, with its name and category
@@ -468,6 +468,7 @@ Total.
 - dummies: a typed category word is a key or its label; auto and nonsense are none
 - dummies: a custom dummy makes a fight's content "dummy" on WoW Forever too
 - dummies: a built-in switched off is open-world content again
+- dummies: test mode's sample dummy keeps its seed name when the player switches it off
 - dummies: Read and Capture keep what the game says, by map, and count the captures
 - dummies: a sealed field is left out of the read, and a player is no creature
 - dummies: Resolve takes an ID or a captured or seeded name
@@ -1151,7 +1152,7 @@ Total.
 | test_format.lua | 19 |
 | test_fight.lua | 30 |
 | test_identity.lua | 47 |
-| test_dummies.lua | 28 |
+| test_dummies.lua | 29 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
@@ -1196,4 +1197,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **942** |
+| **Total** | **943** |

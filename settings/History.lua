@@ -34,7 +34,7 @@ local L = NS.L
 local PAGE = "history"
 local D = NS.defaults.profile
 
---- The four tabs, by the plan's key, in strip order.
+--- The five tabs, by the plan's key, in strip order.
 NS.HISTORY_TAB_ORDER = { "recording", "retention", "results", "usage", "dummies" }
 NS.HISTORY_TABS = {
     recording = L["Recording filters"], retention = L["History"], results = L["Results window"], usage = L["Usage"],

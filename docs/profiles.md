@@ -5,7 +5,8 @@ How AceDB profiles work here (documentation-§3, Tier 2: the Profiles page ships
 ## What a profile holds
 
 Everything under `CombatTrailDB.profiles[<name>]`: the master switches, both lanes, the DPS HUD, the
-recording filters and retention, the Results window's view, place and look, and the skin
+recording filters and retention, the Results window's view, place and look, the player's own training
+dummies (`dummies.custom`, History > Training dummies) and the skin
 (`defaults/Profile.lua`, [`schema.md`](schema.md)). A new character starts on the `Default` profile
 shared by every character (`AceDB:New(..., true)`).
 
@@ -16,6 +17,8 @@ These are global on purpose, so a profile switch never hides or moves them:
 - **The fight store** (`global.fights`, `global.fightOrder`), the interned talent loadouts and the equipment sets: a fight
   belongs to the installation, and bests span characters.
 - **The Usage hidden list** (`global.usage.hidden`), as it filters the global store.
+- **The training-dummy captures** (`global.dummies.captures`): what the game said about each creature
+  `/ct dummy` captured, data rather than a setting, as a creature is the same on every profile.
 - **The minimap button** (`global.minimap`): a per-installation display preference, which survives
   Reset all settings and the General page's Defaults (launcher-§3).
 - **The key bindings**, which the game keeps.

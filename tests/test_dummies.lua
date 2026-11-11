@@ -267,6 +267,16 @@ test("dummies: a built-in switched off is open-world content again", function()
     assertEqual(NS.Identity.Resolve({ snapshot = snap }, nil, {}).content, "world")
 end)
 
+test("dummies: test mode's sample dummy keeps its seed name when the player switches it off", function()
+    local NS = fresh()
+    NS.DUMMY_SEED[31146] = NS.DUMMY_SEED[31146] or { name = "Raider's Training Dummy", category = "boss" }
+    NS.Dummies.Remove(31146)
+    assertNil(NS.Dummies.Name(31146), "switched off: no dummy now")
+    local b = NS.MockFights.Board("dummy")
+    if NS.Compat.IsForever() then return assertNil(b, "no dummy board on WoW Forever") end
+    assertEqual(b.target.name, "Raider's Training Dummy", "the sample names its creature whatever the list says")
+end)
+
 -- ── the captures ────────────────────────────────────────────────────────────────────────────────
 
 test("dummies: Read and Capture keep what the game says, by map, and count the captures", function()
