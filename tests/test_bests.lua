@@ -240,6 +240,18 @@ test("bests: a dummy list change redraws the race boards", function()
     assertTrue(NS.Bests.IsBest(a), "moved to the cleave board, where it is alone")
 end)
 
+test("bests: a profile change redraws the race boards (its own Training dummies list)", function()
+    local NS = fresh()
+    local a = race(NS, { npc = 999005, kind = "single", dps = 1000 })
+    local b = race(NS, { npc = 999006, kind = "single", dps = 2000 })
+    save(NS, a, b)
+    assertFalse(NS.Bests.IsBest(a), "one board")
+    -- The new profile's list makes the creature a cleave dummy; the switch announces "profile" only.
+    NS.db.profile.dummies.custom = "999005:cleave"
+    NS.AnnounceSettingsChanged("profile", "Other")
+    assertTrue(NS.Bests.IsBest(a), "moved to the cleave board, where it is alone")
+end)
+
 test("bests: incomplete and lost races never count; the highest race DPS holds the board", function()
     local NS = fresh()
     local done = race(NS, { dps = 1000, fightDps = 99999 })

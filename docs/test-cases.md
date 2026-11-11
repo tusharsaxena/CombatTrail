@@ -580,7 +580,7 @@ Total.
 - filters: scenarios are stored by default, a kind without a toggle is dropped
 - filters: the short check comes before the content check
 
-### test_bests.lua (20)
+### test_bests.lua (21)
 
 - bests: best per character×spec×boardKey
 - bests: For with exclude answers the runner-up
@@ -596,6 +596,7 @@ Total.
 - bests: race boards split by character, spec, dummy kind and length
 - bests: a race's kind is read from the dummy list now, else the stored kind
 - bests: a dummy list change redraws the race boards
+- bests: a profile change redraws the race boards (its own Training dummies list)
 - bests: incomplete and lost races never count; the highest race DPS holds the board
 - bests: an incomplete or flagged race never holds the clean board
 - bests: Compute's second argument still skips a record; the clean view is its third
@@ -1186,7 +1187,7 @@ Total.
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
 | test_filters.lua | 12 |
-| test_bests.lua | 20 |
+| test_bests.lua | 21 |
 | test_retention.lua | 14 |
 | test_record.lua | 18 |
 | test_race_record.lua | 13 |
@@ -1225,4 +1226,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **967** |
+| **Total** | **968** |
