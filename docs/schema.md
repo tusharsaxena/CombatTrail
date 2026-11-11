@@ -32,6 +32,7 @@ default; the file's comments say what each value means.
 | `lanes.<k>.anchor` | `{ mode, point, relPoint, x, y, target, gap, frameName }`: the Player lane free at `CENTER` 0, -200, the Pet lane docked under it | Lanes → Size and position |
 | `lanes.<k>.visibility` | `{ show = "always", hideAfter = 5, where, hideMounted, hideVehicle, hidePetBattle, hideResting, alphaCombat, alphaOOC }`; `where` has no `delve` or `arena` key, and there is no `hideVehicle` or `hidePetBattle`, on WoW Forever | Lanes → Visibility |
 | `lanes.<k>.ignore` | `{ [spellID] = true }` from the client's seed; a removed seed is stored as `false` | Lanes → Ignored spells |
+| `lanes.pet.link` | `false`; on, the Pet lane reads every look and visibility key from the Player lane's (`LaneRender.Config`), keeping `enabled`, `anchor`, `strata`, `levelOffset`, `labelText` and `ignore` (`LaneRender.LINK_OWN`); the Player lane has no such key | Lanes → General (Pet lane) |
 | `hud.show`, `fadeAfter`, `holdOnMouse`, `instancesOnly`, `paceAgainst`, `paceRange`, `overCard`, `showSkipReason` | `"auto"`, `8`, `true`, `false`, `"best"`, `1.5`, `true`, `true` | DPS HUD → Behavior |
 | `hud.width`, `hud.scale`, `hud.layout.*` | `260` (DPS Race's, also the slider's floor, `Hud.MIN_WIDTH`; `Hud.MAX_WIDTH` 600), `1`, every part `true` | DPS HUD → Layout |
 | `hud.sizeMode`, `bars`, `grow` | `"fixed"` (or `"auto"`), `5` (`Hud.MIN_BARS` 1 to `Hud.MAX_BARS` 15), `"down"` (or `"up"`, read in auto only). Fixed: the height is `Hud.FixedHeight()`, the chrome plus `HudStates.FixedStack(layout, bars, paceable)`, and the grip's release writes `hud.width` and `hud.bars`. Auto: the stack's height with up to `bars` rows. Both scroll past `bars` (v0.2 Task B3; `hud.spells.rows` retired, no migration: AceDB stores only differences) | DPS HUD → Layout |
@@ -45,9 +46,9 @@ default; the file's comments say what each value means.
 | `results.scale`, `rowHeight`, `shareTalents`, `closeInCombat` | `1`, `18`, `true`, `true` | History → Results window |
 | `results.timelineMarks` | `"icon"` | History → Results window (*Ability timeline*); also the timeline's *Icons* and *Ticks* words on its *By ability* heading line, through `NS.SetByPath`. How By ability draws a cast: its ability's icon or a thin tick (`"tick"`); an open timeline redraws, its zoom kept |
 | `results.view` | the saved filters, grouping and sort (`group = "board"`, `days = 7`) | (named state, below) |
-| `results.window` | `{ point, relPoint, x, y, width = 1100, height = 520, view = "collapsed" }`; the list's least width is `Results.MIN_WIDTH` (1038 with the Status, Used and Note columns), and a stored width below it is held to it | (named state, below) |
+| `results.window` | `{ point, relPoint, x, y, width = 1100, height = 520, view = "collapsed" }`; the list's least width is `Results.MIN_WIDTH` (972 with the Used and Note columns), and a stored width below it is held to it | (named state, below) |
 | `results.columns` | `{}`; a dragged column's width, `{ character = px }` (Character ships at 104, held to 70–240) | (named state, below) |
-| `results.collapsedSections` | `{}`; the fight detail's folded sections, `{ [section] = true }` over `chart`, `spells`, `loadout`, `usage` and `note` (`NS.ResultsDetail.SECTIONS`), open stored as nothing | (named state, below) |
+| `results.collapsedSections` | `{}`; the fight detail's folded sections, `{ [section] = true }` over `chart`, `spells`, `loadout`, `usage`, `targets` and `note` (`NS.ResultsDetail.SECTIONS`), open stored as nothing | (named state, below) |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
@@ -97,7 +98,7 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
 | The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |
 
-## The fight record (CT_SCHEMA 2)
+## The fight record (CT_SCHEMA 3)
 
 Built by `Recorder.Build` after combat from plain values only; anything that came back secret is left
 absent. `Recorder.CT_SCHEMA` is the record's own format version, separate from the settings stamp; a
@@ -112,6 +113,7 @@ record with a higher `schema` than this build knows is never listed.
 | `spells` | one packed string (CastCodec); `Recorder.Spells` unpacks it to `{ spellID, total, isPet }` |
 | `casts`, `cooldowns` | the packed cast list, and `{ [spellID] = ms }` for the timeline |
 | `gearSet`, `stats`, `loadout`, `usage` | the key of the equipment set current at combat start (`global.gearSets`; read through `Loadouts.GearOf`, which also takes a sample fight's inline `gear`), the stats (per fight: they move with buffs), the loadout key, what was used |
+| `targets` | CT_SCHEMA 3, optional: `{ { name, total }, ... }`, the enemies your damage reached (the meter's EnemyDamageTaken view, read after combat), enemies of one name merged, highest first, at most `Recorder.TARGETS_MAX` (10). Absent on a CT_SCHEMA 2 record or when the meter answered none; the fight detail's Targets section is then not drawn |
 | `note`, `client`, `build`, `version`, `status` | the player's note (`Recorder.ClampNote`: a control character to a space, `\|` to `/`, trimmed, at most 200 UTF-8 characters), `retail`/`forever`, the client build, the addon version, `"final"` |
 
 A five-minute raid fight packs under 6 KB (pinned by `tests/test_record.lua`), so 500 fights stay

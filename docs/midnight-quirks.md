@@ -316,10 +316,70 @@ the probe); that it is not simply uncounted is not measured. *Do:* nothing yet; 
 unmeasured: the probe's "pet is separate source" line in combat (SM-CT-P4 on Forever) settles it.
 *Source:* this repo, `modules/Meter.lua`.
 
-**In combat on WoW Forever is not measured.** *Client:* Forever. *Measured:* not measured. Whether
-meter values, cast spell IDs, castGUIDs and the pet's GUID are secret in combat there is assumed to
-match Retail. *Do:* treat every one as possibly secret (spec §3); the probe's in-combat sample
-answers it. Listed in `smoke-tests.md`.
+**WoW Forever folds the pet into its owner's meter source and names it on each row.** *Client:*
+Forever (1.60.1, build 70888). *Measured:* the owner's HUD screenshots and debug logs, 2026-11-10:
+the pet's spells (Claw, Bite) come back in the player's source, and the pet's melee is a SECOND
+Auto Attack row beside the owner's (two "Attack" rows when both melee; a single one, credited to the
+player, when only the pet fought). A spell row carries `creatureName` (the Midnight documentation's
+DamageMeterCombatSpell field), the meter's own mark of a creature's row. *Measured* (`/ct probe`,
+2026-11-11, build 70888): out of combat the pet's rows read `creature "Whisper"` and the owner's
+`creature ""` (an empty string, not nil); in combat every row's name is `<secret>`, so the owner's
+"" and the pet's name cannot be told apart there. *Do:* `Meter.ReadFinal` moves every row the meter
+plainly names a creature on to the pet part (Auto Attack too), the cast set only as the fallback for
+an unnamed row (`petsRow`), and a name still secret seals the read until it settles.
+`Secrets.NamesCreature` counts a plain non-empty name only (a sealed one counted, at first, which
+painted every live row as the pet's). Live, a plain name colors the row; a secret one colors none,
+and the breakdown hands it to the share column's FontString instead (empty live), where the owner's
+"" draws nothing and the pet's draws its name. A pet source with no rows is dropped live, so the
+Pet figure reads a dash instead of a confident 0. *Source:* this repo,
+`modules/Meter.lua`, `modules/Hud_Breakdown.lua`, `core/Secrets.lua`.
+
+**In combat on WoW Forever, the meter is secret and the casts are not.** *Client:* Forever (1.60.1,
+build 70888). *Measured:* `/ct probe`, four solo Hunter fights, 2026-11-11: at combat+5s the
+player's source total read secret, and by afterCombat+2s plain; every cast heard in combat (22 in
+one fight, 11 of them the pet's; 23 in a pet-only fight) had a plain spell ID and a plain castGUID.
+The source table carries no `amountPerSecond` on Forever either (`dps nil`), so the live DPS comes
+from the session's local row. Whether the pet's GUID is secret in combat is still not measured.
+*Do:* treat every meter value as secret in combat (spec §3); the pet's plain cast IDs are what issue
+#7's color curve would be built from. *Source:* this repo, `modules/Probe.lua`.
+
+**WoW Forever's EnemyDamageTaken view has one row per enemy, keyed by creature ID.** *Client:*
+Forever (1.60.1, build 70888). *Measured:* `/ct probe`, 2026-11-11: each enemy row carries `name`,
+`sourceCreatureID`, `totalAmount`, `amountPerSecond`, `classification` and the death fields, and no
+`sourceGUID`. In a solo pet-only fight on two mobs the rows (706 and 545) summed to the player's
+1251 total. A two-mob fight (Redridge Basher 731, Redridge Mystic 512) summed to the player's 1243, and
+its session `totalAmount` read 1243 too; one earlier one-enemy fight's did not (579 against its
+row's 1183), so a total is summed from the rows. The drill-down by creature ID answers
+(`GetCombatSessionSourceFromType(Current, EnemyDamageTaken, nil, creatureID)`): one spell row,
+`spellID` 0 and `creatureName` "", holding the row's whole total, so it does not split a target's
+damage by who dealt it. Not measured: whether a row counts only your damage or the group's, and
+whether two same-named mobs share a row (the lookup is by creature ID). *Do:* nothing built on it yet
+(issue #6); the probe drills each row by GUID and by creature ID and prints the session's fields.
+*Source:* this repo, `modules/Probe.lua`.
+
+**The client number formatters refuse a secret from addon code; FloorToNearestString takes it.**
+*Client:* Forever (1.60.1, build 70888). *Measured:* `/ct probe`'s formatter trial, 2026-11-11, on the
+live DPS figure. In combat (secret): both `CreateAbbreviatedNumberFormatter` and
+`CreateNumericRuleFormatter` instances raise "Secret values are only allowed during untainted
+execution for this argument" from `FormatNumber`, while `AbbreviateNumbers`,
+`C_StringUtil.FloorToNearestString`, `RoundToNearestString`, `TruncateWhenZero` and
+`string.format("%d")` each answer a secret string. After combat (plain 69.5625): `AbbreviateNumbers`
+drew "69.5625" (the decimal tail the owner saw live); `FloorToNearestString`, `TruncateWhenZero`, `%d`
+and both formatters drew "69"; `RoundToNearestString` drew "70". `CreateNumericRuleFormatter` refuses
+the abbreviation ladder (it wants a `threshold` field). C_StringUtil carries 15 functions on Forever.
+*Do:* a secret rate goes to `Format.Rate`, which hands it to `FloorToNearestString` (whole, not
+abbreviated: 30190.47 reads "30190"); a client formatter that raises on a secret is dropped for the
+session. Totals stay on `Format.Number` (integers, where AbbreviateNumbers draws no tail). Retail is
+not measured. *Source:* this repo, `modules/Format.lua`.
+
+**A color curve cannot evaluate a secret from addon code.** *Client:* Forever (1.60.1, build 70888).
+*Measured:* `/ct probe`'s color curve section, 2026-11-11: `C_CurveUtil` (CreateColorCurve,
+CreateCurve, EvaluateColorFromBoolean, EvaluateColorValueFromBoolean, EvaluateGameCurve),
+`Enum.LuaCurveType.Step` (1) and `CreateColor` exist; a step curve maps plain IDs exactly (16829 to
+the pet color, 75 to the player color), and its color unpacks and reaches `SetStatusBarColor`. On a
+secret spell ID in combat, `curve:Evaluate` raises "Secret values are only allowed during untainted
+execution". *Do:* issue #7's route is closed; live rows stay in the player color mid-combat.
+*Source:* this repo, `modules/ProbeCurve.lua`.
 
 **The client number formatter may draw a fractional value raw.** *Client:* Retail (both clients
 unmeasured directly). *Measured:* not measured by probe; inferred from the owner's report,
@@ -329,8 +389,15 @@ truncates through the integer significand, so an integer check value (2763000 ->
 while a fractional input can come back unfloored. *Cost:* a DPS figure with a long tail of
 decimals. *Do:* `modules/Format.lua` checks each constructor
 (`Compat.NumberFormatterCandidates`) against a fractional value too (30190.4761904 -> "30.1K") and
-uses the first that passes. A plain number never reaches the client formatter; Lua abbreviates and
-truncates it. A secret with no trusted formatter goes to `AbbreviateNumbers` in pcall, and the raw
+uses the first that passes. On WoW Forever (build 70888, the owner's log, 2026-11-11) both
+constructors logged "built no formatter" and the live DPS drew `39.7142...` through
+`AbbreviateNumbers`: the check then required the instance to be a Lua table, while a client object
+may be a userdata (AuraMaster tests only that one came back), so the lookup is now a pcall'd
+`SetBreakpoints`; and `CreateNumericRuleFormatter` takes AuraMaster's measured
+`{ threshold, format }` rules, not the ladder, so when it refuses the ladder it is tried with one
+whole-number rule (`"%d"`: "39", "30190"), checked like the others. Whether either now passes on
+Forever is *not measured*: `/ct debug` names the path. A plain number never reaches the client
+formatter; Lua abbreviates and truncates it. A secret with no trusted formatter goes to `AbbreviateNumbers` in pcall, and the raw
 secret is the last resort. An answer to a secret may itself be a secret string, so its presence
 is asked of `Secrets.IsPresent`, never compared to nil. `/ct debug` writes which path served the numbers. Settle it with the
 out-of-combat probe in recon R:hud-sizing#4 on both clients (each constructor's `FormatNumber(30190.4761904)`

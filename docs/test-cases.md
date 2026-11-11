@@ -243,7 +243,7 @@ Total.
 - lane visibility: a lane set to never or switched off needs no event
 - lane visibility: stand-down drops every registration and the hide-after timer
 
-### test_lanes_page.lua (21)
+### test_lanes_page.lua (25)
 
 - lanes page: all seven tabs exist, General first and Ignored spells last
 - lanes page: every lane setting has a row for each lane
@@ -266,10 +266,18 @@ Total.
 - lanes page: every pixel row says (px) (options-ui-§21 Units)
 - lanes page: the three texture pickers offer Flat, so the flat default stays pickable
 - lanes page: the Frame level tooltip says lanes at one level mix their icons (frame-layering-§3)
+- lanes link: off by default; on, the Pet lane reads the Player lane's look but keeps its own place
+- lanes link: a linked Pet lane follows the Player lane's Visibility
+- lanes link: the Pet lane's tabs show only the rows it keeps while linked, with a note
+- lanes link: Copy from Player lane gives the Pet lane its own copy and unlinks it
 
-### test_probe.lua (29)
+### test_probe.lua (33)
 
 - probe: report runs with no C_DamageMeter
+- probe: the enemy view lists each enemy's every field (issue #6's feasibility)
+- probe: the spell color curve section says when the client has no curve API
+- probe: the spell color curve maps a plain pet ID and a plain other ID to their colors
+- probe: each sample runs the formatter trial and the color curve on what the HUD draws
 - probe: report lists the 8 functions with mock meter
 - probe: a function the client lacks is named
 - probe: a meter call that raises is reported, never raised
@@ -299,7 +307,7 @@ Total.
 - probe: forever: a talent read that raises prints one line and the rest of the report
 - probe: retail: no talent-tree section (clients-§4)
 
-### test_meter.lua (33)
+### test_meter.lua (37)
 
 - meter: the stat and session constants come from the client enum
 - meter: without the enum, the documented values stand and the enemy view is unread
@@ -328,6 +336,10 @@ Total.
 - meter: ReadFinal with no damage of the player's is a zero result, not an error
 - meter: amountPerSecond nil → dps computed as total/duration in ReadFinal
 - meter: an empty pet source falls back to tagging the pet's spells in the player's
+- meter: a folded source's rows the meter names a creature on are the pet's, Auto Attack too
+- meter: the pet with no cast set yet still splits by creature name
+- meter: ReadLive flags a row the meter plainly names a creature on; a secret name says nothing
+- meter: a creature name still secret after combat seals the record read
 - meter: PET_SEPARATE=false path tags by cast set
 - meter: ReadEnemies sorts by damage taken
 - meter: ReadEnemies is empty with a reason while sealed, missing or without the enum
@@ -335,17 +347,26 @@ Total.
 - meter: Call reports a missing function and a raising one without throwing
 - meter: ReadFinal keeps the player's part when only the pet's read raises
 
-### test_format.lua (10)
+### test_format.lua (19)
 
 - format: a plain fractional DPS abbreviates in Lua, never through the client formatter
 - format: a secret goes to a formatter that passes both checks
 - format: a formatter that renders a fraction raw fails the check, and the next constructor answers
+- format: a client formatter that is a userdata, not a table, is still used (WoW Forever, 2026-11-11)
+- format: a rule formatter refusing the ladder serves whole numbers, never a raw fraction
 - format: a secret with no trusted formatter goes to AbbreviateNumbers
 - format: a secret with no client formatter at all is handed back untouched
 - format: a secret the client formatter answers with a secret string goes to SetText untouched
 - format: Secrets.IsPresent answers a secret and a plain value without comparing either
 - format: the debug log names the path that served a number, once per change
 - format: a refused or failing constructor is skipped
+- format: a formatter that passes its checks but raises on a secret says so, once (WoW Forever, 2026-11-11)
+- format: the probe's trial runs every path on a value and describes each answer
+- format: the trial on a secret never shows its text
+- format: a client formatter that raises on a secret is dropped after the first
+- format: a secret rate is written whole by FloorToNearestString, never with its decimal tail
+- format: a total and a rate drawn in turn log each path once, not a line per redraw
+- format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain
 - format: Clock, Length, Pct and SignedPct take plain numbers
 
 ### test_fight.lua (30)
@@ -475,8 +496,10 @@ Total.
 - usage: a parked fight's end counts are taken as the next fight starts
 - usage: food is found by the Well Fed spell ID, or by the client's own name for it
 
-### test_stats.lua (7)
+### test_stats.lua (9)
 
+- stats: on WoW Forever Read reads the classic panel's set and never asks the spec
+- stats: on WoW Forever the view is the classic panel's two groups, an unread row left out
 - stats: Read reads the primary stat, stamina, armor and every rating with its percent
 - stats: crit is the highest of melee, ranged and each spell school's
 - stats: a secret value is absent, never compared or kept
@@ -552,7 +575,7 @@ Total.
 - retention: /ct purge purges now and says how many went
 - retention: EstimateBytes sizes the store as SavedVariables writes it
 
-### test_record.lua (16)
+### test_record.lua (18)
 
 - record: a real fight becomes a stored record with the spec §5 fields
 - record: 22 s fight skipped as short
@@ -563,6 +586,7 @@ Total.
 - record: an unreadable meter duration falls back to the fight's own clock
 - record: the fight's casts are packed into the record
 - record: the enemies are summed across a merged fight's sessions
+- record: the stored fight keeps its targets, summed across sessions (issue #6)
 - record: 5-min raid record < 6 KB
 - record: All walks newest first; Delete and SetNote edit the store and say so
 - record: two fights saved in the same second get distinct ids
@@ -570,6 +594,7 @@ Total.
 - no secret reaches the record
 - record: a short fight with no readable character is skipped as short, the filters first
 - record: three fights in the same gear share one gear set; a swap between fights is a second
+- record: targets merge enemies of one name, highest first, whole, capped
 
 ### test_slices.lua (18)
 
@@ -638,13 +663,16 @@ Total.
 - chart: hud.chart.columns caps the columns; the layout's chart off hides it
 - chart: the pure layout helpers
 
-### test_hud_breakdown.lua (5)
+### test_hud_breakdown.lua (8)
 
 - breakdown never sorts or computes in combat (mock secret values)
 - breakdown: pet rows carry paw and pet color
+- breakdown: a folded pet row the meter names a creature on draws as the pet's, live
 - breakdown: the over card's rows are merged, highest first, with their shares
 - breakdown: hud.bars caps the rows and the wheel scrolls past them
 - breakdown: the layout's spell rows off hides them
+- hud: the live DPS figures are written whole through the rate path; Damage is not
+- hud: the DPS box shows your pet's DPS too; your figures share a color, the pet's another
 
 ### test_hud_appearance.lua (7)
 
@@ -717,7 +745,7 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (39)
+### test_results_table.lua (38)
 
 - results: default view: current character, last 7 days, grouped by board
 - results: the date range and the character filter
@@ -751,21 +779,20 @@ Total.
 - results: a window hidden while the Character edge is held ends the drag and stores the width
 - results: a profile switch lays the columns out at the new profile's widths, shown or hidden
 - results: no spec: the row draws its class icon and no second icon
-- results: the Status badge reads Best with the trophy on the board's top only
-- results: the Status header names a spec on Retail and a talent tree on Forever (clients-§4)
+- results: no Status column; the best is only compared against (owner, 2026-11-10)
 - results: the Used column lists the fight's usage as icons, +n past what fits, a dash for none
 - results: the Note column shows the note cut to ten characters, the whole of it on hover
 - results: a note is added, edited and cleared from the note box, and a reload keeps it
 - results: a note's escape codes and control characters are neutralized
 - results: the Damage and DPS bars are the palette's blue, not the class color, under every skin
 
-### test_results_detail.lua (17)
+### test_results_detail.lua (20)
 
 - detail: the header meta is three lines: where and who, what, the stamp (plan A2)
 - detail: an open-world fight names its zone, not the continent, and the target's level
 - detail: shows Leads by on best
 - detail: a fight the filters leave out falls back to its board
-- detail: missing slices shows the session-only note
+- detail: a fight with no chart this session has no Damage profile section
 - detail: pet spells tagged
 - detail: gear in the character frame's order, talents with View Talents and no Copy (C3)
 - detail: forever: the talents line names the class and its points per tree (C3)
@@ -778,6 +805,9 @@ Total.
 - detail: the popups the window opened close with it
 - detail: the window steps aside for the talent tree and comes back
 - detail: forever: the header's second icon is the predominant tree's, hidden with none (D5)
+- detail: the Targets section lists each enemy with its amount and share
+- detail: a fight with no targets (an older record) has no Targets section
+- detail: Targets rows skip a malformed entry and share out of what is listed
 
 ### test_results_sections.lua (5)
 
@@ -1073,33 +1103,33 @@ Total.
 | test_lane_render.lua | 38 |
 | test_lane_anchor.lua | 33 |
 | test_lane_visibility.lua | 30 |
-| test_lanes_page.lua | 21 |
-| test_probe.lua | 29 |
-| test_meter.lua | 33 |
-| test_format.lua | 10 |
+| test_lanes_page.lua | 25 |
+| test_probe.lua | 33 |
+| test_meter.lua | 37 |
+| test_format.lua | 19 |
 | test_fight.lua | 30 |
 | test_identity.lua | 47 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
-| test_stats.lua | 7 |
+| test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
 | test_filters.lua | 10 |
 | test_bests.lua | 10 |
 | test_retention.lua | 13 |
-| test_record.lua | 16 |
+| test_record.lua | 18 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
 | test_hud_chart.lua | 7 |
-| test_hud_breakdown.lua | 5 |
+| test_hud_breakdown.lua | 8 |
 | test_hud_appearance.lua | 7 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 39 |
-| test_results_detail.lua | 17 |
+| test_results_table.lua | 38 |
+| test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
 | test_share.lua | 6 |
 | test_timeline.lua | 12 |
@@ -1123,4 +1153,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **873** |
+| **Total** | **903** |

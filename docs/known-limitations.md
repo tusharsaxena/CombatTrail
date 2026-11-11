@@ -28,7 +28,14 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   the player and that the player's total does not already hold the pet's damage. The probe cannot see
   double counting. *Unverified* in combat. On WoW Forever, out of combat, the pet's source came back
   empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage is most likely
-  folded into the player's (not measured: it may simply be uncounted), so the pet's own figure is empty there until the in-combat probe says more.
+  folded into the player's, and fights since show it is: the pet's rows sit in the player's source,
+  each named by `creatureName` (midnight-quirks.md), and are split out by that name. While in combat
+  the Pet figure reads a dash there, because summing the pet's secret rows is not allowed.
+- **Targets are read after combat, by name.** The fight detail's Targets section (issue #6) comes
+  from the meter's EnemyDamageTaken view, which is secret in combat, so the HUD never shows it.
+  Enemies of one name are one row (the meter keys them by creature ID), at most ten are kept, and
+  a fight stored before this version has none. Solo, the rows sum to your own damage; whether a
+  group fight's row counts only yours is not measured.
 - **A meter reset mid-fight loses the fight.** It is marked lost and not stored, and the rest of that
   combat is not tracked. DPS Race's shared-session netting is not ported.
 - **Nothing after the settle is read.** Damage that lands more than the settle window after combat
@@ -61,14 +68,13 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   it. The fade hides at once, the pace bar has no ahead or behind color, and the best line is solid.
 - **Results:** the detail ships collapsed, there are no `results.*` look keys for the table (its bars
   are the palette's blue, with no class-color option), and the Delta column measures against the
-  group's best while the Status column's Best is the board's, whatever the filters.
-- **The Results window is wider since v0.2.** The Status, Used and Note columns raise the list's
-  least width to 1038 px (1478 expanded, with the 440 px detail beside it), and the shipped width to
+  group's best, while the board's best (whatever the filters) shows only in that cell's tooltip,
+  the detail and the compare: the list has no Status column (owner, 2026-11-10).
+- **The Results window is wider since v0.2.** The Used and Note columns raise the list's
+  least width to 972 px (1412 expanded, with the 440 px detail beside it), and the shipped width to
   1100, above the least so the Character column's header drag has room to grow. On a small screen
   or a large UI scale, lower History → Results window → Scale. A width a profile stored before is
   held to the new least.
-- **The Status column holds one tag.** It is 60 px (`Fights.STATUS_W`), which fits the "Best" badge
-  with its trophy (51 px) and no second tag; a later tag widens it and the window's least width.
 - **The compare's "Trinkets and consumables" list has no cap.** Each item used by either fight adds
   a 22 px line (`Compare.USAGE_ROW_H`), so a fight with many consumables makes a tall window that
   relies on being clamped to the screen and can run past it on a small one.

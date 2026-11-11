@@ -56,6 +56,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/LaneVisibility.lua` | When a lane shows and how opaque it is |
 | `modules/LaneIgnore.lua` | Each lane's ignore list and the `/ct ignore` verb |
 | `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read and the after-combat read |
+| `modules/ProbeCurve.lua` | `/ct probe`'s spell color curve trial (issue #7): can the client map a secret spell ID to a color |
 | `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers |
 | `modules/Identity.lua` | Who fought, where and against what, and the board key |
 | `modules/Fight.lua` | The fight state machine, one fight per meter session |
@@ -86,6 +87,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_Fights.lua` | The filter bar, the grouping and the fight list |
 | `modules/Results_Loadout.lua` | The detail's Gear and Talents |
 | `modules/Results_Usage.lua` | The detail's Usage list and its edit, and the list's Used icons |
+| `modules/Results_Targets.lua` | The detail's Targets list: each enemy your damage reached and how much it took (issue #6) |
 | `modules/Results_Detail.lua` | One fight in full |
 | `modules/Share.lua` | The one-line chat summary of a fight |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |

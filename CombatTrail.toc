@@ -118,6 +118,9 @@ modules\LaneIgnore.lua
 # The ONLY reader of C_DamageMeter. LOAD-BEARING: captures NS.Secrets and NS.Perf and resolves the
 # meter enums at FILE SCOPE; registers nothing (core\CombatTrail.lua primes its session list).
 modules\Meter.lua
+# `/ct probe`'s spell color curve trial (issue #7). Registers nothing; captures NS.Secrets at FILE
+# SCOPE, reaches NS.Compat at CALL time only.
+modules\ProbeCurve.lua
 # `/ct probe`: the in-game checks of the meter, the casts and the pet. Registers nothing until armed;
 # reaches NS.Meter, NS.DebugLog, NS.Compat and NS.db at CALL time only.
 modules\Probe.lua
@@ -191,6 +194,7 @@ modules\Results_Tips.lua
 modules\Results_Fights.lua
 modules\Results_Loadout.lua
 modules\Results_Usage.lua
+modules\Results_Targets.lua
 modules\Results_Detail.lua
 modules\Share.lua
 modules\Results_TimelineData.lua

@@ -70,9 +70,16 @@ is written to `lanes.<k>.`, `<k>` being `player` or `pet`. Tabs: *General*, *Siz
 
 The tab also carries the host-drawn acts on the lane: unlock it, copy the other lane's settings onto it, reset it, and preview it.
 
+*Link to Player lane* is the Pet lane's alone (after KickCD's Focus-mirrors-Target, off by default).
+While on, the Pet lane draws with the Player lane's look and visibility, keeping its switch, where it
+sits (anchor, strata, level), its label text and its ignore list (`LaneRender.LINK_OWN`). Its tabs
+then show only those rows, a tab left with none drops off the strip, and a note under the row says
+why. Copy from Player lane unlinks it.
+
 | Row | Key |
 |---|---|
 | Enable this lane | `lanes.<k>.enabled` |
+| Link to Player lane (Pet lane only) | `lanes.<k>.link` |
 
 ### Size and position
 
@@ -252,6 +259,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Use the skin's shadow | `hud.figures.fontShadowFromSkin` |
 | Final DPS color | `hud.figures.overColor` |
 | Use class color | `hud.figures.useClassColorOverColor` |
+| Same color as Damage | `hud.figures.overColorMatchDamage` |
 | Background color | `hud.figures.boxBg` |
 | Use class color | `hud.figures.useClassColorBoxBg` |
 | Use the skin's background | `hud.figures.boxBgFromSkin` |
@@ -270,8 +278,6 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Bar color | `hud.chart.barColor` |
 | Use class color | `hud.chart.useClassColorBar` |
 | Use the skin's texture | `hud.chart.barTextureFromSkin` |
-| Burst column color | `hud.chart.burstColor` |
-| Use class color | `hud.chart.useClassColorBurstColor` |
 | Pace line color | `hud.chart.bestColor` |
 | Use class color | `hud.chart.useClassColorBestColor` |
 | Show zero line | `hud.chart.zeroLine` |
