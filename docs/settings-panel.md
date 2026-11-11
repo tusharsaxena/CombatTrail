@@ -11,7 +11,7 @@ that resets that page on the current profile. Every row is a schema row (`settin
 | General | The master switches (enable, lock, debug console, minimap button, test mode, sim mode, the HUD in combat), the skin and its overrides, and the key bindings |
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, and the look of each part |
-| History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, and the items Usage never lists |
+| History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
 | Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show and auto-arm near a training dummy, the race clock, the countdown and the buzzer, the scoring rules, the late-cast ignore list, and where the Race window stands |
 | Profiles | AceDB's own profile controls |
 
@@ -59,7 +59,9 @@ The library's Keybindings tab over `NS.BINDINGS` (core/LauncherSetup.lua): *Togg
 never reaches them; the same bindings show under Options → Keybindings → Ka0s Combat Trail.
 
 Master controls also carries *Reset position* (the lanes, the HUD and the Results window back to their
-starting places) and *Reset all settings*, which asks first.
+starting places, and with them the detached Race window's place on Retail and the new-best toast's
+dragged place: `NS.ResetPositions`, core/CombatTrail.lua) and *Reset all settings*, which asks first.
+Race mode adds no key binding (ruling X18): the Keybindings tab keeps its three.
 
 ## Lanes
 

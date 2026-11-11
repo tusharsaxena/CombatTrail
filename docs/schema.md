@@ -14,10 +14,10 @@ default; the file's comments say what each value means.
   `general.minimap.shown` row).
 - **The registry:** `NS.Schema`, the one array of schema rows. **Its one writer** is
   `NS.RegisterSchemaRows` (settings/Schema.lua), called at **file scope** by each page file in
-  `settings/` (General, Lanes, Hud, History) as the TOC loads them, so the load pass is the TOC's own
+  `settings/` (General, Lanes, Hud, History, and Race on Retail only) as the TOC loads them, so the load pass is the TOC's own
   settings pass. `NS.SchemaForPage` filters it per page.
 - **The one write seam:** `NS.SetByPath(path, value)` (settings/Schema.lua). The pages, the CLI
-  (`/ct set`), the verbs (`enable`, `lock`, `lane`, `ignore`) and the launcher all write through it,
+  (`/ct set`), the verbs (`enable`, `lock`, `lane`, `ignore`, `dummy`, `race`) and the launcher all write through it,
   and it sends `SETTINGS_CHANGED`. Reads go through `NS.GetSetting(path)`.
 
 ## The profile tree
@@ -87,6 +87,7 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | `loadouts` | Talent loadouts interned once, keyed by hash; a record holds the key |
 | `gearSets` | Equipment sets interned once, `{ [key] = { [slot] = trimmed item string } }`, keyed by the hash of the canonical gear (`slot=item` in slot order); a record holds the key (`gearSet`). Created on first use |
 | `usage.hidden` | The item IDs the Usage list never shows, comma-separated |
+| `pendingRaces` | A race under way, per character, `{ [Bests.CharKey] = slot }` (modules/Race.lua, race plan Task B2): written at its first hit, cleared at its result or a cancel, plain fields only; on both clients, written only where a race runs (Retail). The slot's fields are under *Named non-setting state* |
 | `dummies.captures` | What the game said about each creature `/ct dummy` captured, `{ [creatureID] = { name, level, classification, health, creatureType, pvp, faction, reaction, first, last, count, addon, build, places = { [mapID] = { zone, subzone, x, y, date } } } }` (modules/Dummies.lua); a sealed field is absent |
 | `minimap` | LibDBIcon's own table, handed to `:Register` |
 | `skinNotice` | The account's one-time skin notice, written by LibKa0s-Options |

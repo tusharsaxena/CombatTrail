@@ -10,7 +10,8 @@ in-game feedback batch is [`superpowers/plans/2026-11-10-combat-trail-v0.2-feedb
 ## Overview
 
 An Ace3 addon in the Ka0s modular layout (`core/ defaults/ modules/ settings/ locales/`), built on
-the vendored LibKa0s (the provenance line is in root `CLAUDE.md`). It does three things:
+the vendored LibKa0s (the provenance line is in root `CLAUDE.md`). It does three things, and on
+Retail a fourth:
 
 - **The trail.** Two fixed cast lanes, Player and Pet, fed by `UNIT_SPELLCAST_*` for `player` and
   `pet` (spec §4).
@@ -18,9 +19,17 @@ the vendored LibKa0s (the provenance line is in root `CLAUDE.md`). It does three
 - **The history.** Every fight that passes the recording filters stored account-wide in
   `CombatTrailDB.global.fights`, read back by the Results window, the timeline, the compare and the
   gear view (spec §5, §7).
+- **Race mode (Retail).** DPS Race, retired as an addon and rebuilt here: a fight on a training dummy
+  timed against a set length, with its own Race window, countdown and buzzer, race boards and a
+  `race` part on the fight record (the Race mode spec,
+  [`superpowers/specs/2026-11-11-race-mode-design.md`](superpowers/specs/2026-11-11-race-mode-design.md),
+  and its plan, [`superpowers/plans/2026-11-11-race-mode.md`](superpowers/plans/2026-11-11-race-mode.md),
+  whose rulings are cited as "ruling Xn"). A race is a Combat Trail fight that happens to be timed:
+  `Race` rides the fight pipeline and `Recorder` saves it.
 
 Core, meter, HUD and Results code is adapted from DPS Race @045f479 with every race concept removed;
-the lanes are new code grown from the owner's CastTrail. One codebase serves **Retail and WoW
+Race mode then ports DPS Race @f8078c7's race layer back on top of it. The lanes are new code grown
+from the owner's CastTrail. One codebase serves **Retail and WoW
 Forever** (`## Interface: 120105, 16001`); every client check goes through `NS.Compat`
 (clients-§3).
 
@@ -53,6 +62,12 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Race mode's samples (`modules/MockRaces.lua`, `RaceSample.lua`, `SimRace.lua`: each returns at once off Retail): `/ct test race [armed\|running\|result]`, the sim's eight `race-` scenarios, and the `race` section of `/ct diagnostics` | present | absent: `test race` is plain `test`, the sim lists no race scenario, the report has no race section |
 | Sample history (test mode and the sim) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
+
+Race mode has no launcher entry and no key binding on either client: LibKa0s-Launcher's menu is fixed
+(launcher-§2), so the minimap menu stays Enabled, Locked, Test mode, Sim mode and Show window (ruling
+X17), and one static `Bindings.xml` would show a Retail-only binding on WoW Forever (clients-§4), so
+`Bindings.xml` keeps its three (ruling X18). `/ct race show`, `/ct race toggle` and `/ct race arm`
+work in a macro. Neither is a deviation: the spec items are dropped and deferred.
 
 ### Secret-value invariants (spec §3)
 
@@ -181,7 +196,9 @@ itself. The pipeline from event to screen is [`data-flow.md`](data-flow.md).
 
 The in-combat chart is session-only, the HUD has no live percentage or delta, the pet split rests on
 the meter exposing the pet as its own source, and a set of client behaviors still waits for the
-owner's in-game checks. The full list is [`known-limitations.md`](known-limitations.md); the checks
+owner's in-game checks. Race mode reads on Combat Trail's settle, scores the pet's damage with the
+player's, ends a race at the first combat end before the buzzer, and resumes after a `/reload` without
+the casts or chart from before it. The full list is [`known-limitations.md`](known-limitations.md); the checks
 are in [`smoke-tests.md`](smoke-tests.md).
 
 ## Documentation map

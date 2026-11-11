@@ -63,6 +63,9 @@ The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` a
 Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,
 `race-died`, `race-flagged`, `race-shared` and `race-sticky`, refused in one line with Race mode off.
 
+The Race window has no launcher entry and no key binding (race plan rulings X17 and X18): `/ct race
+show`, `toggle` and `arm` are the ways in, and each works in a macro.
+
 ## Adding a verb
 
 See [`common-tasks.md`](common-tasks.md), *Add a slash verb*.

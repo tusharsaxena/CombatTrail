@@ -30,6 +30,14 @@ The difference from DPS Race **(owner)**: DPS Race runs timed races against trai
 records real fights (raids, dungeons, delves, PvP, the open world and dummies) with no arming and no clock to
 race.
 
+**Since 2026-11-11 (owner): Race mode.** DPS Race is retired as an addon and rebuilt inside Combat Trail as
+**Race mode**, on Retail only: a race is a Combat Trail fight on a training dummy that happens to be timed,
+armed by the player (or by auto-arm), clocked from the first hit to a buzzer, and saved as a fight record with
+a `race` part. It is specified in [`2026-11-11-race-mode-design.md`](2026-11-11-race-mode-design.md) ("the
+Race mode spec") and built by [`../plans/2026-11-11-race-mode.md`](../plans/2026-11-11-race-mode.md). The
+three things above are unchanged for every fight that is not a race; this document stays the v0.1.0 design,
+with the Race mode spec layered on it.
+
 Success means the owner deletes CastTrail, plays with Combat Trail on both clients, and uses the Results
 window to check rotations and gear changes after real pulls.
 
@@ -42,6 +50,10 @@ window to check rotations and gear changes after real pulls.
   suite on both kit profiles, the automated-test bundle, README, ARCHITECTURE, smoke-tests and DEPENDENCIES.
 - **Every visual element can be customized** **(owner)**: colors, fonts, sizes, textures, visibility and position, per lane
   and per window, on top of the selected skin.
+- **Race mode** (owner, 2026-11-11; added after v0.1.0's design, Race mode spec): every DPS Race feature as
+  Race mode, Retail only and absent on WoW Forever (clients-§4), and training dummies (the built-in seed and the
+  player's own list) on both clients. Its exceptions to the spec items are the Race mode plan's rulings X17 (no
+  launcher entry for the Race window) and X18 (no key bindings in that run).
 
 **Non-goals (v0.1.0)**
 - Lanes other than Player and Pet. Target, Focus and Party 1-5 come later (issue #1) **(owner)**.
@@ -50,6 +62,9 @@ window to check rotations and gear changes after real pulls.
 - Creating new lanes. The dropdown only selects between the fixed lanes **(owner)**.
 - Parsing the combat log for damage. Every number comes from `C_DamageMeter`, as in DPS Race and Multi Meters.
 - Importing CastTrail's settings **(Claude)**.
+- ~~Timed races against training dummies~~ (DPS Race's job when v0.1.0 was designed). No longer a non-goal:
+  Race mode brings them in (owner, 2026-11-11; Race mode spec).
+- Carrying DPS Race's saved runs, settings or bests over **(Claude)**, per Race mode spec §2.
 - Masque support **(Claude)**. The owner didn't answer this question, so the icons use LibKa0s skins only.
 - Group or raid meters (other players' damage). This is a personal tool.
 

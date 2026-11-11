@@ -1,6 +1,6 @@
 # Known limitations — Ka0s Combat Trail
 
-What v0.1.0 cannot do, or does not yet know (documentation-§3, Tier 2). Each line says why. Items
+What v0.1.0 (Race mode included) cannot do, or does not yet know (documentation-§3, Tier 2). Each line says why. Items
 marked *unverified* wait for the owner's in-game checks in [`smoke-tests.md`](smoke-tests.md), and the
 owner's open decisions are listed in the plan's *Owner decisions*.
 
@@ -37,7 +37,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   a fight stored before this version has none. Solo, the rows sum to your own damage; whether a
   group fight's row counts only yours is not measured.
 - **A meter reset mid-fight loses the fight.** It is marked lost and not stored, and the rest of that
-  combat is not tracked. DPS Race's shared-session netting is not ported.
+  combat is not tracked. A plain fight is never netted against a session the meter already held;
+  only a race is (ruling X3: flagged `sharedSession`, its score less what the session held at the
+  arm), and its HUD then draws no pace and no chart.
 - **Nothing after the settle is read.** Damage that lands more than the settle window after combat
   ends (a long DoT tail on a dummy) is not in the record.
 
@@ -126,6 +128,20 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   own list), and with enemy nameplates off only your target counts: a dummy across the room opens
   nothing until you target it. A nameplate that came up in combat with a sealed GUID is counted at the
   next rescan (the debounced hide's), not when it came.
+- **Race mode is Retail only.** WoW Forever has no Race mode page, `/ct race` verb, Race window,
+  countdown, race toast or race filter (clients-§4); a race saved on Retail lists there as a fight
+  with its race DPS.
+- **No launcher entry and no key binding for the Race window** (rulings X17, X18). The minimap menu is
+  LibKa0s-Launcher's fixed set, and one static `Bindings.xml` would show a Retail-only binding on WoW
+  Forever. `/ct race show`, `toggle` and `arm` work in a macro; per-client bindings files wait for an
+  in-game check.
+- **An incomplete race whose fight carries on keeps the whole fight's total as its score** (ruling
+  X16): no meter read is taken at the early combat end, where secrecy is unproven, so its DPS divides
+  that total by the fight's race-clock length (first hit to fight end). Incomplete races never count
+  on a board, so this only sets the figure shown.
+- **A race's chart, like a fight's, lasts one session.** The race clock shift on the chart and the
+  Timeline (ruling X9) reads the part's `firstHit`; a race saved before that field reads as 0, with no
+  shift.
 - **Race mode off stops new races only.** An armed race is canceled with the switch (or a profile
   that has it off), but one already running when it goes off runs on to its result; the switch never
   touches a saved race.

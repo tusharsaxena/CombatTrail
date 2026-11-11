@@ -10,6 +10,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 | Date | Build | Result |
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
 
 ## How to run it
 
@@ -60,7 +61,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 |---|---|---|---|
 | SM-CT-L1 | Both | Log in with the addon enabled | No Lua error; the first-run skin picker shows once, in test mode |
 | SM-CT-L2 | Both | `/ct version` and `/ct help` | The version line; the full command list |
-| SM-CT-L3 | Both | Settings → AddOns → Ka0s Combat Trail | The landing page with the logo, then General, Lanes, DPS HUD, History and Profiles |
+| SM-CT-L3 | Both | Settings → AddOns → Ka0s Combat Trail | The landing page with the logo, then General, Lanes, DPS HUD, History, Race mode (Retail only) and Profiles |
 | SM-CT-L4 | Both | `/ct disable`, then `/ct results` and `/ct enable` | Lanes and HUD hide; the feature verb answers the disabled line; enable brings everything back |
 | SM-CT-L5 | Both | Hover and right-click the minimap button | Status tooltip; menu with Enabled, Locked, Test mode, Sim mode, Show window |
 | SM-CT-L6 | Both | The three bindings (Toggle DPS HUD, Toggle Results window, Toggle lanes) pressed in game | Each toggles its target; the lanes key brings back exactly the lanes it turned off |
@@ -204,9 +205,115 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 |---|---|---|---|
 | SM-CT-M1 | Both | `/ct test` | Sample casts loop on the lanes, the HUD holds a sample fight, the Results window shows the sample history, each under its strip |
 | SM-CT-M2 | Both | Enter combat in test mode | Test mode ends; nothing was saved |
-| SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays in real time; the card says New best, then Not saved |
+| SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays in real time; the card says New best, then Not saved. The `race-` scenarios are Retail's (SM-CT-RM42) |
 | SM-CT-M4 | Both | `/ct sim` step window | Anchored beside the HUD |
 | SM-CT-M5 | Forever | The WoW Forever mock spell and item IDs | Every sample icon draws |
+
+## 9. Training dummies and the recording rules
+
+Both clients (race plan Tasks A1 and A2). On Retail use the Reinforced Golem (243205, Boss-level) or
+any built-in dummy. On WoW Forever no dummy is built in, so add one first (SM-CT-D2).
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-D1 | Retail | Target a built-in dummy (the Reinforced Golem), fight it for 35 s, then `/ct results` | The fight is saved with Training dummies as its content and the dummy's name as its target |
+| SM-CT-D2 | Both | Target a creature that is not a built-in dummy, `/ct dummy add`, then `/ct dummy` (WoW Forever: any target dummy in a capital) | One line says it is a training dummy now, as Single target; `/ct dummy` lists it under *Your training dummies* and counts the built-ins (0 on WoW Forever) |
+| SM-CT-D3 | Both | `/ct dummy add cleave` on the same target, then a 35 s fight on it | The line names Cleave; the fight is saved as a Training dummies fight |
+| SM-CT-D4 | Both | History → Training dummies: *Add your target*, the list's X, a built-in's checkbox cleared (Retail), *Reset list*; then `/ct dummy remove` on a built-in and `/ct dummy defaults` | Each change shows at once on the tab and in `/ct dummy`; a built-in switched off is listed as off and `/ct dummy add` on it brings it back; Reset list and `defaults` leave only the built-ins |
+| SM-CT-D5 | Both | `/ct dummy capture` on a target, then `/ct dummy` | One *Saved:* line with its level, health, zone and place; the target is not marked a dummy and `/ct dummy` does not list it |
+| SM-CT-D6 | Both | A fight on a dummy saved before it was added, then add it and fight again | The older fight keeps its content (open world); the new one is Training dummies |
+| SM-CT-D7 | Both | `/ct dummy add` on a player, or with no target | One refusal line each; the list does not change |
+| SM-CT-D8 | Retail | History → Recording filters on a fresh profile | Minimum fight length reads 30, every content kind ticked, Scenarios too |
+| SM-CT-D9 | Forever | History → Recording filters on a fresh profile; then a 20 s fight and a 12 s fight | Minimum fight length reads 15, every content kind ticked, Scenarios too; the 20 s fight is saved, the 12 s one is not (the card says too short) |
+| SM-CT-D10 | Retail | A 20 s fight on a fresh profile | Not saved, the card says too short (the minimum is 30 s here) |
+| SM-CT-D11 | Both | A fight inside a scenario (Retail: a Delve's lead-in or a world scenario; WoW Forever: any scenario the client has) on a fresh profile | Saved, its content Scenarios; untick Scenarios and the next one is not saved |
+| SM-CT-D12 | Both | A profile made before this version that never changed Scenarios or the minimum length, then a scenario fight (WoW Forever: and a 20 s fight) | The new defaults apply to it: Scenarios ticked, the minimum 30 s on Retail and 15 s on WoW Forever; a value the profile set itself is kept |
+
+## 10. Race mode
+
+Retail only (race plan Tasks B1 to E1), ported from DPS Race's smoke suite (its sections 4, 5 and
+20-24) onto Combat Trail's verbs and windows: `/ct race` for DPS Race's `/dr arm` and `/dr cancel`,
+the Race window for DPS Race's race HUD, and the DPS HUD for its live damage. Use a 0:30 race on the
+Reinforced Golem (243205) unless a row says otherwise, and a Dungeoneer's Training Dummy where a row
+needs combat to hold. There is no launcher entry for the Race window and no key binding for it (rulings
+X17, X18): `/ct race show` and `/ct race toggle` open it, and work in a macro.
+
+### The Race window and arming
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM1 | Retail | `/ct race show` with no target, then target the Golem | The Race window opens beside the DPS HUD, on its right: the presets 0:30, 1:00, 2:00, 3:00, 5:00 and *Custom*, the target card (*No target*, then the Golem's name with its Boss-level chip), *Your best* (none yet), *Arm Race*; nothing overlaps |
+| SM-CT-RM2 | Retail | Target a creature that is no training dummy | The target card warns that a race armed now is canceled when that pull starts |
+| SM-CT-RM3 | Retail | *Custom*: type `90`, `1:30`, `3m`, then `5` | The first three are taken (1:30, 1:30, 3:00); `5` is refused with *A race lasts from 0:10 to 15:00.* |
+| SM-CT-RM4 | Retail | Enter combat on anything, then look at *Arm Race* and click it; `/ct race arm` | Grayed with *Leave combat to arm a race.*; the click and the verb say the same |
+| SM-CT-RM5 | Retail | `/ct race arm 30` out of combat | The armed body: 0:30, still, and that the first hit starts the clock; chat prints *Armed: 0:30 on Reinforced Golem. First hit starts the clock.* |
+| SM-CT-RM6 | Retail | Pull with a cast-time spell, then on a second race with an instant | Both times the race clock starts on the first hit, not on the cast's start or the combat entry; the DPS HUD opens on the same hit |
+| SM-CT-RM7 | Retail | Race mode → Race → *Race clock*: *Time left*, *Elapsed*, then *Elapsed and time left*, during a race | One large red clock, one large green clock, then the pair side by side; the change shows at once |
+| SM-CT-RM8 | Retail | Race mode → Race window: untick *Attach to the DPS HUD*, drag the window, `/reload`; then each *Side of the DPS HUD*; then the title bar's attach control; then Master controls → Lock frame and Reset position | Detached it drags and holds its place; attached it stands beside the HUD on the side picked and moves with it; the control attaches and detaches; locked, no drag; Reset position puts the detached place back |
+| SM-CT-RM9 | Retail | Attached, close the DPS HUD by hand (or with DPS HUD → Behavior's Show on toggle, the HUD hidden), then `/ct race show` | The Race window stands where the HUD would be, never at the screen's corner or off screen (Review focus 4) |
+| SM-CT-RM10 | Retail | `/ct race toggle` twice; then Race mode off and `/ct race show` | It opens, then closes; off, one line says Race mode is off and nothing opens |
+
+### The race
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM11 | Retail | Keep attacking through a 0:30 race | The running body: the race clock counting, the pace bar against the race board's best; the DPS HUD beside it shows the live damage, DPS, chart and spells, its pace on the race board (whatever DPS HUD → Behavior's Show, Only in instances and Show DPS HUD in combat say, ruling X7) |
+| SM-CT-RM12 | Retail | Hear and watch the last 10 s with the defaults; then *Countdown cue sound* off mid-race; then *Center countdown from* 3; then *Center-screen countdown* off mid-countdown | The cue sounds once a second from 10 to 1, never twice; gold numbers 10 to 1 pop in mid-screen, one a second, and go at the buzzer; the cue goes silent at once; the numbers start at 3; switched off, the number on screen goes at once |
+| SM-CT-RM13 | Retail | With about 8 s left, open a Results filter dropdown over the numbers | The menu draws over them; the mouse passes through the numbers |
+| SM-CT-RM14 | Retail | Stop on the buzzer | A raid warning *STOP* with its sound (*Buzzer raid warning and sound* on); the Stop! body: the damage tail climbing while DoTs tick, the late casts so far, the time in combat, *Stop Now* and *Cancel* |
+| SM-CT-RM15 | Retail | On the Dungeoneer's dummy, stay idle in combat 20 s after the buzzer | The waiting body with the time in combat; after 15 s (*Sticky-combat hint after*) the hint names the drop-combat abilities this character has |
+| SM-CT-RM16 | Retail | *Stop Now* on the Stop! body out of combat, then on another race while waiting in combat | Out of combat the race is read at once, without waiting out the tail; in combat it is read the moment combat ends, with no settle wait; the result card shows |
+| SM-CT-RM17 | Retail | Read the result card, then the chat | Score, race DPS (the score over 0:30 exactly; check it in the detail), the verdict against the best (*New best* on the board's first race), the flag chips, the pace bar, *New Race*, *Open*, *Share*, *Delete*; chat prints the score line once |
+| SM-CT-RM18 | Retail | *New Race*; then *Open* on another card | New Race goes back to *Arm Race* with 0:30 picked and the same target, nothing armed; Open shows the race in the Results window |
+| SM-CT-RM19 | Retail | Stop attacking at about 0:12 left and drop combat | Incomplete: the card says combat ended before the buzzer, its DPS is the score over the time raced, and it never takes a best (no toast) |
+| SM-CT-RM20 | Retail | Feign Death (Hunter) at about 0:15 and back in within 4 s | The race is incomplete at the Feign Death (ruling X4); the fight carries on and is saved whole; the race's DPS divides by the fight's race-clock length (ruling X16) |
+| SM-CT-RM21 | Retail | Let the Dungeoneer's dummy kill you mid-race | The card says incomplete, died |
+| SM-CT-RM22 | Retail | Cast a spell 2 s after the buzzer; then put it on Race mode → Late-cast ignore list and look at the race again | The card and the detail flag the late cast; on the list, the flag goes from that race and every other saved one (the list is read at score time) |
+| SM-CT-RM23 | Retail | Stop at the buzzer, stay in combat on the Dungeoneer's dummy 10 s without attacking, then attack again | The result carries the damage-restarted flag at about +10 s |
+| SM-CT-RM24 | Retail | `/ct race cancel` while armed, then while running; then *Cancel* while waiting | Armed: *Race canceled.*; running and waiting: the race is off and the fight goes on as a plain dummy fight, saved by the recording filters as any other; nothing is saved as a race |
+| SM-CT-RM25 | Retail | Arm, then pull a mob that is no dummy (or walk into an instance) | The arm cancels with the pull; the fight is a normal fight with no race part; no error (Review focus 1) |
+| SM-CT-RM26 | Retail | Fight the Golem, let combat drop, then arm and pull it again within a few seconds, while the meter still holds that session | The race is flagged shared session, its score is the session's total less what it held at the arm, and it is saved once (Review focus 5); the HUD draws no pace and no chart for it |
+| SM-CT-RM27 | Retail | Reset Blizzard's damage meter while armed, then while running | Armed: still armed. Running: the race is lost, the card says its result could not be read, and nothing is saved as a race |
+| SM-CT-RM28 | Retail | Close the result card (its close mark, then Escape on a fresh one); *Delete* on another, then delete a race in the Results window while its card shows | The card is dismissed and the race stays in the history; Delete asks first, and the window goes back to *Arm Race* at that race's length |
+| SM-CT-RM29 | Retail | The toast: a race that beats its board's best; then the board's first race; then History → New-best toast → *Toast a race's new best* off | A toast near the top says New best and by how much, with the dummy kind and length chips; the first race shows none; off, no race toasts while a fight's still does |
+| SM-CT-RM30 | Retail | Race mode off (the switch at the top of the page) with a race armed, then with one running | The armed race is canceled; the running one runs on to its result; afterwards no race arms, auto-arm does nothing, the Race window stays shut and the saved races stay in Results |
+
+### Reload and resume
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM31 | Retail | `/reload` at 0:15 left, still attacking (SM-CT-F20 covers the four reload cases in one pass) | The Race window and the HUD come back on the same race clock; the countdown's number of the moment shows at once, silently; at the buzzer the race resolves as usual |
+| SM-CT-RM32 | Retail | On the Dungeoneer's dummy, `/reload` 2 s after the buzzer still in combat | After the reload the window is waiting; once combat drops the result reads with the reloaded flag |
+| SM-CT-RM33 | Retail | Race, and while waiting for the read log out to the character screen and into another character | The other character is idle and can arm; back on the first the race resumes, or reads lost if its session is gone |
+
+### Near a training dummy
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM34 | Retail | Auto-show on (the default): walk up to the Golem with enemy nameplates on, then away; then close the window by hand near it | It opens while the dummy's nameplate is up or it is targeted, and closes a few seconds after the last one is gone; closed by hand, it stays closed until the next time you come near one |
+| SM-CT-RM35 | Retail | Auto-arm on: target the Golem out of combat, then a boar, then the Golem in combat; then in an instance | Armed at the window's length on the Golem, canceled on the boar; nothing arms in combat or in an instance (SM-CT-S10 is the short form) |
+
+### Results and Insights
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM36 | Retail | `/ct results races` after the races above | The list on the Races filter: each race with its race DPS, a length chip and a flag chip (Flagged, Incomplete, Died); the second filter row shows the race length, the dummy kind, Hide flagged, Include incomplete and Only best; the groupings by race length and by dummy kind and length list them under headers |
+| SM-CT-RM37 | Retail | Each race filter in turn; then *Fights only* and *Fights and races* | Each narrows the list as it says; Fights only hides every race; both kinds list together under the third |
+| SM-CT-RM38 | Retail | A race's detail | The Timing strip (race length, the tail after the buzzer, the combat end) and the Flags box; Damage, race DPS and Delta; right-click a late cast in Flags and *Ignore for late casts* takes it off the flags (SM-CT-R25 covers the race clock on the chart and the Timeline) |
+| SM-CT-RM39 | Retail | `/ct results insights`, then the Fights / Races / All filter, then Races with Clean only and Include incomplete | The cards, DPS Progression, the board tabs with Spec Comparison and Consistency, By Character, By Character x Content and Recent New Bests over every saved fight; under Races the race-only sections show (Races By Character x Length, Late Casts, Races Per Day, Damage Tail After The Buzzer) and the Clean races card; under Fights both are gone |
+| SM-CT-RM40 | Both | Log in on WoW Forever (or turn Race mode off on Retail) on an account that holds saved races, then `/ct results` and its Insights tab | No Lua error. Forever: the races list as fights with their race DPS, with no Fights / Races / All filter, no race chip, no Timing or Flags section and no race section in Insights. Retail with Race mode off: the race controls are still there (Review focus 3) |
+
+### Test mode, the sim, share and diagnostics
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM41 | Retail | `/ct test race armed`, `running`, `result`, then bare `/ct test race` | The Race window holds a sample race in each body (running when none is named), under the sample strip, beside the HUD's sample fight; Results shows 40 sample fights and 16 sample races |
+| SM-CT-RM42 | Retail | `/ct sim race-newbest`, then `race-incomplete`, `race-flagged`, `race-shared` and `race-sticky` | Each plays in real time: armed, running with the countdown and the STOP warning, then its ending (the new best with its toast; incomplete; the late-cast flag; the shared-session flag; the sticky-combat hint), the chat lines, then the Results window on the sample race. Nothing is saved |
+| SM-CT-RM43 | Retail | Race mode off, then `/ct test race` and `/ct sim race-newbest`; then a real `/ct race arm 30` while test mode is on | Both refuse in one line; the arm ends test mode with *Test mode ended: a race was armed.* |
+| SM-CT-RM44 | Retail | *Share* on the result card to Say, then a race from the Results row menu | One line with the race's length, target, damage and DPS; refused in combat |
+| SM-CT-RM45 | Retail | `/ct diagnostics` while idle, then while a race runs | A race section: the race state, its fight and session, the pending races, the race boards, the Race window, the countdown and the sample race; the windows section has the toast line |
+| SM-CT-RM46 | Forever | `/ct test race`, `/ct sim` and `/ct diagnostics` | `test race` is plain test mode; the sim's list has no `race-` scenario; the report has no race section but keeps the toast line |
+| SM-CT-RM47 | Both | `/ct perf start`, a 0:30 race (Retail) or a fight (WoW Forever), `/ct perf finish` | No hitch felt; on Retail the `race`, `raceWindow` and `autoArm` buckets show figures |
 
 ## In-game verification list
 
@@ -227,3 +334,11 @@ The items the build assumed and the owner confirms, each answered by a row above
 - The HUD's look against DPS Race's, live and after the fight: SM-CT-H12.
 - The HUD's fixed size, grip, scroll and grow edge: SM-CT-H13.
 - The timeline's icons or ticks and the caster colors: SM-CT-T11.
+- Training dummies on both clients, the player's own list and the captures: SM-CT-D1 to SM-CT-D7.
+- The recording rules (30 s on Retail, 15 s on WoW Forever, scenarios recorded): SM-CT-F2, SM-CT-D8 to
+  SM-CT-D12.
+- Race mode (Retail): SM-CT-RM1 to SM-CT-RM47, with SM-CT-F20 (the reload cases), SM-CT-R25 (the race
+  clock on the chart and the Timeline) and SM-CT-S9 to SM-CT-S11 (the page, the verb, its absence on
+  WoW Forever).
+- The race's first-hit clock, the shared session and the Feign Death split: SM-CT-RM6, SM-CT-RM20,
+  SM-CT-RM26.
