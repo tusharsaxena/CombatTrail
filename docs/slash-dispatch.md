@@ -46,7 +46,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `diagnostics` | none | yes | `NS.DebugLog:RunDiagnostics` (modules/Diagnostics.lua's sections) |
 | `perf` | the library's grammar (`/ct perf help`) | yes | `NS.Perf.OnCommand` |
 | `version` | none | yes | the dispatcher's `CliVersion` |
-| `results` | `show`, `hide`, `toggle`, or nothing | no | `Results.OnVerb` |
+| `results` | `show`, `hide`, `toggle`, or nothing; `races` on Retail (the list on the Races filter, `Results.ShowRaces`) | no | `Results.OnVerb` |
 | `hud` | `show`, `hide`, `toggle`, `pin`, `unpin` | no | `Hud.OnVerb` |
 | `lock` | none | no | writes `general.locked` true; `NS.ApplyLocked` |
 | `unlock` | none | no | writes `general.locked` false; the lanes' edit overlay and the HUD's drag |

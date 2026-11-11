@@ -102,9 +102,11 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_Table.lua` | The sortable pooled list and the small drawing helpers |
 | `modules/Results_Tips.lua` | What every cell and header says on hover |
 | `modules/Results_Fights.lua` | The filter bar, the grouping and the fight list |
+| `modules/Results_Races.lua` | Races in the list: the Fights / Races / All filter and the race filters, the race groupings, a race row's chips, score and time raced, the race cells' tooltips (Retail controls; Race mode plan D1) |
 | `modules/Results_Loadout.lua` | The detail's Gear and Talents |
 | `modules/Results_Usage.lua` | The detail's Usage list and its edit, and the list's Used icons |
 | `modules/Results_Targets.lua` | The detail's Targets list: each enemy your damage reached and how much it took (issue #6) |
+| `modules/Results_RaceDetail.lua` | A race's detail: the Timing strip and the Flags box, its score and race DPS, the late-cast right-click (Retail; Race mode plan D1) |
 | `modules/Results_Detail.lua` | One fight in full |
 | `modules/Share.lua` | The one-line chat summary of a fight or a race, and the race's own lines on the arm and at its result |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |

@@ -225,7 +225,11 @@ modules\BestToast.lua
 # FILE SCOPE; modules\Results.lua reads NS.ResultsFights and NS.ResultsTable at FILE SCOPE (its minimum
 # width) and builds its bus receiver there. The detail's parts (the loadout, the usage, the detail pane)
 # and the share line register nothing and reach each other at CALL time; modules\Share.lua defines its
-# whisper popup at FILE SCOPE. LOAD-BEARING: modules\Results_TimelineData.lua reads
+# whisper popup at FILE SCOPE. Race mode's Results parts (plan Task D1): modules\Results_Races.lua (the
+# race filters, groupings, chips and tips) reads NS.ResultsTable and NS.Dummies.CATEGORIES at FILE
+# SCOPE, so it follows modules\Results_Table.lua; it and modules\Results_RaceDetail.lua (the detail's
+# Timing and Flags) are reached by the fight list, the tips and the detail at CALL time, before
+# modules\Results.lua. LOAD-BEARING: modules\Results_TimelineData.lua reads
 # NS.ResultsTable.COLORS at FILE SCOPE, and modules\Results_Timeline.lua reads NS.ResultsTimelineData and
 # NS.ResultsTable there; modules\Results_TimelineMarks.lua (the timeline's cast marks, v0.2 Task D1) takes
 # NS.ResultsTimeline and reads NS.ResultsTimelineData, NS.ResultsTable and NS.Constants.PALETTE at FILE
@@ -236,9 +240,11 @@ modules\Results_Source.lua
 modules\Results_Table.lua
 modules\Results_Tips.lua
 modules\Results_Fights.lua
+modules\Results_Races.lua
 modules\Results_Loadout.lua
 modules\Results_Usage.lua
 modules\Results_Targets.lua
+modules\Results_RaceDetail.lua
 modules\Results_Detail.lua
 modules\Share.lua
 modules\Results_TimelineData.lua

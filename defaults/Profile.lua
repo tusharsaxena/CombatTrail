@@ -229,9 +229,15 @@ NS.defaults = {
         -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps; and
         -- `timelineMarks`, how the ability timeline's By ability lanes draw a cast (v0.2 Task D1,
         -- modules/Results_TimelineMarks.lua): "icon" (its ability's icon) or "tick" (a thin line).
+        -- The view's race filters (Race mode plan Task D1, modules/Results_Races.lua; Retail only, read
+        -- as "all" on WoW Forever): `kind` "all" | "fights" | "races"; under "races" alone, `length`
+        -- (seconds or "all"), `dummyKind` (a dummy category or "all"), `hideFlagged`,
+        -- `includeIncomplete` (DPS Race's default: on) and `onlyBest`.
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
-                     days = 7, bossesOnly = false, group = "datechar", sort = "date", desc = true },
+                     days = 7, bossesOnly = false, group = "datechar", sort = "date", desc = true,
+                     kind = "all", length = "all", dummyKind = "all", hideFlagged = false,
+                     includeIncomplete = true, onlyBest = false },
             window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, height = 520,
                        view = "collapsed" },
             scale = 1, rowHeight = 18,

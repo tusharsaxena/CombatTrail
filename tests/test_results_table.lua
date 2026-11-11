@@ -168,7 +168,9 @@ test("results: the filters are faceted: each list reads the fights the other fil
     assertEqual(values(o.board), "all,c:3000", "a content pick narrows the targets")
     assertTrue(values(o.content):find("dungeon", 1, true) ~= nil, "the content list ignores its own pick")
     assertEqual(values(o.days), "1,7,30,0")
-    assertEqual(values(o.group), "datechar,date,board,character,spec,content,none")
+    -- The race groupings (Race mode plan Task D1) are Retail's.
+    assertEqual(values(o.group), NS.Compat.IsForever() and "datechar,date,board,character,spec,content,none"
+        or "datechar,date,board,character,spec,content,length,targetLength,specTargetLength,none")
 end)
 
 test("results: the Spec dropdown and grouping are on both clients; Forever names a talent tree (D5, D11)", function()

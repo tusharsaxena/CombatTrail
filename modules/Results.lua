@@ -762,18 +762,35 @@ function Results.ResetPosition()
     eachFollower("ResetPosition")
 end
 
+--- Open the window on the list under the Races filter (`/ct results races`, Race mode plan Task D1;
+--- Retail only: the filter is absent on WoW Forever).
+--- @return boolean shown
+function Results.ShowRaces()
+    if not NS.ResultsRaces.On() then return false end
+    Results.Show()
+    if not ui then return false end
+    detailOpen = false
+    ui.list:SetFilter("kind", "races")
+    return true
+end
+
 local VERBS = {
     [""] = function() Results.Toggle() end,
     toggle = function() Results.Toggle() end,
     show = function() Results.Show() end,
     hide = function() Results.Hide() end,
 }
+-- The Races verb is Retail's, as the filter it opens (clients-§4).
+local RACE_VERBS = { races = function() Results.ShowRaces() end }
 
---- `/ct results [show|hide|toggle]`: bare toggles the window; anything else is one usage line.
+--- `/ct results [show|hide|toggle|races]`: bare toggles the window; anything else is one usage line.
 function Results.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
-    local fn = VERBS[word]
+    local fn = VERBS[word] or (NS.ResultsRaces.On() and RACE_VERBS[word])
     if fn then return fn() end
+    if NS.ResultsRaces.On() then
+        return NS.Print(L["Usage: /ct results, or /ct results show, hide, toggle or races"])
+    end
     NS.Print(L["Usage: /ct results, or /ct results show, hide or toggle"])
 end
 
@@ -802,7 +819,9 @@ end
 
 --- A row's right-click menu (LootHistory's): Add Note (Edit Note once it has one), Share with its
 --- channels as a submenu (grayed on sample fights, whose numbers are made up),
---- Compare With This Fight (grayed on the selected fight itself), and Delete behind its confirmation.
+--- Compare With This Fight (grayed on the selected fight itself), a race's Ignore for late casts
+--- submenu (Retail, a stored race with a late cast: modules/Results_RaceDetail.lua), and Delete
+--- behind its confirmation.
 --- @param record table  the fight
 --- @param owner table  the row
 --- @return boolean opened
@@ -816,6 +835,7 @@ function Results.RowMenu(record, owner)
         if canShare() then NS.Share.FillMenu(shareMenu, record) else shareMenu:SetEnabled(false) end
         local cmp = root:CreateButton(L["Compare With This Fight"], function() Results.CompareWith(record.id) end)
         if record.id == selected or selected == nil then cmp:SetEnabled(false) end
+        NS.ResultsRaceDetail.FillRowMenu(root, record)
         -- A destructive item in the skin's `sem.danger`.
         root:CreateButton((NS.SkinEscape("sem.danger") or "") .. L["Delete"] .. "|r",
             function() Results.ConfirmDelete(record.id) end)
@@ -968,6 +988,13 @@ local function onSettings(path)
     if path == "results.timelineMarks" then NS.ResultsTimeline.Redraw() end
     -- The Usage "never show" list: the detail redraws (an edit under way keeps its ticks).
     if path == NS.Usage.HIDDEN_PATH and windowShown() then renderDetail() end
+    -- The late-cast ignore list re-scores every race's flags, and the Training dummies list moves races
+    -- between kinds: the sample's boards are dropped and the window redraws (Race mode plan Task D1).
+    if path == NS.LateIgnore.PATH or path == NS.Dummies.PATH then
+        NS.Bests.Invalidate()
+        Source.Invalidate()
+        if windowShown() then render() end
+    end
 end
 
 do

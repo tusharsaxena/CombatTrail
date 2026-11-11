@@ -1165,6 +1165,29 @@ Total.
 - sections: a rebuilt pane reads the folds back; Reset position keeps them
 - sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
+### test_results_races.lua (20)
+
+- results: Races shows only races, Fights only fights, All both
+- results: under Races the length, dummy kind, Hide flagged and Include incomplete filters apply
+- results: only bests keeps each board's best
+- results: a race row shows its race DPS, length chip and flags
+- results: the race lengths take DPS Race's colors, and any other length a neutral gray
+- results: an incomplete race is compared but never leads its group
+- results: group by length, by target and length, and by spec, target and length
+- results: under the date groupings a race is measured on its race board, not the dummy's fights
+- results: the race detail has Timing and Flags
+- results: the timing strip places the buzzer, grace, tail, late casts and combat end
+- results: the detail's figures are the race's: score, race DPS, DPS · Incomplete
+- results: the Delta box's runner-up reads its race DPS
+- results: the Compare and the DPS tip read the race DPS
+- results: the row menu offers Ignore for late casts only for a race with a late cast
+- results: an ignore-list edit re-scores Hide flagged in the list
+- results: /ct results races opens the list on the Races filter
+- results: saved races list on WoW Forever with no race control
+- results: Race mode off still lists saved races
+- results: the Races bar fits the window's least width
+- results: switching to Races shows the race filters and hides Bosses only
+
 ### test_share.lua (13)
 
 - share: line format and length <= 255
@@ -1506,6 +1529,7 @@ Total.
 | test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
+| test_results_races.lua | 20 |
 | test_share.lua | 13 |
 | test_timeline.lua | 12 |
 | test_timeline_marks.lua | 11 |
@@ -1528,4 +1552,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1234** |
+| **Total** | **1254** |

@@ -3,9 +3,15 @@ local _, NS = ...
 -- (character, spec, content, encounter or target, difficulty, date range, Bosses only, Group by, Save
 -- view) over the pooled, sortable fight table (modules/Results_Table.lua). A click selects a fight
 -- and a right-click opens its menu; the shell (modules/Results.lua) places the list. Adapted from DPS
--- Race @045f479 (modules/Results_Runs.lua) without its race: no race length, no dummy category, no
--- late-cast flags, no Include incomplete (every stored fight is final), and no Status column: the best
--- is only what a fight is compared against (owner, 2026-11-10), never a tag on a row.
+-- Race @045f479 (modules/Results_Runs.lua), with no Status column: the best is only what a fight is
+-- compared against (owner, 2026-11-10), never a tag on a row.
+--
+-- RACES (Race mode plan Task D1). A race is a fight record with a race part, listed here with the
+-- rest; modules/Results_Races.lua owns everything race-specific and this file asks it at CALL time:
+-- the Fights / Races / All filter and the race filters (Races.Pass, Races.Options), the race
+-- groupings, the bar's second row, a race row's chips, score and time raced. Every DPS here is
+-- NS.RaceRecord.Dps (a race's race DPS, spec §7), and an incomplete race is compared but never leads
+-- its group (DPS Race's).
 --
 -- THE VIEW is `results.view` (defaults/Profile.lua): the filters, the grouping and the sort. Each
 -- build opens on the profile's saved view; Save view writes the view on screen there, and Reset view
@@ -43,10 +49,12 @@ local DASH = "\226\128\148"
 local SEP = " \194\183 "
 
 -- The view keys (results.view's shape) the filters read, the grouping and the sort aside.
-Fights.FILTERS = { "character", "spec", "content", "board", "difficulty", "days", "bossesOnly" }
+Fights.FILTERS = { "character", "spec", "content", "board", "difficulty", "days", "bossesOnly", "kind",
+                   "length", "dummyKind", "hideFlagged", "includeIncomplete", "onlyBest" }
 -- Every key a saved view holds.
 Fights.VIEW_KEYS = { "character", "spec", "content", "board", "difficulty", "days", "bossesOnly", "group",
-                     "sort", "desc" }
+                     "sort", "desc", "kind", "length", "dummyKind", "hideFlagged", "includeIncomplete",
+                     "onlyBest" }
 
 local FILTER_H = 32         -- one row of the filter bar
 local RETAIL = { "retail" }
@@ -61,6 +69,8 @@ local GAP = 6
 local MARGIN = GAP + 2      -- the bar's left margin, and its right one once the dropdowns stretch
 
 --- A spec label in this client's words: Retail's `retail`, WoW Forever's `forever` (a talent tree).
+local function Races() return NS.ResultsRaces end
+
 local function specWords(retail, forever)
     return NS.Compat.ForClient(RETAIL) and L[retail] or L[forever]
 end
@@ -178,8 +188,13 @@ local PASS = {
     board = function(r, v) return v == "all" or Fights.TargetKey(r) == v end,
     difficulty = function(r, v) return v == "all" or Fights.DifficultyOf(r) == v end,
     days = function(r, _, ctx) return ctx.since == nil or (r.t or 0) >= ctx.since end,
-    bossesOnly = function(r, v) return not v or ident(r).isBoss == true end,
+    -- Under Races it stands aside: no dummy is a boss, so a saved Bosses only would empty the list.
+    bossesOnly = function(r, v, ctx) return not v or Races().UnderRaces(ctx.f) or ident(r).isBoss == true end,
 }
+-- The race filters are modules/Results_Races.lua's.
+for _, key in ipairs({ "kind", "length", "dummyKind", "hideFlagged", "includeIncomplete", "onlyBest" }) do
+    PASS[key] = function(r, v, ctx) return Races().Pass(key, r, v, ctx.f) end
+end
 
 -- `view` over the stock view: a key it leaves out takes its shipped value.
 local function full(view)
@@ -198,7 +213,7 @@ local function passes(record, f, ctx, skip)
 end
 
 local function context(f, now, current)
-    return { since = Fights.Since(f.days, now), current = current or Fights.Current() }
+    return { since = Fights.Since(f.days, now), current = current or Fights.Current(), f = f }
 end
 
 --- The fights that pass every filter of `view`, in the order given.
@@ -327,15 +342,18 @@ function Fights.DayOptions()
     }
 end
 
--- The Group by modes, in the dropdown's order, each declared for its clients.
+-- The Group by modes, in the dropdown's order, each declared for its clients; the race groupings
+-- (modules/Results_Races.lua, Retail) follow the fight ones, None last.
 local GROUP_SPECS = { { key = "datechar" }, { key = "date" }, { key = "board" }, { key = "character" },
-                      { key = "spec" }, { key = "content" }, { key = "none" } }
+                      { key = "spec" }, { key = "content" } }
 
 --- The Group by modes this client has, in order.
 function Fights.GroupOrder()
     local out = {}
-    for _, g in ipairs(GROUP_SPECS) do
-        if NS.Compat.ForClient(g.clients) then out[#out + 1] = g.key end
+    for _, list in ipairs({ GROUP_SPECS, Races().GROUP_SPECS, { { key = "none" } } }) do
+        for _, g in ipairs(list) do
+            if NS.Compat.ForClient(g.clients) then out[#out + 1] = g.key end
+        end
     end
     return out
 end
@@ -351,13 +369,15 @@ local GROUP_LABELS = {
 --- @return table { character, spec, content, board, difficulty, days, group }
 function Fights.Options(records, view, now, current)
     current = current or Fights.Current()
-    local function facet(key) return OPTION_LISTS[key](Fights.Filter(records, view, now, current, key)) end
+    local function facet(key, lister)
+        return (lister or OPTION_LISTS[key])(Fights.Filter(records, view, now, current, key))
+    end
     local groups = {}
     for i, mode in ipairs(Fights.GroupOrder()) do
         groups[i] = { value = mode, label = mode == "spec" and specWords("Group: Spec", "Group: Talent tree")
-                      or L[GROUP_LABELS[mode]] }
+                      or L[GROUP_LABELS[mode] or Races().GROUP_LABELS[mode]] }
     end
-    return {
+    return Races().Options(facet, {
         character = Fights.WithAll(facet("character"), L["All characters"], L["Current character"]),
         spec = Fights.WithAll(facet("spec"), specWords("All specs", "All talent trees"),
                               specWords("Current spec", "Current talent tree")),
@@ -366,7 +386,7 @@ function Fights.Options(records, view, now, current)
         difficulty = Fights.WithAll(facet("difficulty"), L["All difficulties"]),
         days = Fights.DayOptions(),
         group = groups,
-    }
+    })
 end
 
 -- ── grouping (LootHistory's Group by) ──────────────────────────────────────────────────────────
@@ -380,6 +400,8 @@ function Fights.Colored(text, color)
 end
 
 local function boardGroup(r)
+    local raceKey, raceLabel, raceRank = Races().BoardGroup(r)
+    if raceKey then return raceKey, raceLabel, raceRank end
     local label = Fights.BoardLabel(r)
     return r.boardKey or ("?" .. Fights.TargetKey(r)), label, label:lower()
 end
@@ -442,7 +464,7 @@ Fights.GROUPS = {
 --- The grouping for `mode`, or nil for none: a mode this client does not have groups as none.
 function Fights.GroupSpec(mode)
     for _, key in ipairs(Fights.GroupOrder()) do
-        if key == mode then return Fights.GROUPS[mode] end
+        if key == mode then return Fights.GROUPS[mode] or Races().GROUPS[mode] end
     end
     return nil
 end
@@ -452,9 +474,16 @@ end
 -- one below it (nil when there is none). The fight detail's Delta or "Leads by" box (plan Task 4.2)
 -- reads the same contexts through View:DeltaContext.
 
+-- The one DPS a row is shown, sorted and compared by: a race's race DPS (spec §7).
 local function dpsOf(record)
-    local dps = type(record) == "table" and record.dps
+    local dps = NS.RaceRecord.Dps(record)
     return type(dps) == "number" and dps > 0 and dps or nil
+end
+
+-- The DPS a row may lead its group with: an incomplete race is compared, never the best (DPS Race's).
+local function leadDps(record)
+    if NS.RaceRecord.IsRace(record) and record.race.status ~= "complete" then return nil end
+    return dpsOf(record)
 end
 
 -- `a` ranks above `b`: higher DPS; on a tie the earlier fight (it set the mark first), then the id,
@@ -472,7 +501,7 @@ end
 function Fights.Leaders(records)
     local first, second
     for _, r in ipairs(records or {}) do
-        if dpsOf(r) then
+        if leadDps(r) then
             if not first or leads(r, first) then
                 first, second = r, first
             elseif not second or leads(r, second) then
@@ -597,12 +626,21 @@ local function numberText(v)
     return NS.Format.Number(v), C.text
 end
 
+-- A race's damage is its score.
 local function damageOf(record)
+    local score = Races().Score(record)
+    if score then return score end
     local d = type(record.damage) == "table" and record.damage.merged
     return type(d) == "number" and d or nil
 end
 
--- The target cell: what the fight was against, "+N" after it for the others that took damage.
+-- A race's length is its time raced (the race length, or to combat end when incomplete).
+local function lengthOf(record)
+    return Races().Seconds(record) or record.duration
+end
+
+-- The target cell: what the fight was against, "+N" after it for the others that took damage; a race
+-- (Retail) leads it with its length and flag chips (Races.Chips).
 local function targetText(record)
     local name, others = Fights.TargetName(record), ident(record).otherTargets
     if type(others) == "number" and others > 0 then name = L["%s +%d"]:format(name, others) end
@@ -684,13 +722,13 @@ function Fights.Columns(view)
           text = function(r) return Tbl.Ilvl(who(r).ilvl) end },
         { key = "target", label = L["Encounter or target"], flex = true, min = Fights.TARGET_W, desc = false,
           sort = function(r) return Fights.TargetName(r):lower() end,
-          text = targetText },
+          text = targetText, chips = function(r) return Races().Chips(r) end },
         { key = "content", label = L["Content"], width = Fights.CONTENT_W, kind = "badge", desc = false,
           sort = function(r) return CONTENT_RANK[ident(r).content] or 99 end,
           text = Tbl.ContentChip },
         { key = "len", label = L["Length"], width = 44, desc = true,
-          sort = function(r) return r.duration end,
-          text = function(r) return NS.Format.Length(r.duration), C.text end },
+          sort = lengthOf,
+          text = function(r) return NS.Format.Length(lengthOf(r)), C.text end },
         { key = "damage", label = L["Damage"], width = 60, desc = true,
           sort = damageOf, bar = damageOf,
           text = function(r) return numberText(damageOf(r)) end },
@@ -747,6 +785,7 @@ local function buildBar(view)
         end
     end
     view.bossesOnly = checkbox(view, bar, "bossesOnly", L["Bosses only"])
+    Races().BuildBar(view, bar, checkbox)
     -- DPS Race's three (owner, 2026-11-11): Save, Reset (the saved view deleted, the shipped one back)
     -- and Clear (back to the saved view, kept).
     view.save = Style.Button(bar, L["Save"], function() view:SaveView() end)
@@ -893,16 +932,19 @@ function Fights.BarMinWidth()
     return w
 end
 
---- Plan the bar, pure (no frame is read), across `width`: the dropdowns on the first row at their
---- configured widths, sharing what the bar has beyond them, so the last ends MARGIN short of the
---- bar's right edge; Bosses only on the second row at the left, Save, Reset and Clear on it at the
---- right, under the last dropdown's right edge. Answers each dropdown's x and width, the second row's
---- y, the check box's x and each button's right x, all from the bar's left.
-function Fights.BarPlan(width)
+--- Plan the bar, pure (no frame is read), across `width` under `filters` (the view's): the dropdowns
+--- on the first row at their configured widths, sharing what the bar has beyond them, so the last
+--- ends MARGIN short of the bar's right edge; the second row at the left (Races.Row2: on Retail the
+--- Fights / Races / All filter, then the race filters under Races or Bosses only), Save, Reset and
+--- Clear on it at the right, under the last dropdown's right edge. Answers each dropdown's x and
+--- width, the second row's y and items ({ key, kind, x, w }), and each button's right x, all from the
+--- bar's left.
+function Fights.BarPlan(width, filters)
     local extra = type(width) == "number" and math.floor(width - Fights.BarMinWidth()) or 0
     local dropdowns = Fights.Dropdowns()
     local widths = stretched(dropdowns, math.max(0, extra))
-    local plan = { dropdowns = {}, widths = widths, y = -(FILTER_H - 2), check = MARGIN, buttons = {} }
+    local plan = { dropdowns = {}, widths = widths, y = -(FILTER_H - 2), buttons = {},
+                   row2 = Races().Row2(filters, MARGIN, GAP) }
     local x = MARGIN
     for _, spec in ipairs(dropdowns) do
         plan.dropdowns[spec.key] = x
@@ -918,7 +960,8 @@ end
 -- Lay the bar out by Fights.BarPlan at `width`: re-anchored and the dropdowns re-sized, nothing
 -- repainted, so the cheap layout runs it too.
 function View:layoutBar(width)
-    local plan = Fights.BarPlan(width)
+    self.barWidth = width
+    local plan = Fights.BarPlan(width, self.filters)
     for _, spec in ipairs(Fights.Dropdowns()) do
         local dd = self.dropdowns[spec.key]
         if dd then
@@ -927,8 +970,7 @@ function View:layoutBar(width)
             dd:SetWidth(plan.widths[spec.key])
         end
     end
-    self.bossesOnly:ClearAllPoints()
-    self.bossesOnly:SetPoint("TOPLEFT", self.bar, "TOPLEFT", plan.check, plan.y)
+    Races().LayoutBar(self, plan)
     for key, b in pairs({ save = self.save, reset = self.reset, clear = self.clear }) do
         b:ClearAllPoints()
         b:SetPoint("TOPRIGHT", self.bar, "TOPLEFT", plan.buttons[key], plan.y)
@@ -969,6 +1011,7 @@ function View:paintFilters(options)
         end
     end
     self.bossesOnly:SetChecked(self.filters.bossesOnly == true)
+    Races().PaintBar(self, options)
 end
 
 --- Re-read the source and redraw: options, filtered list, count, selection.
@@ -976,6 +1019,8 @@ function View:Refresh()
     self.shownOnce = true
     local all, now = NS.ResultsSource.All(), time()
     local current = Fights.Current()
+    -- The second row follows the kind filter (the race filters under Races).
+    if self.barWidth then self:layoutBar(self.barWidth) end
     self:paintFilters(Fights.Options(all, self.filters, now, current))
     self.filtered = Fights.Filter(all, self.filters, now, current)
     local n = #self.filtered

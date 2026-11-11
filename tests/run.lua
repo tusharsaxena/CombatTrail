@@ -154,6 +154,7 @@ local SUITES = {
     "test_results_table",
     "test_results_detail",
     "test_results_sections",
+    "test_results_races",
     "test_share",
     "test_timeline",
     "test_timeline_marks",
