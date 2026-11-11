@@ -37,6 +37,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Training dummies (Identity's dummy content) | the measured dummies in `defaults/Dummies.lua` | none, empty by decision until one is measured |
 | Ignore seeds (`defaults/IgnoreSeeds.lua`) | its own list, picked once | its own list (the same IDs today) |
 | Default skin | Ka0s Default | WoW Forever |
+| Recording filters' default minimum length (`history.minLength`) | 30 s | 15 s (Race mode spec §3) |
 | Spec in Results (the column's second icon, the dropdown, the Spec grouping, the bests' board, the Share line) | the specialization | the predominant talent tree (most points, a tie to the first) stands in, worded "talent tree" (v0.2 plan A4, D5 and D11); none with no points or no talent API, so the class icon never shows twice |
 | The talent-tree section of `/ct probe` | absent | every talent API's answer and the tree picked |
 | Sample history (test mode and the sim) | 40 fights | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |

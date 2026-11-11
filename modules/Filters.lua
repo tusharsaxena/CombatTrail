@@ -2,9 +2,9 @@ local _, NS = ...
 -- modules/Filters.lua — the recording filters (spec §5, plan Task 2.5): every fight is tracked live,
 -- but one is STORED only if it passes these. The minimum length (`history.minLength`, 30 s on Retail,
 -- 15 s on WoW Forever), bosses only (`history.bossesOnly`, off) and one toggle per content kind
--- (`history.content.<kind>`, every kind on, scenarios too). The content keys are modules/Identity.lua's Identity.CONTENT for this
--- client: Mythic+, delves and arenas are Retail-only, so on WoW Forever their toggles are absent
--- (clients-§4) and no identity ever names them there.
+-- (`history.content.<kind>`, every kind on, scenarios too). The content keys are
+-- modules/Identity.lua's Identity.CONTENT for this client: Mythic+, delves and arenas are Retail-only,
+-- so on WoW Forever their toggles are absent (clients-§4) and no identity ever names them there.
 --
 -- PURE over the identity (Identity.Resolve's plain table) and the settings, read at CALL time; the
 -- recorder (modules/Recorder.lua) is the one caller.
