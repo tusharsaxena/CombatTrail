@@ -686,7 +686,7 @@ Total.
 - race timeline: an out-of-order or non-number update is handled
 - race timeline: two timelines are independent
 
-### test_late_ignore.lua (11)
+### test_late_ignore.lua (12)
 
 - late ignore: the hearthstone table holds 59 positive IDs, once each, with 8690, Dalaran and Garrison, never 556
 - late ignore: the setting parses sorted and once each, refuses anything else, and joins back
@@ -697,10 +697,11 @@ Total.
 - late ignore: on a degraded load a number, a link and a hearthstone still resolve
 - late ignore: the known spells are every late cast's spell, newest race first, then the defaults
 - late ignore: a profile switch re-scores the flags by the other profile's list and drops the clean board
+- late ignore: an edit of the list alone drops the cached clean board
 - late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
 - late ignore: Label names a spell, the hearthstones' entry and an unknown one
 
-### test_race.lua (55)
+### test_race.lua (56)
 
 - race: the states, the lengths and the timings are the plan's
 - race: arming refuses on WoW Forever and registers nothing there
@@ -754,6 +755,7 @@ Total.
 - race: cancel on a result dismisses it and keeps the record; race again arms
 - race: an arm from a result arms a new race
 - race: the arm's snapshots replace the fight's combat-entry reads
+- race: a re-pull after the buzzer inside the grace is one fight, saved once, its combat end the last
 - race: inputs in the wrong state change nothing
 - race: the watchers register only what the race's state needs
 - race: a stand-down drops the armed race silently, with its registrations
@@ -1292,8 +1294,8 @@ Total.
 | test_record.lua | 18 |
 | test_race_record.lua | 13 |
 | test_race_scoring.lua | 20 |
-| test_late_ignore.lua | 11 |
-| test_race.lua | 55 |
+| test_late_ignore.lua | 12 |
+| test_race.lua | 56 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1329,4 +1331,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1059** |
+| **Total** | **1061** |

@@ -206,6 +206,17 @@ test("late ignore: a profile switch re-scores the flags by the other profile's l
     assertEqual(NS.Bests.CleanFor(c), f, "the switch dropped it again")
 end)
 
+test("late ignore: an edit of the list alone drops the cached clean board", function()
+    local NS = fresh()
+    local f = savedRace(NS, "f", 1, 900, late({ 1.4, FEIGN }))
+    local c = savedRace(NS, "c", 2, 500)
+    NS.Bests.Invalidate()
+    assertEqual(NS.Bests.CleanFor(c), f, "Feign Death is ignored: the faster race is clean")
+    NS.db.profile.race.lateIgnore = ""
+    NS.AnnounceSettingsChanged(NS.LateIgnore.PATH, "")
+    assertEqual(NS.Bests.CleanFor(c), c, "no profile change: the list's own path dropped it")
+end)
+
 -- ── the menu ────────────────────────────────────────────────────────────────────────────────────
 
 test("late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast", function()

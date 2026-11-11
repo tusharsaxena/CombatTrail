@@ -655,6 +655,8 @@ test("fight: Hurry in combat settles at the combat end with no wait", function()
     settle(inst, 20)
     assertEqual(#heard.ended, 0, "nothing is read in combat")
     leave(inst, 40)
+    local queued = inst.mocks.__timers[#inst.mocks.__timers]
+    assertTrue(queued ~= nil and queued.delay <= 0.01, "the settle is queued with no grace")
     update(inst, 40.2, 1)                 -- a trailing update would hold the quiet
     settle(inst, 40.2)
     assertEqual(#heard.ended, 1, "read at the combat end")

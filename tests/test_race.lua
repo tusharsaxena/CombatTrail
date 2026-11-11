@@ -837,15 +837,41 @@ test("race: the arm's snapshots replace the fight's combat-entry reads", functio
     local phase = "arm"
     NS.Stats.Read = function() return { phase = phase } end
     NS.Usage.Snapshot = function() return { phase = phase } end
+    NS.Loadouts.Snapshot = function() return { talents = { phase = phase } } end
+    NS.Loadouts.CurrentGearSet = function() return "gear-" .. phase end
     assertTrue(F.arm(S, 10))
     phase = "combat"
     S.meter.SetSession(25, F.SESSION)
     F.enter(S, 101)
     local fight = NS.Fight.Current()
     assertEqual(fight.stats.phase, "combat", "Combat Trail's read at the pull")
+    assertEqual(fight.gearSet, "gear-combat", "the gear set current at the pull")
     F.hit(S, 102, 25)
     assertEqual(fight.stats.phase, "arm", "the arm's read, out of combat")
     assertEqual(fight.usageSnap.phase, "arm")
+    assertEqual(fight.loadout.talents.phase, "arm", "the arm's talents")
+    assertEqual(fight.gearSet, "gear-arm", "the arm's gear set")
+end)
+
+test("race: a re-pull after the buzzer inside the grace is one fight, saved once, its combat end the last", function()
+    if forever() then return end
+    local S = fresh()
+    local R = S.NS.Race
+    assertTrue(F.arm(S, 10))
+    local start = F.pull(S)
+    F.damage(S, 25, start + 1, start + 10, 1)
+    assertEqual(R.State(), "stopping")
+    F.leave(S, start + 11)
+    F.enter(S, start + 13)                -- inside Combat Trail's grace: the same fight
+    assertEqual(S.NS.Fight.State(), "combat")
+    assertEqual(R.State(), "stopping", "the race still waits for its read")
+    F.hit(S, start + 14, 25)
+    F.settle(S, start + 16)
+    local records = F.records(S)
+    assertEqual(#records, 1, "saved once")
+    assertEqual(records[1].race.status, "complete")
+    assertEqual(records[1].race.combatEnd, 6, "the last combat end, from the buzzer")
+    assertEqual(F.count(S, "RACE_RESULT"), 1)
 end)
 
 -- ── inputs in the wrong state and the wiring ───────────────────────────────────────────────────
