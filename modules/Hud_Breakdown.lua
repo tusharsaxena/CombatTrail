@@ -3,7 +3,9 @@ local _, NS = ...
 -- config, filled either LIVE (opaque values in the meter's order, no share) or from the fight's
 -- PLAIN after-combat read (merged player and pet, highest first, each with its share of the fight).
 -- Adapted from DPS Race @045f479 (modules/Hud_Breakdown.lua) for two sources: the player's rows,
--- then the pet's, each pet row marked by the paw and drawn in `hud.spells.petColor`.
+-- then the pet's, each pet row marked by the paw and drawn in `hud.spells.petColor`. On WoW Forever
+-- the pet folds into the player's source and each row carries the meter's creature name, secret in
+-- combat: live, the share column draws that name (blank on the owner's rows), never a color.
 --
 -- THE LIVE PATH TOUCHES NO NUMBER. A live value is secret for the whole fight, so a row hands it to
 -- three native seams and nowhere else: the bar's SetMinMaxValues / SetValue (the widget scales it),
@@ -21,7 +23,8 @@ local _, NS = ...
 -- out from `hud.bars`, the window's room and the wheel), so the list never decides what is visible.
 --
 -- THE LOOK (modules/Hud_Appearance.lua, `hud.spells.*`) is applied once per Appearance stamp: the
--- row height, the icons, the bar's texture and the player's and the pet's colors, the text's font.
+-- row height, the icons, the bar's texture and the player's and the pet's colors, the text's font
+-- (the share column too: the amount's color, face and flags, a little smaller).
 
 local Breakdown = {}
 NS.HudBreakdown = Breakdown
@@ -32,6 +35,8 @@ local Style = NS.Style
 Breakdown.ROW_GAP = 2
 Breakdown.PAW = 12
 local PCT_WIDTH = 44
+Breakdown.PCT_SMALLER = 2   -- the share's size under the amount's (points)
+local pctFont = {}          -- refilled per restyle: ApplyFont keeps nothing of it
 
 --- The configured row height.
 function Breakdown.RowHeight()
@@ -101,7 +106,7 @@ local function newRow(parent)
     row.paw:SetSize(Breakdown.PAW, Breakdown.PAW)
     row.name = Style.PlainText(bar, Style.FONT.TEXT, "LEFT")
     row.amount = Style.PlainText(bar, Style.FONT.TEXT, "RIGHT")
-    row.pct = Style.Text(bar, Style.FONT.CAPTION, nil, "RIGHT")
+    row.pct = Style.PlainText(bar, Style.FONT.TEXT, "RIGHT")
     row:EnableMouse(true)
     row:SetScript("OnEnter", rowEnter)
     row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
@@ -124,6 +129,13 @@ local function restyle(row)
     local font = A.Font("spells")
     A.ApplyFont(row.name, font)
     A.ApplyFont(row.amount, font)
+    -- The share: the amount's color, face and flags (owner, 2026-11-11), PCT_SMALLER points smaller
+    -- so it stays the quieter figure.
+    pctFont.path, pctFont.flags, pctFont.shadow, pctFont.shadowFromSkin = font.path, font.flags, font.shadow,
+        font.shadowFromSkin
+    pctFont.size = math.max(6, font.size - Breakdown.PCT_SMALLER)
+    pctFont.r, pctFont.g, pctFont.b, pctFont.a = font.r, font.g, font.b, font.a
+    A.ApplyFont(row.pct, pctFont)
 end
 
 -- The row's anchors for its mode: the icon, the paw and the share column on or off. Set only when
@@ -216,12 +228,16 @@ local function setIcon(row, id)
     if row.icon:IsShown() then row.icon:SetTexture(Breakdown.SpellIcon(id)) end
 end
 
--- The live entries in drawing order: the player's spells, then the pet's ({ spell, isPet }).
+-- The live entries in drawing order: the player's spells, then the pet's ({ spell, isPet }). A row
+-- of the player's that the meter PLAINLY names a creature on (`creature`: a folded source's pet row,
+-- WoW Forever, read out of combat) draws as the pet's where it stands. In combat the name is secret
+-- (the owner's rows carry "", the pet's its name), so no row can be colored by it: the share column,
+-- empty live, draws the name instead (ShowLive), blank on the owner's rows.
 local function liveEntries(live)
     local out = {}
     local function add(part, isPet)
         if type(part) ~= "table" or type(part.spells) ~= "table" then return end
-        for _, s in ipairs(part.spells) do out[#out + 1] = { s = s, pet = isPet } end
+        for _, s in ipairs(part.spells) do out[#out + 1] = { s = s, pet = isPet or s.creature == true } end
     end
     add(live.player, false)
     add(live.pet, true)
@@ -247,17 +263,24 @@ function List:ShowLive(live, n, offset)
     self:Clear()
     if type(live) ~= "table" then return 0 end
     local entries, max = liveEntries(live), liveMax(live)
+    -- The pet's name column: while a pet is out and a row carries a name to draw.
+    local names = live.petOut == true
     offset = offset or 0
     for i = 1, n do
         local e = entries[offset + i]
         if not e then break end
         local s = e.s
-        local row = self:acquire(i, e.pet, false)
+        local row = self:acquire(i, e.pet, names)
         if max ~= nil then row.bar:SetMinMaxValues(0, max) end
         if s.total ~= nil then row.bar:SetValue(s.total) else row.bar:SetValue(0) end
         row.name:SetText(Breakdown.SpellName(s.spellID))
         row.amount:SetText(NS.Format.Number(s.total))
-        row.pct:SetText("")
+        -- The meter's creature name, untouched (only `== nil` is asked of it): "" on the owner's rows.
+        if names and s.creatureName ~= nil then row.pct:SetText(s.creatureName) else row.pct:SetText("") end
+        if names then
+            local c = row.petLook
+            row.pct:SetTextColor(c.r, c.g, c.b, 1)
+        end
         setIcon(row, s.spellID)
         row.spellID = s.spellID   -- a handle for the hover only: tested for nil, never compared
     end
@@ -287,6 +310,7 @@ function List:ShowFinal(spells, total, n, offset)
         row.name:SetText(Breakdown.SpellName(s.spellID))
         row.amount:SetText(NS.Format.Number(dmg))
         row.pct:SetText(total > 0 and NS.Format.Pct(dmg / total * 100) or "")
+        row.pct:SetTextColor(pctFont.r, pctFont.g, pctFont.b, pctFont.a)   -- off the live tint (restyle filled it)
         setIcon(row, s.spellID)
         row.spellID = s.spellID
     end

@@ -20,8 +20,10 @@ local _, NS = ...
 -- GUID. ResolvePet() is that GUID while a pet exists (passed to the client as it comes, even opaque),
 -- and remembers the last PLAIN one, so the after-combat read still finds the pet that fought after it
 -- was dismissed. PET_SEPARATE is the seam for a client that folds the pet into its owner: false, and
--- ReadFinal reads no pet source and tags the player's spells that NS.Casts.PetSpellSet() names as the
--- pet's instead (ReadFinal also does this whenever the pet's own source comes back empty) (plan Task 2.4 builds that set; until then nothing is tagged). A pet read that raises
+-- ReadFinal reads no pet source and moves the player's rows that are the pet's to a pet part instead
+-- (ReadFinal also does this whenever the pet's own source comes back empty, as on WoW Forever): a row
+-- the meter names a creature on (creatureName, the pet's melee included), else a spell the cast set
+-- NS.Casts.PetSpellSet() names. ReadLive flags the named rows for the breakdown. A pet read that raises
 -- costs only the pet: the record keeps the player's part with no pet part, while a SEALED pet read
 -- still seals the whole read, so the settle tries again.
 --
@@ -274,7 +276,12 @@ local function readSpells(acc, source)
             return false
         end
         local id, dmg, dps = plain(acc, e.spellID), plain(acc, e.totalAmount), plain(acc, e.amountPerSecond)
-        if id then spells[#spells + 1] = { spellID = id, total = dmg or 0, dps = dps } end
+        -- A secret creature name would credit a pet row to the owner: the read waits for it too.
+        if Secrets.IsSealed(e.creatureName) then acc.sealed = true end
+        if id then
+            spells[#spells + 1] = { spellID = id, total = dmg or 0, dps = dps,
+                                    creature = Secrets.NamesCreature(e.creatureName) }
+        end
     end)
     return spells
 end
@@ -330,20 +337,33 @@ end
 
 local AUTO_ATTACK = 6603
 
--- No pet source (PET_SEPARATE = false, or an empty one): move the player's spells that the cast set
--- names to a pet part. Auto Attack stays the player's, since a folded source cannot tell whose it is.
+-- Whether a folded row is the pet's: the meter names a creature on it (its own mark, Auto Attack
+-- included: the pet's melee is a row of its own), else the cast set names its spell. By the cast set
+-- alone Auto Attack stays the owner's, since the set cannot tell whose melee it is.
+local function petsRow(sp, set)
+    if sp.creature then return true, "name" end
+    if set and set[sp.spellID] and sp.spellID ~= AUTO_ATTACK then return true, "casts" end
+    return false
+end
+
+-- No pet source (PET_SEPARATE = false, or an empty one): move the player's rows that are the pet's
+-- (petsRow) to a pet part.
 local function splitFolded(player)
     local set = NS.Casts and NS.Casts.PetSpellSet and NS.Casts.PetSpellSet()
-    if type(set) ~= "table" then return nil end
-    local mine, theirs, petTotal = {}, {}, 0
+    if type(set) ~= "table" then set = nil end
+    local mine, theirs, petTotal, by = {}, {}, 0, { name = 0, casts = 0 }
     for _, sp in ipairs(player.spells) do
-        if set[sp.spellID] and sp.spellID ~= AUTO_ATTACK then -- both melee as Auto Attack: the owner's
+        local pets, why = petsRow(sp, set)
+        if pets then
             theirs[#theirs + 1] = sp
             petTotal = petTotal + sp.total
+            by[why] = by[why] + 1
         else
             mine[#mine + 1] = sp
         end
     end
+    debug("folded split: %d player row(s), %d pet row(s) (%d by creature name, %d by cast set)",
+        #mine, #theirs, by.name, by.casts)
     if #theirs == 0 then return nil end
     player.spells = mine
     player.total = math.max(0, player.total - petTotal)
@@ -555,7 +575,12 @@ local function livePart(guid)
     local spells = {}
     Secrets.SafeIterate(source.combatSpells, function(_, e)
         if not Secrets.CanAccessTable(e) then return end
-        spells[#spells + 1] = { spellID = e.spellID, total = e.totalAmount, dps = e.amountPerSecond }
+        -- `creature` is plain: whether the meter PLAINLY names a creature on the row (out of combat;
+        -- in combat the name is secret and may be the owner's "", so it says nothing). `creatureName`
+        -- is the name itself, copied untouched: the breakdown hands it to a FontString, where the
+        -- owner's "" draws nothing and the pet's draws its name.
+        spells[#spells + 1] = { spellID = e.spellID, total = e.totalAmount, dps = e.amountPerSecond,
+                                creature = Secrets.NamesCreature(e.creatureName), creatureName = e.creatureName }
     end)
     return { total = source.totalAmount, dps = source.amountPerSecond, maxAmount = source.maxAmount,
              spells = spells, source = source }
@@ -578,7 +603,8 @@ end
 --- Every value is OPAQUE (secret in combat) and only copied; spells keep Blizzard's order. A source
 --- the client does not answer (no session, no pet, no API) is nil.
 --- @param id number|nil
---- @return table live  { player = {total, dps, rung, maxAmount, spells = { {spellID, total, dps} }}|nil,
+--- @return table live  { player = {total, dps, rung, maxAmount, spells = { {spellID, total, dps, creature,
+---                       creatureName} }}|nil,
 ---                       pet = {total, dps, maxAmount, spells}|nil }
 function Meter.ReadLive(id)
     if shared and shared.at == GetTime() and shared.id == id and shared.live then return shared.live end
@@ -587,9 +613,13 @@ function Meter.ReadLive(id)
     local player = livePlayer()
     local pet = Meter.PET_SEPARATE and livePart(Meter.ResolvePet()) or nil
     if pet then pet.source = nil end
+    -- A pet source with no rows (a plain count of this file's own array) is a folded one: its total
+    -- would draw a confident 0 while the pet's damage sits in the owner's rows.
+    if pet and #pet.spells == 0 then pet = nil end
     liveID = nil
     if t0 then Perf.Note("meter", debugprofilestop() - t0) end
-    local live = { player = player, pet = pet }
+    -- `petOut`: whether a pet exists (plain), so the breakdown knows to draw the pet's name column.
+    local live = { player = player, pet = pet, petOut = Meter.ResolvePet() ~= nil }
     if shared and shared.at == GetTime() then shared.id, shared.live = id, live end
     return live
 end

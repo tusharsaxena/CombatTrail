@@ -106,7 +106,9 @@ return function(Kit)
     local function spellsOf(w, list)
         local spells = {}
         for i, sp in ipairs(list or {}) do
-            spells[i] = { spellID = w(sp.id), totalAmount = w(sp.dmg), amountPerSecond = w(sp.dps) }
+            -- `creature`: the creatureName a folded source puts on a pet's row (WoW Forever, 2026-11-10).
+            spells[i] = { spellID = w(sp.id), totalAmount = w(sp.dmg), amountPerSecond = w(sp.dps),
+                          creatureName = sp.creature ~= nil and w(sp.creature) or nil }
         end
         return spells
     end
@@ -136,6 +138,21 @@ return function(Kit)
                            totalAmount = w(e.damage), amountPerSecond = w(e.dps) }
         end
         return { combatSources = sources, durationSeconds = w(s.duration) }
+    end
+
+    -- One enemy's drill-down in the EnemyDamageTaken view, found by its GUID or, with no GUID, by its
+    -- creature ID (the owner's Forever rows carry only the creature ID, 2026-11-11).
+    local function enemySourceTable(ctl, id, guid, creatureID)
+        local s = id and ctl.sessions[id]
+        if not s then return nil end
+        local w = wrapper(ctl, id)
+        for i, e in ipairs(s.enemies or {}) do
+            local own = "Creature-0-1-2-3-" .. tostring(e.creatureID) .. "-" .. i
+            if (guid ~= nil and guid == own) or (guid == nil and creatureID == e.creatureID) then
+                return { totalAmount = w(e.damage), combatSpells = spellsOf(w, e.spells) }
+            end
+        end
+        return nil
     end
 
     -- The Dps meter type's source for the player: totalAmount the damage, amountPerSecond the rate.
@@ -191,12 +208,16 @@ return function(Kit)
             record(ctl, "GetCombatSessionSourceFromID", id, statType, guid, creatureID)
             if guid ~= nil and not Kit.isSecret(guid) and ctl.raiseFor[guid] then error(ctl.raiseFor[guid], 2) end
             if statType == DPS then return dpsSourceTable(ctl, id, guid) end
+            if statType == ENEMY_TAKEN then return enemySourceTable(ctl, id, guid, creatureID) end
             if statType ~= DAMAGE_DONE then return nil end
             return sourceTable(ctl, id, guid)
         end
         function api.GetCombatSessionSourceFromType(sessionType, statType, guid, creatureID)
             record(ctl, "GetCombatSessionSourceFromType", sessionType, statType, guid, creatureID)
             if statType == DPS then return dpsSourceTable(ctl, currentFor(ctl, sessionType), guid) end
+            if statType == ENEMY_TAKEN then
+                return enemySourceTable(ctl, currentFor(ctl, sessionType), guid, creatureID)
+            end
             if statType ~= DAMAGE_DONE then return nil end
             return sourceTable(ctl, currentFor(ctl, sessionType), guid)
         end

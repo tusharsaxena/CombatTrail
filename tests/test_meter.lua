@@ -469,6 +469,74 @@ test("meter: an empty pet source falls back to tagging the pet's spells in the p
     NS.Casts = nil
 end)
 
+-- WoW Forever folds the pet into its owner and names the pet on each of its rows (creatureName), its
+-- melee a second Auto Attack row beside the owner's (owner's report, 2026-11-10).
+local FOLDED = { damage = 10700, duration = 30, pet = false, spells = {
+    { id = 11366, dmg = 8500, dps = 280 }, { id = 6603, dmg = 500, dps = 16 },
+    { id = 6603, dmg = 700, dps = 23, creature = "Wolf" }, { id = 17253, dmg = 1000, dps = 33, creature = "Wolf" },
+    { id = 2643, dmg = 0, dps = 0, creature = "" },
+} }
+
+test("meter: a folded source's rows the meter names a creature on are the pet's, Auto Attack too", function()
+    local NS, meter = withPet()
+    NS.Casts = { PetSpellSet = function() return {} end }   -- no cast seen: the name alone decides
+    meter.SetSession(21, FOLDED)
+    local r = NS.Meter.ReadFinal(21)
+    assertEqual(r.merged.total, 10700, "counted once")
+    assertEqual(r.pet.total, 1700, "the pet's melee and its Bite")
+    assertEqual(r.player.total, 9000, "the owner's Auto Attack and Aimed Shot")
+    local melee = {}
+    for _, sp in ipairs(r.merged.spells) do
+        if sp.spellID == 6603 then melee[#melee + 1] = (sp.isPet and "pet:" or "player:") .. sp.total end
+    end
+    table.sort(melee)
+    assertEqual(table.concat(melee, ","), "pet:700,player:500", "two Auto Attack rows, one each")
+    for _, sp in ipairs(r.merged.spells) do
+        if sp.spellID == 2643 then assertFalse(sp.isPet, "a plain empty name is no creature") end
+    end
+    NS.Casts = nil
+end)
+
+test("meter: the pet with no cast set yet still splits by creature name", function()
+    local NS, meter = withPet()
+    NS.Casts = nil
+    meter.SetSession(22, FOLDED)
+    local r = NS.Meter.ReadFinal(22)
+    assertEqual(r.pet and r.pet.total, 1700)
+end)
+
+test("meter: ReadLive flags a row the meter plainly names a creature on; a secret name says nothing", function()
+    local NS, meter = withPet()
+    meter.SetSession(23, FOLDED)
+    local function flags(live)
+        local out = {}
+        for i, sp in ipairs(live.player.spells) do out[i] = sp.creature and "c" or "-" end
+        return table.concat(out)
+    end
+    local live = NS.Meter.ReadLive()
+    assertEqual(flags(live), "--cc-", "plain: the named rows; the owner's empty name is no creature")
+    assertTrue(live.petOut, "a pet is out")
+    -- In combat the owner's "" and the pet's name are both secret (/ct probe, 2026-11-11): no flag,
+    -- but the name itself is carried, untouched, for the breakdown to draw.
+    meter.SetSecret(true)
+    live = NS.Meter.ReadLive()
+    assertEqual(flags(live), "-----", "a secret name flags nothing")
+    assertTrue(T.isSecret(live.player.spells[3].creatureName), "the name copied, still secret")
+    assertEqual(T.reveal(live.player.spells[3].creatureName), "Wolf")
+    assertNil(live.pet, "a pet source with no rows is a folded one: no pet figure")
+    meter.SetSecret(false)
+end)
+
+test("meter: a creature name still secret after combat seals the record read", function()
+    local NS, meter = withPet()
+    meter.SetSession(24, FOLDED)
+    meter.SetSecret(true)
+    local r, err = NS.Meter.ReadFinal(24)
+    assertNil(r)
+    assertEqual(err, "sealed")
+    meter.SetSecret(false)
+end)
+
 test("meter: PET_SEPARATE=false path tags by cast set", function()
     local NS, meter = withPet()
     NS.Meter.PET_SEPARATE = false

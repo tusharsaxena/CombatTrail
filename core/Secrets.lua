@@ -114,6 +114,17 @@ function Secrets.PlainEquals(a, b)
     return a == b
 end
 
+--- Whether a meter spell row's `creatureName` PLAINLY names a creature: the folded source's mark of a
+--- pet's row (WoW Forever puts the pet's spells, its melee too, in its owner's source). The owner's
+--- own rows carry "" there, not nil (`/ct probe`, 2026-11-11), so a sealed name says nothing: it
+--- may be "" and cannot be compared. Only a plain, non-empty name counts; nil, "" and a secret do not.
+--- @param v any
+--- @return boolean
+function Secrets.NamesCreature(v)
+    if Secrets.IsSealed(v) then return false end
+    return type(v) == "string" and v ~= ""
+end
+
 -- ---------------------------------------------------------------------------
 -- Table inspection
 -- ---------------------------------------------------------------------------

@@ -48,7 +48,9 @@ test("breakdown never sorts or computes in combat (mock secret values)", functio
         assertTrue(T.isSecret(row.spellID), "the ID kept as the meter's handle")
         order[i] = T.reveal(row.spellID)
         assertTrue(T.isSecret(row.amount:GetText()), "the amount is the formatter's (here the secret itself)")
-        assertFalse(row.pct:IsShown(), "no share in combat")
+        -- No share in combat: with a pet out the column draws the meter's creature name instead,
+        -- blank here (a separate pet source names none).
+        assertEqual(row.pct:GetText(), "", "no share in combat")
     end
     assertEqual(table.concat(order, ","), "11366,133,17253,16827", "the meter's own order, player then pet")
     assertEqual(T.reveal(list[1].bar:GetValue()), 10000)
@@ -82,6 +84,36 @@ test("breakdown: pet rows carry paw and pet color", function()
     meter.SetSecret(false)
 end)
 
+test("breakdown: a folded pet row the meter names a creature on draws as the pet's, live", function()
+    local inst, meter, Hud = H.fresh({ pet = true })
+    meter.SetSession(1, { damage = 2000, dps = 100, duration = 20, pet = false,
+        spells = { { id = 6603, dmg = 900, dps = 45 }, { id = 6603, dmg = 700, dps = 35, creature = "Wolf" },
+                   { id = 17253, dmg = 400, dps = 20, creature = "Wolf" } },
+        enemies = { { name = "Angry Boar", creatureID = 1985, damage = 2000 } } })
+    H.enter(inst, 10)
+    H.run(inst, 10.25)
+    H.hit(inst, 11, 1)
+    H.tick(inst, 11.25, 13)
+    -- Plain (the meter answering out of combat): the named rows are the pet's.
+    local list = rows(Hud, "live")
+    local marks = {}
+    for i, row in ipairs(list) do marks[i] = row.isPet and "p" or "-" end
+    assertEqual(table.concat(marks), "-pp", "the owner's melee, then the pet's melee and Bite")
+    assertTrue(list[2].paw:IsShown(), "the paw on the pet's melee")
+    -- In combat the name is secret: no row can be colored by it, but the share column draws it.
+    meter.SetSecret(true)
+    H.tick(inst, 13.25, 14)
+    list = rows(Hud, "live")
+    marks = {}
+    for i, row in ipairs(list) do marks[i] = row.isPet and "p" or "-" end
+    assertEqual(table.concat(marks), "---", "a secret name colors nothing")
+    assertTrue(list[2].pct:IsShown(), "the name column is up while a pet is out")
+    assertTrue(T.isSecret(list[2].pct:GetText()), "the pet's name, handed on untouched")
+    assertEqual(T.reveal(list[2].pct:GetText()), "Wolf")
+    assertEqual(list[1].pct:GetText(), "", "the owner's row draws no name")
+    meter.SetSecret(false)
+end)
+
 test("breakdown: the over card's rows are merged, highest first, with their shares", function()
     local inst, meter, Hud = H.fresh({ pet = true })
     H.whole(inst, meter, 1, PETFIGHT, 10, 40)
@@ -99,6 +131,21 @@ test("breakdown: the over card's rows are merged, highest first, with their shar
     local _, max = list[2].bar:GetMinMaxValues()
     assertEqual(max, 30000, "scaled to the top spell")
     assertEqual(list[1].name:GetText(), "Spell 133")
+    -- The share wears the amount's color, face and flags, a little smaller (owner, 2026-11-11).
+    H.setHud(inst, "spells.fontFlags", "OUTLINE")
+    list = rows(Hud, "over")
+    local pct, amount = list[1].pct, list[1].amount
+    local pf, ps, pfl = pct:GetFont()
+    local af, as, afl = amount:GetFont()
+    assertEqual(pf, af, "the amount's face")
+    assertEqual(pfl, afl, "the amount's flags")
+    assertEqual(pfl, "OUTLINE")
+    assertEqual(ps, as - inst.NS.HudBreakdown.PCT_SMALLER, "a little smaller")
+    local pr, pg, pb = pct:GetTextColor()
+    local ar, ag, ab = amount:GetTextColor()
+    assertEqual(pr, ar)
+    assertEqual(pg, ag)
+    assertEqual(pb, ab)
 end)
 
 test("breakdown: hud.bars caps the rows and the wheel scrolls past them", function()
@@ -130,4 +177,49 @@ test("breakdown: the layout's spell rows off hides them", function()
     local body = H.body(Hud, "live")
     assertFalse(body.parts.spells.frame:IsShown())
     assertTrue(inst ~= nil)
+end)
+
+test("hud: the live DPS figures are written whole through the rate path; Damage is not", function()
+    local inst = secretFight()
+    local NS = inst.NS
+    local seen = {}
+    local rate, number = NS.Format.Rate, NS.Format.Number
+    NS.Format.Rate = function(v) seen[#seen + 1] = "rate"; return rate(v) end
+    NS.Format.Number = function(v) seen[#seen + 1] = "number"; return number(v) end
+    H.tick(inst, 13.25, 14)
+    NS.Format.Rate, NS.Format.Number = rate, number
+    local rates = 0
+    for _, k in ipairs(seen) do if k == "rate" then rates = rates + 1 end end
+    assertTrue(rates >= 2, "your DPS and the pet's: " .. table.concat(seen, ","))
+end)
+
+test("hud: the DPS box shows your pet's DPS too; your figures share a color, the pet's another", function()
+    local inst, meter, Hud = secretFight()
+    local NS = inst.NS
+    local C = NS.HudStates.COLORS
+    local live = H.body(Hud, "live").w.dps
+    assertTrue(live.petValue:IsShown(), "the Pet row is up live")
+    assertTrue(T.isSecret(live.petValue:GetText()), "the pet's rate, the meter's secret")
+    assertEqual(T.reveal(live.petValue:GetText()), 200)
+    local dmg = H.body(Hud, "live").w.damage
+    local r, g, b = live.value:GetTextColor()
+    local dr, dg, db = dmg.value:GetTextColor()
+    assertEqual(r, dr, "your DPS in your Damage's color")
+    assertEqual(g, dg)
+    assertEqual(b, db)
+    local pr, pg, pb = live.petValue:GetTextColor()
+    assertEqual(pr, C.pet[1], "the pet's DPS in the softer skin hue")
+    assertEqual(pg, C.pet[2])
+    assertEqual(pb, C.pet[3])
+    local qr, qg, qb = dmg.petValue:GetTextColor()
+    assertEqual(qr, pr, "the pet's damage in the same hue")
+    assertEqual(qg, pg)
+    assertEqual(qb, pb)
+    assertTrue(pr ~= r or pg ~= g or pb ~= b, "yours and the pet's differ")
+    meter.SetSecret(false)
+    H.finish(inst, 10, 40)
+    assertEqual(Hud.State(), "over")
+    local over = H.body(Hud, "over").w.dps
+    assertTrue(over.petValue:IsShown(), "the Pet row on the card")
+    assertEqual(over.petValue:GetText(), NS.Format.Number(200))
 end)
