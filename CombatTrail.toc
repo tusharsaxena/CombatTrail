@@ -153,6 +153,9 @@ modules\Loadouts.lua
 # Bests and Recorder each register their bus receiver at FILE SCOPE; Recorder captures NS.Secrets and
 # NS.L there. Each reaches the others, NS.db and the fight modules above at CALL time only.
 modules\Filters.lua
+# The fight record's race part (Race mode): pure; reaches NS.Secrets at FILE SCOPE, so it follows
+# core\Secrets.lua; Bests and Recorder reach it at CALL time.
+modules\RaceRecord.lua
 modules\Bests.lua
 modules\Recorder.lua
 # The purge (at login, daily, `/ct purge`) and the store's size. Reaches NS.Recorder, NS.Bests,

@@ -37,7 +37,7 @@ test("diagnostics: the report carries every section of this addon's own", functi
     local lines = report(inst)
     assertTrue(#lines > 0, "no report landed")
     for _, needle in ipairs({
-        "schema stored=2 code=2 fightFormat=3", "profile=", "fights stored=0",
+        "schema stored=2 code=2 fightFormat=4", "profile=", "fights stored=0",
         "lanes player=on pet=on", "cast events=", "fight state=idle",
         "hud state=", "results shown=false", "test active=false mode=none",
     }) do

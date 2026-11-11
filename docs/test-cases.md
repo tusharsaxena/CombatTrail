@@ -19,7 +19,7 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 2 and the fight record's format is 2
+- load: the settings stamp is 2 and the fight record's format is 4
 - load: a schema 1 store loads empty at version 2, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
@@ -580,7 +580,7 @@ Total.
 - filters: scenarios are stored by default, a kind without a toggle is dropped
 - filters: the short check comes before the content check
 
-### test_bests.lua (10)
+### test_bests.lua (20)
 
 - bests: best per character×spec×boardKey
 - bests: For with exclude answers the runner-up
@@ -592,10 +592,21 @@ Total.
 - bests: the boards follow a save and a delete
 - bests: the character key carries the client, so boards never mix Retail and Forever
 - bests: forever: the predominant tree splits the boards as a spec does (D5)
+- bests: a race counts only on its race board, never the dummy's fight board
+- bests: race boards split by character, spec, dummy kind and length
+- bests: a race's kind is read from the dummy list now, else the stored kind
+- bests: a dummy list change redraws the race boards
+- bests: incomplete and lost races never count; the highest race DPS holds the board
+- bests: an incomplete or flagged race never holds the clean board
+- bests: Compute's second argument still skips a record; the clean view is its third
+- bests: HoldingIDs names the holders of the all and the clean boards
+- bests: Before is the best on the board fought before; Delta the verdict against it
+- bests: Delta works for fights too, and defaults its list to the store
 
-### test_retention.lua (13)
+### test_retention.lua (14)
 
 - retention: purge removes >7 days except bests
+- retention: a race holding a best survives the purge
 - retention: keepBests off lets an old best go
 - retention: days=0 keeps forever
 - retention: purge of 600 fights keeps bests and caps at 500
@@ -629,6 +640,22 @@ Total.
 - record: a short fight with no readable character is skipped as short, the filters first
 - record: three fights in the same gear share one gear set; a swap between fights is a second
 - record: targets merge enemies of one name, highest first, whole, capped
+
+### test_race_record.lua (13)
+
+- race record: a complete race is saved however short
+- race record: an incomplete race is saved too, with its endedAt
+- race record: a canceled race saves the pull as a plain dummy fight under the normal filters
+- race record: a lost race is not a race
+- race record: a race still needs a character
+- race record: Recorder asks the race to finalize before it judges the fight
+- race record: no secret reaches the race part
+- race record: Plain answers nil for anything but a table, and copies the spec §6 fields
+- race record: IsRace is a record with a race part
+- race record: Dps is the race DPS for a race, the fight DPS otherwise
+- race record: ScoreDps is the score over the length, over endedAt when incomplete
+- race record: Flagged reads the race part's flags and its status
+- database: schema 3 records load unchanged under 4
 
 ### test_slices.lua (18)
 
@@ -1159,9 +1186,10 @@ Total.
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
 | test_filters.lua | 12 |
-| test_bests.lua | 10 |
-| test_retention.lua | 13 |
+| test_bests.lua | 20 |
+| test_retention.lua | 14 |
 | test_record.lua | 18 |
+| test_race_record.lua | 13 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1197,4 +1225,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **943** |
+| **Total** | **967** |

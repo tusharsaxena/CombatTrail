@@ -131,6 +131,7 @@ local SUITES = {
     "test_bests",
     "test_retention",
     "test_record",
+    "test_race_record",
     "test_slices",
     "test_hud_states",
     "test_hud_pace",

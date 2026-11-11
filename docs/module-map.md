@@ -68,7 +68,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Stats.lua` | The character's stats at the fight's start, completed after combat |
 | `modules/Loadouts.lua` | The interned equipment sets (and their recon) and talent loadouts a fight refers to |
 | `modules/Filters.lua` | The recording filters a fight must pass to be stored |
-| `modules/Bests.lua` | Personal bests, worked out from the stored fights |
+| `modules/RaceRecord.lua` | The fight record's `race` part: its plain copy, the race DPS, its flags (Race mode) |
+| `modules/Bests.lua` | Personal bests, worked out from the stored fights: fight boards, race boards and their clean view |
 | `modules/Recorder.lua` | The fight record and the store |
 | `modules/Retention.lua` | The purge, its daily timer and `/ct purge`, and the store's size |
 | `modules/Slices.lua` | The damage chart's in-session store |

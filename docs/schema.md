@@ -101,7 +101,7 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
 | The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |
 
-## The fight record (CT_SCHEMA 3)
+## The fight record (CT_SCHEMA 4)
 
 Built by `Recorder.Build` after combat from plain values only; anything that came back secret is left
 absent. `Recorder.CT_SCHEMA` is the record's own format version, separate from the settings stamp; a
@@ -117,6 +117,7 @@ record with a higher `schema` than this build knows is never listed.
 | `casts`, `cooldowns` | the packed cast list, and `{ [spellID] = ms }` for the timeline |
 | `gearSet`, `stats`, `loadout`, `usage` | the key of the equipment set current at combat start (`global.gearSets`; read through `Loadouts.GearOf`, which also takes a sample fight's inline `gear`), the stats (per fight: they move with buffs), the loadout key, what was used |
 | `targets` | CT_SCHEMA 3, optional: `{ { name, total }, ... }`, the enemies your damage reached (the meter's EnemyDamageTaken view, read after combat), enemies of one name merged, highest first, at most `Recorder.TARGETS_MAX` (10). Absent on a CT_SCHEMA 2 record or when the meter answered none; the fight detail's Targets section is then not drawn |
+| `race` | CT_SCHEMA 4, optional: a race's part (Race mode; `modules/RaceRecord.lua`, `RaceRecord.Plain` keeps these fields only, each only when plain): `length` (the race length picked, s), `kind` (the dummy's category when saved; the boards read the Training dummies list now and fall back to it), `status` (`complete` or `incomplete`: a lost or canceled race is taken off its fight, which is then judged as a plain fight), `flags` (`lateCasts` `{ { t, spellID } }`, `restartedAt`, `reloaded`, `died`, `sessionFromList`, `sharedSession`), `score` (the session's merged total), `dps` (score over `length`, over `endedAt` when incomplete), `tail`, `endedAt`, `combatEnd`, `grace`, `restartGap`. A race is saved without the recording filters; the record's own `duration` and `dps` stay the fight's, and `RaceRecord.Dps` is the race DPS wherever a race is shown. Absent on a fight and on every older record |
 | `note`, `client`, `build`, `version`, `status` | the player's note (`Recorder.ClampNote`: a control character to a space, `\|` to `/`, trimmed, at most 200 UTF-8 characters), `retail`/`forever`, the client build, the addon version, `"final"` |
 
 A five-minute raid fight packs under 6 KB (pinned by `tests/test_record.lua`), so 500 fights stay
@@ -134,5 +135,6 @@ a step that returned; a step marked `perProfile` runs once for every stored prof
 | 2 | 1 → 2 | Empties the fight store, its order, the loadouts and the gear sets (`global.fights`, `fightOrder`, `loadouts`, `gearSets`): the v0.2 record shape, CT_SCHEMA 2. Every other account-wide key is kept |
 
 A change to the fight record bumps `Recorder.CT_SCHEMA` and reads the older shape where it is read,
-never by rewriting stored fights. The one exception is step 2: the addon was unpublished, so the v0.1
+never by rewriting stored fights: CT_SCHEMA 3 → 4 (the optional `race`) has no step, and an older record
+loads as it was, a fight. The one exception is step 2: the addon was unpublished, so the v0.1
 store was emptied once instead of migrated (v0.2 plan, decision D1).

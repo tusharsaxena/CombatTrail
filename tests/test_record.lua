@@ -112,7 +112,7 @@ test("record: a real fight becomes a stored record with the spec §5 fields", fu
     assertEqual(NS.Recorder.Get(r.id), r, "stored under its id")
     assertEqual(NS.db.global.fightOrder[1], r.id)
     assertEqual(r.schema, NS.Recorder.CT_SCHEMA)
-    assertEqual(NS.Recorder.CT_SCHEMA, 3)
+    assertEqual(NS.Recorder.CT_SCHEMA, 4)
     assertEqual(r.status, "final")
     assertEqual(r.duration, 40)
     assertEqual(r.damage.merged, 40000)

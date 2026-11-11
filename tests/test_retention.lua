@@ -78,6 +78,32 @@ test("retention: purge removes >7 days except bests", function()
     assertEqual(heard.n, 1, "no message when nothing was removed")
 end)
 
+test("retention: a race holding a best survives the purge", function()
+    local NS = fresh()
+    local R = NS.Recorder
+    -- Three old races on one race board: the fastest holds it, a flagged one is beaten by it, and the
+    -- clean board's holder is the fastest clean one. A slower clean race holds neither and goes.
+    local function race(o)
+        local r = rec({ t = o.t, boardKey = "t:31146:80:Training Dummy:0", dps = 50 })
+        r.identity.content = "dummy"
+        r.identity.targetCreatureID = 31146
+        r.race = { length = 60, kind = "single", status = o.status or "complete", flags = o.flags or {},
+                   score = o.dps * 60, dps = o.dps }
+        return r
+    end
+    local best = race({ t = NOW - 20 * DAY, dps = 3000, flags = { died = true } })
+    local cleanBest = race({ t = NOW - 19 * DAY, dps = 2000 })
+    local slower = race({ t = NOW - 18 * DAY, dps = 1000 })
+    local incomplete = race({ t = NOW - 17 * DAY, dps = 9000, status = "incomplete" })
+    for _, r in ipairs({ best, cleanBest, slower, incomplete }) do R.Save(r) end
+    assertEqual(NS.Retention.Purge(NOW), 2)
+    local fights = store(NS)
+    assertTrue(fights[best.id] ~= nil, "the race board's best is kept")
+    assertTrue(fights[cleanBest.id] ~= nil, "the clean board's best is kept")
+    assertNil(fights[slower.id], "a race holding no best ages out")
+    assertNil(fights[incomplete.id], "an incomplete race never holds a best")
+end)
+
 test("retention: keepBests off lets an old best go", function()
     local NS = fresh()
     NS.db.profile.history.keepBests = false
