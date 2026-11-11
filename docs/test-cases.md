@@ -533,17 +533,19 @@ Total.
 - gear sets: Sweep mid-fight keeps the live fight's set after a swap in combat
 - gear sets: the stored size estimate counts the sets
 
-### test_filters.lua (10)
+### test_filters.lua (12)
 
 - filters: the history defaults are the plan's
+- filters: the minimum length defaults to 30 s on Retail and 15 s on WoW Forever
+- filters: every content kind is saved by default, scenarios too
 - filters: the content toggles are exactly this client's content kinds
 - filters: retail: the mplus, delve and arena toggles are present and on
 - forever: mplus/delve/arena filter keys absent
-- filters: 22 s fight skipped as short
+- filters: a fight under the minimum length is skipped as short
 - filters: the minimum length follows the setting
 - filters: bossesOnly drops non-encounter
 - filters: content toggle drops world
-- filters: scenarios are dropped by default, a kind without a toggle too
+- filters: scenarios are stored by default, a kind without a toggle is dropped
 - filters: the short check comes before the content check
 
 ### test_bests.lua (10)
@@ -578,7 +580,7 @@ Total.
 ### test_record.lua (18)
 
 - record: a real fight becomes a stored record with the spec §5 fields
-- record: 22 s fight skipped as short
+- record: a 10 s fight is skipped as short
 - record: a lost fight is skipped as lost
 - record: a filtered fight is skipped as filtered
 - record: a fight with no readable character is skipped as unknown
@@ -894,7 +896,7 @@ Total.
 - usage edit: never-show list hides
 - usage edit: a sample fight changes in memory only
 
-### test_history_page.lua (16)
+### test_history_page.lua (17)
 
 - history page: four tabs, Recording filters first and Usage last
 - history page: every history.* key, the Results window's settings and the hidden list have a row
@@ -908,6 +910,7 @@ Total.
 - history page: Window scale reaches the Results window and every follower
 - history page: Row height reaches the Results list
 - history page: the words follow options-ui-§21 and no subsection restates its tab (options-ui-§7)
+- history page: the minimum length tooltip names this client's default
 - history page: every tab renders without printing
 - history page: the page's Defaults puts every row back and leaves the fights
 - history page: /ct set reaches a history path
@@ -1122,7 +1125,7 @@ Total.
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
-| test_filters.lua | 10 |
+| test_filters.lua | 12 |
 | test_bests.lua | 10 |
 | test_retention.lua | 13 |
 | test_record.lua | 18 |
@@ -1145,7 +1148,7 @@ Total.
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
-| test_history_page.lua | 16 |
+| test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 5 |
 | test_bindings.lua | 11 |
@@ -1161,4 +1164,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **911** |
+| **Total** | **914** |

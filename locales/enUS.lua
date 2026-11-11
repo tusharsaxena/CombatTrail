@@ -1044,8 +1044,8 @@ L["Training dummies"] = "Training dummies"
 L["Scenarios"] = "Scenarios"
 L["Which fights"] = "Which fights"
 L["Minimum fight length (seconds)"] = "Minimum fight length (seconds)"
-L["A fight shorter than this is shown on the DPS HUD but not stored."] =
-    "A fight shorter than this is shown on the DPS HUD but not stored."
+L["A fight shorter than this is shown on the DPS HUD but not stored. The default is %d seconds."] =
+    "A fight shorter than this is shown on the DPS HUD but not stored. The default is %d seconds."
 L["Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."] =
     "Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."
 L["Content to store"] = "Content to store"

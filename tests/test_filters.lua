@@ -1,7 +1,8 @@
 -- tests/test_filters.lua — modules/Filters.lua and the `history` defaults (plan Task 2.5, spec §5):
--- a fight is stored only if it passes the recording filters: the minimum length (30 s), bosses only
--- (off) and the content toggles (all on but scenarios). The Retail-only kinds (Mythic+, delves,
--- arenas) are declared for Retail and their toggles are absent on WoW Forever (clients-§4).
+-- a fight is stored only if it passes the recording filters: the minimum length (30 s on Retail, 15 s
+-- on WoW Forever; Race mode plan Task A1), bosses only (off) and the content toggles (all on,
+-- scenarios too). The Retail-only kinds (Mythic+, delves, arenas) are declared for Retail and their
+-- toggles are absent on WoW Forever (clients-§4).
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -22,15 +23,24 @@ end
 test("filters: the history defaults are the plan's", function()
     local NS = fresh()
     local h = NS.defaults.profile.history
-    assertEqual(h.minLength, 30)
     assertEqual(h.bossesOnly, false)
     assertEqual(h.days, 7)
     assertEqual(h.keepBests, true)
     assertEqual(h.maxFights, 500)
-    for _, key in ipairs({ "raid", "dungeon", "bg", "world", "dummy" }) do
-        assertEqual(h.content[key], true, key)
+end)
+
+test("filters: the minimum length defaults to 30 s on Retail and 15 s on WoW Forever", function()
+    local NS = fresh()
+    assertEqual(NS.defaults.profile.history.minLength, NS.Compat.IsForever() and 15 or 30)
+end)
+
+test("filters: every content kind is saved by default, scenarios too", function()
+    local NS = fresh()
+    local c = NS.defaults.profile.history.content
+    for _, key in ipairs(NS.Identity.ContentKeys()) do
+        assertEqual(c[key], true, key)
     end
-    assertEqual(h.content.scenario, false, "scenarios are off")
+    assertEqual(c.scenario, true, "scenarios are on")
 end)
 
 test("filters: the content toggles are exactly this client's content kinds", function()
@@ -62,12 +72,13 @@ test("forever: mplus/delve/arena filter keys absent", function()
     assertEqual(c.bg, true, "an arena counts as a battleground there")
 end)
 
-test("filters: 22 s fight skipped as short", function()
+test("filters: a fight under the minimum length is skipped as short", function()
     local NS = fresh()
-    local ok, why = NS.Filters.Passes(world(), 22)
+    local min = NS.defaults.profile.history.minLength
+    local ok, why = NS.Filters.Passes(world(), min - 1)
     assertFalse(ok)
     assertEqual(why, "short")
-    assertTrue((NS.Filters.Passes(world(), 30)), "the minimum length itself passes")
+    assertTrue((NS.Filters.Passes(world(), min)), "the minimum length itself passes")
     ok, why = NS.Filters.Passes(world(), nil)
     assertFalse(ok)
     assertEqual(why, "short", "no length at all is short")
@@ -101,12 +112,12 @@ test("filters: content toggle drops world", function()
     assertTrue((NS.Filters.Passes(world({ content = "raid" }), 60)), "another kind still passes")
 end)
 
-test("filters: scenarios are dropped by default, a kind without a toggle too", function()
+test("filters: scenarios are stored by default, a kind without a toggle is dropped", function()
     local NS = fresh()
-    local ok, why = NS.Filters.Passes(world({ content = "scenario" }), 60)
+    assertTrue((NS.Filters.Passes(world({ content = "scenario" }), 60)), "a scenario passes")
+    local ok, why = NS.Filters.Passes(world({ content = "nonsense" }), 60)
     assertFalse(ok)
     assertEqual(why, "filtered")
-    assertFalse((NS.Filters.Passes(world({ content = "nonsense" }), 60)))
     assertFalse((NS.Filters.Passes(nil, 60)), "no identity at all")
 end)
 

@@ -20,8 +20,8 @@ local FIGHT = { damage = 40000, dps = 1000, duration = 40,
 local FASTER = { damage = 48000, dps = 1200, duration = 40,
                  spells = { { id = 133, dmg = 48000, dps = 1200 } },
                  enemies = { { name = "Angry Boar", creatureID = 1985, damage = 48000 } } }
-local SHORT = { damage = 9000, dps = 450, duration = 20,
-                spells = { { id = 133, dmg = 9000, dps = 450 } },
+local SHORT = { damage = 9000, dps = 900, duration = 10,
+                spells = { { id = 133, dmg = 9000, dps = 900 } },
                 enemies = { { name = "Angry Boar", creatureID = 1985, damage = 9000 } } }
 
 -- A fresh instance on the scripted meter, the player targeting a boar (so a fight has a board key).
@@ -260,18 +260,19 @@ end)
 
 test("hud: skip reason chip on FIGHT_SKIPPED short", function()
     local inst, meter, Hud = fresh()
-    whole(inst, meter, 1, SHORT, 10, 20)
-    assertEqual(inst.NS.Recorder.Count(), 0, "under the 30 s minimum: not stored")
+    whole(inst, meter, 1, SHORT, 10, 10)
+    local min = inst.NS.defaults.profile.history.minLength
+    assertEqual(inst.NS.Recorder.Count(), 0, "under the minimum: not stored")
     assertEqual(Hud.State(), "over")
     local v = Hud.View()
     assertTrue(v.saved == false)
     assertEqual(v.skipReason, "short")
     local chips = table.concat(Hud.Chips(), "|")
-    assertTrue(chips:find(inst.NS.L["Not saved: shorter than %d s"]:format(30), 1, true) ~= nil, chips)
+    assertTrue(chips:find(inst.NS.L["Not saved: shorter than %d s"]:format(min), 1, true) ~= nil, chips)
     setHud(inst, "showSkipReason", false)
     chips = table.concat(Hud.Chips(), "|")
     assertTrue(chips:find(inst.NS.L["Not saved"], 1, true) ~= nil, chips)
-    assertTrue(chips:find("30", 1, true) == nil, "no reason when showSkipReason is off: " .. chips)
+    assertTrue(chips:find(tostring(min), 1, true) == nil, "no reason when showSkipReason is off: " .. chips)
 end)
 
 test("hud: overCard off: an auto-opened HUD closes with the fight", function()

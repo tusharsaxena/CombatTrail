@@ -150,7 +150,7 @@ quiet-wait pattern in `Race.lua` and `Meter.lua`). Edge cases:
 - **Chained trash** (one long combat, many targets): one session gives one fight. The primary target is the enemy that took
   the most damage, and the identity line says "+N others".
 - **An encounter starting mid-combat:** if the meter splits there, the pre-encounter part is its own fight (usually
-  under 30 s, so not stored) and the boss part is the encounter fight. If the meter doesn't split, the whole session is
+  under the minimum length, so not stored) and the boss part is the encounter fight. If the meter doesn't split, the whole session is
   one fight carrying the encounter identity.
 - **A meter reset mid-fight:** the fight is marked *lost* (as in DpsRace) and isn't stored.
 - **The live HUD** follows the same session: the clock starts on the session's first damage update.
@@ -160,9 +160,9 @@ it passes the recording filters:
 
 | Filter | Default |
 |---|---|
-| Minimum length | **30 s** **(owner)** |
+| Minimum length | **30 s** on Retail, **15 s** on WoW Forever **(owner, Race mode spec §3)** |
 | Bosses only | off |
-| Content types | raids, dungeons (Retail: incl. Mythic+), delves*, battlegrounds, arenas*, open world, training dummies: all on; scenarios off **(Claude)** |
+| Content types | raids, dungeons (Retail: incl. Mythic+), delves*, battlegrounds, arenas*, open world, training dummies, scenarios: all on **(owner, Race mode spec §3)** |
 
 **Identity (Claude).** The identity is read after combat, as plain values:
 - **Encounter:** `ENCOUNTER_START` and `ENCOUNTER_END` (`encounterID`, name, difficultyID, group size) inside the fight.

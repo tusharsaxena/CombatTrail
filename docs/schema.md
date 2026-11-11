@@ -41,7 +41,7 @@ default; the file's comments say what each value means.
 | `hud.spells.*` | `rowHeight = 18`, icons, paw, bars (`barColor` = `PALETTE.BAR`, `barAlpha` = `PALETTE.BAR_A` 0.9, `petColor` = `PALETTE.PET` at `BAR_A`), font (`fontSize = 10`, `fontShadow = true`), the bars' border (`borderShow = false`, `borderStyle = "Solid"`, `borderSize = 1`, `borderColor` black, `useClassColorBorder`, `borderStyleFromSkin = false`, `borderColorFromSkin = false`; drawn round the bar alone, on the HUD and in the fight detail) | DPS HUD → Spell rows |
 | `hud.window.*` | title bar, colors, footer, `strata = "MEDIUM"`, `alpha = 1` | DPS HUD → Window |
 | `hud.position` | `{ point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 }` | DPS HUD → Window, and the title bar's drag (named state, below) |
-| `history.minLength`, `bossesOnly`, `content.*` | `30`, `false`, every kind on but `scenario`; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
+| `history.minLength`, `bossesOnly`, `content.*` | `30` on Retail and `15` on WoW Forever, `false`, every kind on, `scenario` too; no `mplus`, `delve` or `arena` key on WoW Forever | History → Recording filters |
 | `history.days`, `keepBests`, `maxFights` | `7`, `true`, `500` | History → History |
 | `results.scale`, `rowHeight`, `shareTalents`, `closeInCombat` | `1`, `18`, `true`, `true` | History → Results window |
 | `results.timelineMarks` | `"icon"` | History → Results window (*Ability timeline*); also the timeline's *Icons* and *Ticks* words on its *By ability* heading line, through `NS.SetByPath`. How By ability draws a cast: its ability's icon or a thin tick (`"tick"`); an open timeline redraws, its zoom kept |

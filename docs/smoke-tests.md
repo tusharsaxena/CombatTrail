@@ -97,7 +97,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | ID | Client | Check | Expect |
 |---|---|---|---|
 | SM-CT-F1 | Both | A 40 s fight on a target dummy, then leave combat | The HUD's card appears 2 s after damage stops; the fight is saved |
-| SM-CT-F2 | Both | A 15 s fight | Not saved, the card says too short |
+| SM-CT-F2 | Both | A 10 s fight | Not saved, the card says too short |
 | SM-CT-F3 | Both | Feign Death (Hunter) mid-boss and back in within 4 s | One fight, not two, and not lost |
 | SM-CT-F4 | Both | Does the meter open a new session at `ENCOUNTER_START` mid-combat? | Recorded; if it splits, the boss part is the encounter fight |
 | SM-CT-F5 | Both | Does the meter keep or replace the session across Feign Death? | Recorded; either way the fight carries on |

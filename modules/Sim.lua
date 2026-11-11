@@ -36,7 +36,7 @@ Sim.SCENARIOS = {
     { key = "behind", label = "Behind the best", factor = 0.93, desc = "saved, behind your best" },
     { key = "first", label = "First fight", board = "salhadaar",
       desc = "the first fight on its board: no best, no pace bar" },
-    { key = "short", label = "Too short", factor = 0.98, length = 22,
+    { key = "short", label = "Too short", factor = 0.98, length = 10,
       desc = "shorter than the recording filters' minimum: not saved" },
     { key = "lost", label = "Lost fight", factor = 0.97, lost = true, desc = "the meter loses the fight: not saved" },
 }

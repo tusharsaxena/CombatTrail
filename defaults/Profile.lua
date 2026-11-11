@@ -36,11 +36,11 @@ local function visibility()
     return v
 end
 
--- What the recording filters store, per content kind (spec §5): every kind on but scenarios. The
+-- What the recording filters store, per content kind (spec §5): every kind on, scenarios too. The
 -- keys are modules/Identity.lua's Identity.CONTENT for this client (a suite holds the two equal):
 -- Mythic+, delves and arenas are Retail-only, so on WoW Forever their keys are ABSENT (clients-§4).
 local function content()
-    local c = { raid = true, dungeon = true, bg = true, world = true, dummy = true, scenario = false }
+    local c = { raid = true, dungeon = true, bg = true, world = true, dummy = true, scenario = true }
     if NS.Compat.ForClient({ "retail" }) then
         c.mplus, c.delve, c.arena = true, true, true
     end
@@ -185,11 +185,12 @@ NS.defaults = {
                        footer = true, strata = "MEDIUM", alpha = 1 },
         },
         -- The recording filters and retention (spec §5; modules/Filters.lua, modules/Retention.lua):
-        -- the minimum length in seconds, bosses only, one toggle per content kind (content(), above),
+        -- the minimum length in seconds (30 on Retail, 15 on WoW Forever, where fights run shorter),
+        -- bosses only, one toggle per content kind (content(), above),
         -- the days a fight is kept (0 = for ever), whether a fight holding a best is kept past them,
         -- and the store's cap (0 = none).
         history = {
-            minLength = 30, bossesOnly = false, content = content(),
+            minLength = NS.Compat.ForClient({ "forever" }) and 15 or 30, bossesOnly = false, content = content(),
             days = 7, keepBests = true, maxFights = 500,
         },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view

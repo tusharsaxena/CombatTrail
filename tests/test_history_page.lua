@@ -313,6 +313,13 @@ test("history page: the words follow options-ui-§21 and no subsection restates 
     assertTrue(NS.FindSchemaRow("history.minLength").label:find("(seconds", 1, true) ~= nil, "length says (seconds)")
 end)
 
+test("history page: the minimum length tooltip names this client's default", function()
+    local NS = T.load().NS
+    local want = NS.Compat.IsForever() and 15 or 30
+    local tip = NS.FindSchemaRow("history.minLength").tooltip
+    assertTrue(type(tip) == "string" and tip:find("default is " .. want .. " seconds", 1, true) ~= nil, tostring(tip))
+end)
+
 test("history page: every tab renders without printing", function()
     local inst, ctx = shownPage({ mutate = installIds })
     local NS, M = inst.NS, inst.mocks

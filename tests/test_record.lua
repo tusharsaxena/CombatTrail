@@ -144,12 +144,12 @@ test("record: a real fight becomes a stored record with the spec §5 fields", fu
     assertEqual(#heard.skipped, 0)
 end)
 
-test("record: 22 s fight skipped as short", function()
+test("record: a 10 s fight is skipped as short", function()
     local inst, meter, heard = fresh()
     local s = {}
     for k, v in pairs(FIGHT) do s[k] = v end
-    s.duration = 22
-    fightThrough(inst, meter, s, 22)
+    s.duration = 10
+    fightThrough(inst, meter, s, 10)
     assertEqual(#heard.saved, 0)
     assertEqual(count(inst.NS), 0)
     assertEqual(#heard.skipped, 1)

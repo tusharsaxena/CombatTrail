@@ -94,7 +94,8 @@ local CONTENT = {
 at(TAB.recording, L["Which fights"])
 row("history.minLength", { type = "number", label = L["Minimum fight length (seconds)"], min = 0, max = 300, step = 5,
     validate = whole(0, 300), startsLine = true,
-    tooltip = L["A fight shorter than this is shown on the DPS HUD but not stored."] })
+    tooltip = L["A fight shorter than this is shown on the DPS HUD but not stored. The default is %d seconds."]
+        :format(D.history.minLength) })
 row("history.bossesOnly", { type = "bool", label = L["Bosses only"],
     tooltip = L["Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."] })
 
