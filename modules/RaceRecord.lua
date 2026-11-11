@@ -8,7 +8,7 @@ local _, NS = ...
 --
 -- `length` is the race length the player picked (seconds); `kind` the dummy's category when the race
 -- was saved (modules/Dummies.lua CATEGORIES; the boards read the list as it is now, modules/Bests.lua
--- RaceKind); `status` "complete" or "incomplete" on a stored record (a lost or cancelled race is taken
+-- RaceKind); `status` "complete" or "incomplete" on a stored record (a lost or canceled race is taken
 -- off its fight before the save, modules/Recorder.lua); `score` the session's total (player and pet);
 -- `dps` the score over the length, or over `endedAt` (seconds from the first hit to combat end) when
 -- incomplete; `tail`, `combatEnd`, `grace` and `restartGap` DPS Race's timing. `flags.lateCasts` is
