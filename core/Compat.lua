@@ -20,6 +20,11 @@ local _, NS = ...
 --                                untouched, so the caller runs it in pcall (it may be secret)
 --   Compat.CanAccessTable(t)     canaccesstable, then issecrettable, then "readable"
 --   Compat.ChatSender()          C_ChatInfo.SendChatMessage, then the bare global (deprecated 11.2.0)
+--   Compat.NamespaceFunctions(ns)  Compat.NamespaceFunction(ns, name)
+--                                a client namespace's function names, and one of its functions, for
+--                                `/ct probe`'s trials of seams a feature has not been built on yet
+--   Compat.ColorCurveApi()       C_CurveUtil.CreateColorCurve, Enum.LuaCurveType.Step and CreateColor,
+--                                each nil where this client lacks it (issue #7's probe)
 --   Compat.NumberFormatterCandidates()  C_StringUtil's abbreviated-number formatter constructor,
 --                                then its numeric-rule constructor, every one present (Format
 --                                checks each and takes the first that passes)
@@ -689,6 +694,47 @@ function Compat.ChatLocked()
     if not (info and type(info.InChatMessagingLockdown) == "function") then return false end
     local ok, locked = pcall(info.InChatMessagingLockdown)
     return ok and locked == true
+end
+
+--- The function names a client namespace (a global table such as "C_StringUtil") carries, sorted;
+--- empty where the client has no such namespace. For `/ct probe`, which lists them.
+--- @param ns string
+--- @return table names
+function Compat.NamespaceFunctions(ns)
+    local t = _G[ns]
+    local out = {}
+    if type(t) ~= "table" then return out end
+    for k, v in pairs(t) do
+        if type(k) == "string" and type(v) == "function" then out[#out + 1] = k end
+    end
+    table.sort(out)
+    return out
+end
+
+--- One function of a client namespace, or nil where the namespace or the function is absent.
+--- @param ns string
+--- @param name string
+--- @return function|nil
+function Compat.NamespaceFunction(ns, name)
+    local t = _G[ns]
+    if type(t) ~= "table" then return nil end
+    local fn = t[name]
+    return type(fn) == "function" and fn or nil
+end
+
+--- The color-curve API (issue #7's probe): { util, create, step, color }, where `util` says whether
+--- C_CurveUtil exists, `create` is C_CurveUtil.CreateColorCurve, `step` Enum.LuaCurveType.Step and
+--- `color` the CreateColor global; each nil where this client lacks it.
+--- @return table
+function Compat.ColorCurveApi()
+    local util = type(C_CurveUtil) == "table" and C_CurveUtil or nil
+    local kinds = type(Enum) == "table" and Enum.LuaCurveType or nil
+    return {
+        util   = util ~= nil,
+        create = util and type(util.CreateColorCurve) == "function" and util.CreateColorCurve or nil,
+        step   = type(kinds) == "table" and kinds.Step or nil,
+        color  = type(CreateColor) == "function" and CreateColor or nil,
+    }
 end
 
 -- The client's number-formatter constructors, in the order modules/Format.lua tries them.

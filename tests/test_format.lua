@@ -59,6 +59,21 @@ test("format: a formatter that renders a fraction raw fails the check, and the n
     assertEqual(handedAfterChecks(m.__formatters[2]), 1, "the numeric-rule formatter served the secret")
 end)
 
+test("format: a client formatter that is a userdata, not a table, is still used (WoW Forever, 2026-11-11)", function()
+    local NS, m = fresh{ abbreviated = "floor", userdata = true }
+    assertEqual(NS.Format.Number(T.secret(FRACTION)), "30.1K")
+    assertEqual(#m.__formatters, 1, "the abbreviated formatter served")
+end)
+
+test("format: a rule formatter refusing the ladder serves whole numbers, never a raw fraction", function()
+    local NS, m, inst = fresh{ abbreviated = "raw", numeric = "rule" }
+    NS.State.debug = true
+    assertEqual(NS.Format.Number(T.secret(39.7142857)), "39", "the live DPS without its tail")
+    assertEqual(NS.Format.Number(T.secret(FRACTION)), "30190", "whole, if not abbreviated")
+    assertTrue(#m.__formatters >= 2, "the abbreviated one was tried first")
+    assertEqual(logged(inst, "CreateNumericRuleFormatter refused the breakpoints; trying the next"), 1)
+end)
+
 test("format: a secret with no trusted formatter goes to AbbreviateNumbers", function()
     local NS, m = fresh{ abbreviated = "raw", numeric = "raw", abbreviate = true }
     local s = T.secret(FRACTION)
@@ -150,6 +165,97 @@ test("format: a refused or failing constructor is skipped", function()
     local s = T.secret(5)
     assertTrue(inst.NS.Format.Number(s) == s, "neither was trusted")
     assertEqual(inst.NS.Format.Number(2763000), "2.76M")
+end)
+
+test("format: a formatter that passes its checks but raises on a secret says so, once (WoW Forever, 2026-11-11)", function()
+    local NS, _, inst = fresh{ abbreviated = "floor", secretRaises = true, abbreviate = true }
+    NS.State.debug = true
+    assertEqual(NS.Format.Number(T.secret(FRACTION)), "abbr", "AbbreviateNumbers next")
+    NS.Format.Number(T.secret(FRACTION))
+    assertEqual(logged(inst, "CreateAbbreviatedNumberFormatter passed its checks; secret numbers go to it first"), 1)
+    assertEqual(logged(inst, "CreateAbbreviatedNumberFormatter failed on a secret (raised: "), 1, "once, not per number")
+end)
+
+test("format: the probe's trial runs every path on a value and describes each answer", function()
+    local NS = fresh{ abbreviated = "floor", numeric = "rule", abbreviate = true }
+    local lines = NS.Format.Trial(FRACTION)
+    local all = table.concat(lines, "\n")
+    assertEqual(lines[1], "format trial: value plain " .. tostring(FRACTION))
+    assertTrue(all:find('CreateAbbreviatedNumberFormatter with the ladder: ok, "30.1K"', 1, true) ~= nil, all)
+    assertTrue(all:find('CreateNumericRuleFormatter with the whole-number rule: ok, "30190"', 1, true) ~= nil, all)
+    assertTrue(all:find("formatter in use: not built yet", 1, true) ~= nil, all)
+    assertTrue(all:find('AbbreviateNumbers: ok, "abbr"', 1, true) ~= nil, all)
+    assertTrue(all:find("C_StringUtil.FloorToNearestString: missing", 1, true) ~= nil, all)
+    assertTrue(all:find('string.format %d: ok, "30190"', 1, true) ~= nil, all)
+end)
+
+test("format: the trial on a secret never shows its text", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        -- The client answers a secret with a secret string, as AbbreviateNumbers does here.
+        local inst = T.load{ mutate = function(m)
+            m.AbbreviateNumbers = function(v) return T.isSecret(v) and T.secret("30.1K") or "30.1K" end
+        end }
+        local lines = inst.NS.Format.Trial(T.secret(FRACTION))
+        local all = table.concat(lines, "\n")
+        assertEqual(lines[1], "format trial: value secret")
+        assertTrue(all:find("AbbreviateNumbers: ok, a secret", 1, true) ~= nil, all)
+        assertEqual(all:find("30.1K", 1, true), nil, "a secret answer's text is not printed")
+    end)
+    restore()
+    assertTrue(ok, tostring(err))
+end)
+
+test("format: a client formatter that raises on a secret is dropped after the first", function()
+    local NS, m = fresh{ abbreviated = "floor", secretRaises = true, abbreviate = true }
+    NS.Format.Number(T.secret(FRACTION))
+    NS.Format.Number(T.secret(FRACTION))
+    assertEqual(handedAfterChecks(m.__formatters[1]), 1, "tried on one secret, then not again")
+end)
+
+-- C_StringUtil.FloorToNearestString as measured (WoW Forever, 2026-11-11): a secret in, a secret
+-- string out; a plain value floored to its whole digits.
+local function withFloor(spec)
+    local inst = T.load{ mutate = function(m)
+        Formatter.install(m, spec)
+        m.C_StringUtil.FloorToNearestString = function(v)
+            local s = tostring(math.floor(T.reveal(v)))
+            return T.isSecret(v) and T.secret(s) or s
+        end
+    end }
+    return inst.NS, inst.mocks
+end
+
+test("format: a secret rate is written whole by FloorToNearestString, never with its decimal tail", function()
+    local NS = withFloor{ abbreviated = "floor", secretRaises = true, abbreviate = true }
+    local out = NS.Format.Rate(T.secret(69.5625))
+    assertTrue(T.isSecret(out), "the helper's secret string, untouched")
+    assertEqual(T.reveal(out), "69")
+    assertEqual(T.reveal(NS.Format.Rate(T.secret(FRACTION))), "30190", "whole, not abbreviated")
+end)
+
+test("format: a total and a rate drawn in turn log each path once, not a line per redraw", function()
+    local inst = T.load{ mutate = function(m)
+        Formatter.install(m, { abbreviated = "floor", secretRaises = true, abbreviate = true })
+        m.C_StringUtil.FloorToNearestString = function(v) return T.secret(tostring(math.floor(T.reveal(v)))) end
+    end }
+    local NS = inst.NS
+    NS.State.debug = true
+    for _ = 1, 5 do
+        NS.Format.Number(T.secret(1243))
+        NS.Format.Rate(T.secret(59.047619))
+    end
+    assertEqual(logged(inst, "numbers served by AbbreviateNumbers"), 1)
+    assertEqual(logged(inst, "rates served by FloorToNearestString"), 1)
+end)
+
+test("format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain", function()
+    local NS = withFloor{ abbreviated = "floor" }
+    assertEqual(NS.Format.Rate(FRACTION), "30.1K")
+    assertEqual(NS.Format.Rate(69.5625), "69")
+    assertEqual(NS.Format.Rate(nil), "")
+    local bare = fresh{ abbreviated = "floor" }
+    assertEqual(bare.Format.Rate(T.secret(FRACTION)), "30.1K", "the client formatter, as Number")
 end)
 
 test("format: Clock, Length, Pct and SignedPct take plain numbers", function()

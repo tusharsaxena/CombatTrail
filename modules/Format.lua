@@ -47,6 +47,16 @@ local CHECKS = {
     { value = 30190.4761904, text = "30.1K" },
 }
 
+-- The numeric RULE formatter's own shape (C_StringUtil.CreateNumericRuleFormatter, measured by
+-- AuraMaster on 12.1): { threshold, format }, a value written through the highest rule it reaches.
+-- It cannot divide, so it cannot abbreviate; a whole-number rule at least never draws a fraction
+-- ("39", not "39.7142857..."). Tried when the constructor refuses the ladder, and checked the same way.
+local RULES = { { threshold = 0, format = "%d" } }
+local RULE_CHECKS = {
+    { value = 77.142857, text = "77" },
+    { value = 30190.4761904, text = "30190" },
+}
+
 -- nil = not built yet, false = this client has none that works, else the instance.
 local formatter
 -- The constructor that built it, for the debug line naming the path.
@@ -56,46 +66,78 @@ local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Format", fmt, ...) end
 end
 
--- Which path served a number, written when it changes (debug-logging-§8: no line per redraw).
-local function servedBy(path)
-    if NS.DebugChanged then NS.DebugChanged("format:path", "Format", "numbers served by %s", path) end
+-- Which path served a number, written when it changes (debug-logging-§8: no line per redraw). A
+-- rate keeps its own key: the HUD draws a total and a rate on every redraw, and one shared key
+-- logged a line at each alternation (the owner's WoW Forever log, 2026-11-11).
+local function servedBy(path, key)
+    if NS.DebugChanged then
+        NS.DebugChanged(key or "format:path", "Format", "%s served by %s", key and "rates" or "numbers", path)
+    end
+end
+
+-- An error's text for the log: "<secret>" when the client handed back a secret.
+local function errText(e)
+    if Secrets.IsSealed(e) then return "<secret>" end
+    return tostring(e)
+end
+
+-- f:FormatNumber(v), at file scope so the call is pcall'd with no closure made per number (and a
+-- userdata instance is indexed inside the pcall).
+local function formatWith(f, v)
+    return f:FormatNumber(v)
 end
 
 -- The first check `f` renders wrongly, as (value, what it drew), or nil when it passes them all.
 -- The values are plain constants and the outputs plain strings, so comparing them is legal.
-local function failedCheck(f)
-    for _, check in ipairs(CHECKS) do
-        local ok, out = pcall(f.FormatNumber, f, check.value)
+local function failedCheck(f, checks)
+    for _, check in ipairs(checks) do
+        local ok, out = pcall(formatWith, f, check.value)
         if not ok or out ~= check.text then return check.value, tostring(out) end
     end
     return nil
 end
 
--- One constructor built, its breakpoints set and checked: the instance, or nil (logged why).
-local function tryCandidate(c)
+-- Whether `f` answers SetBreakpoints. A client object may be a table or a userdata (AuraMaster tests
+-- only that one came back), so its type is not asked: the method is looked up in pcall.
+local function setter(f)
+    if f == nil or Secrets.IsSealed(f) then return nil end
+    local ok, fn = pcall(function() return f.SetBreakpoints end)
+    if ok and type(fn) == "function" then return fn end
+    return nil
+end
+
+-- One constructor built, `list` set as its breakpoints and `checks` passed: the instance, or nil
+-- (logged why). `how` names the attempt in the log ("" or " as a whole-number rule").
+local function tryCandidate(c, list, checks, how)
     local ok, f = pcall(c.make)
-    if not ok or type(f) ~= "table" or type(f.SetBreakpoints) ~= "function" then
-        debug("%s built no formatter; trying the next", c.name)
+    local set = ok and setter(f) or nil
+    if not set then
+        debug("%s built no formatter (%s); trying the next", c.name, ok and type(f) or "it raised")
         return nil
     end
-    if not pcall(f.SetBreakpoints, f, LADDER) then
-        debug("%s refused the breakpoints; trying the next", c.name)
+    if not pcall(set, f, list) then
+        debug("%s refused the breakpoints%s; trying the next", c.name, how)
         return nil
     end
-    local value, out = failedCheck(f)
+    local value, out = failedCheck(f, checks)
     if value then
-        debug("%s rendered the check value %s as %s; not used", c.name, tostring(value), out)
+        debug("%s%s rendered the check value %s as %s; not used", c.name, how, tostring(value), out)
         return nil
     end
     return f
 end
 
--- The client's constructors are version-variant: core/Compat.lua owns the list (compat).
+-- The client's constructors are version-variant: core/Compat.lua owns the list (compat). Each is
+-- tried with the abbreviating ladder; the numeric rule formatter, refusing that, with RULES.
 local function build()
     for _, c in ipairs(NS.Compat.NumberFormatterCandidates()) do
-        local f = tryCandidate(c)
+        local f = tryCandidate(c, LADDER, CHECKS, "")
+        if not f and c.name == "CreateNumericRuleFormatter" then
+            f = tryCandidate(c, RULES, RULE_CHECKS, " as a whole-number rule")
+        end
         if f then
             formatterName = c.name
+            debug("%s passed its checks; secret numbers go to it first", c.name)
             return f
         end
     end
@@ -129,11 +171,19 @@ end
 local function native(v)
     local f = instance()
     if f then
-        local ok, out = pcall(f.FormatNumber, f, v)
+        local ok, out = pcall(formatWith, f, v)
         if ok and Secrets.IsPresent(out) then
             servedBy("the client formatter (" .. tostring(formatterName) .. ")")
             return out
         end
+        -- It passed its plain checks but not this secret. Measured on WoW Forever (`/ct probe`,
+        -- 2026-11-11): both client formatters raise "Secret values are only allowed during untainted
+        -- execution", and an addon's code is never untainted, so it is dropped for the session.
+        if NS.DebugChanged then
+            NS.DebugChanged("format:fail", "Format", "%s failed on a secret (%s); AbbreviateNumbers next",
+                tostring(formatterName), ok and "it answered nothing" or ("raised: " .. errText(out)))
+        end
+        if not ok then formatter = false end
     end
     local client = AbbreviateNumbers
     if type(client) == "function" then
@@ -163,6 +213,81 @@ function Format.Number(v)
     if Secrets.IsPresent(out) then return out end
     servedBy("nothing: the raw value")
     return v
+end
+
+--- A per-second rate as short text, never a decimal tail. A plain rate abbreviates in Lua, as
+--- Number does ("30.1K", "69"). A secret rate (the live DPS) goes to C_StringUtil.FloorToNearestString,
+--- which takes a secret from an addon and answers it whole: `/ct probe` on WoW Forever, 2026-11-11,
+--- "ok, a secret" in combat and "69" for 69.5625 after it, where AbbreviateNumbers drew "69.5625"
+--- and both client formatters refuse a secret from tainted code. Whole, not abbreviated: a live
+--- rate of 30190.47 reads "30190". Without the helper, Number's chain.
+--- @param v any  a number, possibly secret
+--- @return any  a string, or what Number answers
+function Format.Rate(v)
+    if v == nil then return "" end
+    if Secrets.PlainNumber(v) then return Format.Number(v) end
+    local floor = NS.Compat.NamespaceFunction("C_StringUtil", "FloorToNearestString")
+    if floor then
+        local ok, got = pcall(floor, v)
+        if ok and Secrets.IsPresent(got) then
+            servedBy("FloorToNearestString", "format:rate")
+            return got
+        end
+    end
+    return Format.Number(v)
+end
+
+-- ── `/ct probe`'s trial: every path a number could take to text ─────────────────────────────────
+
+-- C_StringUtil's whole-number helpers, tried on the value where the client has them: a seam that
+-- would end the live DPS's decimal tail without a formatter.
+local STRING_UTIL_TRIALS = { "FloorToNearestString", "RoundToNearestString", "TruncateWhenZero" }
+
+-- One pcall's answer, described: never the text of a secret.
+local function answerOf(ok, got)
+    if not ok then return "raised: " .. errText(got) end
+    if Secrets.IsSealed(got) then return "ok, a secret" end
+    if got == nil then return "ok, nil" end
+    if type(got) == "string" then return ('ok, "%s"'):format(got) end
+    return "ok, " .. tostring(got)
+end
+
+-- Constructor `c` built afresh, `list` set, then run on `v`: the answer, or where it stopped.
+local function trialOf(c, list, v)
+    local ok, f = pcall(c.make)
+    if not ok then return "the constructor raised: " .. errText(f) end
+    local set = setter(f)
+    if not set then return "built no formatter (" .. (Secrets.IsSealed(f) and "secret" or type(f)) .. ")" end
+    local okSet, err = pcall(set, f, list)
+    if not okSet then return "refused the breakpoints: " .. errText(err) end
+    return answerOf(pcall(formatWith, f, v))
+end
+
+--- `/ct probe`'s trial of value `v` (the live DPS figure, secret in combat): each client formatter
+--- built afresh with the ladder (the rule formatter with the whole-number rule too), the one in
+--- use, AbbreviateNumbers, C_StringUtil's whole-number helpers and string.format, each answer
+--- described ("ok, a secret", or the plain text). Never shows a secret's text.
+--- @param v any
+--- @return table lines
+function Format.Trial(v)
+    local value = Secrets.IsSealed(v) and "secret" or (v == nil and "nil" or ("plain " .. tostring(v)))
+    local out = { "format trial: value " .. value }
+    for _, c in ipairs(NS.Compat.NumberFormatterCandidates()) do
+        out[#out + 1] = ("   %s with the ladder: %s"):format(c.name, trialOf(c, LADDER, v))
+        if c.name == "CreateNumericRuleFormatter" then
+            out[#out + 1] = ("   %s with the whole-number rule: %s"):format(c.name, trialOf(c, RULES, v))
+        end
+    end
+    local inUse = formatter == nil and "not built yet" or (formatter == false and "none") or tostring(formatterName)
+    out[#out + 1] = "   formatter in use: " .. inUse
+    local abbr = AbbreviateNumbers
+    out[#out + 1] = "   AbbreviateNumbers: " .. (type(abbr) == "function" and answerOf(pcall(abbr, v)) or "missing")
+    for _, name in ipairs(STRING_UTIL_TRIALS) do
+        local fn = NS.Compat.NamespaceFunction("C_StringUtil", name)
+        out[#out + 1] = ("   C_StringUtil.%s: %s"):format(name, fn and answerOf(pcall(fn, v)) or "missing")
+    end
+    out[#out + 1] = "   string.format %d: " .. answerOf(pcall(string.format, "%d", v))
+    return out
 end
 
 --- Seconds as the HUD's clock shows them: "m:ss.t", tenths truncated ("2:41.3"). Plain numbers only.
