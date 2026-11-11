@@ -97,6 +97,100 @@ test("probe: report runs with no C_DamageMeter", function()
     assertTrue(lineWith(lines, "client: " .. inst.NS.Compat.ClientKey()) ~= nil, "the client line names the client")
 end)
 
+test("probe: the enemy view lists each enemy's every field (issue #6's feasibility)", function()
+    local inst, meter = withMeter()
+    session(meter, { damage = 1000, dps = 50, duration = 20, spells = { { id = 133, dmg = 1000, dps = 50 } },
+                     enemies = { { name = "Angry Boar", creatureID = 1985, damage = 700 },
+                                 { name = "Kobold", creatureID = 40, damage = 300 } } })
+    local lines = inst.NS.Probe.Report()
+    assertTrue(lineWith(lines, "enemy view (EnemyDamageTaken): enemies 2") ~= nil, text(lines))
+    local first = lineWith(lines, "   enemy 1: ")
+    assertTrue(first ~= nil, text(lines))
+    assertTrue(first:find("name=Angry Boar", 1, true) ~= nil, first)
+    assertTrue(first:find("totalAmount=700", 1, true) ~= nil, first)
+    assertTrue(first:find("sourceCreatureID=1985", 1, true) ~= nil, first)
+    assertTrue(lineWith(lines, "      drill-down by GUID: ") ~= nil, "each enemy's drill-down by GUID")
+    local byID = lineWith(lines, "      drill-down by creature ID: ")
+    assertTrue(byID ~= nil and byID:find("totalAmount=700", 1, true) ~= nil, text(lines))
+    assertTrue(lineWith(lines, "   enemy view session: ") ~= nil, "the session table's own fields")
+end)
+
+-- A step color curve, scripted (issue #7's probe): points { x, color }, Evaluate answers the last
+-- point at or below x, with secret channels when x is secret, as the client's native curve would.
+local function installCurve(m)
+    local function color(r, g, b, a)
+        return { r = r, g = g, b = b, a = a, GetRGBA = function(self) return self.r, self.g, self.b, self.a end }
+    end
+    m.CreateColor = color
+    m.Enum = m.Enum or {}
+    m.Enum.LuaCurveType = { Linear = 0, Step = 1 }
+    m.C_CurveUtil = { CreateColorCurve = function()
+        local c = { points = {} }
+        function c:SetType(kind) self.kind = kind end
+        function c:AddPoint(x, col) self.points[#self.points + 1] = { x = x, col = col } end
+        function c:Evaluate(x)
+            local secret = T.isSecret(x)
+            local n = T.reveal(x)
+            local best
+            for _, pt in ipairs(self.points) do
+                if pt.x <= n then best = pt.col end
+            end
+            if not best then return nil end
+            if not secret then return best end
+            return color(T.secret(best.r), T.secret(best.g), T.secret(best.b), T.secret(best.a))
+        end
+        return c
+    end }
+end
+
+test("probe: the spell color curve section says when the client has no curve API", function()
+    local inst, meter = withMeter(function(m) m.C_CurveUtil = nil end)
+    session(meter)
+    local lines = inst.NS.Probe.Report()
+    assertTrue(lineWith(lines, "spell color curve: C_CurveUtil no, CreateColorCurve no") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "spell color curve: not built (the API is missing)") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "C_CurveUtil functions (0): none") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "C_StringUtil functions (") ~= nil, text(lines))
+end)
+
+test("probe: the spell color curve maps a plain pet ID and a plain other ID to their colors", function()
+    local inst, meter = withMeter(installCurve)
+    session(meter)
+    local lines = inst.NS.Probe.Report()
+    assertTrue(lineWith(lines, "spell color curve: C_CurveUtil yes, CreateColorCurve yes, Enum.LuaCurveType.Step 1, CreateColor yes") ~= nil,
+        text(lines))
+    assertTrue(lineWith(lines, "Evaluate(16829) is the pet color: yes (0.40, 1.00, 0.40); Evaluate(75) is the player color: yes")
+        ~= nil, text(lines))
+    assertTrue(lineWith(lines, "C_CurveUtil functions (1): CreateColorCurve") ~= nil, text(lines))
+end)
+
+test("probe: each sample runs the formatter trial and the color curve on what the HUD draws", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst, meter = withMeter(installCurve)
+        session(meter)
+        slash(inst, "probe")
+        meter.SetSecret(true)
+        enterCombat(inst)
+        inst.mocks.__fireTimers()
+        meter.SetSecret(false)
+        leaveCombat(inst)
+        inst.mocks.__fireTimers()
+        local lines = inst.NS.Probe.Report()
+        assertTrue(lineWith(lines, "   combat+5s format trial: value secret") ~= nil, text(lines))
+        assertTrue(lineWith(lines, "   combat+5s    string.format %d: ") ~= nil, text(lines))
+        assertTrue(lineWith(lines, "   combat+5s spell color curve: spell ID secret; Evaluate ok; GetRGBA ok (red secret); SetStatusBarColor took it")
+            ~= nil, text(lines))
+        assertTrue(lineWith(lines, "   afterCombat+2s format trial: value plain 50") ~= nil, text(lines))
+        assertTrue(lineWith(lines, "   afterCombat+2s spell color curve: spell ID plain; Evaluate ok") ~= nil, text(lines))
+        for _, line in ipairs(lines) do
+            assertEqual(line:find("trials raised", 1, true), nil, line)
+        end
+    end)
+    restore()
+    assertTrue(ok, tostring(err))
+end)
+
 test("probe: report lists the 8 functions with mock meter", function()
     local inst, meter = withMeter()
     session(meter)
@@ -113,7 +207,7 @@ test("probe: report lists the 8 functions with mock meter", function()
     assertTrue(lineWith(lines, "Enum.DamageMeterSessionType: ") ~= nil, text(lines))
     assertTrue(lineWith(lines, "sessions: 1") ~= nil, text(lines))
     assertTrue(lineWith(lines, "player source: total 1000, dps 50, spells 2") ~= nil, text(lines))
-    assertTrue(lineWith(lines, "spell 133 total 600") ~= nil, text(lines))
+    assertTrue(lineWith(lines, "spell 133 total 600 creature nil") ~= nil, text(lines))
     assertTrue(lineWith(lines, "current session: sources 1, duration 20") ~= nil, text(lines))
     assertTrue(lineWith(lines, "GetSessionDurationSeconds(current): 20") ~= nil, text(lines))
 end)

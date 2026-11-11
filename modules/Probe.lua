@@ -16,7 +16,13 @@ local _, NS = ...
 --   * on WoW Forever only, every talent API's answer (the talent tabs, the class-wide spec, the active
 --     config, its tree's trait groups and their points) and the talent tree the addon picks as the
 --     spec (v0.2 plan Task A4, D11)
---   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it.
+--   * the enemy view (issue #6): each enemy row's fields and its drill-down, asked by GUID and by
+--     creature ID (the owner's Forever rows carry a sourceCreatureID and no sourceGUID)
+--   * the spell color curve (issue #7, modules/ProbeCurve.lua) and the function lists of the
+--     client namespaces the trials lean on (C_StringUtil, C_CurveUtil)
+--   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it; each
+--     sample also runs the number formatter trial on the live DPS figure (Format.Trial: why the
+--     live figure keeps its decimal tail) and the color curve on the first live spell row's ID.
 --
 -- ARMING. Nothing is registered until the probe is armed. `/ct probe` writes the report and, while
 -- no fight has been sampled, arms the probe for the next combat; `/ct probe start` arms it now with
@@ -41,7 +47,8 @@ local _, NS = ...
 --
 -- THROUGH THE METER ADAPTER, RAW. modules/Meter.lua is the only file that names the client's meter;
 -- this file reaches it through NS.Meter.Api (the namespace, for the function list) and NS.Meter.Call
--- (each function, pcall'd), and nothing else of the adapter's: the probe exists to check the client
+-- (each function, pcall'd), and nothing else of the adapter's but NS.Meter.ReadLive in the samples
+-- (the very values the HUD draws, for the formatter and color-curve trials): the probe exists to check the client
 -- the adapter is built on, so it reads the raw shapes (each field's secrecy, the error a call
 -- raised, the pet's source beside the player's) that the adapter's reads deliberately fold away.
 
@@ -207,11 +214,19 @@ local function sessionsLine(out)
     out[#out + 1] = ("sessions: %d"):format(Secrets.SafeIterate(list, function() end))
 end
 
+-- A row's creatureName: quoted when plain (so an empty one shows as ""), else show()'s word. It
+-- settles whether the owner's own rows carry nil or "" (docs/midnight-quirks.md, the folded pet).
+local function creature(v)
+    if not Secrets.IsSealed(v) and type(v) == "string" then return ("%q"):format(v) end
+    return show(v)
+end
+
 -- The top spells of one source, one indented line each; answers the spell count.
 local function spellLines(out, spells)
     return Secrets.SafeIterate(spells, function(i, e)
         if i > TOP then return end
-        out[#out + 1] = ("   spell %s total %s"):format(show(field(e, "spellID")), show(field(e, "totalAmount")))
+        out[#out + 1] = ("   spell %s total %s creature %s"):format(show(field(e, "spellID")),
+            show(field(e, "totalAmount")), creature(field(e, "creatureName")))
     end)
 end
 
@@ -363,6 +378,18 @@ local function sourceSecrecy(who, guid)
         secrecy(src.combatSpells))
 end
 
+-- The trials on what the HUD draws now: the number formatter on the live DPS figure, the color
+-- curve on the first live spell row's ID (both opaque: secret in combat).
+local function trialSamples(tag)
+    local live = NS.Meter.ReadLive(nil)
+    local player = live and live.player
+    for _, line in ipairs(NS.Format.Trial(player and player.dps)) do
+        samples[#samples + 1] = ("   %s %s"):format(tag, line)
+    end
+    local first = player and player.spells and player.spells[1]
+    samples[#samples + 1] = ("   %s %s"):format(tag, NS.ProbeCurve.Sample(first and first.spellID))
+end
+
 local function takeSample(tag)
     local line
     if not hasMeter() then
@@ -372,6 +399,10 @@ local function takeSample(tag)
         if UnitExists("pet") then line = line .. "; " .. sourceSecrecy("pet", UnitGUID("pet")) end
     end
     samples[#samples + 1] = ("meter sample %s: %s"):format(tag, line)
+    if hasMeter() then
+        local ok, err = pcall(trialSamples, tag)
+        if not ok then samples[#samples + 1] = ("   %s trials raised: %s"):format(tag, show(err)) end
+    end
     debug("sample %s", tag)
 end
 
@@ -474,6 +505,72 @@ end
 
 -- ── the report ─────────────────────────────────────────────────────────────────────────────────
 
+-- ── the enemies (issue #6: can a fight's targets be split down to the player's own damage?) ────
+
+local ENEMY_TOP = 5
+
+-- One enemy's drill-down (its source in the EnemyDamageTaken view), asked `how` ("by GUID" or "by
+-- creature ID"): its fields, then each spell row's every field, so the report shows whether a row
+-- names who dealt it.
+local function enemyDrill(out, stat, how, guid, creatureID)
+    local label = "      drill-down " .. how .. ": "
+    local ok, src = call("GetCombatSessionSourceFromType", sessionCurrent(), stat, guid, creatureID)
+    if not ok then
+        out[#out + 1] = label .. src
+        return
+    end
+    if not readable(src) then
+        out[#out + 1] = label .. show(src)
+        return
+    end
+    out[#out + 1] = label .. fields(src)
+    Secrets.SafeIterate(src.combatSpells, function(j, s)
+        if j > TOP then return end
+        out[#out + 1] = "         spell row: " .. fields(s)
+    end)
+end
+
+-- The Current session's EnemyDamageTaken view: each enemy row's every field, and its drill-down.
+local function enemyLines(out)
+    local stat = enumValue("DamageMeterType", "EnemyDamageTaken", nil)
+    if stat == nil then
+        out[#out + 1] = "enemy view: no Enum.DamageMeterType.EnemyDamageTaken"
+        return
+    end
+    local ok, sess = call("GetCombatSessionFromType", sessionCurrent(), stat)
+    if not ok then
+        out[#out + 1] = "enemy view: " .. sess
+        return
+    end
+    if not readable(sess) then
+        out[#out + 1] = "enemy view: " .. show(sess)
+        return
+    end
+    local rows = {}
+    local n = Secrets.SafeIterate(sess.combatSources, function(i, e)
+        if i > ENEMY_TOP then return end
+        rows[#rows + 1] = ("   enemy %d: %s"):format(i, fields(e))
+        local guid, creatureID = field(e, "sourceGUID"), field(e, "sourceCreatureID")
+        if guid ~= nil then enemyDrill(rows, stat, "by GUID", guid, nil) end
+        if creatureID ~= nil then enemyDrill(rows, stat, "by creature ID", nil, creatureID) end
+    end)
+    out[#out + 1] = ("enemy view (EnemyDamageTaken): enemies %d, total %s"):format(n, show(field(sess, "totalAmount")))
+    -- The session table's own fields too: its total disagreed with its one enemy's on Forever (517
+    -- against 1183, 2026-11-11), so the report shows what else it carries.
+    out[#out + 1] = "   enemy view session: " .. fields(sess)
+    for _, line in ipairs(rows) do out[#out + 1] = line end
+end
+
+-- The trials' sections: the spell color curve, then the function lists of the namespaces they and
+-- the number formatter lean on.
+local function trialLines(out)
+    for _, line in ipairs(NS.ProbeCurve.Lines()) do out[#out + 1] = line end
+    for _, ns in ipairs({ "C_StringUtil", "C_CurveUtil" }) do
+        local names = NS.Compat.NamespaceFunctions(ns)
+        out[#out + 1] = ("%s functions (%d): %s"):format(ns, #names, #names > 0 and table.concat(names, ", ") or "none")
+    end
+end
+
 --- The report, as plain text lines. Reads the client now; writes nothing.
 --- @return string[]
 function Probe.Report()
@@ -489,7 +586,9 @@ function Probe.Report()
         sessionsLine(out)
         unitSourceLines(out)
         sessionLines(out)
+        enemyLines(out)
     end
+    trialLines(out)
     out[#out + 1] = "pet is separate source: " .. (hasMeter() and petSplit() or "unknown (no meter)")
     out[#out + 1] = "pace pet-fill anchor: " .. anchorCheck()
     talentLines(out)
