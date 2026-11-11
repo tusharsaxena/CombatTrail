@@ -292,6 +292,30 @@ test("hud pace: a race part that lands after the HUD went live re-paces on RACE_
     fight.race = nil
 end)
 
+test("hud pace: a race resumed after a /reload goes live on the HUD and paces on its race board", function()
+    if forever() then return end
+    local S = racer()
+    local _, raceRec = boards(S)
+    S.NS.db.profile.hud.show = "toggle"     -- only the race's own rule (ruling X7) may open it
+    assertTrue(F.arm(S, 30, 210))
+    local start = F.pull(S, 211, 22, PLAIN)
+    F.damage(S, 22, start + 1, start + 8, 1)
+    -- The /reload: Fight.Adopt sends no FIGHT_STARTED; the resume's state change is all there is.
+    local G = F.reload(S, { now = start + 10, inCombat = true, sessions = { [22] = PLAIN },
+                            mutate = installPaint })
+    local NS, Hud = G.NS, G.NS.Hud
+    assertEqual(NS.Race.State(), "running", "the race resumed")
+    assertEqual(Hud.State(), "live", "the HUD is live for the resumed race")
+    assertTrue(Hud.IsShown(), "and up, though hud.show is toggle")
+    local v = Hud.View()
+    assertTrue(v.fight == NS.Race.Fight(), "on the race's adopted fight")
+    assertEqual(v.pace and v.pace.id, raceRec.id, "paced on the race board")
+    near(v.curve.duration, 30, "on the race's straight line")
+    F.damage(G, 22, start + 11, start + 13, 1)
+    local pace = H.body(Hud, "live").parts.pace
+    assertTrue(pace ~= nil and pace.bar:IsShown(), "the pace bar is up")
+end)
+
 local EARLIER = { damage = 200000, dps = 10000, duration = 20,
                   spells = { { id = 29722, dmg = 150000, dps = 7500 }, { id = 348, dmg = 50000, dps = 2500 } } }
 local CARRIED = { damage = 1200000, dps = 20000, duration = 60,

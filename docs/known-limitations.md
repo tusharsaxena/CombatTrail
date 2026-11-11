@@ -116,6 +116,7 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   snapshot and the chart's samples were in memory. A race read after the reload is flagged
   `reloaded` past its buzzer; one whose combat ended unseen is incomplete at the resume, its real
   combat end unknowable. A resume after a restart of the machine takes its clock from the stored date.
+  The HUD goes live on the resumed fight, paced on its race board, from the resume on.
 - **A `/reload` mid-fight still drops a plain fight.** Only a race is written before its read; a
   fight in memory is gone with the reload and the rest of that combat is not tracked (the race's
   `Fight.Adopt` seam could carry plain fights too; not done).

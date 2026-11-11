@@ -19,7 +19,7 @@ stand-down drops it and the stand-up replays it (slash-commands-§7).
 | `FIGHT_SAVED` | Recorder | `(record)` | Bests, BestToast (a fight's new best; never a race), Hud, Race, Results, Slices, History page |
 | `FIGHT_SKIPPED` | Recorder | `(fight, reason)` | Hud, Race, Slices |
 | `FIGHTS_CHANGED` | Recorder, Retention | none | Bests, RaceWindow (a deleted result card goes back to Arm Race), Results, History page |
-| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | AutoArm, Countdown (the marks armed on `running`, gone on any other state), RaceWindow (the body on screen, the arm's and the resume's opening, the idle edge's close) |
+| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | AutoArm, Countdown (the marks armed on `running`, gone on any other state), Hud (the resume's `idle` to `running` or `stopping`: the adopted fight goes live, paced on its race board, ruling X7), RaceWindow (the body on screen, the arm's and the resume's opening, the idle edge's close) |
 | `RACE_ARMED` | Race.Arm | `(race)` | Share (the armed line); the Race window reacts to the state change |
 | `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | Hud (a race's fight opens the HUD whatever its own rules say, ruling X7; the live fight paces on its race board, Task C3) |
 | `RACE_BUZZER` | Race, at the race length | `(race)` | Countdown (the raid warning's STOP and its sound) |
@@ -47,8 +47,9 @@ one receiver running before another:
   message is `RACE_STATE_CHANGED` from `idle` to `running` or `stopping` (or to `result`, with
   `RACE_RESULT` and a nil record, when its session is gone), then `FIGHT_TICK`… → `FIGHT_ENDED` →
   `FIGHT_SAVED` / `RACE_RESULT` as above. A receiver that shows a race reacts to the state change, not
-  to `RACE_STARTED` alone; one that keys on `FIGHT_STARTED` (Casts, Hud, Slices, Usage) hears an ended
-  fight it never saw begin.
+  to `RACE_STARTED` alone; one that keys on `FIGHT_STARTED` (Casts, Slices, Usage) hears an ended
+  fight it never saw begin. The HUD takes the adopted fight up on that state change (`Race.Fight()`,
+  marked `resumed`): live and paced on its race board, and on screen whatever its own rules say.
 
 The sample fight of test mode and the sim is never sent on the bus: Preview and Sim hand it to the
 HUD directly, so the recorder, the casts, the slices reader and the bests never hear it.

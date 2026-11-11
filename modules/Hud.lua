@@ -18,9 +18,10 @@ local _, NS = ...
 -- the race board the race would count on (race plan Task C3, spec §4.2): Hud.PaceRecord probes with
 -- the part's kind and length, and the curve is the race best's straight line (HudBest.RaceCurve), the
 -- Race window's own. RACE_STARTED reads the pace again (the bus keeps no order between receivers), and
--- RACE_CANCELED, the part gone, paces the fight on its dummy's fight board again. A fight on a SHARED
--- session (ruling X3: its live total holds the damage from before the arm) is not paced and draws no
--- chart, live or on the card, as in DPS Race.
+-- RACE_CANCELED, the part gone, paces the fight on its dummy's fight board again. A race resumed after a
+-- /reload (RACE_STATE_CHANGED out of idle) brings its adopted fight, which had no FIGHT_STARTED, live.
+-- A fight on a SHARED session (ruling X3: its live total holds the damage from before the arm) is not
+-- paced and draws no chart, live or on the card, as in DPS Race.
 --
 -- WHEN IT OPENS (`hud.show`). "auto" (default): on the first hit of every fight (FIGHT_TICK after the
 -- fight's firstHitT is set; the Master controls' `general.hudInCombat` off turns this off), and
@@ -33,8 +34,8 @@ local _, NS = ...
 -- auto-opened HUD when its fight ends instead of showing the card.
 --
 -- WHAT RUNS, AND WHEN. Nothing is registered with the client: the HUD hears the bus (FIGHT_STARTED,
--- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, RACE_STARTED, RACE_CANCELED, SETTINGS_CHANGED) on its
--- own target. While a
+-- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, RACE_STARTED, RACE_CANCELED, RACE_STATE_CHANGED,
+-- SETTINGS_CHANGED) on its own target. While a
 -- fight is live and the window is up, each FIGHT_TICK (4 Hz, combat only) reads NS.Meter.ReadLive
 -- once and redraws; nothing else polls, and no OnUpdate is ever set. The fade is one AceTimer on the
 -- addon object, so the stand-down's CancelAllTimers takes it, and Suspend drops it too.
@@ -1037,6 +1038,17 @@ function Hud.OnRaceStarted(fight)
     Hud.Refresh()
 end
 
+--- A race resumed after a /reload or a stand-up (RACE_STATE_CHANGED from idle to running or stopping,
+--- Race.Resume): its fight came back through Fight.Adopt, which sends no FIGHT_STARTED, so the HUD
+--- takes it up here, live and paced on its race board, and a race's fight opens it (ruling X7). A
+--- stopping race's fight is read at once: its FIGHT_ENDED turns this into the card.
+function Hud.OnRaceStateChanged(from, to)
+    if isDown() or from ~= "idle" or (to ~= "running" and to ~= "stopping") then return end
+    local fight = NS.Race and NS.Race.Fight and NS.Race.Fight()
+    if type(fight) ~= "table" or not fight.resumed or fight == cur or fight == pending then return end
+    Hud.OnFightStarted(fight)
+end
+
 --- A race was canceled (RACE_CANCELED): the live fight it rode, its part gone, paces on its dummy's
 --- fight board again.
 function Hud.OnRaceCanceled()
@@ -1069,6 +1081,7 @@ do
         bus:RegisterMessage(NS.MSG.FIGHT_SKIPPED, function(_, fight, reason) Hud.OnFightSkipped(fight, reason) end)
         bus:RegisterMessage(NS.MSG.RACE_STARTED, function(_, _, fight) Hud.OnRaceStarted(fight) end)
         bus:RegisterMessage(NS.MSG.RACE_CANCELED, function() Hud.OnRaceCanceled() end)
+        bus:RegisterMessage(NS.MSG.RACE_STATE_CHANGED, function(_, _, from, to) Hud.OnRaceStateChanged(from, to) end)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path, value) onSettings(path, value) end)
     end
 end
