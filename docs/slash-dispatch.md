@@ -14,7 +14,12 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 - **The disabled gate.** While the `disabled` hold is taken every verb but the live set answers the one
   refusal line. The live set is the library's thirteen reserved verbs plus this addon's `lane`,
   `ignore` and `dummy` (`HOST_LIVE_VERBS`), which read and write the lanes' own settings and the
-  training-dummy list as `get` and `set` do (race plan ruling X10).
+  training-dummy list as `get` and `set` do, and on Retail `race`, which answers its `ignore` word (the
+  late-cast list's settings) and refuses every other word itself with the hold's one line (race plan
+  ruling X10).
+- **Per client.** `race` is declared `clients = { "retail" }` on its triple (clients-§4): the library
+  leaves it out of the help and the landing page on WoW Forever, where typing it is an unknown verb.
+  The degraded stub and `NS.RunVerb` apply the same gate.
 - **The perf hold.** Every feature verb is wrapped in `feature()`, which answers
   `NS.StoodDownRefusal()`'s line while a capture holds the addon down.
 - **One handler per act.** A feature verb calls the same handler as the launcher menu and the key
@@ -52,6 +57,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `lane` | `player` or `pet`, then `on` or `off` | yes | `NS.Lanes.OnVerb` (settings/Lanes.lua) |
 | `ignore` | `add` or `remove` a spell, `list`, `reset`, then an optional `player` or `pet` | yes | `LaneIgnore.OnVerb` |
 | `dummy` | nothing or `show`; `add [category]` (the target; `single` when none is typed), `remove [creature ID or name]` (the target when none), `capture` (the target, not marked), `defaults`. Both clients | yes | `Dummies.OnVerb` (modules/Dummies.lua) |
+| `race` | Retail only. `arm [length]` (`90`, `1:30`, `3m`, `1m30s`; 0:10 to 15:00; none: the length the next race arms at), `cancel`, `show`, `hide`, `toggle` (the Race window, through `NS.SetRaceWindowShown`), `ignore [show\|add\|remove\|defaults] <spell>` (the late-cast ignore list). Race mode off refuses the arm and the window in one line | `ignore` only | `RaceVerb.OnVerb` (modules/RaceVerb.lua) |
 
 The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`.
 

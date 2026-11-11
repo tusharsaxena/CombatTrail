@@ -63,7 +63,7 @@ Total.
 ### test_slash.lua (19)
 
 - slash: help lists every verb spec §8 names
-- slash: help lists every COMMANDS verb, in order
+- slash: help lists every COMMANDS verb this client has, in order
 - slash: an unknown verb says so and prints the help
 - slash: bare /ct opens the settings panel
 - slash: /ct and /combattrail are both registered on the one dispatcher
@@ -788,6 +788,56 @@ Total.
 - resume: a stood-down login resumes nothing until the addon is enabled
 - resume: nothing is resumed on WoW Forever
 
+### test_race_settings.lua (17)
+
+- race mode: the page, its rows and the verb are present on Retail, each declared retail
+- race mode: every control and verb is absent on WoW Forever
+- race mode: the library-absent dispatcher lists and runs the verb on its own client only
+- race mode: the stored paths, types, defaults and ranges are the pinned set
+- race mode: the page's tabs are Race, Late-cast ignore list and Race window, and it renders quietly
+- race mode: a new default length forgets the last one armed
+- race mode: the page's Defaults brings every race row back, the ignore list too
+- race mode: Ignore, Unignore and Reset write the late-cast list through its row
+- race verb: arm takes 90, 1:30 and 3m, and refuses 0 and 901 with one line
+- race verb: a bare arm takes the remembered length, and a refusal says why
+- race verb: cancel says what it did in the state it found
+- race verb: show, hide and toggle reach the Race window, and say so before it is built
+- race verb: ignore shows, adds, removes and resets the late-cast list
+- race verb: disabled, only race ignore answers; every other word is the refusal line
+- race verb: under the perf hold alone, race arm answers the capture line
+- race mode off: arming refuses and the Race window stays hidden
+- race mode off: an armed race is canceled with the switch; a running race runs on
+
+### test_autoarm.lua (27)
+
+- autoarm: on WoW Forever nothing registers and a dummy target arms and shows nothing
+- autoarm: a new profile shows the Race window near a dummy and never arms by itself
+- autoarm: both rules off register nothing
+- autoarm: each rule registers only what it needs, and turning both off drops it all
+- autoshow: a dummy target opens the Race window, and leaving it closes it after the debounce
+- autoshow: a dummy's nameplate opens the Race window, with no target at all
+- autoshow: nameplates churning inside the debounce never close the window
+- autoshow: the hide's fire scans the nameplates again before it closes
+- autoshow: a secret GUID is no dummy
+- autoshow: the player's close keeps it closed for the rest of the dummy session
+- autoshow: a window the player opened is theirs, and never closed by leaving
+- autoshow: a race holds the window; its idle edge starts the debounce
+- autoshow: turning the rule off closes the window it opened
+- autoarm: targeting a dummy out of combat arms at the Race window's length
+- autoarm: with no length from the Race window, the race's own default
+- autoarm: a target that is no dummy arms nothing
+- autoarm: Race.Arm's refusals hold, silently: in combat, meter unavailable
+- autoarm: no arm in test mode
+- autoarm: targeting anything else before the pull disarms; another dummy keeps it
+- autoarm: a target change in combat never disarms, and a started race is no longer the rule's
+- autoarm: a race the player armed is never the rule's to disarm
+- autoarm: Cancel works as ever, and the next target change to a dummy arms again
+- autoarm: a profile switch re-reads both rows, with no /reload
+- autoarm: Race mode off, neither rule registers or acts; on again, both come back
+- autoarm: neither rule acts in an instance or a battleground
+- autoarm: entering an instance closes the dummy's window
+- autoarm: stood down, nothing is registered and nothing acts; the stand-up rebuilds
+
 ### test_slices.lua (18)
 
 - slices: a 2 s step, at most 60 columns, a column that grows with the fight
@@ -1325,6 +1375,8 @@ Total.
 | test_late_ignore.lua | 12 |
 | test_race.lua | 56 |
 | test_race_resume.lua | 23 |
+| test_race_settings.lua | 17 |
+| test_autoarm.lua | 27 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1360,4 +1412,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1086** |
+| **Total** | **1130** |

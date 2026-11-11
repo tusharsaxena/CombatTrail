@@ -85,6 +85,10 @@ files["modules/Dummies.lua"] = {
                      "UnitFactionGroup", "UnitReaction", "GetZoneText", "GetSubZoneText", "C_Map" },
 }
 
+-- Auto-show and auto-arm near a training dummy (Race mode): the instance type that keeps both off, and
+-- the nameplates up now (each pcall'd at CALL time).
+files["modules/AutoArm.lua"] = { read_globals = { "GetInstanceInfo", "C_NamePlate" } }
+
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
 -- time, so a client without one leaves the field absent).
 files["modules/Usage.lua"] = {

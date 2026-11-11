@@ -12,12 +12,14 @@ that resets that page on the current profile. Every row is a schema row (`settin
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, and the look of each part |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, and the items Usage never lists |
+| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show and auto-arm near a training dummy, the race clock, the countdown and the buzzer, the scoring rules, the late-cast ignore list, and where the Race window stands |
 | Profiles | AceDB's own profile controls |
 
 The tree below is page, then tab in strip order, then row, as the schema produces it. Rows a client
 cannot have are absent there (clients-§4): the Delves and Arenas rows of the Lanes page's Visibility
 tab, and the Mythic+, Delves and Arenas rows of the History page's Recording filters, exist only on
-Retail.
+Retail. The whole Race mode page is Retail's: on WoW Forever it is not registered, and none of its rows
+or stored keys exist (`settings/Race.lua`).
 
 ## General
 
@@ -395,6 +397,54 @@ none on WoW Forever, whose seed is empty), then *Reset list* last.
 | Row | Key |
 |---|---|
 | Your training dummies | `dummies.custom` (skipRender: drawn as the tab's body, not a text box) |
+
+## Race mode
+
+Retail only (race plan Task B3). Tabs: *Race*, *Late-cast ignore list*, *Race window*
+(settings/Race.lua, `NS.RACE_TABS`). The Race tab opens on the page's one note on where Race mode came
+from, then the switch; the race clock's two colored clocks and the window's look are the DPS HUD page's
+appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
+page's. The New-best toast's section is not on the page yet: where it stands waits for the owner (the
+fights' toast is on both clients, this page is Retail's), and it lands with the toast (Task C2).
+
+### Race
+
+| Row | Key |
+|---|---|
+| Race mode | `race.enabled` |
+| Default race length | `race.defaultLength` |
+| Show the Race window near a training dummy | `race.autoShow` |
+| Arm on a training dummy | `race.autoArm` |
+| Race clock | `race.clock` |
+| Countdown cue sound | `race.countdownCue` |
+| Center-screen countdown | `race.centerCountdown` |
+| Center countdown from (seconds) | `race.finalCountdown` |
+| Buzzer raid warning and sound | `race.buzzer` |
+| Sticky-combat hint after (seconds) | `race.hintDelay` |
+| Late-cast grace (seconds) | `race.grace` |
+| Damage-restart gap (seconds) | `race.restartGap` |
+
+Under the headings *Race mode*, *Length*, *Near a training dummy*, *Clock*, *Countdown*, *At the buzzer*
+and *Scoring rules*. A new default length forgets the length last armed (`Race.ForgetLength`); the
+switch and the two dummy rows re-sync auto-show's and auto-arm's events (`AutoArm.Sync`), and the switch
+going off cancels a race still armed (one running runs on). Grace and the
+restart gap apply to new races: each race keeps the values it armed with.
+
+### Late-cast ignore list
+
+A blurb, the library's spell ID list (an add box for a spell ID, a link or a name a race cast late; the
+X takes one off; 8690 says it stands for every hearthstone), then *Reset list* (the six defaults).
+
+| Row | Key |
+|---|---|
+| Late-cast ignore list | `race.lateIgnore` (skipRender: drawn as the tab's body, not a text box) |
+
+### Race window
+
+| Row | Key |
+|---|---|
+| Attach to the DPS HUD | `raceWindow.attached` |
+| Side of the DPS HUD | `raceWindow.side` |
 
 ## Profiles
 

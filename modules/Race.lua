@@ -7,7 +7,8 @@ local _, NS = ...
 -- (modules/RaceRecord.lua's shape), which modules/Recorder.lua saves with the fight.
 --
 -- THE FLOW, ON THE BUS (core/Bus.lua):
---   Arm            RACE_ARMED. Refused stood down, on WoW Forever, while armed or racing, while a race
+--   Arm            RACE_ARMED. Refused stood down, on WoW Forever, with Race mode off (Task B3), while
+--                  armed or racing, while a race
 --                  waits for its read, for a length outside 10 s - 15:00, in combat, while a fight is
 --                  still settling (a pull inside its grace would carry that fight on, ruling X5) and
 --                  with the meter unavailable. The sessions the client holds now are the arm's set,
@@ -53,6 +54,23 @@ local _, NS = ...
 
 local Race = {}
 NS.Race = Race
+
+-- ── Race mode (Task B3) ─────────────────────────────────────────────────────────────────────────
+-- The ONE gate every race surface asks: Retail, and the Race mode page's switch on. Off stops NEW
+-- races only (spec §8): Arm refuses, no auto-show or auto-arm, the Race window stays hidden; a race
+-- under way runs to its result, and a saved race is a fight that never asks this.
+NS.RaceMode = NS.RaceMode or {}
+
+--- Whether Race mode is on: Retail, and `race.enabled` (WoW Forever has neither the switch nor the key).
+function NS.RaceMode.On()
+    if not NS.Compat.ForClient({ "retail" }) then return false end
+    local db = NS.db
+    local race = db and db.profile and db.profile.race
+    local on
+    if type(race) == "table" then on = race.enabled end
+    if on == nil then on = NS.defaults.profile.race.enabled end
+    return on ~= false
+end
 
 local Secrets = NS.Secrets
 
@@ -182,6 +200,15 @@ function Race.StopRequested()
     return state == STATE.STOPPING and cur.stopNow == true
 end
 
+--- The Race mode page's new default length: the length last armed is forgotten, so the next race arms
+--- at the new default (DPS Race's ForgetLength).
+function Race.ForgetLength()
+    local db = NS.db
+    if db and type(db.profile) == "table" and type(db.profile.race) == "table" then
+        db.profile.race.lastLength = nil
+    end
+end
+
 --- The length the next race arms at: the last one armed, else the profile's default.
 function Race.DefaultLength()
     local last = setting("lastLength")
@@ -268,6 +295,7 @@ end
 local function armRefusal(length)
     if isDown() then return "disabled" end
     if not NS.Compat.ForClient(RETAIL) then return "client" end
+    if not NS.RaceMode.On() then return "off" end
     local refusal = stateRefusal()
     if refusal then return refusal end
     if not validLength(length) then return "bad_length" end
@@ -328,7 +356,7 @@ end
 --- Arm a race of `length` seconds (Race.DefaultLength() when nil) for the next pull.
 --- @param length number|nil  10-900
 --- @return boolean ok
---- @return string|nil reason  "disabled" | "client" | "busy" | "pending" | "bad_length" | "in_combat" |
+--- @return string|nil reason  "disabled" | "client" | "off" | "busy" | "pending" | "bad_length" | "in_combat" |
 ---                            "settling" | "meter_unavailable"
 --- @return string|nil detail  for "meter_unavailable": the client's own reason, verbatim
 function Race.Arm(length)

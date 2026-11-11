@@ -10,7 +10,16 @@ local function out(line) NS.Print(line) end
 
 local cli   -- built at the bottom, once NS.COMMANDS exists; handlers reach it at CALL time
 local doEnabled, doDebug, doPerf, doSetVerb
-local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy
+local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy, doRace
+
+-- Race mode's verb is Retail's (clients-§4): declared on its triple, which the library gates, and
+-- gated the same way on the library-absent stub and NS.RunVerb below.
+local RETAIL = { "retail" }
+
+--- Whether a COMMANDS triple is a verb on this client: none declared serves both.
+local function onClient(entry)
+    return entry.clients == nil or NS.Compat.ForClient(entry.clients)
+end
 
 --- A feature verb's handler behind the stand-down: the dispatcher refuses every feature verb while the
 --- `disabled` hold is taken, and this answers the `perf` hold's line (slash-commands-§7, "Which
@@ -72,13 +81,17 @@ NS.COMMANDS = {
     -- clients, and live while disabled as `lane` and `ignore` are (race plan ruling X10).
     { "dummy",       L["Your training dummies: /ct dummy show|add|remove|capture|defaults"],
                                                                    function(rest) doDummy(rest) end },
+    -- Race mode (modules/RaceVerb.lua, race plan Task B3), Retail only. Live while disabled for its
+    -- `ignore` word alone (ruling X10): doRace refuses every other word itself while stood down.
+    { "race",        L["Race mode: /ct race arm [length], cancel, show, hide, toggle or ignore"],
+                                                                   function(rest) doRace(rest) end, clients = RETAIL },
 }
 
 --- Run one verb's handler by name: the launcher's Enabled entry reaches `enable`/`disable` through
 --- here, so the menu and the verb are one handler (launcher-§2).
 function NS.RunVerb(verb, rest)
     for _, entry in ipairs(NS.COMMANDS) do
-        if entry[1] == verb then return entry[3](rest or "") end
+        if entry[1] == verb and onClient(entry) then return entry[3](rest or "") end
     end
 end
 
@@ -94,8 +107,10 @@ NS.SLASH_LIVE_VERBS = {
 --- (the library's LIVE_VERBS plus these) and the library-absent stub's gate. `lane` and `ignore` read
 --- and write the lanes' own settings, and `dummy` the training-dummy list, as `get`/`set` do, so the
 --- addon declines slash-commands-§2's feature-verb refusal for them: a player reads and repairs
---- settings while the addon is off.
+--- settings while the addon is off. `race` (Retail) is live for its `ignore` word, the late-cast list's
+--- settings, and refuses its other words itself (ruling X10).
 local HOST_LIVE_VERBS = { "lane", "ignore", "dummy" }
+if NS.Compat.ForClient(RETAIL) then HOST_LIVE_VERBS[#HOST_LIVE_VERBS + 1] = "race" end
 local HOST_LIVE = {}
 for _, verb in ipairs(HOST_LIVE_VERBS) do HOST_LIVE[verb] = true end
 
@@ -126,7 +141,9 @@ if not SlashLib then
         stub.CliVersion = function() out(L["%s version %s"]:format(d.brandName, version())) end
         stub.LandingRows = function()
             local rows = {}
-            for _, e in ipairs(d.commands) do rows[#rows + 1] = d.slash .. " " .. e[1] .. "  " .. e[2] end
+            for _, e in ipairs(d.commands) do
+                if onClient(e) then rows[#rows + 1] = d.slash .. " " .. e[1] .. "  " .. e[2] end
+            end
             return rows
         end
         stub.HelpRows = function()
@@ -146,7 +163,7 @@ if not SlashLib then
             verb = verb:lower()
             verb = (d.aliases or {})[verb] or verb
             for _, e in ipairs(d.commands) do
-                if e[1] == verb then
+                if e[1] == verb and onClient(e) then
                     -- The disabled gate the live dispatcher applies: a feature verb refuses with the
                     -- one line while the `disabled` hold is taken (slash-commands-§7).
                     if d.isEnabled and not d.isEnabled() and not NS.SLASH_LIVE_VERBS[verb]
@@ -250,6 +267,17 @@ end
 doResults, doHud, doLane = delegate("Results"), delegate("Hud"), delegate("Lanes")
 doIgnore, doPurge, doProbe = delegate("LaneIgnore"), delegate("Retention"), delegate("Probe")
 doDummy = delegate("Dummies")
+
+--- `race <word>`: while stood down only `race ignore` answers; every other word is the hold's one line
+--- (the disabled line, or the capture's under the `perf` hold alone), as a feature verb's (ruling X10).
+function doRace(rest)
+    local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
+    if word ~= "ignore" then
+        local line = NS.StoodDownRefusal()
+        if line then return out(line) end
+    end
+    return delegate("RaceVerb")(rest)
+end
 
 --- `lock` / `unlock`: the Locked row (slash-commands-§8).
 function doLock(want)

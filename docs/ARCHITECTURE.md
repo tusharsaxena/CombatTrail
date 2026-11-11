@@ -41,6 +41,9 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Spec in Results (the column's second icon, the dropdown, the Spec grouping, the bests' board, the Share line) | the specialization | the predominant talent tree (most points, a tie to the first) stands in, worded "talent tree" (v0.2 plan A4, D5 and D11); none with no points or no talent API, so the class icon never shows twice |
 | The talent-tree section of `/ct probe` | absent | every talent API's answer and the tree picked |
 | Race mode's engine (`modules/Race.lua`: its bus receivers and `Race.Arm`; `modules/RaceWatchers.lua`: its events), gated with `NS.Compat.ForClient({ "retail" })` | present | absent: `Race.Arm` refuses (`"client"`), nothing registers; a saved race still lists and re-scores (`modules/LateIgnore.lua`, both clients) |
+| The Race mode page (`settings/Race.lua`: the page declared `clients = { "retail" }`, its rows registered on Retail only and each declared retail; the keys `race.enabled`, `autoShow`, `autoArm`, `clock`, the countdown's and the buzzer's, and `raceWindow` built under `ForClient` in `defaults/Profile.lua`) | present | absent: no page, no row, no stored key |
+| The `/ct race` verb (`settings/Slash.lua`: the triple declared `clients = { "retail" }`, gated by the library and, degraded, by the stub and `NS.RunVerb`) | present | absent: not in the help, typing it is an unknown verb |
+| Auto-show and auto-arm (`modules/AutoArm.lua`: its bus receivers under `ForClient`, its events only while `NS.RaceMode.On()`) | present | absent: nothing registers |
 | Sample history (test mode and the sim) | 40 fights | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
@@ -78,18 +81,18 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
 - **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
-- **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers.
+- **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, AutoArm, RaceVerb.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Loadout,
   Results_Usage, Results_Targets, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
   Results_Gear, Results_Compare, Results.
 - **Preview and support:** MockRotations, MockFights, Preview, Sim, Diagnostics.
-- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, History, Profiles.
+- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, History, Race (the Race mode page, Retail), Profiles.
 
 ## Settings Schema
 
 The profile tree is `defaults/Profile.lua` (the only place a default is written): `general`,
-`lanes.player` / `lanes.pet`, `hud`, `history`, `results` and `skin`. The global tree holds the fight
+`lanes.player` / `lanes.pet`, `hud`, `history`, `results`, `dummies`, `race`, `raceWindow` (Retail) and `skin`. The global tree holds the fight
 store (`fights`, `fightOrder`), the interned talent loadouts (`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the
 minimap table and `schemaVersion`, migrated by `core/Database.lua`'s runner to `NS.SCHEMA_VERSION`.
 Every row registers into `NS.Schema` through `NS.RegisterSchemaRows`, and every write goes through
@@ -117,8 +120,9 @@ first hit, so `Race.Resume` (OnEnable and the stand-up) carries it on after a `/
 
 `/ct` and `/combattrail` reach one LibKa0s-Slash-1.0 dispatcher over the ordered `NS.COMMANDS` in
 `settings/Slash.lua`: the thirteen reserved verbs plus `skin`, then the feature verbs `results`,
-`hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `ignore` and `dummy`. Feature verbs
-refuse while stood down; `lane`, `ignore` and `dummy` stay live. The full table and the dispatch rules are in
+`hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `ignore` and `dummy`, and `race` on
+Retail only (declared `clients = { "retail" }`). Feature verbs refuse while stood down; `lane`,
+`ignore` and `dummy` stay live, and `race` stays live for its `ignore` word alone (ruling X10). The full table and the dispatch rules are in
 [`slash-dispatch.md`](slash-dispatch.md).
 
 ## Event Subscriptions
@@ -137,6 +141,9 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   `DAMAGE_METER_RESET`; running and stopping hear both regen edges, `PLAYER_DEAD`,
   `DAMAGE_METER_COMBAT_SESSION_UPDATED` and, on a frame filtered to `player`, `UNIT_SPELLCAST_START`,
   `_EMPOWER_START`, `_CHANNEL_START`, `_SUCCEEDED`, `_INTERRUPTED` and `_CHANNEL_STOP`.
+- **Auto-show and auto-arm (AutoArm, Retail only, Race mode on):** with either rule on,
+  `PLAYER_TARGET_CHANGED` and `PLAYER_ENTERING_WORLD`; with auto-show on, `NAME_PLATE_UNIT_ADDED` and
+  `_REMOVED` too; both off, Race mode off or stood down, nothing.
 - **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges.
 - **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
   `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an

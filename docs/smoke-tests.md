@@ -193,6 +193,9 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-S6 | Forever | History → Recording filters | Mythic+, Delves and Arenas rows absent on WoW Forever |
 | SM-CT-S7 | Both | Switch, copy and reset a profile | Every window redraws from the new profile; fights stay |
 | SM-CT-S8 | Both | `/ct skin`, preview a skin, Apply; then close the picker without Apply | Apply keeps it; closing puts everything back |
+| SM-CT-S9 | Retail | The Race mode page: its three tabs; `/ct race arm 1:30`, then `/ct race cancel`; `/ct race ignore add` a spell, then `/ct race ignore defaults`; Race mode off, then `/ct race arm` | The tabs are Race, Late-cast ignore list and Race window; the race arms at 1:30 and the cancel says so; the list follows each verb and the page redraws; off, the arm says Race mode is off |
+| SM-CT-S10 | Retail | Auto-arm on, target a training dummy out of combat, then a boar; target the dummy and pull | Armed on the dummy, canceled on the boar; the pull starts the race |
+| SM-CT-S11 | Forever | The settings panel, `/ct help` and `/ct race` | No Race mode page, `race` is not in the help, and `/ct race` is an unknown command |
 
 ## 8. Test mode and the sim
 

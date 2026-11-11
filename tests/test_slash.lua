@@ -34,15 +34,17 @@ test("slash: help lists every verb spec §8 names", function()
     end
 end)
 
-test("slash: help lists every COMMANDS verb, in order", function()
+test("slash: help lists every COMMANDS verb this client has, in order", function()
     local inst = T.load()
     inst.mocks.__resetPrinted()
     inst.NS.Slash:OnSlash("help")
     local out, last = text(inst.mocks), 0
     for _, row in ipairs(inst.NS.COMMANDS) do
-        local at = out:find("/ct " .. row[1], 1, true)
-        assertTrue(at ~= nil and at > last, row[1] .. " is in COMMANDS order")
-        last = at
+        if row.clients == nil or inst.NS.Compat.ForClient(row.clients) then
+            local at = out:find("/ct " .. row[1], 1, true)
+            assertTrue(at ~= nil and at > last, row[1] .. " is in COMMANDS order")
+            last = at
+        end
     end
 end)
 

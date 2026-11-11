@@ -157,6 +157,12 @@ modules\LateIgnore.lua
 modules\RaceScoring.lua
 modules\Race.lua
 modules\RaceWatchers.lua
+# Race mode's player-facing parts (Retail only, Task B3): auto-show and auto-arm near a training dummy
+# (LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus receiver at FILE SCOPE, on
+# Retail; reaches NS.Race, NS.Identity, NS.Dummies and NS.RaceWindow at CALL time) and `/ct race`'s
+# words (registers nothing; reaches NS.Race and NS.LateIgnore at CALL time).
+modules\AutoArm.lua
+modules\RaceVerb.lua
 # The stored cast list's format: pure.
 modules\CastCodec.lua
 # Each fight's cast list. LOAD-BEARING: calls NS.LaneCasts.Listen and registers its bus receiver at FILE
@@ -250,9 +256,12 @@ settings\Slash.lua
 # NS.RegisterTabbedPage, which settings\Lanes.lua, Hud.lua and History.lua call at FILE SCOPE.
 settings\OptionsSetup.lua
 # LOAD-BEARING: General registers FIRST and Profiles LAST -- the page order IS the registration order
-# (General, Lanes, DPS HUD, History, Profiles).
+# (General, Lanes, DPS HUD, History, Race mode on Retail, Profiles).
 settings\General.lua
 settings\Lanes.lua
 settings\Hud.lua
 settings\History.lua
+# The Race mode page, Retail only (declared on its page and its rows; nothing registers on WoW Forever).
+# LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format and NS.LateIgnore at FILE SCOPE.
+settings\Race.lua
 settings\Profiles.lua

@@ -18,6 +18,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `meter` | the live read of the player's and the pet's sources (modules/Meter.lua) | every HUD tick in combat |
 | `fight` | every combat, encounter and meter event (modules/Watchers.lua) | the meter's session events fire often in combat |
 | `race` | every race event: both regen edges, `PLAYER_DEAD`, the meter's session updates and the player's casts (modules/RaceWatchers.lua) | only while a race runs or waits for its read (Retail) |
+| `autoArm` | auto-show's and auto-arm's target, nameplate and `PLAYER_ENTERING_WORLD` events (modules/AutoArm.lua) | only while either rule is on, Race mode on (Retail); nameplates churn in a city |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
 | `hud` | the HUD's read and redraw on each `FIGHT_TICK` (modules/Hud.lua), holding `meter` | four times a second in combat |

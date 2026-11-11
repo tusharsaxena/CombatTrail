@@ -15,7 +15,10 @@ test("settings: the pages register in the panel's order, General first and Profi
     local inst = T.load()
     local order = {}
     for _, ctx in ipairs(inst.NS.Helpers.__pages()) do order[#order + 1] = ctx.pageKey or ctx.key end
-    assertEqual(table.concat(order, ","), "general,lanes,hud,history,profiles")
+    -- Race mode is Retail's page (clients-§4, tests/test_race_settings.lua): absent on WoW Forever.
+    local want = inst.NS.Compat.IsForever() and "general,lanes,hud,history,profiles"
+        or "general,lanes,hud,history,race,profiles"
+    assertEqual(table.concat(order, ","), want)
 end)
 
 test("settings: every page is a subcategory under its player-facing name", function()

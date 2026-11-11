@@ -47,6 +47,20 @@ local function content()
     return c
 end
 
+-- Race mode's own keys (the Race mode page, race plan Task B3), Retail only, so ABSENT on WoW Forever
+-- (clients-§4); the rest of the race table (the length, the scoring rules, the late-cast list) is on
+-- both clients, as a saved race re-scores there too. The switch (Race mode on, which stops new races
+-- only), auto-show near a dummy (on) and auto-arm on targeting one (off), the race clock's mode
+-- ("both", "left" or "elapsed"), the countdown's cue, its center numbers and where they start (s),
+-- and the buzzer's raid warning (DPS Race's defaults; the countdown and the buzzer are Task C2's).
+local function raceMode(r)
+    if NS.Compat.ForClient({ "retail" }) then
+        r.enabled, r.autoShow, r.autoArm, r.clock = true, true, false, "both"
+        r.countdownCue, r.centerCountdown, r.finalCountdown, r.buzzer = true, true, 10, true
+    end
+    return r
+end
+
 -- One lane's every setting (spec §4's table, tab by tab). The two lanes differ only where `over` says.
 local function lane(key, over)
     local d = {
@@ -233,8 +247,13 @@ NS.defaults = {
         -- IDs, ascending and comma-separated, 8690 standing for every hearthstone
         -- (defaults/Hearthstones.lua): Invisibility, Vanish, Feign Death, Hearthstone, Shadowmeld,
         -- Greater Invisibility. On both clients: a saved race (account-wide) re-scores on WoW Forever too.
-        race = { defaultLength = 60, grace = 1.0, restartGap = 6, hintDelay = 15,
-                 lateIgnore = "66,1856,5384,8690,58984,110959" },
+        -- The Retail-only part (raceMode(), below, Task B3) adds the Race mode page's own keys.
+        race = raceMode({ defaultLength = 60, grace = 1.0, restartGap = 6, hintDelay = 15,
+                          lateIgnore = "66,1856,5384,8690,58984,110959" }),
+        -- The Race window's place (Race mode, Task B3; Retail only, so ABSENT on WoW Forever,
+        -- clients-§4): attached beside the DPS HUD, on its `side` ("RIGHT", "LEFT", "TOP", "BOTTOM").
+        -- Task C1's window reads it; detached, it stands where its drag puts it.
+        raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT" } or nil,
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the

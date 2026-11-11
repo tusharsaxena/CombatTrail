@@ -62,6 +62,9 @@ function NS.RegisterGameEvents()
     if NS.Watchers then NS.Watchers.Sync() end
     -- The race's events for the race's current state, Retail only (modules/RaceWatchers.lua).
     if NS.RaceWatchers then NS.RaceWatchers.Sync() end
+    -- Auto-show and auto-arm near a training dummy: their target and nameplate events, for the rules
+    -- on, with Race mode on, on Retail (modules/AutoArm.lua).
+    if NS.AutoArm then NS.AutoArm.Sync() end
     -- The equipment recon's events, and one recon now: at login and every stand-up, whatever the gear
     -- became while the addon was not watching is interned as the current set (modules/Loadouts.lua).
     if NS.Loadouts then NS.Loadouts.Sync() end
@@ -138,6 +141,30 @@ function NS.IsHudShown()
 end
 
 --- The Results window key and `/ct results`: show or hide the Results window.
+--- The Race window's words, by the act each one asks of it.
+local RACE_WINDOW_ACT = { show = "Show", hide = "Hide", toggle = "Toggle" }
+
+--- `/ct race show|hide|toggle` (Race mode, Retail): show, hide or toggle the Race window (Task C1's
+--- NS.RaceWindow). With Race mode off it does nothing and says why in one line (spec §8).
+--- @param how string  "show" | "hide" | "toggle"
+function NS.SetRaceWindowShown(how)
+    if refused() then return false end
+    if not NS.RaceMode.On() then
+        NS.Print(L["Race mode is off. Turn it on at the top of the Race mode settings page."])
+        return false
+    end
+    local W = NS.RaceWindow
+    local act = W and W[RACE_WINDOW_ACT[how] or "Toggle"]
+    if not act then return notBuilt() end
+    act()
+    return true
+end
+
+--- `/ct race toggle`: show or hide the Race window.
+function NS.ToggleRaceWindow()
+    return NS.SetRaceWindowShown("toggle")
+end
+
 function NS.ToggleResults()
     if refused() then return false end
     if not (NS.Results and NS.Results.Toggle) then return notBuilt() end

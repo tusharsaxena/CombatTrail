@@ -69,6 +69,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceScoring.lua` | A race's scoring rules: the late-cast test, the race DPS and its flags (Race mode) |
 | `modules/Race.lua` | The race engine on the fight: arm, the first-hit clock, the buzzer, the late casts, the race part, the pending slot and the resume after a `/reload` (Race mode, Retail) |
 | `modules/RaceWatchers.lua` | The race's game events, one set per race state (Race mode, Retail) |
+| `modules/AutoArm.lua` | Auto-show and auto-arm near a training dummy: the target and nameplate events, the debounced hide, the Race window's five hooks (Race mode, Retail) |
+| `modules/RaceVerb.lua` | `/ct race`'s words: arm with a typed length, cancel, the Race window, the late-cast ignore list; the arm refusals' copy (Race mode, Retail) |
 | `modules/CastCodec.lua` | The packed cast-list string a record stores, pure |
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |
 | `modules/Usage.lua` | What a fight used: on-use gear and consumables |
@@ -117,6 +119,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `settings/Lanes.lua` | The Lanes page and the `/ct lane` verb |
 | `settings/Hud.lua` | The DPS HUD page |
 | `settings/History.lua` | The History page |
+| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the late-cast ignore list, the Race window's place (Retail only) |
 | `settings/Profiles.lua` | The Profiles page |
 
 ## Not shipped

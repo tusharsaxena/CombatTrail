@@ -121,3 +121,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   `Fight.Adopt` seam could carry plain fights too; not done).
 - **The late-cast ignore list is per profile while the store is account-wide,** as the Training
   dummies list is: a profile switch re-scores every saved race by the other profile's list.
+- **Auto-show and auto-arm see only the training dummies Combat Trail knows** (the built-ins and your
+  own list), and with enemy nameplates off only your target counts: a dummy across the room opens
+  nothing until you target it. A nameplate that came up in combat with a sealed GUID is counted at the
+  next rescan (the debounced hide's), not when it came.
+- **Race mode off stops new races only.** An armed race is canceled with the switch, but one already
+  running when it goes off runs on to its result; the switch never touches a saved race.
