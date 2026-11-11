@@ -23,7 +23,7 @@ stand-down drops it and the stand-up replays it (slash-commands-§7).
 | `RACE_ARMED` | Race.Arm | `(race)` | (the Race window and the chat lines, Tasks C1 and C2) |
 | `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | (the Race window, Task C1) |
 | `RACE_BUZZER` | Race, at the race length | `(race)` | (the buzzer's warning, Task C2) |
-| `RACE_RESULT` | Race, inside the race fight's `FIGHT_SAVED` or `FIGHT_SKIPPED` | `(record, race)`; `record` nil when nothing was stored (a lost race) | (the result card, the toast and the chat line, Tasks C1 and C2) |
+| `RACE_RESULT` | Race, inside the race fight's `FIGHT_SAVED` or `FIGHT_SKIPPED`; or from `Race.Resume` itself for a resumed race whose session is gone | `(record, race)`; `record` nil when nothing was stored (a lost race) | (the result card, the toast and the chat line, Tasks C1 and C2) |
 | `RACE_CANCELED` | Race.Cancel, or a pull not on a training dummy | `(reason)`: `"canceled"` or `"not_dummy"` | (the Race window, Task C1) |
 
 The race messages are Retail's (Race mode is absent on WoW Forever, clients-§4): nothing sends them
@@ -42,6 +42,13 @@ one receiver running before another:
 - **One race on the bus:** `RACE_ARMED` → `FIGHT_STARTED` → `FIGHT_FIRST_HIT` / `RACE_STARTED` →
   `FIGHT_TICK`… → `RACE_BUZZER` → `FIGHT_ENDED` → `FIGHT_SAVED` / `RACE_RESULT`, with a
   `RACE_STATE_CHANGED` at each transition.
+- **A resumed race** (`Race.Resume` after a `/reload` or the stand-up, Task B2) sends no `RACE_ARMED`
+  or `RACE_STARTED`, and its fight (`Fight.Adopt`) no `FIGHT_STARTED` or `FIGHT_FIRST_HIT`: the first
+  message is `RACE_STATE_CHANGED` from `idle` to `running` or `stopping` (or to `result`, with
+  `RACE_RESULT` and a nil record, when its session is gone), then `FIGHT_TICK`… → `FIGHT_ENDED` →
+  `FIGHT_SAVED` / `RACE_RESULT` as above. A receiver that shows a race reacts to the state change, not
+  to `RACE_STARTED` alone; one that keys on `FIGHT_STARTED` (Casts, Hud, Slices, Usage) hears an ended
+  fight it never saw begin.
 
 The sample fight of test mode and the sim is never sent on the bus: Preview and Sim hand it to the
 HUD directly, so the recorder, the casts, the slices reader and the bests never hear it.
