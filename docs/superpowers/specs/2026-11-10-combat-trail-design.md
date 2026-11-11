@@ -173,7 +173,9 @@ it passes the recording filters:
 - **Content:** `GetInstanceInfo()` (instance type, difficultyID, instance name and map) and, since v0.2, the zone and
   subzone (`GetZoneText`, `GetSubZoneText`: the open world's instance name is the continent); delve (Retail);
   Mythic+ keystone level (Retail, `C_ChallengeMode`); training dummy from a **per-client** dummy creature-ID
-  seed list (start from DpsRace `DummyList.lua`; Forever gets its own list, possibly empty by decision).
+  seed list (start from DpsRace `DummyList.lua`; Forever gets its own list, possibly empty by decision),
+  plus the player's own list on both clients (`modules/Dummies.lua`, History > Training dummies,
+  `/ct dummy`; race plan Task A2).
 - **Who:** character, realm (Forever's two-word names and long realm labels, client-quirks §5), class, spec,
   item level, pet name and family. On Forever (v0.2 owner decision D5) the client answers one class-wide spec,
   so the talent tree with the most points stands in for the spec everywhere (the row's second icon, the Spec

@@ -64,8 +64,12 @@ function above CCN 15. Write the failing test first.
 
 ## Add a training dummy
 
-- Measure its creature ID in game, then add `[id] = "Name", -- date, where` to the client's list in
-  `defaults/Dummies.lua`. Never guess an ID, and never assume a Retail ID holds on WoW Forever.
+- A player adds one for themselves with `/ct dummy add [category]` on the target, or History >
+  Training dummies (modules/Dummies.lua, the profile's `dummies.custom`).
+- To ship one: measure its creature ID in game (`/ct dummy capture` saves it to
+  `global.dummies.captures`), then add `[id] = { name = "Name", category = "single" }, -- date, where`
+  to the client's seed in `defaults/Dummies.lua` (`single`, `cleave`, `dungeoneer`, `boss` or `pvp`).
+  Never guess an ID, and never assume a Retail ID holds on WoW Forever.
 
 ## Add a sim scenario
 

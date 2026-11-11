@@ -46,8 +46,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **In-combat behavior is unverified.** The 2026-11-10 probe (build 70862) ran out of combat only:
   whether the meter's values, cast spell IDs and the pet's GUID are secret in combat there is assumed
   to match Retail until the probe reports.
-- **No training dummies.** No dummy creature ID has been measured, so a dummy fight reads as open
-  world.
+- **No built-in training dummies.** No dummy creature ID has been measured, so a dummy fight reads as
+  open world until the player adds the dummy to their own list (History > Training dummies, or
+  `/ct dummy add` on the target).
 - **The talent tree stands in for a spec.** WoW Forever answers one class-wide spec, so the tree
   with the most points is the fight's spec (v0.2 plan A4). The probe (build 70862, out of combat)
   found the trees in C_Traits' trait groups, with the talent-tab API absent (midnight-quirks.md);
@@ -64,6 +65,11 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   tab (issue #2).
 - **The retention settings are per profile while the store is global**, and the 500-fight cap is
   enforced when the purge runs, not on each save.
+- **Your own training dummies are per profile, and a fight's content is decided when it is saved.**
+  Adding a creature to the list (or switching a built-in off) changes what the next fight on it is;
+  a fight stored before keeps the content it was saved with. A built-in cannot be given another
+  category, only switched off. A creature whose GUID arrives secret has no creature ID, so it is never
+  a dummy (both clients).
 - **The HUD has no Pin control in its title bar** (the icon catalog has none); `/ct hud pin` pins
   it. The fade hides at once, the pace bar has no ahead or behind color, and the best line is solid.
 - **Results:** the detail ships collapsed, there are no `results.*` look keys for the table (its bars

@@ -93,8 +93,8 @@ core\Database.lua
 defaults\IgnoreSeeds.lua
 # LOAD-BEARING: reads NS.DEFAULT_SKIN (core\SkinSetup.lua), NS.L and NS.IGNORE_SEEDS at FILE SCOPE.
 defaults\Profile.lua
-# The training dummies, per client. LOAD-BEARING: reads NS.Compat at FILE SCOPE and publishes
-# NS.DUMMIES; modules\Identity.lua reads it at CALL time.
+# The training dummies' seed, per client. LOAD-BEARING: reads NS.Compat at FILE SCOPE and publishes
+# NS.DUMMY_SEED; modules\Dummies.lua reads it at CALL time.
 defaults\Dummies.lua
 
 # Modules -- conventional order: each reaches the others at CALL time, except as noted.
@@ -124,8 +124,13 @@ modules\ProbeCurve.lua
 # `/ct probe`: the in-game checks of the meter, the casts and the pet. Registers nothing until armed;
 # reaches NS.Meter, NS.DebugLog, NS.Compat and NS.db at CALL time only.
 modules\Probe.lua
+# The training dummies: the seed, the player's own list and the captures. LOAD-BEARING: reads
+# NS.defaults (defaults\Profile.lua) and captures NS.Secrets and NS.L at FILE SCOPE; reaches
+# NS.DUMMY_SEED, NS.Identity, NS.Format and NS.db at CALL time only. Before modules\Identity.lua,
+# which asks it whether a target is a dummy.
+modules\Dummies.lua
 # Who, where and against what a fight was, and its board key. Captures NS.Secrets and NS.L at FILE
-# SCOPE; reaches NS.Compat and NS.DummyName at CALL time only.
+# SCOPE; reaches NS.Compat and NS.Dummies at CALL time only.
 modules\Identity.lua
 # The fight state machine: idle -> combat -> settling, bound to the meter's sessions. LOAD-BEARING:
 # captures NS.Secrets and NS.Constants.FIGHT at FILE SCOPE; reaches NS.Meter, NS.Watchers and NS.addon

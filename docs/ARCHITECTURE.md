@@ -34,7 +34,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Arenas (lane visibility, the recording filter) | present | absent |
 | Mythic+ (the keystone level on the board key, the recording filter) | present | absent |
 | Vehicles and pet battles (lane visibility's "Hide when" rows and their events) | present | absent |
-| Training dummies (Identity's dummy content) | the measured dummies in `defaults/Dummies.lua` | none, empty by decision until one is measured |
+| Training dummies (Identity's dummy content) | the measured seed in `defaults/Dummies.lua`, plus the player's own list (`modules/Dummies.lua`, History > Training dummies, `/ct dummy`) | no seed, empty by decision until one is measured; the player's own list works as on Retail |
 | Ignore seeds (`defaults/IgnoreSeeds.lua`) | its own list, picked once | its own list (the same IDs today) |
 | Default skin | Ka0s Default | WoW Forever |
 | Recording filters' default minimum length (`history.minLength`) | 30 s | 15 s (Race mode spec §3) |
@@ -75,7 +75,7 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   LauncherSetup, CombatTrail, Database.
 - **Defaults and locale:** IgnoreSeeds, Profile, Dummies; enUS.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
-- **Fights:** Meter, ProbeCurve, Probe, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
+- **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
   Filters, Bests, Recorder, Retention, Slices.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Loadout,
@@ -118,8 +118,8 @@ HUD directly, so the recorder, the casts, the slices reader and the bests never 
 
 `/ct` and `/combattrail` reach one LibKa0s-Slash-1.0 dispatcher over the ordered `NS.COMMANDS` in
 `settings/Slash.lua`: the thirteen reserved verbs plus `skin`, then the feature verbs `results`,
-`hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane` and `ignore`. Feature verbs refuse
-while stood down; `lane` and `ignore` stay live. The full table and the dispatch rules are in
+`hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `ignore` and `dummy`. Feature verbs
+refuse while stood down; `lane`, `ignore` and `dummy` stay live. The full table and the dispatch rules are in
 [`slash-dispatch.md`](slash-dispatch.md).
 
 ## Event Subscriptions

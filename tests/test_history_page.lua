@@ -1,9 +1,10 @@
 -- tests/test_history_page.lua — the History settings page (plan Task 4.5, spec §5, §7 and §8, the
--- mockup's History tabs): the four tabs, a row for every `history.*` key the recorder, the filters,
--- the retention and the bests read, the Results window's settings (its scale reaching every
--- follower, its row height reaching the list), the Usage tab's "never show" list as the library's ID
--- list, the History tab's stored count and size and its Purge history… behind a confirmation, no
--- Retail-only trace on WoW Forever, the words options-ui-§7/§21 fix, and the page's Defaults.
+-- mockup's History tabs): the five tabs (the Training dummies tab's body is tests/test_dummies.lua's),
+-- a row for every `history.*` key the recorder, the filters, the retention and the bests read, the
+-- Results window's settings (its scale reaching every follower, its row height reaching the list), the
+-- Usage tab's "never show" list as the library's ID list, the History tab's stored count and size and
+-- its Purge history… behind a confirmation, no Retail-only trace on WoW Forever, the words
+-- options-ui-§7/§21 fix, and the page's Defaults.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -80,13 +81,13 @@ local function stored(NS)
     return c
 end
 
-test("history page: four tabs, Recording filters first and Usage last", function()
+test("history page: five tabs, Recording filters first and Training dummies last", function()
     local inst, ctx = shownPage()
     local NS = inst.NS
-    assertEqual(table.concat(NS.HISTORY_TAB_ORDER, ","), "recording,retention,results,usage")
+    assertEqual(table.concat(NS.HISTORY_TAB_ORDER, ","), "recording,retention,results,usage,dummies")
     local want = {}
     for i, key in ipairs(NS.HISTORY_TAB_ORDER) do want[i] = NS.HISTORY_TABS[key] end
-    assertEqual(table.concat(want, ","), "Recording filters,History,Results window,Usage")
+    assertEqual(table.concat(want, ","), "Recording filters,History,Results window,Usage,Training dummies")
     -- The label is the standard's (plan D6); the internal key stays `retention`.
     assertEqual(NS.HISTORY_TABS.retention, "History")
     local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "history")

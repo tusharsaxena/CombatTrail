@@ -337,7 +337,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 
 ## History
 
-Tabs: *Recording filters*, *History*, *Results window*, *Usage* (settings/History.lua,
+Tabs: *Recording filters*, *History*, *Results window*, *Usage*, *Training dummies* (settings/History.lua,
 `NS.HISTORY_TAB_ORDER`; the History tab's internal key stays `retention`). The History tab also shows
 the stored count and its estimated size, and carries *Purge history…*.
 
@@ -384,6 +384,17 @@ same key, and an open timeline redraws with its zoom and pan kept.
 | Row | Key |
 |---|---|
 | Hidden items | `global.usage.hidden` (drawn as a list with add and remove, not a text box) |
+
+### Training dummies
+
+On both clients (race plan Task A2). A blurb, *Add your target* (captures the target and counts it as
+a single-target dummy), the library's ID list over the player's own dummies (a creature ID or a
+captured name; the X takes one off), one checkbox per built-in (clear it to switch the built-in off;
+none on WoW Forever, whose seed is empty), then *Reset list* last.
+
+| Row | Key |
+|---|---|
+| Your training dummies | `dummies.custom` (skipRender: drawn as the tab's body, not a text box) |
 
 ## Profiles
 

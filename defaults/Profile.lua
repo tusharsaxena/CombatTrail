@@ -219,6 +219,10 @@ NS.defaults = {
             collapsedSections = {},
             timelineMarks = "icon",
         },
+        -- The player's own training dummies (modules/Dummies.lua, race plan Task A2): one string of
+        -- `id:category` (a dummy of the player's) and `-id` (a built-in switched off) entries, written
+        -- whole through the seam. Empty: the client's seed alone (defaults/Dummies.lua).
+        dummies = { custom = "" },
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the
@@ -240,6 +244,10 @@ NS.defaults = {
         -- The items the Results detail's Usage never lists (modules/Usage.lua, spec §7's "never show"
         -- list): item IDs, comma-separated. Global, as the fight store it filters is.
         usage = { hidden = "" },
+        -- What the game said about each creature `/ct dummy` captured, by creature ID
+        -- (modules/Dummies.lua): data, not a setting. Global, as a creature is the same on every
+        -- profile.
+        dummies = { captures = {} },
         -- LibDBIcon's own table, handed straight to :Register (launcher-§3). Global, because the
         -- button belongs to the installation and a profile switch must not move it.
         minimap = { hide = false },

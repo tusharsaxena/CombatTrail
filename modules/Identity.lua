@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Identity.lua — what a fight was (spec §5, plan Task 2.3): who fought, where, against what,
 -- and the board key that groups it with the fights it is compared against. Adapted from DPS Race
--- @045f479 (modules/Recorder.lua's snapshots) without its race: no arm-time snapshot, no dummy
--- categories, no dummy-type boards.
+-- @045f479 (modules/Recorder.lua's snapshots) without its race: no arm-time snapshot, no dummy-type
+-- boards. A dummy is one modules/Dummies.lua answers now (the client's seed and the player's own
+-- list), read at Resolve and frozen into the fight's content.
 --
 -- TWO READS.
 --   * Identity.Snapshot() at combat entry (modules/Fight.lua stores it as fight.snapshot): who the
@@ -118,6 +119,14 @@ local function creatureOf(guid)
     return tonumber(id)
 end
 
+--- A unit's creature ID (its GUID's sixth field), or nil: no unit, a player, a pet, or a GUID that
+--- arrived secret, which is never parsed. modules/Dummies.lua's captures and `/ct dummy` read it.
+--- @param unit string
+--- @return number|nil
+function Identity.UnitCreatureID(unit)
+    return creatureOf(ask(UnitGUID, unit))
+end
+
 -- A unit's whole character name, plain, or nil.
 local function nameOf(unit)
     return Secrets.PlainString((ask(NS.Compat.UnitCharacterName, unit)))
@@ -211,9 +220,9 @@ local function readTarget()
         level          = Secrets.PlainNumber(ask(UnitLevel, "target")),
         classification = Secrets.PlainString(ask(UnitClassification, "target")),
     }
-    local dummy = NS.DummyName(t.creatureID)
+    local dummy = NS.Dummies.Lookup(t.creatureID)
     t.isDummy = dummy ~= nil
-    if t.name == nil then t.name = dummy end
+    if t.name == nil and dummy then t.name = dummy.name end
     return t
 end
 
@@ -315,7 +324,7 @@ local function difficultyNameOf(id, where)
 end
 
 local function contentOf(ident)
-    if NS.DummyName(ident.targetCreatureID) then return "dummy" end
+    if NS.Dummies.Lookup(ident.targetCreatureID) then return "dummy" end
     local kind = ident.instanceType
     if kind == "party" and ident.keystoneLevel then return "mplus" end
     if ident.isDelve then return "delve" end
@@ -349,7 +358,7 @@ local function resolveTarget(ident, snap, enemies)
     end
     ident.targetCreatureID = first.creatureID
     ident.targetLevel = levelOf(first, snap.target)
-    ident.targetName = first.name or NS.DummyName(first.creatureID) or ident.encounterName
+    ident.targetName = first.name or NS.Dummies.Name(first.creatureID) or ident.encounterName
     if ident.targetName == nil then ident.targetName = L["Unknown target"] end
 end
 

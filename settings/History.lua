@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/History.lua — the History page (spec §5, §7 and §8, the mockup's History tabs, plan Task
--- 4.5): four tabs in strip order. Recording filters holds what a fight must pass to be stored
+-- 4.5; race plan Task A2): five tabs in strip order. Recording filters holds what a fight must pass to be stored
 -- (modules/Filters.lua: `history.minLength`, `history.bossesOnly`, one `history.content.<kind>` per
 -- content kind this client has). History (internal key `retention`, plan decision D6) holds how long
 -- and how many are kept (modules/Retention.lua and modules/Bests.lua: `history.days`,
@@ -9,7 +9,9 @@ local _, NS = ...
 -- starts, whether Share appends the talents link and how the ability timeline's By ability lanes draw
 -- a cast (`results.scale`, `results.rowHeight`, `results.closeInCombat`, `results.shareTalents`,
 -- `results.timelineMarks`). Usage holds the "never show" list
--- (`global.usage.hidden`), drawn as the library's ID list.
+-- (`global.usage.hidden`), drawn as the library's ID list. Training dummies holds the player's own
+-- dummies (`dummies.custom`, modules/Dummies.lua) on both clients: Add your target, the library's ID
+-- list, one checkbox per built-in (none on WoW Forever, whose seed is empty) and the list's reset.
 --
 -- NOT ROWS: `results.view` (the filters, the grouping and the sort Save view captures) and
 -- `results.window` (the place and size the drag and the grip set, and the fold the arrow sets) and
@@ -33,9 +35,10 @@ local PAGE = "history"
 local D = NS.defaults.profile
 
 --- The four tabs, by the plan's key, in strip order.
-NS.HISTORY_TAB_ORDER = { "recording", "retention", "results", "usage" }
+NS.HISTORY_TAB_ORDER = { "recording", "retention", "results", "usage", "dummies" }
 NS.HISTORY_TABS = {
     recording = L["Recording filters"], retention = L["History"], results = L["Results window"], usage = L["Usage"],
+    dummies = L["Training dummies"],
 }
 local TAB = NS.HISTORY_TABS
 
@@ -158,6 +161,18 @@ out[#out + 1] = {
     tooltip = L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."],
 }
 
+-- Training dummies: the player's own list (modules/Dummies.lua, race plan Task A2). One plain string
+-- written WHOLE through the seam, as the hidden items are, so the CLI and the page's Defaults reach it;
+-- per profile. The row carries skipRender: the tab draws it (afterDummies). Both clients.
+at(TAB.dummies, nil)
+out[#out + 1] = {
+    path = NS.Dummies.PATH, page = PAGE, group = TAB.dummies, type = "string", skipRender = true,
+    label = L["Your training dummies"], default = NS.Dummies.DEFAULT,
+    validate = function(v) return NS.Dummies.Parse(v) ~= nil end,
+    normalize = function(v) return NS.Dummies.Normalize(v) end,
+    tooltip = L["The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."],
+}
+
 for i, r in ipairs(out) do r.order = i end
 NS.RegisterSchemaRows(out)
 
@@ -243,18 +258,98 @@ local function afterUsage(ctx)
     })
 end
 
+-- The Training dummies tab's body, after its one skipRender row: a blurb, Add your target, the
+-- library's ID list over the player's own dummies (an add box for a creature ID or a captured name, the
+-- X takes one off), one checkbox per built-in (clear it to switch it off), then the list's own reset.
+-- Nothing here writes a path: Dummies' writes write the whole row.
+local DUMMY_KIND = {
+    noun = "creature", plural = "creatures",
+    resolve = function(text) return NS.Dummies.Resolve(text) end,
+    info = function(id) return NS.Dummies.NameOf(id) end,
+}
+
+local function ownDummies()
+    local list = {}
+    for _, e in ipairs(NS.Dummies.Entries()) do
+        if not e.hidden then
+            list[#list + 1] = { id = e.id, suffix = L["\194\183 %s"]:format(NS.Dummies.Label(e.category)) }
+        end
+    end
+    return list
+end
+
+-- The built-ins, ascending by creature ID (none on WoW Forever).
+local function builtInIds()
+    local ids = {}
+    for id in pairs(NS.DUMMY_SEED) do ids[#ids + 1] = id end
+    table.sort(ids)
+    return ids
+end
+
+--- Add your target: capture it and count it as a dummy (single target, or the built-in switched back
+--- on). Says why in one line when the target is no creature.
+function HistoryPage.AddTargetDummy()
+    local Dum = NS.Dummies
+    local _, r = Dum.Capture()
+    if not r then return NS.Print(L["Target a creature first."]) end
+    Dum.Add(r.creatureID)
+end
+
+local function builtInBoxes(ctx)
+    local H, Dum = NS.Helpers, NS.Dummies
+    local ids = builtInIds()
+    if #ids == 0 then return end
+    H.TextRow(ctx, L["Built-in training dummies. Clear one to stop counting it as a dummy."])
+    for _, id in ipairs(ids) do
+        local d = Dum.BuiltIn(id)
+        H.SessionCheckbox(ctx, nil, 1, {
+            label   = L["%s (%d) \194\183 %s"]:format(d.name, id, Dum.Label(d.category)),
+            tooltip = L["Count this built-in as a training dummy. Cleared, a fight on it is stored as open world."],
+            get     = function() return Dum.Lookup(id) ~= nil end,
+            set     = function(on) if on then Dum.Add(id) else Dum.Remove(id) end end,
+        })
+    end
+end
+
+local function afterDummies(ctx)
+    local H, Dum = NS.Helpers, NS.Dummies
+    H.TextRow(ctx, L["Your own training dummies: a fight on one is stored as a Training dummies fight. Target a dummy and click Add your target, or type /ct dummy add; either saves what the game says about it."])
+    H.InlineButtonPair(ctx, {
+        text    = L["Add your target"],
+        tooltip = L["Count your target as a training dummy (single target; /ct dummy add <category> gives another) and save what the game says about it: its level, health, zone and where you stand. A built-in that is switched off is switched back on."],
+        onClick = function() HistoryPage.AddTargetDummy() end,
+    })
+    H.IdList(ctx, {
+        kind        = DUMMY_KIND,
+        label       = L["Add a creature"],
+        tooltip     = L["A creature ID, or the name of a creature you captured. It is counted as single target."],
+        emptyText   = L["No training dummies of your own yet."],
+        entries     = ownDummies,
+        onAdd       = function(id) Dum.Add(id) end,
+        onRemove    = function(id) Dum.Remove(id) end,
+        removeStyle = "icon",
+    })
+    builtInBoxes(ctx)
+    H.InlineButtonPair(ctx, {
+        text    = L["Reset list"],
+        tooltip = L["Remove your own training dummies, and switch back on any built-in you switched off. Stored fights are not touched."],
+        onClick = function() Dum.Defaults() end,
+    })
+end
+
 NS.RegisterTabbedPage({
     key             = PAGE,
     title           = L["History"],
     panelName       = "CombatTrailHistoryPanel",
-    defaultsTooltip = L["Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."],
-    afterGroup      = { [TAB.retention] = afterRetention, [TAB.usage] = afterUsage },
+    defaultsTooltip = L["Restore every History setting on this profile to its addon default, your training dummies among them, and empty the account-wide hidden items. Stored fights are not touched."],
+    afterGroup      = { [TAB.retention] = afterRetention, [TAB.usage] = afterUsage, [TAB.dummies] = afterDummies },
     beforeGroup     = { [TAB.recording] = beforeRecording },
 })
 
--- The stored count repaints when the store changes, and the hidden-items list when it changes from
--- anywhere (the detail's right-click, `/ct set` or `reset`); a hidden page is only flagged, and
--- repaints on its next show (the library's RefreshPanel).
+-- The stored count repaints when the store changes, the hidden-items list when it changes from
+-- anywhere (the detail's right-click, `/ct set` or `reset`), and the training dummies when they change
+-- (`/ct dummy`, `/ct set`) or the profile does (another profile, another list); a hidden page is only
+-- flagged, and repaints on its next show (the library's RefreshPanel).
 local function repaint()
     local ctx = NS.pageCtx[PAGE]
     if ctx and NS.Helpers.RefreshPanel then NS.Helpers.RefreshPanel(ctx, true) end
@@ -266,7 +361,7 @@ do
         bus:RegisterMessage(NS.MSG.FIGHTS_CHANGED, repaint)
         bus:RegisterMessage(NS.MSG.FIGHT_SAVED, repaint)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
-            if path == NS.Usage.HIDDEN_PATH then repaint() end
+            if path == NS.Usage.HIDDEN_PATH or path == NS.Dummies.PATH or path == "profile" then repaint() end
         end)
     end
 end

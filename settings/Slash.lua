@@ -10,7 +10,7 @@ local function out(line) NS.Print(line) end
 
 local cli   -- built at the bottom, once NS.COMMANDS exists; handlers reach it at CALL time
 local doEnabled, doDebug, doPerf, doSetVerb
-local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore
+local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy
 
 --- A feature verb's handler behind the stand-down: the dispatcher refuses every feature verb while the
 --- `disabled` hold is taken, and this answers the `perf` hold's line (slash-commands-§7, "Which
@@ -68,6 +68,10 @@ NS.COMMANDS = {
                                                                    function(rest) doLane(rest) end },
     { "ignore",      L["A lane's ignore list: /ct ignore add|remove <spell> [player|pet]"],
                                                                    function(rest) doIgnore(rest) end },
+    -- The training dummies (modules/Dummies.lua, race plan Task A2): the player's own list, on both
+    -- clients, and live while disabled as `lane` and `ignore` are (race plan ruling X10).
+    { "dummy",       L["Your training dummies: /ct dummy show|add|remove|capture|defaults"],
+                                                                   function(rest) doDummy(rest) end },
 }
 
 --- Run one verb's handler by name: the launcher's Enabled entry reaches `enable`/`disable` through
@@ -88,9 +92,10 @@ NS.SLASH_LIVE_VERBS = {
 
 --- The host verbs that also answer while disabled, on BOTH arms: the descriptor's `liveVerbs` below
 --- (the library's LIVE_VERBS plus these) and the library-absent stub's gate. `lane` and `ignore` read
---- and write the lanes' own settings, as `get`/`set` do, so the addon declines slash-commands-§2's
---- feature-verb refusal for them: a player reads and repairs settings while the addon is off.
-local HOST_LIVE_VERBS = { "lane", "ignore" }
+--- and write the lanes' own settings, and `dummy` the training-dummy list, as `get`/`set` do, so the
+--- addon declines slash-commands-§2's feature-verb refusal for them: a player reads and repairs
+--- settings while the addon is off.
+local HOST_LIVE_VERBS = { "lane", "ignore", "dummy" }
 local HOST_LIVE = {}
 for _, verb in ipairs(HOST_LIVE_VERBS) do HOST_LIVE[verb] = true end
 
@@ -244,6 +249,7 @@ local function delegate(owner)
 end
 doResults, doHud, doLane = delegate("Results"), delegate("Hud"), delegate("Lanes")
 doIgnore, doPurge, doProbe = delegate("LaneIgnore"), delegate("Retention"), delegate("Probe")
+doDummy = delegate("Dummies")
 
 --- `lock` / `unlock`: the Locked row (slash-commands-§8).
 function doLock(want)

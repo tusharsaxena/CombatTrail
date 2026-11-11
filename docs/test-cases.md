@@ -68,7 +68,7 @@ Total.
 - slash: /ct and /combattrail are both registered on the one dispatcher
 - slash: disable and enable write general.enabled through the seam
 - slash: a feature verb refuses with the one line while disabled; settings verbs still answer
-- slash: disabled, each feature verb answers one refusal line; lane and ignore still act
+- slash: disabled, each feature verb answers one refusal line; lane, ignore and dummy still act
 - slash: under the perf hold alone a feature verb answers the capture line
 - slash: lock and unlock write general.locked
 - slash: test turns test mode on and off
@@ -422,7 +422,7 @@ Total.
 - identity: a world boss keeps its creature key, level aside
 - identity: a sealed level or GUID leaves the fields nil and never raises
 - identity: where carries the zone and subzone; sealed or raising ones are absent
-- identity: the dummy list is picked once, per client; Forever's is empty by decision
+- identity: the dummy seed is picked once, per client; Forever's is empty by decision
 - identity: dummy creature -> content dummy
 - identity: a dummy found only by the snapshot's target is still a dummy
 - identity: no enemies and no snapshot -> Unknown target, key nil
@@ -451,6 +451,37 @@ Total.
 - identity: forever: Prime reads the trees out of combat, so the session's first sealed read has one
 - identity: the stand-up primes the trees (core/CombatTrail.lua RegisterGameEvents)
 - identity: retail: the talent trees are absent and the spec is the client's
+
+### test_dummies.lua (28)
+
+- dummies: the seed is picked once per client; Forever's is empty by decision
+- dummies: Lookup answers the seed by creature ID, with its name and category
+- dummies: Lookup answers a copy, so a caller cannot edit the seed
+- dummies: five categories in order, each with an enUS label, and Other for no dummy
+- dummies: Parse reads entries and hides, ascending, the last of an ID winning
+- dummies: Normalize drops a custom entry for a built-in and a hide of a non-built-in
+- dummies: the row refuses what does not parse and stores what it normalizes
+- dummies: Add marks a creature, Lookup answers it, Remove takes it off
+- dummies: a custom dummy added with no category is single target
+- dummies: a built-in is switched off and back on, never recategorized
+- dummies: Defaults clears the list; a profile switch reads the other profile's
+- dummies: a typed category word is a key or its label; auto and nonsense are none
+- dummies: a custom dummy makes a fight's content "dummy" on WoW Forever too
+- dummies: a built-in switched off is open-world content again
+- dummies: Read and Capture keep what the game says, by map, and count the captures
+- dummies: a sealed field is left out of the read, and a player is no creature
+- dummies: Resolve takes an ID or a captured or seeded name
+- dummies: a captured custom dummy answers its captured name
+- dummies: the Training dummies section is on both clients
+- dummies: the row's default empties the list
+- dummies: the tab draws Add your target, the list, a box per built-in and Reset list
+- dummies: Add your target counts the target as single target, and says so with none
+- dummy verb: add marks the target, captures it and says what it saved
+- dummy verb: add refuses a word that is no category, no target, and a player
+- dummy verb: on a built-in, add says so and captures; remove switches it off, add brings it back
+- dummy verb: remove takes a typed creature ID or name; show lists yours and the switched-off
+- dummy verb: capture saves without marking; an unknown word prints the usage
+- dummy verb: answers while the addon is disabled, on both clients
 
 ### test_cast_codec.lua (7)
 
@@ -898,7 +929,7 @@ Total.
 
 ### test_history_page.lua (17)
 
-- history page: four tabs, Recording filters first and Usage last
+- history page: five tabs, Recording filters first and Training dummies last
 - history page: every history.* key, the Results window's settings and the hidden list have a row
 - history page: the rows sit on their tabs, the hidden list on Usage
 - history page: every row's default is the shipped one (defaults/Profile.lua is the only source)
@@ -1120,6 +1151,7 @@ Total.
 | test_format.lua | 19 |
 | test_fight.lua | 30 |
 | test_identity.lua | 47 |
+| test_dummies.lua | 28 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
@@ -1164,4 +1196,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **914** |
+| **Total** | **942** |

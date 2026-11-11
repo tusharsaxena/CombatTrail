@@ -12,8 +12,9 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
   `allRows`, `applyDefault`).
 - A bare `/ct` opens the settings panel.
 - **The disabled gate.** While the `disabled` hold is taken every verb but the live set answers the one
-  refusal line. The live set is the library's thirteen reserved verbs plus this addon's `lane` and
-  `ignore` (`HOST_LIVE_VERBS`), which read and write the lanes' own settings as `get` and `set` do.
+  refusal line. The live set is the library's thirteen reserved verbs plus this addon's `lane`,
+  `ignore` and `dummy` (`HOST_LIVE_VERBS`), which read and write the lanes' own settings and the
+  training-dummy list as `get` and `set` do (race plan ruling X10).
 - **The perf hold.** Every feature verb is wrapped in `feature()`, which answers
   `NS.StoodDownRefusal()`'s line while a capture holds the addon down.
 - **One handler per act.** A feature verb calls the same handler as the launcher menu and the key
@@ -50,6 +51,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `probe` | nothing, `start`, `stop` | no | `Probe.OnVerb` |
 | `lane` | `player` or `pet`, then `on` or `off` | yes | `NS.Lanes.OnVerb` (settings/Lanes.lua) |
 | `ignore` | `add` or `remove` a spell, `list`, `reset`, then an optional `player` or `pet` | yes | `LaneIgnore.OnVerb` |
+| `dummy` | nothing or `show`; `add [category]` (the target; `single` when none is typed), `remove [creature ID or name]` (the target when none), `capture` (the target, not marked), `defaults`. Both clients | yes | `Dummies.OnVerb` (modules/Dummies.lua) |
 
 The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`.
 

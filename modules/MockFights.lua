@@ -19,7 +19,7 @@ local _, NS = ...
 -- Never math.random here.
 --
 -- CLIENTS (clients-§4). Each board declares the clients it exists on: Mythic+, delves, arenas and
--- the training dummies (an empty catalog on WoW Forever, defaults/Dummies.lua) are Retail's, so the
+-- the training dummies (an empty seed on WoW Forever, defaults/Dummies.lua) are Retail's, so the
 -- Forever history holds none of them. The figures are scaled per client, picked once at FILE SCOPE.
 
 local MockFights = {}
@@ -111,7 +111,7 @@ local function boards()
                             difficultyID = 0, maxPlayers = 3, pvpBracket = "r3" },
                   target = { name = "Samplerogue" } }
     out.dummy = { where = { instanceType = "none", instanceName = "Silvermoon City", difficultyID = 0 },
-                  target = { name = NS.DummyName(31146), creatureID = 31146 } }
+                  target = { name = NS.Dummies.Name(31146), creatureID = 31146 } }
     return out
 end
 

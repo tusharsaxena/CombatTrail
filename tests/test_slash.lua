@@ -17,7 +17,7 @@ local function text(M) return table.concat(M.__printed(), "\n") end
 -- Spec §8's verbs, plus the reserved ones the standard owes every addon (slash-commands-§2).
 local SPEC_VERBS = {
     "help", "results", "hud", "unlock", "lock", "test", "sim", "lane", "ignore", "set", "get", "reset",
-    "purge", "debug", "diagnostics", "probe",
+    "purge", "debug", "diagnostics", "probe", "dummy",
 }
 local RESERVED = { "config", "skin", "enable", "disable", "list", "resetall", "perf", "version" }
 
@@ -97,12 +97,12 @@ test("slash: a feature verb refuses with the one line while disabled; settings v
 end)
 
 -- slash-commands-§7 step 7: the suite pins the addon's choice per verb. Every feature verb refuses
--- with exactly one line while disabled and writes nothing; `lane` and `ignore` decline the
+-- with exactly one line while disabled and writes nothing; `lane`, `ignore` and `dummy` decline the
 -- feature-verb SHOULD (HOST_LIVE_VERBS) and act normally. Under the `perf` hold alone a feature verb
 -- answers the capture line, never the disabled one.
 local FEATURE_VERBS = { "skin", "results", "hud", "lock", "unlock", "test", "sim", "purge", "probe" }
 
-test("slash: disabled, each feature verb answers one refusal line; lane and ignore still act", function()
+test("slash: disabled, each feature verb answers one refusal line; lane, ignore and dummy still act", function()
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
     NS.Slash:OnSlash("disable")
@@ -121,6 +121,11 @@ test("slash: disabled, each feature verb answers one refusal line; lane and igno
         assertEqual(#M.__printed(), 1, verb .. ": " .. text(M))
         assertTrue(M.__printed()[1]:find(refusal, 1, true) == nil, verb .. " is live while disabled")
     end
+    -- `dummy` alone shows the list: two lines or more, none of them the refusal.
+    M.__resetPrinted()
+    NS.Slash:OnSlash("dummy")
+    assertTrue(#M.__printed() >= 2, "dummy: " .. text(M))
+    assertFalse(text(M):find(refusal, 1, true) ~= nil, "dummy is live while disabled")
 end)
 
 test("slash: under the perf hold alone a feature verb answers the capture line", function()

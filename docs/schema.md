@@ -49,6 +49,7 @@ default; the file's comments say what each value means.
 | `results.window` | `{ point, relPoint, x, y, height = 520, view = "collapsed" }`; no `width` ships: with none stored the list opens at its least width, `Results.MIN_WIDTH` (the filter bar's or the table's, whichever is wider), and a stored width below it is held to it | (named state, below) |
 | `results.columns` | `{}`; a dragged column's width, `{ character = px }` (Character ships at 104, held to 70–240) | (named state, below) |
 | `results.collapsedSections` | `{}`; the fight detail's folded sections, `{ [section] = true }` over `chart`, `spells`, `loadout`, `usage`, `targets` and `note` (`NS.ResultsDetail.SECTIONS`), open stored as nothing | (named state, below) |
+| `dummies.custom` | `""`; the player's own training dummies (modules/Dummies.lua, both clients): `id:category` marks a creature as a dummy (`single`, `cleave`, `dungeoneer`, `boss` or `pvp`; one added without a category is `single`), `-id` switches a built-in off, ascending and comma-separated (`"243300:cleave,-243205"`); written whole through `NS.SetByPath`, so `/ct get`, `set` and `reset` reach it | History → Training dummies (drawn as Add your target, a list with add and remove, and a checkbox per built-in) |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
@@ -77,6 +78,7 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | `loadouts` | Talent loadouts interned once, keyed by hash; a record holds the key |
 | `gearSets` | Equipment sets interned once, `{ [key] = { [slot] = trimmed item string } }`, keyed by the hash of the canonical gear (`slot=item` in slot order); a record holds the key (`gearSet`). Created on first use |
 | `usage.hidden` | The item IDs the Usage list never shows, comma-separated |
+| `dummies.captures` | What the game said about each creature `/ct dummy` captured, `{ [creatureID] = { name, level, classification, health, creatureType, pvp, faction, reaction, first, last, count, addon, build, places = { [mapID] = { zone, subzone, x, y, date } } } }` (modules/Dummies.lua); a sealed field is absent |
 | `minimap` | LibDBIcon's own table, handed to `:Register` |
 | `skinNotice` | The account's one-time skin notice, written by LibKa0s-Options |
 
@@ -94,6 +96,7 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | Interned loadouts | `global.loadouts` | modules/Loadouts.lua | `Loadouts.Store`; `Loadouts.Sweep`, called by the purge |
 | Equipment sets | `global.gearSets` | modules/Loadouts.lua | `Loadouts.StoreGear`, through `Loadouts.Recon` (PLAYER_ENTERING_WORLD, the debounced PLAYER_EQUIPMENT_CHANGED and UNIT_INVENTORY_CHANGED, the stand-up, and the pull when no set is known); `Loadouts.Sweep`, called by the purge and a delete, keeping the current set and the live fight's |
 | The Usage hidden list | `global.usage.hidden` | modules/Usage.lua | `Usage.Hide`, `Usage.Unhide` and the History page's Usage tab, all through `NS.SetByPath` |
+| The training-dummy captures | `global.dummies.captures` | modules/Dummies.lua | `Dummies.Capture` (`/ct dummy add` and `capture`, the Training dummies tab's Add your target) |
 | The skin picker seen | `skin.pickerSeen`, `global.skinNotice` | core/SkinSetup.lua (LibKa0s-Options writes the notice) | the picker's close |
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
 | The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |

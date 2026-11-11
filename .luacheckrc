@@ -78,6 +78,13 @@ files["modules/Identity.lua"] = {
                      "GetInstanceInfo", "GetDifficultyInfo", "GetZoneText", "GetSubZoneText" },
 }
 
+-- The training dummies' captures (`/ct dummy capture`): what the game says about the target and where
+-- the player stands, each read pcall'd at CALL time, so a client without one leaves the field absent.
+files["modules/Dummies.lua"] = {
+    read_globals = { "UnitLevel", "UnitClassification", "UnitHealthMax", "UnitCreatureType", "UnitIsPVP",
+                     "UnitFactionGroup", "UnitReaction", "GetZoneText", "GetSubZoneText", "C_Map" },
+}
+
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
 -- time, so a client without one leaves the field absent).
 files["modules/Usage.lua"] = {

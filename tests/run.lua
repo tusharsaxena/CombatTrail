@@ -121,6 +121,7 @@ local SUITES = {
     "test_format",
     "test_fight",
     "test_identity",
+    "test_dummies",
     "test_cast_codec",
     "test_casts",
     "test_usage",

@@ -48,7 +48,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/Database.lua` | AceDB setup, the profile callbacks and the migration runner |
 | `defaults/IgnoreSeeds.lua` | Each lane's ignored spells out of the box, per client |
 | `defaults/Profile.lua` | The AceDB defaults tree, the only place a default is written |
-| `defaults/Dummies.lua` | The measured training dummies, per client |
+| `defaults/Dummies.lua` | The measured training dummies' seed, per client, with each dummy's category |
 | `modules/LaneCasts.lua` | The lanes' cast capture: one `LANE_PUSH` per shown cast, dedupe and interrupt marks |
 | `modules/LaneLayout.lua` | The lanes' layout math, pure |
 | `modules/LaneRender.lua` | Each lane's frame, ticks, label and pooled icons, and its `OnUpdate` while icons show |
@@ -58,6 +58,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read and the after-combat read |
 | `modules/ProbeCurve.lua` | `/ct probe`'s spell color curve trial (issue #7): can the client map a secret spell ID to a color |
 | `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers |
+| `modules/Dummies.lua` | The training dummies: the seed with the player's own list, the captures and `/ct dummy` (both clients) |
 | `modules/Identity.lua` | Who fought, where and against what, and the board key |
 | `modules/Fight.lua` | The fight state machine, one fight per meter session |
 | `modules/Watchers.lua` | The fight's game events, one set per fight state |

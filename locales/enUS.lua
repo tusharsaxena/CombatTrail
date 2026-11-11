@@ -1094,8 +1094,31 @@ L["Hide an item"] = "Hide an item"
 L["An item ID, a shift-clicked item link, or the name of an item a fight listed."] =
     "An item ID, a shift-clicked item link, or the name of an item a fight listed."
 L["No item is hidden."] = "No item is hidden."
-L["Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."] =
-    "Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."
+-- The Training dummies tab (settings/History.lua, race plan Task A2)
+L["Your training dummies"] = "Your training dummies"
+L["The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."] =
+    "The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."
+L["\194\183 %s"] = "\194\183 %s"
+L["Target a creature first."] = "Target a creature first."
+L["Built-in training dummies. Clear one to stop counting it as a dummy."] =
+    "Built-in training dummies. Clear one to stop counting it as a dummy."
+L["%s (%d) \194\183 %s"] = "%s (%d) \194\183 %s"
+L["Count this built-in as a training dummy. Cleared, a fight on it is stored as open world."] =
+    "Count this built-in as a training dummy. Cleared, a fight on it is stored as open world."
+L["Your own training dummies: a fight on one is stored as a Training dummies fight. Target a dummy and click Add your target, or type /ct dummy add; either saves what the game says about it."] =
+    "Your own training dummies: a fight on one is stored as a Training dummies fight. Target a dummy and click Add your target, or type /ct dummy add; either saves what the game says about it."
+L["Add your target"] = "Add your target"
+L["Count your target as a training dummy (single target; /ct dummy add <category> gives another) and save what the game says about it: its level, health, zone and where you stand. A built-in that is switched off is switched back on."] =
+    "Count your target as a training dummy (single target; /ct dummy add <category> gives another) and save what the game says about it: its level, health, zone and where you stand. A built-in that is switched off is switched back on."
+L["Add a creature"] = "Add a creature"
+L["A creature ID, or the name of a creature you captured. It is counted as single target."] =
+    "A creature ID, or the name of a creature you captured. It is counted as single target."
+L["No training dummies of your own yet."] = "No training dummies of your own yet."
+L["Reset list"] = "Reset list"
+L["Remove your own training dummies, and switch back on any built-in you switched off. Stored fights are not touched."] =
+    "Remove your own training dummies, and switch back on any built-in you switched off. Stored fights are not touched."
+L["Restore every History setting on this profile to its addon default, your training dummies among them, and empty the account-wide hidden items. Stored fights are not touched."] =
+    "Restore every History setting on this profile to its addon default, your training dummies among them, and empty the account-wide hidden items. Stored fights are not touched."
 
 -- Test mode and the sim (modules/Preview.lua, modules/Sim.lua, modules/MockFights.lua). The sample
 -- history's difficulty and spec names stand in for the client's own; its boss, place and character
@@ -1134,3 +1157,47 @@ L["Beast Mastery"] = "Beast Mastery"
 L["Sample note: every cooldown in the opener"] = "Sample note: every cooldown in the opener"
 L["Sample note: tier 8 with the bountiful key"] = "Sample note: tier 8 with the bountiful key"
 L["Sample note: a clean dummy pull"] = "Sample note: a clean dummy pull"
+
+-- The training dummies (modules/Dummies.lua, race plan Task A2): the categories, the captures' line
+-- and `/ct dummy`
+L["Single target"] = "Single target"
+L["Cleave"] = "Cleave"
+L["Dungeoneer"] = "Dungeoneer"
+L["Boss-level"] = "Boss-level"
+L["PvP"] = "PvP"
+L["Usage: %s dummy [show|add|remove|capture|defaults] [category or creature ID]"] =
+    "Usage: %s dummy [show|add|remove|capture|defaults] [category or creature ID]"
+L["%s (%d)"] = "%s (%d)"
+L["Creature %d"] = "Creature %d"
+L["skull level"] = "skull level"
+L["level %d"] = "level %d"
+L["%s %s"] = "%s %s"
+L["%s, %s"] = "%s, %s"
+L["%s %.1f, %.1f"] = "%s %.1f, %.1f"
+L["%s health"] = "%s health"
+L["PvP flagged"] = "PvP flagged"
+L["not PvP flagged"] = "not PvP flagged"
+L["Your target is not a creature, so it cannot be a training dummy."] =
+    "Your target is not a creature, so it cannot be a training dummy."
+L["No training dummies of your own. Target one and type %s dummy add."] =
+    "No training dummies of your own. Target one and type %s dummy add."
+L["Your training dummies:"] = "Your training dummies:"
+L["  %s \194\183 %s"] = "  %s \194\183 %s"
+L["Built-in training dummies: %d, %d switched off."] = "Built-in training dummies: %d, %d switched off."
+L["  %s (off)"] = "  %s (off)"
+L["%s is a training dummy now: %s."] = "%s is a training dummy now: %s."
+L["%s is a training dummy again: %s."] = "%s is a training dummy again: %s."
+L["%s is already a built-in training dummy: %s."] = "%s is already a built-in training dummy: %s."
+L["%s is already a training dummy: %s."] = "%s is already a training dummy: %s."
+L["'%s' is no category. Use single, cleave, dungeoneer, boss or pvp."] =
+    "'%s' is no category. Use single, cleave, dungeoneer, boss or pvp."
+L["Saved: %s"] = "Saved: %s"
+L["No creature '%s' is known. Use its creature ID."] = "No creature '%s' is known. Use its creature ID."
+L["%s is no longer a training dummy."] = "%s is no longer a training dummy."
+L["%s, a built-in training dummy, is switched off. %s dummy add on it brings it back."] =
+    "%s, a built-in training dummy, is switched off. %s dummy add on it brings it back."
+L["%s is not a training dummy."] = "%s is not a training dummy."
+L["Your training dummies are cleared: only the built-in ones count."] =
+    "Your training dummies are cleared: only the built-in ones count."
+L["Your training dummies: /ct dummy show|add|remove|capture|defaults"] =
+    "Your training dummies: /ct dummy show|add|remove|capture|defaults"
