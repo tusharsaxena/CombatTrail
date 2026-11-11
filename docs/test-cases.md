@@ -1208,17 +1208,22 @@ Total.
 - insights: Compute lists late casts by spell, ignored apart, a sealed one as Unknown
 - insights: on WoW Forever there is no Races filter and no race-only section
 
-### test_insights.lua (16)
+### test_insights.lua (21)
 
 - insights tab: built on its first show, its label lit while it shows; /ct results insights opens it
 - insights tab: the dropdowns list the stored fights with their counts, led by All
 - insights tab: a filter redraws the cards and narrows the other dropdowns
 - insights tab: the cards state their figures, each hover naming its value
+- insights tab: CardGrid packs four a row, and every short row is shared out, none half empty
+- insights tab: above 60 fights the progression is one column a day, a day keyed with its year
+- insights tab: Consistency on a board tab is a worst-to-best range per spec, the average marked
+- insights tab: the wheel scrolls the content, clamped to it
 - insights: the Clean races card counts races only, under Races and All, never under Fights
 - insights: the race-only sections show under the Races filter only
 - insights tab: a tab per board, Overall first, the sections under it read the tab picked
 - insights tab: a Recent New Bests row opens its fight on the Fights tab; a right-click its row menu
 - insights tab: Late Casts lists the counted spells, then the ignored ones dimmed; a right-click ignores
+- insights tab: Late Casts keeps room for the ignored spells when the counted ones pass ten
 - insights tab: with no fight the empty state shows, and every card and section hides
 - insights tab: Save, Clear and Reset keep the view at results.insights
 - insights tab: the sample history fills the tab; Save refuses, and the player's view comes back
@@ -1570,7 +1575,7 @@ Total.
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 23 |
 | test_insights_data.lua | 14 |
-| test_insights.lua | 16 |
+| test_insights.lua | 21 |
 | test_share.lua | 13 |
 | test_timeline.lua | 12 |
 | test_timeline_marks.lua | 11 |
@@ -1593,4 +1598,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1287** |
+| **Total** | **1292** |

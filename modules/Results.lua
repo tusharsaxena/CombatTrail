@@ -338,8 +338,6 @@ function Results.Mode()
     return Results.View() == "expanded" and "wide" or "narrow"
 end
 
--- The list's frame and the detail's, placed for the view: beside each other when wide; in the narrow
--- view one of the two, the detail while a fight is open in it.
 -- The Insights tab, built on its first show (it reads the source then).
 local function buildInsights()
     if ui.insights then return ui.insights end
@@ -377,6 +375,9 @@ local function layoutInsights(width, height)
     pane:Layout(width, height)
 end
 
+-- The tab shown across the body: Insights, or the list's frame and the detail's, placed for the
+-- view: beside each other when wide; in the narrow view one of the two, the detail while a fight is
+-- open in it.
 function layout()
     if not ui then return end
     local width, height = bodySize()

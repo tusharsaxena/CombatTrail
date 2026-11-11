@@ -124,6 +124,86 @@ test("insights tab: the cards state their figures, each hover naming its value",
     assertEqual(c.avg.value:GetText(), NS.Format.Number(1100))
 end)
 
+test("insights tab: CardGrid packs four a row, and every short row is shared out, none half empty", function()
+    local NS = tab(nil, { closed = true })
+    local I = NS.ResultsInsights
+    local function rowSpans(defs)
+        local cells, rows = I.CardGrid(defs, 4)
+        local used = {}
+        for _, c in ipairs(cells) do used[c.row + 1] = (used[c.row + 1] or 0) + c.span end
+        for r = 1, rows do used[r] = tostring(used[r]) end
+        return table.concat(used, ","), cells, rows
+    end
+    -- Every view's cards: ten under All and Races (Retail), nine without the Clean races card (under
+    -- Fights, and always on WoW Forever). No row stands with a column empty.
+    for _, kind in ipairs({ "all", "races", "fights" }) do
+        local defs = I.Cards({ kind = kind })
+        assertEqual(rowSpans(defs), "4,4,4", ("%s: %d cards fill three rows"):format(kind, #defs))
+    end
+    -- Seven units: the last row's three cards share four columns.
+    local _, cells, rows = rowSpans({ {}, {}, {}, {}, {}, { wide = true } })
+    assertEqual(rows, 2)
+    assertEqual(cells[5].span, 4 / 3)
+    assertEqual(cells[6].col, 4 / 3)
+    assertEqual(cells[6].span, 8 / 3)
+    -- A wide card that does not fit moves down whole, and the row it leaves is shared out.
+    local spans
+    spans, cells = rowSpans({ {}, {}, {}, { wide = true } })
+    assertEqual(spans, "4,4")
+    assertEqual(cells[4].row, 1)
+    assertEqual(cells[3].col + cells[3].span, 4, "the row above ends at the edge")
+    assertEqual(#I.CardGrid({}, 4), 0)
+end)
+
+test("insights tab: above 60 fights the progression is one column a day, a day keyed with its year", function()
+    local inst = T.load()
+    local list = {}
+    for n = 1, 61 do
+        local year = n <= 31 and 2025 or 2026
+        list[n] = F.fight(inst.NS, { id = "p" .. n, t = os.time({ year = year, month = 10, day = 25, hour = 12, min = n }) })
+    end
+    local _, _, _, pane = tab(list)
+    local cols = active(pane, "progression")
+    assertEqual(#cols, 2, "one column for 25 Oct 2025 and one for 25 Oct 2026")
+    assertEqual(cols[1]._tip[2], "31 fights")
+    assertEqual(cols[2]._tip[2], "30 fights")
+    assertTrue(cols[1]._tip[1]:find("2025", 1, true) ~= nil, "the hover names the year")
+end)
+
+test("insights tab: Consistency on a board tab is a worst-to-best range per spec, the average marked", function()
+    local inst = T.load()
+    local list = {}
+    for n, v in ipairs({ 1500, 1600, 1400 }) do
+        list[n] = F.fight(inst.NS, { id = "c" .. n, dps = v, t = F.NOW - n * F.HOUR })
+    end
+    local NS, _, _, pane = tab(list)
+    assertFalse(pane.headers.consistency:IsShown(), "Overall: DPS compares only within a board")
+    pane:SelectBoard("fight:e:1111:15")
+    assertTrue(pane.headers.consistency:IsShown())
+    local rows = active(pane, "consistency")
+    assertEqual(#rows, 1)
+    assertEqual(rows[1].label:GetText(), NS.ResultsTable.SpecInfo(63, "Fire"))
+    assertTrue(rows[1].mark:IsShown(), "the average's mark")
+    assertEqual(rows[1].value:GetText(), NS.Format.Pct((1500 / 1600 + 1 + 1400 / 1600) / 3 * 100),
+        "the average fight's share of the best")
+    local tip = rows[1]._tip
+    assertEqual(tip[2], "Best " .. NS.Format.Number(1600) .. " DPS")
+    assertEqual(tip[4], "Worst " .. NS.Format.Number(1400) .. " DPS")
+    assertEqual(tip[#tip], "3 fights")
+end)
+
+test("insights tab: the wheel scrolls the content, clamped to it", function()
+    local _, _, _, pane = tab()
+    pane:Layout(902, 300)
+    assertTrue(pane.contentH > pane.viewH, "the sections run past a short window")
+    pane:Scroll(-1)
+    assertEqual(pane.scroll, 40)
+    pane:Scroll(1000)
+    assertEqual(pane.scroll, 0)
+    pane:Scroll(-1000)
+    assertEqual(pane.scroll, pane.contentH - pane.viewH)
+end)
+
 test("insights: the Clean races card counts races only, under Races and All, never under Fights", function()
     local _, _, _, pane = tab()
     local clean = pane.cards.clean
@@ -232,6 +312,23 @@ test("insights tab: Late Casts lists the counted spells, then the ignored ones d
     assertNil(asked, "a left click does nothing")
     fireClick(rows[1], "RightButton")
     assertEqual(asked, 29722, "the ignore list's own menu, over that one cast")
+end)
+
+test("insights tab: Late Casts keeps room for the ignored spells when the counted ones pass ten", function()
+    if forever() then return end
+    local inst = T.load()
+    local casts = {}
+    for n = 1, 12 do casts[n] = { t = 1.5, spellID = 100000 + n } end
+    casts[13] = { t = 2, spellID = 5384 }
+    local NS, _, _, pane = tab({ F.race(inst.NS, { id = "x", flags = { lateCasts = casts } }) })
+    pane:SetFilter("kind", "races")
+    local rows = active(pane, "late")
+    assertEqual(#rows, 10, "the panel's ten rows")
+    assertTrue(rows[10].name:GetText():find("(ignored)", 1, true) ~= nil, "the ignored row kept")
+    local asked
+    NS.LateIgnore.Menu = function(x) asked = x.flags.lateCasts[1].spellID end
+    fireClick(rows[10], "RightButton")
+    assertEqual(asked, 5384, "so it can be stopped ignoring from Insights")
 end)
 
 test("insights tab: with no fight the empty state shows, and every card and section hides", function()

@@ -314,13 +314,13 @@ local CARD_FILL = {
     end,
 }
 
--- The last row's cards share the whole row when they leave columns empty (fractional spans).
-local function stretchLastRow(cells, cols)
-    local lastRow, used, members = cells[#cells].row, 0, {}
+-- A row's cards share the whole row when they leave columns empty (fractional spans).
+local function stretchRow(cells, row, cols)
+    local used, members = 0, {}
     for _, c in ipairs(cells) do
-        if c.row == lastRow then used, members[#members + 1] = used + c.span, c end
+        if c.row == row then used, members[#members + 1] = used + c.span, c end
     end
-    if used >= cols then return end
+    if used == 0 or used >= cols then return end
     local col = 0
     for _, c in ipairs(members) do
         c.col, c.span = col, c.span * cols / used
@@ -329,8 +329,9 @@ local function stretchLastRow(cells, cols)
 end
 
 --- The cards' grid: each def's { col, row, span } across `cols` columns (a wide def spans 2, and
---- moves to the next row when it does not fit), and the number of rows. A last row left short is
---- shared out among its cards, so no row stands half empty. Pure.
+--- moves to the next row when it does not fit), and the number of rows. Any row left short (the last,
+--- or one a wide card left; nine cards without the Clean races card) is shared out among its cards,
+--- so no row stands half empty. Pure.
 --- @return table cells, number rows
 function Insights.CardGrid(defs, cols)
     local cells, col, row = {}, 0, 0
@@ -341,7 +342,7 @@ function Insights.CardGrid(defs, cols)
         col = col + span
     end
     if #cells == 0 then return cells, 0 end
-    stretchLastRow(cells, cols)
+    for r = 0, row do stretchRow(cells, r, cols) end
     return cells, row + 1
 end
 
