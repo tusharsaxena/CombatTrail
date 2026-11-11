@@ -52,7 +52,7 @@ files["tests/"] = {
 files["core/Compat.lua"] = {
     read_globals = {
         "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CAMELOT",
-        "C_ChatInfo", "SendChatMessage", "C_StringUtil",
+        "C_ChatInfo", "SendChatMessage", "C_StringUtil", "C_CurveUtil", "CreateColor",
         "C_SpecializationInfo", "GetSpecialization", "GetSpecializationInfo",
         "C_Spell", "GetSpellTexture", "GetSpellInfo", "GetSpellBaseCooldown", "UnitSpellHaste",
         "C_PetBattles", "UnitInVehicle", "C_PartyInfo",
@@ -85,7 +85,8 @@ files["modules/Loadouts.lua"] = { read_globals = { "GetInventoryItemLink", "C_Cl
 files["modules/Stats.lua"] = {
     read_globals = { "UnitStat", "UnitArmor", "GetCombatRating", "GetCritChance", "GetRangedCritChance",
                      "GetSpellCritChance", "GetHaste", "GetMasteryEffect", "GetCombatRatingBonus",
-                     "GetVersatilityBonus", "GetLifesteal", "GetAvoidance", "GetSpeed" },
+                     "GetVersatilityBonus", "GetLifesteal", "GetAvoidance", "GetSpeed",
+                     "UnitAttackPower", "UnitRangedAttackPower", "GetSpellBonusDamage", "GetHitModifier" },
 }
 
 -- The context menus: the client's menu without the library.

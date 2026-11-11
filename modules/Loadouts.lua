@@ -36,8 +36,11 @@ NS.Loadouts = Loadouts
 
 local Secrets = NS.Secrets
 
--- The equipment slots a snapshot records, in slot order: 1-18 without the shirt (4).
+-- The equipment slots a snapshot records, in slot order: 1-18 without the shirt (4), and on WoW
+-- Forever the ammo slot (0, INVSLOT_AMMO) first, which the classic character panel shows (owner,
+-- 2026-11-10). A fight stored before keeps no ammo: its gear view shows the slot empty.
 Loadouts.GEAR_SLOTS = { 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 }
+if NS.Compat.IsForever() then table.insert(Loadouts.GEAR_SLOTS, 1, 0) end
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Loadouts", fmt, ...) end

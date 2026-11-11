@@ -50,6 +50,8 @@ Loadout.LINK_COLOR = { 1, 0.82, 0 }
 -- The character frame's order: its left column (head down to the wrists, then the weapons), then its
 -- right (hands down to the trinkets).
 Loadout.ORDER = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8, 11, 12, 13, 14, 16, 17, 18 }
+-- WoW Forever's ammo slot (0) after the ranged one, as its character panel's bottom row ends.
+if NS.Compat.IsForever() then Loadout.ORDER[#Loadout.ORDER + 1] = 0 end
 
 local SEP = " \194\183 "
 

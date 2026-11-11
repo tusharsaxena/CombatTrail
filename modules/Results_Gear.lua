@@ -9,14 +9,17 @@ local _, NS = ...
 -- then three columns: on the left head, neck, shoulders, back, chest, shirt and tabard (each only when
 -- the fight has one: neither is recorded today, Loadouts.GEAR_SLOTS) and wrists; on the right hands,
 -- waist, legs, feet, both rings and both trinkets (the ranged slot under them, only when filled); main
--- hand and off hand side by side under the middle. Each slot: the item's icon in its quality's edge, its
--- item level over the icon, its name beside it toward the middle, and under the name its marks: the
+-- hand and off hand side by side under the middle. On WoW Forever the bottom row is the classic
+-- panel's: main hand, off hand, ranged (or the relic: an idol, libram or totem sits in the same slot)
+-- and ammo, all four always shown, and the window widens to fit them (owner, 2026-11-10). Each
+-- slot: the item's icon in its quality's edge, its item level over the icon, its name beside it toward the middle, and under the name its marks: the
 -- enchant's (MARK_ENCHANT) and each gem's own icon, read from the stored item string (ParseItem: the
 -- enchant and gem IDs after the item ID). Hovering a slot shows the client's item tooltip (and what
 -- differs from the compared fight); Shift-click links it in chat. The middle column is Stats.Groups
 -- (modules/Stats.lua): Primary, Secondary and Tertiary, each value against the compared fight's, with
--- dashes for a value the fight did not record (on WoW Forever, with no specialization, the primary
--- stat row is a dash).
+-- dashes for a value the fight did not record. On WoW Forever it is the classic panel's Primary (the
+-- five base stats and armor) and Secondary (attack, ranged attack and spell power, crit, hit and
+-- haste), a row neither fight recorded left out.
 --
 -- THE COMPARE. Against the fight the detail compares with (the pane's CompareTarget, the one answer
 -- the timeline and the compare window read too): a slot whose item differs (another item, or one side
@@ -69,6 +72,10 @@ Gear.LABEL_W, Gear.VALUE_W, Gear.DELTA_W = 104, 98, 98
 Gear.LEFT = { 1, 2, 3, 15, 5, 4, 19, 9 }
 Gear.RIGHT = { 10, 6, 7, 8, 11, 12, 13, 14, 18 }
 Gear.WEAPONS = { 16, 17 }
+if NS.Compat.IsForever() then
+    Gear.RIGHT = { 10, 6, 7, 8, 11, 12, 13, 14 }
+    Gear.WEAPONS = { 16, 17, 18, 0 }
+end
 local OPTIONAL = { [4] = true, [19] = true, [18] = true }
 
 -- The enchant's mark: the Enchanting profession's icon (Trade_Engraving); a gem's is its own icon,
@@ -81,6 +88,7 @@ Gear.SLOT_NAMES = {
     [1] = "Head", [2] = "Neck", [3] = "Shoulder", [4] = "Shirt", [5] = "Chest", [6] = "Waist", [7] = "Legs",
     [8] = "Feet", [9] = "Wrist", [10] = "Hands", [11] = "Ring 1", [12] = "Ring 2", [13] = "Trinket 1",
     [14] = "Trinket 2", [15] = "Back", [16] = "Main hand", [17] = "Off hand", [18] = "Ranged", [19] = "Tabard",
+    [0] = "Ammo",
 }
 
 --- A slot's name ("Trinket 1").
@@ -235,7 +243,8 @@ end
 function Gear.Size(gear)
     gear = type(gear) == "table" and gear or {}
     local rows = math.max(#columnRows(gear, Gear.LEFT), #columnRows(gear, Gear.RIGHT))
-    local width = 2 * Gear.PAD + 2 * Gear.SLOT_W + Gear.MID_W + 2 * Gear.COL_GAP
+    local width = math.max(2 * Gear.PAD + 2 * Gear.SLOT_W + Gear.MID_W + 2 * Gear.COL_GAP,
+        2 * Gear.PAD + #Gear.WEAPONS * Gear.SLOT_W + (#Gear.WEAPONS - 1) * Gear.COL_GAP)
     local height = HEADER_H + Gear.LEGEND_H + Gear.PAD + rows * Gear.PITCH + Gear.WEAPON_GAP + Gear.PITCH
         + Gear.PAD
     return width, height, rows
@@ -254,10 +263,14 @@ function Gear.Cells(gear)
     for i, slot in ipairs(columnRows(gear, Gear.RIGHT)) do
         cells[#cells + 1] = { slot = slot, side = "right", x = width - Gear.PAD - Gear.SLOT_W, y = -(i - 1) * Gear.PITCH }
     end
-    -- The weapons under the middle, facing each other as the character panel's do.
-    local y, mid = -(rows * Gear.PITCH + Gear.WEAPON_GAP), width / 2
-    cells[#cells + 1] = { slot = Gear.WEAPONS[1], side = "right", x = mid - Gear.COL_GAP / 2 - Gear.SLOT_W, y = y }
-    cells[#cells + 1] = { slot = Gear.WEAPONS[2], side = "left", x = mid + Gear.COL_GAP / 2, y = y }
+    -- The weapons' row under the middle, its two halves facing each other as the character panel's do
+    -- (the left half's icons on their right, the right half's on their left).
+    local y, n = -(rows * Gear.PITCH + Gear.WEAPON_GAP), #Gear.WEAPONS
+    local x0 = (width - (n * Gear.SLOT_W + (n - 1) * Gear.COL_GAP)) / 2
+    for i, slot in ipairs(Gear.WEAPONS) do
+        cells[#cells + 1] = { slot = slot, side = i <= n / 2 and "right" or "left",
+                              x = x0 + (i - 1) * (Gear.SLOT_W + Gear.COL_GAP), y = y }
+    end
     return cells
 end
 
@@ -342,39 +355,45 @@ local function buildLegend(f)
     ui.legendB:SetPoint("RIGHT", f, "TOPRIGHT", -Gear.PAD, y)
 end
 
--- The stats column: a heading per group and a row of three cells per stat, built once (Stats.GROUPS
--- never changes) and placed from the constants.
+-- The stats column: a heading per group and a row of three cells per stat, built once over this
+-- client's groups (Stats.ActiveGroups never changes in a session) and placed on each fill from the
+-- constants, since a WoW Forever row neither fight recorded is left out (Stats.Groups).
 local function buildStats(body)
     local col = CreateFrame("Frame", nil, body)
     col:SetPoint("TOPLEFT", body, "TOPLEFT", Gear.PAD + Gear.SLOT_W + Gear.COL_GAP, 0)
     col:SetSize(Gear.MID_W, 1)
-    ui.statsCol, ui.groups, ui.statRows = col, {}, {}
-    local y = 0
-    for gi, g in ipairs(NS.Stats.GROUPS) do
-        local head = Style.Text(col, FONT.SECTION)
-        head:SetPoint("TOPLEFT", col, "TOPLEFT", 0, y)
-        ui.groups[gi] = head
-        y = y - Gear.GROUP_H
+    ui.statsCol, ui.groups, ui.statRows, ui.statByKey = col, {}, {}, {}
+    for gi, g in ipairs(NS.Stats.ActiveGroups()) do
+        ui.groups[gi] = Style.Text(col, FONT.SECTION)
         for _, key in ipairs(g.rows) do
             local row = { key = key }
             row.label = Style.Text(col, FONT.TEXT, C.dim)
-            row.label:SetPoint("TOPLEFT", col, "TOPLEFT", 0, y)
             row.label:SetWidth(Gear.LABEL_W)
             row.value = Style.Text(col, FONT.TEXT, C.text, "RIGHT")
-            row.value:SetPoint("TOPLEFT", col, "TOPLEFT", Gear.LABEL_W, y)
             row.value:SetWidth(Gear.VALUE_W)
             row.delta = Style.Text(col, FONT.TEXT, C.dim, "RIGHT")
-            row.delta:SetPoint("TOPLEFT", col, "TOPLEFT", Gear.LABEL_W + Gear.VALUE_W, y)
             row.delta:SetWidth(Gear.DELTA_W)
             ui.statRows[#ui.statRows + 1] = row
-            y = y - Gear.STAT_H
+            ui.statByKey[key] = row
         end
-        y = y - Gear.GROUP_GAP
     end
     ui.statsNote = Style.Text(col, FONT.CAPTION)
-    ui.statsNote:SetPoint("TOPLEFT", col, "TOPLEFT", 0, y)
     ui.statsNote:SetWidth(Gear.MID_W)
     ui.statsNote:SetText(L["Stats were not recorded for this fight."])
+end
+
+-- A stat row's three cells at `y` in the column, shown or hidden.
+local function placeStatRow(row, y, shown)
+    local col = ui.statsCol
+    row.label:ClearAllPoints()
+    row.label:SetPoint("TOPLEFT", col, "TOPLEFT", 0, y)
+    row.value:ClearAllPoints()
+    row.value:SetPoint("TOPLEFT", col, "TOPLEFT", Gear.LABEL_W, y)
+    row.delta:ClearAllPoints()
+    row.delta:SetPoint("TOPLEFT", col, "TOPLEFT", Gear.LABEL_W + Gear.VALUE_W, y)
+    row.label:SetShown(shown)
+    row.value:SetShown(shown)
+    row.delta:SetShown(shown)
 end
 
 -- A close-stack close, a frame later: the Results window's cover goes unless the view is open again.
@@ -557,12 +576,18 @@ end
 -- ── drawing ─────────────────────────────────────────────────────────────────────────────────────
 
 local function fillStats(stats, otherStats)
-    local i = 0
+    for _, row in ipairs(ui.statRows) do placeStatRow(row, 0, false) end
+    local y, col = 0, ui.statsCol
     for gi, g in ipairs(NS.Stats.Groups(stats, otherStats)) do
-        ui.groups[gi]:SetText(g.title)
+        local head = ui.groups[gi]
+        head:ClearAllPoints()
+        head:SetPoint("TOPLEFT", col, "TOPLEFT", 0, y)
+        head:SetText(g.title)
+        y = y - Gear.GROUP_H
         for _, r in ipairs(g.rows) do
-            i = i + 1
-            local row = ui.statRows[i]
+            local row = ui.statByKey[r.key]
+            placeStatRow(row, y, true)
+            y = y - Gear.STAT_H
             row.label:SetText(r.label)
             row.value:SetText(r.text)
             Style.Paint(row.value, stats and C.text or C.dim)
@@ -570,7 +595,10 @@ local function fillStats(stats, otherStats)
             Style.Paint(row.delta, signColor(r.sign, C.dim))
             row.data = r
         end
+        y = y - Gear.GROUP_GAP
     end
+    ui.statsNote:ClearAllPoints()
+    ui.statsNote:SetPoint("TOPLEFT", col, "TOPLEFT", 0, y)
     ui.statsNote:SetShown(stats == nil)
 end
 

@@ -14,6 +14,15 @@ local _, NS = ...
 -- function is read bare at CALL time and pcall'd, so a client without one (WoW Forever may lack the
 -- tertiary readers) leaves that field absent.
 --
+-- ON WOW FOREVER (owner, 2026-11-10) the character panel is the classic one, and the class-wide
+-- pseudo spec GetSpecializationInfo answers there names no real primary stat (it read Intellect on a
+-- Hunter), so the spec is never asked. The read is the classic set instead: the five base stats
+-- (strength, agility, stamina, intellect, spirit) and armor; attack power, ranged attack power and
+-- spell power (UnitAttackPower, UnitRangedAttackPower: base plus buffs; GetSpellBonusDamage, the
+-- highest school 2..7); crit, hit and haste as percents (GetHitModifier, else the melee hit rating's
+-- bonus). No ratings, no mastery, versatility or tertiaries. The gear view hides a row neither fight
+-- recorded (a reader the client lacks).
+--
 -- SECRETS. The start read is in combat, where a stat may be secret: each value passes through
 -- NS.Secrets.PlainNumber, and a sealed one is absent (never compared, never stored). Fill reads again
 -- after combat and takes only the fields the start read lacks. Nothing readable at all answers nil.
@@ -41,16 +50,30 @@ local STAMINA = 3   -- LE_UNIT_STAT_STAMINA
 -- The primary stats by UnitStat index.
 Stats.PRIMARY = { [1] = "Strength", [2] = "Agility", [4] = "Intellect" }
 
--- The gear view's groups, in the character panel's order. `rated` rows show a rating and a percent.
+-- The gear view's groups, in the character panel's order. `rated` rows show a rating and a percent;
+-- a key in PERCENT_ROWS shows its percent alone. WoW Forever's are the classic panel's.
 Stats.GROUPS = {
     { key = "primary", title = "Primary", rows = { "primary", "stamina", "armor" } },
     { key = "secondary", title = "Secondary", rated = true, rows = { "crit", "haste", "mastery", "vers" } },
     { key = "tertiary", title = "Tertiary", rated = true, rows = { "leech", "avoidance", "speed" } },
 }
+Stats.GROUPS_FOREVER = {
+    { key = "primary", title = "Primary", rows = { "str", "agi", "stamina", "int", "spi", "armor" } },
+    { key = "secondary", title = "Secondary", rows = { "ap", "rap", "sp", "crit", "hit", "haste" } },
+}
+Stats.PERCENT_ROWS = { crit = true, hit = true, haste = true }
 Stats.LABELS = {
     stamina = "Stamina", armor = "Armor", crit = "Critical Strike", haste = "Haste", mastery = "Mastery",
     vers = "Versatility", leech = "Leech", avoidance = "Avoidance", speed = "Speed",
+    str = "Strength", agi = "Agility", int = "Intellect", spi = "Spirit", ap = "Attack Power",
+    rap = "Ranged Attack Power", sp = "Spell Power", hit = "Hit",
 }
+
+--- The gear view's groups on this client.
+--- @return table
+function Stats.ActiveGroups()
+    return NS.Compat.IsForever() and Stats.GROUPS_FOREVER or Stats.GROUPS
+end
 
 local DASH = "\226\128\148"
 local SEP = " \194\183 "
@@ -126,9 +149,49 @@ local PERCENT = {
     speed = function() return ask(GetSpeed) end,
 }
 
+-- An attack power reader's total (base plus positive and negative buffs), or nil.
+local function attackPower(fn)
+    local base, pos, neg = ask(fn, "player")
+    base, pos, neg = Secrets.PlainNumber(base), Secrets.PlainNumber(pos), Secrets.PlainNumber(neg)
+    if not base then return nil end
+    return whole(base + (pos or 0) + (neg or 0))
+end
+
+-- Spell power as the classic panel's: the highest bonus damage over schools 2..7, or nil.
+local function spellPower()
+    local best
+    for school = 2, 7 do
+        local v = Secrets.PlainNumber(ask(GetSpellBonusDamage, school))
+        if v and (best == nil or v > best) then best = v end
+    end
+    return best and whole(best) or nil
+end
+
+-- Hit as a percent: GetHitModifier, else the melee hit rating's bonus (CR_HIT_MELEE, 6).
+local function hitChance()
+    local v = Secrets.PlainNumber(ask(GetHitModifier))
+    if v then return v end
+    local cr = _G.CR_HIT_MELEE
+    return Secrets.PlainNumber(ask(GetCombatRatingBonus, type(cr) == "number" and cr or 6))
+end
+
+-- WoW Forever's classic set (the header).
+local function readForever()
+    local s = {
+        str = unitStat(1), agi = unitStat(2), stamina = unitStat(STAMINA), int = unitStat(4), spi = unitStat(5),
+        armor = whole(select(2, ask(UnitArmor, "player"))),
+        ap = attackPower(UnitAttackPower), rap = attackPower(UnitRangedAttackPower), sp = spellPower(),
+        crit = pct(critChance()), hit = pct(hitChance()), haste = pct(ask(GetHaste)),
+    }
+    if next(s) == nil then return nil end
+    s.v = Stats.VERSION
+    return s
+end
+
 --- The player's stats now, or nil with nothing readable.
 --- @return table|nil stats  the record (see the header)
 function Stats.Read()
+    if NS.Compat.IsForever() then return readForever() end
     local s = { primaryStat = primaryIndex() }
     s.primary = s.primaryStat and unitStat(s.primaryStat) or nil
     s.stamina = unitStat(STAMINA)
@@ -187,8 +250,10 @@ local function numText(n, signed)
     return (signed and n >= 0 and "+" or "") .. Stats.Grouped(n)
 end
 
--- One row's value text: a rated row "1,234 · 25.30%", either half alone, else the plain value.
+-- One row's value text: a rated row "1,234 · 25.30%", either half alone; a percent row its percent;
+-- else the plain value.
 local function valueText(s, key, rated, signed)
+    if not rated and Stats.PERCENT_ROWS[key] then return s[key] and pctText(s[key], signed) or nil end
     if not rated then return s[key] and numText(s[key], signed) or nil end
     local r, p = s[key .. "Rating"], s[key]
     if r and p then return numText(r, signed) .. SEP .. pctText(p, signed) end
@@ -231,18 +296,28 @@ function Stats.Delta(s, o, key, rated)
     return text, by > 0 and 1 or (by < 0 and -1 or 0)
 end
 
---- The gear view's stats column: each group's title and rows ({ key, label, text, delta, sign }).
+-- Whether a fight's stats recorded `key` (its value or its rating).
+local function recorded(t, key)
+    return type(t) == "table" and (t[key] ~= nil or t[key .. "Rating"] ~= nil)
+end
+
+--- The gear view's stats column: each group's title and rows ({ key, label, text, delta, sign }). On
+--- WoW Forever a row neither fight recorded is left out (a reader the client lacks), unless neither
+--- fight has stats at all, which keeps every row as a dash.
 --- @param s table|nil  this fight's stats
 --- @param o table|nil  the compared fight's
 --- @return table groups
 function Stats.Groups(s, o)
     local out = {}
-    for _, g in ipairs(Stats.GROUPS) do
+    local prune = NS.Compat.IsForever() and (type(s) == "table" or type(o) == "table")
+    for _, g in ipairs(Stats.ActiveGroups()) do
         local rows = {}
         for _, key in ipairs(g.rows) do
-            local delta, sign = Stats.Delta(s, o, key, g.rated)
-            rows[#rows + 1] = { key = key, label = Stats.Label(key, s), text = Stats.Text(s, key, g.rated),
-                                delta = delta, sign = sign }
+            if not prune or recorded(s, key) or recorded(o, key) then
+                local delta, sign = Stats.Delta(s, o, key, g.rated)
+                rows[#rows + 1] = { key = key, label = Stats.Label(key, s), text = Stats.Text(s, key, g.rated),
+                                    delta = delta, sign = sign }
+            end
         end
         out[#out + 1] = { key = g.key, title = L[g.title], rows = rows }
     end

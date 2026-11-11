@@ -151,18 +151,32 @@ test("gear: a stored gear set and a sample's inline gear read alike through Load
 end)
 
 test("gear: the character panel's layout and its size", function()
-    local G = fresh().ResultsGear
+    local NS = fresh()
+    local G = NS.ResultsGear
     local cells = G.Cells(GEAR)
     local by = {}
     for _, c in ipairs(cells) do by[c.slot] = c end
     assertEqual(by[1].side, "left")
     assertEqual(by[10].side, "right")
     assertNil(by[4], "no shirt: the optional slot is left out")
-    assertNil(by[18], "no ranged item")
     assertEqual(by[16].y, by[17].y, "the weapons side by side")
     local w, h, rows = G.Size(GEAR)
     assertEqual(rows, 8, "the right column's eight slots")
-    assertEqual(w, 2 * G.PAD + 2 * G.SLOT_W + G.MID_W + 2 * G.COL_GAP)
+    if NS.Compat.IsForever() then
+        -- The classic panel's bottom row: main hand, off hand, ranged (or relic) and ammo, always.
+        assertTrue(by[18] ~= nil and by[0] ~= nil, "ranged and ammo shown, filled or not")
+        assertEqual(by[18].y, by[16].y, "ranged in the weapons' row")
+        assertEqual(by[0].y, by[16].y, "ammo in the weapons' row")
+        assertTrue(by[16].x < by[17].x and by[17].x < by[18].x and by[18].x < by[0].x, "MH, OH, ranged, ammo")
+        assertEqual(by[17].side, "right")
+        assertEqual(by[18].side, "left")
+        assertEqual(w, 2 * G.PAD + 4 * G.SLOT_W + 3 * G.COL_GAP, "wide enough for the four")
+        assertEqual(G.SlotName(0), "Ammo")
+    else
+        assertNil(by[18], "no ranged item")
+        assertNil(by[0], "no ammo slot on Retail")
+        assertEqual(w, 2 * G.PAD + 2 * G.SLOT_W + G.MID_W + 2 * G.COL_GAP)
+    end
     assertTrue(h > rows * G.PITCH)
     local x, y = G.CenterOver("CENTER", 10, 20, 900, 500, 700, 400)
     assertEqual(x, 10)
@@ -177,9 +191,9 @@ end)
 test("gear: the window opens from the detail, marks the changes and closes with the Results window", function()
     local NS, M = fresh()
     save(NS, rec(NS, { id = "best", dps = 3000, gear = BEST,
-                       stats = { v = 1, primaryStat = 2, primary = 60000, crit = 21, critRating = 6000 } }),
+                       stats = { v = 1, primaryStat = 2, primary = 60000, agi = 60000, crit = 21, critRating = 6000 } }),
         rec(NS, { id = "this", dps = 2000, gear = GEAR,
-                  stats = { v = 1, primaryStat = 2, primary = 61000, crit = 21.6, critRating = 6120 } }),
+                  stats = { v = 1, primaryStat = 2, primary = 61000, agi = 61000, crit = 21.6, critRating = 6120 } }),
         rec(NS, { id = "bare", dps = 100 }))
     assertTrue(NS.Results.ShowFight("this"))
     local pane = NS.Results.__ui().detail
@@ -201,11 +215,15 @@ test("gear: the window opens from the detail, marks the changes and closes with 
     assertEqual(cells[3].name:GetText(), "Empty", "the shoulders: nothing worn")
     assertTrue(ui.legendB:GetText():find("Best", 1, true) ~= nil, "against the best")
     -- The stats against the best's: Agility up, crit up.
-    local primary, crit
+    -- (On WoW Forever the classic panel's Agility row; a row neither fight recorded is hidden.)
+    local forever = NS.Compat.IsForever()
+    local primary, crit, str
     for _, row in ipairs(ui.statRows) do
-        if row.key == "primary" then primary = row end
+        if row.key == (forever and "agi" or "primary") then primary = row end
         if row.key == "crit" then crit = row end
+        if row.key == "str" then str = row end
     end
+    if forever then assertFalse(str.label:IsShown(), "Strength, recorded by neither fight, is hidden") end
     assertEqual(primary.label:GetText(), "Agility")
     assertEqual(primary.delta:GetText(), "+1,000")
     assertTrue(crit.delta:GetText():find("+0.60%", 1, true) ~= nil, crit.delta:GetText())
