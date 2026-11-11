@@ -171,6 +171,42 @@ test("timeline: compare lanes align to their own fight start", function()
     assertEqual(D.MarkX(row.a[1], built.len, 400), D.MarkX(row.b[1], built.len, 400), "the same x")
 end)
 
+test("timeline: a race runs on the race clock, from its first hit, with its buzzer (ruling X9)", function()
+    local NS = T.NS
+    local D = NS.ResultsTimelineData
+    -- A 30 s race whose first hit came 2 s after combat entry, 40 s from combat entry to its end.
+    local race = rec(NS, { id = "race", duration = 40, casts = { { 1, MID }, { 2, BIG }, { 7, FILLER } } })
+    race.race = { length = 30, status = "complete", flags = {}, firstHit = 2 }
+    local fight = rec(NS, { id = "fight", duration = 30, casts = { { 7, FILLER } } })
+    local built = D.Build(race, fight)
+    local filler
+    for _, row in ipairs(built.rows) do if row.spellID == FILLER then filler = row end end
+    if NS.Compat.IsForever() then
+        -- No race controls on WoW Forever: a saved race lists as a fight, on the fight's clock.
+        assertEqual(built.len, 40)
+        assertNil(built.buzzer, "no buzzer line")
+        assertEqual(built.stripA[1].t, 1)
+        assertEqual(filler.a[1], 7)
+        return
+    end
+    assertEqual(built.len, 38, "the race's own clock: 40 s from combat entry less its first 2")
+    assertEqual(built.buzzer, 30, "the buzzer at the race length")
+    assertEqual(built.stripA[1].t, -1, "a cast before the first hit sits before the race clock's zero")
+    assertEqual(built.stripA[2].t, 0, "the opener on 0:00")
+    assertEqual(filler.a[1], 5, "the lanes on the race clock too")
+    assertEqual(filler.b[1], 7, "a compared fight stays on its own clock")
+    -- A race saved without its offset (or an older one) is not shifted, and keeps its buzzer.
+    race.race.firstHit = nil
+    built = D.Build(race, nil)
+    assertEqual(built.len, 40)
+    assertEqual(built.buzzer, 30)
+    assertEqual(built.stripA[1].t, 1)
+    -- A race shorter than its length (incomplete) still spans to the buzzer.
+    race.duration = 12
+    assertEqual(D.Build(race, nil).len, 30)
+    assertNil(D.Build(fight, nil).buzzer, "a fight has no buzzer")
+end)
+
 test("timeline: the compare target is the pick, else the best, else the runner-up", function()
     local NS = fresh()
     local D = NS.ResultsTimelineData

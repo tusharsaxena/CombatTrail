@@ -172,7 +172,9 @@ function Detail.PetShare(record)
 end
 
 --- The chart's view for a stored fight (modules/Hud_Chart.lua's OverView over the in-session slices,
---- scaled to the record's plain player damage), or nil when this session holds none.
+--- scaled to the record's plain player damage), or nil when this session holds none. A race's runs on
+--- its race clock, from its first hit, with its buzzer line (ruling X9; not on WoW Forever, where it
+--- lists as a fight: modules/Results_Races.lua Clock).
 --- @param record table
 --- @return table|nil view
 function Detail.ChartView(record)
@@ -180,9 +182,11 @@ function Detail.ChartView(record)
     local d = record.damage
     local player = tonumber(d.player) or tonumber(d.merged)
     local final = { duration = record.duration, player = { total = player } }
+    local clock = NS.ResultsRaces.Clock(record)
     local casts = NS.CastCodec.Decode(record.casts)
+    if clock then casts = NS.RaceRecord.OnClock(casts, clock.shift) end
     local cooldowns = NS.HudChart.Cooldowns(casts, record.cooldowns)
-    return NS.HudChart.OverView({ id = record.id }, nil, final, cooldowns)
+    return NS.HudChart.OverView({ id = record.id }, nil, final, cooldowns, clock)
 end
 
 -- ── the folded sections (stored) ────────────────────────────────────────────────────────────────

@@ -318,12 +318,24 @@ local function buildBar(f)
 end
 
 -- The pinned axis's clip on the window and the scrollbar under it.
+-- A race's buzzer line (ruling X9): one over the Casts strips, one down the lanes, in the Timing
+-- strip's race hue (modules/Hud_Chart.lua Chart.BUZZER), over the grid and under the marks.
+local function buzzerLine(layer)
+    local t = layer:CreateTexture(nil, "BORDER")
+    local c = NS.HudChart.BUZZER
+    t:SetColorTexture(c[1], c[2], c[3], 1)
+    t:SetWidth(NS.HudChart.LINE_W)
+    t:Hide()
+    return t
+end
+
 local function buildAxis(f)
     ui.axisClip, ui.axisLayer = clipLayer(f)
     buildBar(f)
     ui.axis, ui.castsAxis, ui.grid = {}, {}, {}
     ui.axisPool, ui.castsAxisPool = NS.Pool.New(), NS.Pool.New()
     ui.gridPool, ui.laneGridPool = NS.Pool.New(), NS.Pool.New()
+    ui.buzzerLine = { casts = buzzerLine(ui.castsLayer), lanes = buzzerLine(ui.marks) }
 end
 
 local function buildBody(f)
@@ -734,6 +746,23 @@ local function placeAxes(g, shown)
     end
 end
 
+-- The race's buzzer line at its length on this geometry; hidden for a fight and on WoW Forever.
+local function placeBuzzer(g, shown)
+    local line, t = ui.buzzerLine, ui.buzzer
+    local on = shown and type(t) == "number"
+    line.casts:SetShown(on)
+    line.lanes:SetShown(on)
+    if not on then return end
+    local s = ui.sections
+    local x = D.MarkX(t, g.span, g.zoomW) + Timeline.CLIP_PAD - NS.HudChart.LINE_W / 2
+    line.casts:ClearAllPoints()
+    line.casts:SetPoint("TOPLEFT", ui.castsLayer, "TOPLEFT", x, 0)
+    line.casts:SetHeight(s.stripB + s.heightB - s.stripA)
+    line.lanes:ClearAllPoints()
+    line.lanes:SetPoint("TOPLEFT", ui.marks, "TOPLEFT", x, 0)
+    line.lanes:SetPoint("BOTTOMLEFT", ui.marks, "BOTTOMLEFT", x, 0)
+end
+
 local function layoutRows(g)
     NS.Pool.ReleaseAll(ui.pairs, function(pair) pair.row = nil end)
     Timeline.ReleaseMarks()
@@ -776,6 +805,7 @@ local function layoutFrame(g)
     ui.isEmpty = empty ~= nil
     ui.scroll:SetShown(not ui.isEmpty)
     placeAxes(g, not ui.isEmpty)
+    placeBuzzer(g, not ui.isEmpty)
     ui.scroll:ClearAllPoints()
     ui.scroll:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", D.PAD, -(top + 8))
     ui.viewH = math.max(1, ui.height - top - 8 - Timeline.AXIS_H - 8 - D.BarBand(g.zoom))
@@ -857,6 +887,7 @@ function draw()
     ui.hasCasts = D.Has(record)
     ui.hasPet = D.HasPet(record, other)
     ui.rows, ui.castsA, ui.castsB, ui.span = built.rows, built.stripA, built.stripB, built.len
+    ui.buzzer = built.buzzer
     fillLegend(record, other, kind)
     Timeline.ApplyScale()
     layout()

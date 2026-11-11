@@ -5,7 +5,8 @@ local _, NS = ...
 -- pace bar sets the fight's damage against the paced best's at this point (modules/Hud_Best.lua).
 -- Adapted from DPS Race @045f479 (modules/Hud_Chart.lua) without its race: no race length or buzzer
 -- (the chart spans the fight, or the best's duration while that is longer), no shared session, and a
--- pace bar that carries the pet.
+-- pace bar that carries the pet. The one race part is the Results detail's (ruling X9): OverView with a
+-- race's clock runs the columns from its first hit and marks its buzzer with a line (Strip:drawBuzzer).
 --
 -- A VISUAL INDICATOR, NO MATH ON A VALUE. A column's value is the player's live total copied at its
 -- step: secret in combat, and it stays secret. It goes to StatusBar:SetValue and nowhere else. The
@@ -54,6 +55,9 @@ Chart.ICON = 12         -- a cooldown icon's size
 Chart.ICON_GAP = 1      -- between two rows of icons
 Chart.RESERVE = Chart.ICON + Chart.ICON_GAP   -- the plot's headroom on top: one row of icons
 Chart.PACE_H = 12       -- the pace bar's line: the bar 8px tall, 2px clear over and under it
+-- A race's buzzer line (the Results detail and the Timeline, ruling X9): the Timing strip's race hue
+-- (modules/Results_RaceDetail.lua RD.RACE), DPS Race's data hue, the same under every skin.
+Chart.BUZZER = { 0.53, 0.53, 0.93 }
 
 local ICON_CROP = { 0.08, 0.92, 0.08, 0.92 }
 
@@ -174,9 +178,9 @@ function Chart.Cooldowns(casts, spells)
     return out
 end
 
--- The view's columns from the fight's store, over `span` seconds.
-local function columnsOf(fightID, span)
-    local cols = NS.Slices.Columns(fightID, span, Chart.MaxColumns())
+-- The view's columns from the fight's store, over `span` seconds from `shift` seconds in (default 0).
+local function columnsOf(fightID, span, shift)
+    local cols = NS.Slices.Columns(fightID, span, Chart.MaxColumns(), shift)
     if not cols then return nil end
     return { count = cols.count, step = cols.step, values = cols.values, span = cols.count * cols.step }
 end
@@ -217,20 +221,33 @@ function Chart.LiveView(fight, curve, live, elapsed, cooldowns)
     return view
 end
 
+-- The fight-over chart's span and its clock: the fight's length (its duration or its steps, the
+-- longer) from `shift` seconds in, and never short of the race `length` (0 for a fight).
+local function overSpan(rec, final, clock)
+    local duration = final and NS.Secrets.PlainNumber(final.duration) or 0
+    local shift, length = clock and clock.shift or 0, clock and clock.length or 0
+    local steps = (rec.count or 0) * NS.Slices.STEP
+    return math.max(duration - shift, steps - shift, length, NS.Slices.STEP), shift, length
+end
+
 --- The fight-over card's chart: the fight's columns over its length, scaled to its plain final
---- player damage, against the best it was paced on when there is one. Nil when this session holds no
---- columns for it.
+--- player damage, against the best it was paced on when there is one. With a race's `clock` (the
+--- Results detail, ruling X9) the columns run from its first hit (`shift` seconds in), the span reaches
+--- at least its `length`, and `buzzer` is where that length falls (a fraction of the span). Nil when
+--- this session holds no columns for it.
 --- @param fight table
 --- @param curve table|nil
 --- @param final table|nil  the after-combat read (plain)
---- @param cooldowns table|nil
+--- @param cooldowns table|nil  on the chart's clock (a race's already moved onto its race clock)
+--- @param clock table|nil  { shift, length } (modules/Results_Races.lua Clock)
 --- @return table|nil view
-function Chart.OverView(fight, curve, final, cooldowns)
+function Chart.OverView(fight, curve, final, cooldowns, clock)
     local rec = NS.Slices.Get(fight.id)
     if not rec or (rec.filled or 0) == 0 then return nil end
-    local duration = final and NS.Secrets.PlainNumber(final.duration) or 0
-    local view = columnsOf(fight.id, math.max(duration, (rec.count or 0) * NS.Slices.STEP, NS.Slices.STEP))
+    local span, shift, length = overSpan(rec, final, clock)
+    local view = columnsOf(fight.id, span, shift)
     if not view then return nil end
+    if length > 0 then view.buzzer = length / view.span end
     local player = final and final.player and NS.Secrets.PlainNumber(final.player.total)
     if not player or player <= 0 then return nil end
     view.cooldowns, view.note = cooldowns, ""
@@ -283,6 +300,10 @@ function Chart.New(parent)
     s.over:SetFrameLevel((s.plot:GetFrameLevel() or 0) + NS.Constants.LAYERS.LEVEL.CHART_OVERLAY)
     s.line = s.over:CreateLine(nil, "OVERLAY")
     s.line:SetThickness(Chart.LINE_W)
+    s.buzzer = s.over:CreateTexture(nil, "OVERLAY")
+    s.buzzer:SetColorTexture(Chart.BUZZER[1], Chart.BUZZER[2], Chart.BUZZER[3], 1)
+    s.buzzer:SetWidth(Chart.LINE_W)
+    s.buzzer:Hide()
     s.zero = s.over:CreateTexture(nil, "OVERLAY")
     s.zero:SetHeight(1)
     Style.Fill(s.zero, "ct.chart.grid")
@@ -416,6 +437,17 @@ function Strip:drawLine(level)
     self.line:SetEndPoint("BOTTOMLEFT", self.over, (self.width or 0) - Chart.INSET, Chart.INSET + h * level)
 end
 
+-- A race's buzzer line at `at` (a plain fraction of the plot's width), up the plot; hidden with none.
+function Strip:drawBuzzer(at)
+    self.buzzer:SetShown(at ~= nil)
+    if at == nil then return end
+    local inner = (self.width or 0) - 2 * Chart.INSET
+    local x = Chart.INSET + inner * math.max(0, math.min(1, at)) - Chart.LINE_W / 2
+    self.buzzer:ClearAllPoints()
+    self.buzzer:SetPoint("TOPLEFT", self.over, "TOPLEFT", x, -Chart.INSET)
+    self.buzzer:SetHeight(math.max(1, (self.frameH or 0) - 2 * Chart.INSET))
+end
+
 --- Draw `view` (Chart.LiveView's or OverView's). Its `max` may be secret (live with no best): it, as
 --- each column's value, only reaches SetMinMaxValues and SetValue.
 function Strip:Draw(view)
@@ -425,6 +457,7 @@ function Strip:Draw(view)
     for i = 1, count do self:fill(i, self.cols[i], view.values[i], view.max) end
     for i = count + 1, #self.cols do self.cols[i]:Hide() end
     self:drawLine(view and view.best or nil)
+    self:drawBuzzer(view and view.buzzer or nil)
     local span = view and view.span or 0
     self:drawIcons(view and view.cooldowns or nil, span)
     self.note:SetText(view and view.note or "")

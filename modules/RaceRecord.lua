@@ -4,7 +4,7 @@ local _, NS = ...
 -- own fields (who, identity, damage, dps, duration, ...) stay a fight's; the part adds:
 --
 --   race = { length, kind, status, flags = { lateCasts, restartedAt, reloaded, died, sessionFromList,
---            sharedSession }, score, dps, tail, endedAt, combatEnd, grace, restartGap }
+--            sharedSession }, score, dps, tail, endedAt, combatEnd, grace, restartGap, firstHit }
 --
 -- `length` is the race length the player picked (seconds); `kind` the dummy's category when the race
 -- was saved (modules/Dummies.lua CATEGORIES; the boards read the list as it is now, modules/Bests.lua
@@ -12,7 +12,9 @@ local _, NS = ...
 -- off its fight before the save, modules/Recorder.lua); `score` the session's total (player and pet);
 -- `dps` the score over the length, or over `endedAt` (seconds from the first hit to combat end) when
 -- incomplete; `tail`, `combatEnd`, `grace` and `restartGap` DPS Race's timing. `flags.lateCasts` is
--- `{ { t, spellID }, ... }`, each cast's offset after the buzzer.
+-- `{ { t, spellID }, ... }`, each cast's offset after the buzzer. `firstHit` is the race clock's zero on
+-- the fight clock (ruling X9): seconds from combat entry (the fight's startT, the zero of the casts and
+-- of the chart's steps) to the first hit. A race saved without it reads as 0: no shift.
 --
 -- PURE over plain values: no WoW API. Plain copies only plain values: a sealed field, a sealed flag or
 -- a late cast's sealed spell is left out, never kept (spec §10, docs/midnight-quirks.md).
@@ -23,7 +25,7 @@ NS.RaceRecord = RaceRecord
 local Secrets = NS.Secrets
 
 -- The part's fields by the type each must have to be kept.
-local NUMBERS = { "length", "score", "dps", "tail", "endedAt", "combatEnd", "grace", "restartGap" }
+local NUMBERS = { "length", "score", "dps", "tail", "endedAt", "combatEnd", "grace", "restartGap", "firstHit" }
 local STRINGS = { "kind", "status" }
 local FLAG_TRUTHS = { "reloaded", "died", "sessionFromList", "sharedSession" }
 
@@ -32,6 +34,34 @@ local FLAG_TRUTHS = { "reloaded", "died", "sessionFromList", "sharedSession" }
 --- @return boolean
 function RaceRecord.IsRace(record)
     return type(record) == "table" and type(record.race) == "table"
+end
+
+--- The race clock's zero on the fight clock (ruling X9): a race's `firstHit`, seconds from combat entry
+--- to the first hit. 0, no shift, for a fight, and for a race saved without it or with one not past 0.
+--- @param record table|nil
+--- @return number seconds
+function RaceRecord.FirstHit(record)
+    local v = RaceRecord.IsRace(record) and record.race.firstHit or nil
+    if type(v) ~= "number" or v <= 0 then return 0 end
+    return v
+end
+
+--- `casts` ({ { t, ... }, ... }, timed from combat entry) moved onto a clock whose zero is `shift`
+--- seconds in: a copy of each cast, `t` less the shift (to the hundredth), every other field kept. A
+--- cast before the new zero goes negative. No shift (0 or none) answers the list itself.
+--- @param casts table
+--- @param shift number|nil
+--- @return table casts
+function RaceRecord.OnClock(casts, shift)
+    if type(shift) ~= "number" or shift == 0 or type(casts) ~= "table" then return casts end
+    local out = {}
+    for i, c in ipairs(casts) do
+        local copy = {}
+        for k, v in pairs(c) do copy[k] = v end
+        if type(c.t) == "number" then copy.t = math.floor((c.t - shift) * 100 + 0.5) / 100 end
+        out[i] = copy
+    end
+    return out
 end
 
 --- The race DPS out of a score (DPS Race's Scoring.Dps on the race part): the score over the race

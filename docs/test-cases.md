@@ -650,7 +650,7 @@ Total.
 - record: three fights in the same gear share one gear set; a swap between fights is a second
 - record: targets merge enemies of one name, highest first, whole, capped
 
-### test_race_record.lua (13)
+### test_race_record.lua (16)
 
 - race record: a complete race is saved however short
 - race record: an incomplete race is saved too, with its endedAt
@@ -660,6 +660,9 @@ Total.
 - race record: Recorder asks the race to finalize before it judges the fight
 - race record: no secret reaches the race part
 - race record: Plain answers nil for anything but a table, and copies the spec §6 fields
+- race record: Plain keeps the first hit's offset only when it is a plain number (ruling X9)
+- race record: FirstHit is the race clock's zero on the fight clock, 0 for no shift
+- race record: OnClock answers casts moved onto a later zero, a copy, the list untouched
 - race record: IsRace is a record with a race part
 - race record: Dps is the race DPS for a race, the fight DPS otherwise
 - race record: ScoreDps is the score over the length, over endedAt when incomplete
@@ -704,7 +707,7 @@ Total.
 - late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
 - late ignore: Label names a spell, the hearthstones' entry and an unknown one
 
-### test_race.lua (57)
+### test_race.lua (58)
 
 - race: the states, the lengths and the timings are the plan's
 - race: arming refuses on WoW Forever and registers nothing there
@@ -718,6 +721,7 @@ Total.
 - race: an armed pull that never hits keeps the arm for the next pull
 - race: buzzer at start+length moves to stopping and emits RACE_BUZZER, never early
 - race: a complete race is read after the settle and saved once, as a race with its score and DPS
+- race: the record keeps the first hit's offset from combat entry, the race clock's zero (ruling X9)
 - race: the race part is on the fight before Recorder builds it, and RACE_RESULT follows FIGHT_SAVED
 - race: a race is saved however short, past the minimum length
 - race: combat end before the buzzer -> incomplete with endedAt
@@ -764,12 +768,13 @@ Total.
 - race: the watchers register only what the race's state needs
 - race: a stand-down drops the armed race silently, with its registrations
 
-### test_race_resume.lua (23)
+### test_race_resume.lua (24)
 
 - resume: the slot is written at the first hit, plain, and nothing reaches the fight store
 - resume: the slot is cleared at the result and at a cancel
 - resume: arming refuses while this character's slot waits to be resumed
 - resume: running past buzzer becomes stopping+reloaded
+- resume: a resumed race keeps its first hit's offset; a slot without the combat entry has none
 - resume: running before buzzer keeps running with remaining time
 - resume: stopping out of combat reads immediately
 - resume: stopping in combat waits for the combat end
@@ -929,7 +934,7 @@ Total.
 - toast: the History page's New-best toast tab, the races row on Retail only
 - toast: the stub answers every member a live toast has, as an empty toast does
 
-### test_slices.lua (18)
+### test_slices.lua (19)
 
 - slices: a 2 s step, at most 60 columns, a column that grows with the fight
 - slices: a read copies the handles into each step it is the first read at or after
@@ -939,6 +944,7 @@ Total.
 - slices: a 5 minute fight re-buckets into 50 columns of 6 s, each its last step's total
 - slices: a column whose last step is a hole takes its latest filled step, and an empty one stays empty
 - slices: an expected length sizes the columns before the fight reaches it
+- slices: a shift lays the columns from a later zero, each still its latest filled step (ruling X9)
 - slices: the views are cached until the next capture
 - slices: Tail is the last 60 steps, one column a step
 - slices: a closed store takes no more reads, and only KEEP closed stores are held
@@ -1165,7 +1171,7 @@ Total.
 - sections: a rebuilt pane reads the folds back; Reset position keeps them
 - sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
-### test_results_races.lua (23)
+### test_results_races.lua (25)
 
 - results: Races shows only races, Fights only fights, All both
 - results: under Races the length, dummy kind, Hide flagged and Include incomplete filters apply
@@ -1175,6 +1181,8 @@ Total.
 - results: an incomplete race is compared but never leads its group
 - results: group by length, by target and length, and by spec, target and length
 - results: under the date groupings a race is measured on its race board, not the dummy's fights
+- results: a race's chart runs on the race clock, with the buzzer line at its length (ruling X9)
+- results: a race's Timeline runs on the race clock and draws the buzzer line (ruling X9)
 - results: the race detail has Timing and Flags
 - results: the timing strip places the buzzer, grace, tail, late casts and combat end
 - results: the detail's figures are the race's: score, race DPS, DPS · Incomplete
@@ -1248,12 +1256,13 @@ Total.
 - share: a lost race prints that it could not be read, and has no score line
 - share: on WoW Forever a saved race still shares, and no race line is printed
 
-### test_timeline.lua (12)
+### test_timeline.lua (13)
 
 - timeline: rows order long CDs first
 - timeline: decodes packed casts
 - timeline: pet toggle hides pet rows
 - timeline: compare lanes align to their own fight start
+- timeline: a race runs on the race clock, from its first hit, with its buzzer (ruling X9)
 - timeline: the compare target is the pick, else the best, else the runner-up
 - timeline: the axis, the zoom and the stacking arithmetic
 - timeline: opens from the detail over the Results window, under its cover
@@ -1550,17 +1559,17 @@ Total.
 | test_bests.lua | 21 |
 | test_retention.lua | 14 |
 | test_record.lua | 18 |
-| test_race_record.lua | 13 |
+| test_race_record.lua | 16 |
 | test_race_scoring.lua | 20 |
 | test_late_ignore.lua | 12 |
-| test_race.lua | 57 |
-| test_race_resume.lua | 23 |
+| test_race.lua | 58 |
+| test_race_resume.lua | 24 |
 | test_race_settings.lua | 18 |
 | test_autoarm.lua | 27 |
 | test_race_window.lua | 36 |
 | test_countdown.lua | 22 |
 | test_toast.lua | 21 |
-| test_slices.lua | 18 |
+| test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
@@ -1573,11 +1582,11 @@ Total.
 | test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
-| test_results_races.lua | 23 |
+| test_results_races.lua | 25 |
 | test_insights_data.lua | 14 |
 | test_insights.lua | 21 |
 | test_share.lua | 13 |
-| test_timeline.lua | 12 |
+| test_timeline.lua | 13 |
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
@@ -1598,4 +1607,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1292** |
+| **Total** | **1301** |

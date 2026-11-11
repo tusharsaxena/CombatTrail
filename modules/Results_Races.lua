@@ -40,6 +40,19 @@ end
 
 local function isRace(record) return NS.RaceRecord.IsRace(record) end
 
+--- The race clock a race's chart and Timeline run on (ruling X9): `shift`, the seconds from combat
+--- entry to its first hit (0 for a race saved without it), and `length`, where the buzzer line sits.
+--- nil for a fight, a race with no length, and on WoW Forever, where a saved race lists as a fight
+--- on the fight's own clock, as its detail has no Timing section there (Review focus 3).
+--- @param record table|nil
+--- @return table|nil clock  { shift, length }
+function Races.Clock(record)
+    if not (Races.On() and isRace(record)) then return nil end
+    local length = record.race.length
+    if type(length) ~= "number" or length <= 0 then return nil end
+    return { shift = NS.RaceRecord.FirstHit(record), length = length }
+end
+
 -- ── colors (DPS Race's, the owner's calls 2026-10-24/25) ────────────────────────────────────────
 
 -- The five preset lengths in muted ROYGBIV hues, shortest to longest; any other length a neutral gray.

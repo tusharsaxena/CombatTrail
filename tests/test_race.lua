@@ -253,6 +253,13 @@ test("race: a complete race is read after the settle and saved once, as a race w
     assertNil(F.findSecret(records[1]), "nothing secret in the record")
 end)
 
+test("race: the record keeps the first hit's offset from combat entry, the race clock's zero (ruling X9)", function()
+    if forever() then return end
+    local S = fresh()
+    F.whole(S, 30, 1)   -- combat entry at 101, the first hit at 102
+    assertEqual(F.records(S)[1].race.firstHit, 1.0)
+end)
+
 test("race: the race part is on the fight before Recorder builds it, and RACE_RESULT follows FIGHT_SAVED", function()
     if forever() then return end
     local S = fresh()

@@ -42,7 +42,7 @@ RD.FLAG_MAIN_H = 18
 RD.FLAG_SUB_H = 12
 
 -- The strip's hues are DATA hues (DPS Race's), the same under every skin.
-RD.RACE = { 0.53, 0.53, 0.93 }
+RD.RACE = NS.HudChart.BUZZER   -- the race segment, and the buzzer line on the chart and the Timeline
 RD.CYAN = { 0.3, 0.85, 1.0 }
 RD.VIOLET = { 0.78, 0.5, 1.0 }
 RD.IGNORED = { 0.55, 0.55, 0.55 }

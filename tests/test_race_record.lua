@@ -206,6 +206,38 @@ test("race record: Plain answers nil for anything but a table, and copies the sp
     assertEqual(type(p.flags.lateCasts), "table")
 end)
 
+test("race record: Plain keeps the first hit's offset only when it is a plain number (ruling X9)", function()
+    local RR = T.NS.RaceRecord
+    local part = racePart()
+    part.firstHit = 1.25
+    assertEqual(RR.Plain(part).firstHit, 1.25, "seconds from combat entry to the first hit")
+    part.firstHit = T.secret(1.25)
+    assertNil(RR.Plain(part).firstHit, "a sealed offset is left out")
+    part.firstHit = "1.25"
+    assertNil(RR.Plain(part).firstHit, "so is one of the wrong type")
+end)
+
+test("race record: FirstHit is the race clock's zero on the fight clock, 0 for no shift", function()
+    local RR = T.NS.RaceRecord
+    assertEqual(RR.FirstHit({ race = { firstHit = 1.5 } }), 1.5)
+    assertEqual(RR.FirstHit({ race = {} }), 0, "a race saved without it: no shift")
+    assertEqual(RR.FirstHit({ race = { firstHit = -2 } }), 0, "never a shift back")
+    assertEqual(RR.FirstHit({ race = { firstHit = "1" } }), 0)
+    assertEqual(RR.FirstHit({ dps = 100 }), 0, "a fight runs on its own clock")
+    assertEqual(RR.FirstHit(nil), 0)
+end)
+
+test("race record: OnClock answers casts moved onto a later zero, a copy, the list untouched", function()
+    local RR = T.NS.RaceRecord
+    local casts = { { t = 0.5, spellID = 1 }, { t = 4, spellID = 2, unit = "pet" } }
+    local moved = RR.OnClock(casts, 1.5)
+    assertEqual(moved[1].t, -1, "a cast before the first hit is before the race clock's zero")
+    assertEqual(moved[2].t, 2.5)
+    assertEqual(moved[2].unit, "pet", "every other field copied")
+    assertEqual(casts[2].t, 4, "the list handed in is not changed")
+    assertTrue(RR.OnClock(casts, 0) == casts, "no shift: the same list")
+end)
+
 test("race record: IsRace is a record with a race part", function()
     local RR = T.NS.RaceRecord
     assertTrue(RR.IsRace({ race = {} }))

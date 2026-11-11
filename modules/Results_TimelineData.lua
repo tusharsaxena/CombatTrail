@@ -5,7 +5,10 @@ local _, NS = ...
 -- modules/Results_Timeline.lua, which loads after this file. Adapted from DPS Race @045f479
 -- (modules/Results_TimelineData.lua) without its race: no race length, no buzzer; a fight's own
 -- length is the axis, and each fight's casts are timed from that fight's own start, so the two
--- fights' lanes line up at 0:00 whatever day they were fought.
+-- fights' lanes line up at 0:00 whatever day they were fought. A race (Retail) is the one exception
+-- (ruling X9): its casts and its length run on the race clock, from its first hit (its part's
+-- `firstHit`, modules/Results_Races.lua Clock), its axis reaches at least its length, and Build
+-- answers that length as `buzzer`, where the window draws the buzzer line.
 --
 -- THE CASTS are the stored record's packed list (modules/CastCodec.lua), decoded here: { t, spellID,
 -- unit = "player" | "pet", interrupted }, with the record's base cooldowns beside it (`cooldowns`,
@@ -67,12 +70,20 @@ Data.HOT = NS.ResultsTable.COLORS.red
 
 -- ── the casts ───────────────────────────────────────────────────────────────────────────────────
 
---- A fight's casts, decoded, in stored order (an empty list for none).
+-- A race's clock (modules/Results_Races.lua Clock), nil for a fight and on WoW Forever.
+local function clockOf(record)
+    local Races = NS.ResultsRaces
+    return Races and Races.Clock(record) or nil
+end
+
+--- A fight's casts, decoded, in stored order (an empty list for none); a race's on its race clock
+--- (ruling X9), from its first hit.
 --- @param record table|nil
 --- @return table casts  { { t, spellID, unit, interrupted }, ... }
 function Data.Decode(record)
     if type(record) ~= "table" then return {} end
-    return NS.CastCodec.Decode(record.casts)
+    local casts, clock = NS.CastCodec.Decode(record.casts), clockOf(record)
+    return clock and NS.RaceRecord.OnClock(casts, clock.shift) or casts
 end
 
 --- Whether a fight has casts to draw (the detail's Timeline button is live only then).
@@ -156,9 +167,13 @@ function Data.Rows(record, other, showPet)
     return rows
 end
 
+-- A fight's length on its own clock: a race's from its first hit, and never short of its buzzer.
 local function lengthOf(record)
     local n = type(record) == "table" and tonumber(record.duration) or nil
-    return n and n > 0 and n or 0
+    n = n and n > 0 and n or 0
+    local clock = clockOf(record)
+    if not clock then return n end
+    return math.max(n - clock.shift, clock.length)
 end
 
 --- The axis's span in seconds: the longer fight of the two (a picked fight may be on another board).
@@ -170,10 +185,12 @@ end
 --- @param record table|nil
 --- @param other table|nil
 --- @param opts table|nil  { showPet = boolean } (the pet's abilities shown unless false)
---- @return table  { rows, stripA, stripB, len }
+--- @return table  { rows, stripA, stripB, len, buzzer (a race's length: its buzzer line, else nil) }
 function Data.Build(record, other, opts)
     local showPet = not (type(opts) == "table" and opts.showPet == false)
+    local clock = clockOf(record)
     return {
+        buzzer = clock and clock.length or nil,
         rows = record and Data.Rows(record, other, showPet) or {},
         stripA = Data.CastsOf(record, showPet),
         stripB = Data.CastsOf(other, showPet),

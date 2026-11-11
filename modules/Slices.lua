@@ -186,12 +186,22 @@ local function latestFilled(values, from, to)
     return nil
 end
 
-local function buildColumns(rec, k, length, max)
+-- The steps column `j` spans: those whose boundary falls in its window of the clock that starts
+-- `shift` seconds into the fight, ((j-1)*w + shift, j*w + shift]. No shift: steps (j-1)*k+1 .. j*k.
+local function stepsOf(j, w, shift)
+    local from = math.floor(((j - 1) * w + shift) / Slices.STEP + EPS) + 1
+    return from, math.floor((j * w + shift) / Slices.STEP + EPS)
+end
+
+local function buildColumns(rec, k, length, max, shift)
     local count = math.min(max, math.max(1, math.ceil(length / (k * Slices.STEP))))
-    local view = { step = k * Slices.STEP, count = count, values = {}, pet = {}, filled = 0,
+    local w = k * Slices.STEP
+    local view = { step = w, count = count, values = {}, pet = {}, filled = 0,
                    k = k, steps = rec.count }
-    for j = 1, math.min(count, math.ceil(rec.count / k)) do
-        local i = latestFilled(rec.values, (j - 1) * k + 1, math.min(j * k, rec.count))
+    for j = 1, count do
+        local from, to = stepsOf(j, w, shift)
+        if from > rec.count then break end
+        local i = latestFilled(rec.values, from, math.min(to, rec.count))
         if i then
             view.values[j], view.pet[j] = rec.values[i], rec.pet[i]
             view.filled = view.filled + 1
@@ -202,23 +212,28 @@ end
 
 --- The chart's view of a fight: at most MAX columns, each Width(length) seconds of the fight clock,
 --- holding the running total at its latest filled step (copied, never summed). `length` defaults to
---- the longer of the expected length and the steps so far. Cached until the next capture.
+--- the longer of the expected length and the steps so far. With `shift`, the columns run on a clock
+--- whose zero is that many seconds into the fight (a race's first hit, ruling X9): each still holds a
+--- copy of its latest filled step, the steps before the zero left out. Cached until the next capture.
 --- @param id any  a fight id or a record id
 --- @param length number|nil  seconds the chart spans
 --- @param maxColumns number|nil  the most columns drawn (default MAX; the HUD's `hud.chart.columns`)
+--- @param shift number|nil  plain seconds from the fight's start to the columns' zero (default 0)
 --- @return table|nil view  { step (seconds a column), count, values, pet, filled }
-function Slices.Columns(id, length, maxColumns)
+function Slices.Columns(id, length, maxColumns, shift)
     local rec = Slices.Get(id)
     if not rec then return nil end
     local span = plainLength(length) or math.max(rec.expected or 0, rec.count * Slices.STEP)
     local max = math.max(1, math.min(Slices.MAX, math.floor(tonumber(maxColumns) or Slices.MAX)))
     local k = stepsPerColumn(span, max)
+    shift = type(shift) == "number" and shift > 0 and shift or 0
     local view = rec.view
-    if view and view.k == k and view.steps == rec.count and view.span == span and view.max == max then
+    if view and view.k == k and view.steps == rec.count and view.span == span and view.max == max
+        and view.shift == shift then
         return view
     end
-    view = buildColumns(rec, k, span, max)
-    view.span, view.max = span, max
+    view = buildColumns(rec, k, span, max, shift)
+    view.span, view.max, view.shift = span, max, shift
     rec.view = view
     return view
 end

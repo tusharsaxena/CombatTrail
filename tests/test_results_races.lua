@@ -285,6 +285,84 @@ end)
 
 -- ── the race detail ─────────────────────────────────────────────────────────────────────────────
 
+-- A race saved 2 s after its combat entry's first hit, with a 3:00 cooldown 5 s in and a filler 1 s
+-- in (before the first hit), and this session's chart: 17 steps over its 34 s.
+local BIG = 1122
+local function clockRace(NS, o)
+    local r = raceRec(NS, { id = o.id, length = 30 })   -- 34 s from combat entry to its end
+    r.race.firstHit = o.firstHit
+    r.cooldowns = { [BIG] = 180000 }
+    r.casts = NS.CastCodec.Encode({ { t = 1, spellID = 133, unit = "player", interrupted = false },
+                                    { t = 5, spellID = BIG, unit = "player", interrupted = false } })
+    local steps = {}
+    for i = 1, 17 do steps[i] = i * 100 end
+    NS.Slices.Seed(r.id, { values = steps })
+    return r
+end
+
+test("results: a race's chart runs on the race clock, with the buzzer line at its length (ruling X9)", function()
+    local NS = fresh()
+    local race, plain = clockRace(NS, { id = "race", firstHit = 2 }), clockRace(NS, { id = "plain" })
+    plain.race = nil
+    save(NS, race, plain)
+    assertTrue(NS.Results.ShowFight("race"))
+    local p = NS.Results.__ui().detail
+    local cv, chart = p.chartView, p.w.chart
+    if forever() then
+        -- No race controls on WoW Forever: a saved race's chart is a fight's, on the fight's clock.
+        assertEqual(cv.span, 34)
+        assertNil(cv.buzzer)
+        assertFalse(chart.buzzer:IsShown(), "no buzzer line")
+        assertEqual(chart:Icons()[1].cast.t, 5)
+        return
+    end
+    assertEqual(cv.span, 32, "34 s from combat entry, less the 2 s before the first hit")
+    assertEqual(cv.values[1], 200, "the first column is the race clock's first 2 s: the step at 4 s")
+    assertEqual(cv.buzzer, 30 / 32, "the buzzer at the race length")
+    assertTrue(chart.buzzer:IsShown(), "the buzzer line")
+    local inset = NS.HudChart.INSET
+    local _, _, _, x = chart.buzzer:GetPoint(1)
+    assertEqual(x, inset + (chart.width - 2 * inset) * 30 / 32 - NS.HudChart.LINE_W / 2)
+    assertEqual(chart:Icons()[1].cast.t, 3, "the cooldown's icon on the race clock")
+    assertEqual(chart.axis[3]:GetText(), "0:32")
+    -- A plain fight: its own clock, no line.
+    assertTrue(NS.Results.ShowFight("plain"))
+    p = NS.Results.__ui().detail
+    assertEqual(p.chartView.span, 34)
+    assertNil(p.chartView.buzzer)
+    assertFalse(p.w.chart.buzzer:IsShown(), "a fight has no buzzer line")
+end)
+
+test("results: a race's Timeline runs on the race clock and draws the buzzer line (ruling X9)", function()
+    local NS = fresh()
+    local race, plain = clockRace(NS, { id = "race", firstHit = 2 }), clockRace(NS, { id = "plain" })
+    plain.race = nil
+    save(NS, race, plain)
+    assertTrue(NS.Results.ShowFight("race"))
+    local p = NS.Results.__ui().detail
+    p.w.timeline:__fire("OnClick")
+    local ui = NS.ResultsTimeline.__ui()
+    local line = ui.buzzerLine
+    if forever() then
+        assertEqual(ui.span, 34, "a fight's clock on WoW Forever")
+        assertFalse(line.casts:IsShown(), "no buzzer line")
+        assertFalse(line.lanes:IsShown())
+        return
+    end
+    assertEqual(ui.span, 32)
+    assertEqual(ui.buzzer, 30)
+    assertTrue(line.casts:IsShown(), "the buzzer line over the Casts strips")
+    assertTrue(line.lanes:IsShown(), "and down the lanes")
+    local D = NS.ResultsTimelineData
+    local _, _, _, x = line.lanes:GetPoint(1)
+    local _, _, laneW = D.LaneGeometry(ui.width)   -- 1x: the axis is the lanes' width
+    assertEqual(x, D.MarkX(30, 32, laneW) + NS.ResultsTimeline.CLIP_PAD - NS.HudChart.LINE_W / 2)
+    NS.ResultsTimeline.Hide()
+    assertTrue(NS.Results.ShowFight("plain"))
+    NS.Results.__ui().detail.w.timeline:__fire("OnClick")
+    assertFalse(NS.ResultsTimeline.__ui().buzzerLine.casts:IsShown(), "a fight has no buzzer line")
+end)
+
 test("results: the race detail has Timing and Flags", function()
     local NS = fresh()
     local r = raceRec(NS, { id = "r", flags = { lateCasts = { { t = 2.5, spellID = 133 } }, sharedSession = true } })

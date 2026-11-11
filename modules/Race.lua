@@ -687,6 +687,15 @@ local function raceDps(fight, race)
     return race.score / span
 end
 
+-- The race clock's zero on the fight clock (ruling X9): combat entry to the first hit. A resumed race's
+-- adopted fight carries the pull's own offset (its startT moved with its first hit), or starts on the
+-- first hit (0) when the slot kept no combat entry.
+local function firstHitOffset(fight)
+    local from, at = Secrets.PlainNumber(fight.startT), Secrets.PlainNumber(fight.firstHitT)
+    if not (from and at) or at < from then return nil end
+    return round2(at - from)
+end
+
 -- The race's figures out of the fight's plain read.
 local function score(fight, final)
     local race = cur.race
@@ -702,6 +711,7 @@ local function score(fight, final)
     end
     race.status = race.endedAt and "incomplete" or "complete"
     race.dps = raceDps(fight, race)
+    race.firstHit = firstHitOffset(fight)
     race.flags.sessionFromList = fight.boundBy == "tick" or nil
 end
 

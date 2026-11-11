@@ -163,6 +163,25 @@ test("slices: an expected length sizes the columns before the fight reaches it",
     assertEqual(view.filled, 4, "20 s of steps fill four 6 s columns (the fourth with step 10)")
 end)
 
+test("slices: a shift lays the columns from a later zero, each still its latest filled step (ruling X9)", function()
+    local S = slices()
+    S.Begin("race")
+    local h = handles(20)
+    for i = 1, 20 do S.Record("race", i * 2, h[i]) end   -- 40 s of the fight clock
+    local view = S.Columns("race", 36, nil, 3)   -- the race clock's zero 3 s into the fight
+    assertEqual(view.step, 2)
+    assertEqual(view.count, 18, "the columns span the length handed in, on the race clock")
+    -- Column j is the race clock's ((j-1)*2, j*2], the fight clock's ((j-1)*2+3, j*2+3]: step j+1.
+    for j = 1, 18 do
+        assertTrue(rawequal(view.values[j], h[j + 1]), "column " .. j .. " is step " .. (j + 1) .. "'s total")
+    end
+    local plain = S.Columns("race", 36)
+    assertTrue(rawequal(plain.values[1], h[1]), "no shift: the fight clock's columns, never the shifted view cached")
+    local past = S.Columns("race", 36, nil, 39)
+    assertTrue(rawequal(past.values[1], h[20]), "the last step")
+    assertNil(past.values[2], "no step past the store's end")
+end)
+
 test("slices: the views are cached until the next capture", function()
     local S = slices()
     S.Begin("c")

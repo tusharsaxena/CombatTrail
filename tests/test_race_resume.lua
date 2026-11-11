@@ -104,6 +104,19 @@ test("resume: running past buzzer becomes stopping+reloaded", function()
     assertNil(F.slot(G), "the slot is cleared")
 end)
 
+test("resume: a resumed race keeps its first hit's offset; a slot without the combat entry has none", function()
+    if forever() then return end
+    local S = raceTo(125)   -- combat entry at 101, the first hit at 102
+    local G = F.reload(S, { now = 147, inCombat = true })
+    F.settle(G, 148)
+    assertEqual(F.records(G)[1].race.firstHit, 1.0, "the adopted fight keeps the pull's combat entry")
+    S = raceTo(125)
+    F.slot(S).startT = nil
+    G = F.reload(S, { now = 147, inCombat = true })
+    F.settle(G, 148)
+    assertEqual(F.records(G)[1].race.firstHit, 0, "the adopted fight starts on the first hit: no shift")
+end)
+
 test("resume: running before buzzer keeps running with remaining time", function()
     if forever() then return end
     local S = raceTo(110)
