@@ -427,7 +427,8 @@ fights' toast is on both clients, this page is Retail's), and it lands with the 
 Under the headings *Race mode*, *Length*, *Near a training dummy*, *Clock*, *Countdown*, *At the buzzer*
 and *Scoring rules*. A new default length forgets the length last armed (`Race.ForgetLength`); the
 switch and the two dummy rows re-sync auto-show's and auto-arm's events (`AutoArm.Sync`), and the switch
-going off cancels a race still armed (one running runs on). Grace and the
+going off cancels a race still armed (one running runs on), as does a profile switch, copy or reset
+that lands on Race mode off (the page's `SETTINGS_CHANGED` receiver, path `profile`). Grace and the
 restart gap apply to new races: each race keeps the values it armed with.
 
 ### Late-cast ignore list

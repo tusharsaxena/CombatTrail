@@ -9,7 +9,7 @@ stand-down drops it and the stand-up replays it (slash-commands-§7).
 
 | Message | Sender | Payload | Consumers |
 |---|---|---|---|
-| `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | Bests, Hud, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page |
+| `SETTINGS_CHANGED` | settings/Schema.lua | `(path, value)`, or `("profile", key)` | AutoArm, Bests, Hud, LaneAnchor, LaneCasts, LaneRender, LaneVisibility, Results, History page, Race mode page |
 | `LANE_PUSH` | LaneCasts | `(laneKey, item)` | LaneRender |
 | `COMBAT_ENTERED` | Fight, on the `PLAYER_REGEN_DISABLED` edge only (never a split or a mid-combat `ENCOUNTER_START`) | `(t)` | Results (closes while `results.closeInCombat` is on) |
 | `FIGHT_STARTED` | Fight | `(fight)` | Casts, Hud, Loadouts, Preview (ends test mode), Race, Slices, Stats, Usage |
@@ -19,7 +19,7 @@ stand-down drops it and the stand-up replays it (slash-commands-§7).
 | `FIGHT_SAVED` | Recorder | `(record)` | Bests, Hud, Race, Results, Slices, History page |
 | `FIGHT_SKIPPED` | Recorder | `(fight, reason)` | Hud, Race, Slices |
 | `FIGHTS_CHANGED` | Recorder, Retention | none | Bests, Results, History page |
-| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | (the Race window, Task C1) |
+| `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | AutoArm (the Race window, Task C1) |
 | `RACE_ARMED` | Race.Arm | `(race)` | (the Race window and the chat lines, Tasks C1 and C2) |
 | `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | (the Race window, Task C1) |
 | `RACE_BUZZER` | Race, at the race length | `(race)` | (the buzzer's warning, Task C2) |

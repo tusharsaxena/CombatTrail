@@ -140,7 +140,6 @@ function NS.IsHudShown()
     return NS.Hud ~= nil and NS.Hud.IsShown ~= nil and NS.Hud.IsShown() == true
 end
 
---- The Results window key and `/ct results`: show or hide the Results window.
 --- The Race window's words, by the act each one asks of it.
 local RACE_WINDOW_ACT = { show = "Show", hide = "Hide", toggle = "Toggle" }
 
@@ -165,6 +164,7 @@ function NS.ToggleRaceWindow()
     return NS.SetRaceWindowShown("toggle")
 end
 
+--- The Results window key and `/ct results`: show or hide the Results window.
 function NS.ToggleResults()
     if refused() then return false end
     if not (NS.Results and NS.Results.Toggle) then return notBuilt() end

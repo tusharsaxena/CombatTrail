@@ -107,6 +107,10 @@ test("race mode: the library-absent dispatcher lists and runs the verb on its ow
     else
         assertTrue(said(M, "Usage: /ct race"), text(M))
     end
+    -- The typed verb too: the stub's own dispatch runs it on Retail and knows no race on WoW Forever.
+    M.__resetPrinted()
+    NS.Slash:OnSlash("race frob")
+    assertEqual(said(M, "Usage: /ct race"), not forever(), "the stub dispatched race: " .. text(M))
 end)
 
 -- ── the page ────────────────────────────────────────────────────────────────────────────────────
@@ -392,4 +396,22 @@ test("race mode off: an armed race is canceled with the switch; a running race r
     F.pull(S)
     assertTrue(S.NS.SetByPath("race.enabled", false))
     assertEqual(S.NS.Race.State(), "running", "a race under way was stopped by the switch")
+end)
+
+test("race mode off: a profile switch to Race mode off cancels an armed race, as the switch does", function()
+    if forever() then return end
+    local S = F.fresh()
+    local NS = S.NS
+    NS.db:SetProfile("Other")
+    assertTrue(NS.SetByPath("race.enabled", false))
+    NS.db:SetProfile("Default")
+    assert(F.arm(S, 30))
+    NS.db:SetProfile("Other")
+    assertFalse(NS.RaceMode.On())
+    assertEqual(NS.Race.State(), "idle", "the arm outlived a profile with Race mode off")
+    -- A profile with Race mode on leaves an armed race armed.
+    NS.db:SetProfile("Default")
+    assert(F.arm(S, 30))
+    NS.AnnounceSettingsChanged("profile", "Default")
+    assertEqual(NS.Race.State(), "armed", "a profile with Race mode on canceled the arm")
 end)

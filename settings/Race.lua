@@ -23,7 +23,7 @@ local _, NS = ...
 -- WRITES: every row writes through the seam (NS.SetByPath). The race reads its keys at call time and
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
 -- one armed (Race.ForgetLength); auto-show, auto-arm and the switch re-sync AutoArm's registrations,
--- and the switch going off cancels a race still armed.
+-- and the switch going off (or a profile that has it off) cancels a race still armed.
 -- The countdown, the buzzer and the Race window read their keys off SETTINGS_CHANGED (Tasks C1, C2).
 
 local L = NS.L
@@ -96,9 +96,15 @@ local SIDES = {
 -- Race: the switch first, then the race's own order.
 at(TAB.race, L["Race mode"])
 -- Off: an armed race (no first hit yet) is canceled with it; a race already running runs on to its result.
-local function onSwitch(on)
+-- A profile switch, copy or reset that lands on Race mode off does the same (the bus receiver below),
+-- so no race starts while Race mode is off.
+local function cancelArmedIfOff()
+    if not NS.RaceMode.On() and NS.Race.State() == NS.Race.STATE.ARMED then NS.Race.Cancel() end
+end
+
+local function onSwitch()
     syncAutoArm()
-    if on == false and NS.Race.State() == NS.Race.STATE.ARMED then NS.Race.Cancel() end
+    cancelArmedIfOff()
 end
 
 row("race.enabled", { type = "bool", label = L["Race mode"], startsLine = true, onChange = onSwitch,
@@ -226,7 +232,8 @@ NS.RegisterTabbedPage({
 })
 
 -- The ignore list repaints when it changes from anywhere (`/ct race ignore`, `/ct set`, a right-click)
--- or the profile does; a hidden page is only flagged, and repaints on its next show.
+-- or the profile does; a hidden page is only flagged, and repaints on its next show. A new profile
+-- with Race mode off cancels an armed race, as the switch does.
 local function repaint()
     local ctx = NS.pageCtx[PAGE]
     if ctx and NS.Helpers.RefreshPanel then NS.Helpers.RefreshPanel(ctx, true) end
@@ -236,6 +243,7 @@ do
     local bus = NS.NewBusTarget()
     if bus then
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
+            if path == "profile" then cancelArmedIfOff() end
             if path == NS.LateIgnore.PATH or path == "profile" then repaint() end
         end)
     end

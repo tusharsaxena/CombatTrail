@@ -788,7 +788,7 @@ Total.
 - resume: a stood-down login resumes nothing until the addon is enabled
 - resume: nothing is resumed on WoW Forever
 
-### test_race_settings.lua (17)
+### test_race_settings.lua (18)
 
 - race mode: the page, its rows and the verb are present on Retail, each declared retail
 - race mode: every control and verb is absent on WoW Forever
@@ -807,6 +807,7 @@ Total.
 - race verb: under the perf hold alone, race arm answers the capture line
 - race mode off: arming refuses and the Race window stays hidden
 - race mode off: an armed race is canceled with the switch; a running race runs on
+- race mode off: a profile switch to Race mode off cancels an armed race, as the switch does
 
 ### test_autoarm.lua (27)
 
@@ -1375,7 +1376,7 @@ Total.
 | test_late_ignore.lua | 12 |
 | test_race.lua | 56 |
 | test_race_resume.lua | 23 |
-| test_race_settings.lua | 17 |
+| test_race_settings.lua | 18 |
 | test_autoarm.lua | 27 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
@@ -1412,4 +1413,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1130** |
+| **Total** | **1131** |

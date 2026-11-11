@@ -125,5 +125,6 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   own list), and with enemy nameplates off only your target counts: a dummy across the room opens
   nothing until you target it. A nameplate that came up in combat with a sealed GUID is counted at the
   next rescan (the debounced hide's), not when it came.
-- **Race mode off stops new races only.** An armed race is canceled with the switch, but one already
-  running when it goes off runs on to its result; the switch never touches a saved race.
+- **Race mode off stops new races only.** An armed race is canceled with the switch (or a profile
+  that has it off), but one already running when it goes off runs on to its result; the switch never
+  touches a saved race.
