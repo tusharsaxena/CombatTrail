@@ -4,11 +4,13 @@
 -- behind half in the bar look with a red shortfall anchored to its fill's end, the ahead half green,
 -- both handed the same total. A total with no live pet source of its own runs against the best's
 -- merged pace; a separate pet source, player-only against the best's player damage; after the fight
--- the plain merged total. Every live value reaches the bar as the meter's secret, untouched.
+-- the plain merged total. Every live value reaches the bar as the meter's secret, untouched. While
+-- the fight is a race (Race mode plan Task C3), the race board's best is the reference, and a race on
+-- a shared session is not paced and draws no chart.
 
 local T = _G.CT_TEST
-local test, assertEqual, assertTrue, assertFalse =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 local H = dofile(T.root .. "/tests/hud_fixture.lua")(T)
 local near = H.near
 
@@ -158,4 +160,148 @@ test("pace: no best, or the layout's pace off, hides the bar", function()
     assertEqual(Hud.State(), "live", "a best to pace against")
     body = H.body(Hud, "live")
     assertFalse(body.paceShown == true, "the layout's switch hides it")
+end)
+
+-- ── a race's pace (Race mode plan Task C3, spec §4.2 and §4.4) ─────────────────────────────────
+-- On a training dummy through the REAL Fight, Race and Recorder (tests/race_fixture.lua fires the
+-- events). While the fight carries a `race` part the HUD paces on the race board the race would count
+-- on: its best's score over its length (DPS Race's straight line, the Race window's too), never the
+-- dummy's fight board. Retail only: WoW Forever has no race.
+
+local F = dofile(T.root .. "/tests/race_fixture.lua")(T)
+local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
+
+local function forever() return T.NS.Compat.IsForever() end
+
+-- A plain dummy fight: 600000 over 40 s. A race's session: 900000 by its 30 s buzzer.
+local PLAIN = { damage = 600000, dps = 15000, duration = 40,
+                spells = { { id = 29722, dmg = 400000, dps = 10000 }, { id = 348, dmg = 200000, dps = 5000 } } }
+local RACED = { damage = 900000, dps = 29032, duration = 31,
+                spells = { { id = 29722, dmg = 700000, dps = 22580 }, { id = 348, dmg = 200000, dps = 6452 } } }
+
+local function racer()
+    local S = F.fresh({ mutate = installPaint })
+    assert(S.NS.SetByPath("race.autoShow", false))
+    S.NS.db.profile.hud.show = "always"
+    return S
+end
+
+-- The dummy's fight board and the 30 s race board, one record each: a plain fight on session 20,
+-- then a race on session 21. Answers the fight's record and the race's.
+local function boards(S)
+    local start = F.pull(S, 101, 20, PLAIN)
+    F.damage(S, 20, start + 1, start + 39, 1)
+    F.settle(S, start + 40)
+    assertTrue(F.arm(S, 30, 160))
+    start = F.pull(S, 161, 21, RACED)
+    F.damage(S, 21, start + 1, start + 30, 1)
+    F.settle(S, start + 31)
+    local fightRec, raceRec
+    for _, r in ipairs(F.records(S)) do
+        if r.race then raceRec = r else fightRec = r end
+    end
+    assertTrue(fightRec ~= nil and raceRec ~= nil, "one fight and one race stored")
+    assertEqual(raceRec.race.score, 900000)
+    return fightRec, raceRec
+end
+
+test("hud pace: during a race the HUD paces against the race board's best, not the dummy's fight board", function()
+    if forever() then return end
+    local S = racer()
+    local Hud = S.NS.Hud
+    local _, raceRec = boards(S)
+    assertTrue(F.arm(S, 30, 210))
+    local start = F.pull(S, 211, 22, PLAIN)
+    F.damage(S, 22, start + 1, start + 8, 1)
+    local v = Hud.View()
+    assertEqual(v.pace and v.pace.id, raceRec.id, "the race board's best")
+    near(v.curve:damageAt(15), 450000, "its score over its length, times t")
+    near(v.curve:damageAt(45), 900000, "held at the score past the buzzer")
+    near(v.curve.duration, 30, "the race length is the curve's")
+    local pace = H.body(Hud, "live").parts.pace
+    assertTrue(pace ~= nil and pace.bar:IsShown(), "the bar is up")
+    local ref = 900000 * v.clock / 30
+    local lo = pace.behind:GetMinMaxValues()
+    local _, hi = pace.ahead:GetMinMaxValues()
+    near(lo, ref * 0.5, "lo around the race best's pace")
+    near(hi, ref * 1.5)
+end)
+
+test("hud pace: after the race the next plain dummy fight paces on the fight board again", function()
+    if forever() then return end
+    local S = racer()
+    local Hud = S.NS.Hud
+    local fightRec = boards(S)
+    assertTrue(F.arm(S, 30, 210))
+    local start = F.pull(S, 211, 22, PLAIN)
+    F.damage(S, 22, start + 1, start + 30, 1)
+    F.settle(S, start + 31)
+    assertEqual(#F.records(S), 3, "the second race saved")
+    start = F.pull(S, 260, 23, PLAIN)
+    F.damage(S, 23, start + 1, start + 5, 1)
+    local v = Hud.View()
+    assertNil(v.fight.race, "a plain fight")
+    assertEqual(v.pace and v.pace.id, fightRec.id, "the dummy's fight board again")
+    assertEqual(v.curve.id, fightRec.id, "the fight's own curve")
+    near(v.curve.duration, fightRec.duration, "over the fight's duration, not a race length")
+end)
+
+test("hud pace: a race canceled mid-pull paces its fight on the dummy's fight board again", function()
+    if forever() then return end
+    local S = racer()
+    local Hud = S.NS.Hud
+    local fightRec, raceRec = boards(S)
+    assertTrue(F.arm(S, 30, 210))
+    local start = F.pull(S, 211, 22, PLAIN)
+    F.damage(S, 22, start + 1, start + 3, 1)
+    assertEqual(Hud.View().pace.id, raceRec.id)
+    assertTrue(S.NS.Race.Cancel())
+    assertEqual(Hud.View().pace and Hud.View().pace.id, fightRec.id, "a plain dummy fight now")
+    assertEqual(Hud.View().curve.id, fightRec.id, "the fight's own curve")
+end)
+
+test("hud pace: a race part that lands after the HUD went live re-paces on RACE_STARTED", function()
+    if forever() then return end
+    local S = racer()
+    local NS, Hud = S.NS, S.NS.Hud
+    local fightRec, raceRec = boards(S)
+    local start = F.pull(S, 211, 22, PLAIN)
+    F.damage(S, 22, start + 1, start + 2, 1)
+    local fight = Hud.View().fight
+    assertEqual(Hud.View().pace.id, fightRec.id, "live before the race part: the fight board")
+    -- The bus keeps no order between receivers: the part arrives once the HUD already paced.
+    fight.race = { kind = "boss", length = 30, status = "running", flags = {} }
+    NS.SendBus(NS.MSG.RACE_STARTED, fight.race, fight)
+    assertEqual(Hud.View().pace and Hud.View().pace.id, raceRec.id, "re-paced on the race board")
+    near(Hud.View().curve:damageAt(15), 450000)
+    fight.race = nil
+end)
+
+local EARLIER = { damage = 200000, dps = 10000, duration = 20,
+                  spells = { { id = 29722, dmg = 150000, dps = 7500 }, { id = 348, dmg = 50000, dps = 2500 } } }
+local CARRIED = { damage = 1200000, dps = 20000, duration = 60,
+                  spells = { { id = 29722, dmg = 950000, dps = 15800 }, { id = 348, dmg = 250000, dps = 4100 } } }
+
+test("hud pace: a race on a shared session draws no pace bar and no chart, live or on the card", function()
+    if forever() then return end
+    local S = racer()
+    local Hud = S.NS.Hud
+    F.whole(S, 10)                      -- a best on the 10 s race board
+    S.meter.SetSession(5, EARLIER)      -- the last fight's session, still alive at the arm
+    assertTrue(F.arm(S, 10, 130))
+    F.enter(S, 131)
+    S.meter.SetSession(5, CARRIED)      -- the pull lands in it: its live total holds the arm's damage
+    F.hit(S, 132, 5)
+    F.damage(S, 5, 133, 137, 1)
+    assertTrue(S.NS.Fight.Current().sharedSession)
+    assertEqual(Hud.State(), "noBest", "not paced: the live total cannot be netted")
+    local live = H.body(Hud, "live")
+    assertFalse(live.paceShown == true, "no pace bar")
+    assertFalse(live.chartShown == true, "no chart")
+    F.damage(S, 5, 138, 142, 1)
+    F.settle(S, 143)
+    assertEqual(Hud.State(), "over")
+    local over = H.body(Hud, "over")
+    assertFalse(over.paceShown == true, "no pace bar on the card")
+    assertFalse(over.chartShown == true, "no chart on the card")
 end)

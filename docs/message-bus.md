@@ -21,10 +21,10 @@ stand-down drops it and the stand-up replays it (slash-commands-§7).
 | `FIGHTS_CHANGED` | Recorder, Retention | none | Bests, RaceWindow (a deleted result card goes back to Arm Race), Results, History page |
 | `RACE_STATE_CHANGED` | Race, on every transition | `(race, from, to)` | AutoArm, Countdown (the marks armed on `running`, gone on any other state), RaceWindow (the body on screen, the arm's and the resume's opening, the idle edge's close) |
 | `RACE_ARMED` | Race.Arm | `(race)` | Share (the armed line); the Race window reacts to the state change |
-| `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | Hud (a race's fight opens the HUD whatever its own rules say, ruling X7) |
+| `RACE_STARTED` | Race, on the race fight's `FIGHT_FIRST_HIT` | `(race, fight)` | Hud (a race's fight opens the HUD whatever its own rules say, ruling X7; the live fight paces on its race board, Task C3) |
 | `RACE_BUZZER` | Race, at the race length | `(race)` | Countdown (the raid warning's STOP and its sound) |
 | `RACE_RESULT` | Race, inside the race fight's `FIGHT_SAVED` or `FIGHT_SKIPPED`; or from `Race.Resume` itself for a resumed race whose session is gone | `(record, race)`; `record` nil when nothing was stored (a lost race) | RaceWindow (opens on the result card), BestToast (a race's new best), Share (the score line, or the lost line) |
-| `RACE_CANCELED` | Race.Cancel, or a pull not on a training dummy | `(reason)`: `"canceled"` or `"not_dummy"` | none yet; the Race window reacts to the state change |
+| `RACE_CANCELED` | Race.Cancel, or a pull not on a training dummy | `(reason)`: `"canceled"` or `"not_dummy"` | Hud (the live fight, its race part gone, paces on its dummy's fight board again, Task C3); the Race window reacts to the state change |
 
 The race messages are Retail's (Race mode is absent on WoW Forever, clients-§4): nothing sends them
 there. A consumer in parentheses arrives with the task named.

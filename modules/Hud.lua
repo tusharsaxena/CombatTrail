@@ -14,7 +14,13 @@ local _, NS = ...
 --
 -- A RACE'S FIGHT (race plan ruling X7) opens it on its first hit whatever `hud.show`, `hud.instancesOnly`
 -- and `general.hudInCombat` say (RACE_STARTED re-decides a fight already on screen); only the
--- player's close on that fight holds it shut.
+-- player's close on that fight holds it shut. While the fight carries its `race` part the HUD paces on
+-- the race board the race would count on (race plan Task C3, spec §4.2): Hud.PaceRecord probes with
+-- the part's kind and length, and the curve is the race best's straight line (HudBest.RaceCurve), the
+-- Race window's own. RACE_STARTED reads the pace again (the bus keeps no order between receivers), and
+-- RACE_CANCELED, the part gone, paces the fight on its dummy's fight board again. A fight on a SHARED
+-- session (ruling X3: its live total holds the damage from before the arm) is not paced and draws no
+-- chart, live or on the card, as in DPS Race.
 --
 -- WHEN IT OPENS (`hud.show`). "auto" (default): on the first hit of every fight (FIGHT_TICK after the
 -- fight's firstHitT is set; the Master controls' `general.hudInCombat` off turns this off), and
@@ -27,7 +33,8 @@ local _, NS = ...
 -- auto-opened HUD when its fight ends instead of showing the card.
 --
 -- WHAT RUNS, AND WHEN. Nothing is registered with the client: the HUD hears the bus (FIGHT_STARTED,
--- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, RACE_STARTED, SETTINGS_CHANGED) on its own target. While a
+-- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, RACE_STARTED, RACE_CANCELED, SETTINGS_CHANGED) on its
+-- own target. While a
 -- fight is live and the window is up, each FIGHT_TICK (4 Hz, combat only) reads NS.Meter.ReadLive
 -- once and redraws; nothing else polls, and no OnUpdate is ever set. The fade is one AceTimer on the
 -- addon object, so the stand-down's CancelAllTimers takes it, and Suspend drops it too.
@@ -200,18 +207,35 @@ local function lastOnBoard(probe, list)
     return nil
 end
 
+-- A fight on a shared session (race plan ruling X3): its live total holds the damage from before the
+-- race's arm, which cannot be netted in combat.
+local function onSharedSession(fight)
+    if fight.sharedSession == true then return true end
+    local race = fight.race
+    return type(race) == "table" and type(race.flags) == "table" and race.flags.sharedSession == true
+end
+
+-- The record the pace looks up: the fight's board, or while it carries its race part the race board
+-- (Bests.Key reads a probe with a `race` part as a race: its kind and length).
+local function probeOf(fight, ident)
+    local snap = type(fight.snapshot) == "table" and fight.snapshot or {}
+    local probe = { who = snap.who, boardKey = NS.Identity.BoardKey(ident), identity = ident, status = "final" }
+    local race = fight.race
+    if type(race) == "table" then probe.race = { kind = race.kind, length = race.length } end
+    return probe
+end
+
 --- The stored fight the live fight is paced against (`hud.paceAgainst`): its board's best, its
---- board's newest fight, or nil (none, an unknown target, a board with nothing on it). A sample
---- fight is paced against the sample history.
+--- board's newest fight, or nil (none, an unknown target, a board with nothing on it, a shared
+--- session). While the fight carries its race part, the board is its race board. A sample fight is
+--- paced against the sample history.
 --- @param fight table
 --- @param ident table|nil  the fight's identity (Identity.Resolve), read when nil
 --- @return table|nil record
 function Hud.PaceRecord(fight, ident)
     local against = setting("hud.paceAgainst")
-    if against == "none" or type(fight) ~= "table" then return nil end
-    ident = ident or identityOf(fight)
-    local snap = type(fight.snapshot) == "table" and fight.snapshot or {}
-    local probe = { who = snap.who, boardKey = NS.Identity.BoardKey(ident), identity = ident, status = "final" }
+    if against == "none" or type(fight) ~= "table" or onSharedSession(fight) then return nil end
+    local probe = probeOf(fight, ident or identityOf(fight))
     if fight.sample then
         local Source = NS.ResultsSource
         if against == "last" then return lastOnBoard(probe, Source.All()) end
@@ -231,11 +255,25 @@ local function targetLine(ident)
     return table.concat(parts, " \194\183 ")
 end
 
+-- The pace record's curve: a race's straight line (its score over its length), else the fight's.
+local function curveOf(pace)
+    if not pace then return nil end
+    if NS.RaceRecord.IsRace(pace) then return NS.HudBest.RaceCurve(pace) end
+    return NS.HudBest.Curve(pace.id, pace)
+end
+
 local function newView(fight)
     local ident = identityOf(fight)
     local pace = Hud.PaceRecord(fight, ident)
-    return { fight = fight, ident = ident, targetLine = targetLine(ident), pace = pace,
-             curve = pace and NS.HudBest.Curve(pace.id, pace) or nil }
+    return { fight = fight, ident = ident, targetLine = targetLine(ident), pace = pace, curve = curveOf(pace),
+             raced = fight.race ~= nil }
+end
+
+-- The live fight's pace read again (its race part came or went after the first hit).
+local function repace(fight)
+    local pace = Hud.PaceRecord(fight, view.ident)
+    view.pace, view.curve, view.raced = pace, curveOf(pace), fight.race ~= nil
+    debug("fight %s paced again (pace %s)", tostring(fight.id), pace and tostring(pace.id) or "none")
 end
 
 -- The over card's best: is the saved fight its board's best now, and by how much over the one before.
@@ -675,6 +713,8 @@ local function fillExtras(v)
     else
         v.chartView = NS.HudChart.LiveView(cur, v.curve, v.live, sinceStart(), cooldowns)
     end
+    -- A shared session's columns hold the damage from before the race's arm: no chart (DPS Race's rule).
+    if cur and onSharedSession(cur) then v.chartView = nil end
 end
 
 -- The view the bodies draw: the fight's facts plus this moment's settings and figures.
@@ -985,14 +1025,24 @@ function Hud.OnFightSaved(record)
     if key == "over" then Hud.Refresh() end
 end
 
---- A race's clock started on `fight` (RACE_STARTED): a fight already on screen that the HUD's own
---- rules kept shut opens now (ruling X7), whichever of FIGHT_STARTED's receivers ran first.
+--- A race's clock started on `fight` (RACE_STARTED): the fight already live paces on its race board
+--- now (Task C3), and one the HUD's own rules kept shut opens (ruling X7), whichever of FIGHT_STARTED's
+--- receivers ran first.
 function Hud.OnRaceStarted(fight)
-    if isDown() or type(fight) ~= "table" or fight ~= cur or key ~= "live" or wanted then return end
-    wanted = autoAllowed(fight)
+    if isDown() or type(fight) ~= "table" or fight ~= cur or key ~= "live" then return end
+    repace(fight)
+    if not wanted then wanted = autoAllowed(fight) end
     if not Hud.IsShown() then return end
     readLive()
     Hud.Refresh()
+end
+
+--- A race was canceled (RACE_CANCELED): the live fight it rode, its part gone, paces on its dummy's
+--- fight board again.
+function Hud.OnRaceCanceled()
+    if isDown() or not cur or key ~= "live" or not view.raced or cur.race ~= nil then return end
+    repace(cur)
+    if Hud.IsShown() then Hud.Refresh() end
 end
 
 function Hud.OnFightSkipped(fight, reason)
@@ -1018,6 +1068,7 @@ do
         bus:RegisterMessage(NS.MSG.FIGHT_SAVED, function(_, record) Hud.OnFightSaved(record) end)
         bus:RegisterMessage(NS.MSG.FIGHT_SKIPPED, function(_, fight, reason) Hud.OnFightSkipped(fight, reason) end)
         bus:RegisterMessage(NS.MSG.RACE_STARTED, function(_, _, fight) Hud.OnRaceStarted(fight) end)
+        bus:RegisterMessage(NS.MSG.RACE_CANCELED, function() Hud.OnRaceCanceled() end)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path, value) onSettings(path, value) end)
     end
 end

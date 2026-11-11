@@ -340,33 +340,14 @@ local function bestFor(race)
     return paceBest.record
 end
 
--- The best's player share of its merged damage (1 with no pet part): the live total is the player's
--- alone where the pet has a live source of its own (HudBest.LiveView's playerOnly).
-local function playerShare(record)
-    local d = type(record.damage) == "table" and record.damage or {}
-    local merged, player = d.merged, d.player
-    if type(merged) ~= "number" or merged <= 0 or type(player) ~= "number" or player < 0 then return 1 end
-    return math.min(1, player / merged)
-end
-
--- The best's straight-line pace (spec §4.4): its score over its length, times t; the player's own
--- part of it at the same share.
-local function lineOf(record)
-    local score, length = record.race.score, record.race.length
-    local rate = (type(score) == "number" and type(length) == "number" and length > 0) and score / length or 0
-    local playerRate = rate * playerShare(record)
-    local function clip(t) return math.max(0, math.min(tonumber(t) or 0, length or 0)) end
-    return { damageAt = function(_, t) return rate * clip(t) end,
-             playerAt = function(_, t) return playerRate * clip(t) end }
-end
-
 -- The running pace bar: the live total against the race board's best at the race clock. None on a
 -- shared session (its live total holds damage from before the arm) or with no best.
 local function runningPace(race, elapsed)
     if type(race.flags) == "table" and race.flags.sharedSession then return nil, L["not paced: shared session"] end
-    local best = bestFor(race)
-    if not best or type(best.race) ~= "table" then return nil, L["no best yet"] end
-    return NS.HudBest.LiveView(lineOf(best), elapsed, live), nil
+    -- The best's straight line (spec §4.4), the one the DPS HUD paces this race on too.
+    local line = NS.HudBest.RaceCurve(bestFor(race))
+    if not line then return nil, L["no best yet"] end
+    return NS.HudBest.LiveView(line, elapsed, live), nil
 end
 
 local function runningView(v)

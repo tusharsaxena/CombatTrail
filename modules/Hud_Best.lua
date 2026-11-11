@@ -3,7 +3,9 @@ local _, NS = ...
 -- against (modules/Hud.lua PaceRecord: the board's best, or its newest fight) had done by each second
 -- of its own clock, and the pace bar's ends around that figure. Adapted from DPS Race @045f479
 -- (modules/Hud_Best.lua and modules/Hud_Chart.lua's Pace and PaceBounds) without its race: no race
--- length, no idle "Your best" card; a fight's own duration is the curve's length.
+-- length, no idle "Your best" card; a fight's own duration is the curve's length. A RACE best is paced
+-- on its own straight line instead (HudBest.RaceCurve, Race mode plan Task C3): its score over its
+-- race length, held at the score past the buzzer, read by the HUD and the Race window alike.
 --
 -- THE CURVE (HudBest.Curve) comes from the best's SESSION SLICES when this session holds them
 -- (modules/Slices.lua, by the record's id) and every step it would read is a plain number, else it
@@ -125,6 +127,37 @@ function Best.Curve(recordID, held)
     return setmetatable({ id = record.id, duration = duration, merged = merged, player = player,
                           rate = merged / duration, playerRate = player / duration,
                           points = points, fromSlices = points ~= nil }, Curve)
+end
+
+-- A race best's straight line (Race mode spec §4.4, DPS Race's Chart.Pace): its score by t, held at
+-- the score past the race length; the player's own part at the record's share of its merged damage.
+local RaceLine = {}
+RaceLine.__index = RaceLine
+
+local function clip(line, t)
+    return math.max(0, math.min(tonumber(t) or 0, line.duration))
+end
+
+function RaceLine:damageAt(t) return self.rate * clip(self, t) end
+function RaceLine:playerAt(t) return self.playerRate * clip(self, t) end
+
+--- The pace curve of a stored RACE (a record with a `race` part): its score over its race length,
+--- times t, held at the score past the buzzer (the tail is in the score, as in DPS Race), the player's
+--- own part at the record's player share. The shape is Best.Curve's (`duration` is the race length),
+--- so the HUD's pace bar and chart and the Race window's pace bar read one line. Nil for a record that
+--- is no race, or one with no plain score or length to pace from.
+--- @param record table
+--- @return table|nil curve
+function Best.RaceCurve(record)
+    local race = type(record) == "table" and record.race or nil
+    if type(race) ~= "table" then return nil end
+    local score, length = positive(race.score), positive(race.length)
+    if not (score and length) then return nil end
+    local merged, player = damageOf(record)
+    local share = (merged and player) and math.min(1, player / merged) or 1
+    return setmetatable({ id = record.id, duration = length, merged = score, player = score * share,
+                          rate = score / length, playerRate = score * share / length, fromSlices = false },
+                        RaceLine)
 end
 
 --- The configured pace bar range (`hud.paceRange`), held to the slider's bounds at read time.

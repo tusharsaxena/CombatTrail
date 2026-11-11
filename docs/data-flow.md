@@ -87,7 +87,9 @@ FIGHT_ENDED
 
 - **The HUD** (modules/Hud.lua and its parts): in combat the live body copies opaque values into
   StatusBars and secret-safe text (spec §3); the pace bar's fill is set against the paced fight's
-  damage at the same second (modules/Hud_Best.lua). After FIGHT_ENDED the card draws the plain read:
+  damage at the same second (modules/Hud_Best.lua); while the fight carries its `race` part that is
+  the race board's best, on its score over its length, and a race on a shared session is not paced
+  and draws no chart (Race mode plan Task C3). After FIGHT_ENDED the card draws the plain read:
   shares, the New best chip from `Bests`, and Saved or the skip reason.
 - **The Results window** (modules/Results.lua) reads `Results_Source`, which is the store or, in test
   mode and the sim, the sample history. The list, the detail, the timeline, the compare and the gear
