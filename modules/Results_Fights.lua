@@ -480,9 +480,15 @@ local function dpsOf(record)
     return type(dps) == "number" and dps > 0 and dps or nil
 end
 
--- The DPS a row may lead its group with: an incomplete race is compared, never the best (DPS Race's).
+--- Whether `record` is a race that ended before its buzzer: compared, never the best, and its Delta
+--- shown muted (DPS Race's).
+function Fights.Unranked(record)
+    return NS.RaceRecord.IsRace(record) and record.race.status ~= "complete"
+end
+
+-- The DPS a row may lead its group with: an incomplete race is compared, never the best.
 local function leadDps(record)
-    if NS.RaceRecord.IsRace(record) and record.race.status ~= "complete" then return nil end
+    if Fights.Unranked(record) then return nil end
     return dpsOf(record)
 end
 
@@ -555,6 +561,7 @@ function Fights.DeltaText(record, ctx)
     if Fights.IsTop(record, ctx) then return L["%.1f%%"]:format(0), C.green end
     local pct = Fights.Delta(record, ctx.top)
     if pct == nil then return DASH, C.dim end
+    if Fights.Unranked(record) then return L["%+.1f%%"]:format(pct), C.dim end
     if pct == 0 then return L["%.1f%%"]:format(0), C.green end
     return L["%+.1f%%"]:format(pct), pct < 0 and C.red or C.green
 end
@@ -574,6 +581,7 @@ function Fights.DeltaTip(record, ctx, grouped)
         local second = ctx.second and dpsOf(ctx.second)
         if second then lines[#lines + 1] = L["Leads the next one by %s."]:format(NS.Format.SignedPct((ctx.top / second - 1) * 100)) end
     end
+    if Fights.Unranked(record) then lines[#lines + 1] = L["An incomplete race is compared, but never sets the best."] end
     if NS.ResultsSource.IsBest(record) then lines[#lines + 1] = { L["Your best on this board."], C.blue[1], C.blue[2], C.blue[3] } end
     return lines
 end

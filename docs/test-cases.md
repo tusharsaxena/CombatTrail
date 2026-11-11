@@ -1165,7 +1165,7 @@ Total.
 - sections: a rebuilt pane reads the folds back; Reset position keeps them
 - sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
-### test_results_races.lua (20)
+### test_results_races.lua (23)
 
 - results: Races shows only races, Fights only fights, All both
 - results: under Races the length, dummy kind, Hide flagged and Include incomplete filters apply
@@ -1187,6 +1187,9 @@ Total.
 - results: Race mode off still lists saved races
 - results: the Races bar fits the window's least width
 - results: switching to Races shows the race filters and hides Bosses only
+- results: a race row's chips and target text follow a column drag
+- results: an incomplete race's Delta is shown muted, compared but never the best
+- results: the sample history's clean board drops on an ignore-list edit
 
 ### test_share.lua (13)
 
@@ -1529,7 +1532,7 @@ Total.
 | test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
-| test_results_races.lua | 20 |
+| test_results_races.lua | 23 |
 | test_share.lua | 13 |
 | test_timeline.lua | 12 |
 | test_timeline_marks.lua | 11 |
@@ -1552,4 +1555,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1254** |
+| **Total** | **1257** |

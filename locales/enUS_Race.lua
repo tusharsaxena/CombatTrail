@@ -353,4 +353,6 @@ L["%d ignored late casts"] = "%d ignored late casts"
 L["On the late-cast ignore list, so no flag. Right-click to count a spell again."] =
     "On the late-cast ignore list, so no flag. Right-click to count a spell again."
 L["DPS \194\183 Incomplete"] = "DPS \194\183 Incomplete"
+L["An incomplete race is compared, but never sets the best."] =
+    "An incomplete race is compared, but never sets the best."
 L["Ignore for late casts"] = "Ignore for late casts"

@@ -158,6 +158,8 @@ function Detail.DeltaBox(record, ctx)
     end
     local pct = Fights().Delta(record, ctx.top)
     if pct == nil then return L["Delta"], DASH, C.dim, false end
+    -- An incomplete race is compared, muted: it never sets the best.
+    if Fights().Unranked(record) then return L["Delta"], NS.Format.SignedPct(pct), C.dim, false end
     return L["Delta"], NS.Format.SignedPct(pct), pct < 0 and C.red or C.green, false
 end
 

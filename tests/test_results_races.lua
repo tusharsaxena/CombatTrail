@@ -549,3 +549,63 @@ test("results: switching to Races shows the race filters and hides Bosses only",
     v:SetFilter("days", 0)
     assertEqual(v:Count(), 1, "a saved Bosses only never empties the Races list")
 end)
+
+-- ── review fixes ────────────────────────────────────────────────────────────────────────────────
+
+test("results: a race row's chips and target text follow a column drag", function()
+    local NS = fresh()
+    if forever() then return end
+    local late = raceRec(NS, { id = "late", flags = { lateCasts = { { t = 2.5, spellID = 133 } } } })
+    save(NS, late)
+    local _, v = open(NS)
+    v:SetFilter("character", "all")
+    v:SetFilter("days", 0)
+    local function placed()
+        local cell = drawn(v).late.cells.target
+        local _, _, _, textX = cell.fs:GetPoint(1)
+        return cell.x, textX
+    end
+    local x1, textX = placed()
+    local lead = textX - x1
+    assertTrue(lead > 0, "the text after the chips: " .. tostring(lead))
+    v.list:DragColumn("character", NS.ResultsFights.CHARACTER_MIN)
+    v.list:EndColumnDrag("character")
+    local x2, textX2 = placed()
+    assertTrue(x2 ~= x1, "the drag moved the target column: " .. tostring(x2))
+    assertEqual(textX2 - x2, lead, "the text still after the chips")
+end)
+
+test("results: an incomplete race's Delta is shown muted, compared but never the best", function()
+    local NS = fresh()
+    local F = NS.ResultsFights
+    local C = NS.ResultsTable.COLORS
+    local done = raceRec(NS, { id = "done", score = 300000 })
+    local low = raceRec(NS, { id = "low", score = 150000 })
+    local inc = raceRec(NS, { id = "inc", status = "incomplete", endedAt = 10, score = 200000 })
+    local ctx = F.Context({ done, low, inc })
+    local _, color = F.DeltaText(inc, ctx)
+    assertEqual(color, C.dim, "muted, though its DPS is above the best's")
+    local _, lowColor = F.DeltaText(low, ctx)
+    assertEqual(lowColor, C.red, "a complete race below the best keeps its red")
+    local _, _, boxColor = NS.ResultsDetail.DeltaBox(inc, ctx)
+    assertEqual(boxColor, C.dim, "the detail's Delta box says the same")
+    local tip = table.concat((function()
+        local out = {}
+        for i, line in ipairs(F.DeltaTip(inc, ctx, true)) do out[i] = type(line) == "table" and line[1] or line end
+        return out
+    end)(), "\n")
+    assertTrue(tip:find("never sets the best", 1, true) ~= nil, tip)
+end)
+
+test("results: the sample history's clean board drops on an ignore-list edit", function()
+    local NS = fresh()
+    if forever() then return end      -- the late-cast ignore list is Race mode's, Retail only
+    local S = NS.ResultsSource
+    local fast = raceRec(NS, { id = "fast", score = 900000, flags = { lateCasts = { { t = 2.5, spellID = 133 } } } })
+    local slow = raceRec(NS, { id = "slow", score = 300000 })
+    assertTrue(S.Use({ fights = { fast, slow } }))
+    assertEqual(S.CleanFor(slow), slow, "the late cast keeps the faster race off the clean board")
+    NS.LateIgnore.Ignore(133)
+    assertEqual(S.CleanFor(slow), fast, "the edit dropped the sample's clean board")
+    S.Use(nil)
+end)

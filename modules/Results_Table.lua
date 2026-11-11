@@ -401,24 +401,35 @@ local function bindChip(chip, item)
     return w
 end
 
--- The cell's chips from its left edge (placeCell's x), the text after them: none drawn, the text at
--- its own place.
+-- Anchor the cell's chips from its left edge (placeCell's x), at the widths its last bind drew, and
+-- the text after them; with none drawn, the text at its own place. placeCell runs it again, so a
+-- column drag or a resize that moves the cell takes its chips along.
+local function placeChips(cell)
+    local row, x = cell.rowOf(), 0
+    for i, w in ipairs(cell.chipW or {}) do
+        local chip = cell["chip" .. i]
+        chip:ClearAllPoints()
+        chip:SetPoint("LEFT", row, "LEFT", cell.x + x, 0)
+        x = x + w + Tbl.CHIP_GAP
+    end
+    cell.fs:ClearAllPoints()
+    cell.fs:SetPoint("LEFT", row, "LEFT", cell.x + x, 0)
+    cell.fs:SetWidth(math.max(10, cell.w - x))
+end
+
+-- Paint the record's chips (the unused ones hidden) and place them.
 local function bindChips(cell, col, record)
     local list = col.chips(record) or {}
-    local x = 0
+    cell.chipW = {}
     for i = 1, Tbl.CHIP_MAX do
         local chip, item = cell["chip" .. i], list[i]
         if item then
-            chip:ClearAllPoints()
-            chip:SetPoint("LEFT", cell.rowOf(), "LEFT", cell.x + x, 0)
-            x = x + bindChip(chip, item) + Tbl.CHIP_GAP
+            cell.chipW[i] = bindChip(chip, item)
         else
             chip:Hide()
         end
     end
-    cell.fs:ClearAllPoints()
-    cell.fs:SetPoint("LEFT", cell.rowOf(), "LEFT", cell.x + x, 0)
-    cell.fs:SetWidth(math.max(10, cell.w - x))
+    placeChips(cell)
 end
 
 function Bind.text(cell, col, record)
@@ -540,6 +551,7 @@ local function placeCell(row, cell, col, x, w)
     cell.fs:SetWidth(math.max(10, w))
     -- Where a chip column's Bind re-anchors its text (a closure: showCells shows every table part).
     cell.rowOf, cell.x, cell.w = function() return row end, x, w
+    if cell.chipW then placeChips(cell) end
     if not cell.bar then return end
     -- The bar spans the cell and a little of the gap each side; the text sits inside it.
     cell.barW = w + 4
