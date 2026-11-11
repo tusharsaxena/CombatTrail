@@ -96,7 +96,7 @@ end
 
 -- ── the shipped view ────────────────────────────────────────────────────────────────────────────
 
-test("results: default view: current character, last 7 days, grouped by board", function()
+test("results: default view: current character, last 7 days, grouped by date and character", function()
     local NS = fresh()
     local v = NS.db.profile.results.view
     assertEqual(v.character, "current")
@@ -106,18 +106,24 @@ test("results: default view: current character, last 7 days, grouped by board", 
     assertEqual(v.difficulty, "all")
     assertEqual(v.days, 7)
     assertEqual(v.bossesOnly, false)
-    assertEqual(v.group, "board")
+    assertEqual(v.group, "datechar", "Date + character, the owner's default (2026-11-11)")
     local recent, older = rec(NS, { id = "recent", days = 1 }), rec(NS, { id = "old", days = 10 })
     local alt = rec(NS, { id = "alt", mine = false, days = 1 })
     local week = rec(NS, { id = "week", days = 6 })
     save(NS, recent, older, alt, week)
     assertEqual(ids(NS.ResultsFights.Rows(nil, NOW)), "recent,week", "mine, in the last 7 days")
     local _, view = open(NS)
-    assertEqual(view.filters.group, "board")
+    assertEqual(view.filters.group, "datechar")
     assertEqual(view:Count(), 2)
-    local first = view.list:Visible()[1]
-    assertTrue(first.group ~= nil, "the first row is a board's group header")
-    assertTrue(first.group.label:find("Angry Boar", 1, true) ~= nil, "the header names the board: " .. first.group.label)
+    local visible = view.list:Visible()
+    local first = visible[1]
+    assertTrue(first.group ~= nil, "the first row is a day's group header")
+    local me = NS.Identity.Who().name
+    assertTrue(first.group.label:find(NS.ResultsTable.Date(recent.t, "%d %b %Y"), 1, true) ~= nil,
+        "the newest day first: " .. first.group.label)
+    assertTrue(first.group.label:find(me, 1, true) ~= nil, "and the character: " .. first.group.label)
+    assertEqual(visible[2].record.id, "recent")
+    assertTrue(visible[3].group ~= nil, "the older day is its own group")
 end)
 
 test("results: the date range and the character filter", function()
@@ -162,7 +168,7 @@ test("results: the filters are faceted: each list reads the fights the other fil
     assertEqual(values(o.board), "all,c:3000", "a content pick narrows the targets")
     assertTrue(values(o.content):find("dungeon", 1, true) ~= nil, "the content list ignores its own pick")
     assertEqual(values(o.days), "1,7,30,0")
-    assertEqual(values(o.group), "board,character,spec,content,none")
+    assertEqual(values(o.group), "datechar,date,board,character,spec,content,none")
 end)
 
 test("results: the Spec dropdown and grouping are on both clients; Forever names a talent tree (D5, D11)", function()
@@ -325,7 +331,7 @@ test("results: a header click sorts, a second flips it, and a saved view keeps t
     assertEqual(v.group, "none")
 end)
 
-test("results: Save view persists results.view; Reset view puts the shipped one back", function()
+test("results: Save persists results.view; Clear goes back to it; Reset deletes it", function()
     local NS = fresh()
     local _, view = open(NS)
     view:SetFilter("days", 30)
@@ -337,9 +343,14 @@ test("results: Save view persists results.view; Reset view puts the shipped one 
     -- A new window (the next login) opens on the saved view.
     local again = NS.ResultsFights.Build(NS.Results.__ui().body, {})
     assertEqual(again.filters.days, 30)
+    view:SetFilter("days", 1)
+    assertTrue(view:ClearView())
+    assertEqual(view.filters.days, 30, "Clear: back to the saved view")
+    assertEqual(NS.db.profile.results.view.days, 30, "which stays saved")
     assertTrue(view:ResetView())
-    assertEqual(NS.db.profile.results.view.days, 7)
+    assertEqual(NS.ResultsFights.SavedView().days, 7, "Reset: the saved view is gone, the shipped one reads")
     assertEqual(view.filters.bossesOnly, false)
+    assertEqual(view.filters.group, "datechar")
 end)
 
 -- ── the row menu ────────────────────────────────────────────────────────────────────────────────
@@ -460,7 +471,7 @@ test("results: the verb, Reset position and the Locked row", function()
     NS.ResetPositions()
     assertEqual(w.x, 0)
     assertEqual(w.y, 0)
-    assertEqual(w.width, NS.defaults.profile.results.window.width)
+    assertEqual(w.width, nil, "Reset position clears the stored width: the window opens at its least")
     NS.ApplyLocked(true)
     assertTrue(NS.Results.IsShown(), "the lock leaves the browser alone")
 end)
@@ -591,8 +602,8 @@ test("results: Character is a fixed 104 px column and the target column takes th
     local cols = F.Columns()
     local ci, ti = indexOf(cols, "character"), indexOf(cols, "target")
     assertEqual(F.CHARACTER_W, 104)
-    local shipped = NS.defaults.profile.results.window.width
-    for _, width in ipairs({ NS.Results.MIN_WIDTH, shipped, 1400 }) do
+    local shipped = NS.Results.MIN_WIDTH
+    for _, width in ipairs({ shipped, 1200, 1400 }) do
         local place = Tbl.Columns(cols, width)
         assertEqual(place[ci].w, 104, "Character at " .. width)
         assertTrue(place[ti].w >= F.TARGET_W, "the target column keeps its minimum at " .. width)
@@ -600,7 +611,16 @@ test("results: Character is a fixed 104 px column and the target column takes th
         assertTrue(last.x + last.w <= width - Tbl.SCROLLBAR_W - Tbl.PAD, "the columns fit at " .. width)
     end
     assertTrue(Tbl.Columns(cols, 1400)[ti].w > Tbl.Columns(cols, shipped)[ti].w, "a wider window widens the target")
-    assertTrue(NS.defaults.profile.results.window.width >= NS.Results.MIN_WIDTH, "the shipped width fits")
+end)
+
+test("results: the window opens at its least width, which no shipped number overrides", function()
+    local NS = fresh()
+    assertEqual(NS.defaults.profile.results.window.width, nil, "no width ships")
+    assertEqual(select(5, NS.Results.Placement()), NS.Results.MinWidth(), "the collapsed window at its least")
+    NS.db.profile.results.window.width = 10
+    assertEqual(select(5, NS.Results.Placement()), NS.Results.MinWidth(), "a stored width below it is held to it")
+    NS.db.profile.results.window.width = NS.Results.MIN_WIDTH + 50
+    assertEqual(select(5, NS.Results.Placement()), NS.Results.MinWidth() + 50, "a dragged width stands")
 end)
 
 test("results: a stored Character width wins, within the room the target column leaves", function()
@@ -620,6 +640,7 @@ test("results: a stored Character width wins, within the room the target column 
     assertEqual(full[ti].w, F.TARGET_W, "and the target sits at its minimum")
     assertTrue(full[#full].x + full[#full].w <= least - Tbl.SCROLLBAR_W - Tbl.PAD, "the columns still fit")
     NS.db.profile.results.columns.character = 150
+    NS.db.profile.results.window.width = 1100   -- dragged wider than its least: room for the Character drag
     local _, view = open(NS)
     assertEqual(view.list.place[ci].w, 150, "the window lays out the stored width")
 end)
@@ -629,6 +650,7 @@ test("results: dragging the Character header's edge resizes it and stores the wi
     local NS = fresh(function(m) m.GetCursorPosition = function() return cursor, 0 end end)
     local cols = NS.ResultsFights.Columns()
     local ci = indexOf(cols, "character")
+    NS.db.profile.results.window.width = 1100   -- dragged wider than its least: room for the Character drag
     local _, view = open(NS)
     local grip = view.list.heads[ci].grip
     assertTrue(grip ~= nil, "the Character header has a grip")
@@ -650,6 +672,7 @@ test("results: a window hidden while the Character edge is held ends the drag an
     local cursor = 0
     local NS = fresh(function(m) m.GetCursorPosition = function() return cursor, 0 end end)
     local ci = indexOf(NS.ResultsFights.Columns(), "character")
+    NS.db.profile.results.window.width = 1100   -- dragged wider than its least: room for the Character drag
     local _, view = open(NS)
     local grip = view.list.heads[ci].grip
     cursor = 500
@@ -669,6 +692,7 @@ test("results: a profile switch lays the columns out at the new profile's widths
     local NS = fresh()
     local ci = indexOf(NS.ResultsFights.Columns(), "character")
     NS.db.profile.results.columns.character = 150
+    NS.db.profile.results.window.width = 1100   -- dragged wider than its least: room for the Character drag
     local _, view = open(NS)
     assertEqual(view.list.place[ci].w, 150, "the first profile's width")
     -- A profile that has seen the first-run skin picker, with no dragged widths.
@@ -873,4 +897,48 @@ test("results: the Damage and DPS bars are the palette's blue, not the class col
     Skin:SetChoice("CombatTrail", "ka0s", W.PROBE_KEY)
     view:Refresh()
     for _, key in ipairs({ "damage", "dps" }) do isPalette(barColor("fast", key), key .. " under the probe skin") end
+end)
+
+-- ── the owner's 2026-11-11 round: stripes, the date groupings, Clear ──
+
+test("results: the list's rows are striped on a white background, every other one tinted", function()
+    local NS = fresh()
+    save(NS, rec(NS, { id = "a" }), rec(NS, { id = "b" }), rec(NS, { id = "c" }))
+    local _, view = open(NS)
+    view:SetFilter("group", "none")
+    local visible = view.list:Visible()
+    assertEqual(visible[1].bg:GetTexture(), NS.Style.WHITE, "a texture the tint can show on")
+    local _, _, _, a1 = visible[1].bg:GetVertexColor()
+    local _, _, _, a2 = visible[2].bg:GetVertexColor()
+    assertEqual(a1, 0, "an odd row untinted")
+    assertEqual(a2, NS.Style.Tok("ct.list.stripe")[4], "an even row tinted")
+end)
+
+test("results: under the date groupings Delta still measures each fight against its encounter", function()
+    local NS = fresh()
+    -- One day, one character, two targets: each fight is the best on its own board.
+    save(NS, rec(NS, { id = "boar", dps = 1000 }), rec(NS, { id = "kobold", dps = 400, target = "Kobold",
+                                                            creatureID = 40 }))
+    local _, view = open(NS)
+    for _, mode in ipairs({ "datechar", "date" }) do
+        view:SetFilter("group", mode)
+        for _, id in ipairs({ "boar", "kobold" }) do
+            local r = NS.Recorder.Get and NS.Recorder.Get(id) or NS.db.global.fights[id]
+            local ctx = view:DeltaContext(r)
+            assertTrue(ctx ~= nil, mode .. ": " .. id .. " has a context")
+            assertEqual(NS.ResultsFights.Delta(r, ctx.top), 0, mode .. ": " .. id .. " is its encounter's best")
+        end
+    end
+end)
+
+test("results: the bar holds Save, Reset and Clear, right to left Clear last", function()
+    local NS = fresh()
+    local plan = NS.ResultsFights.BarPlan(1400)
+    assertTrue(plan.buttons.save < plan.buttons.reset and plan.buttons.reset < plan.buttons.clear,
+        "Save, Reset, Clear from left to right")
+    assertEqual(plan.buttons.clear, plan.right, "Clear under the last dropdown's right edge")
+    local _, view = open(NS)
+    assertEqual(view.save.label:GetText(), "Save")
+    assertEqual(view.reset.label:GetText(), "Reset")
+    assertEqual(view.clear.label:GetText(), "Clear")
 end)

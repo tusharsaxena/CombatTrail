@@ -71,8 +71,8 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   group's best, while the board's best (whatever the filters) shows only in that cell's tooltip,
   the detail and the compare: the list has no Status column (owner, 2026-11-10).
 - **The Results window is wider since v0.2.** The Used and Note columns raise the list's
-  least width to 972 px (1412 expanded, with the 440 px detail beside it), and the shipped width to
-  1100, above the least so the Character column's header drag has room to grow. On a small screen
+  least width to 972 px (1412 expanded, with the 440 px detail beside it). The window opens at that
+  least (owner, 2026-11-11); drag its corner wider to give the Character column's header drag room. On a small screen
   or a large UI scale, lower History → Results window → Scale. A width a profile stored before is
   held to the new least.
 - **The compare's "Trinkets and consumables" list has no cap.** Each item used by either fight adds

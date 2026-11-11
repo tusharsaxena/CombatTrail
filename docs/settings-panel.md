@@ -298,6 +298,13 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Use the skin's texture | `hud.spells.barTextureFromSkin` |
 | Pet bar color | `hud.spells.petColor` |
 | Use class color | `hud.spells.useClassColorPetColor` |
+| Show border (off by default: the bars draw no border) | `hud.spells.borderShow` |
+| Border style | `hud.spells.borderStyle` |
+| Border thickness (px) | `hud.spells.borderSize` |
+| Border color | `hud.spells.borderColor` |
+| Use class color | `hud.spells.useClassColorBorder` |
+| Use the skin's border (the skin's bar border style and thickness; a skin with None keeps yours) | `hud.spells.borderStyleFromSkin` |
+| Use the skin's color | `hud.spells.borderColorFromSkin` |
 | Font | `hud.spells.font` |
 | Font size | `hud.spells.fontSize` |
 | Font color | `hud.spells.fontColor` |

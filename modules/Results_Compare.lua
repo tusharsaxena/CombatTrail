@@ -15,7 +15,7 @@ local _, NS = ...
 --
 -- THE LAYOUT. A legend bar (this fight's label in yellow, the other's in blue and what it is, a note
 -- when a picked fight is on another board, *Clear pick* at its right while a pick is in use); three
--- figure boxes, DPS, Damage and Length, each "other >> this" and the change; the spell table, every
+-- figure boxes, Damage, DPS and Length (the HUD's order), each "other >> this" and the change; the spell table, every
 -- spell either fight cast matched by spell and caster (the pet's marked "(pet)"), each row the other's
 -- total -> this one's, a blue and a yellow bar on one scale, and the change; the gear line under the
 -- spells: the slots whose gear differs (Gear.ChangedSlots, with the item levels), and the *Different
@@ -57,7 +57,7 @@ Compare.FRAME_NAME = "CombatTrailCompare"
 Compare.WIDTH = 660
 Compare.PAD = 12
 Compare.LEGEND_H = 26
-Compare.KPI_H = 46
+Compare.KPI_H = 60   -- three centered lines: the label, the figures, the change (owner, 2026-11-11)
 Compare.KPI_GAP = 8
 Compare.HEAD_H = 20         -- the spell table's header line
 Compare.ROW_H = 22          -- one spell row
@@ -163,13 +163,14 @@ local function merged(record)
     return type(d) == "table" and num(d.merged) or nil
 end
 
---- The figure boxes: DPS, Damage and Length, each { key, a (this fight), b (the other), pct }.
+--- The figure boxes: Damage, DPS and Length (the HUD's Damage box left of its DPS box; owner,
+--- 2026-11-11), each { key, a (this fight), b (the other), pct }.
 --- @return table kpis
 function Compare.Kpis(a, b)
     local out = {}
     for _, k in ipairs({
-        { key = "dps", va = num(a and a.dps), vb = num(b and b.dps) },
         { key = "damage", va = merged(a), vb = merged(b) },
+        { key = "dps", va = num(a and a.dps), vb = num(b and b.dps) },
         { key = "length", va = num(a and a.duration), vb = num(b and b.duration) },
     }) do
         out[#out + 1] = { key = k.key, a = k.va, b = k.vb, pct = Compare.Pct(k.va, k.vb) }
@@ -403,19 +404,21 @@ local function buildKpis(f)
     ui.kpis = {}
     local box = math.floor((Compare.WIDTH - 2 * Compare.PAD - 2 * Compare.KPI_GAP) / 3)
     local y = -(HEADER_H + Compare.LEGEND_H)
-    for i, key in ipairs({ "dps", "damage", "length" }) do
+    for i, key in ipairs({ "damage", "dps", "length" }) do
         local card = NS.HudStates.Card(f)
         card:SetSize(box, Compare.KPI_H)
         card:SetPoint("TOPLEFT", f, "TOPLEFT", Compare.PAD + (i - 1) * (box + Compare.KPI_GAP), y)
         local k = { frame = card, key = key }
-        k.label = Style.Text(card, FONT.CAPTION)
+        k.label = Style.Text(card, FONT.CAPTION, nil, "CENTER")
         k.label:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -7)
+        k.label:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -7)
         k.label:SetText(L[KPI_LABELS[key]])
-        k.change = Style.Text(card, FONT.CAPTION, C.dim, "RIGHT")
-        k.change:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -7)
-        k.value = Style.Text(card, FONT.HEADING, C.text)
-        k.value:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8, 7)
-        k.value:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 7)
+        k.value = Style.Text(card, FONT.HEADING, C.text, "CENTER")
+        k.value:SetPoint("LEFT", card, "LEFT", 8, 0)
+        k.value:SetPoint("RIGHT", card, "RIGHT", -8, 0)
+        k.change = Style.Text(card, FONT.CAPTION, C.dim, "CENTER")
+        k.change:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8, 7)
+        k.change:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 7)
         ui.kpis[i] = k
     end
 end
@@ -460,6 +463,7 @@ local function newRow(f)
     row:SetSize(Compare.WIDTH - 2 * Compare.PAD, Compare.ROW_H)
     row.bg = row:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints(row)
+    row.bg:SetTexture(Style.WHITE)   -- white, so Style.Stripe's tint shows (as the fight list's)
     row.icon = row:CreateTexture(nil, "ARTWORK")
     row.icon:SetSize(Compare.ICON, Compare.ICON)
     row.icon:SetPoint("LEFT", row, "LEFT", 0, 0)

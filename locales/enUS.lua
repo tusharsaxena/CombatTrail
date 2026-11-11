@@ -368,6 +368,9 @@ L["Layout"] = "Layout"
 L["Clock and figures"] = "Clock and figures"
 L["Damage chart"] = "Damage chart"
 L["Spell rows"] = "Spell rows"
+L["Bar border"] = "Bar border"
+L["Draw a border round each spell row's bar, on the HUD and in the fight detail."] = "Draw a border round each spell row's bar, on the HUD and in the fight detail."
+L["Draw the border in the skin's bar border color. The border color swatch is not read while this is on, and Use class color comes first."] = "Draw the border in the skin's bar border color. The border color swatch is not read while this is on, and Use class color comes first."
 L["Window"] = "Window"
 L["On each fight's first hit"] = "On each fight's first hit"
 L["Only when you open it"] = "Only when you open it"
@@ -503,8 +506,8 @@ L["The texture your spell rows' bars and the pace bar's fills are drawn with."] 
     "The texture your spell rows' bars and the pace bar's fills are drawn with."
 L["Pet bars"] = "Pet bars"
 L["Pet bar color"] = "Pet bar color"
-L["The color of your pet's spell rows and of its part of the pace bar."] =
-    "The color of your pet's spell rows and of its part of the pace bar."
+L["The color of your pet's spell rows."] =
+    "The color of your pet's spell rows."
 L["Row font"] = "Row font"
 L["The face the spell names and amounts are drawn in."] = "The face the spell names and amounts are drawn in."
 L["Title bar and footer"] = "Title bar and footer"
@@ -634,14 +637,14 @@ L["The boss or target this fight is against, with the instance and difficulty it
     "The boss or target this fight is against, with the instance and difficulty its bests group by."
 L["This fight's damage per second, yours and your pet's."] =
     "This fight's damage per second, yours and your pet's."
-L["This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."] =
-    "This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best."
+L["This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best: red short of it is behind, green past it ahead."] =
+    "This fight's final damage against the best it was paced against, at the same length. The tick in the middle is level with that best: red short of it is behind, green past it ahead."
 L["This fight's spells, highest damage first, with each one's share. The mouse wheel scrolls through more spells than the rows hold."] =
     "This fight's spells, highest damage first, with each one's share. The mouse wheel scrolls through more spells than the rows hold."
 L["This fight's total damage, yours and your pet's."] = "This fight's total damage, yours and your pet's."
 L["Unknown spell"] = "Unknown spell"
-L["Your damage against your best's at this point in the fight. The tick in the middle is on pace; your pet's damage carries on from the end of yours."] =
-    "Your damage against your best's at this point in the fight. The tick in the middle is on pace; your pet's damage carries on from the end of yours."
+L["Your damage against your best's at this point in the fight. The tick in the middle is on pace: red short of it is how far behind you are, green past it how far ahead."] =
+    "Your damage against your best's at this point in the fight. The tick in the middle is on pace: red short of it is how far behind you are, green past it how far ahead."
 L["Your damage per second so far this fight, as the damage meter reports it."] =
     "Your damage per second so far this fight, as the damage meter reports it."
 L["Your damage so far this fight, as the damage meter reports it. Your pet's shows beside it."] =
@@ -712,12 +715,14 @@ L["Content"] = "Content"
 L["Length"] = "Length"
 L["Delta"] = "Delta"
 L["Bosses only"] = "Bosses only"
-L["Save view"] = "Save view"
-L["Save these filters, the grouping and the sort as this profile's view of your fights."] =
-    "Save these filters, the grouping and the sort as this profile's view of your fights."
-L["Reset view"] = "Reset view"
-L["Go back to the view the addon ships with: your character, the last 7 days, grouped by encounter and difficulty, newest first."] =
-    "Go back to the view the addon ships with: your character, the last 7 days, grouped by encounter and difficulty, newest first."
+L["Save these filters, the grouping and the sort as this profile's default view of your fights."] =
+    "Save these filters, the grouping and the sort as this profile's default view of your fights."
+L["Reset"] = "Reset"
+L["Delete the saved view and go back to the one the addon ships with: your character, the last 7 days, grouped by date and character, newest first."] =
+    "Delete the saved view and go back to the one the addon ships with: your character, the last 7 days, grouped by date and character, newest first."
+L["Clear"] = "Clear"
+L["Go back to the saved view (the shipped one when none is saved). The saved view is kept."] =
+    "Go back to the saved view (the shipped one when none is saved). The saved view is kept."
 L["No fights match these filters."] = "No fights match these filters."
 L["Not saved: the Results window is showing sample fights."] =
     "Not saved: the Results window is showing sample fights."
@@ -765,6 +770,8 @@ L["Group: Spec"] = "Group: Spec"
 L["Group: Talent tree"] = "Group: Talent tree"
 L["Group: Content"] = "Group: Content"
 L["Group: None"] = "Group: None"
+L["Group: Date"] = "Group: Date"
+L["Group: Date + character"] = "Group: Date + character"
 L["When the fight started. Click to sort."] = "When the fight started. Click to sort."
 L["The character's class and spec."] = "The character's class and spec."
 L["The character's class and talent tree."] = "The character's class and talent tree."

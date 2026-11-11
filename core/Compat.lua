@@ -645,6 +645,28 @@ function Compat.PvpRules()
 end
 
 -- ---------------------------------------------------------------------------
+-- Physical pixels (the spell rows' snap, modules/Hud_Breakdown.lua)
+-- ---------------------------------------------------------------------------
+
+--- One physical pixel in the UI units of `frame`: the client's PixelUtil factor over the frame's
+--- effective scale (LibKa0s CorePixel's sum, which is internal to the library, so not called). 1 where
+--- the client has no PixelUtil, and a frame with no effective scale reads as scale 1.
+--- @param frame table|nil
+--- @return number
+function Compat.PixelSize(frame)
+    local pu = PixelUtil
+    if type(pu) ~= "table" or type(pu.GetPixelToUIUnitFactor) ~= "function" then return 1 end
+    local ok, factor = pcall(pu.GetPixelToUIUnitFactor)
+    if not ok or type(factor) ~= "number" or factor <= 0 then return 1 end
+    local scale = 1
+    if type(frame) == "table" and type(frame.GetEffectiveScale) == "function" then
+        local got = frame:GetEffectiveScale()
+        if type(got) == "number" and got > 0 then scale = got end
+    end
+    return factor / scale
+end
+
+-- ---------------------------------------------------------------------------
 -- The client line of `/ct probe` (modules/Probe.lua)
 -- ---------------------------------------------------------------------------
 

@@ -20,16 +20,17 @@ local _, NS = ...
 -- Every column draws in the chart's own bar look: a cooldown marks the chart with its icon only, and
 -- never recolors a column (owner, 2026-11-10: DPS Race parity, "don't change the chart color").
 --
--- THE PACE BAR (spec §6, the pet-fill seam Hud.PACE_PET_FILL, spec §12). Two StatusBars over one
--- track. The player's spans the bar from lo to hi (HudBest.Bounds: the best's pace in the middle,
--- where the tick sits) and is handed the player's live total; the pet's is anchored to the RIGHT
--- EDGE OF THE PLAYER FILL'S TEXTURE, is as wide as the whole bar, runs 0 to hi - lo and is handed
--- the pet's live total, so the client draws the pet's damage on from the end of the player's, at
--- the same scale, and the bar clips what runs past its end. Nothing is summed or compared: the two
--- figures meet only on screen, C-side, and no geometry is read back. Against the best's MERGED pace.
--- With the seam off the pet's bar hides and the player's total is set against the best's player
--- damage alone. (A player total under lo draws an empty player fill, and the pet's then starts from
--- the bar's left edge: the bar reads deep behind either way.)
+-- THE PACE BAR (spec §6), DPS Race's (modules/Hud_Chart.lua, the owner's call there 2026-10-26,
+-- and here 2026-11-11). Two StatusBars split at the on-pace tick in the middle of the bar, over one
+-- track. The BEHIND half runs lo to the pace (HudBest.Bounds: the best's pace in the middle) in the
+-- spell rows' bar look, with red from its fill's end to the tick (a texture anchored to the fill
+-- texture), so behind pace shows red for the shortfall; the AHEAD half runs the pace to hi in green,
+-- so ahead shows green past the tick. Both are handed the same total and clamp it (empty or full):
+-- nothing compares it and no color is chosen from it; the color is where the fill ends, which the
+-- client draws. The total is ONE figure against a reference of the same measure (HudBest.LiveView,
+-- OverView): live, the player's source total (on WoW Forever the pet folds into it) against the
+-- best's merged pace, or, where the pet has its own source, the player's alone against the best's
+-- player damage (two secrets cannot be summed); after the fight, the plain merged total.
 --
 -- LAYOUT FROM CONFIG. Every size is the width Place() is handed and the configured plot height
 -- (`hud.chart.height`); nothing reads a size or position back off a column. The heading is DPS
@@ -530,46 +531,54 @@ end
 local Pace = {}
 Pace.__index = Pace
 
--- The pet's fill hangs off the right edge of the player fill's texture: the client places it from
--- the player's value. Again whenever the fill texture is set (the bar may hand back a new region).
-function Pace:anchorPet()
-    local fill = self.player:GetStatusBarTexture()
-    self.pet:ClearAllPoints()
-    self.pet:SetPoint("TOPLEFT", fill, "TOPRIGHT", 0, 0)
-    self.pet:SetPoint("BOTTOMLEFT", fill, "BOTTOMRIGHT", 0, 0)
-    self.pet:SetWidth(self.barW or 1)
-    self.petAnchor = fill
+local AHEAD = "ct.ahead"          -- the green past the tick
+local BEHIND = "ct.pace.behind"   -- the red shortfall to the tick
+
+-- The red shortfall hangs off the right edge of the behind half's fill texture, to the half's own
+-- right edge (the tick): the client places it from the value. Again whenever the fill texture is set
+-- (the bar may hand back a new region).
+function Pace:anchorShortfall()
+    local fill = self.behind:GetStatusBarTexture()
+    self.shortfall:ClearAllPoints()
+    self.shortfall:SetPoint("TOPLEFT", fill, "TOPRIGHT", 0, 0)
+    self.shortfall:SetPoint("BOTTOMRIGHT", self.behind, "BOTTOMRIGHT", 0, 0)
+    self.fillAnchor = fill
 end
 
--- The bar's look, once per Appearance stamp: the spell rows' texture in the player's and the pet's
--- colors.
+-- The bar's look, once per Appearance stamp: the behind half in the spell rows' bar look, the ahead
+-- half in its texture and the green, the shortfall in the red, both at the look's opacity.
 function Pace:restyle()
     local A = NS.HudAppearance
     if self.stamp == A.stamp then return end
     self.stamp = A.stamp
     local look = A.Bar("spells")
-    A.PaintBar(self.player, look)
-    A.PaintBar(self.pet, look, A.PetColor())
-    self:anchorPet()
+    A.PaintBar(self.behind, look)
+    local r, g, b = Style.Rgb(AHEAD)
+    A.PaintBar(self.ahead, look, { r = r, g = g, b = b, a = look.a })
+    Style.Fill(self.shortfall, BEHIND, look.a)
+    self:anchorShortfall()
 end
 
---- The pace bar built into `parent`: the track, the player's and the pet's fills, the on-pace tick.
+local function halfBar(parent)
+    local b = CreateFrame("StatusBar", nil, parent)
+    b:SetMinMaxValues(0, 1)
+    b:SetValue(0)
+    return b
+end
+
+--- The pace bar built into `parent`: the track, the behind and ahead halves split at the on-pace
+--- tick, the red shortfall, and the tick over both.
 --- @param parent table
 --- @return table pace
 function Chart.NewPace(parent)
     local p = setmetatable({}, Pace)
     p.bar = CreateFrame("Frame", nil, parent)
-    if p.bar.SetClipsChildren then p.bar:SetClipsChildren(true) end
     p.track = p.bar:CreateTexture(nil, "BACKGROUND")
     p.track:SetAllPoints(p.bar)
     Style.Fill(p.track, "ct.pace.track")
-    p.player = CreateFrame("StatusBar", nil, p.bar)
-    p.player:SetAllPoints(p.bar)
-    p.player:SetMinMaxValues(0, 1)
-    p.player:SetValue(0)
-    p.pet = CreateFrame("StatusBar", nil, p.bar)
-    p.pet:SetMinMaxValues(0, 1)
-    p.pet:SetValue(0)
+    p.behind = halfBar(p.bar)
+    p.ahead = halfBar(p.bar)
+    p.shortfall = p.behind:CreateTexture(nil, "ARTWORK")
     p.over = CreateFrame("Frame", nil, p.bar)
     p.over:SetAllPoints(p.bar)
     p.over:SetFrameLevel((p.bar:GetFrameLevel() or 0) + 2)
@@ -586,35 +595,41 @@ function Pace:SetShown(on)
 end
 
 --- Place it on the PACE_H line at `y` (negative, from `anchor`'s top) across `width`, DPS Race's
---- geometry: the bar 2px under the line's top and 4px shorter than it; answers the line's height.
+--- geometry: the bar 2px under the line's top and 4px shorter than it, the tick in its middle, the
+--- behind half left of it and the ahead half right of it; answers the line's height.
 --- @return number
 function Pace:Place(anchor, y, width)
     self.bar:ClearAllPoints()
     self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y - 2)
     self.barW = math.max(1, width)
-    self.bar:SetSize(self.barW, Chart.PACE_H - 4)
+    local h = Chart.PACE_H - 4
+    self.bar:SetSize(self.barW, h)
     local x = math.floor(self.barW / 2 + 0.5)
     self.tick:ClearAllPoints()
     self.tick:SetPoint("TOP", self.bar, "TOPLEFT", x, 2)
     self.tick:SetPoint("BOTTOM", self.bar, "BOTTOMLEFT", x, -2)
-    self:anchorPet()
+    self.behind:ClearAllPoints()
+    self.behind:SetPoint("TOPLEFT", self.bar, "TOPLEFT", 0, 0)
+    self.behind:SetSize(math.max(1, x), h)
+    self.ahead:ClearAllPoints()
+    self.ahead:SetPoint("TOPLEFT", self.bar, "TOPLEFT", x, 0)
+    self.ahead:SetSize(math.max(1, self.barW - x), h)
+    self:anchorShortfall()
     return Chart.PACE_H
 end
 
---- The range (plain, HudBest.Bounds), then the two figures: `player` (opaque) on the player's fill,
---- `pet` (opaque) on the pet's when `withPet`, else the pet's fill hides. Nothing here compares or
---- sums them.
+--- The range (plain, HudBest.Bounds: the pace in the middle), then the total (opaque live, plain
+--- after the fight) straight to both halves, each clamping it: behind pace the behind half stops
+--- short of the tick and the red fills the rest; ahead, it is full and the ahead half fills green.
 --- @param lo number
 --- @param hi number
---- @param player any
---- @param pet any
---- @param withPet boolean
-function Pace:Set(lo, hi, player, pet, withPet)
+--- @param total any
+function Pace:Set(lo, hi, total)
     self:restyle()
-    self.player:SetMinMaxValues(lo, hi)
-    if player == nil then self.player:SetValue(lo) else self.player:SetValue(player) end
-    self.pet:SetShown(withPet and true or false)
-    if not withPet then return end
-    self.pet:SetMinMaxValues(0, hi - lo)
-    if pet == nil then self.pet:SetValue(0) else self.pet:SetValue(pet) end
+    local mid = (lo + hi) / 2
+    self.behind:SetMinMaxValues(lo, mid)
+    self.ahead:SetMinMaxValues(mid, hi)
+    if total == nil then total = lo end
+    self.behind:SetValue(total)
+    self.ahead:SetValue(total)
 end

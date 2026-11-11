@@ -1,9 +1,10 @@
 -- tests/test_hud_pace.lua — the DPS HUD's pace (plan Task 3.2, spec §6 and §12): the paced best's
 -- curve (its session slices when this session holds them plain, else its linear average pace), the
--- bar's range around it, and the bar itself: the player's live total on the player fill, the pet's
--- on a fill anchored to the end of the player fill's texture, against the best's merged pace, and
--- with the seam (Hud.PACE_PET_FILL) off, player-only against the best's player damage. Every live
--- value reaches the bar as the meter's secret, untouched.
+-- bar's range around it, and the bar itself, DPS Race's: two halves split at the on-pace tick, the
+-- behind half in the bar look with a red shortfall anchored to its fill's end, the ahead half green,
+-- both handed the same total. A total with no live pet source of its own runs against the best's
+-- merged pace; a separate pet source, player-only against the best's player damage; after the fight
+-- the plain merged total. Every live value reaches the bar as the meter's secret, untouched.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse =
@@ -20,11 +21,11 @@ local PETFIGHT = { damage = 40000, dps = 1000, duration = 40,
                    enemies = ENEMIES }
 
 -- A stored best (fight 1, 10 s to 50 s), then fight 2 live from 100 with the meter's figures secret.
-local function pacedFight(opts)
+-- `live`: the live fight's session (default PETFIGHT, its pet a source of its own).
+local function pacedFight(live)
     local inst, meter, Hud = H.fresh({ pet = true })
-    if opts and opts.noPetFill then Hud.PACE_PET_FILL = false end
     H.whole(inst, meter, 1, PETFIGHT, 10, 40)
-    meter.SetSession(2, PETFIGHT)
+    meter.SetSession(2, live or PETFIGHT)
     H.enter(inst, 100)
     meter.SetSecret(true)
     H.run(inst, 100.25)
@@ -84,62 +85,65 @@ end)
 
 -- ── the bar ─────────────────────────────────────────────────────────────────────────────────────
 
-test("pace: pet fill anchored to player fill texture, against the best's merged pace", function()
+test("pace: split at the tick, red short of it, green past it; a separate pet paces player-only", function()
     local inst, meter, Hud = pacedFight()
     assertEqual(Hud.State(), "live")
     local body = H.body(Hud, "live")
     assertTrue(body.paceShown == true)
     local pace = body.parts.pace
     assertTrue(pace ~= nil and pace.bar:IsShown(), "the bar is up")
-    assertTrue(pace.petAnchor ~= nil and pace.petAnchor == pace.player:GetStatusBarTexture(),
-        "the pet fill hangs off the player fill's texture")
-    assertTrue(pace.pet:IsShown(), "the pet fill shows")
-    -- And the anchor itself, as the client is told it, on the next restyle.
-    local points = {}
-    rawset(pace.pet, "SetPoint", function(_, ...) points[#points + 1] = { ... } end)
-    Hud.Apply()
-    assertTrue(#points >= 1, "the pet fill was anchored again")
-    for _, pt in ipairs(points) do
-        assertEqual(pt[2], pace.player:GetStatusBarTexture(), "relative to the player fill's texture")
-    end
-    assertEqual(points[1][1] .. ">" .. points[1][3], "TOPLEFT>TOPRIGHT", "its left edge on the fill's right edge")
-    local player, pet = pace.player:GetValue(), pace.pet:GetValue()
-    assertTrue(T.isSecret(player), "the player's live total, handed over as the meter's secret")
-    assertTrue(T.isSecret(pet), "and the pet's")
-    assertEqual(T.reveal(player), 40000)
-    assertEqual(T.reveal(pet), 8000)
-    local ref = 48000 * Hud.View().clock / 40
-    local lo, hi = pace.player:GetMinMaxValues()
-    near(lo, ref * 0.5, "lo: the merged pace x (2 - 1.5)")
-    near(hi, ref * 1.5, "hi: the merged pace x 1.5")
-    local plo, phi = pace.pet:GetMinMaxValues()
-    near(plo, 0)
-    near(phi, hi - lo, "the pet fill runs at the player fill's scale")
+    assertTrue(pace.fillAnchor ~= nil and pace.fillAnchor == pace.behind:GetStatusBarTexture(),
+        "the red shortfall hangs off the behind half's fill texture")
+    local Style = inst.NS.Style
+    local sr, sg, sb = unpack(pace.shortfall.__color or {})   -- its SetColorTexture, as recorded
+    local red = Style.Tok("ct.pace.behind")
+    near(sr, red[1], "the shortfall red")
+    near(sg, red[2])
+    near(sb, red[3])
+    local ar, ag, ab = pace.ahead:GetStatusBarColor()
+    local green = Style.Tok("ct.ahead")
+    near(ar, green[1], "the ahead half green")
+    near(ag, green[2])
+    near(ab, green[3])
+    local behind, ahead = pace.behind:GetValue(), pace.ahead:GetValue()
+    assertTrue(T.isSecret(behind) and T.isSecret(ahead), "both halves handed the meter's secret")
+    assertEqual(T.reveal(behind), 40000, "the player's own total: the pet has a source of its own")
+    assertEqual(T.reveal(ahead), 40000, "the same total to both")
+    local ref = 40000 * Hud.View().clock / 40
+    local lo, mid = pace.behind:GetMinMaxValues()
+    local mid2, hi = pace.ahead:GetMinMaxValues()
+    near(lo, ref * 0.5, "lo: the best's player pace x (2 - 1.5)")
+    near(mid, ref, "the behind half ends at the pace, the tick")
+    near(mid2, ref, "the ahead half starts there")
+    near(hi, ref * 1.5, "hi: the pace x 1.5")
     meter.SetSecret(false)
 
-    -- The over card: the plain final read against the best at the fight's length.
+    -- The over card: the plain final merged total against the best's merged pace at its length.
     H.finish(inst, 100, 40)
     assertEqual(Hud.State(), "over")
     local over = H.body(Hud, "over").parts.pace
     assertTrue(over ~= nil and over.bar:IsShown())
-    assertEqual(over.player:GetValue(), 40000)
-    assertEqual(over.pet:GetValue(), 8000)
-    lo, hi = over.player:GetMinMaxValues()
+    assertEqual(over.behind:GetValue(), 48000, "the player's and the pet's, summed after combat")
+    assertEqual(over.ahead:GetValue(), 48000)
+    lo = over.behind:GetMinMaxValues()
+    hi = select(2, over.ahead:GetMinMaxValues())
     near(lo, 24000, "the best's 48000 at 40 s, x 0.5")
     near(hi, 72000)
 end)
 
-test("pace: PACE_PET_FILL=false shows player-only against the best's player damage", function()
-    local inst, meter, Hud = pacedFight({ noPetFill = true })
+test("pace: a total with no pet source of its own runs against the best's merged pace", function()
+    -- WoW Forever folds the pet into the player's source: one total, the pet's damage in it.
+    local folded = { damage = 48000, dps = 1200, duration = 40,
+                     spells = { { id = 133, dmg = 48000, dps = 1200 } }, enemies = ENEMIES }
+    local _, meter, Hud = pacedFight(folded)
     local pace = H.body(Hud, "live").parts.pace
-    assertFalse(pace.pet:IsShown(), "no pet fill")
-    assertEqual(T.reveal(pace.player:GetValue()), 40000, "the player's own total")
-    local ref = 40000 * Hud.View().clock / 40
-    local lo, hi = pace.player:GetMinMaxValues()
-    near(lo, ref * 0.5, "against the best's player damage alone")
+    assertEqual(T.reveal(pace.behind:GetValue()), 48000, "the folded total")
+    local ref = 48000 * Hud.View().clock / 40
+    local lo = pace.behind:GetMinMaxValues()
+    local _, hi = pace.ahead:GetMinMaxValues()
+    near(lo, ref * 0.5, "against the best's merged pace")
     near(hi, ref * 1.5)
     meter.SetSecret(false)
-    assertTrue(inst ~= nil)
 end)
 
 test("pace: no best, or the layout's pace off, hides the bar", function()

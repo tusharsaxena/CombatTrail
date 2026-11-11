@@ -470,9 +470,19 @@ test("detail: the Targets section lists each enemy with its amount and share", f
     assertEqual(x.title:GetText(), "Targets")
     assertTrue(pane.heads.targets:IsShown(), "its fold arrow")
     assertEqual(x.rows[1].name:GetText(), "Redridge Brute")
-    assertTrue(x.rows[1].amount:GetText():find("1.0K", 1, true) ~= nil, x.rows[1].amount:GetText())
-    assertTrue(x.rows[1].amount:GetText():find("63.8%", 1, true) ~= nil, "its share of the targets")
-    assertTrue(x.rows[1].amount:GetText():find("17 DPS", 1, true) ~= nil, "its DPS over the 60 s fight")
+    -- Three columns, each its own right-aligned text in the amount's white (owner, 2026-11-11).
+    assertEqual(x.rows[1].amount:GetText(), "1.0K")
+    assertEqual(x.rows[1].dps:GetText(), "17 DPS", "its DPS over the 60 s fight")
+    assertEqual(x.rows[1].share:GetText(), "63.8%", "its share of the targets")
+    for _, part in ipairs({ "amount", "dps", "share" }) do
+        local fs = x.rows[1][part]
+        assertEqual(fs:GetJustifyH(), "RIGHT", part .. " right-aligned")
+        assertEqual(fs:GetText():find("|c", 1, true), nil, part .. " in one color, no dim escape")
+    end
+    local function rightOf(fs) local pt = fs.__points[1]; return pt[4] + fs:GetWidth() end
+    local RT = NS.ResultsTargets
+    assertEqual(rightOf(x.rows[1].share) - rightOf(x.rows[1].dps), RT.SHARE_W + RT.COL_GAP, "a gap between columns")
+    assertEqual(rightOf(x.rows[1].dps) - rightOf(x.rows[1].amount), RT.DPS_W + RT.COL_GAP)
     assertTrue(x.rows[1].bar:IsShown(), "a bar under each row")
     assertTrue(x.rows[2].bar:GetWidth() < x.rows[1].bar:GetWidth(), "the bar's length is the amount's")
     assertEqual(x.rows[2].name:GetText(), "Redridge Mystic")
@@ -501,7 +511,8 @@ test("detail: Targets rows skip a malformed entry and share out of what is liste
     assertEqual(rows[1].dps, nil, "no fight length, no DPS")
     local timed = NS.ResultsTargets.Rows({ duration = 25, targets = { { name = "Redridge Brute", total = 1063 } } })
     assertEqual(timed[1].dps, 1063 / 25)
-    assertEqual(NS.ResultsTargets.Amount(timed[1]):match("|c%x%x%x%x%x%x%x%x(%d+) DPS"), "42", "whole, as EllesmereUI shows it")
+    assertEqual(select(2, NS.ResultsTargets.Cells(timed[1])), "42 DPS", "whole, as EllesmereUI shows it")
+    assertEqual(select(2, NS.ResultsTargets.Cells(rows[1])), "", "no DPS without the fight's length")
     assertEqual(#NS.ResultsTargets.Rows({}), 0)
     assertEqual(#NS.ResultsTargets.Rows(nil), 0)
 end)

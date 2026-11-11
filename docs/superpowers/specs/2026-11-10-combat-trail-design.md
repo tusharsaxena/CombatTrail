@@ -239,9 +239,11 @@ folding). In combat the HUD can't sum player and pet, so:
 - the Damage box shows the player source's total, and a smaller "Pet" figure sits beside it (copied).
 - the spell rows list player spells, then pet spells, in the meter's own order. Each bar is scaled to the
   player source's `maxAmount` (C-side clamp).
-- the pace bar draws the player fill, then a pet fill anchored to the end of the player fill's texture (C-side
-  geometry, never read back) against the best's merged damage so far. If that turns out not to work in
-  game, fall back to player-only pace against the best's player damage.
+- the pace bar is DPS Race's split bar (owner, 2026-11-11, replacing the v0.1 pet fill, which could not
+  show a shortfall): two halves at the on-pace tick, red short of it and green past it, both handed one
+  total. Where the pet folds into the player's source (WoW Forever) or there is none, that total is the
+  merged one against the best's merged damage so far; where the pet has a source of its own, the
+  player's alone against the best's player damage (two secrets cannot be summed).
 - after combat everything merges in plain Lua.
 
 **Not available on the HUD:** live percentages, sorting, and a live delta number, because of secret values. The same
@@ -361,6 +363,6 @@ lists; locale strings; Edit Mode integration details; the sample data for test a
 |---|---|
 | Forever behaves differently in combat | M1 in-game probe (`/ct probe`); design for secrets regardless |
 | The pet isn't a separate meter source on one client | the probe confirms it; if the pet is folded into the player, drop the pet split and tag pet spells by the IDs seen from `UNIT_SPELLCAST_SUCCEEDED` unit=pet |
-| The pace bar's pet-fill anchoring fails | fall back to player-only pace |
+| The pace bar's pet-fill anchoring fails | retired 2026-11-11: the bar is DPS Race's split bar, its red shortfall anchored to a fill texture as the pet fill was (`/ct probe`'s anchor line still checks it) |
 | Scope is large (DpsRace is about 24k lines) | milestones with a pushed checkpoint each; the plan's status ledger makes the run resumable |
 | LibKa0s v1.94.0 lacks something needed | work around it locally, file a LibKa0s issue, and don't edit LibKa0s |

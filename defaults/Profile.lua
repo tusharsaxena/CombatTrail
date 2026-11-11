@@ -172,6 +172,10 @@ NS.defaults = {
                        barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                        useClassColorBar = false, barTextureFromSkin = true,
                        petColor = swatch(PALETTE.PET, PALETTE.BAR_A), useClassColorPetColor = false,
+                       -- The bars' border (owner, 2026-11-11): off; a flat 1 px edge in black when
+                       -- shown, the skin's bar border while its companions are on.
+                       borderShow = false, borderStyle = "Solid", borderSize = 1, borderColor = rgba(0, 0, 0, 1),
+                       useClassColorBorder = false, borderStyleFromSkin = false, borderColorFromSkin = false,
                        font = "Ka0s Prototype", fontSize = 10, fontColor = rgba(1, 1, 1, 1),
                        useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
                        fontColorFromSkin = true, fontShadowFromSkin = true },
@@ -196,16 +200,17 @@ NS.defaults = {
         -- its scale, its list's row height (px); whether Share appends the fight's talents link; whether
         -- it closes when combat starts (v0.2 Task C1); and `columns`, the widths a header's edge was
         -- dragged to (`{ character = px }`; empty is the shipped width), put back by Reset position. The
-        -- list's width clears its least (Results.MIN_WIDTH, 972 with v0.2 Task C2's Used and
-        -- Note columns) with room for the target column and a Character drag; and `collapsedSections`, the
+        -- list's width has no shipped number: nothing stored opens the window at its least
+        -- (Results.MIN_WIDTH, the filter bar's or the table's; owner, 2026-11-11), and a stored width is
+        -- held to it; and `collapsedSections`, the
         -- fight detail's folded sections (v0.2 Task C3: `{ [section] = true }`, keys
         -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps; and
         -- `timelineMarks`, how the ability timeline's By ability lanes draw a cast (v0.2 Task D1,
         -- modules/Results_TimelineMarks.lua): "icon" (its ability's icon) or "tick" (a thin line).
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
-                     days = 7, bossesOnly = false, group = "board", sort = "date", desc = true },
-            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, width = 1100, height = 520,
+                     days = 7, bossesOnly = false, group = "datechar", sort = "date", desc = true },
+            window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, height = 520,
                        view = "collapsed" },
             scale = 1, rowHeight = 18,
             shareTalents = true, closeInCombat = true,

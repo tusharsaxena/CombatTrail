@@ -223,3 +223,89 @@ test("hud: the DPS box shows your pet's DPS too; your figures share a color, the
     assertTrue(over.petValue:IsShown(), "the Pet row on the card")
     assertEqual(over.petValue:GetText(), NS.Format.Number(200))
 end)
+
+test("breakdown: every other spell row is faintly tinted, on the HUD and in the fight detail (2026-11-11)", function()
+    local inst, meter, Hud = secretFight()
+    local list = rows(Hud, "live")
+    local NS = inst.NS
+    assertEqual(list[1].stripe:GetTexture(), NS.Style.WHITE, "a white texture the tint shows on")
+    local _, _, _, a1 = list[1].stripe:GetVertexColor()
+    local _, _, _, a2 = list[2].stripe:GetVertexColor()
+    assertEqual(a1, 0, "the first row untinted")
+    assertEqual(a2, NS.Style.Tok("ct.list.stripe")[4], "the second tinted")
+    meter.SetSecret(false)
+end)
+
+-- A client whose PixelUtil makes one physical pixel `px` UI units (a UI scale that is not round);
+-- the mock client has none, so every other case draws at 1. The kit's frames keep no anchors, so
+-- each frame made here records its own (`GetPoint`). Fight 1 live from 10, as secretFight's.
+local function pixelFight(px)
+    local inst, meter, Hud = H.fresh({ pet = true, mutate = function(m)
+        m.PixelUtil = { GetPixelToUIUnitFactor = function() return px end }
+        local create = m.CreateFrame
+        m.CreateFrame = function(...)
+            local f = create(...)
+            local points = {}
+            rawset(f, "SetPoint", function(_, ...) points[#points + 1] = { ... } end)
+            rawset(f, "ClearAllPoints", function() for k in pairs(points) do points[k] = nil end end)
+            rawset(f, "GetPoint", function(_, n) return unpack(points[n or 1] or {}) end)
+            return f
+        end
+    end })
+    meter.SetSession(1, PETFIGHT)
+    H.enter(inst, 10)
+    meter.SetSecret(true)
+    H.run(inst, 10.25)
+    H.hit(inst, 11, 1)
+    H.tick(inst, 11.25, 13)
+    return inst, meter, Hud
+end
+
+local function whole(v, px, what)
+    local n = v / px
+    assertTrue(math.abs(n - math.floor(n + 0.5)) < 1e-6, what .. ": " .. v .. " is not whole pixels at " .. px)
+end
+
+test("breakdown: the snapped rows are whole pixels, never taller than the layout's room (2026-11-11)", function()
+    local inst = H.fresh({ pet = true })
+    local B = inst.NS.HudBreakdown
+    for _, px in ipairs({ 1, 0.7, 0.533, 1.25 }) do
+        local h, pitch, gap = B.Snapped(px)
+        whole(h, px, "height")
+        whole(pitch, px, "pitch")
+        whole(gap, px, "gap")
+        assertTrue(gap >= px - 1e-6, "a gap of a pixel at least at " .. px)
+        assertTrue(pitch <= B.Pitch() + 1e-6, "never past the configured pitch at " .. px)
+        assertTrue(math.abs(h + gap - pitch) < 1e-6, "height and gap make the pitch")
+    end
+    local h, pitch, gap = B.Snapped(1)
+    assertEqual(h, B.RowHeight(), "at one unit a pixel, the configured height")
+    assertEqual(pitch, B.Pitch())
+    assertEqual(gap, B.ROW_GAP)
+end)
+
+test("breakdown: at a UI scale that is not round, every row and its border sit on whole pixels (2026-11-11)", function()
+    do
+        local inst, meter, Hud = pixelFight(0.7)
+        H.setHud(inst, "spells.borderShow", true)
+        H.tick(inst, 13.25, 14)
+        local list = rows(Hud, "live")
+        assertTrue(#list >= 3, "rows to measure")
+        local B = inst.NS.HudBreakdown
+        local h, pitch, gap = B.Snapped(0.7)
+        for i, row in ipairs(list) do
+            -- (The kit's mock answers no height unarmed; the icon is sized off the snapped one.)
+            assertTrue(math.abs(row.iconSize - (h - 2 * 0.7)) < 1e-6, "row " .. i .. ": the icon off the snapped height")
+            whole(row.iconSize, 0.7, "row " .. i .. " icon")
+            local _, _, _, _, y = row:GetPoint(1)
+            assertTrue(math.abs(y + (i - 1) * pitch) < 1e-6, "row " .. i .. ": a whole-pixel pitch down")
+            whole(y, 0.7, "row " .. i .. " top")
+            local _, _, _, _, sy = row.stripe:GetPoint(2)
+            assertTrue(math.abs(sy + gap) < 1e-6, "row " .. i .. ": the stripe down through the snapped gap")
+            local _, _, _, bx = row.bar:GetPoint(1)
+            whole(bx, 0.7, "row " .. i .. " bar's left")
+            assertTrue(math.abs(row.edge:GetBackdrop().edgeSize - 0.7) < 1e-6, "row " .. i .. ": a 1 px edge is one pixel")
+        end
+        meter.SetSecret(false)
+    end
+end)

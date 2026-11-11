@@ -2,8 +2,9 @@ local _, NS = ...
 -- modules/Results_Targets.lua — the fight detail's Targets section (issue #6): which enemies your
 -- damage reached and how much each took, below Usage. One row per enemy name, highest first, over a
 -- bar in the Results table's blue whose length is the row's amount against the top target's (as
--- Blizzard's meter and EllesmereUI's skin of it draw their Targets): the name at the left, then at
--- the right the amount, its DPS over the whole fight and its share of the fight's target damage.
+-- Blizzard's meter and EllesmereUI's skin of it draw their Targets): the name at the left, then three
+-- right-aligned columns in the amount's white, a little apart and with no separators (owner,
+-- 2026-11-11): the amount, its DPS over the whole fight, and its share of the fight's target damage.
 --
 -- THE DATA is the record's `targets` (Recorder.Targets: the meter's EnemyDamageTaken view, read once
 -- after combat, when it is plain; enemies of one name merged, as the meter and Blizzard's own damage
@@ -26,7 +27,11 @@ local Style = NS.Style
 local FONT = Style.FONT
 
 ResultsTargets.ROW_H = 20      -- one row, its bar 2 px shorter
-ResultsTargets.AMOUNT_W = 170  -- the right-hand amount, DPS and share
+-- The right-hand columns, right to left: the share, the DPS, the amount; COL_GAP between them.
+ResultsTargets.SHARE_W = 44
+ResultsTargets.DPS_W = 72
+ResultsTargets.AMOUNT_W = 56
+ResultsTargets.COL_GAP = 8
 ResultsTargets.TEXT_X = 4      -- the name and the amount, in from the bar's ends
 ResultsTargets.TEXT_Y = 4      -- the text's top, down from the row's
 
@@ -58,16 +63,18 @@ function ResultsTargets.Rows(record)
     return rows
 end
 
---- A row's right-hand text: the amount, then its DPS and share in the dim color
---- ("1.0K  42 DPS · 63.8%"; no DPS without the fight's length).
-function ResultsTargets.Amount(row)
-    local dim = Tbl().Hex(Tbl().COLORS.dim)
-    local share = NS.Format.Pct(row.share)
-    if type(row.dps) ~= "number" then
-        return ("%s  |c%s%s|r"):format(NS.Format.Number(row.total), dim, share)
-    end
-    return ("%s  |c%s%s \194\183 %s|r"):format(NS.Format.Number(row.total), dim,
-        L["%s DPS"]:format(NS.Format.Rate(row.dps)), share)
+--- A row's three right-hand cells: the amount, its DPS ("42 DPS", "" without the fight's length)
+--- and its share ("63.8%").
+--- @return string amount, string dps, string share
+function ResultsTargets.Cells(row)
+    local dps = type(row.dps) == "number" and L["%s DPS"]:format(NS.Format.Rate(row.dps)) or ""
+    return NS.Format.Number(row.total), dps, NS.Format.Pct(row.share)
+end
+
+--- The three columns' widths together, their gaps included.
+function ResultsTargets.ColumnsWidth()
+    local T = ResultsTargets
+    return T.AMOUNT_W + T.DPS_W + T.SHARE_W + 2 * T.COL_GAP
 end
 
 -- ── the section ─────────────────────────────────────────────────────────────────────────────────
@@ -88,6 +95,8 @@ local function newRow(p)
     row.bar = p.content:CreateTexture(nil, "BORDER", nil, 2)
     row.name = Style.Text(p.content, FONT.TEXT, Tbl().COLORS.text)
     row.amount = Style.Text(p.content, FONT.TEXT, Tbl().COLORS.text, "RIGHT")
+    row.dps = Style.Text(p.content, FONT.TEXT, Tbl().COLORS.text, "RIGHT")
+    row.share = Style.Text(p.content, FONT.TEXT, Tbl().COLORS.text, "RIGHT")
     return row
 end
 
@@ -97,16 +106,17 @@ function ResultsTargets.Fill(p)
     x.list = ResultsTargets.Rows(p.record)
     for i, data in ipairs(x.list) do
         x.rows[i] = x.rows[i] or newRow(p)
-        x.rows[i].name:SetText(data.name)
-        x.rows[i].amount:SetText(ResultsTargets.Amount(data))
+        local row, amount, dps, share = x.rows[i], ResultsTargets.Cells(data)
+        row.name:SetText(data.name)
+        row.amount:SetText(amount)
+        row.dps:SetText(dps)
+        row.share:SetText(share)
     end
 end
 
 local function hideRows(x, from)
     for i = from, #x.rows do
-        x.rows[i].bar:Hide()
-        x.rows[i].name:Hide()
-        x.rows[i].amount:Hide()
+        for _, part in ipairs({ "bar", "name", "amount", "dps", "share" }) do x.rows[i][part]:Hide() end
     end
 end
 
@@ -134,20 +144,27 @@ function ResultsTargets.Layout(p, y, cw)
         hideRows(x, 1)
         return y
     end
-    local amountW = math.min(ResultsTargets.AMOUNT_W, math.floor(cw / 2))
-    local tx, ty = ResultsTargets.TEXT_X, ResultsTargets.TEXT_Y
+    local T = ResultsTargets
+    local tx, ty = T.TEXT_X, T.TEXT_Y
+    -- The columns' right edges, right to left from the bar's end.
+    local shareR = cw - tx
+    local dpsR = shareR - T.SHARE_W - T.COL_GAP
+    local amountR = dpsR - T.DPS_W - T.COL_GAP
     for i = 1, n do
-        local row, data, ry = x.rows[i], x.list[i], y - (i - 1) * ResultsTargets.ROW_H
+        local row, data, ry = x.rows[i], x.list[i], y - (i - 1) * T.ROW_H
         place(row.bar, p.content, 0, ry)
         Style.Fill(row.bar, Tbl().BAR_COLOR, Tbl().BAR_ALPHA)
-        row.bar:SetSize(math.max(1, math.floor(cw * data.fill + 0.5)), ResultsTargets.ROW_H - 2)
+        row.bar:SetSize(math.max(1, math.floor(cw * data.fill + 0.5)), T.ROW_H - 2)
         place(row.name, p.content, tx, ry - ty)
-        row.name:SetWidth(math.max(20, cw - amountW - 2 * tx - 8))
-        place(row.amount, p.content, cw - amountW - tx, ry - ty)
-        row.amount:SetWidth(amountW)
+        row.name:SetWidth(math.max(20, amountR - T.AMOUNT_W - T.COL_GAP - tx))
+        for _, col in ipairs({ { row.amount, amountR, T.AMOUNT_W }, { row.dps, dpsR, T.DPS_W },
+                               { row.share, shareR, T.SHARE_W } }) do
+            place(col[1], p.content, col[2] - col[3], ry - ty)
+            col[1]:SetWidth(col[3])
+            col[1]:Show()
+        end
         row.bar:Show()
         row.name:Show()
-        row.amount:Show()
     end
     hideRows(x, n + 1)
     return y - n * ResultsTargets.ROW_H - 8

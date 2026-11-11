@@ -406,7 +406,7 @@ local function placeProfile(body, v, y)
     if paceOn then
         NS.HudTips.Attach(pace.bar, body.key == "over" and "overPace" or "pace")
         pace:Place(body.frame, -(top + SECTION_H), width)
-        pace:Set(pv.lo, pv.hi, pv.player, pv.pet, pv.withPet)
+        pace:Set(pv.lo, pv.hi, pv.total)
     end
     return top + h + GAP
 end

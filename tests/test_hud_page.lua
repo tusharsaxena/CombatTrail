@@ -169,6 +169,7 @@ test("hud page: every color is a ColorPair with its Use class color companion", 
             colors = colors + 1
             local prefix, key = r.path:match("^(.*%.)([^.]+)$")
             local leaf = key == "fontColor" and "Font" or key == "barColor" and "Bar"
+                or key == "borderColor" and "Border"
                 or (key:sub(1, 1):upper() .. key:sub(2))
             local companion = NS.FindSchemaRow(prefix .. "useClassColor" .. leaf)
             assertTrue(companion ~= nil, "no class-color companion beside " .. r.path)
@@ -177,7 +178,7 @@ test("hud page: every color is a ColorPair with its Use class color companion", 
             assertTrue(r.disabledIf == nil, r.path .. " is never disabled (anti-pattern #74)")
         end
     end
-    assertEqual(colors, 12)
+    assertEqual(colors, 13)
 end)
 
 test("hud page: Frame strata offers BACKGROUND to HIGH and never DIALOG (frame-layering-§1)", function()

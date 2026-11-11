@@ -56,7 +56,7 @@ local DROPDOWN_SPECS = {
     { key = "content", width = 100 }, { key = "board", width = 150 }, { key = "difficulty", width = 100 },
     { key = "days", width = 100 }, { key = "group", width = 150 },
 }
-local VIEW_BUTTON_W = 80
+local VIEW_BUTTON_W = 60
 local GAP = 6
 local MARGIN = GAP + 2      -- the bar's left margin, and its right one once the dropdowns stretch
 
@@ -328,8 +328,8 @@ function Fights.DayOptions()
 end
 
 -- The Group by modes, in the dropdown's order, each declared for its clients.
-local GROUP_SPECS = { { key = "board" }, { key = "character" }, { key = "spec" },
-                      { key = "content" }, { key = "none" } }
+local GROUP_SPECS = { { key = "datechar" }, { key = "date" }, { key = "board" }, { key = "character" },
+                      { key = "spec" }, { key = "content" }, { key = "none" } }
 
 --- The Group by modes this client has, in order.
 function Fights.GroupOrder()
@@ -342,6 +342,7 @@ end
 local GROUP_LABELS = {
     board = "Group: Encounter + difficulty", character = "Group: Character",
     content = "Group: Content", none = "Group: None",
+    date = "Group: Date", datechar = "Group: Date + character",
 }
 
 --- Each dropdown's options under `view`, faceted: a list reads the fights that pass every filter but
@@ -406,7 +407,32 @@ local function contentGroup(r)
     return key, Fights.Colored(text, color), ("%03d"):format(CONTENT_RANK[key] or 99)
 end
 
+-- A fight's day (local), as the group's key, its label ("11 Nov 2026") and a rank that sorts the
+-- newest day first (the groups rank ascending).
+local function dayOf(r)
+    local t = tonumber(r.t) or 0
+    local d = date("*t", t)
+    local stamp = d.year * 10000 + d.month * 100 + d.day
+    return ("%08d"):format(stamp), Tbl.Date(t, "%d %b %Y"), ("%08d"):format(99999999 - stamp)
+end
+
+local function dateGroup(r)
+    return dayOf(r)
+end
+
+-- The day, then the character in its class color: one group per character per day.
+local function dateCharGroup(r)
+    local day, dayLabel, dayRank = dayOf(r)
+    local key, nameLabel, nameRank = charGroup(r)
+    return day .. "|" .. key, dayLabel .. SEP .. nameLabel, dayRank .. "|" .. nameRank
+end
+
+-- `delta`: the key the Delta column measures by, where it is not the group's own. A day holds fights
+-- on different encounters, so under the date groupings a fight is measured against its encounter and
+-- difficulty across the filtered list, as the board grouping does (owner's default, 2026-11-11).
 Fights.GROUPS = {
+    date = { of = dateGroup, delta = boardGroup },
+    datechar = { of = dateCharGroup, delta = boardGroup },
     board = { of = boardGroup },
     character = { of = charGroup },
     spec = { of = specGroup },
@@ -721,11 +747,15 @@ local function buildBar(view)
         end
     end
     view.bossesOnly = checkbox(view, bar, "bossesOnly", L["Bosses only"])
-    view.save = Style.Button(bar, L["Save view"], function() view:SaveView() end)
-    view.save.tip = { L["Save view"], L["Save these filters, the grouping and the sort as this profile's view of your fights."] }
-    view.reset = Style.Button(bar, L["Reset view"], function() view:ResetView() end)
-    view.reset.tip = { L["Reset view"], L["Go back to the view the addon ships with: your character, the last 7 days, grouped by encounter and difficulty, newest first."] }
-    for _, b in ipairs({ view.save, view.reset }) do b:SetWidth(VIEW_BUTTON_W) end
+    -- DPS Race's three (owner, 2026-11-11): Save, Reset (the saved view deleted, the shipped one back)
+    -- and Clear (back to the saved view, kept).
+    view.save = Style.Button(bar, L["Save"], function() view:SaveView() end)
+    view.save.tip = { L["Save"], L["Save these filters, the grouping and the sort as this profile's default view of your fights."] }
+    view.reset = Style.Button(bar, L["Reset"], function() view:ResetView() end)
+    view.reset.tip = { L["Reset"], L["Delete the saved view and go back to the one the addon ships with: your character, the last 7 days, grouped by date and character, newest first."] }
+    view.clear = Style.Button(bar, L["Clear"], function() view:ClearView() end)
+    view.clear.tip = { L["Clear"], L["Go back to the saved view (the shipped one when none is saved). The saved view is kept."] }
+    for _, b in ipairs({ view.save, view.reset, view.clear }) do b:SetWidth(VIEW_BUTTON_W) end
     view.bar = bar
 end
 
@@ -752,10 +782,10 @@ function Fights.Build(parent, hooks)
     return view
 end
 
--- ── saved views (LootHistory's Save / Reset) ───────────────────────────────────────────────────
+-- ── saved views (DPS Race's Save / Reset / Clear) ───────────────────────────────────────────────
 -- The list's view (its filters, its grouping and its sort) is the profile's `results.view`. Every
--- build applies it. Save view stores the view on screen there; Reset view stores the shipped one and
--- applies it.
+-- build applies it. Save stores the view on screen there; Reset deletes it, so the shipped one
+-- applies; Clear applies the saved one again, keeping it.
 
 --- The profile's view (the shipped one where the profile is not there yet).
 function Fights.SavedView()
@@ -827,11 +857,16 @@ end
 
 function View:ResetView()
     if sampleRefusal() then return false end
-    local stock = {}
-    for k, v in pairs(Fights.StockView()) do stock[k] = v end
-    writeView(stock)
-    self:ApplyView(stock)
+    if not writeView(nil) then return false end
+    self:ApplyView(Fights.StockView())
     NS.Print(L["The Results view is back to the one the addon ships with."])
+    return true
+end
+
+--- Back to the saved view (the shipped one when none is saved), which stays saved. Writes nothing,
+--- so it serves the sample history too.
+function View:ClearView()
+    self:ApplyView(Fights.SavedView())
     return true
 end
 
@@ -860,7 +895,7 @@ end
 
 --- Plan the bar, pure (no frame is read), across `width`: the dropdowns on the first row at their
 --- configured widths, sharing what the bar has beyond them, so the last ends MARGIN short of the
---- bar's right edge; Bosses only on the second row at the left, Save view and Reset view on it at the
+--- bar's right edge; Bosses only on the second row at the left, Save, Reset and Clear on it at the
 --- right, under the last dropdown's right edge. Answers each dropdown's x and width, the second row's
 --- y, the check box's x and each button's right x, all from the bar's left.
 function Fights.BarPlan(width)
@@ -874,8 +909,9 @@ function Fights.BarPlan(width)
         x = x + widths[spec.key] + GAP
     end
     plan.right = x - GAP
-    plan.buttons.reset = plan.right
-    plan.buttons.save = plan.right - VIEW_BUTTON_W - GAP
+    plan.buttons.clear = plan.right
+    plan.buttons.reset = plan.right - VIEW_BUTTON_W - GAP
+    plan.buttons.save = plan.right - 2 * (VIEW_BUTTON_W + GAP)
     return plan
 end
 
@@ -893,7 +929,7 @@ function View:layoutBar(width)
     end
     self.bossesOnly:ClearAllPoints()
     self.bossesOnly:SetPoint("TOPLEFT", self.bar, "TOPLEFT", plan.check, plan.y)
-    for key, b in pairs({ save = self.save, reset = self.reset }) do
+    for key, b in pairs({ save = self.save, reset = self.reset, clear = self.clear }) do
         b:ClearAllPoints()
         b:SetPoint("TOPRIGHT", self.bar, "TOPLEFT", plan.buttons[key], plan.y)
     end

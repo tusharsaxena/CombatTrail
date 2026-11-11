@@ -161,11 +161,12 @@ test("compare: spells side by side, matched by spell and caster", function()
     assertEqual(bw, 100)
     assertEqual(aw, 80)
     local kpis = Cmp.Kpis(a, b)
-    assertEqual(kpis[1].key, "dps")
-    assertEqual(math.floor(kpis[1].pct * 10 + 0.5), 100, "+10.0% DPS")
+    assertEqual(kpis[1].key, "damage", "Damage first, as on the HUD (owner, 2026-11-11)")
+    assertEqual(kpis[2].key, "dps")
+    assertEqual(math.floor(kpis[2].pct * 10 + 0.5), 100, "+10.0% DPS")
     assertEqual(kpis[3].key, "length")
     assertEqual(kpis[3].pct, 0)
-    assertEqual(Cmp.ChangeText(kpis[1].pct), "+10.0%")
+    assertEqual(Cmp.ChangeText(kpis[2].pct), "+10.0%")
     assertEqual(Cmp.PairText("dps", 1100, 1000), NS.Format.Number(1000) .. " \194\187 " .. NS.Format.Number(1100))
     assertEqual(Cmp.PairText("length", 60, 75), "1:15 \194\187 1:00")
     assertEqual(Cmp.ChangeText(nil), "\226\128\148")
@@ -215,8 +216,19 @@ test("compare: the window opens over the Results window, follows the detail and 
     for _, name in ipairs(M.UISpecialFrames) do if name == "CombatTrailCompare" then special = true end end
     assertTrue(special, "Escape closes it")
     assertEqual(#NS.ResultsCompare.Rows(), 1, "one spell row")
-    assertTrue(ui.kpis[1].value:GetText():find("\194\187", 1, true) ~= nil, "other -> this")
-    assertEqual(ui.kpis[1].change:GetText(), "-33.3%")
+    assertEqual(ui.kpis[1].key, "damage", "the Damage box left of the DPS box, as on the HUD")
+    assertEqual(ui.kpis[2].key, "dps")
+    assertTrue(ui.kpis[2].value:GetText():find("\194\187", 1, true) ~= nil, "other -> this")
+    assertEqual(ui.kpis[2].change:GetText(), "-33.3%")
+    -- Each box: its label, its figures and its change, centered, the change on the bottom line
+    -- (owner, 2026-11-11).
+    for _, part in ipairs({ "label", "value", "change" }) do
+        assertEqual(ui.kpis[1][part]:GetJustifyH(), "CENTER", part .. " centered")
+    end
+    assertEqual(ui.kpis[1].change.__points[1][1], "BOTTOMLEFT", "the change on the box's bottom line")
+    assertEqual(ui.kpis[1].label.__points[1][1], "TOPLEFT", "the label on its top line")
+    -- Every spell row on a white background, so its stripe shows.
+    assertEqual(ui.rows[1].bg:GetTexture(), NS.Style.WHITE)
     -- The gear line: the trinket changed, the head's enchant differs.
     local texts = {}
     for _, g in ipairs(ui.gearItems) do if g.text:IsShown() then texts[#texts + 1] = g.text:GetText() end end

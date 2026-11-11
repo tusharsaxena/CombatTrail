@@ -649,8 +649,8 @@ Total.
 
 - pace: uses the best's slices when present, else its linear pace
 - pace: the bounds sit the best's pace in the middle; the range is held to the slider
-- pace: pet fill anchored to player fill texture, against the best's merged pace
-- pace: PACE_PET_FILL=false shows player-only against the best's player damage
+- pace: split at the tick, red short of it, green past it; a separate pet paces player-only
+- pace: a total with no pet source of its own runs against the best's merged pace
 - pace: no best, or the layout's pace off, hides the bar
 
 ### test_hud_chart.lua (7)
@@ -663,7 +663,7 @@ Total.
 - chart: hud.chart.columns caps the columns; the layout's chart off hides it
 - chart: the pure layout helpers
 
-### test_hud_breakdown.lua (8)
+### test_hud_breakdown.lua (11)
 
 - breakdown never sorts or computes in combat (mock secret values)
 - breakdown: pet rows carry paw and pet color
@@ -673,11 +673,15 @@ Total.
 - breakdown: the layout's spell rows off hides them
 - hud: the live DPS figures are written whole through the rate path; Damage is not
 - hud: the DPS box shows your pet's DPS too; your figures share a color, the pet's another
+- breakdown: every other spell row is faintly tinted, on the HUD and in the fight detail (2026-11-11)
+- breakdown: the snapped rows are whole pixels, never taller than the layout's room (2026-11-11)
+- breakdown: at a UI scale that is not round, every row and its border sit on whole pixels (2026-11-11)
 
-### test_hud_appearance.lua (7)
+### test_hud_appearance.lua (8)
 
 - every hud appearance key applies (one assertion per key via Apply)
 - appearance: every look key in the defaults has a case
+- appearance: the spell bars draw no border out of the box
 - appearance: Hud.Apply bumps the stamp, so a part restyles once, not on every tick
 - palette: NS.Constants.PALETTE holds the shared bar colors
 - palette: the HUD's bar defaults equal the palette entries
@@ -745,9 +749,9 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (38)
+### test_results_table.lua (42)
 
-- results: default view: current character, last 7 days, grouped by board
+- results: default view: current character, last 7 days, grouped by date and character
 - results: the date range and the character filter
 - results: bossesOnly filter
 - results: the filters are faceted: each list reads the fights the other filters pass
@@ -759,7 +763,7 @@ Total.
 - results: the table's columns are the plan's
 - results: table builds 500 rows via pooled rows
 - results: a header click sorts, a second flips it, and a saved view keeps the sort
-- results: Save view persists results.view; Reset view puts the shipped one back
+- results: Save persists results.view; Clear goes back to it; Reset deletes it
 - results: right-click menu has Note, Share, Compare With This Fight, Delete
 - results: the window is a toplevel HIGH browser in the close stack
 - results: ShowFight opens the window on the fight; Toggle closes and opens it
@@ -774,6 +778,7 @@ Total.
 - results: a window reopened mid-combat stays open through a split or an encounter start
 - results: the fold arrow shows chevron-right collapsed and chevron-left expanded
 - results: Character is a fixed 104 px column and the target column takes the rest
+- results: the window opens at its least width, which no shipped number overrides
 - results: a stored Character width wins, within the room the target column leaves
 - results: dragging the Character header's edge resizes it and stores the width on release
 - results: a window hidden while the Character edge is held ends the drag and stores the width
@@ -785,6 +790,9 @@ Total.
 - results: a note is added, edited and cleared from the note box, and a reload keeps it
 - results: a note's escape codes and control characters are neutralized
 - results: the Damage and DPS bars are the palette's blue, not the class color, under every skin
+- results: the list's rows are striped on a white background, every other one tinted
+- results: under the date groupings Delta still measures each fight against its encounter
+- results: the bar holds Save, Reset and Clear, right to left Clear last
 
 ### test_results_detail.lua (20)
 
@@ -1122,13 +1130,13 @@ Total.
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
 | test_hud_chart.lua | 7 |
-| test_hud_breakdown.lua | 8 |
-| test_hud_appearance.lua | 7 |
+| test_hud_breakdown.lua | 11 |
+| test_hud_appearance.lua | 8 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 38 |
+| test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
 | test_share.lua | 6 |
@@ -1153,4 +1161,4 @@ Total.
 | test_skin_switch.lua | 40 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **903** |
+| **Total** | **911** |

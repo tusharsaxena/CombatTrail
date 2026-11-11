@@ -95,9 +95,11 @@ local function frameWidth(listWidth)
     return listWidth + (Results.View() == "expanded" and Results.DETAIL_WIDTH or 0)
 end
 
+-- The list's width: the stored one held to its least, else the least itself, which is the shipped
+-- width (no number ships: the filter bar and the columns set it; owner, 2026-11-11).
 local function storedSize()
     local w, d = store() or {}, shippedWindow()
-    return frameWidth(math.max(Results.MIN_WIDTH, tonumber(w.width) or d.width)),
+    return frameWidth(math.max(Results.MIN_WIDTH, tonumber(w.width) or Results.MIN_WIDTH)),
         math.max(Results.MIN_HEIGHT, tonumber(w.height) or d.height)
 end
 

@@ -48,6 +48,28 @@ function Breakdown.Pitch()
     return Breakdown.RowHeight() + Breakdown.ROW_GAP
 end
 
+--- The rows as drawn at `px` UI units a physical pixel (Compat.PixelSize's): the row's height, the
+--- pitch and the gap between, each a whole number of pixels, so every row and every gap draws the
+--- same thickness at a UI scale that is not round (owner, 2026-11-11: an 18 px row and its 2 px gap
+--- fell on fractions of a pixel and came out 1, 2 or 3 pixels apart). The pitch rounds DOWN, so n
+--- snapped rows never take more than Height(n), the room the layout gave them; the row's height
+--- rounds to the nearest pixel, short of the pitch by one pixel at least while there is a gap.
+--- @param px number|nil  1 when left out
+--- @return number rowHeight, number pitch, number gap
+function Breakdown.Snapped(px)
+    px = (type(px) == "number" and px > 0) and px or 1
+    local pitch = math.max(1, math.floor(Breakdown.Pitch() / px + 1e-6))
+    local h = math.max(1, math.floor(Breakdown.RowHeight() / px + 0.5))
+    if Breakdown.ROW_GAP > 0 then h = math.min(h, pitch - 1) else h = math.min(h, pitch) end
+    h = math.max(1, h)
+    return h * px, pitch * px, (pitch - h) * px
+end
+
+-- `v` UI units to the nearest whole pixel at `px`.
+local function snap(v, px)
+    return math.floor(v / px + 0.5) * px
+end
+
 --- A spell's name through C_Spell (a secret ID is passed through, the name only ever reaching
 --- SetText), or the localized "Unknown spell".
 --- @param id any  a spell ID, possibly secret
@@ -92,6 +114,12 @@ end
 
 local function newRow(parent)
     local row = CreateFrame("Frame", nil, parent)
+    -- Every other row faintly tinted, under the icon and the bar's track (owner, 2026-11-11: the fight
+    -- list's stripe, Style.Stripe), on the HUD and in the fight detail alike.
+    -- Down through the gap under the row, so the bands join up (DPS Race's, 2026-11-11).
+    -- Its anchors are restyle's: the gap it reaches down through is the snapped one.
+    row.stripe = row:CreateTexture(nil, "BACKGROUND")
+    row.stripe:SetTexture(Style.WHITE)
     row.icon = row:CreateTexture(nil, "ARTWORK")
     row.icon:SetPoint("LEFT", row, "LEFT", 0, 0)
     Style.EdgeIcon(row.icon, true)
@@ -113,19 +141,26 @@ local function newRow(parent)
     return row
 end
 
--- The row's look, once per Appearance stamp: its height, the icon's size, the bar's texture, the
--- spell text's font. The fill's color is set per fill (the player's or the pet's).
-local function restyle(row)
+-- The row's look, once per Appearance stamp and pixel size: its height (snapped, Breakdown.Snapped),
+-- the stripe down through the gap, the icon's size, the bar's texture and border, the spell text's
+-- font. The fill's color is set per fill (the player's or the pet's).
+local function restyle(row, px)
     local A = NS.HudAppearance
-    if row.stamp == A.stamp then return end
-    row.stamp, row.mode = A.stamp, nil
-    local h = Breakdown.RowHeight()
+    if row.stamp == A.stamp and row.px == px then return end
+    row.stamp, row.px, row.mode = A.stamp, px, nil
+    local h, _, gap = Breakdown.Snapped(px)
     row:SetHeight(h)
-    row.iconSize = math.max(8, h - 2)
+    row.stripe:ClearAllPoints()
+    row.stripe:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+    row.stripe:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, -gap)
+    row.iconSize = math.max(8, h - 2 * px)
     row.icon:SetSize(row.iconSize, row.iconSize)
     row.look = A.Bar("spells")
     row.petLook = A.PetColor()
     A.PaintBar(row.bar, row.look)
+    -- The bar's border (Spell rows > Bar border; owner, 2026-11-11): off by default, drawn round the
+    -- bar alone, never the icon.
+    A.PaintEdge(row, row.bar, A.Border("spells"), px)
     local font = A.Font("spells")
     A.ApplyFont(row.name, font)
     A.ApplyFont(row.amount, font)
@@ -146,7 +181,7 @@ local function setMode(row, icons, paw, pct)
     row.mode = mode
     local bar = row.bar
     bar:ClearAllPoints()
-    bar:SetPoint("TOPLEFT", row, "TOPLEFT", icons and ((row.iconSize or 16) + 3) or 0, 0)
+    bar:SetPoint("TOPLEFT", row, "TOPLEFT", icons and snap((row.iconSize or 16) + 3, row.px or 1) or 0, 0)
     bar:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", 0, 0)
     row.pct:ClearAllPoints()
     row.pct:SetPoint("RIGHT", bar, "RIGHT", -6, 0)
@@ -205,14 +240,19 @@ function Breakdown.Capacity(room)
 end
 
 -- One pooled row at index `i`, styled and in its mode.
-function List:acquire(i, isPet, pct)
+-- `rank`: the spell's place in the whole list (the offset plus `i`), which the stripe follows so its
+-- tint stays with its spell on the wheel; `i` when left out.
+function List:acquire(i, isPet, pct, rank)
     local parent = self.parent
     local row = NS.Pool.Acquire(self.pool, function() return newRow(parent) end)
-    restyle(row)
-    local y = -(i - 1) * Breakdown.Pitch()
+    local px = NS.Compat.PixelSize(parent)
+    restyle(row, px)
+    local _, pitch = Breakdown.Snapped(px)
+    local y = -(i - 1) * pitch
     row:ClearAllPoints()
     row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
     row:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, y)
+    Style.Stripe(row.stripe, rank or i)
     local A = NS.HudAppearance
     setMode(row, A.On("hud.spells.icons"), isPet and A.On("hud.spells.paw"), pct)
     if isPet then row.paw:SetTexture(NS.Icon("ph:paw-print")) end
@@ -270,7 +310,7 @@ function List:ShowLive(live, n, offset)
         local e = entries[offset + i]
         if not e then break end
         local s = e.s
-        local row = self:acquire(i, e.pet, names)
+        local row = self:acquire(i, e.pet, names, offset + i)
         if max ~= nil then row.bar:SetMinMaxValues(0, max) end
         if s.total ~= nil then row.bar:SetValue(s.total) else row.bar:SetValue(0) end
         row.name:SetText(Breakdown.SpellName(s.spellID))
@@ -304,7 +344,7 @@ function List:ShowFinal(spells, total, n, offset)
     for i = 1, math.min(n, #spells - offset) do
         local s = spells[offset + i]
         local dmg = tonumber(s.total) or 0
-        local row = self:acquire(i, s.isPet == true, true)
+        local row = self:acquire(i, s.isPet == true, true, offset + i)
         row.bar:SetMinMaxValues(0, top > 0 and top or 1)
         row.bar:SetValue(dmg)
         row.name:SetText(Breakdown.SpellName(s.spellID))

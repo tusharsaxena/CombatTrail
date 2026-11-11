@@ -54,7 +54,7 @@ local function lsm()
 end
 
 -- The shared media library's own file for `name`, where LSM cannot answer (no LSM loaded yet).
-local OWN = { font = "Font", statusbar = "Texture" }
+local OWN = { font = "Font", statusbar = "Texture", border = "Border" }
 
 -- The path LSM holds for `name` of media `kind`, else the shared media library's, else nil.
 local function fetch(kind, name)
@@ -183,6 +183,83 @@ function Appearance.PaintBar(bar, look, color)
     local c = color or look
     bar:SetStatusBarColor(c.r, c.g, c.b, c.a)
     if NS.Skin.BarGloss then NS.Skin.BarGloss(bar, look.fromSkin) end
+end
+
+-- The border styles that are a flat edge: LibKa0s registers "Solid" as one, and a client with no
+-- shared media still draws it (DPS Race's FLAT_EDGE).
+local FLAT_EDGE = { Solid = true, flat = true }
+
+-- The border's style, show and thickness at `p`, through S.BarBorder while the skin's border is
+-- followed (Appearance.Border's).
+local function borderShape(p)
+    local style, show, size = setting(p .. "borderStyle"), setting(p .. "borderShow") == true,
+        tonumber(setting(p .. "borderSize")) or 1
+    local S = NS.Skin
+    if S and type(S.BarBorder) == "function" then
+        local ok, s2, show2, size2 = pcall(S.BarBorder, style, show, size, setting(p .. "borderStyleFromSkin") == true)
+        if ok then style, show, size = s2, show2 == true, tonumber(size2) or size end
+    end
+    return style, show, size
+end
+
+-- The border's color at `p`: the skin's `bar.border` while followed and no class color is asked
+-- for, else the stored one (a class color first).
+local function borderColor(p)
+    local S, classPath = NS.Skin, p .. "useClassColorBorder"
+    if setting(p .. "borderColorFromSkin") == true and setting(classPath) ~= true and S and S.Color then
+        local r, g, b, a = S.Color("bar.border")
+        if r ~= nil then return r, g, b, a end
+    end
+    return Appearance.Color(p .. "borderColor", classPath)
+end
+
+--- A bar border at `hud.<block>.` (the composer's BorderGroup with Show border, on the bar family:
+--- options-ui-§16), or nil when it draws none: { file, size, r, g, b, a }. The style and thickness go
+--- through S.BarBorder while `borderStyleFromSkin` is on (a skin's real style wins and shows; its None
+--- hands back the stored three); the color is the skin's `bar.border` while `borderColorFromSkin` is
+--- on, a class color first. Off, None, an unknown style or no thickness draws nothing.
+--- @param block string  "spells"
+--- @return table|nil
+function Appearance.Border(block)
+    local p = "hud." .. block .. "."
+    local style, show, size = borderShape(p)
+    if not show or type(style) ~= "string" or style == "None" or size <= 0 then return nil end
+    local file = FLAT_EDGE[style] and FALLBACK_BAR or fetch("border", style)
+    if not file then return nil end
+    local r, g, b, a = borderColor(p)
+    return { file = file, size = size, r = r, g = g, b = b, a = a or 1 }
+end
+
+--- Draw `look` (Appearance.Border's) round `anchor`: a frame of `anchor`'s own kept on
+--- `holder.edge`, made the first time a border draws, with no fill and no mouse, over the fill. Nil
+--- hides it. The backdrop is set only when its file, thickness or pixel size changes (DPS Race's
+--- PaintEdge). `px` (Compat.PixelSize's, 1 when left out) turns the thickness from physical pixels
+--- into UI units, so a 1 px edge draws one pixel on every side at any UI scale, not 1 or 2 by where
+--- the bar falls (owner, 2026-11-11: some bars' borders looked thicker).
+--- @param holder table  what keeps the frame
+--- @param anchor table  the frame it covers
+--- @param look table|nil
+--- @param px number|nil
+function Appearance.PaintEdge(holder, anchor, look, px)
+    local edge = holder.edge
+    if not look then
+        if edge then edge:Hide() end
+        return
+    end
+    if not edge then
+        edge = CreateFrame("Frame", nil, anchor, "BackdropTemplate")
+        edge:SetAllPoints(anchor)
+        if edge.EnableMouse then edge:EnableMouse(false) end
+        holder.edge = edge
+    end
+    px = (type(px) == "number" and px > 0) and px or 1
+    local key = look.file .. "@" .. look.size .. "@" .. px
+    if edge.edgeKey ~= key then
+        edge.edgeKey = key
+        if edge.SetBackdrop then edge:SetBackdrop({ edgeFile = look.file, edgeSize = look.size * px }) end
+    end
+    if edge.SetBackdropBorderColor then edge:SetBackdropBorderColor(look.r, look.g, look.b, look.a) end
+    edge:Show()
 end
 
 --- The pet's rows and fills: the spell rows' bar look in `hud.spells.petColor`.

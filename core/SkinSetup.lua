@@ -251,6 +251,8 @@ NS.SKIN_TOKENS = {
     -- other skin draws its own bar.bg.
     ["ct.list.track"]   = { default = { 1, 1, 1, 0.04 }, follow = "bar.bg" },
     ["ct.pace.track"]   = { default = { 1, 1, 1, 0.08 }, follow = "bar.bg" },
+    -- The pace bar's shortfall to the tick, DPS Race's red (its sem.statusBad), 2026-11-11.
+    ["ct.pace.behind"]  = { default = { 1, 0.32, 0.32, 1 }, follow = "sem.statusBad" },
     -- The fight detail's pane wash, and the dim cover over the Results window while a modal is open.
     ["ct.pane.bg"]       = { default = { 0, 0, 0, 0.15 }, follow = "panel.bg" },
     ["ct.cover.dim"]     = { default = { 0, 0, 0, 0.45 }, follow = "cover.dim" },

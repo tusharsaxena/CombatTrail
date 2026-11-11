@@ -641,6 +641,9 @@ end
 local function rowBackground(row)
     row.bg = row:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints(row)
+    -- White, so Style.Stripe's vertex tint shows: a texture with no file draws nothing, which left the
+    -- list unstriped (owner, 2026-11-11; DPS Race sets it the same way).
+    row.bg:SetTexture(Style.WHITE)
     row.sel = row:CreateTexture(nil, "BORDER")
     row.sel:SetAllPoints(row)
     Style.Fill(row.sel, "ct.list.sel")   -- the selection and hover washes: the list's own
@@ -855,8 +858,11 @@ end
 function Table:measure()
     local spec = self.grouping
     local function groupOf(record) return Tbl.GroupKey(spec, record) end
+    -- The whole-list scan (the Delta column) keys by the grouping's `delta` where it has one.
+    local scanOf = groupOf
+    if spec and spec.delta then scanOf = function(record) return tostring((spec.delta(record))) end end
     for _, col in ipairs(self.columns) do
-        if col.scan then col.scan(self.data, groupOf) end
+        if col.scan then col.scan(self.data, scanOf) end
         if col.bar then
             col.groupOf = groupOf
             col.barRanges = barRanges(col, self.data, groupOf)

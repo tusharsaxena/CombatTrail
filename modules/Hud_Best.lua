@@ -15,8 +15,8 @@ local _, NS = ...
 -- pace that grows.
 --
 -- TWO MEASURES. `damageAt(t)` is the best's MERGED damage (player and pet), the pace bar's reference
--- while the pet fill is drawn (Hud.PACE_PET_FILL, spec §6 and §12); `playerAt(t)` is the best's own
--- player damage alone, which the bar paces against when that seam is off and which the damage chart
+-- for a merged total (spec §6); `playerAt(t)` is the best's own player damage alone, which the bar
+-- paces against when the pet has a live source of its own and which the damage chart
 -- draws its best line from (the chart's columns are the player's live total alone: modules/Slices.lua
 -- keeps the pet beside it, and the two can never be summed in combat).
 --
@@ -148,7 +148,7 @@ function Best.Bounds(pace, range)
 end
 
 --- The reference the pace bar sets the fight against at `t`: the best's merged damage, or its player
---- damage alone with `playerOnly` (Hud.PACE_PET_FILL off).
+--- damage alone with `playerOnly` (a live pet source of its own: the totals cannot be summed).
 --- @param curve table  Best.Curve's
 --- @param t number
 --- @param playerOnly boolean|nil
@@ -158,38 +158,38 @@ function Best.PaceAt(curve, t, playerOnly)
     return curve:damageAt(t)
 end
 
---- The live pace bar's view: the bounds around the best's pace at `t` (the fight's clock), the
---- player's live total and, with `withPet`, the pet's (both opaque, copied and never tested but for
---- nil).
+--- The live pace bar's view: the bounds around the best's pace at `t` (the fight's clock) and the
+--- one total the bar is handed (opaque, copied and never tested but for nil): the player's source
+--- total. Where the pet folds into it (WoW Forever) or there is no pet, that is the merged figure,
+--- against the best's merged pace; where the pet has a live source of its own (`live.pet`), the two
+--- secrets cannot be summed, so the player's alone runs against the best's player damage.
 --- @param curve table
 --- @param t number
 --- @param live table|nil  NS.Meter.ReadLive's
---- @param withPet boolean  Hud.PACE_PET_FILL
---- @return table { lo, hi, ref, player, pet, withPet }
-function Best.LiveView(curve, t, live, withPet)
-    local ref = Best.PaceAt(curve, t, not withPet)
+--- @return table { lo, hi, ref, total, playerOnly }
+function Best.LiveView(curve, t, live)
+    local playerOnly = type(live) == "table" and type(live.pet) == "table"
+    local ref = Best.PaceAt(curve, t, playerOnly)
     local lo, hi = Best.Bounds(ref)
-    local view = { lo = lo, hi = hi, ref = ref, withPet = withPet }
-    if type(live) ~= "table" then return view end
-    if type(live.player) == "table" then view.player = live.player.total end
-    if withPet and type(live.pet) == "table" then view.pet = live.pet.total end
+    local view = { lo = lo, hi = hi, ref = ref, playerOnly = playerOnly }
+    if type(live) == "table" and type(live.player) == "table" then view.total = live.player.total end
     return view
 end
 
---- The over card's pace bar: the fight's plain final player (and pet) damage against the best's pace
---- at the fight's length (`final.duration`, else `clock`). Nil for a fight the meter lost.
+--- The over card's pace bar: the fight's plain final merged damage (the player's and the pet's,
+--- summed: plain after combat) against the best's merged pace at the fight's length
+--- (`final.duration`, else `clock`). Nil for a fight the meter lost.
 --- @param curve table
 --- @param final table|nil  the after-combat read
 --- @param clock number
---- @param withPet boolean
---- @return table|nil { lo, hi, ref, player, pet, withPet }
-function Best.OverView(curve, final, clock, withPet)
+--- @return table|nil { lo, hi, ref, total, playerOnly }
+function Best.OverView(curve, final, clock)
     if type(final) ~= "table" or type(final.player) ~= "table" then return nil end
     local player = Secrets.PlainNumber(final.player.total)
     if not player then return nil end
     local t = Secrets.PlainNumber(final.duration) or tonumber(clock) or 0
-    local ref = Best.PaceAt(curve, t, not withPet)
+    local ref = Best.PaceAt(curve, t, false)
     local lo, hi = Best.Bounds(ref)
-    local pet = withPet and type(final.pet) == "table" and Secrets.PlainNumber(final.pet.total) or nil
-    return { lo = lo, hi = hi, ref = ref, player = player, pet = pet, withPet = withPet }
+    local pet = type(final.pet) == "table" and Secrets.PlainNumber(final.pet.total) or 0
+    return { lo = lo, hi = hi, ref = ref, total = player + pet, playerOnly = false }
 end

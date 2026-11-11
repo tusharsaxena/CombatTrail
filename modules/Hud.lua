@@ -33,11 +33,10 @@ local _, NS = ...
 -- plain after-combat read and the stored records.
 --
 -- THE PACE (spec §6 and §12). The pace record's curve (HudBest.Curve) is read once when the fight goes
--- live; each redraw sets the fight's live totals against it at the clock's time (from the first hit):
--- the player's total on the bar's player fill, the pet's on the pet fill anchored to it, against the
--- best's merged pace. Hud.PACE_PET_FILL is the seam (one place, spec §10): false, and the pet fill
--- hides and the player's total is set against the best's player damage alone. The over card draws
--- the same bar from the plain after-combat read at the fight's length.
+-- live; each redraw sets the fight's live total against it at the clock's time (from the first hit),
+-- on DPS Race's split bar: red short of the tick, green past it (modules/Hud_Chart.lua; the total and
+-- its reference, HudBest.LiveView). The over card draws the same bar from the plain after-combat read
+-- at the fight's length.
 --
 -- THE WINDOW is a plain, non-secure frame (standalone-windows): skinned through NS.ApplySkin, closed
 -- through NS.MakeCloseButton, in UISpecialFrames, clamped, toplevel in the MEDIUM tier
@@ -80,10 +79,6 @@ local Perf = NS.Perf
 local Secrets = NS.Secrets
 
 Hud.STATE = { HIDDEN = "hidden", LIVE = "live", OVER = "over", NO_BEST = "noBest" }
---- The pace bar's pet-fill seam (spec §12): true draws the pet's live total on from the end of the
---- player's fill against the best's merged pace; false is the fallback, player-only against the
---- best's player damage, if the anchoring does not hold up in game.
-Hud.PACE_PET_FILL = true
 -- Seconds between two reads of the fight's casts for the chart's cooldown icons.
 Hud.CAST_READ = 1
 Hud.FRAME_NAME = "CombatTrailHud"
@@ -639,9 +634,8 @@ end
 local function paceView(v)
     local curve = v.curve
     if not curve or v.pace == nil then return nil end
-    local withPet = Hud.PACE_PET_FILL == true
-    if v.key == "over" then return NS.HudBest.OverView(curve, v.final, v.clock, withPet) end
-    return NS.HudBest.LiveView(curve, v.clock, v.live, withPet)
+    if v.key == "over" then return NS.HudBest.OverView(curve, v.final, v.clock) end
+    return NS.HudBest.LiveView(curve, v.clock, v.live)
 end
 
 -- The over card's spell rows: the merged plain read, highest first, and its total.

@@ -235,7 +235,12 @@ block(H.BarGroup(spec("spells", { fromSkin = true,
     tooltips = { barTexture = L["The texture your spell rows' bars and the pace bar's fills are drawn with."] } })))
 at(TAB.spells, L["Pet bars"])
 colorPair("spells", "petColor", L["Pet bar color"],
-    L["The color of your pet's spell rows and of its part of the pace bar."])
+    L["The color of your pet's spell rows."])
+at(TAB.spells, L["Bar border"])
+block(H.BorderGroup(spec("spells", { show = true, fromSkin = "bar",
+    tooltips = { borderShow = L["Draw a border round each spell row's bar, on the HUD and in the fight detail."] },
+    extra = { companion("spells", "borderColorFromSkin", L["Use the skin's color"],
+        L["Draw the border in the skin's bar border color. The border color swatch is not read while this is on, and Use class color comes first."]) } })))
 at(TAB.spells, L["Row font"])
 fontBlock("spells", true, { font = L["The face the spell names and amounts are drawn in."] })
 

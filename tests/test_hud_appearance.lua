@@ -172,10 +172,34 @@ local LIVE_CASES = join(
         { "spells.paw", false, function(_, Hud) assertFalse(rows(Hud)[3].paw:IsShown()) end },
     },
     barCases("spells", playerRowBar),
+    -- The bars' border (owner, 2026-11-11): off out of the box, then each row of its group.
+    {
+        { "spells.borderShow", true, function(_, Hud)
+            local edge = rows(Hud)[1].edge
+            assertTrue(edge ~= nil and edge:IsShown(), "a border round the bar")
+            assertEqual(edge:GetParent(), rows(Hud)[1].bar, "round the bar, not the icon")
+            assertEqual(edge:GetBackdrop().edgeSize, 1, "a 1 px edge")
+            rgb({ r = 0, g = 0, b = 0 }, edge:GetBackdropBorderColor())
+        end },
+        { "spells.borderSize", 3, function(_, Hud) assertEqual(rows(Hud)[1].edge:GetBackdrop().edgeSize, 3) end },
+        { "spells.borderColor", RED, function(_, Hud) rgb(RED, rows(Hud)[1].edge:GetBackdropBorderColor()) end },
+        { "spells.useClassColorBorder", true, function(_, Hud)
+            rgb(MAGE, rows(Hud)[1].edge:GetBackdropBorderColor())
+        end },
+        { "spells.borderColorFromSkin", true, function(_, Hud)
+            local r, g, b = rows(Hud)[1].edge:GetBackdropBorderColor()
+            rgb(MAGE, r, g, b, "a class color before the skin's")
+        end },
+        { "spells.borderStyleFromSkin", true, function(_, Hud)
+            -- Ka0s Default's bar border is None, which hands the stored three back.
+            assertTrue(rows(Hud)[1].edge:IsShown(), "the skin's None keeps the player's border")
+            assertEqual(rows(Hud)[1].edge:GetBackdrop().edgeSize, 3)
+        end },
+        { "spells.borderStyle", "None", function(_, Hud) assertFalse(rows(Hud)[1].edge:IsShown(), "None draws nothing") end },
+    },
     {
         { "spells.petColor", RED, function(_, Hud)
             rgb(RED, rows(Hud)[3].bar:GetStatusBarColor())
-            rgb(RED, live(Hud).parts.pace.pet:GetStatusBarColor())
         end },
         { "spells.useClassColorPetColor", true, function(_, Hud) rgb(MAGE, rows(Hud)[3].bar:GetStatusBarColor()) end },
     },
@@ -241,6 +265,12 @@ test("appearance: every look key in the defaults has a case", function()
     end
     table.sort(missing)
     assertEqual(table.concat(missing, ", "), "", "keys with no case")
+end)
+
+test("appearance: the spell bars draw no border out of the box", function()
+    local _, _, Hud = stage()
+    local edge = rows(Hud)[1].edge
+    assertTrue(edge == nil or not edge:IsShown(), "no border by default")
 end)
 
 test("appearance: Hud.Apply bumps the stamp, so a part restyles once, not on every tick", function()
@@ -320,6 +350,6 @@ test("palette: the live HUD draws the palette with no setting touched", function
     swatchIs(drawn(plainColumn(Hud):GetStatusBarColor()), P.BAR, P.BAR_A, "a chart column")
     swatchIs(drawn(unpack(chart(Hud).line.__color)), P.PACE, nil, "the pace line")
     local pace = live(Hud).parts.pace
-    swatchIs(drawn(pace.player:GetStatusBarColor()), P.BAR, P.BAR_A, "the pace bar's player fill")
-    swatchIs(drawn(pace.pet:GetStatusBarColor()), P.PET, P.BAR_A, "the pace bar's pet fill")
+    swatchIs(drawn(pace.behind:GetStatusBarColor()), P.BAR, P.BAR_A, "the pace bar's behind half")
+    swatchIs(drawn(pace.ahead:GetStatusBarColor()), inst.NS.Style.Tok("ct.ahead"), P.BAR_A, "the pace bar's green ahead half")
 end)

@@ -168,6 +168,8 @@ end
 -- own opacity). Painted by the host on every bind, never by a recorded primitive, so a pooled box
 -- takes the next item's color.
 
+--- The plain white texture a tint (Style.Stripe, Style.Vertex) is drawn on.
+Style.WHITE = "Interface\\Buttons\\WHITE8x8"
 Style.FLAT = { bgFile = "Interface\\Buttons\\WHITE8x8", edgeFile = "Interface\\Buttons\\WHITE8x8", edgeSize = 1 }
 Style.TINT_FILL_A, Style.CHIP_EDGE_A, Style.BADGE_EDGE_A = 0.08, 0.55, 0.6
 

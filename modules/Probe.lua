@@ -12,7 +12,7 @@ local _, NS = ...
 --     It cannot see double counting: whether the player's own total also holds the pet's damage
 --     is a sum the meter alone could answer, so a "yes" says so beside it.
 --   * "pace pet-fill anchor": two hidden StatusBars, bar B's LEFT anchored to bar A's fill texture's
---     RIGHT, and whether that SetPoint raised (the pace bar's pet fill, plan Task 3.2)
+--     RIGHT, and whether that SetPoint raised (the pace bar's red shortfall hangs off its fill so)
 --   * on WoW Forever only, every talent API's answer (the talent tabs, the class-wide spec, the active
 --     config, its tree's trait groups and their points) and the talent tree the addon picks as the
 --     spec (v0.2 plan Task A4, D11)
