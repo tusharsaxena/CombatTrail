@@ -841,7 +841,7 @@ Total.
 - autoarm: entering an instance closes the dummy's window
 - autoarm: stood down, nothing is registered and nothing acts; the stand-up rebuilds
 
-### test_race_window.lua (34)
+### test_race_window.lua (36)
 
 - race window: absent on WoW Forever, with nothing of it loaded
 - race window: present on Retail, with its frame name and its hooks
@@ -849,6 +849,7 @@ Total.
 - race window: combat ending before the buzzer waits for the read
 - race window: idle offers the five lengths and Custom, and Arm Race arms the pick
 - race window: a typed length is taken, and one out of range is refused with the length line
+- race window: a changed Default race length takes effect over the pick
 - race window: in combat Arm Race is disabled and the line under it says why
 - race window: the target card names the dummy, its kind and its creature ID
 - race window: a target that is no training dummy, or none, is warned about
@@ -866,6 +867,7 @@ Total.
 - race window: the result chips name each flag in a short word, its full text the tip
 - race window: the running clocks follow the race clock setting
 - race window: the running pace bar paces on the race board's best
+- race window: with a pet the meter reads apart, the player's total paces on the best's player share
 - race window: no live boxes, no chart and no spell rows in any body
 - race window: it wears the HUD's skin and appearance
 - race window: attached, it stands beside the HUD on each side and moves with it
@@ -1425,7 +1427,7 @@ Total.
 | test_race_resume.lua | 23 |
 | test_race_settings.lua | 18 |
 | test_autoarm.lua | 27 |
-| test_race_window.lua | 34 |
+| test_race_window.lua | 36 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1461,4 +1463,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1175** |
+| **Total** | **1177** |

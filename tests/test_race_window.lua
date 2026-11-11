@@ -178,6 +178,19 @@ test("race window: a typed length is taken, and one out of range is refused with
     assertEqual(RW.View().length, 90, "a refused length changes nothing")
 end)
 
+test("race window: a changed Default race length takes effect over the pick", function()
+    if forever() then return end
+    local S = fresh()
+    local RW = W(S)
+    RW.Show()
+    RW.Act.pickLength(120)
+    assertEqual(RW.View().length, 120)
+    assertTrue(S.NS.SetByPath("race.defaultLength", 300))
+    assertEqual(RW.View().length, 300, "the idle body offers the new default")
+    assertEqual(RW.ArmLength(), 300, "and auto-arm arms it")
+    assertEqual(body(S).w.presets[5].styleName, "primary", "the 5:00 preset is the picked one")
+end)
+
 test("race window: in combat Arm Race is disabled and the line under it says why", function()
     if forever() then return end
     local S = fresh()
@@ -471,6 +484,37 @@ test("race window: the running pace bar paces on the race board's best", functio
     assertEqual(chips[1], S.NS.Dummies.Label(best.race.kind) .. " \194\183 0:30")
 end)
 
+test("race window: with a pet the meter reads apart, the player's total paces on the best's player share", function()
+    if forever() then return end
+    local PET = "Pet-0-1-2-3-4"
+    local S = fresh({ mutate = function(m)
+        m.__unitExists.pet = true
+        m.__unitGUIDs.pet = PET
+        m.__unitNames.pet = "Wolf"
+    end })
+    S.meter.SetPetGUID(PET)
+    local session = { damage = 30000, dps = 1000, duration = 30, spells = { { id = 133, dmg = 30000, dps = 1000 } },
+                      pet = { damage = 30000, dps = 1000, spells = { { id = 17253, dmg = 30000, dps = 1000 } } } }
+    W(S).Show()
+    assertTrue(F.arm(S, 30))
+    local s1 = F.pull(S, 101, 25, session)
+    F.damage(S, 25, s1 + 1, s1 + 30, 1)
+    F.settle(S, s1 + 31)
+    local best = F.records(S)[1]
+    assertEqual(best.race.status, "complete")
+    local share = best.damage.player / best.damage.merged
+    assertTrue(share < 1, "the best's pet did part of its damage")
+    W(S).Act.newRace()
+    assertTrue(F.arm(S, 30, 200))
+    local start = F.pull(S, 201, 26, session)
+    F.damage(S, 26, start + 1, start + 10, 1)
+    F.run(S, start + 10.25)
+    W(S).Refresh()
+    local v = W(S).View()
+    assertTrue(v.pace ~= nil and v.pace.playerOnly, "the live total is the player's alone")
+    F.near(v.pace.ref, best.race.score * share / 30 * 10.25, "against the best's player damage, not its merged score")
+end)
+
 test("race window: no live boxes, no chart and no spell rows in any body", function()
     if forever() then return end
     local S = fresh()
@@ -553,7 +597,21 @@ end)
 
 test("race window: attached with the HUD hidden it stands where the HUD would", function()
     if forever() then return end
-    local S = fresh()
+    -- The kit's frames keep no anchors or size: each named frame records its own here.
+    local geom = {}
+    local S = fresh({ mutate = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, name, ...)
+            local f = create(kind, name, ...)
+            if type(name) ~= "string" then return f end
+            local g = { points = {} }
+            geom[name] = g
+            rawset(f, "SetPoint", function(_, ...) g.points[#g.points + 1] = { ... } end)
+            rawset(f, "ClearAllPoints", function() g.points = {} end)
+            rawset(f, "SetSize", function(_, w, h) g.w, g.h = w, h end)
+            return f
+        end
+    end })
     local Hud = S.NS.Hud
     assertFalse(Hud.IsShown(), "the HUD is shut")
     W(S).Show()
@@ -562,6 +620,16 @@ test("race window: attached with the HUD hidden it stands where the HUD would", 
     assertFalse(hud:IsShown(), "and stays hidden")
     assertTrue(Hud.__ui().docked, "placed and sized where the HUD would stand")
     assertEqual(W(S).Anchor()[2], hud)
+    -- A frame with no anchor and no size has no rect, and a window anchored to it has none either.
+    local g = geom[Hud.FRAME_NAME]
+    assertTrue(#g.points >= 1, "the hidden HUD is anchored")
+    local point, rel, relPoint, x, y = unpack(g.points[#g.points])
+    assertEqual(point, "TOPRIGHT", "at the HUD's own place")
+    assertEqual(rel, S.M.UIParent)
+    assertEqual(relPoint, "TOPRIGHT")
+    assertEqual(x, -60)
+    assertEqual(y, -160)
+    assertTrue((g.w or 0) > 0 and (g.h or 0) > 0, "and sized")
     Hud.Show()
     Hud.Hide()
     W(S).Refresh()

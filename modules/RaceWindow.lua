@@ -340,12 +340,24 @@ local function bestFor(race)
     return paceBest.record
 end
 
--- The best's straight-line pace (spec §4.4): its score over its length, times t.
+-- The best's player share of its merged damage (1 with no pet part): the live total is the player's
+-- alone where the pet has a live source of its own (HudBest.LiveView's playerOnly).
+local function playerShare(record)
+    local d = type(record.damage) == "table" and record.damage or {}
+    local merged, player = d.merged, d.player
+    if type(merged) ~= "number" or merged <= 0 or type(player) ~= "number" or player < 0 then return 1 end
+    return math.min(1, player / merged)
+end
+
+-- The best's straight-line pace (spec §4.4): its score over its length, times t; the player's own
+-- part of it at the same share.
 local function lineOf(record)
     local score, length = record.race.score, record.race.length
     local rate = (type(score) == "number" and type(length) == "number" and length > 0) and score / length or 0
-    local function at(_, t) return rate * math.max(0, math.min(tonumber(t) or 0, length or 0)) end
-    return { damageAt = at, playerAt = at }
+    local playerRate = rate * playerShare(record)
+    local function clip(t) return math.max(0, math.min(tonumber(t) or 0, length or 0)) end
+    return { damageAt = function(_, t) return rate * clip(t) end,
+             playerAt = function(_, t) return playerRate * clip(t) end }
 end
 
 -- The running pace bar: the live total against the race board's best at the race clock. None on a
@@ -744,6 +756,9 @@ end
 
 local function onSettings(path)
     if type(path) ~= "string" or isDown() then return end
+    -- A new Default race length takes effect over the pick (DPS Race's ForgetLength): the idle body
+    -- and auto-arm's ArmLength offer it.
+    if path == "race.defaultLength" or path == "profile" then pick.length = nil end
     local LI, Dummies = NS.LateIgnore, NS.Dummies
     local mine = path == "profile" or path:find("^raceWindow%.") or path:find("^race%.") or path == "general.locked"
         or (LI and path == LI.PATH) or (Dummies and path == Dummies.PATH)
