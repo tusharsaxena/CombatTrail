@@ -309,6 +309,31 @@ function Format.Length(seconds)
     return ("%d:%02d"):format(math.floor(whole / 60), whole % 60)
 end
 
+--- An offset in seconds with its sign and one decimal ("+3.1"): the Race window's tail and time in
+--- combat after the buzzer (DPS Race's Format.Seconds). Plain numbers only.
+--- @param x number
+--- @return string
+function Format.Seconds(x)
+    if type(x) ~= "number" then x = 0 end
+    return L["+%.1f"]:format(x)
+end
+
+--- A race's time off its part (DPS Race's Format.RunTime on the race part): the race length and the
+--- damage tail after the buzzer ("2:00 +11.1s"), or for an incomplete race its time in combat
+--- against the length ("1:04 / 2:00"). Plain numbers only.
+--- @param race table  a race part
+--- @return string
+function Format.RaceTime(race)
+    race = type(race) == "table" and race or {}
+    local length = Format.Length(race.length)
+    if race.status == "incomplete" and type(race.endedAt) == "number" then
+        return L["%s / %s"]:format(Format.Length(race.endedAt), length)
+    end
+    local tail = race.tail
+    if type(tail) ~= "number" or tail < 0.05 then return length end
+    return length .. " " .. L["+%.1fs"]:format(tail)
+end
+
 --- A percentage, one decimal ("27.6%"). Plain numbers only.
 --- @param x number
 --- @return string

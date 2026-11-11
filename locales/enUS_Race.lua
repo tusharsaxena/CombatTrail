@@ -139,3 +139,145 @@ L["A spell ID, a shift-clicked spell link, or the name of a spell a race cast la
 L["No spell is ignored: every late cast flags its race."] = "No spell is ignored: every late cast flags its race."
 L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."] =
     "Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."
+
+-- A race's time (modules/Format.lua)
+L["+%.1f"] = "+%.1f"
+L["%s / %s"] = "%s / %s"
+
+-- The Race window's bodies (modules/RaceWindow_States.lua)
+L["Race length"] = "Race length"
+L["How long the next race runs. Pick a preset or Custom; the choice stays for your next race."] =
+    "How long the next race runs. Pick a preset or Custom; the choice stays for your next race."
+L["Race for this long. Your bests are kept per race length, so each length has its own."] =
+    "Race for this long. Your bests are kept per race length, so each length has its own."
+L["Custom"] = "Custom"
+L["Set a race length of your own. Click, then type it in."] =
+    "Set a race length of your own. Click, then type it in."
+L["Custom length"] = "Custom length"
+L["Type a length from 10 seconds to 15 minutes, such as 90, 1:30 or 3m, then press Enter. Escape backs out."] =
+    "Type a length from 10 seconds to 15 minutes, such as 90, 1:30 or 3m, then press Enter. Escape backs out."
+L["The training dummy you have targeted, its dummy kind and its creature ID. The kind decides which board the race counts on."] =
+    "The training dummy you have targeted, its dummy kind and its creature ID. The kind decides which board the race counts on."
+L["Arm Race"] = "Arm Race"
+L["Get this race ready. The clock starts on your first hit. When you can't arm, the line under this button says why."] =
+    "Get this race ready. The clock starts on your first hit. When you can't arm, the line under this button says why."
+L["The length of this race. It starts counting down when your first hit lands."] =
+    "The length of this race. It starts counting down when your first hit lands."
+L["First hit"] = "First hit"
+L["Nothing counts until your damage lands, so pre-cast and pre-pot as you would on a pull."] =
+    "Nothing counts until your damage lands, so pre-cast and pre-pot as you would on a pull."
+L["Drop the race. The pull goes on as a plain dummy fight, saved under your recording filters."] =
+    "Drop the race. The pull goes on as a plain dummy fight, saved under your recording filters."
+L["The race's clock. Race mode > Race clock picks what shows here."] =
+    "The race's clock. Race mode > Race clock picks what shows here."
+L["How long this race has run."] = "How long this race has run."
+L["How long until the buzzer."] = "How long until the buzzer."
+L["Your damage against your best's average on this race board at this point in the race. The tick in the middle is on pace: green is ahead of it, red behind. Your damage and DPS are on the DPS HUD."] =
+    "Your damage against your best's average on this race board at this point in the race. The tick in the middle is on pace: green is ahead of it, red behind. Your damage and DPS are on the DPS HUD."
+L["This race's score against the best you had on this race board before it. The tick in the middle is level with that best: green is ahead of it, red behind."] =
+    "This race's score against the best you had on this race board before it. The tick in the middle is level with that best: green is ahead of it, red behind."
+L["STOP"] = "STOP"
+L["The buzzer has gone: stop casting. Damage still landing counts, but a cast that starts after the grace flags the race."] =
+    "The buzzer has gone: stop casting. Damage still landing counts, but a cast that starts after the grace flags the race."
+L["Damage stopped"] = "Damage stopped"
+L["How long after the buzzer your last damage landed, as far as the race has seen."] =
+    "How long after the buzzer your last damage landed, as far as the race has seen."
+L["Combat ended"] = "Combat ended"
+L["Combat ended before the buzzer, this far into the race, so the race is incomplete."] =
+    "Combat ended before the buzzer, this far into the race, so the race is incomplete."
+L["In combat"] = "In combat"
+L["How long you have stayed in combat since the buzzer. The result is read when combat ends."] =
+    "How long you have stayed in combat since the buzzer. The result is read when combat ends."
+L["Out of combat"] = "Out of combat"
+L["Combat is over, so the result can be read."] = "Combat is over, so the result can be read."
+L["Result pending"] = "Result pending"
+L["The damage meter can only be read once combat ends, so the result waits for that. Stop Now takes it as soon as it can."] =
+    "The damage meter can only be read once combat ends, so the result waits for that. Stop Now takes it as soon as it can."
+L["Stop Now"] = "Stop Now"
+L["Take the result now instead of waiting out the damage tail. Out of combat it is read at once; in combat it is read the moment combat ends, and damage up to then counts."] =
+    "Take the result now instead of waiting out the damage tail. Out of combat it is read at once; in combat it is read the moment combat ends, and damage up to then counts."
+L["Casts that started after the grace. The result flags them unless the spell is on the late-cast ignore list."] =
+    "Casts that started after the grace. The result flags them unless the spell is on the late-cast ignore list."
+L["How long after the buzzer a cast may start before it is flagged. Set it on the Race mode page."] =
+    "How long after the buzzer a cast may start before it is flagged. Set it on the Race mode page."
+L["Score"] = "Score"
+L["This race's damage: the whole fight's, as the damage meter read it after combat."] =
+    "This race's damage: the whole fight's, as the damage meter read it after combat."
+L["Race DPS"] = "Race DPS"
+L["The score over the race length, or over the time raced when the race is incomplete. It is the figure the race board ranks."] =
+    "The score over the race length, or over the time raced when the race is incomplete. It is the figure the race board ranks."
+L["This race beat your best on this race board, by this much."] =
+    "This race beat your best on this race board, by this much."
+L["This race sets the best on this race board: there was no earlier race to beat."] =
+    "This race sets the best on this race board: there was no earlier race to beat."
+L["How far this race fell short of your best on this race board."] =
+    "How far this race fell short of your best on this race board."
+L["This race matched your best on this race board."] = "This race matched your best on this race board."
+L["New Race"] = "New Race"
+L["Back to the Arm Race screen at this length. This race stays saved."] =
+    "Back to the Arm Race screen at this length. This race stays saved."
+L["Open"] = "Open"
+L["Open this race in the Results window, with its chart and its spells."] =
+    "Open this race in the Results window, with its chart and its spells."
+L["Pick a chat channel and post this race's result there."] =
+    "Pick a chat channel and post this race's result there."
+L["Remove this race from your history, after a confirmation. A best it holds goes with it."] =
+    "Remove this race from your history, after a confirmation. A best it holds goes with it."
+L["No target"] = "No target"
+L["First hit starts the clock"] = "First hit starts the clock"
+L["Pre-cast and pre-pot as you would on a pull. The clock starts when damage lands, not when you press the button."] =
+    "Pre-cast and pre-pot as you would on a pull. The clock starts when damage lands, not when you press the button."
+L["into the race"] = "into the race"
+L["s"] = "s"
+L["after the buzzer"] = "after the buzzer"
+L["since the buzzer"] = "since the buzzer"
+L["combat ended"] = "combat ended"
+L["1 late cast \194\183 +%.1fs"] = "1 late cast \194\183 +%.1fs"
+L["%d late casts \194\183 +%.1fs"] = "%d late casts \194\183 +%.1fs"
+L["Grace %.1fs"] = "Grace %.1fs"
+L["Damage still landing (DoTs, travel time) counts. Casts that start more than %.1fs after the buzzer are flagged on the result."] =
+    "Damage still landing (DoTs, travel time) counts. Casts that start more than %.1fs after the buzzer are flagged on the result."
+L["Reading the result"] = "Reading the result"
+L["Reading when combat ends"] = "Reading when combat ends"
+L["Waiting for combat to end"] = "Waiting for combat to end"
+L["Restarted +%.1fs"] = "Restarted +%.1fs"
+L["Reloaded"] = "Reloaded"
+L["Session by list"] = "Session by list"
+L["Shared session"] = "Shared session"
+L["Incomplete: died"] = "Incomplete: died"
+L["Incomplete (combat ended at %s)"] = "Incomplete (combat ended at %s)"
+L["Lost"] = "Lost"
+L["Died"] = "Died"
+L["Right-click to ignore a spell for late casts, or count it again."] =
+    "Right-click to ignore a spell for late casts, or count it again."
+L["%d ignored"] = "%d ignored"
+L["Late casts on the ignore list: they flag nothing."] = "Late casts on the ignore list: they flag nothing."
+L["New best +%.1f%%"] = "New best +%.1f%%"
+L["%+.1f%% vs best"] = "%+.1f%% vs best"
+L["Time %s"] = "Time %s"
+L["The race length, then how long your damage kept landing after the buzzer (DoTs, travel time). An incomplete race shows its time in combat against the length."] =
+    "The race length, then how long your damage kept landing after the buzzer (DoTs, travel time). An incomplete race shows its time in combat against the length."
+L["Couldn't read the result"] = "Couldn't read the result"
+L["The race board this race counts on: the dummy's kind and the race length, for this character and spec."] =
+    "The race board this race counts on: the dummy's kind and the race length, for this character and spec."
+
+-- The Race window's Your best card (modules/RaceWindow_Best.lua)
+L["Your best"] = "Your best"
+L["Length: %s"] = "Length: %s"
+L["Score: %s"] = "Score: %s"
+L["Race DPS: %s"] = "Race DPS: %s"
+L["Click to open this race in Results."] = "Click to open this race in Results."
+L["Target a training dummy to see your best."] = "Target a training dummy to see your best."
+L["No race yet: this one sets the mark."] = "No race yet: this one sets the mark."
+
+-- The Race window's shell (modules/RaceWindow.lua)
+L["Attach to or detach from the DPS HUD"] = "Attach to or detach from the DPS HUD"
+L["Lock or unlock the Race window"] = "Lock or unlock the Race window"
+L["Race mode settings"] = "Race mode settings"
+L["No target: target a training dummy, then arm."] = "No target: target a training dummy, then arm."
+L["%s is no training dummy: a race armed now is canceled when that pull starts."] =
+    "%s is no training dummy: a race armed now is canceled when that pull starts."
+L["Your target"] = "Your target"
+L["not paced: shared session"] = "not paced: shared session"
+L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."] =
+    "Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."

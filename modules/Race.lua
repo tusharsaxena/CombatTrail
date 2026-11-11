@@ -515,10 +515,12 @@ local function racing()
     return state == STATE.RUNNING or state == STATE.STOPPING
 end
 
---- PLAYER_REGEN_DISABLED: back in combat after the buzzer, the combat end is not the one read.
+--- PLAYER_REGEN_DISABLED: back in combat after the buzzer, the combat end is not the one read; back
+--- in combat after an early end (no buzzer yet), the fight carries on (ruling X16).
 function Race.OnCombatStart()
     if isDown() or state ~= STATE.STOPPING then return end
     cur.combatEndedAt = nil
+    if not cur.buzzerAt then cur.carriedOn = true end
 end
 
 --- PLAYER_REGEN_ENABLED: before the buzzer the race is incomplete; after it, the combat end is kept.
@@ -670,6 +672,21 @@ local function net(final, base)
     final.merged, final.duration = merged, nil
 end
 
+-- The race DPS. An incomplete race whose fight carried on past `endedAt` (combat again after the early
+-- end, Feign Death inside Combat Trail's grace: ruling X16) keeps the whole fight's total as its score,
+-- so its DPS divides by the fight's own race clock, the first hit to the fight's end, never
+-- `endedAt`; no meter read is taken at the early combat end. Any other race (a resumed one included:
+-- its fight's end is the /reload's, not combat's) is RaceScoring.Dps's.
+local function raceDps(fight, race)
+    if race.status ~= "incomplete" or not cur.carriedOn or type(race.score) ~= "number" then
+        return NS.RaceScoring.Dps(race.score, race)
+    end
+    local stop = Secrets.PlainNumber(fight.combatEndT) or Secrets.PlainNumber(fight.closedT) or GetTime()
+    local span = math.max(round2(stop - cur.startedAt) or 0, race.endedAt or 0)
+    if span <= 0 then return 0 end
+    return race.score / span
+end
+
 -- The race's figures out of the fight's plain read.
 local function score(fight, final)
     local race = cur.race
@@ -684,7 +701,7 @@ local function score(fight, final)
         if cur.combatEndedAt then race.combatEnd = round2(cur.combatEndedAt - cur.buzzerAt) end
     end
     race.status = race.endedAt and "incomplete" or "complete"
-    race.dps = NS.RaceScoring.Dps(race.score, race)
+    race.dps = raceDps(fight, race)
     race.flags.sessionFromList = fight.boundBy == "tick" or nil
 end
 

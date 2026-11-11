@@ -251,9 +251,11 @@ NS.defaults = {
         race = raceMode({ defaultLength = 60, grace = 1.0, restartGap = 6, hintDelay = 15,
                           lateIgnore = "66,1856,5384,8690,58984,110959" }),
         -- The Race window's place (Race mode, Task B3; Retail only, so ABSENT on WoW Forever,
-        -- clients-§4): attached beside the DPS HUD, on its `side` ("RIGHT", "LEFT", "TOP", "BOTTOM").
-        -- Task C1's window reads it; detached, it stands where its drag puts it.
-        raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT" } or nil,
+        -- clients-§4): attached beside the DPS HUD, on its `side` ("RIGHT", "LEFT", "TOP", "BOTTOM");
+        -- detached, it stands at `position` (modules/RaceWindow.lua, Task C1), written by its title
+        -- bar's drag and put back by Master controls' Reset position.
+        raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT",
+            position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the

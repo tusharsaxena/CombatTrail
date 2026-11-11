@@ -12,6 +12,10 @@ local _, NS = ...
 -- `hud.paceAgainst` "none"), or "over" for the fight-over card, whose view carries `newBest` (with
 -- its `delta`), `saved` and `skipReason` from the recorder's FIGHT_SAVED / FIGHT_SKIPPED.
 --
+-- A RACE'S FIGHT (race plan ruling X7) opens it on its first hit whatever `hud.show`, `hud.instancesOnly`
+-- and `general.hudInCombat` say (RACE_STARTED re-decides a fight already on screen); only the
+-- player's close on that fight holds it shut.
+--
 -- WHEN IT OPENS (`hud.show`). "auto" (default): on the first hit of every fight (FIGHT_TICK after the
 -- fight's firstHitT is set; the Master controls' `general.hudInCombat` off turns this off), and
 -- `hud.instancesOnly` keeps it shut outside an instance; both apply to "auto" only. It fades
@@ -23,7 +27,7 @@ local _, NS = ...
 -- auto-opened HUD when its fight ends instead of showing the card.
 --
 -- WHAT RUNS, AND WHEN. Nothing is registered with the client: the HUD hears the bus (FIGHT_STARTED,
--- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, SETTINGS_CHANGED) on its own target. While a
+-- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, RACE_STARTED, SETTINGS_CHANGED) on its own target. While a
 -- fight is live and the window is up, each FIGHT_TICK (4 Hz, combat only) reads NS.Meter.ReadLive
 -- once and redraws; nothing else polls, and no OnUpdate is ever set. The fade is one AceTimer on the
 -- addon object, so the stand-down's CancelAllTimers takes it, and Suspend drops it too.
@@ -43,7 +47,8 @@ local _, NS = ...
 -- (LAYERS.STRATA.HUD, or `hud.window.strata`). Its width is `hud.width`; its scale is `hud.scale`, its
 -- opacity `hud.window.alpha`; its title bar and footer follow `hud.window.titleBar` and `footer`; its
 -- place is `hud.position`, written by the title bar's drag (not while `general.locked`) and put back
--- by Master controls' Reset position. Built on first show.
+-- by Master controls' Reset position. Built on first show, or by Hud.Dock for an attached Race window
+-- (placed and sized where it would stand, still hidden).
 --
 -- ITS SIZE (v0.2 Task B3, plan decisions D2 and D9) is `hud.sizeMode`'s:
 --   "fixed" (default)  the height is Hud.FixedHeight(): the chrome plus HudStates.FixedStack, the stack
@@ -166,8 +171,11 @@ end
 
 --- Whether the HUD may open itself for `fight` now (the show mode, the master row, instancesOnly,
 --- and the player's close on this fight). "always" answers before the master row and instancesOnly,
---- which govern "auto" only (plan decision D4): only the player's close on this fight holds it.
+--- which govern "auto" only (plan decision D4): only the player's close on this fight holds it. A
+--- race's fight opens it whatever the three say (race plan ruling X7): the Race window draws no live
+--- damage of its own, so the HUD is where a race's damage shows; only the player's close holds it.
 local function autoAllowed(fight)
+    if type(fight) == "table" and fight.race ~= nil then return not closedOn(fight) end
     local mode = setting("hud.show")
     if mode == "toggle" then return false end
     if mode == "always" then return not closedOn(fight) end
@@ -709,6 +717,7 @@ end
 function render()
     applyStrip()
     applyWindow()
+    ui.rendered = true
     local v = fill()
     local body = showBody(v.key)
     body:Update(v)
@@ -976,6 +985,16 @@ function Hud.OnFightSaved(record)
     if key == "over" then Hud.Refresh() end
 end
 
+--- A race's clock started on `fight` (RACE_STARTED): a fight already on screen that the HUD's own
+--- rules kept shut opens now (ruling X7), whichever of FIGHT_STARTED's receivers ran first.
+function Hud.OnRaceStarted(fight)
+    if isDown() or type(fight) ~= "table" or fight ~= cur or key ~= "live" or wanted then return end
+    wanted = autoAllowed(fight)
+    if not Hud.IsShown() then return end
+    readLive()
+    Hud.Refresh()
+end
+
 function Hud.OnFightSkipped(fight, reason)
     if isDown() or fight ~= cur then return end
     view.saved, view.skipReason = false, reason
@@ -998,6 +1017,7 @@ do
         bus:RegisterMessage(NS.MSG.FIGHT_ENDED, function(_, fight, final, reason) Hud.OnFightEnded(fight, final, reason) end)
         bus:RegisterMessage(NS.MSG.FIGHT_SAVED, function(_, record) Hud.OnFightSaved(record) end)
         bus:RegisterMessage(NS.MSG.FIGHT_SKIPPED, function(_, fight, reason) Hud.OnFightSkipped(fight, reason) end)
+        bus:RegisterMessage(NS.MSG.RACE_STARTED, function(_, _, fight) Hud.OnRaceStarted(fight) end)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path, value) onSettings(path, value) end)
     end
 end
@@ -1065,6 +1085,20 @@ end
 
 --- The HUD's window, or nil before it is first built.
 function Hud.Frame() return ui and ui.frame or nil end
+
+--- The HUD's window for the Race window to stand beside (race plan Task C1, Review focus 4): built
+--- and placed where it stands even while hidden, and a window that never drew is given its fixed
+--- size, so an attached Race window never falls to 0,0. Shows nothing.
+--- @return table frame
+function Hud.Dock()
+    ensureWindow()
+    if not ui.rendered then
+        applyPlacement()
+        ui.frame:SetSize(width(), Hud.FixedHeight())
+        ui.docked = true
+    end
+    return ui.frame
+end
 
 --- The built window and its bodies, for the suites (nil until first shown).
 function Hud.__ui() return ui end

@@ -348,7 +348,7 @@ Total.
 - meter: Call reports a missing function and a raising one without throwing
 - meter: ReadFinal keeps the player's part when only the pet's read raises
 
-### test_format.lua (19)
+### test_format.lua (20)
 
 - format: a plain fractional DPS abbreviates in Lua, never through the client formatter
 - format: a secret goes to a formatter that passes both checks
@@ -369,6 +369,7 @@ Total.
 - format: a total and a rate drawn in turn log each path once, not a line per redraw
 - format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain
 - format: Clock, Length, Pct and SignedPct take plain numbers
+- format: Seconds signs an offset, and RaceTime reads a race part's length, tail or early end
 
 ### test_fight.lua (36)
 
@@ -703,7 +704,7 @@ Total.
 - late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
 - late ignore: Label names a spell, the hearthstones' entry and an unknown one
 
-### test_race.lua (56)
+### test_race.lua (57)
 
 - race: the states, the lengths and the timings are the plan's
 - race: arming refuses on WoW Forever and registers nothing there
@@ -721,6 +722,7 @@ Total.
 - race: a race is saved however short, past the minimum length
 - race: combat end before the buzzer -> incomplete with endedAt
 - race: Feign Death before the buzzer ends the race as incomplete while the fight carries on
+- race: an incomplete race whose fight carries on scores the whole fight over its own race clock
 - race: death -> incomplete, died flag
 - race: death after the buzzer flags died and the race stays complete
 - race: tail and combat end are stored relative to the buzzer
@@ -801,7 +803,7 @@ Total.
 - race verb: arm takes 90, 1:30 and 3m, and refuses 0 and 901 with one line
 - race verb: a bare arm takes the remembered length, and a refusal says why
 - race verb: cancel says what it did in the state it found
-- race verb: show, hide and toggle reach the Race window, and say so before it is built
+- race verb: show, hide and toggle reach the Race window
 - race verb: ignore shows, adds, removes and resets the late-cast list
 - race verb: disabled, only race ignore answers; every other word is the refusal line
 - race verb: under the perf hold alone, race arm answers the capture line
@@ -838,6 +840,43 @@ Total.
 - autoarm: neither rule acts in an instance or a battleground
 - autoarm: entering an instance closes the dummy's window
 - autoarm: stood down, nothing is registered and nothing acts; the stand-up rebuilds
+
+### test_race_window.lua (34)
+
+- race window: absent on WoW Forever, with nothing of it loaded
+- race window: present on Retail, with its frame name and its hooks
+- race window: the six bodies follow the race, idle to the result card
+- race window: combat ending before the buzzer waits for the read
+- race window: idle offers the five lengths and Custom, and Arm Race arms the pick
+- race window: a typed length is taken, and one out of range is refused with the length line
+- race window: in combat Arm Race is disabled and the line under it says why
+- race window: the target card names the dummy, its kind and its creature ID
+- race window: a target that is no training dummy, or none, is warned about
+- race window: Your best is empty before the first race, then the race board's best
+- race window: Stop! counts the late casts the ignore list leaves, beside the grace
+- race window: the waiting body's hint comes after the hint delay in combat, and Stop Now is taken once
+- race window: the hint box is sized to its words, never measured
+- race window: the result card shows the score, the race DPS and its chips
+- race window: a slower second race is behind its best, and its pace bar is the score against it
+- race window: New Race goes back to Arm Race at the race's length, the window kept
+- race window: Open opens the race in Results, Share prompts, Delete asks first
+- race window: a result card whose race is deleted goes back to Arm Race
+- race window: closing a result card dismisses it and keeps the race
+- race window: a lost race shows dashes and says it could not be read
+- race window: the result chips name each flag in a short word, its full text the tip
+- race window: the running clocks follow the race clock setting
+- race window: the running pace bar paces on the race board's best
+- race window: no live boxes, no chart and no spell rows in any body
+- race window: it wears the HUD's skin and appearance
+- race window: attached, it stands beside the HUD on each side and moves with it
+- race window: attached with the HUD hidden it stands where the HUD would
+- race window: detached, it keeps its own place across a reload
+- race window: locked, or attached, its title bar drags nothing
+- race window: auto-show near a dummy, the debounced close, and the player's close counted
+- race window: an arm opens it, and it closes when that race goes back to idle; the player's stays
+- race window: with Race mode off it stays hidden
+- race window: the clock's timer runs only while racing and shown, and the stand-down drops all of it
+- race window: a race opens the DPS HUD whatever its own rules say; a plain fight does not
 
 ### test_slices.lua (18)
 
@@ -1292,7 +1331,7 @@ Total.
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
 
-### test_skin_switch.lua (40)
+### test_skin_switch.lua (48)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the HUD's window shell changes
@@ -1334,6 +1373,14 @@ Total.
 - skin switch: an interrupted cast's mark changes with the Scope ignored
 - skin switch: a lane's edit overlay changes
 - skin switch: a lane's edit overlay changes with the Scope ignored
+- skin switch: the Race window's shell changes
+- skin switch: the Race window's shell changes with the Scope ignored
+- skin switch: the Race window's footer changes
+- skin switch: the Race window's footer changes with the Scope ignored
+- skin switch: the Race window's target card changes
+- skin switch: the Race window's target card changes with the Scope ignored
+- skin switch: the Race window's Arm Race button changes
+- skin switch: the Race window's Arm Race button changes with the Scope ignored
 
 ### test_skin_values.lua (3)
 
@@ -1358,7 +1405,7 @@ Total.
 | test_lanes_page.lua | 25 |
 | test_probe.lua | 33 |
 | test_meter.lua | 37 |
-| test_format.lua | 19 |
+| test_format.lua | 20 |
 | test_fight.lua | 36 |
 | test_identity.lua | 47 |
 | test_dummies.lua | 29 |
@@ -1374,10 +1421,11 @@ Total.
 | test_race_record.lua | 13 |
 | test_race_scoring.lua | 20 |
 | test_late_ignore.lua | 12 |
-| test_race.lua | 56 |
+| test_race.lua | 57 |
 | test_race_resume.lua | 23 |
 | test_race_settings.lua | 18 |
 | test_autoarm.lua | 27 |
+| test_race_window.lua | 34 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1410,7 +1458,7 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_client_globals.lua | 3 |
 | test_diagnostics_contract.lua | 8 |
-| test_skin_switch.lua | 40 |
+| test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1131** |
+| **Total** | **1175** |

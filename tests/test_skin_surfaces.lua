@@ -1,7 +1,7 @@
 -- tests/test_skin_surfaces.lua — the skin-switch declaration's coverage (skinning-§1 and §9, plan
 -- Task 5.2): tests/skin_surfaces.lua, which tests/run.lua hands the kit as Kit.skinSwitch, declares
 -- surfaces in every window this addon paints (the DPS HUD, the Results window, the ability timeline,
--- the compare, the gear view and the lanes), each companion it names is a schema row that defaults on
+-- the compare, the gear view and the lanes, and on Retail the Race window), each companion it names is a schema row that defaults on
 -- (options-ui-§16), and the Lanes page carries the composed skin companions and the From skin flags
 -- value. The switch itself is the kit's suite (tests/_kit/test_skin_switch.lua).
 
@@ -9,6 +9,8 @@ local T = _G.CT_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 
 local WINDOWS = { "hud", "results", "timeline", "compare", "gear", "lanes" }
+-- The Race window is Retail's (race plan Task C1): declared there, absent on WoW Forever.
+if T.NS.Compat.ForClient({ "retail" }) then WINDOWS[#WINDOWS + 1] = "race" end
 
 local function facts()
     return dofile(T.root .. "/tests/skin_surfaces.lua")(T)

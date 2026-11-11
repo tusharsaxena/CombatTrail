@@ -91,9 +91,10 @@ local function notBuilt()
 end
 
 -- The modules with a frame the player places: each is reached at CALL time and joins in the task
--- that builds it (the lanes, the DPS HUD and the Results window, plan milestones 1, 3 and 4). A module
+-- that builds it (the lanes, the DPS HUD and the Results window, plan milestones 1, 3 and 4; the
+-- Race window, race plan Task C1, Retail only). A module
 -- carries `SetLocked(locked)` and `ResetPosition()`.
-local PLACED = { "Lanes", "Hud", "Results" }
+local PLACED = { "Lanes", "Hud", "RaceWindow", "Results" }
 
 local function eachPlaced(method, ...)
     for _, name in ipairs(PLACED) do

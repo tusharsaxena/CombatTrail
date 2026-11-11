@@ -331,6 +331,22 @@ test("race: Feign Death before the buzzer ends the race as incomplete while the 
     assertTrue(records[1].duration > 10, "the fight's own record runs on")
 end)
 
+test("race: an incomplete race whose fight carries on scores the whole fight over its own race clock", function()
+    if forever() then return end
+    local S = fresh()
+    assertTrue(F.arm(S, 30))
+    local start = F.pull(S)
+    F.leave(S, start + 10)
+    F.enter(S, start + 11)           -- Feign Death inside Combat Trail's grace: the same fight
+    F.damage(S, 25, start + 12, start + 20, 1)
+    F.settle(S, start + 21)
+    local race = F.records(S)[1].race
+    assertEqual(race.status, "incomplete")
+    assertEqual(race.endedAt, 10, "endedAt is the early combat end")
+    assertEqual(race.score, F.SESSION.damage, "the whole fight's total is the score")
+    F.near(race.dps, F.SESSION.damage / 21, "the DPS is over the first hit to the fight's end (ruling X16)")
+end)
+
 test("race: death -> incomplete, died flag", function()
     if forever() then return end
     local S = fresh()

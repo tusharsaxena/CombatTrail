@@ -261,12 +261,15 @@ test("race verb: cancel says what it did in the state it found", function()
     assertNil(S.NS.Fight.Current().race, "the part came off the fight")
 end)
 
-test("race verb: show, hide and toggle reach the Race window, and say so before it is built", function()
+test("race verb: show, hide and toggle reach the Race window", function()
     if forever() then return end
     local S = F.fresh()
-    S.M.__resetPrinted()
+    assertTrue(S.NS.SetByPath("race.autoShow", false))
+    S.NS.RaceWindow.HideAwayFromDummy()
     S.NS.Slash:OnSlash("race show")
-    assertTrue(said(S.M, "That part of Combat Trail is not built yet."), text(S.M))
+    assertTrue(S.NS.RaceWindow.IsShown(), "the real window shows")
+    S.NS.Slash:OnSlash("race hide")
+    assertFalse(S.NS.RaceWindow.IsShown(), "and hides")
     local calls = {}
     S.NS.RaceWindow = {
         Show = function() calls[#calls + 1] = "show" end,

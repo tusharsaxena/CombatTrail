@@ -629,7 +629,7 @@ end
 -- white label that turns gold under the pointer), with the slots a style or a state paints from
 -- another token: primary and danger keep a tinted box, and a disabled one its box and label faded
 -- (the ct.*.off* tokens, core/SkinSetup.lua). Ported from DPS Race @045f479 (modules/Hud_States.lua's
--- buttons) for the Results window, minus the selected-preset look the race's length picker had.
+-- buttons) for the Results window and the Race window (whose picked length takes the primary look).
 
 local BUTTON_STYLES = {
     normal  = { on = {}, off = { bg = "ct.btn.offBg", border = "ct.btn.offBorder", disabled = "ct.btn.offText" } },
@@ -688,6 +688,17 @@ function Style.Button(parent, label, onClick, style)
     end)
     paintButton(b)
     return b
+end
+
+--- Give a Style.Button another style ("normal" | "primary" | "danger"), repainting it: the Race
+--- window's picked length draws in the primary look (DPS Race's selected preset).
+--- @param b table
+--- @param style string
+function Style.SetButtonStyle(b, style)
+    local name = BUTTON_STYLES[style] and style or "normal"
+    if b.styleName == name then return end
+    b.styleName, b.style = name, BUTTON_STYLES[name]
+    paintButton(b)
 end
 
 --- Enable or disable a Style.Button, repainting it.

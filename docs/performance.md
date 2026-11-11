@@ -22,6 +22,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
 | `hud` | the HUD's read and redraw on each `FIGHT_TICK` (modules/Hud.lua), holding `meter` | four times a second in combat |
+| `raceWindow` | the Race window's clock redraw (one repeating AceTimer at 10 Hz), its idle events and its pace bar's `FIGHT_TICK` read (modules/RaceWindow.lua), holding `meter` | ten times a second, only while the window is shown and a race runs or waits for its read (Retail) |
 
 Nested buckets are reported as their own lines; the outer bucket's figure includes the inner one.
 

@@ -267,3 +267,13 @@ test("format: Clock, Length, Pct and SignedPct take plain numbers", function()
     assertEqual(F.Pct(nil), "")
     assertEqual(F.SignedPct(2.14), "+2.1%")
 end)
+
+test("format: Seconds signs an offset, and RaceTime reads a race part's length, tail or early end", function()
+    local F = T.NS.Format
+    assertEqual(F.Seconds(3.14), "+3.1")
+    assertEqual(F.Seconds(nil), "+0.0")
+    assertEqual(F.RaceTime({ length = 120, status = "complete", tail = 11.12 }), "2:00 +11.1s")
+    assertEqual(F.RaceTime({ length = 120, status = "complete", tail = 0.01 }), "2:00", "no tail worth a figure")
+    assertEqual(F.RaceTime({ length = 120, status = "incomplete", endedAt = 64 }), "1:04 / 2:00")
+    assertEqual(F.RaceTime(nil), "0:00")
+end)

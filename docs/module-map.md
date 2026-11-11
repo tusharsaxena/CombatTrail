@@ -90,7 +90,10 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Hud_Breakdown.lua` | The HUD's spell rows, live and after combat |
 | `modules/Hud_Chart.lua` | The HUD's damage chart and pace bar |
 | `modules/Hud_States.lua` | The HUD's two bodies, the live view and the fight-over card |
-| `modules/Hud.lua` | The HUD's shell: the window, when it opens and fades, and the view the bodies draw |
+| `modules/Hud.lua` | The HUD's shell: the window, when it opens and fades, and the view the bodies draw; `Hud.Dock`, the frame an attached Race window stands beside |
+| `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked (Race mode, Retail) |
+| `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card (Race mode, Retail) |
+| `modules/RaceWindow.lua` | The Race window's shell: attached beside the DPS HUD or on its own, when it shows, the view and the acts (Race mode, Retail) |
 | `modules/Sizing.lua` | The one smooth-resize pattern every resizable window uses |
 | `modules/Results_Source.lua` | Where the Results window reads fights: the store, or the sample history |
 | `modules/Results_Table.lua` | The sortable pooled list and the small drawing helpers |
