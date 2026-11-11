@@ -183,6 +183,26 @@ test("toast: each toggle silences its kind", function()
     assertTrue(shownKey(NS) ~= nil, "races off leaves fights on")
 end)
 
+test("toast: a kind switched off drops its own toasts, waiting or shown, and keeps the other kind's", function()
+    if forever() then return end
+    local NS = fresh()
+    save(NS, rec(NS, { dps = 1000 }))
+    save(NS, rec(NS, { id = "fight-best", dps = 2000 }))
+    save(NS, rec(NS, { race = true, dps = 1000 }))
+    save(NS, rec(NS, { race = true, id = "race-best", dps = 2000 }))
+    assertEqual(shownKey(NS), "fight-best")
+    assertEqual(T_(NS):Stats().waiting, 1, "the race's toast waits behind the fight's")
+    assertTrue(NS.SetByPath("toast.fights", false))
+    assertEqual(shownKey(NS), "race-best", "the fight's toast went; the race's is up")
+    assertEqual(T_(NS):Stats().waiting, 0)
+    save(NS, rec(NS, { dps = 3000 }))
+    save(NS, rec(NS, { race = true, id = "race-again", dps = 3000 }))
+    assertEqual(T_(NS):Stats().waiting, 1, "a race's toast waits; the fight's never queued")
+    assertTrue(NS.SetByPath("toast.races", false))
+    assertNil(shownKey(NS), "races off: every race toast went")
+    assertEqual(T_(NS):Stats().waiting, 0)
+end)
+
 test("toast: with no previous best to name, the DPS line is the DPS alone in the text color", function()
     local NS = fresh()
     local p = NS.BestToast.Payload(rec(NS, { dps = 104200 }), nil, nil)
@@ -299,6 +319,78 @@ test("toast: DPS Race's size: 25% larger, the trophy as tall as the three rows",
     assertEqual(w.title:GetText(), payload(NS).title)
     assertTrue(w.chips[1].label:GetText() == "Angry Boar")
     assertFalse(w.flags:IsShown(), "no flags line for a fight")
+end)
+
+test("toast: a real toast never moves; as Test toast's sample it drags", function()
+    local NS = fresh()
+    save(NS, rec(NS, { dps = 1000 }))
+    save(NS, rec(NS, { dps = 2000 }))
+    local frame = T_(NS):Frame()
+    local moved = 0
+    rawset(frame, "StartMoving", function() moved = moved + 1 end)
+    rawset(frame, "StopMovingOrSizing", function() end)
+    frame:__fire("OnDragStart", "LeftButton")
+    assertEqual(moved, 0, "a real toast stays where it is")
+    T_(NS):Dismiss()
+    assertTrue(NS.BestToast.Test())
+    assertTrue(T_(NS):Frame() == frame, "the shell's one frame")
+    frame:__fire("OnDragStart", "LeftButton")
+    assertEqual(moved, 1, "the sample drags")
+end)
+
+test("toast: the class and spec icons sit between New best: and the words", function()
+    local NS = fresh(function(m) m.CLASS_ICON_TCOORDS = { WARLOCK = { 0.75, 1, 0.25, 0.5 } } end)
+    local r = rec(NS, { dps = 2000 })
+    r.who.specIcon = 136186
+    local p = NS.BestToast.Payload(r, 10, rec(NS, { dps = 1000 }))
+    T_(NS):Show(p, { key = "x" })
+    local w = T_(NS):Frame().combatTrail
+    assertTrue(w.class:IsShown(), "the class icon")
+    assertTrue(w.spec:IsShown(), "the spec icon")
+    local function at(region) return region.__points[1] end
+    assertTrue(at(w.class)[2] == w.title and at(w.class)[3] == "RIGHT", "the class icon after New best:")
+    assertTrue(at(w.spec)[2] == w.class and at(w.spec)[3] == "RIGHT", "the spec icon after the class icon")
+    assertTrue(at(w.who)[2] == w.spec and at(w.who)[3] == "RIGHT", "the words after the icons")
+end)
+
+test("toast: a class or spec the client cannot draw takes no room", function()
+    local NS = fresh(function(m) m.CLASS_ICON_TCOORDS = {} end)
+    local p = NS.BestToast.Payload(rec(NS, { dps = 1 }), nil, nil)
+    p.specIcon = nil
+    T_(NS):Show(p, { key = "x" })
+    local w = T_(NS):Frame().combatTrail
+    assertFalse(w.class:IsShown(), "no coordinates for that class")
+    assertFalse(w.spec:IsShown(), "no spec icon")
+    local at = w.who.__points[1]
+    assertTrue(at[2] == w.title and at[3] == "RIGHT" and at[4] == 4, "the words one gap after New best:")
+    T_(NS):Clear()
+    p = NS.BestToast.Payload(rec(NS, { dps = 1 }), nil, nil)
+    p.specIcon = 136186
+    T_(NS):Show(p, { key = "y" })
+    at = w.spec.__points[1]
+    assertTrue(w.spec:IsShown() and at[2] == w.title and at[3] == "RIGHT" and at[4] == 4,
+        "a spec icon without a class icon sits one gap after New best:")
+    assertTrue(w.who.__points[1][2] == w.spec, "the words after the spec icon")
+end)
+
+test("toast: the rows' text draws larger than the same font unscaled, each row at its font's size", function()
+    local NS = fresh()
+    save(NS, rec(NS, { dps = 1000 }))
+    save(NS, rec(NS, { dps = 2000 }))
+    local frame = T_(NS):Frame()
+    local w = frame.combatTrail
+    local function size(fs) local _, s = fs:GetFont() return s end
+    local S = NS.Style
+    -- The same fonts unscaled, on the same frame under the same skin.
+    local title, text = size(S.Text(frame, S.FONT.TITLE)), size(S.Text(frame, S.FONT.TEXT))
+    assertTrue(size(w.title) > title, "the headline: " .. tostring(size(w.title)) .. " vs " .. tostring(title))
+    assertEqual(size(w.who), size(w.title), "the spec and class at the headline's size")
+    assertTrue(size(w.detail) > text, "the DPS line: " .. tostring(size(w.detail)) .. " vs " .. tostring(text))
+    assertEqual(size(w.chips[1].label), size(w.detail), "a chip's word at the DPS line's size")
+    if not forever() then
+        assertEqual(size(w.title), S.FONT_SIZE[S.FONT.TITLE] * 1.25, "Retail: 1.25 times the headline's font")
+        assertEqual(size(w.detail), S.FONT_SIZE[S.FONT.TEXT] * 1.25, "Retail: 1.25 times the text font")
+    end
 end)
 
 -- ── the settings ───────────────────────────────────────────────────────────────────────────────

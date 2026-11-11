@@ -880,11 +880,12 @@ Total.
 - race window: the clock's timer runs only while racing and shown, and the stand-down drops all of it
 - race window: a race opens the DPS HUD whatever its own rules say; a plain fight does not
 
-### test_countdown.lua (21)
+### test_countdown.lua (22)
 
 - countdown: absent on WoW Forever
 - countdown: 10..1 show one per second in the last 10 s, then go at the buzzer
 - countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu
+- countdown: the frame never takes the mouse, and each number pops in
 - countdown: the digits are Blizzard's BigGold set, cut by texcoord
 - countdown: without the digit art it falls back to a large outlined number
 - countdown: finalCountdown 3 starts at 3
@@ -904,7 +905,7 @@ Total.
 - countdown: a canceled race and a race ending early raise no buzzer
 - countdown: never broadcasts a pull timer nor drives Blizzard's TimerTracker
 
-### test_toast.lua (16)
+### test_toast.lua (21)
 
 - toast: a complete race that beats its board's best toasts once, whatever the windows show
 - toast: none for an incomplete or lost race, a race that is no best, or with races off
@@ -912,6 +913,7 @@ Total.
 - toast: a flagged race may toast, its flags on the last line as the Race window words them
 - toast: a new fight best raises the toast; a board's first fight does not
 - toast: each toggle silences its kind
+- toast: a kind switched off drops its own toasts, waiting or shown, and keeps the other kind's
 - toast: with no previous best to name, the DPS line is the DPS alone in the text color
 - toast: two real races, the second faster, toast once on its result
 - toast sound: Default plays the shell's alert; another key its file; an unknown key falls back
@@ -920,6 +922,10 @@ Total.
 - toast: Reset position (Master controls) clears the stored place
 - toast: the stand-down takes the toast down and drops what waits; a best while down shows none
 - toast: DPS Race's size: 25% larger, the trophy as tall as the three rows
+- toast: a real toast never moves; as Test toast's sample it drags
+- toast: the class and spec icons sit between New best: and the words
+- toast: a class or spec the client cannot draw takes no room
+- toast: the rows' text draws larger than the same font unscaled, each row at its font's size
 - toast: the History page's New-best toast tab, the races row on Retail only
 - toast: the stub answers every member a live toast has, as an empty toast does
 
@@ -1478,8 +1484,8 @@ Total.
 | test_race_settings.lua | 18 |
 | test_autoarm.lua | 27 |
 | test_race_window.lua | 36 |
-| test_countdown.lua | 21 |
-| test_toast.lua | 16 |
+| test_countdown.lua | 22 |
+| test_toast.lua | 21 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 5 |
@@ -1515,4 +1521,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1221** |
+| **Total** | **1227** |

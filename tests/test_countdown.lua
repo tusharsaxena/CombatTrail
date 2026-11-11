@@ -121,6 +121,28 @@ test("countdown: its own frame, center of UIParent, FULLSCREEN, over every windo
     assertTrue(rw == nil or u.frame ~= rw.frame, "not the Race window's frame")
 end)
 
+test("countdown: the frame never takes the mouse, and each number pops in", function()
+    if forever() then return end
+    local S = fresh({ mutate = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(...)
+            local f = create(...)
+            rawset(f, "EnableMouse", function(self, on) rawset(self, "__mouse", on and true or false) end)
+            return f
+        end
+    end })
+    running(S, 30)
+    to(S, 122)
+    local u = assert(C(S).__ui())
+    assertEqual(rawget(u.frame, "__mouse"), false, "mouse-disabled")
+    assertTrue(u.pop ~= nil, "the pop animation")
+    local plays = 0
+    local play = u.pop.Play
+    rawset(u.pop, "Play", function(g, ...) plays = plays + 1 return play(g, ...) end)
+    to(S, 131)
+    assertEqual(plays, 9, "one pop per number after the first: 9 down to 1")
+end)
+
 test("countdown: the digits are Blizzard's BigGold set, cut by texcoord", function()
     if forever() then return end
     local S = fresh()

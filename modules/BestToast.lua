@@ -67,6 +67,7 @@ BestToast.FLAGS_HEIGHT = BestToast.ROW_GAP + BestToast.TEXT_H   -- the flags' li
 local TROPHY_FALLBACK = "Interface\\Icons\\Achievement_Dungeon_GloryoftheHero"
 
 local toast       -- the shell's instance (or the seam's stub)
+local kindOf = {} -- record id -> "races" | "fights": each toast queued, so a kind switched off drops its own
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Toast", fmt, ...) end
@@ -363,12 +364,26 @@ toast = NS.NewToast({
 
 -- ── the triggers ────────────────────────────────────────────────────────────────────────────────
 
--- A record that may be a new best over an earlier one on its board: toast it if it is.
-local function offer(record)
+-- A record that may be a new best over an earlier one on its board: toast it if it is, under its
+-- kind ("races" | "fights").
+local function offer(record, kind)
     local pct, isNew, prev = NS.Bests.Delta(record)
     if not (isNew and pct ~= nil) then return false end
     debug("new best %s: %+.1f%%", tostring(record.id), pct)
-    return toast:Show(BestToast.Payload(record, pct, prev), { key = record.id }) == true
+    local shown = toast:Show(BestToast.Payload(record, pct, prev), { key = record.id }) == true
+    if shown and record.id ~= nil then kindOf[record.id] = kind end
+    return shown
+end
+
+--- A kind switched off: every toast of that kind goes, waiting or on screen; the other kind's stay.
+--- @param kind string  "races" | "fights"
+local function dropKind(kind)
+    for id, k in pairs(kindOf) do
+        if k == kind then
+            toast:Remove(id)
+            kindOf[id] = nil
+        end
+    end
 end
 
 --- A race's result (RACE_RESULT's stored record): toast a complete race that is a new best over an
@@ -377,7 +392,7 @@ end
 --- @return boolean shown  queued
 function BestToast.OnRace(record)
     if not racesOn() or not isRace(record) or record.race.status ~= "complete" then return false end
-    return offer(record)
+    return offer(record, "races")
 end
 
 --- A saved fight (FIGHT_SAVED's record): toast a fight, never a race, that is a new best over an
@@ -386,7 +401,7 @@ end
 --- @return boolean shown  queued
 function BestToast.OnFight(record)
     if not fightsOn() or type(record) ~= "table" or isRace(record) then return false end
-    return offer(record)
+    return offer(record, "fights")
 end
 
 -- ── the settings and the lifecycle ──────────────────────────────────────────────────────────────
@@ -411,7 +426,10 @@ function BestToast.Refresh() toast:Refresh() end
 function BestToast.ResetPosition() toast:ResetPosition() end
 
 --- The stand-down: nothing on screen, nothing waiting.
-function BestToast.Suspend() toast:Clear() end
+function BestToast.Suspend()
+    toast:Clear()
+    kindOf = {}
+end
 
 --- The toast instance, for the suites.
 function BestToast.Instance() return toast end
@@ -429,11 +447,12 @@ do
         if NS.Compat.ForClient(RETAIL) then
             bus:RegisterMessage(NS.MSG.RACE_RESULT, function(_, record) BestToast.OnRace(record) end)
         end
-        -- A profile switch or reset: its scale and its point; a kind switched off drops what waits.
+        -- A profile switch or reset: its scale and its point; a kind switched off drops its own toasts.
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
             if path == "profile" then BestToast.Refresh() end
             if path == "toast.races" or path == "toast.fights" or path == "profile" then
-                if not (racesOn() or fightsOn()) then toast:Clear() end
+                if not racesOn() then dropKind("races") end
+                if not fightsOn() then dropKind("fights") end
             end
         end)
     end

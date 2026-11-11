@@ -403,7 +403,8 @@ none on WoW Forever, whose seed is empty), then *Reset list* last.
 On both clients (race plan Task C2, ruling X19: the section sits on a page both clients have, with only
 the races row Retail's). The rows, then *Test toast* last (a sample toast run as a real one; drag it to
 place it while it shows, and General > Master controls' *Reset position* puts it back). Duration and sound
-are read as each toast shows; the scale re-anchors a shown toast.
+are read as each toast shows; the scale re-anchors a shown toast. A race or fight toggle switched off takes
+that kind's toasts down, waiting or shown, and leaves the other kind's.
 
 | Row | Key |
 |---|---|
