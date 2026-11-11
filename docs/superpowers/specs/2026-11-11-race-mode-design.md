@@ -188,7 +188,8 @@ A race is **one fight record** with an optional `race` part **(Claude, from the 
   HUD paces on fight boards only. Saved races are fights and stay in the history, the Races filter and Insights,
   which gate on "the record has a `race` part", never on the switch. Forever has neither the switch nor any of it.
 - **Slash (Claude):** `/ct race` with `arm [len]`, `cancel`, `show`, `hide`, `toggle`, `ignore
-  [show|add|remove|defaults]`, `dummy [show|add|remove|capture|defaults]`; `/ct results races` and
+  [show|add|remove|defaults]`; `/ct dummy [show|add|remove|capture|defaults]` on both clients, since the
+  dummy list is core (§9); `/ct results races` and
   `/ct results insights`; `/ct test race [armed|running|result]`; the sim gains DPS Race's eight race scenarios.
   `/ct ignore` stays the lanes' spell ignore, so the late-cast list lives under `race`.
 - **Keybindings (Claude):** Arm / cancel race and Toggle Race window, both Retail. DPS Race's other two (toggle
