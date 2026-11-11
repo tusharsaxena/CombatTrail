@@ -227,6 +227,21 @@ test("hud pace: during a race the HUD paces against the race board's best, not t
     near(hi, ref * 1.5)
 end)
 
+test("hud pace: with pace against the last fight, a race paces on its race board's newest race", function()
+    if forever() then return end
+    local S = racer()
+    local Hud = S.NS.Hud
+    assert(S.NS.SetByPath("hud.paceAgainst", "last"))
+    local _, raceRec = boards(S)
+    assertTrue(F.arm(S, 30, 210))
+    local start = F.pull(S, 211, 22, PLAIN)
+    F.damage(S, 22, start + 1, start + 8, 1)
+    local v = Hud.View()
+    assertEqual(v.pace and v.pace.id, raceRec.id, "the race board's newest, not the dummy's last fight")
+    near(v.curve.duration, 30, "on the race's straight line")
+    near(v.curve:damageAt(15), 450000)
+end)
+
 test("hud pace: after the race the next plain dummy fight paces on the fight board again", function()
     if forever() then return end
     local S = racer()

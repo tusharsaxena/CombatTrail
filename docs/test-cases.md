@@ -978,7 +978,7 @@ Total.
 - hud: Locked stops the drag; Reset position puts it back
 - hud: disabled addon: hidden, no timer, and no fight opens it
 
-### test_hud_pace.lua (10)
+### test_hud_pace.lua (11)
 
 - pace: uses the best's slices when present, else its linear pace
 - pace: the bounds sit the best's pace in the middle; the range is held to the slider
@@ -986,6 +986,7 @@ Total.
 - pace: a total with no pet source of its own runs against the best's merged pace
 - pace: no best, or the layout's pace off, hides the bar
 - hud pace: during a race the HUD paces against the race board's best, not the dummy's fight board
+- hud pace: with pace against the last fight, a race paces on its race board's newest race
 - hud pace: after the race the next plain dummy fight paces on the fight board again
 - hud pace: a race canceled mid-pull paces its fight on the dummy's fight board again
 - hud pace: a race part that lands after the HUD went live re-paces on RACE_STARTED
@@ -1493,7 +1494,7 @@ Total.
 | test_toast.lua | 21 |
 | test_slices.lua | 18 |
 | test_hud_states.lua | 25 |
-| test_hud_pace.lua | 10 |
+| test_hud_pace.lua | 11 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 11 |
 | test_hud_appearance.lua | 8 |
@@ -1526,4 +1527,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1232** |
+| **Total** | **1233** |
