@@ -422,6 +422,20 @@ test("dummies: Add your target counts the target as single target, and says so w
     assertTrue(has(M, "Target a creature first."), said(M))
 end)
 
+test("dummies: Add your target says what the verb says: no creature, and nothing new", function()
+    local NS, M = fresh()
+    target(M, { guid = "Player-1-00000002", name = "Someone" })
+    M.__resetPrinted()
+    NS.HistoryPage.AddTargetDummy()
+    assertTrue(has(M, "Your target is not a creature, so it cannot be a training dummy."), said(M))
+    target(M, { guid = creatureGUID(BOAR), name = "Angry Boar" })
+    NS.HistoryPage.AddTargetDummy()
+    M.__resetPrinted()
+    NS.HistoryPage.AddTargetDummy()
+    assertEqual(#M.__printed(), 1, said(M))
+    assertTrue(has(M, "is already a training dummy: Single target."), said(M))
+end)
+
 -- ── `/ct dummy` ──────────────────────────────────────────────────────────────────────────────────
 
 test("dummy verb: add marks the target, captures it and says what it saved", function()

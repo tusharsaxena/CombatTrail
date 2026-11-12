@@ -57,7 +57,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `lane` | `player` or `pet`, then `on` or `off` | yes | `NS.Lanes.OnVerb` (settings/Lanes.lua) |
 | `ignore` | `add` or `remove` a spell, `list`, `reset`, then an optional `player` or `pet` | yes | `LaneIgnore.OnVerb` |
 | `dummy` | nothing or `show`; `add [category]` (the target; `single` when none is typed), `remove [creature ID or name]` (the target when none), `capture` (the target, not marked), `defaults`. Both clients | yes | `Dummies.OnVerb` (modules/Dummies.lua) |
-| `race` | Retail only. `arm [length]` (`90`, `1:30`, `3m`, `1m30s`; 0:10 to 15:00; none: the length the next race arms at), `cancel`, `show`, `hide`, `toggle` (the Race window, through `NS.SetRaceWindowShown`), `ignore [show\|add\|remove\|defaults] <spell>` (the late-cast ignore list). Race mode off refuses the arm and the window in one line | `ignore` only | `RaceVerb.OnVerb` (modules/RaceVerb.lua) |
+| `race` | Retail only. `arm [length]` (`90`, `1:30`, `3m`, `1m30s`; 0:10 to 15:00; none: the Race window's pick, else the length the next race arms at; a typed length becomes the window's pick, as in DPS Race), `cancel`, `show`, `hide`, `toggle` (the Race window, through `NS.SetRaceWindowShown`), `ignore [show\|add\|remove\|defaults] <spell>` (the late-cast ignore list). Race mode off refuses the arm and the window in one line | `ignore` only | `RaceVerb.OnVerb` (modules/RaceVerb.lua) |
 
 The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`, then on Retail
 Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,

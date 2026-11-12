@@ -460,7 +460,7 @@ Total.
 - identity: the stand-up primes the trees (core/CombatTrail.lua RegisterGameEvents)
 - identity: retail: the talent trees are absent and the spec is the client's
 
-### test_dummies.lua (29)
+### test_dummies.lua (30)
 
 - dummies: the seed is picked once per client; Forever's is empty by decision
 - dummies: Lookup answers the seed by creature ID, with its name and category
@@ -485,6 +485,7 @@ Total.
 - dummies: the row's default empties the list
 - dummies: the tab draws Add your target, the list, a box per built-in and Reset list
 - dummies: Add your target counts the target as single target, and says so with none
+- dummies: Add your target says what the verb says: no creature, and nothing new
 - dummy verb: add marks the target, captures it and says what it saved
 - dummy verb: add refuses a word that is no category, no target, and a player
 - dummy verb: on a built-in, add says so and captures; remove switches it off, add brings it back
@@ -707,7 +708,7 @@ Total.
 - late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
 - late ignore: Label names a spell, the hearthstones' entry and an unknown one
 
-### test_race.lua (58)
+### test_race.lua (60)
 
 - race: the states, the lengths and the timings are the plan's
 - race: arming refuses on WoW Forever and registers nothing there
@@ -764,11 +765,13 @@ Total.
 - race: an arm from a result arms a new race
 - race: the arm's snapshots replace the fight's combat-entry reads
 - race: a re-pull after the buzzer inside the grace is one fight, saved once, its combat end the last
+- race: a new pull past the grace while the race's fight settles is never mixed into the race
+- race: a split after a shared start keeps the race's clock and takes the arm's snapshots
 - race: inputs in the wrong state change nothing
 - race: the watchers register only what the race's state needs
 - race: a stand-down drops the armed race silently, with its registrations
 
-### test_race_resume.lua (24)
+### test_race_resume.lua (26)
 
 - resume: the slot is written at the first hit, plain, and nothing reaches the fight store
 - resume: the slot is cleared at the result and at a cancel
@@ -779,6 +782,8 @@ Total.
 - resume: stopping out of combat reads immediately
 - resume: stopping in combat waits for the combat end
 - resume: an incomplete race waiting for its read stays incomplete
+- resume: an incomplete race whose fight carried on keeps its own race clock after a reload
+- resume: a carried-on incomplete race read at the resume divides by its last damage, not the reload
 - resume: running before the buzzer with combat already over is incomplete and read at once
 - resume: session gone becomes lost
 - resume: a slot that cannot be raced is cleared, and a new race can be armed
@@ -795,7 +800,7 @@ Total.
 - resume: a stood-down login resumes nothing until the addon is enabled
 - resume: nothing is resumed on WoW Forever
 
-### test_race_settings.lua (18)
+### test_race_settings.lua (19)
 
 - race mode: the page, its rows and the verb are present on Retail, each declared retail
 - race mode: every control and verb is absent on WoW Forever
@@ -807,6 +812,7 @@ Total.
 - race mode: Ignore, Unignore and Reset write the late-cast list through its row
 - race verb: arm takes 90, 1:30 and 3m, and refuses 0 and 901 with one line
 - race verb: a bare arm takes the remembered length, and a refusal says why
+- race verb: a bare arm arms the Race window's pick, and a typed length becomes its pick
 - race verb: cancel says what it did in the state it found
 - race verb: show, hide and toggle reach the Race window
 - race verb: ignore shows, adds, removes and resets the late-cast list
@@ -846,12 +852,14 @@ Total.
 - autoarm: entering an instance closes the dummy's window
 - autoarm: stood down, nothing is registered and nothing acts; the stand-up rebuilds
 
-### test_race_window.lua (36)
+### test_race_window.lua (40)
 
 - race window: absent on WoW Forever, with nothing of it loaded
 - race window: present on Retail, with its frame name and its hooks
 - race window: the six bodies follow the race, idle to the result card
 - race window: combat ending before the buzzer waits for the read
+- race window: an early end back in combat counts the time since the race ended, and the hint comes
+- race window: idle after a plain fight's settle offers Arm Race again
 - race window: idle offers the five lengths and Custom, and Arm Race arms the pick
 - race window: a typed length is taken, and one out of range is refused with the length line
 - race window: a changed Default race length takes effect over the pick
@@ -877,6 +885,8 @@ Total.
 - race window: it wears the HUD's skin and appearance
 - race window: attached, it stands beside the HUD on each side and moves with it
 - race window: attached with the HUD hidden it stands where the HUD would
+- race window: a HUD that drew once, hidden, is placed again for the window beside it
+- race window: unticking Attach in the settings keeps it where it stands, as Detach does
 - race window: detached, it keeps its own place across a reload
 - race window: locked, or attached, its title bar drags nothing
 - race window: auto-show near a dummy, the debounced close, and the player's close counted
@@ -1171,7 +1181,7 @@ Total.
 - sections: a rebuilt pane reads the folds back; Reset position keeps them
 - sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
-### test_results_races.lua (25)
+### test_results_races.lua (27)
 
 - results: Races shows only races, Fights only fights, All both
 - results: under Races the length, dummy kind, Hide flagged and Include incomplete filters apply
@@ -1182,12 +1192,14 @@ Total.
 - results: group by length, by target and length, and by spec, target and length
 - results: under the date groupings a race is measured on its race board, not the dummy's fights
 - results: a race's chart runs on the race clock, with the buzzer line at its length (ruling X9)
+- results: a shared-session race has no chart in its detail, as on the HUD
 - results: a race's Timeline runs on the race clock and draws the buzzer line (ruling X9)
 - results: the race detail has Timing and Flags
 - results: the timing strip places the buzzer, grace, tail, late casts and combat end
 - results: the detail's figures are the race's: score, race DPS, DPS · Incomplete
 - results: the Delta box's runner-up reads its race DPS
 - results: the Compare and the DPS tip read the race DPS
+- results: a carried-on incomplete race's DPS tip names the span it divides by (ruling X16)
 - results: the row menu offers Ignore for late casts only for a race with a late cast
 - results: an ignore-list edit re-scores Hide flagged in the list
 - results: /ct results races opens the list on the Races filter
@@ -1256,13 +1268,14 @@ Total.
 - share: a lost race prints that it could not be read, and has no score line
 - share: on WoW Forever a saved race still shares, and no race line is printed
 
-### test_timeline.lua (13)
+### test_timeline.lua (14)
 
 - timeline: rows order long CDs first
 - timeline: decodes packed casts
 - timeline: pet toggle hides pet rows
 - timeline: compare lanes align to their own fight start
 - timeline: a race runs on the race clock, from its first hit, with its buzzer (ruling X9)
+- timeline: a race's axis reaches its last cast after the buzzer
 - timeline: the compare target is the pick, else the best, else the runner-up
 - timeline: the axis, the zoom and the stacking arithmetic
 - timeline: opens from the detail over the Results window, under its cover
@@ -1574,7 +1587,7 @@ Total.
 | test_format.lua | 20 |
 | test_fight.lua | 36 |
 | test_identity.lua | 47 |
-| test_dummies.lua | 29 |
+| test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
@@ -1587,11 +1600,11 @@ Total.
 | test_race_record.lua | 16 |
 | test_race_scoring.lua | 20 |
 | test_late_ignore.lua | 12 |
-| test_race.lua | 58 |
-| test_race_resume.lua | 24 |
-| test_race_settings.lua | 18 |
+| test_race.lua | 60 |
+| test_race_resume.lua | 26 |
+| test_race_settings.lua | 19 |
 | test_autoarm.lua | 27 |
-| test_race_window.lua | 36 |
+| test_race_window.lua | 40 |
 | test_countdown.lua | 22 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
@@ -1607,11 +1620,11 @@ Total.
 | test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
-| test_results_races.lua | 25 |
+| test_results_races.lua | 27 |
 | test_insights_data.lua | 14 |
 | test_insights.lua | 21 |
 | test_share.lua | 13 |
-| test_timeline.lua | 13 |
+| test_timeline.lua | 14 |
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
@@ -1634,4 +1647,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1320** |
+| **Total** | **1333** |

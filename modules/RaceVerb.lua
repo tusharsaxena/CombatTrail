@@ -91,6 +91,14 @@ local function arm(text)
             return out(RaceVerb.ArmRefusal("bad_length"))
         end
     end
+    -- The Race window's own acts (DPS Race's doArm): a typed length becomes its pick, and a bare arm
+    -- arms what it shows, so the verb, the Arm Race button and auto-arm agree (spec §4.1). Act.arm
+    -- says a refusal itself.
+    local Act = NS.RaceWindow and NS.RaceWindow.Act
+    if Act then
+        if length then Act.pickLength(length) end
+        return Act.arm()
+    end
     local ok, reason, detail = Race.Arm(length)
     if not ok then out(RaceVerb.ArmRefusal(reason, detail)) end
 end

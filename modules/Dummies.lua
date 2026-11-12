@@ -505,16 +505,29 @@ local function addLine(outcome, id, label)
     out(L["%s is already a training dummy: %s."]:format(name, label))
 end
 
+-- The target captured and counted as a dummy of `category` (single target when nil), with the line
+-- that says what changed or why not; `saved` adds the capture's own line first (the verb's).
+local function addTarget(category, saved)
+    local r = capturedTarget()
+    if not r then return nil end
+    local outcome = Dummies.Add(r.creatureID, category)
+    if saved then out(L["Saved: %s"]:format(Dummies.CaptureLine(r))) end
+    addLine(outcome, r.creatureID, Dummies.Label(Dummies.CategoryOf(r.creatureID) or category or "single"))
+    return r
+end
+
+--- The History page's Add your target: `/ct dummy add`'s capture and its lines, without the capture's.
+--- @return table|nil r  the capture, nil after the line that says why there is none
+function Dummies.AddTarget()
+    return addTarget(nil, false)
+end
+
 local function addVerb(word)
     local category = Dummies.CategoryWord(word)
     if word ~= "" and not category then
         return out(L["'%s' is no category. Use single, cleave, dungeoneer, boss or pvp."]:format(word))
     end
-    local r = capturedTarget()
-    if not r then return end
-    local outcome = Dummies.Add(r.creatureID, category)
-    out(L["Saved: %s"]:format(Dummies.CaptureLine(r)))
-    addLine(outcome, r.creatureID, Dummies.Label(Dummies.CategoryOf(r.creatureID) or category or "single"))
+    addTarget(category, true)
 end
 
 -- The creature `remove` names: a typed one, else the target; nil after the one line that says why.

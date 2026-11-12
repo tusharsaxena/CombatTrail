@@ -318,12 +318,9 @@ local function builtInIds()
 end
 
 --- Add your target: capture it and count it as a dummy (single target, or the built-in switched back
---- on). Says why in one line when the target is no creature.
+--- on), in `/ct dummy add`'s words: what changed, that nothing did, or why there is no creature.
 function HistoryPage.AddTargetDummy()
-    local Dum = NS.Dummies
-    local _, r = Dum.Capture()
-    if not r then return NS.Print(L["Target a creature first."]) end
-    Dum.Add(r.creatureID)
+    NS.Dummies.AddTarget()
 end
 
 local function builtInBoxes(ctx)

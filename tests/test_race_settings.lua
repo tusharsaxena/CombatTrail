@@ -242,6 +242,26 @@ test("race verb: a bare arm takes the remembered length, and a refusal says why"
     assertTrue(said(H.M, "Not in this zone"), text(H.M))
 end)
 
+test("race verb: a bare arm arms the Race window's pick, and a typed length becomes its pick", function()
+    if forever() then return end
+    local S = F.fresh()
+    local RW = S.NS.RaceWindow
+    RW.Show()
+    RW.Act.pickLength(180)                 -- 3:00 clicked in the window, not armed
+    S.NS.Slash:OnSlash("race arm")
+    assertEqual(S.NS.Race.Current().length, 180, "the length the window showed")
+    assertTrue(S.NS.Race.Cancel())
+    S.NS.Slash:OnSlash("race arm 90")
+    assertEqual(S.NS.Race.Current().length, 90)
+    assertTrue(S.NS.Race.Cancel())
+    assertEqual(RW.ArmLength(), 90, "the typed length is the window's pick")
+    S.M.__inCombat = true
+    S.M.__resetPrinted()
+    S.NS.Slash:OnSlash("race arm 60")
+    assertEqual(#S.M.__printed(), 1, "a refusal says why once: " .. text(S.M))
+    assertTrue(said(S.M, "Leave combat to arm a race."), text(S.M))
+end)
+
 test("race verb: cancel says what it did in the state it found", function()
     if forever() then return end
     local S = F.fresh()
