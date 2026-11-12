@@ -897,6 +897,68 @@ test("race: a re-pull after the buzzer inside the grace is one fight, saved once
     assertEqual(F.count(S, "RACE_RESULT"), 1)
 end)
 
+test("race: a new pull past the grace while the race's fight settles is never mixed into the race", function()
+    if forever() then return end
+    local S = fresh()
+    local R = S.NS.Race
+    assertTrue(F.arm(S, 10))
+    local start = F.pull(S)
+    F.damage(S, 25, start + 1, start + 10, 1)
+    assertEqual(R.State(), "stopping")
+    F.leave(S, start + 11)                 -- the combat end, 1 s after the buzzer
+    F.hit(S, start + 14, 25)               -- a DoT tick after it: the settle moves to start + 16
+    F.run(S, start + 14)
+    S.meter.SetSession(26, F.SESSION)
+    F.enter(S, start + 15.5)               -- 4.5 s after the end, past the grace: a new pull
+    assertTrue(S.NS.Fight.Current() ~= R.Fight(), "Fight parked the race's fight")
+    F.hit(S, start + 16, 26)
+    F.cast(S, start + 17, "start", 29722)
+    F.cast(S, start + 18, "succeeded", 348)
+    F.settle(S, start + 27)
+    local race
+    for _, r in ipairs(F.records(S)) do
+        if r.race then race = r.race end
+    end
+    assertTrue(race ~= nil, "the race is saved")
+    assertEqual(race.combatEnd, 1, "the race's own combat end, not the new pull's")
+    assertEqual(#race.flags.lateCasts, 0, "the new pull's casts are not the race's")
+    assertEqual(race.status, "complete")
+end)
+
+test("race: a split after a shared start keeps the race's clock and takes the arm's snapshots", function()
+    if forever() then return end
+    local S = fresh()
+    local NS = S.NS
+    local phase = "arm"
+    NS.Stats.Read = function() return { phase = phase } end
+    NS.Loadouts.CurrentGearSet = function() return "gear-" .. phase end
+    S.meter.SetSession(5, EARLIER)
+    assertTrue(F.arm(S, 10))
+    phase = "combat"
+    F.enter(S, 101)
+    S.meter.SetSession(5, CARRIED)
+    F.hit(S, 102, 5)
+    assertEqual(NS.Race.State(), "running")
+    S.meter.SetSession(6, F.SESSION)       -- the meter splits 4 s into the race
+    F.hit(S, 106, 6)
+    local fight = NS.Race.Fight()
+    assertEqual(fight.startT, 101, "the race's fight runs from the pull's combat entry")
+    assertEqual(fight.firstHitT, 102, "and from the race's first hit")
+    assertEqual(fight.stats.phase, "arm", "the arm's stats")
+    assertEqual(fight.gearSet, "gear-arm", "the arm's gear set")
+    F.cast(S, 108.5, "succeeded", 348)
+    F.damage(S, 6, 107, 112, 1)
+    F.settle(S, 113)
+    local race, rec
+    for _, r in ipairs(F.records(S)) do
+        if r.race then race, rec = r.race, r end
+    end
+    local casts = NS.CastCodec.Decode(rec.casts)
+    assertEqual(#casts, 1)
+    assertEqual(casts[1].t, 7.5, "the race's casts are timed from the pull's combat entry")
+    assertEqual(race.firstHit, 1, "the race clock's zero is the first hit, 1 s past combat entry")
+end)
+
 -- ── inputs in the wrong state and the wiring ───────────────────────────────────────────────────
 
 test("race: inputs in the wrong state change nothing", function()

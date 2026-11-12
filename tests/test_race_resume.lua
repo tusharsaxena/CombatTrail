@@ -182,6 +182,36 @@ test("resume: an incomplete race waiting for its read stays incomplete", functio
     assertFalse(r.race.flags.reloaded == true, "it never reached its buzzer")
 end)
 
+test("resume: an incomplete race whose fight carried on keeps its own race clock after a reload", function()
+    if forever() then return end
+    local S, start = raceTo(110, 60)
+    F.leave(S, start + 9)
+    F.enter(S, start + 10)            -- Feign Death inside Combat Trail's grace: the fight carries on
+    F.damage(S, 25, start + 11, start + 30, 1)
+    local G = F.reload(S, { now = start + 31, inCombat = true })
+    F.damage(G, 25, start + 32, start + 40, 1)
+    F.settle(G, start + 41)
+    local r = F.records(G)[1]
+    assertEqual(r.race.status, "incomplete")
+    assertEqual(r.race.endedAt, 9)
+    assertTrue(r.race.flags.carriedOn, "the record says how its DPS was taken")
+    F.near(r.race.dps, DAMAGE / 41, "over the first hit to the fight's end (ruling X16), not endedAt")
+end)
+
+test("resume: a carried-on incomplete race read at the resume divides by its last damage, not the reload", function()
+    if forever() then return end
+    local S, start = raceTo(110, 60)
+    F.leave(S, start + 9)
+    F.enter(S, start + 10)
+    F.damage(S, 25, start + 11, start + 30, 1)
+    F.leave(S, start + 31)
+    local G = F.reload(S, { now = start + 50 })
+    F.run(G, start + 50)
+    local r = F.records(G)[1]
+    assertEqual(r.race.status, "incomplete")
+    F.near(r.race.dps, DAMAGE / 30, "over the first hit to its last damage update")
+end)
+
 test("resume: running before the buzzer with combat already over is incomplete and read at once", function()
     if forever() then return end
     local S = raceTo(110)

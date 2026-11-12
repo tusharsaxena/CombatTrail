@@ -93,7 +93,10 @@ local state = STATE.IDLE
 -- the buzzer), lastDamage (s from the start), timeline, inFlight (the cast begun and not yet finished:
 -- its plain spell ID and castGUID, either nil when sealed), buzzer (the timer), stopNow, record,
 -- date (time() at the first hit), slot and slotKey (the pending slot, Task B2), resumedAt (the resume's
--- GetTime(): a restart gap never spans it).
+-- GetTime(): a restart gap never spans it), readAtResume (a resume out of combat: the fight is read at
+-- once), parked (a new pull
+-- past the grace parked the race's fight: that pull's combat and casts are not the race's),
+-- handOverDue (the arm's snapshots owed to the fight a split moved the race onto).
 local cur = {}
 
 local function debug(fmt, ...)
@@ -424,15 +427,35 @@ local function bindFight(fight)
     debug("fight %s on a %s dummy: waiting for the first hit", tostring(fight.id), cur.race.kind)
 end
 
+-- The arm's snapshots replace the fight's combat-entry reads (ruling X6).
+local function handOver(fight)
+    local s = cur.snaps or {}
+    if s.stats ~= nil then fight.stats = s.stats end
+    if s.talents ~= nil then fight.loadout = { talents = s.talents } end
+    if s.gearSet ~= nil then fight.gearSet = s.gearSet end
+    if s.usageSnap ~= nil then fight.usageSnap = s.usageSnap end
+end
+
 -- The meter split the shared session's fight (a fresh session after the arm): the race follows the
 -- fresh one, as DPS Race's did, and is no longer shared. The shared fight keeps its baseline, so it
--- is netted at its own read and never saves the fight before the arm a second time.
+-- is netted at its own read and never saves the fight before the arm a second time. The fresh fight
+-- takes the race's clock (the pull's combat entry and the race's first hit, so its record's race
+-- clock zero is the race's own, ruling X9; its cast capture is re-based on that entry) and the arm's
+-- snapshots (ruling X6). This runs inside FIGHT_STARTED, whose later receivers write the fight's
+-- combat-entry reads, so the snapshots are handed over at the fight's next damage update or its read.
 local function unshare(fight)
     local old = cur.fight
     old.race = nil
     cur.fight = fight
     fight.race = cur.race
     cur.race.flags.sharedSession = nil
+    local entry = Secrets.PlainNumber(old.startT)
+    if entry and entry <= cur.startedAt then
+        fight.startT = entry
+        if NS.Casts and NS.Casts.Begin then NS.Casts.Begin(fight.id, entry, fight) end
+    end
+    fight.firstHitT = cur.startedAt
+    cur.handOverDue = true
     persist()
     debug("fight %s split off the shared session: the race follows it", tostring(fight.id))
 end
@@ -445,15 +468,6 @@ local function onFightStarted(fight)
         and fight.scanFrom == old.scanFrom then
         return unshare(fight)
     end
-end
-
--- The arm's snapshots replace the fight's combat-entry reads (ruling X6).
-local function handOver(fight)
-    local s = cur.snaps or {}
-    if s.stats ~= nil then fight.stats = s.stats end
-    if s.talents ~= nil then fight.loadout = { talents = s.talents } end
-    if s.gearSet ~= nil then fight.gearSet = s.gearSet end
-    if s.usageSnap ~= nil then fight.usageSnap = s.usageSnap end
 end
 
 -- A shared session (ruling X3): flagged, and its baseline kept on the fight when it is the one read at
@@ -515,31 +529,60 @@ local function racing()
     return state == STATE.RUNNING or state == STATE.STOPPING
 end
 
+-- Whether the player's combat is still the race's: racing, and no new pull has parked its fight.
+local function listening()
+    return racing() and not cur.parked
+end
+
+-- Whether combat starting at `t` is a new pull rather than the race's fight carrying on: Combat Trail
+-- parks a fight whose combat comes back past its grace (modules/Fight.lua), whichever of the two
+-- regen receivers runs first (Fight clears the combat end when it carries the fight on).
+local function newPull(t)
+    local endT = cur.fight and Secrets.PlainNumber(cur.fight.combatEndT)
+    return endT ~= nil and type(t) == "number" and t - endT > NS.Constants.FIGHT.GRACE
+end
+
 --- PLAYER_REGEN_DISABLED: back in combat after the buzzer, the combat end is not the one read; back
---- in combat after an early end (no buzzer yet), the fight carries on (ruling X16).
-function Race.OnCombatStart()
-    if isDown() or state ~= STATE.STOPPING then return end
+--- in combat after an early end (no buzzer yet), the fight carries on (ruling X16). Past Combat Trail's
+--- grace it is a new pull: the race's fight is parked, waiting for its read, and the new combat's
+--- end, death and casts are never the race's.
+function Race.OnCombatStart(t)
+    if isDown() or state ~= STATE.STOPPING or cur.parked then return end
+    if newPull(t) then
+        cur.parked = true
+        debug("a new pull %.2fs after the combat end: the race's fight is parked", t - cur.fight.combatEndT)
+        return
+    end
     cur.combatEndedAt = nil
-    if not cur.buzzerAt then cur.carriedOn = true end
+    if not cur.buzzerAt then cur.race.flags.carriedOn = true end
 end
 
 --- PLAYER_REGEN_ENABLED: before the buzzer the race is incomplete; after it, the combat end is kept.
 function Race.OnCombatEnd(t)
-    if isDown() or not racing() then return end
+    if isDown() or not listening() then return end
     if state == STATE.RUNNING then return endEarly(t) end
     cur.combatEndedAt = t
 end
 
 --- PLAYER_DEAD: before the buzzer the race is incomplete and marked died; after it, marked only.
 function Race.OnDeath(t)
-    if isDown() or not racing() then return end
+    if isDown() or not listening() then return end
     cur.race.flags.died = true
     if state == STATE.RUNNING then endEarly(t) end
+end
+
+-- The arm's snapshots owed to a fight the race followed off a split (unshare), slot and all.
+local function handOverDue()
+    if not cur.handOverDue then return end
+    cur.handOverDue = nil
+    handOver(cur.fight)
+    persist()
 end
 
 -- One damage update for the race's fight at `t`: a stamp, its offset kept, and past the buzzer the
 -- restart flagged the moment it is heard.
 local function stamp(t)
+    handOverDue()
     local race, buzzerAt = cur.race, cur.buzzerAt
     cur.timeline:AddDamage(t)
     cur.lastDamage = round2(t - cur.startedAt)
@@ -615,7 +658,7 @@ end
 --- cast in flight; a channel's stop clears a channel. Starts are tracked from RUNNING, so a cast begun
 --- before the buzzer and finished after it is never late; an auto-repeat's success is never a press.
 function Race.OnCast(kind, spellID, t, castGUID)
-    if isDown() or not racing() then return end
+    if isDown() or not listening() then return end
     local id, guid = Secrets.PlainNumber(spellID), Secrets.PlainString(castGUID)
     if kind == "start" or kind == "channel" then
         cur.inFlight = { id = id, guid = guid, channel = kind == "channel" }
@@ -672,16 +715,23 @@ local function net(final, base)
     final.merged, final.duration = merged, nil
 end
 
+-- Where a carried-on race's fight stopped: its combat end, else its parking. A resumed fight read at
+-- once has the resume as its "combat end", so its last damage update before the /reload stands in.
+local function fightStop(fight)
+    if cur.readAtResume and cur.lastDamage then return cur.startedAt + cur.lastDamage end
+    return Secrets.PlainNumber(fight.combatEndT) or Secrets.PlainNumber(fight.closedT) or GetTime()
+end
+
 -- The race DPS. An incomplete race whose fight carried on past `endedAt` (combat again after the early
 -- end, Feign Death inside Combat Trail's grace: ruling X16) keeps the whole fight's total as its score,
 -- so its DPS divides by the fight's own race clock, the first hit to the fight's end, never
--- `endedAt`; no meter read is taken at the early combat end. Any other race (a resumed one included:
--- its fight's end is the /reload's, not combat's) is RaceScoring.Dps's.
+-- `endedAt`; no meter read is taken at the early combat end. The part's own `flags.carriedOn` says so,
+-- so a resumed race (the slot holds the part) does the same. Any other race is RaceScoring.Dps's.
 local function raceDps(fight, race)
-    if race.status ~= "incomplete" or not cur.carriedOn or type(race.score) ~= "number" then
+    if race.status ~= "incomplete" or not race.flags.carriedOn or type(race.score) ~= "number" then
         return NS.RaceScoring.Dps(race.score, race)
     end
-    local stop = Secrets.PlainNumber(fight.combatEndT) or Secrets.PlainNumber(fight.closedT) or GetTime()
+    local stop = fightStop(fight)
     local span = math.max(round2(stop - cur.startedAt) or 0, race.endedAt or 0)
     if span <= 0 then return 0 end
     return race.score / span
@@ -733,6 +783,7 @@ function Race.Finalize(fight, final, reason)
         return
     end
     if not racing() then return end
+    handOverDue()
     if reason ~= "final" or type(final) ~= "table" then
         cur.race.status = "lost"
     else
@@ -849,6 +900,7 @@ local function resumeRace(slot, key, now)
     end
     if not sessionsHeld(slot.sessions) then return lose("session gone") end
     local inCombat = UnitAffectingCombat("player") and true or false
+    cur.readAtResume = not inCombat
     local running, left = false, nil
     if race.status == "running" then running, left = resumeRunning(race, now, inCombat) end
     -- Past its buzzer and not yet read: what was cast during the reload went unseen.

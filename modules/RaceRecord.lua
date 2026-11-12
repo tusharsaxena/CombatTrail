@@ -4,14 +4,15 @@ local _, NS = ...
 -- own fields (who, identity, damage, dps, duration, ...) stay a fight's; the part adds:
 --
 --   race = { length, kind, status, flags = { lateCasts, restartedAt, reloaded, died, sessionFromList,
---            sharedSession }, score, dps, tail, endedAt, combatEnd, grace, restartGap, firstHit }
+--            sharedSession, carriedOn }, score, dps, tail, endedAt, combatEnd, grace, restartGap, firstHit }
 --
 -- `length` is the race length the player picked (seconds); `kind` the dummy's category when the race
 -- was saved (modules/Dummies.lua CATEGORIES; the boards read the list as it is now, modules/Bests.lua
 -- RaceKind); `status` "complete" or "incomplete" on a stored record (a lost or canceled race is taken
 -- off its fight before the save, modules/Recorder.lua); `score` the session's total (player and pet);
 -- `dps` the score over the length, or over `endedAt` (seconds from the first hit to combat end) when
--- incomplete; `tail`, `combatEnd`, `grace` and `restartGap` DPS Race's timing. `flags.lateCasts` is
+-- incomplete, unless `flags.carriedOn` (combat came back inside Combat Trail's grace after the early
+-- end, ruling X16): then over the first hit to the fight's end, as the score is the whole fight's; `tail`, `combatEnd`, `grace` and `restartGap` DPS Race's timing. `flags.lateCasts` is
 -- `{ { t, spellID }, ... }`, each cast's offset after the buzzer. `firstHit` is the race clock's zero on
 -- the fight clock (ruling X9): seconds from combat entry (the fight's startT, the zero of the casts and
 -- of the chart's steps) to the first hit. A race saved without it reads as 0: no shift.
@@ -28,6 +29,9 @@ local Secrets = NS.Secrets
 local NUMBERS = { "length", "score", "dps", "tail", "endedAt", "combatEnd", "grace", "restartGap", "firstHit" }
 local STRINGS = { "kind", "status" }
 local FLAG_TRUTHS = { "reloaded", "died", "sessionFromList", "sharedSession" }
+-- The truths a plain copy keeps: the flags, and carriedOn (how an incomplete race's DPS was taken; it
+-- flags nothing, as an incomplete race is flagged already).
+local KEPT_TRUTHS = { "reloaded", "died", "sessionFromList", "sharedSession", "carriedOn" }
 
 --- Whether `record` is a race: it carries a `race` part.
 --- @param record table|nil
@@ -65,7 +69,8 @@ function RaceRecord.OnClock(casts, shift)
 end
 
 --- The race DPS out of a score (DPS Race's Scoring.Dps on the race part): the score over the race
---- length when complete, else over `endedAt`. 0 with no score or no positive divisor yet.
+--- length when complete, else over `endedAt`. 0 with no score or no positive divisor yet. A carried-on
+--- incomplete race (`flags.carriedOn`) has its stored `dps`, which RaceRecord.Dps prefers.
 --- @param score number|nil
 --- @param race table|nil  a race part
 --- @return number dps
@@ -133,7 +138,7 @@ end
 local function plainFlags(flags)
     if Secrets.IsSealed(flags) or type(flags) ~= "table" or not Secrets.CanAccessTable(flags) then return {} end
     local out = { restartedAt = Secrets.PlainNumber(flags.restartedAt) }
-    for _, key in ipairs(FLAG_TRUTHS) do
+    for _, key in ipairs(KEPT_TRUTHS) do
         local v = flags[key]
         if not Secrets.IsSealed(v) and type(v) == "boolean" then out[key] = v end
     end

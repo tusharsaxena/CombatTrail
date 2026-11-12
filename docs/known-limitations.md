@@ -139,6 +139,13 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   X16): no meter read is taken at the early combat end, where secrecy is unproven, so its DPS divides
   that total by the fight's race-clock length (first hit to fight end). Incomplete races never count
   on a board, so this only sets the figure shown.
+- **A race on a shared session that the meter splits mid-race scores the fresh session only.** The
+  race keeps its clock (its record runs from the pull's combat entry, its first hit the race's), but the
+  damage and the casts before the split stay with the shared session's fight, and the chart's steps
+  before the split are empty.
+- **A race whose fight is parked by a new pull waits for that pull's read.** A pull past Combat Trail's
+  grace while the race's fight still settles parks it (modules/Fight.lua), and Fight reads parked fights
+  with the next settle. The new pull's combat end, death and casts are never the race's.
 - **A race's chart, like a fight's, lasts one session.** The race clock shift on the chart and the
   Timeline (ruling X9) reads the part's `firstHit`; a race saved before that field reads as 0, with no
   shift.
