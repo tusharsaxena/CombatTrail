@@ -68,7 +68,9 @@ local masterRows, masterTail = H.MasterControls({
     notes            = {
         testMode = L["It fills the lanes, the HUD and the Results window with sample data."],
     },
-    resetPositionTooltip = L["Move the lanes, the DPS HUD and the Results window back to where they started."],
+    resetPositionTooltip = NS.Compat.ForClient({ "retail" })
+        and L["Move the lanes, the DPS HUD, the Race window, the Results window and the new-best toast back to where they started."]
+        or L["Move the lanes, the DPS HUD, the Results window and the new-best toast back to where they started."],
     onResetPosition  = function() NS.ResetPositions() end,
     onResetAll       = function() NS.ShowResetAll() end,
     -- The addon's own rows on this tab, after the canonical block (options-ui-§16: never interleaved).

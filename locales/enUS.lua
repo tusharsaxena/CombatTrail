@@ -73,8 +73,8 @@ L["Restore every General setting on this profile to its addon default: Master co
     "Restore every General setting on this profile to its addon default: Master controls and the look and skin."
 L["It fills the lanes, the HUD and the Results window with sample data."] =
     "It fills the lanes, the HUD and the Results window with sample data."
-L["Move the lanes, the DPS HUD and the Results window back to where they started."] =
-    "Move the lanes, the DPS HUD and the Results window back to where they started."
+L["Move the lanes, the DPS HUD, the Results window and the new-best toast back to where they started."] =
+    "Move the lanes, the DPS HUD, the Results window and the new-best toast back to where they started."
 L["Show DPS HUD in combat"] = "Show DPS HUD in combat"
 L["Open the DPS HUD whenever you enter combat. Off, it opens only when you show it."] =
     "Open the DPS HUD whenever you enter combat. Off, it opens only when you show it."

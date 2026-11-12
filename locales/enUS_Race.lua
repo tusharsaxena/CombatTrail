@@ -399,3 +399,5 @@ L["The result card holds."] = "The result card holds."
 L["Sample note: opener with every cooldown"] = "Sample note: opener with every cooldown"
 L["Sample note: five dummies in reach"] = "Sample note: five dummies in reach"
 L["Sample note: another character's best"] = "Sample note: another character's best"
+L["Move the lanes, the DPS HUD, the Race window, the Results window and the new-best toast back to where they started."] =
+    "Move the lanes, the DPS HUD, the Race window, the Results window and the new-best toast back to where they started."
