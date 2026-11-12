@@ -188,6 +188,8 @@ L["Combat ended before the buzzer, this far into the race, so the race is incomp
 L["In combat"] = "In combat"
 L["How long you have stayed in combat since the buzzer. The result is read when combat ends."] =
     "How long you have stayed in combat since the buzzer. The result is read when combat ends."
+L["How long you have been in combat since the race ended. The result is read when combat ends."] =
+    "How long you have been in combat since the race ended. The result is read when combat ends."
 L["Out of combat"] = "Out of combat"
 L["Combat is over, so the result can be read."] = "Combat is over, so the result can be read."
 L["Result pending"] = "Result pending"
@@ -231,6 +233,7 @@ L["into the race"] = "into the race"
 L["s"] = "s"
 L["after the buzzer"] = "after the buzzer"
 L["since the buzzer"] = "since the buzzer"
+L["since the race ended"] = "since the race ended"
 L["combat ended"] = "combat ended"
 L["1 late cast \194\183 +%.1fs"] = "1 late cast \194\183 +%.1fs"
 L["%d late casts \194\183 +%.1fs"] = "%d late casts \194\183 +%.1fs"

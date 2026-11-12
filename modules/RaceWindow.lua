@@ -405,7 +405,7 @@ end
 local function hintFor(v)
     if v.key ~= "waiting" or not v.inCombat then return nil end
     local delay = tonumber(setting("race.hintDelay")) or 15
-    if (v.sinceBuzzer or 0) < delay then return nil end
+    if (v.sinceBuzzer or v.sinceEnd or 0) < delay then return nil end
     return L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."]
 end
 
@@ -417,6 +417,9 @@ local function stopView(v)
     v.sinceBuzzer = R.SinceBuzzer()
     v.endedEarly = v.sinceBuzzer == nil
     v.endedAt = race.endedAt
+    -- An early end has no buzzer: combat back after it (ruling X16) is counted from the race's end.
+    local elapsed = R.Elapsed()
+    if v.endedEarly and elapsed and type(race.endedAt) == "number" then v.sinceEnd = math.max(0, elapsed - race.endedAt) end
     v.lateCasts = type(race.flags) == "table" and race.flags.lateCasts or nil
     v.grace = race.grace
     v.stopNow = R.StopRequested()
@@ -776,6 +779,11 @@ local function onFightTick(fight)
 end
 
 
+local function onFightEnded()
+    if isDown() or not windowShown() or racing() then return end
+    RW.Refresh()
+end
+
 -- The store changed: the idle body's best may have moved; a result card whose race left the store
 -- goes back to the Arm Race screen.
 local function onFightsChanged()
@@ -794,8 +802,16 @@ local function onFightsChanged()
     end
 end
 
+-- Attach unticked on the Race mode page (or the CLI): it stays where it stands, as the title bar's
+-- Detach does; the frame is still beside the HUD until the settings' Refresh.
+local function detachedBySetting(path)
+    if path ~= "raceWindow.attached" or attached() or not windowShown() then return end
+    if anchor and anchor[2] ~= UIParent then keepWhereItStands() end
+end
+
 local function onSettings(path)
     if type(path) ~= "string" or isDown() then return end
+    detachedBySetting(path)
     -- A new Default race length takes effect over the pick (DPS Race's ForgetLength): the idle body
     -- and auto-arm's ArmLength offer it.
     if path == "race.defaultLength" or path == "profile" then pick.length = nil end
@@ -815,6 +831,8 @@ do
             RW.Refresh()
         end)
         bus:RegisterMessage(NS.MSG.FIGHT_TICK, function(_, fight) onFightTick(fight) end)
+        -- A fight read (Fight idle again): the idle body's "still being read" refusal is lifted.
+        bus:RegisterMessage(NS.MSG.FIGHT_ENDED, function() onFightEnded() end)
         bus:RegisterMessage(NS.MSG.FIGHTS_CHANGED, function() onFightsChanged() end)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path) onSettings(path) end)
     end

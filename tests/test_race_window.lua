@@ -134,7 +134,44 @@ test("race window: combat ending before the buzzer waits for the read", function
     assertEqual(w.title:GetText(), "Reading the result", "out of combat the read is next")
 end)
 
+test("race window: an early end back in combat counts the time since the race ended, and the hint comes", function()
+    if forever() then return end
+    local S = fresh()
+    local RW = W(S)
+    RW.Show()
+    assertTrue(F.arm(S, 60))
+    local start = F.pull(S)
+    F.damage(S, 25, start + 1, start + 10, 1)
+    F.leave(S, start + 10)
+    F.enter(S, start + 11)              -- Feign Death inside the grace: combat carries on
+    F.run(S, start + 15)
+    assertEqual(current(S), "waiting")
+    local w = body(S).w
+    assertEqual(w.combat.label:GetText(), "In combat")
+    assertEqual(w.combat.value:GetText(), "+5.0s", "the time since the race ended, never a frozen 0")
+    assertFalse(w.hint:IsShown(), "no hint before the delay")
+    F.run(S, start + 26)
+    assertTrue(w.hint:IsShown(), "combat holding the read brings the hint")
+end)
+
 -- ── idle ───────────────────────────────────────────────────────────────────────────────────────
+
+test("race window: idle after a plain fight's settle offers Arm Race again", function()
+    if forever() then return end
+    local S = fresh()
+    local RW = W(S)
+    RW.Show()
+    S.meter.SetSession(25, F.SESSION)
+    F.enter(S, 101)
+    F.hit(S, 102, 25)
+    F.leave(S, 110)
+    assertEqual(RW.View().blocker, "settling", "the last fight is still being read")
+    F.run(S, 114.1)
+    F.run(S, 117)
+    assertEqual(S.NS.Fight.State(), "idle")
+    assertNil(RW.View().blocker, "the window drew again once the fight was read")
+    assertTrue(body(S).w.arm:IsEnabled(), "Arm Race is offered")
+end)
 
 test("race window: idle offers the five lengths and Custom, and Arm Race arms the pick", function()
     if forever() then return end
@@ -634,6 +671,58 @@ test("race window: attached with the HUD hidden it stands where the HUD would", 
     Hud.Hide()
     W(S).Refresh()
     assertEqual(W(S).Anchor()[2], hud, "a HUD closed by hand keeps its place")
+end)
+
+test("race window: a HUD that drew once, hidden, is placed again for the window beside it", function()
+    if forever() then return end
+    local geom = {}
+    local S = fresh({ mutate = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, name, ...)
+            local f = create(kind, name, ...)
+            if type(name) ~= "string" then return f end
+            local g = { points = {} }
+            geom[name] = g
+            rawset(f, "SetPoint", function(_, ...) g.points[#g.points + 1] = { ... } end)
+            rawset(f, "ClearAllPoints", function() g.points = {} end)
+            rawset(f, "SetSize", function(_, w, h) g.w, g.h = w, h end)
+            rawset(f, "SetWidth", function(_, w) g.w = w end)
+            return f
+        end
+    end })
+    local Hud = S.NS.Hud
+    Hud.Show()
+    Hud.Hide()
+    assertTrue(Hud.__ui().rendered, "the HUD drew once")
+    local p = S.NS.db.profile.hud.position
+    p.point, p.relPoint, p.x, p.y = "TOPLEFT", "TOPLEFT", 40, -80   -- a profile with its own HUD place
+    assertTrue(S.NS.SetByPath("hud.width", 420))
+    W(S).Show()
+    local g = geom[Hud.FRAME_NAME]
+    local point, _, relPoint, x, y = unpack(g.points[#g.points])
+    assertEqual(point, "TOPLEFT", "at this profile's HUD place")
+    assertEqual(relPoint, "TOPLEFT")
+    assertEqual(x, 40)
+    assertEqual(y, -80)
+    assertEqual(g.w, 420, "at this profile's HUD width")
+end)
+
+test("race window: unticking Attach in the settings keeps it where it stands, as Detach does", function()
+    if forever() then return end
+    local S = fresh()
+    local RW = W(S)
+    RW.Show()
+    assertTrue(RW.IsAttached())
+    local ui = RW.__ui()
+    rawset(ui.frame, "GetLeft", function() return 700.4 end)
+    rawset(ui.frame, "GetTop", function() return 500.6 end)
+    assertTrue(S.NS.SetByPath("raceWindow.attached", false))
+    local a = RW.Anchor()
+    assertEqual(a[1], "TOPLEFT", "where it stood, not the default place")
+    assertEqual(a[2], S.M.UIParent)
+    assertEqual(a[3], "BOTTOMLEFT")
+    assertEqual(a[4], 700)
+    assertEqual(a[5], 501)
 end)
 
 test("race window: detached, it keeps its own place across a reload", function()

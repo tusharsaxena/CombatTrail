@@ -92,6 +92,7 @@ local Tips = {
     damageStopped = { L["Damage stopped"], L["How long after the buzzer your last damage landed, as far as the race has seen."] },
     combatEnded = { L["Combat ended"], L["Combat ended before the buzzer, this far into the race, so the race is incomplete."] },
     inCombat = { L["In combat"], L["How long you have stayed in combat since the buzzer. The result is read when combat ends."] },
+    inCombatEarly = { L["In combat"], L["How long you have been in combat since the race ended. The result is read when combat ends."] },
     outOfCombat = { L["Out of combat"], L["Combat is over, so the result can be read."] },
     pending = { L["Result pending"], L["The damage meter can only be read once combat ends, so the result waits for that. Stop Now takes it as soon as it can."] },
     stopNow = { L["Stop Now"], L["Take the result now instead of waiting out the damage tail. Out of combat it is read at once; in combat it is read the moment combat ends, and damage up to then counts."] },
@@ -635,7 +636,8 @@ end
 -- ── STOP! and WAITING ───────────────────────────────────────────────────────────────────────────
 
 -- The two figures both bodies share, each with its caption row: the tail (or the time in combat at
--- an early end) and the time in combat since the buzzer (or a dash once combat is over). Plain
+-- an early end) and the time in combat since the buzzer (since the race's end at an early end, or a
+-- dash once combat is over). Plain
 -- GetTime() figures, the unit joined to the figure's string.
 local function setStopFigures(w, v)
     w.tail.frame.tip = v.endedEarly and Tips.combatEnded or Tips.damageStopped
@@ -647,7 +649,11 @@ local function setStopFigures(w, v)
         w.tail.label:SetText(L["Damage stopped"])
         setKpi(w.tail, NS.Format.Seconds(v.tail) .. L["s"], L["after the buzzer"])
     end
-    if v.inCombat then
+    if v.inCombat and v.endedEarly then
+        w.combat.frame.tip = Tips.inCombatEarly
+        w.combat.label:SetText(L["In combat"])
+        setKpi(w.combat, NS.Format.Seconds(v.sinceEnd or 0) .. L["s"], L["since the race ended"])
+    elseif v.inCombat then
         w.combat.label:SetText(L["In combat"])
         setKpi(w.combat, NS.Format.Seconds(v.sinceBuzzer or 0) .. L["s"], L["since the buzzer"])
     else

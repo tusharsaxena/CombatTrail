@@ -1152,13 +1152,14 @@ function Hud.Frame() return ui and ui.frame or nil end
 
 --- The HUD's window for the Race window to stand beside (race plan Task C1, Review focus 4): built
 --- and placed where it stands even while hidden, and a window that never drew is given its fixed
---- size, so an attached Race window never falls to 0,0. Shows nothing.
+--- size, so an attached Race window never falls to 0,0. A hidden window that drew before is placed
+--- again and given its width (a profile or a setting may have moved them since). Shows nothing.
 --- @return table frame
 function Hud.Dock()
     ensureWindow()
-    if not ui.rendered then
+    if not windowShown() then
         applyPlacement()
-        ui.frame:SetSize(width(), Hud.FixedHeight())
+        if ui.rendered then ui.frame:SetWidth(width()) else ui.frame:SetSize(width(), Hud.FixedHeight()) end
         ui.docked = true
     end
     return ui.frame
