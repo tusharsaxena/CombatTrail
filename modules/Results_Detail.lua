@@ -174,11 +174,15 @@ end
 --- The chart's view for a stored fight (modules/Hud_Chart.lua's OverView over the in-session slices,
 --- scaled to the record's plain player damage), or nil when this session holds none. A race's runs on
 --- its race clock, from its first hit, with its buzzer line (ruling X9; not on WoW Forever, where it
---- lists as a fight: modules/Results_Races.lua Clock).
+--- lists as a fight: modules/Results_Races.lua Clock); a shared-session race has none.
 --- @param record table
 --- @return table|nil view
 function Detail.ChartView(record)
     if not NS.Slices.Drawable(record) then return nil end
+    -- A shared session's steps hold its damage from before the arm, which the record's own damage
+    -- does not: no chart, as on the DPS HUD (modules/Hud.lua, DPS Race's rule).
+    local race = type(record.race) == "table" and record.race or nil
+    if race and type(race.flags) == "table" and race.flags.sharedSession then return nil end
     local d = record.damage
     local player = tonumber(d.player) or tonumber(d.merged)
     local final = { duration = record.duration, player = { total = player } }

@@ -422,11 +422,22 @@ local function dim(text) return { text, NS.Style.Rgb("ct.dim") } end
 
 local TIP = {}
 
-function TIP.dps(r)
+-- What the race DPS divides by: the race length, the time raced, or for a carried-on incomplete race
+-- (ruling X16) the first hit to the fight's end, the span its stored DPS was taken over.
+local function dpsBasis(r, dps)
     local race = r.race
-    local lines = { L["%s DPS"]:format(NS.ResultsTips.Grouped(NS.RaceRecord.Dps(r))),
-                    race.status == "complete" and L["The race's score over its race length."]
-                        or L["The race's score over the time raced: combat ended before the buzzer."] }
+    if race.status == "complete" then return L["The race's score over its race length."] end
+    local flags = type(race.flags) == "table" and race.flags or {}
+    local score = race.score
+    if flags.carriedOn and type(score) == "number" and type(dps) == "number" and dps > 0 then
+        return L["The race's score over %s, its first hit to the fight's end: combat came back inside the grace after it ended before the buzzer."]:format(NS.Format.Length(score / dps))
+    end
+    return L["The race's score over the time raced: combat ended before the buzzer."]
+end
+
+function TIP.dps(r)
+    local dps = NS.RaceRecord.Dps(r)
+    local lines = { L["%s DPS"]:format(NS.ResultsTips.Grouped(dps)), dpsBasis(r, dps) }
     if type(r.dps) == "number" then
         lines[#lines + 1] = dim(L["The fight around it: %s DPS over its own length."]:format(NS.ResultsTips.Grouped(r.dps)))
     end

@@ -333,6 +333,15 @@ test("results: a race's chart runs on the race clock, with the buzzer line at it
     assertFalse(p.w.chart.buzzer:IsShown(), "a fight has no buzzer line")
 end)
 
+test("results: a shared-session race has no chart in its detail, as on the HUD", function()
+    local NS = fresh()
+    local race = clockRace(NS, { id = "shared", firstHit = 2 })
+    race.race.flags = { sharedSession = true }
+    save(NS, race)
+    assertNil(NS.ResultsDetail.ChartView(NS.Recorder.Get("shared")),
+        "its steps hold the session's damage from before the arm")
+end)
+
 test("results: a race's Timeline runs on the race clock and draws the buzzer line (ruling X9)", function()
     local NS = fresh()
     local race, plain = clockRace(NS, { id = "race", firstHit = 2 }), clockRace(NS, { id = "plain" })
@@ -464,6 +473,19 @@ test("results: the Compare and the DPS tip read the race DPS", function()
     assertEqual(kpis[2].b, 10000)
     local tip = NS.ResultsTips.Cell({ key = "dps" }, a)
     assertTrue(tip[2]:find("race length", 1, true) ~= nil, tostring(tip[2]))
+end)
+
+test("results: a carried-on incomplete race's DPS tip names the span it divides by (ruling X16)", function()
+    local NS = fresh()
+    local r = raceRec(NS, { id = "carried", status = "incomplete", endedAt = 20, score = 2000000,
+                            flags = { carriedOn = true } })
+    r.race.dps = 2000000 / 45
+    local tip = NS.ResultsTips.Cell({ key = "dps" }, r)
+    assertTrue(tip[2]:find("0:45", 1, true) ~= nil, tostring(tip[2]))
+    assertTrue(tip[2]:find("fight's end", 1, true) ~= nil, tostring(tip[2]))
+    local plain = raceRec(NS, { id = "early", status = "incomplete", endedAt = 20, score = 2000000 })
+    tip = NS.ResultsTips.Cell({ key = "dps" }, plain)
+    assertTrue(tip[2]:find("time raced", 1, true) ~= nil, tostring(tip[2]))
 end)
 
 -- ── the late-cast right-click ───────────────────────────────────────────────────────────────────

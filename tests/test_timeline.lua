@@ -207,6 +207,17 @@ test("timeline: a race runs on the race clock, from its first hit, with its buzz
     assertNil(D.Build(fight, nil).buzzer, "a fight has no buzzer")
 end)
 
+test("timeline: a race's axis reaches its last cast after the buzzer", function()
+    local NS = T.NS
+    if NS.Compat.IsForever() then return end
+    local D = NS.ResultsTimelineData
+    -- A 30 s race, its first hit 1.5 s in, a late cast at 34.8 s on the fight clock, duration 33.5.
+    local race = rec(NS, { id = "late", duration = 33.5, casts = { { 1.5, MID }, { 34.8, FILLER } } })
+    race.race = { length = 30, status = "complete", flags = {}, firstHit = 1.5 }
+    local built = D.Build(race, nil)
+    assertTrue(built.len >= 33.3 - 1e-9, "the late cast at 33.3 s on the race clock is on the axis: " .. built.len)
+end)
+
 test("timeline: the compare target is the pick, else the best, else the runner-up", function()
     local NS = fresh()
     local D = NS.ResultsTimelineData

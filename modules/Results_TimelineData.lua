@@ -167,13 +167,24 @@ function Data.Rows(record, other, showPet)
     return rows
 end
 
--- A fight's length on its own clock: a race's from its first hit, and never short of its buzzer.
+-- The latest cast on the race clock, or 0.
+local function lastCast(record)
+    local last = 0
+    for _, c in ipairs(Data.Decode(record)) do
+        if type(c.t) == "number" and c.t > last then last = c.t end
+    end
+    return last
+end
+
+-- A fight's length on its own clock: a race's from its first hit, never short of its buzzer, and
+-- reaching its last cast (the meter's duration may already run from the first hit, so its shifted
+-- length could end before a late cast).
 local function lengthOf(record)
     local n = type(record) == "table" and tonumber(record.duration) or nil
     n = n and n > 0 and n or 0
     local clock = clockOf(record)
     if not clock then return n end
-    return math.max(n - clock.shift, clock.length)
+    return math.max(n - clock.shift, clock.length, lastCast(record))
 end
 
 --- The axis's span in seconds: the longer fight of the two (a picked fight may be on another board).

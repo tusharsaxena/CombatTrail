@@ -318,6 +318,8 @@ L["Group: Spec + dummy kind + length"] = "Group: Spec + dummy kind + length"
 L["The race's score over its race length."] = "The race's score over its race length."
 L["The race's score over the time raced: combat ended before the buzzer."] =
     "The race's score over the time raced: combat ended before the buzzer."
+L["The race's score over %s, its first hit to the fight's end: combat came back inside the grace after it ended before the buzzer."] =
+    "The race's score over %s, its first hit to the fight's end: combat came back inside the grace after it ended before the buzzer."
 L["The fight around it: %s DPS over its own length."] = "The fight around it: %s DPS over its own length."
 L["%s score"] = "%s score"
 L["The race's score: the meter session's total, you and your pet, read after combat."] =
