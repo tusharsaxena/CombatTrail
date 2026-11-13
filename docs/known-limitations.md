@@ -29,8 +29,13 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   double counting. *Unverified* in combat. On WoW Forever, out of combat, the pet's source came back
   empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage is most likely
   folded into the player's, and fights since show it is: the pet's rows sit in the player's source,
-  each named by `creatureName` (midnight-quirks.md), and are split out by that name. While in combat
-  the Pet figure reads a dash there, because summing the pet's secret rows is not allowed.
+  each named by `creatureName` (midnight-quirks.md), and are split out by that name. In combat the
+  HUD shows the Pet row whenever a pet is out: when every value the split needs is plain it shows
+  the pet's figure and your own part as the main Damage and DPS, as on Retail; when any is secret
+  the Pet figure reads a dash and the main figures stay merged (yours and the pet's), because summing
+  secret rows is not allowed. Which of the two a WoW Forever fight gets is *unverified*: `/ct probe`'s
+  samples report it (debug.md). A live pet row the meter names no creature on is the pet's only by
+  the cast set, which does not know whose Auto Attack is whose.
 - **Targets are read after combat, by name.** The fight detail's Targets section (issue #6) comes
   from the meter's EnemyDamageTaken view, which is secret in combat, so the HUD never shows it.
   Enemies of one name are one row (the meter keys them by creature ID), at most ten are kept, and
@@ -47,7 +52,8 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 
 - **In-combat behavior is unverified.** The 2026-11-10 probe (build 70862) ran out of combat only:
   whether the meter's values, cast spell IDs and the pet's GUID are secret in combat there is assumed
-  to match Retail until the probe reports.
+  to match Retail until the probe reports; its samples' *pet rows in player source* line says which
+  of the live Pet figure's two forms (the split or the dash) this client gets (SM-CT-P8).
 - **No built-in training dummies.** No dummy creature ID has been measured, so a dummy fight reads as
   open world until the player adds the dummy to their own list (History > Training dummies, or
   `/ct dummy add` on the target).

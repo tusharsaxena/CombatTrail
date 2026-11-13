@@ -38,6 +38,12 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   and the pet's) and the whole redraw, so the HUD's meter cost scales with the rate: 10 a second is
   2.5 times the old 4 Hz, 20 is 5 times. No read in the settle (Fight out of combat): the beat then
   redraws from the last read. Hidden, nothing reads.
+- On WoW Forever, with a pet out, the live read also splits the pet's figure out of the player's rows
+  (callout plan row C7): two passes over the rows it already copied, each value proved plain first,
+  and one small table for the pet's part. It builds no row array (the pet's rows stay in the player's
+  list, marked), keeps its sums in one file-scope table, asks the cast set through
+  `Casts.IsPetSpell` (no copy of the set), and stops at the first secret value, so a sealed fight
+  costs one pass to its first row.
 - `FIGHT_TICK` stays 0.25 s for its other receivers (the chart's slices, the unbound scan): raising it
   to the HUD's rate would multiply their work for nothing, and the slices' 2 s steps need no finer tick.
 - The race beat is one AceTimer at 1 / `hud.refreshRate`, running only while a race runs or waits for

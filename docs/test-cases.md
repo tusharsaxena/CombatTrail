@@ -272,7 +272,7 @@ Total.
 - lanes link: the Pet lane's tabs show only the rows it keeps while linked, with a note
 - lanes link: Copy from Player lane gives the Pet lane its own copy and unlinks it
 
-### test_probe.lua (33)
+### test_probe.lua (35)
 
 - probe: report runs with no C_DamageMeter
 - probe: the enemy view lists each enemy's every field (issue #6's feasibility)
@@ -295,6 +295,8 @@ Total.
 - probe: pet is separate source: no while the pet's own source is empty
 - probe: pet is separate source: no while the player's source holds the pet's spells
 - probe: pet is separate source: unknown with no pet, or while the values are secret
+- probe: each sample with a pet out counts the pet's rows in the player's source and their secrecy
+- probe: no pet out: the samples carry no pet-rows line
 - probe: pace pet-fill anchor check builds hidden bars and reports ok
 - probe: pace pet-fill anchor reports a SetPoint that raised
 - probe: stand-down drops its registrations; stand-up brings them back while armed
@@ -308,7 +310,7 @@ Total.
 - probe: forever: a talent read that raises prints one line and the rest of the report
 - probe: retail: no talent-tree section (clients-§4)
 
-### test_meter.lua (37)
+### test_meter.lua (45)
 
 - meter: the stat and session constants come from the client enum
 - meter: without the enum, the documented values stand and the enemy view is unread
@@ -323,7 +325,7 @@ Total.
 - meter: ResolvePet answers the pet's GUID, nil with no pet, and remembers the last plain one
 - meter: ReadLive returns opaque player and pet tables
 - meter: ReadLive with no pet GUID returns pet=nil
-- meter: ReadLive with a pet the meter has no source for returns pet=nil
+- meter: ReadLive with a pet the meter has no source for returns pet=nil (Retail)
 - meter: ReadLive reads the Current session, or one session by ID
 - meter: ReadLive answers no sources with no session, and nil with no API or a raising client
 - meter: the player's live DPS rungs: the source, the local row, the Dps type, else nil
@@ -341,6 +343,14 @@ Total.
 - meter: the pet with no cast set yet still splits by creature name
 - meter: ReadLive flags a row the meter plainly names a creature on; a secret name says nothing
 - meter: a creature name still secret after combat seals the record read
+- meter: forever: plain live rows split the pet's figure out of the player's
+- meter: forever: a secret live read leaves the merged figure and marks the Pet row's dash
+- meter: forever: a plain total with no rate splits the damage and leaves both rates nil
+- meter: forever: the cast set names a pet row live; Auto Attack stays the owner's by the set
+- meter: forever: a pet out with no rows of its own yet reads a plain 0
+- meter: no pet out: no Pet part and no dash, on either client
+- meter: retail: the folded rows are never split live (the pet's own source is the figure)
+- meter: FOLDS_PET is this client's: WoW Forever folds, Retail does not
 - meter: PET_SEPARATE=false path tags by cast set
 - meter: ReadEnemies sorts by damage taken
 - meter: ReadEnemies is empty with a reason while sealed, missing or without the enum
@@ -1126,11 +1136,15 @@ Total.
 - chart: hud.chart.columns caps the columns; the layout's chart off hides it
 - chart: the pure layout helpers
 
-### test_hud_breakdown.lua (11)
+### test_hud_breakdown.lua (15)
 
 - breakdown never sorts or computes in combat (mock secret values)
 - breakdown: pet rows carry paw and pet color
 - breakdown: a folded pet row the meter names a creature on draws as the pet's, live
+- hud: forever: plain rows give the Pet figure and the player's part as the main figure
+- hud: forever: secret rows show the Pet row with a dash and keep the merged main figure
+- hud: no pet out: no Pet row live, plain or secret, on either client
+- hud: retail: a folded source shows no live Pet row (the pet answers its own source there)
 - breakdown: the over card's rows are merged, highest first, with their shares
 - breakdown: hud.bars caps the rows and the wheel scrolls past them
 - breakdown: the layout's spell rows off hides them
@@ -1741,8 +1755,8 @@ Total.
 | test_lane_anchor.lua | 33 |
 | test_lane_visibility.lua | 30 |
 | test_lanes_page.lua | 25 |
-| test_probe.lua | 33 |
-| test_meter.lua | 37 |
+| test_probe.lua | 35 |
+| test_meter.lua | 45 |
 | test_format.lua | 25 |
 | test_fight.lua | 36 |
 | test_identity.lua | 47 |
@@ -1773,7 +1787,7 @@ Total.
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
-| test_hud_breakdown.lua | 11 |
+| test_hud_breakdown.lua | 15 |
 | test_hud_appearance.lua | 8 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
@@ -1811,4 +1825,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1477** |
+| **Total** | **1491** |

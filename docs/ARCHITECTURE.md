@@ -69,6 +69,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Race mode's samples (`modules/MockRaces.lua`, `RaceSample.lua`, `SimRace.lua`: each returns at once off Retail): `/ct test race [armed\|running\|result]`, the sim's eight `race-` scenarios, and the `race` section of `/ct diagnostics` | present | absent: `test race` is plain `test`, the sim lists no race scenario, the report has no race section |
 | The samples' alerts (callout plan row C6): the new-best toast for a sim fight's new best (`toast.fights`), and on Retail the toast's preview on `/ct test race result` and a sim race's new best (`toast.races`), with the call-out's words a sample earns (`Countdown.SampleSay`: NEW_BEST, FAILED; Race mode on), all taken down by the preview's stop and switch (`Countdown.EndSample`, `BestToast.EndSample`) | present | the sim fight's toast only: no call-out, no race |
 | Sample history (test mode and the sim) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
+| The DPS HUD's live Pet figure (`Meter.ReadLive`; `Meter.FOLDS_PET` is `NS.Compat.IsForever()`) | the pet's own meter source; no Pet row until that source has rows | the meter folds the pet into the player's source, so the figure is split out of the player's rows by the after-combat rule (a creature name, else the cast set) when every value it reads is plain, and the main Damage and DPS are then the player's part, as on Retail; with any of them secret the Pet row shows a dash and the main figures stay merged; the row is up whenever a pet is out (callout plan row C7) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
 Race mode has no launcher entry: LibKa0s-Launcher's menu is fixed (launcher-§2), so the minimap menu
@@ -101,6 +102,15 @@ macro too.
   displays a value itself: its anchor (`GetPoint`) and its edges (`GetLeft`, `GetTop`, `GetBottom`,
   for the grow edge, v0.2 Task B3) are read after a drag, each only as a plain number, and the grip's
   sizes are the ones `OnSizeChanged` hands the shell.
+- The live folded pet split (WoW Forever, `Meter.ReadLive`'s `liveFolded`, callout plan row C7) is the
+  one live read that does arithmetic, and only on values `NS.Secrets` proved plain first: each row's
+  `creatureName` (`IsSealed`, then `NamesCreature`), the spell ID the cast set is asked of
+  (`PlainNumber`), every pet row's amount and rate and the player's total and rate. One value that is
+  not plain ends it before any number is touched: the pet part stays nil, the player's part stays
+  the merged opaque figure and the plain flag `petDash` puts the Pet row up with a dash. Split, the
+  player's part is the total less the pet's, so `live.pet` is set exactly when `live.player` is the
+  player's alone, which is what the pace bar's `playerOnly` (`HudBest.LiveView`) and the Race
+  window's `Hud.LiveDamage` read.
 - The Race window's one live figure, the player's damage beside Best by now and in each Checkpoint
   (Retail), is the DPS HUD's last read handed in (`Hud.LiveDamage`, no second meter read). It reaches
   two C-side sinks: a label through `NS.Format.Number`, and the mini pace bars'
@@ -237,7 +247,8 @@ itself. The pipeline from event to screen is [`data-flow.md`](data-flow.md).
 ## Known Limitations
 
 The in-combat chart is session-only, the HUD has no live percentage or delta, the pet split rests on
-the meter exposing the pet as its own source, and a set of client behaviors still waits for the
+the meter exposing the pet as its own source (on WoW Forever, where it does not, the live Pet figure
+is a dash whenever the meter's values are secret in combat), and a set of client behaviors still waits for the
 owner's in-game checks. Race mode reads on Combat Trail's settle, scores the pet's damage with the
 player's, ends a race at the first combat end before the buzzer, and resumes after a `/reload` without
 the casts or chart from before it. The center call-out's voice packs and its settings section wait for

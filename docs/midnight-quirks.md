@@ -330,8 +330,12 @@ an unnamed row (`petsRow`), and a name still secret seals the read until it sett
 `Secrets.NamesCreature` counts a plain non-empty name only (a sealed one counted, at first, which
 painted every live row as the pet's). Live, a plain name colors the row; a secret one colors none,
 and the breakdown hands it to the share column's FontString instead (empty live), where the owner's
-"" draws nothing and the pet's draws its name. A pet source with no rows is dropped live, so the
-Pet figure reads a dash instead of a confident 0. *Source:* this repo,
+"" draws nothing and the pet's draws its name. A pet source with no rows is dropped live, never a
+confident 0 from it; instead `Meter.ReadLive` splits the pet's live figure out of the player's rows
+by the same rule when every value it reads is plain, else the Pet row reads a dash (`petDash`;
+callout plan row C7). With the names secret in combat, as measured here, a live fight on this build
+takes the dash; the probe's *pet rows in player source* line (SM-CT-P8) says so per sample, and a
+later build that answers plain values in combat gets the split with no change. *Source:* this repo,
 `modules/Meter.lua`, `modules/Hud_Breakdown.lua`, `core/Secrets.lua`.
 
 **In combat on WoW Forever, the meter is secret and the casts are not.** *Client:* Forever (1.60.1,

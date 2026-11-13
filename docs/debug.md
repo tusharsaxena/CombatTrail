@@ -56,3 +56,11 @@ store still print. The README's *Reporting a bug* tells players how to send it.
 
 `/ct probe` is a debug surface too: it writes its report to the console. Its steps are in
 [`smoke-tests.md`](smoke-tests.md), *The probe*.
+
+With a pet out, each meter sample (5 s into combat and 2 s after it) adds one line on the pet's rows
+in the player's source, the folding client's shape (WoW Forever): how many rows, how many carry a
+secret creature name, how many plainly name a creature and how many of those have a secret amount,
+whether the player's total is secret, and what the HUD's live read made of it: `split` (every value
+plain, so the HUD shows the pet's live figure and your own part), `dash` (something secret: the
+merged figure and a dashed Pet row), `own source` (the pet answers a meter source of its own, as on
+Retail) or `none` (SM-CT-P8). It only counts: no value is printed or compared.

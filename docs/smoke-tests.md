@@ -39,8 +39,8 @@ on **each** client, on a Hunter with a pet out, then again on a Warlock with a d
   seconds. The probe takes one sample 5 s into combat and one 2 s after it ends, then disarms itself.
 - Type `/ct probe` again and copy the whole report. Check its lines: **pet is separate source** (yes
   or no), **pace pet-fill anchor** (whether the anchored SetPoint raised), the cast secrecy counts
-  in and out of combat, and the meter's secrecy samples. On WoW Forever, also the talent-tree lines
-  (SM-CT-P7).
+  in and out of combat, and the meter's secrecy samples (with a pet out, each sample's *pet rows in
+  player source* line: SM-CT-P8). On WoW Forever, also the talent-tree lines (SM-CT-P7).
 - `/ct probe stop` disarms it early.
 
 Hand the reports back for `midnight-quirks.md`. A "no" on the pet line, or a raise on the pet-fill
@@ -55,6 +55,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-P5 | Both | The "pace pet-fill anchor" line | The SetPoint did not raise |
 | SM-CT-P6 | Forever | The cast secrecy counts in combat | Recorded either way: whether cast spell IDs and castGUIDs are secret in combat on WoW Forever |
 | SM-CT-P7 | Forever | The talent-tree lines of `/ct probe` (talent tabs, talent spec, talent config, trait tree and groups, talent tree pick), on a character with points spent | Recorded either way: which API answers, each group's fields (which one holds the icon), and a pick that names the tree with the most points. First run 2026-11-10 (build 70862, out of combat): the talent tabs absent, C_Traits' three groups answered, the pick read Beast Mastery (10/3/0) (midnight-quirks.md). Still owed: the same lines read right after a pull, while combat is fresh |
+| SM-CT-P8 | Forever | `/ct probe start` with the pet out, ten seconds of combat with the pet attacking, then `/ct probe` | Each sample has a line "pet rows in player source: N row(s), A with a secret name, B named a creature (C with a secret amount); player total plain|secret; live Pet figure: split|dash|own source|none". Record the combat+5s line: "split" with no secret name, amount or total means the meter's values are plain in combat on WoW Forever and the HUD shows the live Pet figure (SM-CT-H15); "dash" means they are secret there. The afterCombat+2s line should read "split" |
 
 ## 1. Load and identity
 
@@ -136,7 +137,8 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-H11 | Both | A fresh profile (or the swatches reset), a fight with a pet, side by side with DPS Race on the same skin | The spell rows, chart columns and the pace fill are DPS Race's blue at the same opacity; the pet rows and pet pace fill are a darker green with legible white text; the pace line is a pale neutral gray, not light blue; switching the skin leaves the fill colors as they are |
 | SM-CT-H12 | Both | A fresh profile, the Ka0s Default skin, a fight with a best (live, then the over card), side by side with DPS Race's running body and result card | Same width (260) and about the same height; "Damage profile" and "Spell breakdown" in the same large gold heading with the same space over them; the pace bar directly under "Damage profile" and over the plot; the clock in the same face and size; spell rows 18 px in a 10 pt face; nothing overlaps at 236 px, the heading and its right-hand note included |
 | SM-CT-H13 | Both | A fresh profile; a fight with more than 5 spells (a pet class too); drag the HUD's bottom-right grip taller and shorter, then lock it; then Layout > Window size Auto-grow with Grow Down and Up, dragging the title bar between fights | Fixed: 5 rows, the window the same height with 2 spells as with 12 and when the pet arrives; the note reads "live order · 1-5 of 12" and the wheel scrolls to 8-12 and stops, with a thin thumb in the right gutter; the grip's release snaps to whole rows and the Spell bars slider shows the new count; no grip while locked or in Auto-grow. Auto-grow: the window grows with the rows up to Spell bars, then scrolls; Down keeps the top edge in place, Up the bottom, after a /reload too; nothing overlaps the footer, the over card included |
-| SM-CT-H14 | Forever | A Hunter fight where the pet melees and casts, then one where only the pet fights; `/ct debug on`; then `/ct probe` in and out of combat | Live, every row is blue and the pet's rows show its name at the right (the owner's none); on the card the pet's Attack, Claw and Bite carry the paw in the pet's color and the owner's Attack and shots stay blue; the pet-only fight's Attack is the pet's; the live Pet figure is a dash; the console logs "folded split: … by creature name"; the probe's spell lines show `creature ""` on the owner's rows and the pet's name on the pet's (`<secret>` on all in combat) |
+| SM-CT-H14 | Forever | A Hunter fight where the pet melees and casts, then one where only the pet fights; `/ct debug on`; then `/ct probe` in and out of combat | Live, every row is blue and the pet's rows show its name at the right (the owner's none); on the card the pet's Attack, Claw and Bite carry the paw in the pet's color and the owner's Attack and shots stay blue; the pet-only fight's Attack is the pet's; the live Pet figure as SM-CT-H15 says; the console logs "folded split: … by creature name"; the probe's spell lines show `creature ""` on the owner's rows and the pet's name on the pet's (`<secret>` on all in combat) |
+| SM-CT-H15 | Forever | A Hunter with the pet out: a 20 s fight on a dummy, the pet attacking; then `/ct probe` (SM-CT-P8); then a fight with the pet dismissed | Live, the boxes show a Pet row the whole fight while the pet is out. If SM-CT-P8 read "live Pet figure: split": the Pet figures move with the pet's damage, your Damage and DPS are your own part (lower than the merged figure the card shows after, by about the Pet figure), and the pace bar runs against the best's player line. If it read "dash": the Pet figures are a dash and Damage and DPS are the merged figure, as before. With no pet out there is no Pet row. Record which one this client gives in `known-limitations.md` |
 
 ## 5. Results
 
@@ -385,7 +387,8 @@ look*, *Call-out sound* and *Call-out texts* tabs (the library's settings sectio
 
 The items the build assumed and the owner confirms, each answered by a row above:
 
-- `/ct probe` on both clients, in combat with a pet: SM-CT-P1 to SM-CT-P6.
+- `/ct probe` on both clients, in combat with a pet: SM-CT-P1 to SM-CT-P6; on WoW Forever, whether the
+  meter's values and the pet's rows are secret in combat (the live Pet figure): SM-CT-P8, SM-CT-H15.
 - The pet source split, and that the player's source excludes the pet: SM-CT-P4, SM-CT-F12,
   SM-CT-F13.
 - The pace bar's red shortfall anchored to its fill: SM-CT-P5, SM-CT-H2.

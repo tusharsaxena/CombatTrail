@@ -41,6 +41,9 @@ PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
      every live part, only while Fight holds the fight in combat (in the settle it redraws from the
      last read); Meter.ShareLive brackets let the beat and the slices' boundary tick share one read
      in a frame
+     (WoW Forever, Meter.FOLDS_PET: with a pet out and no pet source, the read splits the pet's
+     figure out of the player's rows when every value it reads is plain, the main figures then the
+     player's part; else the merged figure and petDash, the Pet row's dash; callout plan row C7)
   PLAYER_REGEN_ENABLED
   -> COMBAT -> SETTLING; a re-entry within GRACE (4 s) carries the same fight on
   quiet for SETTLE (2 s) after GRACE
@@ -116,7 +119,7 @@ FIGHT_ENDED
   two C-side sinks: a label through `NS.Format.Number`, and the two mini pace bars'
   `StatusBar:SetValue` (the HUD's pace bar built thinner, `Chart.NewPace` with opts), whose plain range
   is `NS.HudBest.Bounds` around the best's figure there at the HUD's Pace range. Where the pet has a
-  live source of its own (Retail's pet classes, `Hud.LiveDamage`'s third answer `petOwn`), the figure
+  live part of its own (Retail's pet source, or WoW Forever's folded split of plain rows; `Hud.LiveDamage`'s third answer `petOwn`), the figure
   is the player's alone, so the bars range on the best's player-only line (`paceRef`). Each
   Checkpoint keeps the reading of the beat the clock passed it, in memory for that race alone (a dash
   for one passed unseen before a `/reload`); the last one is taken at the buzzer, in the stopping
