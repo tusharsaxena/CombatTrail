@@ -436,7 +436,13 @@ from, then the switch; the race clock's two colored clocks and the window's look
 appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
 page's, and the New-best toast's section is History's too (ruling X19). The countdown rows and the
 buzzer row carry no reaction of their own: modules/Countdown.lua re-arms the race's call-out off their
-SETTINGS_CHANGED.
+SETTINGS_CHANGED. They decide when the call-out speaks for the race; the call-out's own look (font,
+size, outline, shadow, glow, animation, hold, place), voice (the two packs, Game TTS or off, the
+channel, the numbers spoken from) and words are its `callout` table (schema.md), which has **no
+section on this page yet**: LibKa0s-Callout-1.0's settings section (`SettingsTabs`, its Look, Sound and
+Texts tabs with the preview, *Test countdown*, *Play* and *Unlock to move*) writes the table through
+the instance, not `NS.SetByPath`, so adding it waits on the owner's architecture-§5 call (callout plan
+row C2, blocked). Until then the call-out draws and speaks its defaults.
 
 ### Race
 

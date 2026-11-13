@@ -1,0 +1,28 @@
+# Callout adoption: the race countdown on LibKa0s-Callout-1.0
+
+**Goal:** On Retail, a race's last seconds and its buzzer run on LibKa0s-Callout-1.0: big center
+numbers counted to the race's one endsAt (the value the Race window's countdown reads, so the two
+flip in the same frame), spoken from a shipped voice pack, and STOP at the buzzer. The old countdown
+(the BigGold digit art, its cue sound and the buzzer's raid warning) is fully replaced.
+
+**The run plan** (design and the cross-repo ledger, rows S1 to X1) lives in the LibKa0s worktree:
+`GIT/#Worktrees/LibKa0s-callout/docs/superpowers/plans/2026-11-13-callout.md`. The library side is
+LibKa0s v1.96.0 (tag on `f1b4b15`), API document `docs/api/Callout/version-1.1-docs.md`; adoption
+issue LibKa0s#85. This file is Combat Trail's own ledger for its rows (C1 to C4), on branch
+`feat/2026-11-13-callout`.
+
+**Global constraints:** the Ka0s WoW Addon Standard (`CLAUDE.md`), a deviation stopped and flagged,
+never made; never edit `libs/` or `tests/_kit/` except the re-vendor copy; files CRLF; US English;
+secret values only into C sinks (the call-out is handed a `GetTime()` endsAt and stock keys, never a
+figure); Retail only for anything race; the three-command gate green before each commit; no push, no
+merge, no version bump without the owner's word. The extra Callout faces (Orbitron, Bebas Neue, Russo
+One) are not in v1.96.0 (run plan row L2, blocked on an owner call), so nothing here depends on them.
+
+## Status ledger (resume here)
+
+| Row | Title | Status | Notes |
+|---|---|---|---|
+| C1 | Re-vendor LibKa0s v1.96.0 | done | `cfbd85f`: both payloads at v1.96.0 and kit revision 55, provenance line rolled, the `LibKa0s sounds: callout/female-kathleen, callout/male-joe.` declaration under the icon line, `tests/test_vendor_sync.lua` green |
+| C2 | The countdown on the call-out | partly done | `5b7c97e`: new seam `core/CalloutSetup.lua` (`NS.CalloutStub`, `NS.NewCallout`, `NS.CALLOUT_PACKS`, `NS.CalloutDefaults`), `NS.Callout` built in `modules/Countdown.lua` (frame `CombatTrailCallout`, db `profile.callout`, Retail only), `Race.EndsAt` / `RaceSample.EndsAt` / `RaceClock.EndsAt`, `RaceClock.Kick` on each new number, one lead-in AceTimer, `finish = false`, `Cancel()` then `Show("STOP")` at the buzzer, `Suspend` / `Resume` on the stand-down. `21e9510`: `race.countdownCue` retired with no migration (the `hud.spells.rows` precedent), the buzzer row relabeled *STOP at the buzzer*. **Blocked:** the Callout settings section on the Race page. `BuildSettings` / `SettingsTabs` draw path-less rows whose writes go through the instance's `Set` / `SetColor` into `profile.callout`, outside `NS.SetByPath`, with no schema row and out of `/ct get|set|reset` (architecture-§5). The owner picks: (1) an accepted-deviation row in `docs/ARCHITECTURE.md`, (2) a standard change for settings a library section writes into a host-given table, or (3) a LibKa0s change for path-bearing rows (`opts.pathPrefix = "callout."`) so the host registers schema rows and every write goes through the helper |
+| C3 | Tests, docs, smoke tests, this ledger | done | `tests/test_countdown.lua` +5 cases (the call-out handed `RaceClock.EndsAt()`, which is `Race.EndsAt()`, once, `finish = false`; the stand-up re-arming at the number of the moment; a stand-down in the lead-in dropping and re-waiting the timer; a profile change re-applying and reading the new profile's `callout`; a stored `race.countdownCue` ignored), `tests/test_sim_race.lua` (RaceClock follows the sample's endsAt); docs: the hub (overview, per-client rows, the call-out's secret-value invariant, the countdown's event wiring, the module map, Known Limitations), `schema.md` (`callout.*`), `settings-panel.md`, `data-flow.md`, `profiles.md`, `known-limitations.md`, `performance.md`, `smoke-tests.md` (RM12, RM14, RM31 rewritten; RM77 to RM84 new, RM81 to RM84 waiting for the settings section), README, `test-cases.md` regenerated. Not done, with C2's blocked part: tests and docs for the settings section, the deviation register row if option 1 is picked |
+| C4 | Review and fixes; gate; push the branch; the merge waits for the owner | todo | |

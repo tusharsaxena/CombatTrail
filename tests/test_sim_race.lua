@@ -101,6 +101,10 @@ test("sim race: race-newbest arms, races on its clock, buzzes, reads after the q
     assertEqual(NS.Hud.State(), "live", "the HUD's live view")
     assertTrue(NS.Hud.View().fight.race ~= nil)
     assertTrue(#NS.LaneRender.__icons("player") > 0, "the lanes play")
+    -- The one endsAt (callout plan row C3): the beat and the call-out read the sample's, the real race has none.
+    assertTrue(NS.RaceSample.EndsAt() ~= nil, "the live sample has an endsAt")
+    assertEqual(NS.RaceClock.EndsAt(), NS.RaceSample.EndsAt(), "the race beat follows the sample's endsAt")
+    assertNil(NS.Race.EndsAt(), "the real race, idle, has none")
     playTo(S, t0, 25.5)
     assertEqual(NS.Countdown.Shown(), 5, "the real call-out counts the sim's race down")
     playTo(S, t0, 30.2)

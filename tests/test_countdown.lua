@@ -467,6 +467,96 @@ test("countdown: a canceled race and a race ending early raise no buzzer", funct
     assertEqual(spoken(E), "")
 end)
 
+-- ── the one endsAt, the stand-up, a profile change, the retired cue (callout plan row C3) ──────────
+
+--- Record every countdown the call-out is handed: the spec tables, in order.
+local function handed(S)
+    local specs, inst = {}, CO(S)
+    local real = inst.Countdown
+    inst.Countdown = function(self, spec)
+        specs[#specs + 1] = spec
+        return real(self, spec)
+    end
+    return specs
+end
+
+test("countdown: the call-out is handed the race's one endsAt, the value RaceClock and Race read", function()
+    if forever() then return end
+    local S = fresh()
+    local specs = handed(S)
+    running(S, 30)
+    assertEqual(S.NS.Race.EndsAt(), 132, "the buzzer's moment: the first hit at 102 plus 30")
+    assertEqual(S.NS.RaceClock.EndsAt(), S.NS.Race.EndsAt(), "the race beat follows Race.EndsAt")
+    to(S, 122)
+    assertEqual(#specs, 1, "handed once, at the lead")
+    assertEqual(specs[1].endsAt, S.NS.RaceClock.EndsAt(), "the call-out counts to the same endsAt")
+    assertEqual(specs[1].from, 10)
+    assertEqual(specs[1].finish, false, "no GO: the countdown runs to the race's end")
+    to(S, 125.5)
+    assertTrue(math.abs(S.NS.Race.TimeLeft() - (specs[1].endsAt - S.M.__now)) < 1e-9,
+        "the time left is that endsAt less now")
+    to(S, 132)
+    assertNil(S.NS.RaceClock.EndsAt(), "no endsAt once the race stops")
+    assertEqual(#specs, 1, "never handed a second time in one race")
+end)
+
+test("countdown: the stand-up re-arms from the race's endsAt and shows the number of the moment", function()
+    if forever() then return end
+    local S = fresh()
+    running(S, 30)
+    to(S, 124)
+    assertTrue(S.NS.SetByPath("general.enabled", false))
+    to(S, 127.5)
+    assertTrue(S.NS.SetByPath("general.enabled", true))
+    step(S, 127.5)
+    assertEqual(C(S).Shown(), 5, "5 s left at the stand-up: 5 at once")
+    assertEqual(shownAt(S, 128), 4)
+    assertNil(shownAt(S, 132))
+end)
+
+test("countdown: a stand-down during the lead-in drops the timer; the stand-up waits again", function()
+    if forever() then return end
+    local S = fresh()
+    running(S, 30)
+    to(S, 110)
+    assertEqual(C(S).Diagnose().scheduled, 1, "the lead-in waits")
+    assertTrue(S.NS.SetByPath("general.enabled", false))
+    assertEqual(C(S).Diagnose().scheduled, 0, "the stand-down drops it")
+    assertTrue(S.NS.SetByPath("general.enabled", true))
+    assertEqual(C(S).Diagnose().scheduled, 1, "the stand-up waits again")
+    assertNil(shownAt(S, 121.75))
+    assertEqual(shownAt(S, 122), 10)
+end)
+
+test("countdown: a profile change re-applies the call-out's look and reads the new profile's table", function()
+    if forever() then return end
+    local S = fresh()
+    local inst, applied = CO(S), 0
+    local real = inst.Apply
+    inst.Apply = function(self, ...)
+        applied = applied + 1
+        return real(self, ...)
+    end
+    local before = S.NS.db.profile.callout
+    S.NS.db:SetProfile("Other")
+    assertTrue(applied >= 1, "the profile change re-applied the call-out")
+    assertTrue(S.NS.db.profile.callout ~= nil, "the new profile carries the call-out's settings")
+    assertTrue(S.NS.db.profile.callout ~= before, "and they are its own table")
+end)
+
+test("countdown: a profile that still stores the retired race.countdownCue counts as any other", function()
+    if forever() then return end
+    local played = 0
+    local S = fresh({ mutate = function(m) m.PlaySound = function() played = played + 1 end end })
+    -- An old profile's stored cue (AceDB keeps only differences; nothing migrates or reads it).
+    S.NS.db.profile.race.countdownCue = 8960
+    running(S, 30)
+    to(S, 133)
+    assertEqual(spoken(S), "5@127,4@128,3@129,2@130,1@131,stop@132", "the call-out's voice alone")
+    assertEqual(played, 0, "no sound kit cue played")
+    assertNil(S.NS.FindSchemaRow("race.countdownCue"), "and no row reaches it")
+end)
+
 -- ── the fences ─────────────────────────────────────────────────────────────────────────────────
 
 test("countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own", function()

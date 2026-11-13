@@ -11,6 +11,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM84) | |
 
 ## How to run it
 
@@ -259,9 +260,9 @@ macro.
 | ID | Client | Check | Expect |
 |---|---|---|---|
 | SM-CT-RM11 | Retail | Keep attacking through a 0:30 race | The running body: the race clock counting (SM-CT-RM52 has its parts), and no pace bar; the DPS HUD beside it shows the live damage, DPS, chart and spells, its pace on the race board (whatever DPS HUD → Behavior's Show, Only in instances and Show DPS HUD in combat say, ruling X7) |
-| SM-CT-RM12 | Retail | Hear and watch the last 10 s with the defaults; then *Countdown cue sound* off mid-race; then *Center countdown from* 3; then *Center-screen countdown* off mid-countdown | The cue sounds once a second from 10 to 1, never twice; gold numbers 10 to 1 pop in mid-screen, one a second, and go at the buzzer; the cue goes silent at once; the numbers start at 3; switched off, the number on screen goes at once |
+| SM-CT-RM12 | Retail | Hear and watch the last 10 s with the defaults; then *Center countdown from* 3; then *Center-screen countdown* off mid-countdown | Big white numbers 10 to 1 slam in above the middle of the screen with a soft glow, one a second, and go at the buzzer; the voice (the female pack) says five, four, three, two, one, each once and never twice, and nothing for 10 to 6; the Race mode page has no cue sound row; from 3 the numbers start at 3, spoken; switched off, the number on screen goes at once and nothing more is said |
 | SM-CT-RM13 | Retail | With about 8 s left, open a Results filter dropdown over the numbers | The menu draws over them; the mouse passes through the numbers |
-| SM-CT-RM14 | Retail | Stop on the buzzer | A raid warning *STOP* with its sound (*Buzzer raid warning and sound* on); the Stop! body: the damage tail climbing while DoTs tick, the late casts so far, the time in combat, *Stop Now* and *Cancel* |
+| SM-CT-RM14 | Retail | Stop on the buzzer; then a race with *STOP at the buzzer* off | The center call-out's *STOP* in red, spoken once, fading after about a second and a half, with no raid warning and no other sound; with the row off no STOP shows or is said and the race still stops; the Stop! body: the damage tail climbing while DoTs tick, the late casts so far, the time in combat, *Stop Now* and *Cancel* |
 | SM-CT-RM15 | Retail | On the Dungeoneer's dummy, stay idle in combat 20 s after the buzzer | The waiting body with the time in combat; after 15 s (*Sticky-combat hint after*) the hint names the drop-combat abilities this character has |
 | SM-CT-RM16 | Retail | *Stop Now* on the Stop! body out of combat, then on another race while waiting in combat | Out of combat the race is read at once, without waiting out the tail; in combat it is read the moment combat ends, with no settle wait; the result card shows |
 | SM-CT-RM17 | Retail | Read the result card, then the chat | Score, race DPS (the score over 0:30 exactly; check it in the detail), the verdict against the best (*New best* on the board's first race), the flag chips, no pace bar (SM-CT-RM53 has the tables under them), *New Race*, *Open*, *Share*, *Delete*; chat prints the score line once |
@@ -283,7 +284,7 @@ macro.
 
 | ID | Client | Check | Expect |
 |---|---|---|---|
-| SM-CT-RM31 | Retail | `/reload` at 0:15 left, still attacking (SM-CT-F20 covers the four reload cases in one pass) | The Race window and the HUD come back on the same race clock; the countdown's number of the moment shows at once, silently; at the buzzer the race resolves as usual |
+| SM-CT-RM31 | Retail | `/reload` at 0:15 left, still attacking (SM-CT-F20 covers the four reload cases in one pass) | The Race window and the HUD come back on the same race clock; the center numbers start at 0:10 left as usual (SM-CT-RM79 reloads inside them); at the buzzer the race resolves as usual |
 | SM-CT-RM32 | Retail | On the Dungeoneer's dummy, `/reload` 2 s after the buzzer still in combat | After the reload the window is waiting; once combat drops the result reads with the reloaded flag |
 | SM-CT-RM33 | Retail | Race, and while waiting for the read log out to the character screen and into another character | The other character is idle and can arm; back on the first the race resumes, or reads lost if its session is gone |
 
@@ -355,6 +356,25 @@ row says otherwise.
 | SM-CT-RM75 | Retail | A 0:30 race on the Golem with *Fade after the fight* 8: race to the result card and wait half a minute; then press *New Race* and wait | Neither window fades while the race is armed, running, waiting or on its result card; after *New Race* neither fades while you stay near the Golem; walking away closes both together |
 | SM-CT-RM76 | Retail | Open the Race window by hand (`/ct race show`) beside an auto-opened HUD (a fight's first hit), let the card fade, then `/ct disable` and `/ct enable`; then with the HUD shut by its close mark and the Race window still wanted, turn Race mode off and on | The stand-up brings the Race window back with the DPS HUD opened under it; Race mode back on does the same; the Race window never shows without the HUD |
 
+### The center call-out
+
+Callout plan rows C2 and C3: the race's last seconds and its buzzer on LibKa0s-Callout-1.0, counted to
+the race's one endsAt, which the Race window's countdown reads too. Use a 0:30 race on the Golem with
+the defaults. SM-CT-RM81 to SM-CT-RM84 check the call-out's own settings section, which is **not built
+yet** (row C2 is blocked on an architecture-§5 decision): they wait for it and cannot be run until it
+lands on the Race mode page.
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| SM-CT-RM77 | Retail | Listen to the last ten seconds of a race with the game's sound on and music playing; then race again on the Dialog volume slider at its lowest | The voice is the female pack, clear and unclipped, each word starting with its number and done before the next; it is loud enough over the game at the default Master channel, and none of it is cut off at the buzzer, where STOP follows; the voice ignores the Dialog slider (it plays on Master) |
+| SM-CT-RM78 | Retail | Watch the Race window's countdown and the center number through the last ten seconds, first at DPS HUD → Behavior → *HUD refresh rate* 20, then at 4 | At both rates each center number pops in the same frame the countdown's whole second changes (0:05.0 beside 5), even at 4 a second, where the countdown otherwise steps a quarter second at a time; the last tenth reads 0:00.1 beside 1, and 1 goes as 0:00.0 is drawn |
+| SM-CT-RM79 | Retail | `/reload` at about 0:04 left, still attacking; then a race where you `/reload` at about 0:15 left | After the first reload the center shows the number of the moment at once and says it, then counts on, each number said once, and STOP at the buzzer; after the second nothing shows until 0:10 left, then the countdown runs as usual |
+| SM-CT-RM80 | Retail | `/ct disable` at about 0:05 left; `/ct enable` at about 0:03 left; then a race where you `/ct race cancel` at 0:05 left, and one where you leave combat at 0:05 left | Disabled, the number goes at once and nothing more is said; enabled with time left, the number of the moment shows and is said, and the count runs on to STOP; the cancel and the early combat end take the number down with no STOP |
+| SM-CT-RM81 | Retail | (Waits for the settings section.) Race mode → the call-out's Sound tab: *Voice* female, then male, then *Game TTS*, then off, pressing *Test countdown* after each | Female and male each say five to one and GO in their own voice; Game TTS speaks the same words in the client's installed voice (none installed: silence, and the debug console says so once); off is silent, the numbers still shown |
+| SM-CT-RM82 | Retail | (Waits for the settings section.) Over each tab: watch the preview line while changing a row; press *Test countdown*; pick a text in *Text to play* and press *Play* | The preview (5, GO!, STOP in their colors) repaints on every change; *Test countdown* runs 5 to GO! on the real call-out with its voice; *Play* shows and says the text picked; nothing here starts, arms or touches a race |
+| SM-CT-RM83 | Retail | (Waits for the settings section.) *Unlock to move*: drag the call-out to the top left; lock; `/reload`; then *Reset position* | Unlocked, a READY sample shows with a drag strip, and it drags; locked, the strip goes and the mouse passes through the call-out again; the place holds after the reload and the next race counts there; Reset position puts it back above the center |
+| SM-CT-RM84 | Retail | (Waits for the settings section.) The Look tab: each *Font* (Oxanium, the skin's font, the game's default, a LibSharedMedia face), *Size* at 32 and 200, each *Outline*, *Shadow* off and on with its offsets, each *Glow*, each *Animation* (Slam, Pulse, Glow, Blink, Shake, None) and *Hold*, with *Test countdown* after each | Each choice shows on the next call-out and in the preview; at 200 the numbers stay on screen and are never clipped; the shadow offsets move the shadow and are grayed with it off; each animation plays as named and None just shows the number; a longer hold keeps STOP up longer |
+
 ## In-game verification list
 
 The items the build assumed and the owner confirms, each answered by a row above:
@@ -377,7 +397,10 @@ The items the build assumed and the owner confirms, each answered by a row above
 - Training dummies on both clients, the player's own list and the captures: SM-CT-D1 to SM-CT-D7.
 - The recording rules (30 s on Retail, 15 s on WoW Forever, scenarios recorded): SM-CT-F2, SM-CT-D8 to
   SM-CT-D12.
-- Race mode (Retail): SM-CT-RM1 to SM-CT-RM71, with SM-CT-F20 (the reload cases), SM-CT-R25 (the race
+- The center call-out (Retail): its voice packs, its numbers against the Race window's countdown, the
+  resume and the stand-down: SM-CT-RM77 to SM-CT-RM80; its settings section, once built: SM-CT-RM81 to
+  SM-CT-RM84.
+- Race mode (Retail): SM-CT-RM1 to SM-CT-RM84, with SM-CT-F20 (the reload cases), SM-CT-R25 (the race
   clock on the chart and the Timeline) and SM-CT-S9 to SM-CT-S11 (the page, the verb, its absence on
   WoW Forever).
 - The race's first-hit clock, the shared session and the Feign Death split: SM-CT-RM6, SM-CT-RM20,

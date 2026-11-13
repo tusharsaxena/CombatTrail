@@ -129,7 +129,7 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   nothing until you target it. A nameplate that came up in combat with a sealed GUID is counted at the
   next rescan (the debounced hide's), not when it came.
 - **Race mode is Retail only.** WoW Forever has no Race mode page, `/ct race` verb, Race window,
-  countdown, race toast or race filter (clients-§4); a race saved on Retail lists there as a fight
+  countdown, call-out, race toast or race filter (clients-§4); a race saved on Retail lists there as a fight
   with its race DPS.
 - **No launcher entry for the Race window** (ruling X17). The minimap menu is LibKa0s-Launcher's
   fixed set. Its key, *Toggle Race window*, is Retail's alone, in `Bindings_Mainline.xml` (a
@@ -167,6 +167,24 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   line, and the bars fall back to its whole figure.
 - **A checkpoint passed before a `/reload` shows a dash for your figure.** Its reading was held in
   memory for that race alone, so a resumed race keeps the best's figure there but not yours.
+- **The center call-out's voice packs are not yet listened to in game.** The two packs
+  (`female-kathleen`, `male-joe`, synthesized with Piper) passed the library's file checks only; how
+  they sound, and their volume against the game's on the Master channel, waits for SM-CT-RM77.
+- **The call-out's own settings have no section yet.** Its look, voice and words are its `callout`
+  table, which LibKa0s-Callout-1.0's settings section writes outside `NS.SetByPath`; that section waits
+  on the owner's architecture-§5 call (callout plan row C2), so the call-out draws and speaks its
+  defaults: Oxanium at 96, the female voice, numbers spoken from 5. The Race mode page's *Center-screen
+  countdown*, *Center countdown from* and *STOP at the buzzer* rows still decide when it shows.
+- **Game TTS depends on the voices the client has installed.** The call-out's *Game TTS* voice speaks
+  through `C_VoiceChat.SpeakText` with a voice from `C_VoiceChat.GetTtsVoices()`, so a client with
+  none installed (or a language pack without English voices) says nothing, and the voice and its rate
+  differ by system. It is not offered until the settings section lands.
+- **A resume inside the countdown speaks the number of the moment.** A `/reload` or a stand-up with
+  4 s left shows 4 and says it at once (the old countdown showed it silently): the library has no
+  silent first number.
+- **Only the last five numbers are spoken.** The call-out's `speakFrom` default (5) shows the higher
+  numbers silently, where the old cue sounded on every second; there is no GO at the start, as the
+  countdown runs to the race's end.
 - **The Race window matches the DPS HUD's height only on the left or right.** Above or below the HUD
   it keeps its own height, and it is never shorter than its tallest screen needs, so a HUD shrunk below
   that leaves the Race window taller than the HUD.

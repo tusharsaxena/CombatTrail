@@ -857,7 +857,7 @@ Total.
 - autoshow hud: the session's end never closes a live fight's HUD
 - autoshow hud: a HUD the dummy opened stays up through the first hit whatever the show mode
 - autoshow hud: the same gates as auto-show: an instance and Race mode off
-- autoshow hud: a fade hides both; the session's next ask opens both again (W29 #6)
+- autoshow hud: a dummy session holds the HUD up through its fade, and its end closes both
 - autoarm: targeting a dummy out of combat arms at the Race window's length
 - autoarm: with no length from the Race window, the race's own default
 - autoarm: a target that is no dummy arms nothing
@@ -976,31 +976,39 @@ Total.
 - race clock: the held sample race beats while running, and stops with test mode
 - race clock: the sim's race beats from its first hit through Stop!, and stops at its read
 
-### test_countdown.lua (23)
+### test_countdown.lua (31)
 
-- countdown: absent on WoW Forever
+- countdown: absent on WoW Forever, the call-out with it
+- countdown: one call-out, on the addon's folder, skin and two shipped voices
+- countdown: the stub answers every member a live call-out has, as an idle call-out does
+- countdown: the library absent, the seam answers the stub and the countdown counts nothing
 - countdown: 10..1 show one per second in the last 10 s, then go at the buzzer
+- countdown: the call-out is not handed the race until the lead before its window
 - countdown: the center number, the Race window's countdown and the HUD's clock agree at the boundaries
-- countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu
-- countdown: the frame never takes the mouse, and each number pops in
-- countdown: the digits are Blizzard's BigGold set, cut by texcoord
-- countdown: without the digit art it falls back to a large outlined number
+- countdown: a new number redraws the Race window in its own frame, off the beat
+- countdown: the call-out's frame is FULLSCREEN, never the HUD's or the Race window's, and mouse-free while locked
 - countdown: finalCountdown 3 starts at 3
-- countdown: switched off, no frame is ever built and only the cue marks sound
+- countdown: a smaller window mid-countdown takes the number down until it is reached
+- countdown: switched off, nothing is counted, shown or said
 - countdown: switching it off mid-countdown hides the number at once
 - countdown: works with the DPS HUD and the Race window closed
-- countdown: one cue per second of the numbers, never two in a second
-- countdown: the cue off keeps the numbers and silences every second
-- countdown: switching the cue off mid-race silences the marks still ahead
-- countdown: a cancel at 5 s left hides it and nothing more shows or sounds
+- countdown: the voice says 5 down to 1 and STOP, each once, from the shipped pack
+- countdown: a refresh mid-countdown never repeats a number
+- countdown: the call-out's voice off keeps the numbers and silences them
+- countdown: a cancel at 5 s left hides it and nothing more shows or is said
 - countdown: combat ending before the buzzer hides it
-- countdown: the stand-down takes the number and every mark, and nothing re-arms them
+- countdown: the stand-down suspends the call-out, and nothing re-arms it until the stand-up
 - countdown: a /reload with 4 s left resumes at 4 and counts 3, 2, 1
 - countdown: a /reload before the window shows nothing until it opens
 - countdown: a /reload past the buzzer shows nothing
-- countdown: the buzzer raises the raid warning's STOP with its sound, once, only when enabled
+- countdown: the buzzer shows the call-out's STOP, once, only when enabled
 - countdown: a canceled race and a race ending early raise no buzzer
-- countdown: never broadcasts a pull timer nor drives Blizzard's TimerTracker
+- countdown: the call-out is handed the race's one endsAt, the value RaceClock and Race read
+- countdown: the stand-up re-arms from the race's endsAt and shows the number of the moment
+- countdown: a stand-down during the lead-in drops the timer; the stand-up waits again
+- countdown: a profile change re-applies the call-out's look and reads the new profile's table
+- countdown: a profile that still stores the retired race.countdownCue counts as any other
+- countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
 
 ### test_toast.lua (21)
 
@@ -1727,7 +1735,7 @@ Total.
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
-| test_countdown.lua | 23 |
+| test_countdown.lua | 31 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1770,4 +1778,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1444** |
+| **Total** | **1452** |

@@ -130,6 +130,13 @@ FIGHT_ENDED
   close; `Hud.OnRaceIdle`, at the race's idle edge, starts that fade. A dummy session holds it the
   same way (owner, 2026-11-13): no fade and no overCard close while it lasts, and its end
   (`Hud.HideAwayFromDummy`) closes a HUD the session opened, or starts the fade of one it held.
+- **The center call-out** (modules/Countdown.lua on `NS.Callout`, Retail) reads no meter value. While
+  a race (real or sample) runs, it is handed `RaceClock.EndsAt()` (Race.EndsAt, or the live sample's)
+  a second before the `race.finalCountdown` window and shows `ceil(endsAt - GetTime())`, read on its own
+  frame clock, so a number flips in the frame the true time left crosses it; each new number calls
+  `RaceClock.Kick()`, one race beat at once, so the Race window draws 0:0n.0 in that frame. The last
+  `speakFrom` (5) numbers are spoken from the chosen pack. RACE_BUZZER cancels the count and shows STOP
+  (`race.buzzer`); any other way out of running takes the number down silently.
 - **The Results window** (modules/Results.lua) reads `Results_Source`, which is the store or, in test
   mode and the sim, the sample history. The list, the detail, the timeline, the compare and the gear
   view all read stored records; the detail's chart reads Slices while this session holds it.

@@ -6,8 +6,9 @@ How AceDB profiles work here (documentation-§3, Tier 2: the Profiles page ships
 
 Everything under `CombatTrailDB.profiles[<name>]`: the master switches, both lanes, the DPS HUD, the
 recording filters and retention, the Results window's view, place and look, the player's own training
-dummies (`dummies.custom`, History > Training dummies) and the skin
-(`defaults/Profile.lua`, [`schema.md`](schema.md)). A new character starts on the `Default` profile
+dummies (`dummies.custom`, History > Training dummies), the skin and, on Retail, the race call-out's
+look, voice and words (`callout`, LibKa0s-Callout-1.0's settings, read through the instance at every
+call) (`defaults/Profile.lua`, [`schema.md`](schema.md)). A new character starts on the `Default` profile
 shared by every character (`AceDB:New(..., true)`).
 
 ## What a profile does not hold
@@ -33,4 +34,5 @@ the whole profile, so `NS.OnProfileChanged` (core/Database.lua) runs one sequenc
 first-run skin picker is closed, the new profile's skin is applied first so every frame repaints once,
 the `disabled` hold is re-decided from the new `general.enabled`, the skin picker shows again on a
 profile that has not seen it, and `SETTINGS_CHANGED("profile", key)` tells every module to redraw
-from the new values. One debug line records each act.
+from the new values (on Retail the race call-out re-applies its look from the new profile's `callout`
+table there, `NS.Callout:Apply` in modules/Countdown.lua). One debug line records each act.
