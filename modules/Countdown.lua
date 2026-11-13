@@ -5,7 +5,8 @@ local _, NS = ...
 -- spoken in the player's chosen voice, and STOP at the buzzer. When `race.finalCountdown` seconds remain
 -- (3-10, default 10) and `race.centerCountdown` is on, the call-out counts down to 1 and goes at the
 -- buzzer; with `race.buzzer` on, it then says STOP. The call-out's own look, voice and words are its
--- settings, in the profile's `callout` table (defaults/Profile.lua, the library's DEFAULTS).
+-- settings: the profile's `callout` table when one exists, which no default seeds and nothing writes
+-- yet (defaults/Profile.lua, callout plan row C2), so today the library's DEFAULTS.
 --
 -- ONE endsAt (owner, 2026-11-13: the numbers and the Race window's clock had disagreed). The call-out
 -- counts down to RaceClock.EndsAt(), the buzzer's moment on the GetTime() clock, the same value the
@@ -55,7 +56,8 @@ Countdown.FRAME_NAME = "CombatTrailCallout"
 local EPS = 1e-6
 
 --- The addon's one call-out (core/CalloutSetup.lua; the stub without the library). Its settings are
---- the profile's `callout` table, read at every call, so a profile switch is followed.
+--- the profile's `callout` table, read at every call, so a profile switch is followed; with none (the
+--- profile ships no such key), the getter answers nil and the call-out reads the library's DEFAULTS.
 NS.Callout = NS.NewCallout({
     name = Countdown.FRAME_NAME,
     db = function()
@@ -131,9 +133,14 @@ arm = function()
     end
     -- A new window or a new race: the old number goes first, so a smaller window never leaves it up.
     if armedAt then CO:Cancel() end
-    armedAt, armedFrom = at, from
-    CO:Countdown({ endsAt = at, from = from, finish = false, onTick = onTick })
-    debug("counting down from %d, %.2fs left", from, left)
+    -- Armed only when the call-out took it: the stub, or a suspended instance, answers false, and
+    -- Diagnose must not then report a countdown that nothing runs.
+    if CO:Countdown({ endsAt = at, from = from, finish = false, onTick = onTick }) then
+        armedAt, armedFrom = at, from
+        debug("counting down from %d, %.2fs left", from, left)
+    else
+        armedAt, armedFrom = nil, nil
+    end
 end
 
 -- ── the buzzer ──────────────────────────────────────────────────────────────────────────────────

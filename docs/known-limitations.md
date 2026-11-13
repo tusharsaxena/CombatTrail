@@ -170,8 +170,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **The center call-out's voice packs are not yet listened to in game.** The two packs
   (`female-kathleen`, `male-joe`, synthesized with Piper) passed the library's file checks only; how
   they sound, and their volume against the game's on the Master channel, waits for SM-CT-RM77.
-- **The call-out's own settings have no section yet.** Its look, voice and words are its `callout`
-  table, which LibKa0s-Callout-1.0's settings section writes outside `NS.SetByPath`; that section waits
+- **The call-out's own settings have no section yet.** Its look, voice and words would be a profile
+  `callout` table (none ships: no schema row yet), which LibKa0s-Callout-1.0's settings section writes
+  outside `NS.SetByPath`; that section waits
   on the owner's architecture-§5 call (callout plan row C2), so the call-out draws and speaks its
   defaults: Oxanium at 96, the female voice, numbers spoken from 5. The Race mode page's *Center-screen
   countdown*, *Center countdown from* and *STOP at the buzzer* rows still decide when it shows.

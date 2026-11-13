@@ -117,10 +117,40 @@ test("countdown: one call-out, on the addon's folder, skin and two shipped voice
     local keys = {}
     for i, v in ipairs(inst:Voices()) do keys[i] = v.key end
     assertEqual(table.concat(keys, ","), "female,male,tts,off", "the two packs CLAUDE.md declares, then tts and off")
-    assertEqual(table.concat(S.NS.CALLOUT_PACKS, ","), "callout/female-kathleen,callout/male-joe")
     assertEqual(inst:Get("voice"), "female", "the library's default voice")
-    assertTrue(S.NS.db.profile.callout ~= nil, "its settings are the profile's callout table")
-    assertEqual(S.NS.db.profile.callout.size, inst:Get("size"))
+end)
+
+--- The root CLAUDE.md's `LibKa0s sounds:` line, split into its pack names (as the kit's vendor gate
+--- reads it: comma-separated, the trailing period off).
+local function declaredSounds()
+    local fh = assert(io.open(T.root .. "/CLAUDE.md", "rb"))
+    local text = fh:read("*a")
+    fh:close()
+    local line = assert(text:match("\nLibKa0s sounds:%s*([^\r\n]*)"), "CLAUDE.md has a LibKa0s sounds: line")
+    line = line:gsub("%s+$", ""):gsub("%.$", "")
+    local out = {}
+    for name in line:gmatch("[^,]+") do out[#out + 1] = (name:gsub("^%s+", ""):gsub("%s+$", "")) end
+    return out
+end
+
+test("countdown: the packs the seam offers are the CLAUDE.md sounds line, in order", function()
+    if forever() then return end
+    local S = fresh()
+    local want = declaredSounds()
+    assertTrue(#want > 0, "the line names a pack")
+    assertEqual(table.concat(S.NS.CALLOUT_PACKS, ","), table.concat(want, ","),
+        "NS.CALLOUT_PACKS is the declaration the vendor gate prunes media/sounds/ to")
+end)
+
+test("countdown: the profile seeds no call-out table, so the call-out reads the library's DEFAULTS", function()
+    if forever() then return end
+    local S = fresh()
+    local inst = CO(S)
+    assertNil(S.NS.defaults.profile.callout, "no schema row, so no default (architecture-§5)")
+    assertNil(S.NS.db.profile.callout, "nothing writes one")
+    local lib = S.M.LibStub("LibKa0s-Callout-1.0")
+    assertEqual(inst:Get("size"), lib.DEFAULTS.size, "the library's default size")
+    assertEqual(inst:Get("font"), lib.DEFAULTS.font, "the library's default font")
 end)
 
 test("countdown: the stub answers every member a live call-out has, as an idle call-out does", function()
@@ -140,6 +170,20 @@ test("countdown: the library absent, the seam answers the stub and the countdown
     assertTrue(inst.NS.Callout == inst.NS.CalloutStub, "the stub stands in")
     assertNil(inst.NS.Countdown.Shown())
     assertFalse(inst.NS.Countdown.Buzzer(), "the buzzer raises nothing")
+end)
+
+test("countdown: a countdown the call-out refuses is not reported armed", function()
+    if forever() then return end
+    local S = fresh()
+    local inst, asked = CO(S), 0
+    inst.Countdown = function() asked = asked + 1; return false end   -- as the stub, or a suspended one
+    running(S, 30)
+    to(S, 123)
+    assertTrue(asked >= 1, "the call-out was asked inside the window")
+    local d = C(S).Diagnose()
+    assertEqual(d.owner, "none", "nothing counts down, so the race owns nothing")
+    assertEqual(d.scheduled, 0, "and nothing is scheduled")
+    assertNil(C(S).Shown())
 end)
 
 -- ── the numbers ────────────────────────────────────────────────────────────────────────────────
@@ -331,6 +375,8 @@ end)
 test("countdown: the call-out's voice off keeps the numbers and silences them", function()
     if forever() then return end
     local S = fresh()
+    assertFalse(CO(S):Set("voice", "off"), "no table to write into: the profile seeds none")
+    S.NS.db.profile.callout = {}   -- the table a later settings section would write
     assertTrue(CO(S):Set("voice", "off"))
     running(S, 30)
     assertEqual(shownAt(S, 127), 5)
@@ -537,11 +583,12 @@ test("countdown: a profile change re-applies the call-out's look and reads the n
         applied = applied + 1
         return real(self, ...)
     end
-    local before = S.NS.db.profile.callout
+    S.NS.db.profile.callout = { size = 120 }   -- a table a later section would write
+    assertEqual(inst:Get("size"), 120, "the getter reads the profile's table")
     S.NS.db:SetProfile("Other")
     assertTrue(applied >= 1, "the profile change re-applied the call-out")
-    assertTrue(S.NS.db.profile.callout ~= nil, "the new profile carries the call-out's settings")
-    assertTrue(S.NS.db.profile.callout ~= before, "and they are its own table")
+    assertNil(S.NS.db.profile.callout, "the new profile holds none")
+    assertEqual(inst:Get("size"), S.M.LibStub("LibKa0s-Callout-1.0").DEFAULTS.size, "so it reads the defaults")
 end)
 
 test("countdown: a profile that still stores the retired race.countdownCue counts as any other", function()

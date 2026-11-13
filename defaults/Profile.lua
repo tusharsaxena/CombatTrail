@@ -64,14 +64,6 @@ local function raceMode(r)
     return r
 end
 
--- The race call-out's own settings (LibKa0s-Callout-1.0, callout plan row C2: its look, its voice, its
--- words and its place), the library's DEFAULTS copied whole (core/CalloutSetup.lua). Retail only, where
--- the race it speaks for is run: ABSENT on WoW Forever (clients-§4).
-local function calloutDefaults()
-    if NS.Compat.ForClient({ "retail" }) then return NS.CalloutDefaults() end
-    return nil
-end
-
 -- The new-best toast's keys: `races` only on Retail, where a race can be run (clients-§4). A race's
 -- new best toasts out of the box; a fight's is opt-in (History > New-best toast).
 local function toastDefaults()
@@ -291,9 +283,9 @@ NS.defaults = {
         raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT", matchHud = true,
             width = 260, height = 0,
             position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
-        -- The race call-out (modules/Countdown.lua through core/CalloutSetup.lua; Retail only): the
-        -- library's own settings table, every key its DEFAULTS (docs/api/Callout, The settings).
-        callout = calloutDefaults(),
+        -- No `callout` key ships (architecture-§5: the schema drives the defaults, and the race
+        -- call-out's look, voice and words have no rows yet, callout plan row C2). The instance's db
+        -- getter (modules/Countdown.lua) answers nil, so the call-out reads the library's DEFAULTS.
         -- The new-best toast (modules/BestToast.lua, race plan Task C2; History > New-best toast): a
         -- fight's new best toasts on both clients (`fights`), a race's on Retail only (`races`, ABSENT
         -- on WoW Forever, clients-§4); how long it stays (s), its sound (on, and which: "Default" is

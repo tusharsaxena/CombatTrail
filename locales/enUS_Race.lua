@@ -315,7 +315,9 @@ L["Your target"] = "Your target"
 L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."] =
     "Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."
 
--- The center countdown and the buzzer (modules/Countdown.lua) use STOP above; the race toast's row
+-- STOP above is the Race window's Stop! body (modules/RaceWindow_States.lua). The call-out's STOP at
+-- the buzzer (modules/Countdown.lua) is LibKa0s-Callout-1.0's stock word, never this string: translating
+-- STOP here does not change the call-out. Below: the race toast's row
 -- (settings/History.lua) and the race's own chat lines (modules/Share.lua), race plan Task C2
 L["Toast a race's new best"] = "Toast a race's new best"
 L["When a race sets a new best on its board (character, spec, dummy kind and length), a toast near the top of the screen says by how much. A board's first race has nothing to beat and shows none."] =

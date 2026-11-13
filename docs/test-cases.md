@@ -976,12 +976,15 @@ Total.
 - race clock: the held sample race beats while running, and stops with test mode
 - race clock: the sim's race beats from its first hit through Stop!, and stops at its read
 
-### test_countdown.lua (31)
+### test_countdown.lua (34)
 
 - countdown: absent on WoW Forever, the call-out with it
 - countdown: one call-out, on the addon's folder, skin and two shipped voices
+- countdown: the packs the seam offers are the CLAUDE.md sounds line, in order
+- countdown: the profile seeds no call-out table, so the call-out reads the library's DEFAULTS
 - countdown: the stub answers every member a live call-out has, as an idle call-out does
 - countdown: the library absent, the seam answers the stub and the countdown counts nothing
+- countdown: a countdown the call-out refuses is not reported armed
 - countdown: 10..1 show one per second in the last 10 s, then go at the buzzer
 - countdown: the call-out is not handed the race until the lead before its window
 - countdown: the center number, the Race window's countdown and the HUD's clock agree at the boundaries
@@ -1735,7 +1738,7 @@ Total.
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
-| test_countdown.lua | 31 |
+| test_countdown.lua | 34 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1778,4 +1781,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1452** |
+| **Total** | **1455** |

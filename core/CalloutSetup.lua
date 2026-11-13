@@ -10,7 +10,8 @@ local addonName, NS = ...
 -- sink.
 --
 -- THE PACKS are the root CLAUDE.md's `LibKa0s sounds:` line, the folders the re-vendor kept under
--- libs/LibKa0s/media/sounds/ (tests/test_vendor_sync.lua holds the copy to it). Passing them as
+-- libs/LibKa0s/media/sounds/ (tests/test_vendor_sync.lua holds the copy to the line, and
+-- tests/test_countdown.lua holds NS.CALLOUT_PACKS to it, in order). Passing them as
 -- `d.packs` means the instance offers only those and never plays any other.
 --
 -- DEGRADED (the library absent): NS.NewCallout answers NS.CalloutStub, the instance's surface with every
@@ -43,19 +44,6 @@ NS.CalloutStub = {
     Stats = function() return { built = false, shown = false, running = false, awake = false,
         suspended = false, locked = true, logged = 0 } end,
 }
-
---- The library's settings defaults, copied whole (defaults/Profile.lua seeds `profile.callout` with
---- it), or an empty table without the library.
---- @return table
-function NS.CalloutDefaults()
-    local function copy(v)
-        if type(v) ~= "table" then return v end
-        local t = {}
-        for k, x in pairs(v) do t[k] = copy(x) end
-        return t
-    end
-    return copy(Callout and Callout.DEFAULTS or {})
-end
 
 --- A call-out for descriptor `d` (the library's Callout:New; `d.addon`, `d.skin`, `d.packs` and
 --- `d.debug` default to this addon's), or the stub when the library is absent.
