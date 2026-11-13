@@ -73,7 +73,8 @@ sudo apt-get install -y python3-pil     # Pillow from apt avoids the PEP 668 pip
 python3 tools/make_logo.py              # from the repo root
 ```
 
-The icons, the fonts and the bar textures come inside the vendored LibKa0s payload;
+The icons, the fonts, the bar textures and the two voice packs (`media/sounds/callout/`, Ogg
+Vorbis, with their own credits and licenses) come inside the vendored LibKa0s payload;
 regenerating them is that repo's job and its toolchain.
 
 ## Am I set up correctly?

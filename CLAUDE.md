@@ -49,19 +49,25 @@ auto-stage/commit/push and never bump the version without an explicit instructio
 
 This addon vendors **[LibKa0s](https://github.com/tusharsaxena/LibKa0s)** into `libs/LibKa0s/` and
 its test kit into `tests/_kit/`, both copied whole from the tag below (`git -C ../LibKa0s archive
-v1.94.0`, commit 5e71662d117feb7a5c572a3b3e7c7e780e06c0d7), with `libs/LibKa0s/media/icons/` pruned
-to the declaration by the tag's own `tools/prune-icons.lua`. **Never edit anything under `libs/` or
-`tests/_kit/`**: a library problem is filed on LibKa0s and re-vendored back, because the next
-re-vendor silently reverts a local edit. The Ace3, LibSharedMedia, LibDataBroker and LibDBIcon copies
-are Panel Master's (the set that loads on both clients).
+v1.96.0`, commit f1b4b155bf184d755ee6afe1b876cbcf85478aeb), with `libs/LibKa0s/media/icons/` and
+`libs/LibKa0s/media/sounds/` pruned to their declarations by the tag's own `tools/prune-icons.lua`.
+**Never edit anything under `libs/` or `tests/_kit/`**: a library problem is filed on LibKa0s and
+re-vendored back, because the next re-vendor silently reverts a local edit. The Ace3,
+LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's (the set that loads on both
+clients).
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.94.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.96.0 (MIT).
 LibKa0s icons: arrow-left, chart, chat, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
+LibKa0s sounds: callout/female-kathleen, callout/male-joe.
 
-The first of those two lines is the **provenance line**: `tests/test_vendor_sync.lua` reads it and
+The first of those three lines is the **provenance line**: `tests/test_vendor_sync.lua` reads it and
 compares both vendored payloads against that tag in the sibling checkout, so it moves in the same
 commit as the vendored bytes. The second is the **icon declaration** (`library-stack-§7`): the same
 gate holds `libs/LibKa0s/media/icons/` to exactly those names. They are the marks the library draws
 for this addon (the debug console's copy, clear and close, the skin picker's settings gear and eye,
 and the small marks beside skinned controls) plus the ones the HUD and the Results window draw as
-they arrive from DPS Race, the paw on pet spell rows, and the flag on the HUD's Race button.
+they arrive from DPS Race, the paw on pet spell rows, and the flag on the HUD's Race button. The
+third is the **sound declaration** (`library-stack-§7`, *The sound subset*): the same gate holds
+`libs/LibKa0s/media/sounds/` to exactly those voice packs, each folder whole with its license and
+credits. They are the two voices `LibKa0s-Callout-1.0` offers for the race countdown; with no line
+the gate would hold the folder empty.

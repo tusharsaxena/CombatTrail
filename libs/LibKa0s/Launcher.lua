@@ -54,12 +54,16 @@
 -- settings (on every host, never grayed), and every row follows one rule: a toggle is a checkbox
 -- whose tick is asked live, an action is a plain button, and a gated row grays the same way
 -- whichever kind it is, the note in its label.
+--
+-- Minor 10 (QFE-LK2): `lib:New`'s descriptor checks move to the file-local `checkDescriptor`, so no
+-- function is over CCN 15 (releasing.md's tag gate). No behavior change: the same checks, in the same
+-- order, raising the same messages at the host's line.
 
 local core = LibStub and LibStub("LibKa0s-Core-1.0", true)
 local NEEDS_CORE = 1
 if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary; module absent
 
-local MAJOR, MINOR = "LibKa0s-Launcher-1.0", 9
+local MAJOR, MINOR = "LibKa0s-Launcher-1.0", 10
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -193,6 +197,33 @@ local function minimapTable(d)
   return type(t) == "table" and t or nil
 end
 
+--- The descriptor's checks, run by New before it builds anything (minor 10: lifted out of New so
+--- no function is over CCN 15; the checks and their messages are unchanged). Level 3 is New's
+--- caller, so every error still names the host's line, as New's level 2 did.
+local function checkDescriptor(d)
+  if type(d.name) ~= "string" or d.name == "" then
+    error(MAJOR .. ":New requires descriptor.name — the addon's FOLDER name, e.g. \"BankLedger\"", 3)
+  end
+  if type(d.icon) ~= "string" or d.icon == "" then
+    error(MAJOR .. ":New requires descriptor.icon — the addon's own logo path", 3)
+  end
+  if type(d.openSettings) ~= "function" then
+    error(MAJOR .. ":New requires descriptor.openSettings — left-click ALWAYS opens the panel", 3)
+  end
+
+  -- Minor 9: an `entryClients` token is checked once, here, so a typo raises at the host's
+  -- registration naming the entry, not when the menu first opens.
+  local compat = LibStub and LibStub("LibKa0s-Compat-1.0", true)
+  if compat and compat.ForClient and type(d.entryClients) == "table" then
+    for field, clients in pairs(d.entryClients) do
+      local ok, err = pcall(compat.ForClient, clients)
+      if not ok then
+        error(MAJOR .. ":New: entryClients." .. tostring(field) .. " has invalid clients: " .. tostring(err), 3)
+      end
+    end
+  end
+end
+
 --- The descriptor documented, then checked.
 ---
 ---   name           string    REQUIRED. The addon's FOLDER name, used for BOTH registrations.
@@ -274,27 +305,7 @@ end
 --- @return table  the launcher instance
 function lib:New(d)
   d = type(d) == "table" and d or {}
-  if type(d.name) ~= "string" or d.name == "" then
-    error(MAJOR .. ":New requires descriptor.name — the addon's FOLDER name, e.g. \"BankLedger\"", 2)
-  end
-  if type(d.icon) ~= "string" or d.icon == "" then
-    error(MAJOR .. ":New requires descriptor.icon — the addon's own logo path", 2)
-  end
-  if type(d.openSettings) ~= "function" then
-    error(MAJOR .. ":New requires descriptor.openSettings — left-click ALWAYS opens the panel", 2)
-  end
-
-  -- Minor 9: an `entryClients` token is checked once, here, so a typo raises at the host's
-  -- registration naming the entry, not when the menu first opens.
-  local compat = LibStub and LibStub("LibKa0s-Compat-1.0", true)
-  if compat and compat.ForClient and type(d.entryClients) == "table" then
-    for field, clients in pairs(d.entryClients) do
-      local ok, err = pcall(compat.ForClient, clients)
-      if not ok then
-        error(MAJOR .. ":New: entryClients." .. tostring(field) .. " has invalid clients: " .. tostring(err), 2)
-      end
-    end
-  end
+  checkDescriptor(d)
 
   local strings = type(d.L) == "table" and d.L or nil
   local emit    = makeEmit(d)
