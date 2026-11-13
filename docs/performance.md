@@ -21,8 +21,9 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `autoArm` | auto-show's and auto-arm's target, nameplate and `PLAYER_ENTERING_WORLD` events (modules/AutoArm.lua) | only while either rule is on, Race mode on (Retail); nameplates churn in a city |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
-| `hud` | the HUD's read and redraw on each `FIGHT_TICK` (modules/Hud.lua), holding `meter` | four times a second in combat |
-| `raceWindow` | the Race window's clock redraw (one repeating AceTimer at 10 Hz), its idle events and its pace bar's `FIGHT_TICK` read (modules/RaceWindow.lua), holding `meter` | ten times a second, only while the window is shown and a race runs or waits for its read (Retail) |
+| `hud` | the HUD's read and redraw on each beat (modules/Hud.lua: its own beat, or the race beat's call), holding `meter` | `hud.refreshRate` times a second (4, 5, 10 or 20, default 10) while the HUD is up on a live fight; no read in the settle |
+| `raceWindow` | the Race window's redraw on each race beat and its idle events (modules/RaceWindow.lua); it reads no meter | `hud.refreshRate` times a second (default 10), only while the window is shown and a race runs or waits for its read (Retail) |
+| `raceClock` | each race beat (modules/RaceClock.lua): the HUD's read and redraw, then the one `RACE_CLOCK` send, holding `hud` and the Race window's redraw | `hud.refreshRate` times a second (default 10), only while a race (real or sample) runs or waits for its read (Retail) |
 
 Nested buckets are reported as their own lines; the outer bucket's figure includes the inner one.
 
@@ -30,15 +31,32 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
 
 - The lanes animate in `OnUpdate` only while an icon is visible, and nothing polls while idle (spec
   §2's anti-goal).
-- The HUD redraws on `FIGHT_TICK` (0.25 s), not per frame; its rows and the Results window's rows
-  come from pools.
+- The HUD reads and redraws on ONE beat at a time at `hud.refreshRate` (default 10 a second, owner
+  2026-11-13), not per frame; its rows and the Results window's rows come from pools. Outside a race
+  that is the HUD's own AceTimer (`Hud.SyncBeat`), running only while the HUD is up on a live fight
+  that moves; in a race it is the race beat. Each beat is one `Meter.ReadLive` (the player's source
+  and the pet's) and the whole redraw, so the HUD's meter cost scales with the rate: 10 a second is
+  2.5 times the old 4 Hz, 20 is 5 times. No read in the settle (Fight out of combat): the beat then
+  redraws from the last read. Hidden, nothing reads.
+- `FIGHT_TICK` stays 0.25 s for its other receivers (the chart's slices, the unbound scan): raising it
+  to the HUD's rate would multiply their work for nothing, and the slices' 2 s steps need no finer tick.
+- The race beat is one AceTimer at 1 / `hud.refreshRate`, running only while a race runs or waits for
+  its read, and never outside a race. Each fire has the HUD read and redraw (`Hud.OnRaceClock`), then
+  sends one `RACE_CLOCK`, on which the Race window redraws its body from stored records, `GetTime()`
+  and that same read, so a race costs no read beyond the HUD's. The Race window has no timer and no
+  read of its own; its two mini pace bars (over Best by now and in each Checkpoint) are set from that
+  same handed-in figure. The player's
+  damage it draws beside the best's is the HUD's last read, taken as a field lookup
+  (`Hud.LiveDamage`), not a read. The clock's color costs one blend (`RaceWindowBoard.ClockColor`), two
+  `SetTextColor` calls and one `SetColorTexture` per beat.
 - The equipment recon walks the gear once per burst of `PLAYER_EQUIPMENT_CHANGED` /
   `UNIT_INVENTORY_CHANGED` (one coalesced 0.5 s timer), never per event and never per fight: the pull
   takes the current set's key.
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
-- On a boundary tick the HUD and the slices share one `Meter.ReadLive` of the session: Fight brackets
-  `FIGHT_TICK` with `Meter.ShareLive`, so the client is asked once per tick, never twice.
+- When the HUD's beat and a slices boundary tick land in one frame they share one `Meter.ReadLive` of
+  the session: both bracket their read with `Meter.ShareLive`, whichever runs first asks the client
+  and the other is served it within that frame (`GetTime()`), so the client is asked once a frame.
 - The chart's cooldown icons are laid again only when the casts, the span or the geometry change,
   compared by value, since the HUD builds a fresh list every tick.
 

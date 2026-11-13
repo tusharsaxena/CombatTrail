@@ -1,6 +1,6 @@
 -- tests/test_race_settings.lua — Race mode's switch and its surfaces (Race mode plan Task B3): the Race
 -- mode page (Retail only: the switch, the Race tab's rows, the late-cast ignore list, the Race window's
--- attach rows), NS.RaceMode.On(), the `/ct race` verb (arm with a typed length, cancel, show, hide,
+-- attach rows, its grip-written size and the grip itself), NS.RaceMode.On(), the `/ct race` verb (arm with a typed length, cancel, show, hide,
 -- toggle, the late-cast ignore list's words) on the live and the library-absent dispatcher, its
 -- liveness (ruling X10), the late-cast list's writes through its row, and Race mode off. Every surface
 -- has a present case on the Retail kit profile and an absent case on WoW Forever (clients-§4, §6).
@@ -23,8 +23,9 @@ local ROWS = {
     { "race.enabled",         "bool",   true },
     { "race.defaultLength",   "number", 60 },
     { "race.autoShow",        "bool",   true },
+    { "race.autoShowHud",     "bool",   true },
     { "race.autoArm",         "bool",   false },
-    { "race.clock",           "string", "both" },
+    { "race.clock",           "string", "left" },
     { "race.countdownCue",    "bool",   true },
     { "race.centerCountdown", "bool",   true },
     { "race.finalCountdown",  "number", 10, 3, 10, 1 },
@@ -35,6 +36,9 @@ local ROWS = {
     { "race.lateIgnore",      "string", "66,1856,5384,8690,58984,110959" },
     { "raceWindow.attached",  "bool",   true },
     { "raceWindow.side",      "string", "RIGHT" },
+    { "raceWindow.matchHud",  "bool",   true },
+    { "raceWindow.width",     "number", 260, 260, 600, 1 },
+    { "raceWindow.height",    "number", 0, 0, 1000, 1 },
 }
 
 local function pageKeys(NS)
@@ -78,7 +82,7 @@ test("race mode: every control and verb is absent on WoW Forever", function()
         assertFalse(tostring(row.path):find("^race") ~= nil, tostring(row.path) .. " on WoW Forever")
     end
     local D = NS.defaults.profile
-    for _, key in ipairs({ "enabled", "autoShow", "autoArm", "clock", "countdownCue", "centerCountdown",
+    for _, key in ipairs({ "enabled", "autoShow", "autoShowHud", "autoArm", "clock", "countdownCue", "centerCountdown",
                            "finalCountdown", "buzzer" }) do
         assertNil(D.race[key], "race." .. key .. " is stored on WoW Forever")
     end
@@ -153,6 +157,35 @@ test("race mode: the page's tabs are Race, Late-cast ignore list and Race window
     assertEqual(table.concat(keys or {}, ","), "Race,Late-cast ignore list,Race window")
     -- The switch is the Race tab's first row.
     assertEqual(NS.SchemaForPage("race")[1].path, "race.enabled")
+end)
+
+test("race mode: the DPS HUD row sits under auto-show, live whatever auto-show says (W29 decision D4)", function()
+    if forever() then return end
+    local NS = T.load().NS
+    local rows = NS.SchemaForPage("race")
+    local at
+    for i, r in ipairs(rows) do if r.path == "race.autoShowHud" then at = i end end
+    assertTrue(at ~= nil, "the row")
+    assertEqual(rows[at - 1].path, "race.autoShow", "right under auto-show")
+    local row = rows[at]
+    assertEqual(row.label, "Show the DPS HUD near a training dummy")
+    assertEqual(row.subgroup, "Near a training dummy")
+    assertNil(row.disabledIf, "either row is auto-show: neither depends on the other")
+end)
+
+test("race mode: Match the DPS HUD's height sits on the Race window tab, under the side", function()
+    if forever() then return end
+    local NS = T.load().NS
+    local rows = NS.SchemaForPage("race")
+    local at
+    for i, r in ipairs(rows) do if r.path == "raceWindow.matchHud" then at = i end end
+    assertTrue(at ~= nil, "the row")
+    assertEqual(rows[at - 1].path, "raceWindow.side", "right under the side")
+    assertEqual(rows[at].label, "Match the DPS HUD's height")
+    assertEqual(rows[at].group, "Race window", "on the Race window tab")
+    assertTrue(NS.GetSetting("raceWindow.matchHud"))
+    assertTrue(NS.SetByPath("raceWindow.matchHud", false))
+    assertFalse(NS.GetSetting("raceWindow.matchHud"))
 end)
 
 test("race mode: a new default length forgets the last one armed", function()
@@ -437,4 +470,107 @@ test("race mode off: a profile switch to Race mode off cancels an armed race, as
     assert(F.arm(S, 30))
     NS.AnnounceSettingsChanged("profile", "Default")
     assertEqual(NS.Race.State(), "armed", "a profile with Race mode on canceled the arm")
+end)
+
+-- ── the Race window's size, written by its grip (owner, 2026-11-13) ─────────────────────────────
+
+test("race mode: the Race window's width and height are grip-written rows the tab does not draw", function()
+    if forever() then return end
+    local NS = T.load().NS
+    for _, path in ipairs({ "raceWindow.width", "raceWindow.height" }) do
+        local row = NS.FindSchemaRow(path)
+        assertTrue(row ~= nil and row.skipRender == true, path .. ": the grip is its control")
+        assertEqual(row.group, "Race window", path .. " on the Race window tab")
+    end
+    assertFalse(NS.SetByPath("raceWindow.width", 259), "narrower than the least")
+    assertFalse(NS.SetByPath("raceWindow.width", 601))
+    assertTrue(NS.SetByPath("raceWindow.width", 400))
+    assertFalse(NS.SetByPath("raceWindow.height", 1001))
+    assertTrue(NS.SetByPath("raceWindow.height", 500))
+end)
+
+-- A fresh instance whose Race window frame records the size the code sets (the kit's frames answer
+-- no geometry unless armed), both windows up, auto-show off.
+local function sized()
+    local g = {}
+    local S = F.fresh{ target = false, mutate = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, name, ...)
+            local f = create(kind, name, ...)
+            if name ~= "CombatTrailRaceWindow" then return f end
+            rawset(f, "SetSize", function(_, w, h) g.w, g.h = w, h end)
+            return f
+        end
+    end }
+    S.NS.Hud.Show()
+    S.NS.RaceWindow.Show()
+    return S, g, S.NS.RaceWindow.__ui().frame
+end
+
+-- One drag of the grip to `w` x `h`, then its release.
+local function drag(S, f, w, h)
+    f.resizeGrip:__fire("OnMouseDown", "LeftButton")
+    S.M.__now = S.M.__now + 1 / 60
+    f:__fire("OnSizeChanged", w, h)
+    f:__setGeom(w, h)
+    local during = S.NS.RaceWindow.View()
+    f.resizeGrip:__fire("OnMouseUp")
+    return during
+end
+
+test("race window grip: shown only while unlocked, at the stored size", function()
+    if forever() then return end
+    local S, g, f = sized()
+    local RW = S.NS.RaceWindow
+    assertTrue(f.resizeGrip ~= nil, "the library's grip")
+    assertTrue(f.resizeGrip:IsShown(), "unlocked: shown")
+    assertTrue(S.NS.SetByPath("general.locked", true))
+    assertFalse(f.resizeGrip:IsShown(), "locked: hidden")
+    assertTrue(S.NS.SetByPath("general.locked", false))
+    assertTrue(f.resizeGrip:IsShown())
+    assertEqual(g.w, RW.WIDTH, "the default width is the least")
+    assertTrue(S.NS.SetByPath("raceWindow.width", 360))
+    assertEqual(g.w, 360, "the stored width")
+    assertEqual(RW.View().width, 360 - 24, "the view lays out to it (less the side pads)")
+end)
+
+test("race window grip: matched to the HUD's height it drags the width alone", function()
+    if forever() then return end
+    local S, g, f = sized()
+    local RW = S.NS.RaceWindow
+    assertTrue(RW.Diagnose().matched, "attached RIGHT, matched by default")
+    local hudH = S.NS.Hud.Height()
+    local b = f.__resizeBounds
+    assertEqual(b[2], b[4], "the bounds hold the height")
+    assertEqual(b[1], RW.WIDTH, "the least width")
+    local during = drag(S, f, 333, hudH + 80)
+    assertEqual(during.width, 333 - 24, "laid out at the dragged width while held")
+    assertEqual(S.NS.GetSetting("raceWindow.width"), 333, "the release stores the width")
+    assertEqual(S.NS.GetSetting("raceWindow.height"), 0, "and not the height, which is the HUD's")
+    assertEqual(g.w, 333)
+    assertEqual(g.h, RW.WindowHeight(), "the HUD's height still")
+end)
+
+test("race window grip: detached, TOP or BOTTOM, or match-height off, it drags both, never under the least", function()
+    if forever() then return end
+    local S, g, f = sized()
+    local RW = S.NS.RaceWindow
+    RW.Detach()
+    local least = RW.Height()
+    local b = f.__resizeBounds
+    assertEqual(b[2], least, "the least height is the content's")
+    assertTrue(b[4] > b[2], "the height drags")
+    drag(S, f, 300, least + 60)
+    assertEqual(S.NS.GetSetting("raceWindow.width"), 300)
+    assertEqual(S.NS.GetSetting("raceWindow.height"), least + 60)
+    assertEqual(g.h, least + 60, "the stored height")
+    drag(S, f, 300, least - 50)
+    assertEqual(g.h, least, "a drag under the least height stops at it")
+    RW.Attach("TOP")
+    assertTrue(f.__resizeBounds[4] > f.__resizeBounds[2], "TOP: both")
+    RW.Attach("RIGHT")
+    assertTrue(S.NS.SetByPath("raceWindow.matchHud", false))
+    assertTrue(f.__resizeBounds[4] > f.__resizeBounds[2], "match-height off: both")
+    assertTrue(S.NS.SetByPath("raceWindow.height", 0))
+    assertEqual(g.h, RW.Height(), "0 is the least height")
 end)

@@ -131,10 +131,11 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **Race mode is Retail only.** WoW Forever has no Race mode page, `/ct race` verb, Race window,
   countdown, race toast or race filter (clients-§4); a race saved on Retail lists there as a fight
   with its race DPS.
-- **No launcher entry and no key binding for the Race window** (rulings X17, X18). The minimap menu is
-  LibKa0s-Launcher's fixed set, and one static `Bindings.xml` would show a Retail-only binding on WoW
-  Forever. `/ct race show`, `toggle` and `arm` work in a macro; per-client bindings files wait for an
-  in-game check.
+- **No launcher entry for the Race window** (ruling X17). The minimap menu is LibKa0s-Launcher's
+  fixed set. Its key, *Toggle Race window*, is Retail's alone, in `Bindings_Mainline.xml` (a
+  documented deviation); that WoW Forever reads `Bindings.xml` and never lists it waits for the
+  owner's in-game check (SM-CT-RM58). `/ct race show`, `toggle` and `arm` work in a macro, and the DPS
+  HUD's title bar has a Race button.
 - **An incomplete race whose fight carries on keeps the whole fight's total as its score** (ruling
   X16): no meter read is taken at the early combat end, where secrecy is unproven, so its DPS divides
   that total by the fight's race-clock length (first hit to fight end). Incomplete races never count
@@ -152,3 +153,20 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **Race mode off stops new races only.** An armed race is canceled with the switch (or a profile
   that has it off), but one already running when it goes off runs on to its result; the switch never
   touches a saved race.
+- **The Race window never says ahead or behind in words during a race.** The race's live damage is a
+  secret value: the Race window shows it beside the best's figures (Best by now's *Current*, and your
+  reading in each Checkpoint, the DPS HUD's last read) as text and on a thin mini pace bar, which the
+  client fills against the best's figure there, so the green or red is where the fill ends. Nothing
+  in Lua compares it, so there is no mark, chip or difference figure (the owner's choice, 2026-11-13).
+  Best by now and the Checkpoints are the best's straight line at the clock, and a checkpoint shows as
+  passed because the clock reached it, not because the damage did. The full live pace is the DPS HUD's
+  pace bar.
+- **A best saved without a player-only figure paces a pet class on the whole total.** On Retail, where
+  the pet has a meter source of its own, the live figure is the player's alone, so the mini pace bars
+  set it against the best's player-only line. A best whose record has no player figure has no such
+  line, and the bars fall back to its whole figure.
+- **A checkpoint passed before a `/reload` shows a dash for your figure.** Its reading was held in
+  memory for that race alone, so a resumed race keeps the best's figure there but not yours.
+- **The Race window matches the DPS HUD's height only on the left or right.** Above or below the HUD
+  it keeps its own height, and it is never shorter than its tallest screen needs, so a HUD shrunk below
+  that leaves the Race window taller than the HUD.

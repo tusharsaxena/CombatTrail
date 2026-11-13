@@ -4,9 +4,11 @@ local addonName, NS = ...
 --
 -- Left-click ALWAYS opens the settings panel; right-click the options menu (launcher-§2), whose
 -- master-controls entries are Enabled, Locked, Test mode, Sim mode and Show window (the DPS HUD), each
--- on the handler its slash verb runs (core/CombatTrail.lua). Also the three key-binding buttons
--- (launcher-§6, plan Task 5.2) and NS.BINDINGS, the table Bindings.xml and the General page's
--- Keybindings tab are both held to.
+-- on the handler its slash verb runs (core/CombatTrail.lua). Also the key-binding buttons
+-- (launcher-§6, plan Task 5.2) and NS.BINDINGS, the table the bindings file and the General page's
+-- Keybindings tab are both held to: three on both clients, and on Retail a fourth, Toggle Race window
+-- (Race mode is Retail's, clients-§4), in Retail's own Bindings_Mainline.xml (a documented deviation,
+-- docs/ARCHITECTURE.md). Its button, its row and its label exist on Retail only.
 
 local Launcher = LibStub and LibStub("LibKa0s-Launcher-1.0", true)
 local L = NS.L
@@ -19,6 +21,8 @@ local L = NS.L
 NS.TOGGLE_HUD_BUTTON     = "CombatTrailToggleHud"
 NS.TOGGLE_RESULTS_BUTTON = "CombatTrailToggleResults"
 NS.TOGGLE_LANES_BUTTON   = "CombatTrailToggleLanes"
+NS.TOGGLE_RACE_BUTTON    = "CombatTrailToggleRace"   -- Retail only
+local RETAIL = NS.Compat.ForClient({ "retail" })
 do
     local function button(name, handler)
         local b = CreateFrame("Button", name, UIParent)
@@ -30,27 +34,36 @@ do
     button(NS.TOGGLE_HUD_BUTTON, "ToggleHud")
     button(NS.TOGGLE_RESULTS_BUTTON, "ToggleResults")
     button(NS.TOGGLE_LANES_BUTTON, "ToggleLanes")
+    -- The Race window's (`/ct race toggle`'s handler), on Retail only (clients-§4).
+    if RETAIL then button(NS.TOGGLE_RACE_BUTTON, "ToggleRaceWindow") end
 end
 
--- The ONE bindings table (launcher-§6), in Bindings.xml's order with the Show window key first: the
--- General page's Keybindings tab draws its rows from it (options-ui-§20) and the suite checks
--- Bindings.xml against it. Each command is the CLICK binding on the button above.
+-- The ONE bindings table (launcher-§6), in the bindings file's order with the Show window key first:
+-- the General page's Keybindings tab draws its rows from it (options-ui-§20) and the suite checks the
+-- file the client reads (Bindings_Mainline.xml on Retail, Bindings.xml on WoW Forever) against it.
+-- Each command is the CLICK binding on a button above, labeled by its BINDING_NAME_ global.
 local function clickCommand(button) return "CLICK " .. button .. ":LeftButton" end
-NS.BINDINGS = {
-    { command = clickCommand(NS.TOGGLE_HUD_BUTTON),
-      tooltip = L["Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."] },
-    { command = clickCommand(NS.TOGGLE_RESULTS_BUTTON),
-      tooltip = L["Shows or hides the Results window, with your fight history."] },
-    { command = clickCommand(NS.TOGGLE_LANES_BUTTON),
-      tooltip = L["Shows or hides the Player and Pet cast lanes."] },
+local KEYS = {
+    { NS.TOGGLE_HUD_BUTTON, L["Toggle DPS HUD"],
+      L["Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."] },
+    { NS.TOGGLE_RESULTS_BUTTON, L["Toggle Results window"],
+      L["Shows or hides the Results window, with your fight history."] },
+    RETAIL and { NS.TOGGLE_RACE_BUTTON, L["Toggle Race window"],
+      L["Shows or hides the Race window, as /ct race toggle and the DPS HUD's flag do."] } or false,
+    { NS.TOGGLE_LANES_BUTTON, L["Toggle lanes"], L["Shows or hides the Player and Pet cast lanes."] },
 }
 -- The category's title is the brand, assigned at file scope because the client reads it when it
 -- registers the bindings (launcher-§6). The labels' global names hold a space and a colon, so no
 -- identifier can spell them: rawset.
 rawset(_G, "BINDING_HEADER_COMBATTRAIL", NS.BRAND)
-rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[1].command, L["Toggle DPS HUD"])
-rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[2].command, L["Toggle Results window"])
-rawset(_G, "BINDING_NAME_" .. NS.BINDINGS[3].command, L["Toggle lanes"])
+NS.BINDINGS = {}
+for _, key in ipairs(KEYS) do
+    if key then
+        local command = clickCommand(key[1])
+        NS.BINDINGS[#NS.BINDINGS + 1] = { command = command, tooltip = key[3] }
+        rawset(_G, "BINDING_NAME_" .. command, key[2])
+    end
+end
 
 local function minimapTable()
     local db = NS.db

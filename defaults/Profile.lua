@@ -50,20 +50,22 @@ end
 -- Race mode's own keys (the Race mode page, race plan Task B3), Retail only, so ABSENT on WoW Forever
 -- (clients-§4); the rest of the race table (the length, the scoring rules, the late-cast list) is on
 -- both clients, as a saved race re-scores there too. The switch (Race mode on, which stops new races
--- only), auto-show near a dummy (on) and auto-arm on targeting one (off), the race clock's mode
--- ("both", "left" or "elapsed"), the countdown's cue, its center numbers and where they start (s),
--- and the buzzer's raid warning (DPS Race's defaults; modules/Countdown.lua reads the last four).
+-- only), auto-show near a dummy (on), the DPS HUD opening with it (on, race window redesign ruling
+-- O4) and auto-arm on targeting one (off), the race clock's mode ("left", one countdown, by ruling O2;
+-- "both" or "elapsed"), the countdown's cue, its center numbers and where they start (s), and the
+-- buzzer's raid warning (DPS Race's defaults; modules/Countdown.lua reads the last four).
 local function raceMode(r)
     if NS.Compat.ForClient({ "retail" }) then
-        r.enabled, r.autoShow, r.autoArm, r.clock = true, true, false, "both"
+        r.enabled, r.autoShow, r.autoShowHud, r.autoArm, r.clock = true, true, true, false, "left"
         r.countdownCue, r.centerCountdown, r.finalCountdown, r.buzzer = true, true, 10, true
     end
     return r
 end
 
--- The new-best toast's keys: `races` only on Retail, where a race can be run (clients-§4).
+-- The new-best toast's keys: `races` only on Retail, where a race can be run (clients-§4). A race's
+-- new best toasts out of the box; a fight's is opt-in (History > New-best toast).
 local function toastDefaults()
-    local t = { fights = true, duration = 10, sound = true, soundKey = "Default", scale = 1.0 }
+    local t = { fights = false, duration = 10, sound = true, soundKey = "Default", scale = 1.0 }
     if NS.Compat.ForClient({ "retail" }) then t.races = true end
     return t
 end
@@ -171,6 +173,8 @@ NS.defaults = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
             width = 260, scale = 1, sizeMode = "fixed", bars = 5, grow = "down",
+            -- Both windows' live refreshes a second (modules/Hud.lua's beat, the race beat): 4, 5, 10 or 20.
+            refreshRate = 10,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
             clock = { font = "JetBrains Mono", fontSize = 26, fontColor = rgba(0.92, 0.91, 0.88, 1),
@@ -268,10 +272,14 @@ NS.defaults = {
         race = raceMode({ defaultLength = 60, grace = 1.0, restartGap = 6, hintDelay = 15,
                           lateIgnore = "66,1856,5384,8690,58984,110959" }),
         -- The Race window's place (Race mode, Task B3; Retail only, so ABSENT on WoW Forever,
-        -- clients-§4): attached beside the DPS HUD, on its `side` ("RIGHT", "LEFT", "TOP", "BOTTOM");
+        -- clients-§4): attached beside the DPS HUD, on its `side` ("RIGHT", "LEFT", "TOP", "BOTTOM"),
+        -- and on LEFT or RIGHT at the HUD's height while `matchHud` (race window redesign plan Task W4);
         -- detached, it stands at `position` (modules/RaceWindow.lua, Task C1), written by its title
-        -- bar's drag and put back by Master controls' Reset position.
-        raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT",
+        -- bar's drag and put back by Master controls' Reset position. Its `width` (260-600 px) and,
+        -- when its height is not the HUD's, its `height` (0-1000 px, never less than it needs: 0 is
+        -- that least) are written by its grip (owner, 2026-11-13).
+        raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT", matchHud = true,
+            width = 260, height = 0,
             position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
         -- The new-best toast (modules/BestToast.lua, race plan Task C2; History > New-best toast): a
         -- fight's new best toasts on both clients (`fights`), a race's on Retail only (`races`, ABSENT

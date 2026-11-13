@@ -1,10 +1,10 @@
 local _, NS = ...
 -- modules/AutoArm.lua — the race near a training dummy (Race mode, plan Task B3; Retail only): Auto-show
--- (`race.autoShow`) asks the Race window to open by itself while a training dummy (NS.Dummies) is the
--- target or has a nameplate up, and Auto-arm (`race.autoArm`) arms a race by itself when the player
--- targets one out of combat. Auto-show is on by default, auto-arm off, and each is independent of the
--- other. Ported from DPS Race @f8078c7 (modules/AutoArm.lua), unchanged in behavior; the window it
--- drives is the Race window (spec §4.1), never the DPS HUD.
+-- (`race.autoShow` or `race.autoShowHud`) asks the Race window to open by itself while a training
+-- dummy (NS.Dummies) is the target or has a nameplate up, and Auto-arm (`race.autoArm`) arms a race
+-- by itself when the player targets one out of combat. Auto-show is on by default, auto-arm off, and
+-- each is independent of the other. Ported from DPS Race @f8078c7 (modules/AutoArm.lua); the window it drives is the Race window
+-- (spec §4.1), and the DPS HUD beside it (race window redesign rulings O4 and W29, below).
 --
 -- AUTO-SHOW. A DUMMY SESSION runs from the first dummy seen (the target, or a nameplate:
 -- NAME_PLATE_UNIT_ADDED) until none has been seen for HIDE_DELAY seconds: the hide is a timer canceled
@@ -14,7 +14,22 @@ local _, NS = ...
 -- wants it) and closes through RaceWindow.HideAwayFromDummy, and only while the race is idle: an armed
 -- or running race, or a result card, keeps it; the race's idle edge asks again. THE MANUAL-CLOSE RULE:
 -- a close by the player in a session (RaceWindow.Closes() moved since the session began) keeps
--- auto-show from opening the window again until that session ends.
+-- auto-show from opening the window again until that session ends. THE PLAYER'S OPEN IN A SESSION:
+-- the Race window asks AutoArm.InSession() when the player opens it, and one opened while a session
+-- is live is tied to it (ShownNearDummy true), so the session's end closes it like its own opening.
+--
+-- THE DPS HUD WITH IT (Tasks W3 and W29). The Race window is an extension of the DPS HUD and never up
+-- without it (modules/RaceWindow.lua's header), so auto-show is one rule for both windows, on while
+-- either row is: `race.autoShow` or `race.autoShowHud` (owner, 2026-11-13, W29 decision D4). Its ask
+-- goes to the Race window (RaceWindow.ShowNearDummy), which opens the HUD first when it is closed
+-- (Hud.ShowNearDummy: an "auto" open). The session holds the HUD up: no fade and no close with its
+-- fight while it lasts (Hud.lua's dummyHolds, owner 2026-11-13), so both windows stay while the player
+-- stands near the dummy. A HUD that faded before the session began is opened again by its next ask
+-- (a target, a nameplate, the race's idle edge), the Race window with it. The manual-close rule holds on either window's count: a close of the Race window
+-- (RaceWindow.Closes()) or of the HUD (Hud.Closes(), which hides the Race window too) moved since the
+-- session began keeps auto-show from opening either again until that session ends. The session's end
+-- asks both to close (each HideAwayFromDummy), the HUD only while the session's open still stands: no
+-- fight live on it, and not opened or pinned by the player since. Both rows off let what it opened go.
 --
 -- AUTO-ARM. PLAYER_TARGET_CHANGED to a training dummy, out of combat, the race idle and no test mode or
 -- sim on: Race.Arm at RaceWindow.ArmLength() (what Arm Race would arm; the race's own DefaultLength
@@ -27,7 +42,8 @@ local _, NS = ...
 -- THE RACE WINDOW'S SEAM (Task C1). Five hooks on NS.RaceWindow, each reached at CALL time:
 -- ShowNearDummy() -> opened, HideAwayFromDummy() -> closed, ShownNearDummy() -> boolean, Closes() ->
 -- count, ArmLength() -> seconds|nil. Until the window exists, auto-show has nothing to open and
--- auto-arm arms at the race's default length.
+-- auto-arm arms at the race's default length. The DPS HUD's four (Task W3) are the first four of
+-- these, on NS.Hud, reached the same way.
 --
 -- GATES. Neither rule acts in an instance (GetInstanceInfo's type other than "none"), and nothing is
 -- registered while the addon is stood down, with Race mode off (NS.RaceMode.On(), the Race mode page's
@@ -54,7 +70,7 @@ local PLATE_EVENTS = { "NAME_PLATE_UNIT_ADDED", "NAME_PLATE_UNIT_REMOVED" }
 local events               -- this module's AceEvent target (nil until a rule is first on)
 local registered = "none"  -- "none" | "target" | "plates"
 local plates = {}          -- nameplate unit token -> true, for each training dummy's plate
-local session              -- { closes = RaceWindow.Closes() at its start } while a dummy is near
+local session              -- { closes, hudCloses = each window's Closes() at its start } while a dummy is near
 local hideTimer, hideAt    -- the session's end (the AceTimer and its GetTime()), while no dummy is seen
 local armedRace            -- the race part this rule armed, while it is armed and not started
 
@@ -62,7 +78,10 @@ local function debug(fmt, ...)
     if NS.Debug then NS.Debug("AutoArm", fmt, ...) end
 end
 
-local function showOn() return NS.GetSetting("race.autoShow") == true end
+-- Auto-show is on while either of its rows is (W29 decision D4): the Race window's or the HUD's.
+local function showOn()
+    return NS.GetSetting("race.autoShow") == true or NS.GetSetting("race.autoShowHud") == true
+end
 local function armOn() return NS.GetSetting("race.autoArm") == true end
 
 local function idle() return NS.Race.State() == NS.Race.STATE.IDLE end
@@ -77,8 +96,20 @@ local function window(hook, ...)
     return fn(...)
 end
 
-local function shownNear() return window("ShownNearDummy") == true end
 local function closes() return window("Closes") or 0 end
+
+-- The DPS HUD's (Task W3), the same four hooks on NS.Hud.
+local function hud(hook)
+    local H = NS.Hud
+    local fn = H and H[hook]
+    if type(fn) ~= "function" then return nil end
+    return fn()
+end
+
+local function hudCloses() return hud("Closes") or 0 end
+
+-- Either window is open because a dummy is near.
+local function shownNear() return window("ShownNearDummy") == true or hud("ShownNearDummy") == true end
 
 local function armLength()
     local n = window("ArmLength")
@@ -137,7 +168,10 @@ local function leave()
     cancelHide()
     if session then debug("dummy session ended") end
     session = nil
-    if idle() then window("HideAwayFromDummy") end
+    if idle() then
+        window("HideAwayFromDummy")
+        hud("HideAwayFromDummy")
+    end
 end
 
 local hideDue   -- the timer callback, below
@@ -173,11 +207,13 @@ local function decideShow()
     if not near() then return scheduleHide() end
     cancelHide()
     if not session then
-        session = { closes = closes() }
+        session = { closes = closes(), hudCloses = hudCloses() }
         debug("dummy session began")
     end
-    -- The player closed the window in this session: theirs to open again.
-    if closes() ~= session.closes then return end
+    -- The player closed either window in this session: theirs to open again (the Race window cannot
+    -- stand without the HUD, so a HUD the player closed keeps both shut).
+    if closes() ~= session.closes or hudCloses() ~= session.hudCloses then return end
+    -- The Race window opens the HUD first (W29 decision D3), and a pair that faded comes back.
     window("ShowNearDummy")
 end
 
@@ -312,6 +348,11 @@ end
 function AutoArm.Resume()
     registered = "none"
     AutoArm.Sync()
+end
+
+--- Whether a dummy session is live now (the Race window ties a window the player opens in one to it).
+function AutoArm.InSession()
+    return session ~= nil
 end
 
 --- What the rules hold now, for the suites and the diagnostics: the event set, the dummies' nameplates

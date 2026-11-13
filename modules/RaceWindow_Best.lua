@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/RaceWindow_Best.lua — the Race window idle body's Your best card (Race mode spec §4.1, plan
 -- Task C1): the best on the race board the next race would count on, the mark to beat between the
--- Target card and Arm Race. Ported from DPS Race @f8078c7 (modules/Hud_Best.lua) onto Combat Trail's
+-- Target card and Arm Race. The running body draws the same card as Best to beat (race window
+-- redesign plan Task W6), handed its view by modules/RaceWindow.lua for the race's own board. Ported from DPS Race @f8078c7 (modules/Hud_Best.lua) onto Combat Trail's
 -- race boards; never NS.HudBest, which is the DPS HUD's pace data.
 --
 -- THE BOARD is character + spec + dummy kind + length (spec §5, Bests.RaceKey): the player read now
@@ -24,8 +25,12 @@ local L = NS.L
 local Style = NS.Style
 local FONT = Style.FONT
 
--- The DPS figure: the `hud.figures` block at this share of its size, so two lines fit the card.
-local FIGURE_SCALE = 0.8
+-- The card's figures (owner, 2026-11-13): Damage (the score) and DPS (the race DPS) a matched pair on
+-- one row, each half of the card a gold label and its value a fixed LABEL_W after it (sized for the
+-- longer label, so a value never runs under its label at any width), the date and item level line
+-- under them.
+Best.LABEL_W = 44
+local PAD_X, ROW_Y = 8, -7
 local DOT = " \194\183 "
 
 --- The view the idle body draws: { state = "noTarget" | "empty" | "best", record, who, kind, length }.
@@ -123,21 +128,36 @@ function Best.Place(b, parent, y)
     b.card:SetPoint("TOPRIGHT", parent, "TOPRIGHT", 0, y - CAPTION_H)
 end
 
---- Build the section into `parent` (the idle body's frame) at `y`; its box restyles with the body's.
---- @return table b  { caption, card, dps, damage, line, empty }
-function Best.Build(body, parent, y)
+--- A labeled figure on one row of `card`: the label (the gold) at `x` from `from`, its value
+--- LABEL_W after it to `toX` from `to`, in `color`. Every edge is the card's: the value's text is
+--- never measured and nothing is placed off it (Best by now's Current, a secret in combat, is laid
+--- out the same way, modules/RaceWindow_Board.lua).
+--- @return table label, table value
+function Best.Figure(card, from, x, to, toX, label, color, valueFont)
+    local lab = Style.Text(card, FONT.CAPTION, Style.Tok("text.headingAlt"))
+    lab:SetPoint("TOPLEFT", card, from == "LEFT" and "TOPLEFT" or "TOP", x, ROW_Y)
+    lab:SetText(label)
+    local fig = Style.Text(card, valueFont or FONT.TEXT, color, "LEFT")
+    fig:SetPoint("TOPLEFT", card, from == "LEFT" and "TOPLEFT" or "TOP", x + Best.LABEL_W, ROW_Y)
+    fig:SetPoint("TOPRIGHT", card, to == "RIGHT" and "TOPRIGHT" or "TOP", toX, ROW_Y)
+    return lab, fig
+end
+
+--- Build the section into `parent` (the idle body's frame) at `y`, its caption in `font` (a
+--- Style.FONT value; the Race window's bodies pass FONT.SECTION, the DPS HUD's headings, default
+--- FONT.HEADER); its box restyles with the body's.
+--- @return table b  { caption, card, damageLabel, damage, dpsLabel, dps, line, empty }
+function Best.Build(body, parent, y, font)
     local dim = NS.HudStates.COLORS.dim
     local b = {}
-    b.caption = Style.Text(parent, FONT.HEADER)
+    b.caption = Style.Text(parent, font or FONT.HEADER)
     b.caption:SetText(L["Your best"])
     local card = NS.HudStates.Card(parent)
     card:SetHeight(NS.RaceWindowStates.BEST_CARD_H)
     b.card = card
     Best.Place(b, parent, y)
-    b.dps = Style.PlainText(card, FONT.FIGURE)
-    b.dps:SetPoint("TOPLEFT", card, "TOPLEFT", 8, -4)
-    b.damage = Style.Text(card, FONT.TEXT, dim, "RIGHT")
-    b.damage:SetPoint("TOPRIGHT", card, "TOPRIGHT", -8, -7)
+    b.damageLabel, b.damage = Best.Figure(card, "LEFT", PAD_X, "CENTER", -4, L["Damage"], dim)
+    b.dpsLabel, b.dps = Best.Figure(card, "CENTER", 4, "RIGHT", -PAD_X, L["DPS"], dim)
     b.line = Style.Text(card, FONT.CAPTION, dim)
     b.line:SetPoint("BOTTOMLEFT", card, "BOTTOMLEFT", 8, 5)
     b.line:SetPoint("BOTTOMRIGHT", card, "BOTTOMRIGHT", -8, 5)
@@ -150,24 +170,13 @@ function Best.Build(body, parent, y)
     return b
 end
 
--- The figure in the `hud.figures` face, again after each Appearance change.
-local function styleFigure(b)
-    local A = NS.HudAppearance
-    if b.styled == A.stamp then return end
-    b.styled = A.stamp
-    local font = A.Font("figures")
-    font.size = math.max(6, math.floor(font.size * FIGURE_SCALE + 0.5))
-    A.ApplyFont(b.dps, font)
-end
-
 --- Draw `v` (Best.View's) on the section.
 function Best.Update(b, v)
     if not b then return end
     v = v or { state = "noTarget" }
     local record = v.state == "best" and v.record or nil
     b.card.record, b.card.tip = record, record and tipOf(record, v) or nil
-    b.dps:SetShown(record ~= nil)
-    b.damage:SetShown(record ~= nil)
+    for _, fs in ipairs({ b.dps, b.damage, b.dpsLabel, b.damageLabel }) do fs:SetShown(record ~= nil) end
     b.line:SetShown(record ~= nil)
     b.empty:SetShown(record == nil)
     if not record then
@@ -175,7 +184,6 @@ function Best.Update(b, v)
             or L["No race yet: this one sets the mark."])
         return
     end
-    styleFigure(b)
     b.dps:SetText(NS.Format.Number(NS.RaceRecord.Dps(record)))
     b.damage:SetText(NS.Format.Number(scoreOf(record)))
     b.line:SetText(lineText(record))

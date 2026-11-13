@@ -17,7 +17,11 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
   harness, which raises without it), and the AceAddon promotion after the printer exists.
 - **`defaults/`**: the ignore seeds before the profile tree that reads them.
 - **`modules/`** in conventional order. Each reaches the others at call time, except where a module
-  registers its bus receiver or captures a neighbor at file scope (the TOC names each one).
+  registers its bus receiver or captures a neighbor at file scope (the TOC names each one). Two Race
+  mode cases: `modules/RaceClock.lua` follows `modules/RaceWatchers.lua` and registers its bus receiver
+  at file scope; `modules/RaceWindow_Board.lua` and `modules/RaceWindow_States.lua` follow
+  `modules/Hud_States.lua`, whose colors both read at file scope, and the board comes first, as the
+  bodies read its layout constants there.
 - **`settings/` last**: the schema and the slash table first, the options descriptor, then the pages
   in panel order (General first, Profiles last), because the page order is the registration order.
 
@@ -26,7 +30,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | File | Job |
 |---|---|
 | `CombatTrail.toc` | Both interface numbers, the metadata and the load order |
-| `Bindings.xml` | The three `CLICK` key bindings in the addon's own category |
+| `Bindings.xml` | The three shared `CLICK` key bindings in the addon's own category, the file WoW Forever reads |
+| `Bindings_Mainline.xml` | Retail's bindings file: the same three plus *Toggle Race window* after Results, held in step with `Bindings.xml` by `tests/test_bindings.lua` (a documented deviation) |
 | `locales/enUS.lua` | `NS.L`, the canonical locale with the key-is-the-string fallback |
 | `locales/enUS_Race.lua` | Race mode's strings, a topic file filling `NS.L` (ruling X13) |
 | `locales/enUS_Insights.lua` | The Insights tab's strings, a topic file filling `NS.L` (Race mode plan D2) |
@@ -61,7 +66,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/LaneAnchor.lua` | Where a lane sits (free, docked, unit frame), its strata and level, and the edit overlay |
 | `modules/LaneVisibility.lua` | When a lane shows and how opaque it is |
 | `modules/LaneIgnore.lua` | Each lane's ignore list and the `/ct ignore` verb |
-| `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read and the after-combat read |
+| `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read (`Meter.ShareLive` lets the HUD's beat and the slices' boundary tick share one read in a frame) and the after-combat read |
 | `modules/ProbeCurve.lua` | `/ct probe`'s spell color curve trial (issue #7): can the client map a secret spell ID to a color |
 | `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers |
 | `modules/Dummies.lua` | The training dummies: the seed with the player's own list, the captures and `/ct dummy` (both clients) |
@@ -73,7 +78,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceScoring.lua` | A race's scoring rules: the late-cast test, the race DPS and its flags (Race mode) |
 | `modules/Race.lua` | The race engine on the fight: arm, the first-hit clock, the buzzer, the late casts, the race part, the pending slot and the resume after a `/reload` (Race mode, Retail) |
 | `modules/RaceWatchers.lua` | The race's game events, one set per race state (Race mode, Retail) |
-| `modules/AutoArm.lua` | Auto-show and auto-arm near a training dummy: the target and nameplate events, the debounced hide, the Race window's five hooks (Race mode, Retail) |
+| `modules/RaceClock.lua` | The race beat: one timer at `Hud.RefreshInterval()` (1 / `hud.refreshRate`, default 0.1 s) while a race (real or sample) runs or stops, which stands the HUD's own beat down (`Hud.SyncBeat`); each fire calls `Hud.OnRaceClock()` (the HUD's read and redraw), then sends one `RACE_CLOCK` for the Race window (Race mode, Retail) |
+| `modules/AutoArm.lua` | Auto-show and auto-arm near a training dummy: the target and nameplate events, the debounced hide, the Race window's five hooks and the DPS HUD's four, and `AutoArm.InSession`, which ties a Race window the player opens in a dummy session to it (Race mode, Retail) |
 | `modules/RaceVerb.lua` | `/ct race`'s words: arm with a typed length, cancel, the Race window, the late-cast ignore list; the arm refusals' copy (Race mode, Retail) |
 | `modules/CastCodec.lua` | The packed cast-list string a record stores, pure |
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |
@@ -86,18 +92,19 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Recorder.lua` | The fight record and the store |
 | `modules/Retention.lua` | The purge, its daily timer and `/ct purge`, and the store's size |
 | `modules/Slices.lua` | The damage chart's in-session store |
-| `modules/Format.lua` | Every number the UI draws, secret-safe |
-| `modules/Style.lua` | The look the HUD and the Results window share |
+| `modules/Format.lua` | Every number the UI draws, secret-safe; `Format.RaceClock`, the one count of tenths the race's elapsed time and time left share |
+| `modules/Style.lua` | The look the HUD and the Results window share; `Style.FitControlArt`, which crops each header control's mark to its measured box (`Style.ART_BOX`) and sizes its long side to `Style.CONTROL_ART` |
 | `modules/Hud_Appearance.lua` | The HUD's configured look |
 | `modules/Hud_Tips.lua` | The words of the HUD's tooltips |
-| `modules/Hud_Best.lua` | The pace data: what the paced fight had done by each second |
+| `modules/Hud_Best.lua` | The pace data: which stored fight the live one is paced against (`Best.PaceRecord`, the HUD's `Hud.PaceRecord`), its target line and curve, and what it had done by each second |
 | `modules/Hud_Breakdown.lua` | The HUD's spell rows, live and after combat |
-| `modules/Hud_Chart.lua` | The HUD's damage chart and pace bar |
+| `modules/Hud_Chart.lua` | The HUD's damage chart and pace bar; `Chart.NewPace(parent, opts)` also builds the Race window's thinner mini pace bars |
 | `modules/Hud_States.lua` | The HUD's two bodies, the live view and the fight-over card |
-| `modules/Hud.lua` | The HUD's shell: the window, when it opens and fades, and the view the bodies draw; `Hud.Dock`, the frame an attached Race window stands beside |
-| `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked (Race mode, Retail) |
-| `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card (Race mode, Retail) |
-| `modules/RaceWindow.lua` | The Race window's shell: attached beside the DPS HUD or on its own, when it shows, the view and the acts (Race mode, Retail) |
+| `modules/Hud.lua` | The HUD's shell: the window, when it opens and fades, and the view the bodies draw; `Hud.Dock`, the frame an attached Race window stands beside, and `Hud.Height`, the height it takes; `Hud.HideWithRace`, the toggle's closing half, which closes an open Race window with the HUD; `Hud.ShowForRace`, the race's open of the HUD under the Race window, and `Hud.OnRaceIdle`, the race's idle edge that lets it go or starts its fade (no fade while a race holds it, W29); `Hud.LiveDamage`, the last live read's player total the Race window draws (and whether the pet has its own source); `Hud.Toggle`, whose open takes the Race window too near a dummy; `Hud.SyncBeat`, the HUD's own beat at `hud.refreshRate` outside a race (one read and the whole redraw), `Hud.RefreshInterval`, the rate both beats run at, and `Hud.OnRaceClock`, the race beat's direct call; `Hud.OnRaceArmed`, the reset to the pre-fight look; the title bar's Race button (the flag, gold under the pointer only) (Retail) |
+| `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked, and `Best.Figure`, the labeled Damage and DPS pair on one row that Best to beat and Best by now share (Race mode, Retail) |
+| `modules/RaceWindow_Board.lua` | The race board's figures the Race window draws: Best by now and the Checkpoints (the best's straight line, the player's figure as *Current* and their mini pace bars), Against your best and Top races on one column grid, `Board.Spread` (the result card's rows and gaps in a taller window) and `Board.ClockColor` (the countdown's and the time bar's green to amber to red) (Race mode, Retail) |
+| `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card, and the layouts that stretch them to the window's size: `States.ResultLayout`, `States.IdleLayout`, `States.RunningGap` (Race mode, Retail) |
+| `modules/RaceWindow.lua` | The Race window's shell: flush beside the DPS HUD (at its height on the left or right) or on its own, its size and resize grip, when it shows, the view and the acts (Race mode, Retail) |
 | `modules/Countdown.lua` | A race's final seconds: the countdown cue, the center-screen numbers, and the buzzer's raid warning (Race mode, Retail) |
 | `modules/BestToast.lua` | The new-best toast: a race's (Retail) or a fight's (both clients) new best on its board |
 | `modules/Sizing.lua` | The one smooth-resize pattern every resizable window uses |
@@ -135,7 +142,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `settings/Lanes.lua` | The Lanes page and the `/ct lane` verb |
 | `settings/Hud.lua` | The DPS HUD page |
 | `settings/History.lua` | The History page |
-| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the late-cast ignore list, the Race window's place (Retail only) |
+| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the late-cast ignore list, the Race window's place and height, and its size rows the grip writes (Retail only) |
 | `settings/Profiles.lua` | The Profiles page |
 
 ## Not shipped

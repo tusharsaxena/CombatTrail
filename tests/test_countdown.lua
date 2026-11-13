@@ -107,6 +107,39 @@ test("countdown: 10..1 show one per second in the last 10 s, then go at the buzz
     assertEqual(S.NS.Race.State(), "stopping")
 end)
 
+-- The three clocks at the race's end (owner, 2026-11-13: the center read 1 while the Race window read
+-- 0:00.0 and the HUD 0:59.9): the Race window's countdown, the DPS HUD's clock and the center number,
+-- each drawn on the race beat from the same GetTime(), agree on every tenth.
+local function clocks(S, t)
+    F.run(S, t)
+    local hud = S.NS.Hud.__ui()
+    local v = S.NS.RaceWindow.View()
+    local left = v.key == "running" and S.NS.Format.Clock(v.timeLeft) or v.key
+    return ("%s %s %s"):format(left, hud.body.live.w.clock:GetText(), tostring(C(S).Shown()))
+end
+
+test("countdown: the center number, the Race window's countdown and the HUD's clock agree at the boundaries", function()
+    if forever() then return end
+    local S = fresh()
+    S.NS.Hud.Show()
+    S.NS.RaceWindow.Show()
+    running(S, 30)
+    to(S, 120.5)
+    assertEqual(clocks(S, 121.95), "0:10.1 0:19.9 nil", "no number before ten seconds left")
+    assertEqual(clocks(S, 122), "0:10.0 0:20.0 10", "10 pops as the countdown reads 0:10.0")
+    assertEqual(clocks(S, 122.95), "0:09.1 0:20.9 10")
+    assertEqual(clocks(S, 123), "0:09.0 0:21.0 9")
+    to(S, 130.75)
+    assertEqual(clocks(S, 130.95), "0:01.1 0:28.9 2")
+    assertEqual(clocks(S, 131), "0:01.0 0:29.0 1", "1 pops as the countdown reads 0:01.0")
+    assertEqual(clocks(S, 131.5), "0:00.5 0:29.5 1")
+    assertEqual(clocks(S, 131.95), "0:00.1 0:29.9 1", "the last tenth: 0:00.1, never 0:00.0 beside a 1")
+    local at = clocks(S, 132)
+    assertTrue(at:match("^(%S+)") ~= "running", "the buzzer: the Race window's stopping body")
+    assertEqual(at:match("%S+ (%S+) "), "0:30.0", "the HUD at the race length")
+    assertEqual(at:match("(%S+)$"), "nil", "and the number gone")
+end)
+
 test("countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu", function()
     if forever() then return end
     local S = fresh()

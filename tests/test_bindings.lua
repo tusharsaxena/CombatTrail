@@ -1,21 +1,53 @@
--- tests/test_bindings.lua — the three key bindings as the player meets them (launcher-§6,
--- options-ui-§20, plan Task 5.2): Bindings.xml in the addon's own category, NS.BINDINGS in file order
+-- tests/test_bindings.lua — the key bindings as the player meets them (launcher-§6, options-ui-§20,
+-- plan Task 5.2): the bindings file the client reads in the addon's own category (Bindings_Mainline.xml
+-- on Retail, with the Retail-only Toggle Race window key after Results; Bindings.xml on WoW Forever,
+-- the three shared keys; the pair in step, a documented deviation), NS.BINDINGS in that file's order
 -- with its labels, the General page's last tab, `Keybindings`, drawn by the library, and each press
--- running the one handler its surface shares (the HUD's toggle, the Results window's toggle and the
--- lanes' toggle), refused while stood down exactly as the verb is. Capture, conflict, combat and
--- settings-window cases are the library's (testing-§8) and are not repeated.
+-- running the one handler its surface shares (the HUD's toggle, the Results window's toggle, the Race
+-- window's toggle and the lanes' toggle), refused while stood down exactly as the verb is. Capture,
+-- conflict, combat and settings-window cases are the library's (testing-§8) and are not repeated.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
-local HUD, RESULTS, LANES =
+local HUD, RESULTS, RACE, LANES =
     "CLICK CombatTrailToggleHud:LeftButton", "CLICK CombatTrailToggleResults:LeftButton",
-    "CLICK CombatTrailToggleLanes:LeftButton"
+    "CLICK CombatTrailToggleRace:LeftButton", "CLICK CombatTrailToggleLanes:LeftButton"
 local LABELS = {
     [HUD]     = "Toggle DPS HUD",
     [RESULTS] = "Toggle Results window",
+    [RACE]    = "Toggle Race window",
     [LANES]   = "Toggle lanes",
 }
+
+local function forever() return T.NS.Compat.IsForever() end
+
+-- What this client binds, in its file's order: Retail's four, WoW Forever's three.
+local function expected()
+    if forever() then return { HUD, RESULTS, LANES } end
+    return { HUD, RESULTS, RACE, LANES }
+end
+
+-- The file this client reads: the flavor-suffixed one on Retail, Bindings.xml on WoW Forever.
+local function bindingsFile()
+    return T.root .. (forever() and "/Bindings.xml" or "/Bindings_Mainline.xml")
+end
+
+-- Every Binding name in `path`, in order (comments stripped).
+local function namesIn(path)
+    local f = assert(io.open(path, "rb"), path)
+    local body = f:read("*a"):gsub("<!%-%-.-%-%->", "")
+    f:close()
+    local names = {}
+    for name in body:gmatch('<Binding%s+name="([^"]+)"') do names[#names + 1] = name end
+    return names
+end
+
+local function buttons()
+    local list = { "CombatTrailToggleHud", "CombatTrailToggleResults", "CombatTrailToggleLanes" }
+    if not forever() then table.insert(list, 3, "CombatTrailToggleRace") end
+    return list
+end
 
 --- The General page's ctx, drawn on `tab` (nil: its first): the strip's tab keys, the Keybindings
 --- tab's row records when that tab drew.
@@ -51,26 +83,57 @@ end
 
 local function text(M) return table.concat(M.__printed(), " | ") end
 
-test("bindings: NS.BINDINGS is Bindings.xml's order, Show window first, each with a tooltip", function()
+test("bindings: NS.BINDINGS is the bindings file's order, Show window first, each with a tooltip", function()
     local NS = T.NS
-    assertEqual(#NS.BINDINGS, 3)
-    for i, command in ipairs({ HUD, RESULTS, LANES }) do
+    local want = expected()
+    assertEqual(#NS.BINDINGS, #want)
+    for i, command in ipairs(want) do
         assertEqual(NS.BINDINGS[i].command, command)
         assertEqual(type(NS.BINDINGS[i].tooltip), "string", command)
         assertTrue(#NS.BINDINGS[i].tooltip > 0, command .. " tooltip is empty")
     end
 end)
 
-test("bindings: Bindings.xml is the addon's own category, no header, no default, labeled", function()
-    local list = T.assertBindingsXml(T.root .. "/Bindings.xml", {
+test("bindings: this client's bindings file is the addon's own category, no header, no default, labeled", function()
+    local list = T.assertBindingsXml(bindingsFile(), {
         category = "BINDING_HEADER_COMBATTRAIL",
         commands = T.NS.BINDINGS,
         brand    = T.NS.BRAND,
         globals  = T.mocks._G,
         labels   = LABELS,
     })
-    assertEqual(#list, 3)
+    assertEqual(#list, #expected())
     assertEqual(T.mocks._G.BINDING_HEADER_COMBATTRAIL, "Ka0s Combat Trail")
+end)
+
+test("bindings: the pair in step: Bindings_Mainline.xml is Bindings.xml with the Race key after Results", function()
+    local shared, mainline = namesIn(T.root .. "/Bindings.xml"), namesIn(T.root .. "/Bindings_Mainline.xml")
+    assertEqual(table.concat(shared, ","), table.concat({ HUD, RESULTS, LANES }, ","), "Bindings.xml: the shared three")
+    assertEqual(table.concat(mainline, ","), table.concat({ HUD, RESULTS, RACE, LANES }, ","),
+        "Bindings_Mainline.xml: the shared three, the Race key after Results")
+end)
+
+test("bindings: on WoW Forever no Race key: no button, no row, no label", function()
+    if not forever() then return end
+    local inst = T.load()
+    assertTrue(inst.mocks.__frameByName.CombatTrailToggleRace == nil, "the Race key's button was built")
+    for _, b in ipairs(inst.NS.BINDINGS) do assertFalse(b.command == RACE, "a Race key row") end
+    assertTrue(rawget(inst.mocks._G, "BINDING_NAME_" .. RACE) == nil, "a Race key label")
+end)
+
+test("bindings: the Race key runs /ct race toggle's handler (Retail)", function()
+    if forever() then return end
+    local inst = T.load()
+    local NS, M = inst.NS, inst.mocks
+    local calls = 0
+    local real = NS.ToggleRaceWindow
+    NS.ToggleRaceWindow = function(...) calls = calls + 1; return real(...) end
+    M.__frameByName.CombatTrailToggleRace:__fire("OnClick", "LeftButton")
+    assertEqual(calls, 1, "the press ran the shared handler once")
+    assertTrue(NS.RaceWindow.IsShown(), "the Race window opened")
+    M.__frameByName.CombatTrailToggleRace:__fire("OnClick", "LeftButton")
+    NS.ToggleRaceWindow = real
+    assertFalse(NS.RaceWindow.IsShown(), "and closed")
 end)
 
 test("bindings: the General page ends in the Keybindings tab, after Master controls", function()
@@ -122,7 +185,7 @@ test("bindings: each button is plain, named, hidden and down-edge only", functio
         end
     end })
     local M = inst.mocks
-    for _, name in ipairs({ "CombatTrailToggleHud", "CombatTrailToggleResults", "CombatTrailToggleLanes" }) do
+    for _, name in ipairs(buttons()) do
         local b = M.__frameByName[name]
         assertTrue(b ~= nil, name .. " was not created")
         assertFalse(b:IsShown(), name .. " is shown")
@@ -177,7 +240,7 @@ test("bindings: stood down, each key answers the refusal line and changes nothin
     local NS, M = inst.NS, inst.mocks
     NS.Slash:OnSlash("disable")
     local refusal = NS.StoodDownRefusal()
-    for _, name in ipairs({ "CombatTrailToggleHud", "CombatTrailToggleResults", "CombatTrailToggleLanes" }) do
+    for _, name in ipairs(buttons()) do
         M.__resetPrinted()
         M.__frameByName[name]:__fire("OnClick", "LeftButton")
         assertEqual(#M.__printed(), 1, name .. ": " .. text(M))

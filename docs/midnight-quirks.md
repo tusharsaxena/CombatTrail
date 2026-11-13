@@ -372,6 +372,20 @@ abbreviated: 30190.47 reads "30190"); a client formatter that raises on a secret
 session. Totals stay on `Format.Number` (integers, where AbbreviateNumbers draws no tail). Retail is
 not measured. *Source:* this repo, `modules/Format.lua`.
 
+**On Retail the live figures lose their decimals: "24M" and a whole "363477".** *Client:* Retail.
+*Measured:* the owner's screenshot, 2026-11-13: mid-fight the HUD's live Damage read `24M` (the plain
+`AbbreviateNumbers` table, which drops the decimals from 10M up) and its live DPS `363477`
+(`FloorToNearestString`), so neither client formatter served a secret there either. After combat
+the same fight read `24.39M` and `364.0K` (plain values, abbreviated in Lua). Retail has
+`CreateAbbreviateConfig` (the kit's live global list); the assumption, not yet confirmed in game, is
+that Retail's `AbbreviateNumbers` takes the config it builds as a second argument. *Do:* `modules/Format.lua` builds a config from the ladder once,
+trusts it only if `AbbreviateNumbers(value, config)` renders the plain checks exactly (2763000 as
+"2.76M", 30190.4761904 as "30.1K", 69.5625 as "69"), and then sends secret totals and secret rates to it
+ahead of the plain `AbbreviateNumbers` and `FloorToNearestString`. A client that ignores the config
+fails the first check and keeps today's path. Whether it serves in combat is *not measured*: `/ct debug`
+names the path, and `/ct probe`'s formatter trial has a line for it. *Source:* this repo,
+`modules/Format.lua`.
+
 **A color curve cannot evaluate a secret from addon code.** *Client:* Forever (1.60.1, build 70888).
 *Measured:* `/ct probe`'s color curve section, 2026-11-11: `C_CurveUtil` (CreateColorCurve,
 CreateCurve, EvaluateColorFromBoolean, EvaluateColorValueFromBoolean, EvaluateGameCurve),
@@ -408,3 +422,20 @@ Task A5.
 *Measured:* not measured in game; follows from the GUID being unreadable in combat. *Cost:* a cast
 interrupted after an instant went off between its START and its end is not marked. *Do:* never key
 or compare a secret GUID; accept the lost mark (modules/LaneCasts.lua header).
+
+**The Race window's live damage is secret in combat, so it is held in memory, anchored to nothing, and its bars stand on plain frames.**
+*Client:* Retail (Race mode is Retail only). *Measured:* not measured in game; follows from the two
+secret-value rules above (a stored secret comes back `nil`; a frame handed one has secret geometry).
+*Cost:* a checkpoint reading written to SavedVariables would come back empty after a `/reload`, and a
+figure placed off a label holding a secret would inherit its secret geometry. *Do:* the player's damage
+beside Best by now and in each Checkpoint is the DPS HUD's last read (`Hud.LiveDamage`), set as a
+label's text through `NS.Format.Number` and as the value of a mini pace bar (`StatusBar:SetValue`, the
+range plain: `NS.HudBest.Bounds` around the best's figure there), and never compared or computed on; each Checkpoint's reading
+is kept in `modules/RaceWindow.lua`'s memory for that race alone and never saved, so a checkpoint
+passed unseen before a `/reload` resume shows a dash; Best by now's *Current* figure stands a fixed
+`NS.RaceWindowBest.LABEL_W` (44px) after its label, its two anchors both on the card's edges so it
+stays inside its half (`Best.Figure`), never anchored to the best's figure, and the checkpoint cell's
+lines each anchor to the cell; and a bar handed the figure has secret geometry, so nothing is anchored
+to one: Best by now's bar stands on the body's content frame and each checkpoint's on its cell.
+*Source:* this repo, `modules/RaceWindow_Board.lua` and `modules/RaceWindow.lua` headers (race window
+redesign plan W13, and the mini pace bars of 2026-11-13).

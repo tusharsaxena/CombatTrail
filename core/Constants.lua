@@ -55,7 +55,8 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 -- THE FIGHT'S TIMING (spec §5, modules/Fight.lua). GRACE: a re-entry into combat this many seconds
 -- after the combat end (Feign Death, Vanish, Shadowmeld) carries the same fight on. SETTLE: the quiet,
 -- in seconds without a damage update for the fight's sessions, before its after-combat read. TICK:
--- FIGHT_TICK's period in combat (4 Hz), which the HUD redraws on.
+-- FIGHT_TICK's period in combat (4 Hz): the fight's own rhythm (the chart's slices, the unbound scan);
+-- the HUD reads and redraws on its own beat (`hud.refreshRate`, modules/Hud.lua).
 C.FIGHT = { GRACE = 4, SETTLE = 2, TICK = 0.25 }
 
 C.LAYERS = {

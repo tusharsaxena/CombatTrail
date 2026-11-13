@@ -89,7 +89,7 @@ test("sim race: race-newbest arms, races on its clock, buzzes, reads after the q
     assertEqual(current(S), "running", "the first hit starts the race clock")
     local v = NS.RaceWindow.View()
     assertTrue(math.abs(v.elapsed - 5) < 0.11, "the race clock: " .. tostring(v.elapsed))
-    assertTrue(v.pace ~= nil, "paced on its race board")
+    assertTrue(v.checkpoints ~= nil and v.bestView.record ~= nil, "its race board's best, from the sample history")
     assertEqual(NS.Hud.State(), "live", "the HUD's live view")
     assertTrue(NS.Hud.View().fight.race ~= nil)
     assertTrue(#NS.LaneRender.__icons("player") > 0, "the lanes play")
@@ -122,6 +122,38 @@ test("sim race: race-newbest arms, races on its clock, buzzes, reads after the q
     NS.Preview.Stop()
     assertFalse(NS.RaceSample.On())
     assertFalse(NS.RaceWindow.IsShown(), "the window the sim opened closes")
+end)
+
+test("sim race: the running body's Current and Checkpoints come from the sample's plan, never the meter", function()
+    if forever() then return end
+    local S = fresh()
+    local NS = S.NS
+    local reads = 0
+    local read = NS.Meter.ReadLive
+    NS.Meter.ReadLive = function(...) reads = reads + 1; return read(...) end
+    local t0 = sim(S, "race-newbest")
+    playTo(S, t0, 5)
+    assertEqual(current(S), "running")
+    local DASH = "\226\128\148"
+    local v = NS.RaceWindow.View()
+    assertTrue(v.hasYou, "the HUD's sample read")
+    local w = NS.RaceWindow.__ui().body.running.w
+    local early = w.now.you:GetText()
+    assertTrue(early ~= DASH and early ~= "", "a plausible figure: " .. tostring(early))
+    assertEqual(w.now.youLabel:GetText(), "Current")
+    assertEqual(w.now.pace.behind:GetValue(), v.you, "Best by now's mini bar: the sample's reading")
+    assertEqual(w.cps.cells[1].you:GetText(), DASH, "0:07.5 not reached")
+    assertFalse(w.cps.cells[1].pace.bar:IsShown(), "and no bar yet")
+    playTo(S, t0, 8)
+    local kept = w.cps.cells[1].you:GetText()
+    assertTrue(kept ~= DASH, "captured at its crossing")
+    assertTrue(w.cps.cells[1].pace.bar:IsShown(), "its mini bar with it")
+    playTo(S, t0, 13)
+    assertEqual(w.cps.cells[1].you:GetText(), kept, "held")
+    assertTrue(w.now.you:GetText() ~= kept, "Current moves on with the plan")
+    assertEqual(w.cps.cells[2].you:GetText(), DASH)
+    assertEqual(reads, 0, "no meter read for a sample")
+    NS.Preview.Stop()
 end)
 
 test("sim race: race-behind reads behind the best on its board: no new best, no toast", function()
@@ -188,8 +220,8 @@ test("sim race: race-flagged's late cast flags the card; race-shared has no pace
     t0 = sim(S, "race-shared")
     playTo(S, t0, 5)
     local v = NS.RaceWindow.View()
-    assertNil(v.pace, "no pace bar on a shared session")
-    assertEqual(v.paceWhy, "not paced: shared session")
+    assertNil(v.pace, "no pace bar on the Race window: the DPS HUD's alone")
+    assertEqual(v.chips[2] and v.chips[2].text, "Shared session", "the shared session's chip stays")
     assertNil(NS.Hud.View().pace, "nor on the HUD")
     NS.Preview.Stop()
 end)

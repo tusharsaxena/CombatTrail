@@ -13,33 +13,89 @@ local _, NS = ...
 -- Appearance stamp (HudAppearance.Changed refreshes this window too). It has no styling rows of its own.
 --
 -- WHERE IT STANDS. Attached (`raceWindow.attached`, on by default) it is anchored beside the DPS HUD's
--- frame on `raceWindow.side` (RIGHT by default; LEFT, TOP, BOTTOM), DOCK_GAP apart, its top or left
--- edge level with the HUD's, so it moves with the HUD; it is never the HUD's child, so each window
--- shows and fades on its own rules. A HUD that is hidden, or was never shown, is still built and
+-- frame on `raceWindow.side` (RIGHT by default; LEFT, TOP, BOTTOM), flush against it (DOCK_GAP 0,
+-- race window redesign plan Task W4), its top or left edge level with the HUD's, so it moves with the
+-- HUD; it is never the HUD's child, so each window shows and fades on its own rules. Both take
+-- `hud.scale`, so equal heights line up. A HUD that is hidden, or was never shown, is still built and
 -- placed where it would stand (Hud.Dock), so the window never falls to 0,0 (Review focus 4). Detached,
 -- it stands at `raceWindow.position`, written by its title bar's drag; Detach keeps it where it stood.
 -- The lock is Master controls' Lock frame (`general.locked`): no drag while locked, and none while
 -- attached (it follows the HUD). Master controls' Reset position puts the detached place back.
+--
+-- ITS HEIGHT (Task W4, ruling O3). Its least, RW.Height(): the chrome and the content the tallest body
+-- needs. Attached LEFT or RIGHT with `raceWindow.matchHud` on (the default), it takes the DPS HUD's
+-- height instead (Hud.Height(): its fixed or grown height, or the grip's while held), never less than
+-- its least; the HUD tells it each time that height changes (RW.OnHudResized: the bars, auto-grow, the
+-- grip, the title bar or footer, a layout part), so the two stay level. TOP, BOTTOM, detached or the
+-- row off: `raceWindow.height`, never less than its least (the default 0 is its least). The bodies
+-- fill the content frame, so their bottom buttons stay pinned to the window's bottom whatever its
+-- height, and the view carries the content's height (`height`) and width (`width`).
+--
+-- ITS WIDTH AND THE GRIP (owner, 2026-11-13). Its width is `raceWindow.width` (WIDTH, the least, to
+-- MAX_WIDTH). The library's grip (modules/Sizing.lua, as the DPS HUD's) shows only while unlocked
+-- (`general.locked` off). Matched to the HUD's height it drags the width alone (its bounds hold the
+-- height); TOP, BOTTOM, detached or `raceWindow.matchHud` off it drags both, down to the least height.
+-- While it is held the body lays out at the dragged size; the release stores the width, and the
+-- height when it is not matched (both rows skipRender: the grip is their control, the Race window
+-- tab's Defaults puts them back), keeps a detached window's top left where it stood, and redraws.
 --
 -- WHEN IT SHOWS (DPS Race's rules, spec §4.1). Never with Race mode off (NS.RaceMode.On()), stood down
 -- or on WoW Forever, where nothing here loads. Opened by the player (`/ct race show|toggle`, through
 -- NS.SetRaceWindowShown), by auto-show near a training dummy (modules/AutoArm.lua's five hooks:
 -- ShowNearDummy, HideAwayFromDummy, ShownNearDummy, Closes, ArmLength), by an arm, by a resumed race
 -- and by a result. A window the addon opened for a race closes when that race goes back to idle,
--- unless a dummy is near; one the player opened stays. The player's close counts (Closes), so
--- auto-show leaves the window shut for the rest of that dummy session; closing a result card
--- dismisses it (Race.Cancel), the saved race staying in the history.
+-- unless a dummy is near; one the player opened stays. THE PLAYER'S OPEN IN A DUMMY SESSION: a window
+-- the player opens while auto-show's dummy session is live (AutoArm.InSession) is tied to that
+-- session as auto-show's own opening is, so walking away closes it and the next session opens it
+-- again; one that was already up before the session began stays the player's. The player's close
+-- counts (Closes), so auto-show leaves the window shut for the rest of that dummy session; closing a
+-- result card dismisses it (Race.Cancel), the saved race staying in the history. Attach and Detach
+-- move the window only: neither changes who opened it. The DPS HUD's Race control (Task W2) toggles
+-- it as `/ct race toggle` does, and the HUD's own toggle closes it with the HUD (Hud.HideWithRace).
 --
--- WHAT RUNS. Bus receivers (RACE_STATE_CHANGED, RACE_RESULT, FIGHT_TICK, FIGHTS_CHANGED,
+-- AN EXTENSION OF THE DPS HUD (owner, 2026-11-13; race window redesign plan W29, decisions D1 and
+-- D3). The window is up only while the HUD is up: RW.IsShown asks Hud.IsShown, and the HUD's every
+-- Refresh ends by calling RW.FollowHud, so a HUD that hides for any reason (its fade, `hud.overCard`'s
+-- close, its close control, the toggle, a stand-down) takes this window down with it. Hiding with the
+-- HUD is not the player closing this window: `wanted` stands, and the window comes back when the HUD
+-- does. Only the player's close of this window (its close control, `/ct race hide|toggle`, Escape on
+-- it) and the auto-close rules (a race's idle edge, a dummy session's end) let `wanted` go. The other
+-- way round, every open path here opens the HUD first when it is closed (openHud): the player's opens
+-- (Show, the toggle, the stand-up and Race mode back on for a window the player opened) through
+-- Hud.Show, the race's (an arm, a resume, a result, a sample) through Hud.ShowForRace, and a dummy
+-- session's through Hud.ShowNearDummy, so each can close by its own rule later. Escape closes both
+-- windows, each as the player's close (modules/Hud.lua's header).
+--
+-- WHAT RUNS. Bus receivers (RACE_STATE_CHANGED, RACE_RESULT, RACE_CLOCK, FIGHT_ENDED, FIGHTS_CHANGED,
 -- SETTINGS_CHANGED) on its own target; while shown and the race idle or armed, the target, the regen
 -- edges and the spec change on its own AceEvent target (the target card, Arm's refusal, the best's
--- board); while shown and the race running or stopping, one repeating AceTimer at TICK (10 Hz) for the
--- race clock and the stop figures, timed into the perf harness's `raceWindow` bucket, and each
--- FIGHT_TICK of the race's fight (4 Hz, combat only) reads NS.Meter.ReadLive once for the pace bar.
--- Nothing else polls and no OnUpdate is set. The stand-down drops every registration and the timer.
+-- board); while shown and the race running or stopping, each RACE_CLOCK (the race beat,
+-- modules/RaceClock.lua: `hud.refreshRate`, 10 a second by default, Task W5; the beat has the DPS HUD
+-- read the meter and redraw just before it sends RACE_CLOCK) redraws the race clock, the time bar,
+-- Best by now with Current, the mini pace bars, the Checkpoints and the stop figures, timed into the
+-- perf harness's `raceWindow` bucket. It has no timer of its own and reads no meter: the player's
+-- damage it draws, as text and on the mini pace bars, is the DPS HUD's read of that same beat
+-- (Hud.LiveDamage);
+-- nothing else polls and no OnUpdate is set. The stand-down drops every
+-- registration (and the beat with RaceClock's Suspend).
 --
--- NO DECISION FROM A METER VALUE. The pace bar's total is the only live value, handed opaque to the
--- bar; the clocks are Race's GetTime() figures, the result card's the stored record's.
+-- NO DECISION FROM A METER VALUE. The clocks and the time bar are Race's GetTime() figures; Best to
+-- beat, Best by now and the Checkpoints are the race board's best and its straight line
+-- (NS.HudBest.RaceCurve); the result card, Against your best and Top races are stored records' (Tasks
+-- W6 and W7). The one live figure, the player's damage beside Best by now and in each Checkpoint
+-- (owner, 2026-11-13), is the DPS HUD's last read of the race's fight (Hud.LiveDamage: a sample's is
+-- its plan's), opaque: a secret in combat, handed to a label through NS.Format.Number and never
+-- compared, computed on, keyed or tested. A checkpoint keeps the reading of the beat the race clock
+-- passed it, held in this file's memory for that race alone (never saved), with a plain flag beside
+-- it saying whether there is one. The last checkpoint, at the race length, is passed only at the
+-- buzzer, when the race has left running: the stopping view takes it there (the board at the race's
+-- end: the length, or an early end's time), with the HUD's last read, so all four show.
+--
+-- ONE RACE CLOCK (owner, 2026-11-13). The running view's elapsed time and time left are
+-- NS.Format.RaceClock's: one count of tenths, the elapsed truncated as the DPS HUD's clock is and the
+-- time left the rest of the length (rounded up), so the countdown, the time elapsed, the HUD's clock
+-- and the center countdown (modules/Countdown.lua: whole seconds left, rounded up) agree: 0:00.0 only
+-- at the buzzer, and the two clocks always add up to the length.
 --
 -- A RESULT CARD WHOSE RACE IS DELETED (its Delete, or a delete in the Results window): the window goes
 -- back to the Arm Race screen at that race's length, as New Race does. One behavior for both, since the
@@ -47,8 +103,8 @@ local _, NS = ...
 --
 -- A SAMPLE RACE (test mode's `/ct test race`, the sim's race scenarios, plan Task E1): while one is on
 -- (NS.RaceSample.On()), every read and act below goes to it instead of NS.Race (src()), so its bodies
--- are drawn by the same path; its live figures come from its plan (MockFights.LiveAt), its best from the
--- sample history (Results_Source). ShowSample and EndSample open and let go a window the preview opened.
+-- are drawn by the same path; its best, its Against your best and its Top races come from the sample
+-- history (Results_Source, and Bests' sample-aware Before and Ranked). ShowSample and EndSample open and let go a window the preview opened.
 --
 -- RETAIL ONLY (clients-§4): nothing here loads on WoW Forever, so NS.RaceWindow is absent there.
 
@@ -62,9 +118,10 @@ local Perf = NS.Perf
 local Secrets = NS.Secrets
 
 RW.FRAME_NAME = "CombatTrailRaceWindow"
-RW.WIDTH = 260        -- DPS Race's window width, the bodies' layout constants are tuned to it
-RW.TICK = 0.1         -- the race clock's redraw while racing (s)
-RW.DOCK_GAP = 4       -- the gap to the DPS HUD while attached
+RW.WIDTH = 260        -- DPS Race's window width, the least (the bodies' layout constants are tuned to it)
+RW.MAX_WIDTH = 600    -- the grip's and `raceWindow.width`'s, the DPS HUD's own MAX_WIDTH
+RW.MAX_HEIGHT = 1000  -- the grip's and `raceWindow.height`'s
+RW.DOCK_GAP = 0       -- flush against the DPS HUD while attached (Task W4)
 RW.SIDES = { "RIGHT", "LEFT", "TOP", "BOTTOM" }
 
 local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 12
@@ -87,9 +144,8 @@ local closes = 0                -- the player's closes, for auto-show's manual-c
 local locked = false            -- general.locked
 local hiding = false            -- the addon is hiding the frame itself
 local pick = {}                 -- the idle body's pick: { length, editing }
-local live                      -- the race's fight's last NS.Meter.ReadLive (opaque)
-local paceBest = {}             -- { race, record } : the race board's best the running race paces on
-local ticker                    -- the race clock's repeating AceTimer
+local raceBest = {}             -- { race, record } : the race board's best the running race is after
+local held = {}                 -- the running race's checkpoint readings (runningYou), memory only
 local events                    -- this module's AceEvent target
 local listening = false         -- the idle events are registered
 local anchor                    -- the last place applied: { point, relativeTo, relPoint, x, y }
@@ -100,6 +156,10 @@ local function debug(fmt, ...)
 end
 
 local function isDown() return NS.IsStoodDown ~= nil and NS.IsStoodDown() end
+local function hudShown()
+    local H = NS.Hud
+    return H ~= nil and H.IsShown ~= nil and H.IsShown() == true
+end
 local function setting(path) return NS.Hud.Setting(path) end
 local function S() return NS.Race.STATE end
 
@@ -110,6 +170,11 @@ local function src()
     return NS.Race
 end
 local function sampled() return src() ~= NS.Race end
+
+local function racing()
+    local st = src().State()
+    return st == S().RUNNING or st == S().STOPPING
+end
 
 local function shipped(path)
     local node = NS.defaults and NS.defaults.profile
@@ -138,6 +203,20 @@ local function position()
 end
 
 local function windowShown() return ui ~= nil and ui.frame:IsShown() == true end
+
+local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
+
+-- Whether the grip is held now (the size it tracked is the one to lay out from).
+local function sizing()
+    return ui ~= nil and ui.dragW ~= nil and NS.Sizing.IsSizing(ui.frame)
+end
+
+-- Whether the height is the DPS HUD's: attached LEFT or RIGHT with `raceWindow.matchHud` on (Task W4).
+local function matched()
+    if not attached() or setting("raceWindow.matchHud") == false then return false end
+    local s = side()
+    return s == "LEFT" or s == "RIGHT"
+end
 
 local function applyPlacement()
     local f = ui.frame
@@ -226,7 +305,9 @@ local function buildFooter(f)
     ui.footRight:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 5)
 end
 
-local onHide
+local onHide, render, resized, trackSize
+
+local function canResize() return not locked end
 
 local function ensureWindow()
     if ui then return ui end
@@ -245,6 +326,15 @@ local function ensureWindow()
     f:SetScript("OnHide", function() onHide() end)
     -- Escape closes it with the standard close stack (standalone-windows).
     if type(UISpecialFrames) == "table" then table.insert(UISpecialFrames, RW.FRAME_NAME) end
+    -- The grip (modules/Sizing.lua): while it is held each size change lays the body out at the
+    -- dragged size; the release stores it (resized). A size change the grip did not start is this
+    -- window's own SetSize, already laid out, so `redraw` has nothing to do.
+    NS.Sizing.MakeResizable(f, {
+        minWidth = RW.WIDTH, minHeight = RW.Height(),
+        canResize = function() return canResize() end,
+        size = function(w, h) trackSize(w, h) end, layout = function() render() end, redraw = function() end,
+        done = function(w, h) resized(w, h) end,
+    })
     debug("race window built")
     return ui
 end
@@ -286,10 +376,54 @@ local function applyControls()
     end
 end
 
---- The window's height: the chrome and the content every body fits in.
+--- The window's least height: the chrome and the content every body fits in.
 --- @return number
 function RW.Height()
     return contentTop() + contentBottom() + NS.RaceWindowStates.CONTENT_H
+end
+
+--- The height the window has now: matched to the DPS HUD's (attached LEFT or RIGHT,
+--- `raceWindow.matchHud` on), else the grip's while it is held, else `raceWindow.height`; never less
+--- than its least (RW.Height).
+--- @return number
+function RW.WindowHeight()
+    local own = RW.Height()
+    if matched() then
+        local h = NS.Hud.Height and Secrets.PlainNumber(NS.Hud.Height())
+        return h and math.max(own, h) or own
+    end
+    local h = sizing() and ui.dragH or tonumber(setting("raceWindow.height"))
+    return clamp(h or own, own, math.max(own, RW.MAX_HEIGHT))
+end
+
+--- The width the window has now: the grip's while it is held, else `raceWindow.width`, in range.
+--- @return number
+function RW.Width()
+    local w = sizing() and ui.dragW or tonumber(setting("raceWindow.width"))
+    return clamp(w or RW.WIDTH, RW.WIDTH, RW.MAX_WIDTH)
+end
+
+-- Every size change: the size, in range, that a drag lays out from (plain numbers only). Matched,
+-- the height is the HUD's and the grip's bounds hold it.
+function trackSize(w, h)
+    w, h = Secrets.PlainNumber(w), Secrets.PlainNumber(h)
+    if w then ui.dragW = clamp(w, RW.WIDTH, RW.MAX_WIDTH) end
+    if h then ui.dragH = clamp(h, RW.Height(), math.max(RW.Height(), RW.MAX_HEIGHT)) end
+end
+
+-- The grip shown while it may size the window (unlocked), and its bounds: matched to the HUD's
+-- height, the width alone; else both, from the least size.
+local function applyGrip()
+    local f = ui.frame
+    if f.resizeGrip then f.resizeGrip:SetShown(canResize()) end
+    if type(f.SetResizeBounds) ~= "function" then return end
+    local own = RW.Height()
+    if matched() then
+        local h = RW.WindowHeight()
+        f:SetResizeBounds(RW.WIDTH, h, RW.MAX_WIDTH, h)
+    else
+        f:SetResizeBounds(RW.WIDTH, own, RW.MAX_WIDTH, math.max(own, RW.MAX_HEIGHT))
+    end
 end
 
 -- ── the view ────────────────────────────────────────────────────────────────────────────────────
@@ -324,6 +458,15 @@ local function targetNow()
     return type(snap) == "table" and snap.target or nil
 end
 
+-- Top races under Your best (Task W7): the top races on the board Your best is read from, the store's.
+local function idleBoard(v)
+    local bv = v.best
+    if bv.state ~= "best" then return end
+    local probe = { who = bv.who, race = { kind = bv.kind, length = bv.length } }
+    v.board = NS.RaceWindowBoard.Rows(nil, NS.Bests.Ranked(probe, NS.Recorder.List()))
+    v.boardNote = NS.RaceWindowBoard.Note(bv.kind, bv.length)
+end
+
 local function idleView(v)
     v.target = targetNow()
     v.length = currentLength()
@@ -331,6 +474,7 @@ local function idleView(v)
     v.blocker, v.detail = armBlocker()
     v.warning = targetWarning(v.target)
     v.best = NS.RaceWindowBest.View(v.target, v.length)
+    idleBoard(v)
 end
 
 local function fightTarget(fight)
@@ -343,45 +487,89 @@ local function armedView(v)
     v.target = fightTarget(src().Fight()) or targetNow()
 end
 
--- The race board's best the race paces on, read once per race: its fight's character and spec, the
--- dummy's kind, the race length.
+-- The race board's best the race is after, read once per race: its fight's character and spec, the
+-- dummy's kind, the race length (a sample race's from the sample history).
 local function bestFor(race)
-    if paceBest.race == race then return paceBest.record end
+    if raceBest.race == race then return raceBest.record end
     local fight = src().Fight()
     local snap = type(fight) == "table" and fight.snapshot or {}
     local target = fightTarget(fight) or {}
     local probe = { who = snap.who, identity = { targetCreatureID = target.creatureID },
                     race = { kind = race.kind, length = race.length } }
     local best = race.sample and NS.ResultsSource.BestFor or NS.Bests.For
-    paceBest = { race = race, record = best(probe) }
-    return paceBest.record
+    raceBest = { race = race, record = best(probe), who = snap.who }
+    return raceBest.record
 end
 
--- The running pace bar: the live total against the race board's best at the race clock. None on a
--- shared session (its live total holds damage from before the arm) or with no best.
-local function runningPace(race, elapsed)
-    if type(race.flags) == "table" and race.flags.sharedSession then return nil, L["not paced: shared session"] end
-    -- The best's straight line (spec §4.4), the one the DPS HUD paces this race on too.
-    local line = NS.HudBest.RaceCurve(bestFor(race))
-    if not line then return nil, L["no best yet"] end
-    return NS.HudBest.LiveView(line, elapsed, live), nil
+-- Best to beat, Best by now and the Checkpoints (Task W6): the best's card, then its straight line
+-- (spec §4.4, the one the DPS HUD paces this race on) at the race clock. Stored numbers and the clock
+-- only, so a shared session's race shows them too.
+local function runningBest(v, race, elapsed)
+    local record = bestFor(race)
+    v.bestView = { state = record and "best" or "empty", record = record, who = raceBest.who,
+                   kind = race.kind, length = race.length }
+    local line = NS.HudBest.RaceCurve(record)
+    if not line then return nil end
+    v.byNow = NS.RaceWindowBoard.ByNow(line, elapsed)
+    v.checkpoints = NS.RaceWindowBoard.Checkpoints(line, elapsed)
+    return line
 end
 
--- A sample race's live read: its plan's, at the race clock (plain, where a real one is opaque).
-local function sampleLive(elapsed)
-    local fight = src().Fight()
-    if type(fight) ~= "table" or not fight.plan then return end
-    live = NS.MockFights.LiveAt(fight.plan, (NS.MockFights.FIRST_HIT or 0) + (elapsed or 0))
+-- The best's line for a player-only reading: its player share, when the record stored the player's
+-- own damage apart from the pet's; nil when it did not (a share made up from the merged total would
+-- pace the player's alone against the pet's damage too, so the bars keep the best's merged figure).
+local function playerLine(line)
+    local record = raceBest.record
+    local d = type(record) == "table" and record.damage or nil
+    if not (line and type(d) == "table" and type(d.player) == "number") then return nil end
+    return line
+end
+
+-- The player's damage beside the best's: the DPS HUD's last read of the race's fight (opaque), and
+-- per checkpoint the reading of the beat the clock passed it. `has` and `taken` are plain flags; the
+-- readings are never looked at. A checkpoint already behind the clock when this race is first drawn
+-- (a resumed race) keeps a dash: its moment went by unseen. THE PET (owner, 2026-11-13): where the
+-- pet has a live source of its own (the HUD's read carries one, Retail's pet classes), the reading is
+-- the player's alone, so the pace bars take the best's player-only figure (`paceRef`, plain: the
+-- line's playerAt, as the DPS HUD's HudBest.PaceAt does with playerOnly); a checkpoint keeps the
+-- flag of the read it took. No player-only figure on the best's record: no `paceRef`.
+-- The HUD's last read of the race's fight: its player total (opaque), and two plain flags.
+local function lastRead()
+    local Hud = NS.Hud
+    if not (Hud and Hud.LiveDamage) then return nil, false, false end
+    local total, has, petOwn = Hud.LiveDamage(src().Fight())
+    return total, has == true, petOwn == true
+end
+
+-- Checkpoint `i` as the clock passes it: the reading of this beat kept, or a dash for a moment that
+-- went by unseen.
+local function take(i, total, has, petOwn)
+    held.taken[i], held.has[i] = true, has and held.seen
+    if has and held.seen then held.value[i], held.pet[i] = total, petOwn end
+end
+
+local function runningYou(v, race, line, elapsed)
+    if held.race ~= race then held = { race = race, taken = {}, has = {}, value = {}, pet = {}, seen = false } end
+    local total, has, petOwn = lastRead()
+    v.you, v.hasYou = total, has
+    local split = playerLine(line)
+    v.paceRef = (split and petOwn) and split:playerAt(elapsed or 0) or nil
+    for i, cp in ipairs(v.checkpoints or {}) do
+        if cp.passed and not held.taken[i] and (has or not held.seen) then take(i, total, has, petOwn) end
+        cp.you, cp.hasYou = held.value[i], held.has[i] == true
+        cp.paceRef = (split and held.pet[i]) and split:playerAt(cp.t) or nil
+    end
+    held.seen = true
 end
 
 local function runningView(v)
     local R, race = src(), v.race
-    local elapsed = R.Elapsed()
-    if elapsed and race.length then elapsed = math.min(elapsed, race.length) end
-    if race.sample then sampleLive(elapsed) end
-    v.elapsed, v.timeLeft = elapsed, R.TimeLeft()
+    local elapsed, left = R.Elapsed(), R.TimeLeft()
+    if elapsed and race.length then elapsed, left = NS.Format.RaceClock(elapsed, race.length) end
+    v.elapsed, v.timeLeft, v.length = elapsed, left, race.length
     v.clockMode = setting("race.clock")
-    v.pace, v.paceWhy = runningPace(race, elapsed or 0)
+    local line = runningBest(v, race, elapsed or 0)
+    runningYou(v, race, line, elapsed)
     v.chips = NS.RaceWindowStates.RunningChips(race)
 end
 
@@ -394,24 +582,47 @@ local function quietFor()
     return elapsed - last
 end
 
+-- The race the waiting phase was reached for: once there it stays (the owner, 2026-11-13: a DoT
+-- still ticking after the buzzer flipped Stop! and waiting, the hint box blinking in and out, at each
+-- tick that reset the quiet time).
+local heldRace
+
 --- STOPPING is shown in two phases: Stop! while damage may still land, waiting once the tail went
---- quiet (for combat to end, or for the read); a race that ended before its buzzer waits for its read.
-local function stopPhase()
-    if src().SinceBuzzer() == nil then return "waiting" end
-    if quietFor() >= NS.RaceScoring.QUIET_BEFORE_READ then return "waiting" end
-    return "stop"
+--- quiet (for combat to end, or for the read), or once combat has held past `race.hintDelay` after the
+--- buzzer with damage still landing; a race that ended before its buzzer waits for its read. Waiting
+--- is never left for Stop! within one race.
+local function stopPhase(race, fighting)
+    if race ~= nil and race == heldRace then return "waiting" end
+    local R = src()
+    local since = R.SinceBuzzer()
+    local delay = tonumber(setting("race.hintDelay")) or 15
+    local waiting = since == nil or quietFor() >= NS.RaceScoring.QUIET_BEFORE_READ
+        or (fighting and since >= delay)
+    if not waiting then return "stop" end
+    heldRace = race
+    return "waiting"
 end
 
 local function hintFor(v)
     if v.key ~= "waiting" or not v.inCombat then return nil end
     local delay = tonumber(setting("race.hintDelay")) or 15
     if (v.sinceBuzzer or v.sinceEnd or 0) < delay then return nil end
-    return L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."]
+    return NS.RaceWindowStates.HintText()
+end
+
+-- The board at the race's end: the buzzer's (the length) or an early end's time. The checkpoint the
+-- race clock passes there, the last one at the buzzer, is taken now with the HUD's last read, as each
+-- before it was taken on its beat (runningYou).
+local function endBoard(v, race)
+    local at = src().SinceBuzzer() ~= nil and race.length or race.endedAt
+    if type(at) ~= "number" then return end
+    if type(race.length) == "number" then at = math.min(at, race.length) end
+    runningYou(v, race, runningBest(v, race, at), at)
 end
 
 local function stopView(v)
     local R, race = src(), v.race
-    v.key = stopPhase()
+    v.key = stopPhase(race, v.inCombat)
     local last = R.LastDamage()
     v.tail = (type(last) == "number" and race.length) and math.max(0, last - race.length) or 0
     v.sinceBuzzer = R.SinceBuzzer()
@@ -424,17 +635,21 @@ local function stopView(v)
     v.grace = race.grace
     v.stopNow = R.StopRequested()
     v.hint = hintFor(v)
+    endBoard(v, race)
 end
 
--- The result card's pace bar: the plain score against the race board's best before the race, at the
--- race length. None for an incomplete or lost race, or with no earlier best.
-local function resultPace(record, race)
-    if not record or race.status ~= "complete" or type(race.score) ~= "number" then return nil end
-    local prev = NS.Bests.Before(record)
-    local ref = prev and type(prev.race) == "table" and prev.race.score
-    if type(ref) ~= "number" then return nil end
-    local lo, hi = NS.HudBest.Bounds(ref)
-    return { lo = lo, hi = hi, total = race.score }
+-- Against your best and Top races (Task W7): the best before this race (Bests.Before, the one
+-- Bests.Delta is set against) and the board's top races with this one's rank, from the store (the
+-- sample history for a sample race). Neither for a lost race, which left no record.
+local function resultTables(v, record)
+    local race = v.race
+    if not record or race.status == "lost" or type(race.score) ~= "number" then return end
+    local Board = NS.RaceWindowBoard
+    v.prev = v.prev or NS.Bests.Before(record)
+    v.compare = v.prev and Board.Compare(record, v.prev) or nil
+    v.board = Board.Rows(record, NS.Bests.Ranked(record))
+    local who = type(record.who) == "table" and record.who or {}
+    v.boardNote = Board.Note(NS.Bests.RaceKind(record) or race.kind, race.length, Secrets.PlainString(who.specName))
 end
 
 local function resultView(v)
@@ -443,11 +658,11 @@ local function resultView(v)
     v.race = record and type(record.race) == "table" and record.race or v.race
     v.dps = record and NS.RaceRecord.Dps(record) or (v.race and v.race.dps)
     if record and v.race.status == "complete" then
-        local delta, isNew = NS.Bests.Delta(record)
-        v.delta, v.isNew = delta, isNew
+        local delta, isNew, prev = NS.Bests.Delta(record)
+        v.delta, v.isNew, v.prev = delta, isNew, prev
     end
     v.canShare = record ~= nil and not record.sample and NS.Share ~= nil and type(NS.Share.Prompt) == "function"
-    v.pace = resultPace(record, v.race)
+    resultTables(v, record)
 end
 
 local BODY_OF = { idle = "idle", armed = "armed", running = "running", result = "result" }
@@ -456,12 +671,15 @@ local FILL = { idle = idleView, armed = armedView, running = runningView, result
 local function fill()
     local R = src()
     local state = R.State()
-    local v = { state = state, race = R.Current(), inCombat = inCombat(), width = RW.WIDTH - 2 * PAD }
+    local v = { state = state, race = R.Current(), inCombat = inCombat(), width = RW.Width() - 2 * PAD }
     if state == S().STOPPING and v.race then
         stopView(v)
         return v
     end
     v.key = v.race and BODY_OF[state] or "idle"
+    -- The checkpoint readings live as long as the race does (running, then stopping): let go at its
+    -- result, or at idle or armed.
+    if v.key ~= "running" then held = {} end
     FILL[v.key](v)
     return v
 end
@@ -484,7 +702,7 @@ end
 local function footer(v)
     local fight = src().Fight()
     local snap = type(fight) == "table" and fight.snapshot or nil
-    local who = type(snap) == "table" and snap.who or (not ticker and NS.Identity.Who()) or ui.who or {}
+    local who = type(snap) == "table" and snap.who or (not racing() and NS.Identity.Who()) or ui.who or {}
     ui.who = who
     local parts = {}
     for _, s in ipairs({ Secrets.PlainString(who.specName), Secrets.PlainString(who.name) }) do
@@ -494,42 +712,46 @@ local function footer(v)
     ui.footRight:SetText(v.state == S().STOPPING and L["Result pending"] or "")
 end
 
-local function render()
+function render()
     applyWindow()
     applyControls()
+    local w, h = RW.Width(), RW.WindowHeight()
     local v = fill()
+    -- The content's size the body lays out against (the window less its chrome, Task W4).
+    v.height = h - contentTop() - contentBottom()
     local body = showBody(v.key)
     body.width = v.width
     body:Update(v)
-    ui.frame:SetSize(RW.WIDTH, RW.Height())
+    -- The grip owns the size while it is held.
+    if not sizing() then ui.frame:SetSize(w, h) end
+    applyGrip()
     footer(v)
     view = v
     return v
 end
 
--- ── what runs while shown ───────────────────────────────────────────────────────────────────────
-
-local function racing()
-    local st = src().State()
-    return st == S().RUNNING or st == S().STOPPING
+-- The grip's release (or a hide while it was held): the width stored, and the height unless it is
+-- the HUD's; a detached window keeps its top left where the drag left it; then the redraw.
+function resized(w, h)
+    w = Secrets.PlainNumber(w) or ui.dragW
+    h = Secrets.PlainNumber(h) or ui.dragH
+    ui.dragW, ui.dragH = nil, nil
+    if not attached() then keepWhereItStands() end
+    if w then NS.SetByPath("raceWindow.width", clamp(math.floor(w + 0.5), RW.WIDTH, RW.MAX_WIDTH)) end
+    if h and not matched() then
+        NS.SetByPath("raceWindow.height", clamp(math.floor(h + 0.5), 0, RW.MAX_HEIGHT))
+    end
+    if RW.IsShown() then RW.Refresh() end
 end
 
-local function tick()
-    if isDown() or not windowShown() then return end
+-- ── what runs while shown ───────────────────────────────────────────────────────────────────────
+
+-- The race beat (RACE_CLOCK, modules/RaceClock.lua): the race clock and the stop figures, while racing.
+local function onBeat()
+    if isDown() or not windowShown() or not racing() then return end
     local t0 = Perf.on and debugprofilestop()
     render()
     if t0 then Perf.Note("raceWindow", debugprofilestop() - t0) end
-end
-
-local function syncTicker()
-    local want = windowShown() and racing() and not isDown()
-    local addon = NS.addon
-    if want and not ticker and addon and addon.ScheduleRepeatingTimer then
-        ticker = addon:ScheduleRepeatingTimer(tick, RW.TICK)
-    elseif not want and ticker then
-        if addon and addon.CancelTimer then addon:CancelTimer(ticker) end
-        ticker = nil
-    end
 end
 
 local IDLE_EVENTS = { "PLAYER_TARGET_CHANGED", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED",
@@ -567,16 +789,36 @@ function onHide()
     if hiding or (ui and ui.frame:IsShown()) then return end
     wanted, autoShown, dummyShown = false, false, false
     closes = closes + 1
-    syncTicker()
     syncEvents()
     if src().State() == S().RESULT and not isDown() then src().Cancel() end
 end
 
 -- ── the public surface ──────────────────────────────────────────────────────────────────────────
 
---- Whether the window decides to be up: wanted, Race mode on and the addon standing.
+--- Whether the window decides to be up: wanted, Race mode on, the addon standing and the DPS HUD up
+--- (W29 decision D1: never without the HUD).
 function RW.IsShown()
-    return wanted and not isDown() and NS.RaceMode.On()
+    return wanted and not isDown() and NS.RaceMode.On() and hudShown()
+end
+
+--- Whether the frame is on screen now (the HUD's Escape reads it).
+function RW.Visible() return windowShown() end
+
+--- The DPS HUD's Refresh tells this window it may have hidden or come back (modules/Hud.lua): the
+--- frame re-decides only when it disagrees with the decision, so the HUD's frequent refreshes cost a
+--- comparison. Never calls back into the HUD's Refresh.
+function RW.FollowHud()
+    if RW.IsShown() ~= windowShown() then RW.Refresh() end
+end
+
+-- An open of this window while the DPS HUD is closed opens the HUD first (W29 decision D3), by the
+-- path that can close it later: "player" (Hud.Show, the player's, never fading), "auto" (Hud.ShowForRace,
+-- let go at the race's idle edge or faded) or "dummy" (Hud.ShowNearDummy, closed at the session's end).
+-- Nothing while the window is not wanted, Race mode is off or the addon is stood down.
+local function openHud(how)
+    local H = NS.Hud
+    if not wanted or isDown() or not NS.RaceMode.On() or not H or hudShown() then return end
+    if how == "dummy" then H.ShowNearDummy() elseif how == "auto" then H.ShowForRace() else H.Show() end
 end
 
 --- Re-decide and redraw. The one place the frame follows the decision.
@@ -590,16 +832,24 @@ function RW.Refresh()
         render()
         if not windowShown() then ui.frame:Show() end
     end
-    syncTicker()
     syncEvents()
 end
 
 --- Draw again now (the body on screen, with the window's place and look).
 RW.Render = RW.Refresh
 
---- Open the window as the player's.
+-- Whether auto-show's dummy session is live now (modules/AutoArm.lua, reached at call time).
+local function inSession()
+    local A = NS.AutoArm
+    return A ~= nil and A.InSession ~= nil and A.InSession() == true
+end
+
+--- Open the window as the player's. Opened while a dummy session is live, it is tied to that session
+--- (walking away closes it); a window already up keeps what it was tied to.
 function RW.Show()
-    wanted, autoShown, dummyShown = true, false, false
+    if not wanted then dummyShown = inSession() end
+    wanted, autoShown = true, false
+    openHud("player")
     RW.Refresh()
 end
 
@@ -615,9 +865,12 @@ function RW.Toggle()
     if RW.IsShown() then RW.Hide() else RW.Show() end
 end
 
+-- The race's open (an arm, a resume, a result): the window the addon's unless the player's already
+-- wants it, and the HUD opened for it when it is closed (W29 decision D3), even under a window that
+-- was wanted already but hid with the HUD.
 local function autoShow()
-    if wanted then return end
-    wanted, autoShown = true, true
+    if not wanted then wanted, autoShown = true, true end
+    openHud("auto")
 end
 
 local sampleOpened = false      -- the sample race opened the window (let go at its end)
@@ -627,7 +880,8 @@ local backToIdle                 -- the result card's New Race (below)
 --- opened for it when it was not up.
 function RW.ShowSample()
     if not wanted then sampleOpened, wanted = true, true end
-    live, paceBest = nil, {}
+    raceBest = {}
+    openHud("auto")
     RW.Refresh()
 end
 
@@ -635,7 +889,7 @@ end
 --- sample opened is let go, unless a real race now holds it (its arm ended the preview): then it is
 --- that race's, and closes with it.
 function RW.EndSample()
-    live, paceBest = nil, {}
+    raceBest = {}
     if sampleOpened and not autoShown then
         if NS.Race.State() == S().IDLE then wanted = false else autoShown = true end
     end
@@ -656,19 +910,25 @@ function RW.SampleChanged()
 end
 
 --- Auto-show's opening (modules/AutoArm.lua): a training dummy is near. A window already wanted is
---- left as it is; an addon-opened one is taken over by the dummy.
+--- left as it is (an addon-opened one is taken over by the dummy), but one that hid with the DPS HUD
+--- comes back with it: the HUD is opened as the session's (W29 decisions D3 and D4, and the re-ask
+--- after a fade). True when the window came up.
 --- @return boolean opened
 function RW.ShowNearDummy()
-    if wanted then
-        if autoShown then dummyShown = true end
-        return false
+    local was = RW.IsShown()
+    if not wanted then
+        wanted, autoShown, dummyShown = true, true, true
+    elseif autoShown then
+        dummyShown = true
     end
-    wanted, autoShown, dummyShown = true, true, true
+    if was then return false end
+    openHud("dummy")
     RW.Refresh()
-    return true
+    return RW.IsShown()
 end
 
---- Auto-show's closing: no dummy near. Only a window ShowNearDummy opened, still the addon's, closes.
+--- Auto-show's closing: no dummy near. Only a window tied to the session closes: one ShowNearDummy
+--- opened or took over, or one the player opened in the session (RW.Show).
 --- @return boolean closed
 function RW.HideAwayFromDummy()
     if not dummyShown then return false end
@@ -706,7 +966,10 @@ function RW.IsAttached() return attached() end
 --- The Lock frame row's reaction: no drag while locked.
 function RW.SetLocked(on)
     locked = on == true
-    if ui then applyControls() end
+    if ui then
+        applyControls()
+        applyGrip()
+    end
 end
 
 function RW.IsLocked() return locked end
@@ -721,30 +984,40 @@ function RW.ResetPosition()
     if ui then applyPlacement() end
 end
 
+--- The DPS HUD's height changed (modules/Hud.lua, Task W4): a window matched to it follows.
+function RW.OnHudResized()
+    if isDown() or not windowShown() or not matched() then return end
+    render()
+end
+
 --- The place applied last: { point, relativeTo, relPoint, x, y } (the suites read it), or nil.
 function RW.Anchor() return anchor end
 
 --- The view the body on screen drew last.
 function RW.View() return view end
 
---- The lifecycle's stand-down: the window hides, its timer and events go; one the addon opened is
---- let go, one the player opened comes back at the stand-up.
+--- The lifecycle's stand-down: the window hides, its events go; one the addon opened is let go, one
+--- the player opened comes back at the stand-up.
 function RW.Suspend()
     if autoShown then wanted, autoShown, dummyShown = false, false, false end
-    live, paceBest = nil, {}
+    raceBest = {}
     hideWindow()
-    syncTicker()
     if events then events:UnregisterAllEvents() end
     listening = false
 end
 
---- The stand-up: re-decide from the current state.
-function RW.Resume() RW.Refresh() end
+--- The stand-up: re-decide from the current state. A window still wanted (the player's: the
+--- stand-down let the addon's go) opens the HUD first when the HUD did not come back by its own rules
+--- (W29 decision D3).
+function RW.Resume()
+    openHud(autoShown and "auto" or "player")
+    RW.Refresh()
+end
 
 --- What the window is doing, for the diagnostics report.
 function RW.Diagnose()
     return { shown = RW.IsShown(), body = ui and ui.current or "none", attached = attached(), side = side(),
-             ticking = ticker ~= nil, events = listening, locked = locked }
+             matched = matched(), events = listening, locked = locked, width = RW.Width(), height = RW.WindowHeight() }
 end
 
 --- The built window and its bodies, for the suites (nil until first shown).
@@ -755,7 +1028,7 @@ function RW.__ui() return ui end
 local function onState(_, from, to)
     local St = S()
     if to == St.ARMED then
-        pick.editing, live, paceBest = false, nil, {}
+        pick.editing, raceBest = false, {}
         autoShow()
     end
     -- Straight from idle into a live race is a resume: its window comes back as the arm's did.
@@ -764,20 +1037,6 @@ local function onState(_, from, to)
     debug("race window: %s -> %s", tostring(from), tostring(to))
     RW.Refresh()
 end
-
-local function readLive(fight)
-    local sessions = fight.sessions
-    local id = (type(sessions) == "table" and sessions[#sessions]) or fight.sessionID
-    live = NS.Meter.ReadLive(id)
-end
-
-local function onFightTick(fight)
-    if isDown() or sampled() or NS.Race.State() ~= S().RUNNING or fight ~= NS.Race.Fight() or not windowShown() then return end
-    local t0 = Perf.on and debugprofilestop()
-    readLive(fight)
-    if t0 then Perf.Note("raceWindow", debugprofilestop() - t0) end
-end
-
 
 local function onFightEnded()
     if isDown() or not windowShown() or racing() then return end
@@ -815,6 +1074,8 @@ local function onSettings(path)
     -- A new Default race length takes effect over the pick (DPS Race's ForgetLength): the idle body
     -- and auto-arm's ArmLength offer it.
     if path == "race.defaultLength" or path == "profile" then pick.length = nil end
+    -- Race mode back on with the window still wanted: the HUD opens first (W29 decision D3).
+    if path == "race.enabled" then openHud(autoShown and "auto" or "player") end
     local LI, Dummies = NS.LateIgnore, NS.Dummies
     local mine = path == "profile" or path:find("^raceWindow%.") or path:find("^race%.") or path == "general.locked"
         or (LI and path == LI.PATH) or (Dummies and path == Dummies.PATH)
@@ -830,7 +1091,7 @@ do
             autoShow()
             RW.Refresh()
         end)
-        bus:RegisterMessage(NS.MSG.FIGHT_TICK, function(_, fight) onFightTick(fight) end)
+        bus:RegisterMessage(NS.MSG.RACE_CLOCK, function() onBeat() end)
         -- A fight read (Fight idle again): the idle body's "still being read" refusal is lifted.
         bus:RegisterMessage(NS.MSG.FIGHT_ENDED, function() onFightEnded() end)
         bus:RegisterMessage(NS.MSG.FIGHTS_CHANGED, function() onFightsChanged() end)

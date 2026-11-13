@@ -1,12 +1,15 @@
 local _, NS = ...
 -- settings/Race.lua — the Race mode page (Race mode spec §8, plan Task B3), Retail only: three tabs in
 -- strip order. Race holds the switch first (`race.enabled`: off stops new races, NS.RaceMode.On()),
--- then DPS Race's Race section in the order of a race: the length a race arms at, auto-show and
--- auto-arm near a training dummy (modules/AutoArm.lua), the race clock's mode, the countdown, the
+-- then DPS Race's Race section in the order of a race: the length a race arms at, auto-show (and the
+-- DPS HUD opening with it, drawn disabled while auto-show is off: disabledIf) and auto-arm near a
+-- training dummy (modules/AutoArm.lua), the race clock's mode, the countdown, the
 -- buzzer with the sticky-combat hint's delay, and the scoring rules a new race freezes into its part
 -- (grace, restart gap). Late-cast ignore list holds the list (modules/LateIgnore.lua), read when a
 -- race's flags are, drawn as the library's spell ID list. Race window holds where the window stands:
--- attached beside the DPS HUD, and on which side (Task C1 reads both). The Race window's look is the
+-- attached beside the DPS HUD, and on which side (Task C1 reads both), and whether, on the left or
+-- right, it takes the HUD's height (race window redesign plan Task W4); its width and height, written
+-- by its grip, are rows the tab does not draw (skipRender). The Race window's look is the
 -- DPS HUD page's appearance blocks (spec §8), so it has no styling rows here; its lock is Master
 -- controls' Lock frame (general.locked), as every placed frame's is.
 --
@@ -22,7 +25,7 @@ local _, NS = ...
 --
 -- WRITES: every row writes through the seam (NS.SetByPath). The race reads its keys at call time and
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
--- one armed (Race.ForgetLength); auto-show, auto-arm and the switch re-sync AutoArm's registrations,
+-- one armed (Race.ForgetLength); auto-show, its DPS HUD row, auto-arm and the switch re-sync AutoArm,
 -- and the switch going off (or a profile that has it off) cancels a race still armed.
 -- The countdown re-arms a race's marks off its rows' SETTINGS_CHANGED and the buzzer reads its row as
 -- it sounds (modules/Countdown.lua); the Race window reads its keys off SETTINGS_CHANGED (Task C1).
@@ -119,7 +122,12 @@ row("race.defaultLength", { type = "number", label = L["Default race length"], v
 at(TAB.race, L["Near a training dummy"])
 row("race.autoShow", { type = "bool", label = L["Show the Race window near a training dummy"], startsLine = true,
     onChange = syncAutoArm,
-    tooltip = L["Open the Race window by itself while a training dummy is your target or has its nameplate up, outside instances. It closes a few seconds after the last one is gone, and stays closed once you close it until you next come near one."] })
+    tooltip = L["Open the Race window by itself, with the DPS HUD beside it, while a training dummy is your target or has its nameplate up, outside instances. It closes a few seconds after the last one is gone, and stays closed once you close it until you next come near one."] })
+-- Either row is auto-show (owner, 2026-11-13, race window redesign plan W29 decision D4): the Race
+-- window never shows without the DPS HUD, so each opens both, and neither depends on the other.
+row("race.autoShowHud", { type = "bool", label = L["Show the DPS HUD near a training dummy"], startsLine = true,
+    onChange = syncAutoArm,
+    tooltip = L["Open the DPS HUD by itself near a training dummy, with the Race window beside it: the Race window never shows without the DPS HUD, so this or Show the Race window near a training dummy opens both. The DPS HUD fades after a fight by its own rules and takes the Race window with it; both come back the next time a dummy is targeted or comes into view. Both close a few seconds after the last dummy is gone, unless a fight is on the DPS HUD or you opened or pinned it yourself. Once you close either, they stay closed until you next come near a dummy."] })
 row("race.autoArm", { type = "bool", label = L["Arm on a training dummy"], startsLine = true, onChange = syncAutoArm,
     tooltip = L["Arm a race by itself when you target a training dummy out of combat, at the length Arm Race would use; your first hit starts it. Targeting anything else (or nothing) before the pull cancels it. Nothing arms in combat, in instances, over a result, or while a race waits for its result."] })
 
@@ -167,6 +175,16 @@ row("raceWindow.attached", { type = "bool", label = L["Attach to the DPS HUD"], 
     tooltip = L["Keep the Race window beside the DPS HUD, moving with it. Off, it stands on its own wherever you drag it; Lock frame on the General page holds it in place."] })
 row("raceWindow.side", { type = "string", label = L["Side of the DPS HUD"], values = SIDES, validate = oneOf(SIDES),
     tooltip = L["Which side of the DPS HUD the attached Race window stands on."] })
+row("raceWindow.matchHud", { type = "bool", label = L["Match the DPS HUD's height"], startsLine = true,
+    tooltip = L["Attached on the left or right of the DPS HUD, the Race window takes the HUD's height and keeps it as the HUD resizes, never shorter than it needs. Above or below the HUD, or on its own, it keeps its own height."] })
+-- Its size, written by its grip (owner, 2026-11-13): skipRender, the grip is their control; the
+-- tab's Defaults and the CLI reach them like any row.
+row("raceWindow.width", { type = "number", label = L["Race window width (px)"], min = NS.RaceWindow.WIDTH,
+    max = NS.RaceWindow.MAX_WIDTH, step = 1, validate = within(NS.RaceWindow.WIDTH, NS.RaceWindow.MAX_WIDTH, 1),
+    skipRender = true })
+row("raceWindow.height", { type = "number", label = L["Race window height (px)"], min = 0,
+    max = NS.RaceWindow.MAX_HEIGHT, step = 1, validate = within(0, NS.RaceWindow.MAX_HEIGHT, 1),
+    skipRender = true })
 
 for i, r in ipairs(out) do r.order = i end
 NS.RegisterSchemaRows(out)

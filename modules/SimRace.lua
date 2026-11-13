@@ -25,7 +25,9 @@ local _, NS = ...
 -- opens on it.
 --
 -- NOTHING REACHES THE BUS OR THE STORE, as every sample (modules/Preview.lua's header): the windows are
--- called directly, the record lives in the sample history only, and NS.Race never moves.
+-- called directly, the record lives in the sample history only, and NS.Race never moves. The one
+-- message is the race beat's RACE_CLOCK (modules/RaceClock.lua), which carries nothing: while the
+-- sample race runs or stops it moves both race clocks, as for a real race.
 --
 -- RETAIL ONLY (clients-§4): on WoW Forever this file returns at once and the sim has no race scenario.
 -- With Race mode off a race scenario is refused (Sim's raceRefusal), as an arm is.

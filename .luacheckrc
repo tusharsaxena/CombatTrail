@@ -115,7 +115,8 @@ files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }
 files["core/SkinSetup.lua"] = { read_globals = { "ITEM_QUALITY_COLORS" } }
 -- The secret-safe number: the client's abbreviated-number formatter is Compat's; with none, the plain
 -- fallback is the client's AbbreviateNumbers, type-checked at CALL time (modules/Format.lua).
-files["modules/Format.lua"] = { read_globals = { "AbbreviateNumbers" } }
+-- Retail's AbbreviateNumbers also takes a CreateAbbreviateConfig config, which carries the ladder.
+files["modules/Format.lua"] = { read_globals = { "AbbreviateNumbers", "CreateAbbreviateConfig" } }
 -- The Results window's table: the class colors, names and icons, a spec's name and icon (read bare
 -- and type-checked, WoW Forever has no specializations), the cursor a hovered row follows, and the
 -- client's date formatter.

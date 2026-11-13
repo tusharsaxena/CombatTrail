@@ -15,6 +15,12 @@ local _, NS = ...
 -- mark inside the numbers' window sounds once, never twice. Leaving running (the buzzer, a cancel,
 -- combat ending early) cancels every timer and hides the number; so does the stand-down.
 --
+-- THE NUMBER AND THE OTHER CLOCKS (owner, 2026-11-13). A number is the whole seconds left rounded up:
+-- n shows from n seconds left until n - 1. The Race window's countdown takes the same rounding
+-- (NS.Format.RaceClock: the time left rounded up to its tenth, the elapsed time and the DPS HUD's
+-- clock truncated), so n pops on the tenth the countdown reads 0:0n.0, and 1 goes at the buzzer, the
+-- moment the countdown reads 0:00.0 and the HUD's clock the race length.
+--
 -- THE SIM'S RACE (plan Task E1): while its sample race's clock runs (modules/RaceSample.lua Live), the
 -- marks count it instead, armed by the sim's own Countdown.Refresh at each step; test mode's held sample
 -- counts nothing.

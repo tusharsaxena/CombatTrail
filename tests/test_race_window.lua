@@ -24,10 +24,13 @@ local function fresh(opts)
         if mutate then mutate(m) end
     end
     local S = F.fresh(opts)
-    -- Auto-show off, and the window it opened at login (the player targets a dummy) let go: each case
-    -- opens the window itself. The auto-show hooks have their own case below.
+    -- Auto-show off (both its rows, W29 decision D4), and the windows it opened at login (the player
+    -- targets a dummy) let go: each case opens the window itself. The auto-show hooks have their own
+    -- case below.
     assert(S.NS.SetByPath("race.autoShow", false))
+    assert(S.NS.SetByPath("race.autoShowHud", false))
     S.NS.RaceWindow.HideAwayFromDummy()
+    S.NS.Hud.HideAwayFromDummy()
     return S
 end
 
@@ -335,6 +338,46 @@ test("race window: the waiting body's hint comes after the hint delay in combat,
     assertEqual(RW.__ui().footRight:GetText(), "Result pending")
 end)
 
+-- The owner, 2026-11-13: a DoT ticking after the buzzer flipped Stop! and waiting at each tick, the
+-- hint box blinking in and out. Combat holding past the hint delay goes to waiting and stays.
+test("race window: a damage tail in combat past the hint delay waits, and never goes back to Stop!", function()
+    if forever() then return end
+    local S = fresh()
+    W(S).Show()
+    assertTrue(F.arm(S, 30))
+    local start = F.pull(S)
+    local buzzer = start + 30
+    F.damage(S, 25, start + 1, buzzer + 5, 1)    -- a DoT still landing a tick a second
+    assertEqual(current(S), "stop", "damage still landing under the delay: Stop!")
+    F.damage(S, 25, buzzer + 6, buzzer + 16, 1)
+    assertEqual(current(S), "waiting", "combat held past race.hintDelay: waiting")
+    local w = body(S).w
+    assertTrue(w.hint:IsShown(), "with the hint")
+    for t = buzzer + 17, buzzer + 25 do
+        F.damage(S, 25, t, t, 1)
+        assertEqual(current(S), "waiting", "a later tick keeps waiting at " .. (t - buzzer))
+        assertTrue(w.hint:IsShown())
+    end
+end)
+
+test("race window: the waiting body keeps the hint's room before the hint shows", function()
+    if forever() then return end
+    local S = fresh()
+    W(S).Show()
+    assertTrue(F.arm(S, 30))
+    local start = F.pull(S)
+    F.damage(S, 25, start + 1, start + 30, 1)
+    F.run(S, start + 35)
+    assertEqual(current(S), "waiting")
+    local b = body(S)
+    assertFalse(b.w.hint:IsShown(), "no hint yet")
+    local room = b.hintH
+    assertTrue(type(room) == "number" and room > 0, "the room is kept")
+    F.run(S, start + 47)
+    assertTrue(b.w.hint:IsShown())
+    assertEqual(b.hintH, room, "the hint's arrival moves nothing")
+end)
+
 test("race window: the hint box is sized to its words, never measured", function()
     if forever() then return end
     local S = fresh()
@@ -363,11 +406,16 @@ test("race window: the result card shows the score, the race DPS and its chips",
     assertTrue(w.open:IsEnabled())
     assertTrue(w.share:IsEnabled())
     assertTrue(w.delete:IsEnabled())
-    assertFalse(w.pace.bar:IsShown(), "no earlier best: no pace bar")
-    assertFalse(w.paceTitle:IsShown())
+    assertNil(w.pace, "no pace bar: the DPS HUD's over card draws it (Task W7)")
+    assertFalse(w.againstCap.title:IsShown(), "no earlier best: no Against your best")
+    assertEqual(#w.against:Texts(), 0)
+    assertTrue(w.boardCap.title:IsShown(), "Top races: the race is on it")
+    assertEqual(w.boardCap.title:GetText(), "Top races")
+    assertEqual(#w.board:Texts(), 1)
+    assertEqual(w.board:Highlighted(), 1, "this race, first on its board")
 end)
 
-test("race window: a slower second race is behind its best, and its pace bar is the score against it", function()
+test("race window: a slower second race is behind its best, set against it in Against your best", function()
     if forever() then return end
     local S = fresh()
     raced(S, 30)
@@ -386,11 +434,27 @@ test("race window: a slower second race is behind its best, and its pace bar is 
     assertEqual(S.NS.Race.Result().race.score, 1000000, "the card is the second race's")
     assertTrue(type(v.delta) == "number" and v.delta < 0, "behind the best")
     local chips = body(S).w.chips:Texts()
-    assertTrue(chips[1]:find("vs best", 1, true) ~= nil, chips[1])
-    assertEqual(v.pace.total, 1000000)
-    local lo, hi = S.NS.HudBest.Bounds(first.race.score)
-    F.near(v.pace.lo, lo, "the bar's low end")
-    F.near(v.pace.hi, hi, "the bar's high end")
+    for _, s in ipairs(chips) do
+        assertTrue(s:find("vs best", 1, true) == nil, "no chip repeats Against your best's DPS Diff: " .. s)
+    end
+    assertTrue(hasPrefix(chips, "Time 0:30"), "the Time chip stays: " .. table.concat(chips, " | "))
+    assertNil(v.pace, "no pace bar")
+    assertEqual(v.prev.id, first.id, "set against the best before it, Bests.Delta's")
+    local w = body(S).w
+    assertTrue(w.againstCap.title:IsShown())
+    local rows = w.against:Texts()
+    assertEqual(#rows, 4, "Score, DPS, Item level, Date: no time raced row")
+    local F2 = S.NS.Format
+    assertEqual(rows[1], "Score|" .. F2.Number(1000000) .. "|" .. F2.Number(first.race.score) .. "|"
+        .. F2.Number(1000000 - first.race.score))
+    assertEqual(v.compare[2].cells[4], F2.SignedPct(v.delta), "the DPS diff is Bests.Delta's")
+    assertTrue(v.compare[1].colors[4] == S.NS.HudStates.COLORS.red, "behind: red")
+    assertEqual(v.compare[4].cells[1], "Date")
+    assertEqual(v.compare[4].cells[4], "", "the date has no diff")
+    local board = w.board:Texts()
+    assertEqual(#board, 2)
+    assertEqual(board[1]:sub(1, 2), "1|", "the first race leads the board")
+    assertEqual(w.board:Highlighted(), 2, "this race, second")
 end)
 
 test("race window: New Race goes back to Arm Race at the race's length, the window kept", function()
@@ -463,6 +527,9 @@ test("race window: a lost race shows dashes and says it could not be read", func
     assertEqual(w.score.value:GetText(), "\226\128\148")
     assertEqual(w.lost:GetText(), "Couldn't read the result")
     assertFalse(w.open:IsEnabled(), "nothing saved to open")
+    assertFalse(w.againstCap.title:IsShown(), "a lost race: no Against your best")
+    assertFalse(w.boardCap.title:IsShown(), "and no Top races")
+    assertEqual(#w.board:Texts(), 0)
 end)
 
 test("race window: the result chips name each flag in a short word, its full text the tip", function()
@@ -484,13 +551,15 @@ end)
 test("race window: the running clocks follow the race clock setting", function()
     if forever() then return end
     local S = fresh()
+    assertEqual(S.NS.GetSetting("race.clock"), "left", "one countdown by default (ruling O2)")
+    assertTrue(S.NS.SetByPath("race.clock", "both"))
     W(S).Show()
     assertTrue(F.arm(S, 30))
     local start = F.pull(S)
     F.damage(S, 25, start + 1, start + 10, 1)
     W(S).Refresh()
     local w = body(S).w
-    assertTrue(w.elapsed:IsShown() and w.left:IsShown(), "both clocks by default")
+    assertTrue(w.elapsed:IsShown() and w.left:IsShown(), "both clocks with the row on both")
     assertEqual(w.elapsed:GetText(), "0:10.0")
     assertEqual(w.left:GetText(), "0:20.0")
     assertTrue(S.NS.SetByPath("race.clock", "left"))
@@ -502,7 +571,7 @@ test("race window: the running clocks follow the race clock setting", function()
     assertFalse(w.single:IsShown())
 end)
 
-test("race window: the running pace bar paces on the race board's best", function()
+test("race window: the running body sets the race against the race board's best, with no pace bar", function()
     if forever() then return end
     local S = fresh()
     raced(S, 30)
@@ -514,42 +583,104 @@ test("race window: the running pace bar paces on the race board's best", functio
     F.run(S, start + 10.25)
     W(S).Refresh()
     local v = W(S).View()
-    assertTrue(v.pace ~= nil, "paced against the race board's best")
-    F.near(v.pace.ref, best.race.score / 30 * 10.25, "the best's straight-line pace at the race clock")
-    assertTrue(body(S).w.pace.bar:IsShown())
-    local chips = body(S).w.chips:Texts()
+    assertNil(v.pace, "no pace bar: the DPS HUD's alone (Task W6)")
+    local w = body(S).w
+    assertNil(w.pace, "no pace region")
+    assertNil(w.paceTitle)
+    assertEqual(v.bestView.record.id, best.id, "Best to beat: the race board's best")
+    assertEqual(w.best.caption:GetText(), "Best to beat")
+    assertEqual(w.best.damage:GetText(), S.NS.Format.Number(best.race.score))
+    assertEqual(v.elapsed, S.NS.Format.RaceClock(10.25, 30), "the race clock, in tenths (0:10.2)")
+    F.near(v.byNow, best.race.score / 30 * v.elapsed, "Best by now: the best's straight line at the race clock")
+    assertEqual(w.now.value:GetText(), S.NS.Format.Number(v.byNow))
+    assertEqual(w.now.cap.note:GetText(), "at 0:10")
+    assertEqual(#v.checkpoints, 4)
+    F.near(v.checkpoints[1].damage, best.race.score / 4, "the first quarter")
+    assertTrue(v.checkpoints[1].passed, "0:07.5 is behind the clock")
+    assertTrue(v.checkpoints[2].next, "0:15 is next")
+    assertTrue(w.cps.cells[2].next and not w.cps.cells[1].next)
+    assertEqual(w.cps.cells[4].time:GetText(), "0:30")
+    assertEqual(w.ofCap:GetText(), "Left of 0:30", "the countdown's caption against the length")
+    F.near(w.bar.share, v.elapsed / 30, "the time bar: elapsed over the length")
+    assertEqual(w.bar.fillW, math.floor(body(S).width * (1 - w.bar.share)), "the bar: what is left, emptying")
+    local r, g, b = S.NS.RaceWindowBoard.ClockColor(v.timeLeft, 30)
+    local cr, cg, cb = w.single:GetTextColor()
+    assertTrue(cr == r and cg == g and cb == b, "the countdown in the race's color")
+    local tc = w.bar.fill.__color
+    assertTrue(tc[1] == r and tc[2] == g and tc[3] == b, "the bar in the countdown's color")
+    local G = S.NS.HudStates.COLORS.green
+    assertTrue(r == G[1] and g == G[2] and b == G[3], "0:19.8 left of 0:30: green, in the first half")
+    local SECTION = S.NS.Style.FONT.SECTION
+    assertEqual(w.best.caption.__template, SECTION, "Best to beat: the DPS HUD's heading")
+    assertEqual(w.now.cap.title.__template, SECTION, "Best by now too")
+    assertEqual(w.cps.cap.title.__template, SECTION, "and the Checkpoints")
+    local chips = w.chips:Texts()
     assertEqual(chips[1], S.NS.Dummies.Label(best.race.kind) .. " \194\183 0:30")
 end)
 
-test("race window: with a pet the meter reads apart, the player's total paces on the best's player share", function()
+-- A session of `damage`, for the live read to answer.
+local function session(damage)
+    return { damage = damage, dps = damage / 30, duration = 31, spells = { { id = 348, dmg = damage, dps = damage / 30 } } }
+end
+
+test("race window: Best by now and each Checkpoint show your damage, kept as the clock passes it", function()
     if forever() then return end
-    local PET = "Pet-0-1-2-3-4"
-    local S = fresh({ mutate = function(m)
-        m.__unitExists.pet = true
-        m.__unitGUIDs.pet = PET
-        m.__unitNames.pet = "Wolf"
-    end })
-    S.meter.SetPetGUID(PET)
-    local session = { damage = 30000, dps = 1000, duration = 30, spells = { { id = 133, dmg = 30000, dps = 1000 } },
-                      pet = { damage = 30000, dps = 1000, spells = { { id = 17253, dmg = 30000, dps = 1000 } } } }
-    W(S).Show()
-    assertTrue(F.arm(S, 30))
-    local s1 = F.pull(S, 101, 25, session)
-    F.damage(S, 25, s1 + 1, s1 + 30, 1)
-    F.settle(S, s1 + 31)
-    local best = F.records(S)[1]
-    assertEqual(best.race.status, "complete")
-    local share = best.damage.player / best.damage.merged
-    assertTrue(share < 1, "the best's pet did part of its damage")
+    local S = fresh()
+    raced(S, 30)
     W(S).Act.newRace()
     assertTrue(F.arm(S, 30, 200))
-    local start = F.pull(S, 201, 26, session)
-    F.damage(S, 26, start + 1, start + 10, 1)
-    F.run(S, start + 10.25)
+    local start = F.pull(S, 201, 26, session(1000000))
+    F.damage(S, 26, start + 1, start + 5, 1)
     W(S).Refresh()
-    local v = W(S).View()
-    assertTrue(v.pace ~= nil and v.pace.playerOnly, "the live total is the player's alone")
-    F.near(v.pace.ref, best.race.score * share / 30 * 10.25, "against the best's player damage, not its merged score")
+    local w, v = body(S).w, W(S).View()
+    local Fmt = S.NS.Format
+    assertTrue(v.hasYou, "the DPS HUD's last read of the race's fight")
+    assertEqual(w.now.you:GetText(), Fmt.Number(1000000), "Current beside Best")
+    for i = 1, 4 do assertEqual(w.cps.cells[i].you:GetText(), "\226\128\148", "checkpoint " .. i .. ": a dash before it") end
+    -- 0:07.5 goes by: the first checkpoint keeps the reading of that beat.
+    F.damage(S, 26, start + 6, start + 8, 1)
+    W(S).Refresh()
+    assertEqual(w.cps.cells[1].you:GetText(), Fmt.Number(1000000), "captured at its crossing")
+    assertEqual(w.cps.cells[2].you:GetText(), "\226\128\148")
+    -- More damage after it: Best by now's Current moves on, the first checkpoint holds.
+    S.meter.SetSession(26, session(2500000))
+    F.damage(S, 26, start + 9, start + 11, 1)
+    W(S).Refresh()
+    assertEqual(w.now.you:GetText(), Fmt.Number(2500000))
+    assertEqual(w.cps.cells[1].you:GetText(), Fmt.Number(1000000), "the crossing's reading kept")
+    -- In combat the read is secret: it reaches the labels as it is, and the second crossing keeps it.
+    S.meter.SetSecret(true)
+    F.damage(S, 26, start + 12, start + 16, 1)
+    W(S).Refresh()
+    assertTrue(T.isSecret(w.now.you:GetText()), "the secret itself in Current (no formatter in the harness)")
+    assertTrue(T.isSecret(w.cps.cells[2].you:GetText()), "and in the checkpoint it passed")
+    assertEqual(w.cps.cells[1].you:GetText(), Fmt.Number(1000000))
+    assertEqual(w.cps.cells[3].you:GetText(), "\226\128\148")
+    S.meter.SetSecret(false)
+    -- The result: the readings let go.
+    F.damage(S, 26, start + 17, start + 30, 1)
+    F.settle(S, start + 31)
+    assertEqual(current(S), "result")
+end)
+
+test("race window: with no best on the board the running body says so and hides the best's line", function()
+    if forever() then return end
+    local S = fresh()
+    W(S).Show()
+    assertTrue(F.arm(S, 30))
+    local start = F.pull(S)
+    F.damage(S, 25, start + 1, start + 10, 1)
+    F.run(S, start + 10)
+    W(S).Refresh()
+    local v, w = W(S).View(), body(S).w
+    assertEqual(v.bestView.state, "empty")
+    assertNil(v.checkpoints)
+    assertTrue(w.best.empty:IsShown())
+    assertEqual(w.best.empty:GetText(), "No race yet: this one sets the mark.", "the idle card's empty words")
+    assertFalse(w.now.card:IsShown(), "no Best by now")
+    assertFalse(w.now.cap.title:IsShown())
+    assertFalse(w.cps.cells[1]:IsShown(), "no Checkpoints")
+    assertFalse(w.cps.cap.title:IsShown())
 end)
 
 test("race window: no live boxes, no chart and no spell rows in any body", function()
@@ -602,18 +733,20 @@ test("race window: it wears the HUD's skin and appearance", function()
     assertFalse(ui.frame.title:IsShown())
 end)
 
-test("race window: attached, it stands beside the HUD on each side and moves with it", function()
+test("race window: attached, it stands flush beside the HUD on each side and moves with it", function()
     if forever() then return end
     local S = fresh()
     local RW = W(S)
     RW.Show()
     local hud = S.NS.Hud.Frame()
     local want = {
-        RIGHT  = { "TOPLEFT", "TOPRIGHT", 4, 0 },
-        LEFT   = { "TOPRIGHT", "TOPLEFT", -4, 0 },
-        TOP    = { "BOTTOMLEFT", "TOPLEFT", 0, 4 },
-        BOTTOM = { "TOPLEFT", "BOTTOMLEFT", 0, -4 },
+        RIGHT  = { "TOPLEFT", "TOPRIGHT", 0, 0 },
+        LEFT   = { "TOPRIGHT", "TOPLEFT", 0, 0 },
+        TOP    = { "BOTTOMLEFT", "TOPLEFT", 0, 0 },
+        BOTTOM = { "TOPLEFT", "BOTTOMLEFT", 0, 0 },
     }
+    -- Flush on every side (race window redesign plan Task W4): no gap between the two windows.
+    assertEqual(RW.DOCK_GAP, 0)
     assertTrue(RW.IsAttached(), "attached by default")
     local a = RW.Anchor()
     assertEqual(a[2], hud, "anchored to the DPS HUD's frame, so it moves with it")
@@ -651,12 +784,12 @@ test("race window: attached with the HUD hidden it stands where the HUD would", 
     end })
     local Hud = S.NS.Hud
     assertFalse(Hud.IsShown(), "the HUD is shut")
-    W(S).Show()
-    local hud = Hud.Frame()
-    assertTrue(hud ~= nil, "the HUD's frame is built to stand beside")
+    -- The Race window never stands without the HUD (W29), but Hud.Dock still builds and places a
+    -- hidden HUD, so nothing that reads it can fall to 0,0.
+    local hud = Hud.Dock()
+    assertTrue(hud ~= nil and hud == Hud.Frame(), "the HUD's frame is built to stand beside")
     assertFalse(hud:IsShown(), "and stays hidden")
     assertTrue(Hud.__ui().docked, "placed and sized where the HUD would stand")
-    assertEqual(W(S).Anchor()[2], hud)
     -- A frame with no anchor and no size has no rect, and a window anchored to it has none either.
     local g = geom[Hud.FRAME_NAME]
     assertTrue(#g.points >= 1, "the hidden HUD is anchored")
@@ -667,7 +800,9 @@ test("race window: attached with the HUD hidden it stands where the HUD would", 
     assertEqual(x, -60)
     assertEqual(y, -160)
     assertTrue((g.w or 0) > 0 and (g.h or 0) > 0, "and sized")
-    Hud.Show()
+    W(S).Show()
+    assertTrue(Hud.IsShown(), "the Race window's open opened the HUD first (W29 decision D3)")
+    assertEqual(W(S).Anchor()[2], hud, "beside it")
     Hud.Hide()
     W(S).Refresh()
     assertEqual(W(S).Anchor()[2], hud, "a HUD closed by hand keeps its place")
@@ -705,6 +840,110 @@ test("race window: a HUD that drew once, hidden, is placed again for the window 
     assertEqual(x, 40)
     assertEqual(y, -80)
     assertEqual(g.w, 420, "at this profile's HUD width")
+end)
+
+-- ── the HUD's height, docked beside it (race window redesign plan Task W4) ──────────────────────
+
+-- A fresh instance whose named frames (the HUD's and the Race window's) record the size and scale
+-- the code sets: the kit's frames answer no geometry unless armed.
+local function sized()
+    local geom = {}
+    local S = fresh({ mutate = function(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, name, ...)
+            local f = create(kind, name, ...)
+            if type(name) ~= "string" then return f end
+            local g = {}
+            geom[name] = g
+            rawset(f, "SetSize", function(_, w, h) g.w, g.h = w, h end)
+            rawset(f, "SetWidth", function(_, w) g.w = w end)
+            rawset(f, "SetHeight", function(_, h) g.h = h end)
+            rawset(f, "SetScale", function(_, v) g.scale = v end)
+            return f
+        end
+    end })
+    S.NS.Hud.Show()
+    W(S).Show()
+    return S, geom[S.NS.Hud.FRAME_NAME], geom[W(S).FRAME_NAME]
+end
+
+local function chromeOf(S)
+    return S.NS.Style.TITLE_BAR_H + 10 + 20 + 8
+end
+
+test("race window: docked LEFT or RIGHT it takes the DPS HUD's height", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local RW = W(S)
+    assertTrue(S.NS.GetSetting("raceWindow.matchHud"), "on by default")
+    assertTrue(hud.h > RW.Height(), "the default HUD is taller than the window's own minimum")
+    for _, side in ipairs({ "RIGHT", "LEFT" }) do
+        RW.Attach(side)
+        assertEqual(win.h, hud.h, side .. ": the HUD's height")
+        assertEqual(win.h, S.NS.Hud.Height(), side)
+    end
+    -- The bodies lay out against the height the window has: the content is the window less its chrome.
+    assertEqual(RW.View().height, win.h - chromeOf(S), "the body's room is the matched height's")
+end)
+
+test("race window: the matched height follows the HUD's resizes, its parts, the grip and the scale", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local NS, Hud = S.NS, S.NS.Hud
+    local before = hud.h
+    assertTrue(NS.SetByPath("hud.bars", 12))
+    assertTrue(hud.h > before, "more spell bars: a taller HUD")
+    assertEqual(win.h, hud.h, "the window follows the bars")
+    NS.db.profile.hud.window.footer = false
+    NS.HudAppearance.Changed()
+    assertEqual(win.h, hud.h, "the footer off on both: still level")
+    NS.db.profile.hud.window.titleBar = false
+    NS.HudAppearance.Changed()
+    assertEqual(win.h, hud.h, "the title bar off on both: still level")
+    -- The grip, held: the window follows the dragged height; released, the snapped one.
+    local f = Hud.Frame()
+    f.resizeGrip:__fire("OnMouseDown", "LeftButton")
+    S.M.__now = S.M.__now + 1 / 60
+    local dragged = Hud.FixedHeight() - 47
+    f:__fire("OnSizeChanged", 300, dragged)
+    assertEqual(Hud.Height(), dragged, "the HUD's height while the grip is held")
+    assertEqual(win.h, dragged, "the window follows the drag")
+    f:__setGeom(300, dragged)
+    f.resizeGrip:__fire("OnMouseUp")
+    assertEqual(win.h, hud.h, "released: the snapped height")
+    assertTrue(NS.SetByPath("hud.scale", 1.2))
+    assertEqual(win.scale, hud.scale, "one scale for both, so equal heights line up")
+    assertEqual(win.h, hud.h, "rescaled: still level")
+end)
+
+test("race window: a HUD shorter than the window's minimum leaves the minimum", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local layout = S.NS.db.profile.hud.layout
+    layout.pace, layout.chart, layout.spells = false, false, false
+    S.NS.Hud.Apply()
+    assertTrue(hud.h < W(S).Height(), "a short HUD: " .. tostring(hud.h))
+    assertEqual(win.h, W(S).Height(), "never shorter than the tallest body needs")
+end)
+
+test("race window: TOP, BOTTOM, detached or the row off keep the window's own height", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local RW = W(S)
+    for _, side in ipairs({ "TOP", "BOTTOM" }) do
+        RW.Attach(side)
+        assertEqual(win.h, RW.Height(), side)
+    end
+    RW.Attach("RIGHT")
+    assertEqual(win.h, hud.h)
+    RW.Detach()
+    assertEqual(win.h, RW.Height(), "detached")
+    RW.Attach("LEFT")
+    assertTrue(S.NS.SetByPath("raceWindow.matchHud", false))
+    assertEqual(win.h, RW.Height(), "Match the DPS HUD's height off")
+    assertTrue(S.NS.SetByPath("hud.bars", 14))
+    assertEqual(win.h, RW.Height(), "and a HUD resize leaves it")
+    assertEqual(RW.View().height, RW.Height() - chromeOf(S))
 end)
 
 test("race window: unticking Attach in the settings keeps it where it stands, as Detach does", function()
@@ -813,23 +1052,33 @@ test("race window: with Race mode off it stays hidden", function()
     assertFalse(ui ~= nil and ui.frame:IsShown(), "not on screen")
 end)
 
-test("race window: the clock's timer runs only while racing and shown, and the stand-down drops all of it", function()
+test("race window: it has no timer of its own; the race beat redraws it while racing and shown", function()
     if forever() then return end
     local S = fresh()
-    local RW = W(S)
+    local RW, RC = W(S), S.NS.RaceClock
     RW.Show()
-    assertFalse(RW.Diagnose().ticking)
     assertTrue(RW.Diagnose().events, "idle: the target and regen events")
+    assertNil(RW.TICK, "no clock rate of its own (race window redesign plan Task W5)")
     assertTrue(F.arm(S, 30))
-    F.pull(S)
-    assertTrue(RW.Diagnose().ticking, "racing: the clock ticks")
+    local start = F.pull(S)
+    assertTrue(RC.On(), "racing: the race beat runs")
     assertFalse(RW.Diagnose().events, "racing: no idle events")
+    -- One repeating 0.1 s timer while the window is up: the beat's, never one of the window's.
+    local n = 0
+    for _, t in ipairs(S.M.__timers) do
+        if t.timer and t.timer.looping and t.timer.delay == RC.TICK then n = n + 1 end
+    end
+    assertEqual(n, 1, "the race beat is the only 0.1 s timer")
+    F.at(S, start + 3)
+    RC.__beat()
+    assertTrue(math.abs(RW.View().elapsed - 3) < 1e-6, "the beat redrew the race clock")
     RW.Hide()
-    assertFalse(RW.Diagnose().ticking, "hidden: no tick")
+    F.at(S, start + 4)
+    RC.__beat()
+    assertTrue(math.abs(RW.View().elapsed - 3) < 1e-6, "hidden: the beat draws nothing")
     RW.Show()
-    assertTrue(RW.Diagnose().ticking)
     assertTrue(S.NS.SetByPath("general.enabled", false))
-    assertFalse(RW.Diagnose().ticking, "stood down: no tick")
+    assertFalse(RC.On(), "stood down: no beat")
     assertFalse(RW.Diagnose().events, "stood down: no events")
     assertFalse(RW.__ui().frame:IsShown(), "stood down: hidden")
 end)
@@ -850,4 +1099,103 @@ test("race window: a race opens the DPS HUD whatever its own rules say; a plain 
     local s2 = F.pull(S, 121, 26)
     F.run(S, s2 + 0.25)
     assertTrue(NS.Hud.IsShown(), "a race opens it")
+end)
+
+-- ── the last checkpoint, taken at the buzzer (owner, 2026-11-13) ───────────────────────────────
+
+test("race window: the buzzer takes the last checkpoint with the DPS HUD's last read, so all four show", function()
+    if forever() then return end
+    local S = fresh()
+    raced(S, 30)
+    W(S).Act.newRace()
+    assertTrue(F.arm(S, 30, 200))
+    local start = F.pull(S, 201, 26, session(1000000))
+    F.damage(S, 26, start + 1, start + 28, 1)
+    S.meter.SetSession(26, session(3000000))
+    F.hit(S, start + 29.5, 26)
+    F.run(S, start + 29.5)
+    W(S).Refresh()
+    local v = W(S).View()
+    assertEqual(v.key, "running")
+    assertTrue(v.checkpoints[3].hasYou, "the third quarter taken on its beat")
+    assertFalse(v.checkpoints[4].passed, "the last one is the buzzer's")
+    assertFalse(v.checkpoints[4].hasYou, "no reading before it")
+    F.run(S, start + 30)
+    assertEqual(S.NS.Race.State(), "stopping")
+    v = W(S).View()
+    assertTrue(v.key == "stop" or v.key == "waiting", "the stopping body")
+    assertEqual(#v.checkpoints, 4)
+    for i = 1, 4 do
+        assertTrue(v.checkpoints[i].passed, "checkpoint " .. i .. " passed")
+        assertTrue(v.checkpoints[i].hasYou, "checkpoint " .. i .. " has your reading")
+    end
+    assertEqual(v.checkpoints[4].you, 3000000, "the last one is the HUD's last read")
+    assertEqual(v.checkpoints[1].you, 1000000, "the first quarter's own reading kept")
+    -- The stopping beats move nothing: the readings are held.
+    S.meter.SetSession(26, session(9000000))
+    F.hit(S, start + 30.5, 26)
+    F.run(S, start + 31)
+    assertEqual(W(S).View().checkpoints[4].you, 3000000, "held through the stop")
+end)
+
+test("race window: a race ending early takes no checkpoint past its end", function()
+    if forever() then return end
+    local S = fresh()
+    raced(S, 30)
+    W(S).Act.newRace()
+    assertTrue(F.arm(S, 30, 200))
+    local start = F.pull(S, 201, 26, session(1000000))
+    F.damage(S, 26, start + 1, start + 18, 1)
+    F.leave(S, start + 18)
+    F.run(S, start + 18.1)
+    assertEqual(S.NS.Race.State(), "stopping")
+    local v = W(S).View()
+    assertTrue(v.checkpoints[2].hasYou, "0:15 was passed")
+    assertFalse(v.checkpoints[3].passed or v.checkpoints[3].hasYou, "0:22.5 never came")
+    assertFalse(v.checkpoints[4].passed or v.checkpoints[4].hasYou, "nor the buzzer")
+end)
+
+-- ── the pet's own source: the pace bars' player-only reference (owner, 2026-11-13) ─────────────
+
+-- A second race, 30 s, with the best's record split half player, half pet; the DPS HUD's read
+-- answered as `petOwn` says (the pet on a live source of its own, or not).
+local function petRace(petOwn, player)
+    local S = fresh()
+    raced(S, 30)
+    local best = F.records(S)[1]
+    best.damage.player = player and best.damage.merged * player or nil
+    W(S).Act.newRace()
+    assertTrue(F.arm(S, 30, 200))
+    local start = F.pull(S, 201, 26, session(1000000))
+    F.damage(S, 26, start + 1, start + 5, 1)
+    local live = S.NS.Hud.LiveDamage
+    S.NS.Hud.LiveDamage = function(fight)
+        local total, present = live(fight)
+        return total, present, petOwn
+    end
+    F.damage(S, 26, start + 6, start + 10, 1)
+    W(S).Refresh()
+    return S, best, W(S).View()
+end
+
+test("race window pet: with the pet on its own source the pace bars take the best's player-only line", function()
+    if forever() then return end
+    local S, best, v = petRace(true, 0.5)
+    local score = best.race.score
+    F.near(v.paceRef, score * 0.5 * v.elapsed / 30, "Best by now's player-only figure at the race clock")
+    F.near(v.byNow, score * v.elapsed / 30, "Best by now itself stays the best's whole figure")
+    F.near(v.checkpoints[1].paceRef, score * 0.5 * 7.5 / 30, "the checkpoint the clock passed")
+    assertNil(v.checkpoints[2].paceRef, "a checkpoint not reached has none")
+    assertTrue(type(v.paceRef) == "number" and not T.isSecret(v.paceRef), "plain")
+    assertNil(S.NS.Hud.Diagnose().clockEvery, "the race beat draws the HUD's clock, not its own")
+end)
+
+test("race window pet: no pet source, or a best with no player-only figure, gives no paceRef", function()
+    if forever() then return end
+    local _, _, v = petRace(false, 0.5)
+    assertNil(v.paceRef, "the player's total is the merged one: the best's whole figure")
+    assertNil(v.checkpoints[1].paceRef)
+    _, _, v = petRace(true, nil)
+    assertNil(v.paceRef, "no player-only figure stored: none made up")
+    assertNil(v.checkpoints[1].paceRef)
 end)

@@ -8,7 +8,8 @@
 --
 -- The Race window is Task C1's. Its five hooks (ShowNearDummy, HideAwayFromDummy, ShownNearDummy, Closes
 -- and ArmLength) are the seam this module calls; the cases stand a fake window on that seam, as DPS
--- Race's HUD answered them. Every case runs on tests/race_fixture.lua's instance (the scripted meter,
+-- Race's HUD answered them, except the last section's, which run the real Race window (`real`) for the
+-- player's own open and close in a dummy session (AutoArm.InSession, the owner's in-game report). Every case runs on tests/race_fixture.lua's instance (the scripted meter,
 -- the clock, the timer queue serviced at its own GetTime()).
 
 local T = _G.CT_TEST
@@ -64,10 +65,12 @@ local function fixture(opts)
         if opts.mutate then opts.mutate(m) end
     end }
     S.plates = plates
-    S.W = fakeWindow(S.NS)
+    if not opts.real then S.W = fakeWindow(S.NS) end
     S.A = S.NS.AutoArm
     if not opts.defaults then
         assertTrue(S.NS.SetByPath("race.autoShow", opts.show == true))
+        -- Either auto-show row opens the Race window (W29 decision D4): the HUD's row as asked too.
+        assertTrue(S.NS.SetByPath("race.autoShowHud", opts.hud == true))
         assertTrue(S.NS.SetByPath("race.autoArm", opts.arm == true))
     else
         S.A.Sync()
@@ -113,6 +116,7 @@ test("autoarm: on WoW Forever nothing registers and a dummy target arms and show
     assertNil(S.NS.defaults.profile.race.autoArm, "no auto-arm key on WoW Forever")
     target(S, CLEAVE)
     assertFalse(W.wanted)
+    assertFalse(S.NS.Hud.IsShown(), "the DPS HUD opened by a dummy on WoW Forever")
     assertEqual(S.NS.Race.State(), "idle")
 end)
 
@@ -272,6 +276,207 @@ test("autoshow: turning the rule off closes the window it opened", function()
     assertFalse(S.W.wanted)
 end)
 
+-- ── the DPS HUD near a dummy (Race window redesign plan Task W3, ruling O4) ─────────────────────
+
+local function hud(S) return S.NS.Hud end
+
+--- Leave every dummy and let the debounce run out: the session ends.
+local function away(S)
+    target(S, nil)
+    for unit in pairs(S.plates) do plateDown(S, unit) end
+    advance(S, S.A.HIDE_DELAY)
+    assertFalse(S.A.Diagnose().session, "the session ended")
+end
+
+-- From here on the cases run the real Race window (W29): it opens the DPS HUD itself, so the HUD's
+-- part of auto-show is the Race window's own open.
+local function hudFixture(opts)
+    opts = opts or {}
+    opts.real = true
+    if opts.show == nil then opts.show = true end
+    local S = fixture(opts)
+    return S, S.NS.RaceWindow
+end
+
+test("autoshow hud: a new profile opens the DPS HUD with the Race window, as an auto open", function()
+    if forever() then return end
+    local S, RW = hudFixture()
+    assertEqual(S.NS.defaults.profile.race.autoShowHud, true, "on by default")
+    assertFalse(hud(S).IsShown())
+    target(S, CLEAVE)
+    assertTrue(RW.IsShown(), "the Race window opened")
+    assertTrue(hud(S).IsShown(), "the DPS HUD opened with it")
+    assertTrue(hud(S).ShownNearDummy())
+    assertFalse(hud(S).Diagnose().byPlayer, "the addon's open, which fades by the HUD's rules")
+    away(S)
+    assertFalse(RW.IsShown())
+    assertFalse(hud(S).IsShown(), "the HUD this rule opened closed at the session's end")
+    assertFalse(hud(S).ShownNearDummy())
+end)
+
+test("autoshow hud: either row opens both windows near a dummy; both off, neither (W29 D4)", function()
+    if forever() then return end
+    for _, rows in ipairs({ { show = true, hud = false }, { show = false, hud = true }, { show = true, hud = true } }) do
+        local S, RW = hudFixture(rows)
+        local tag = ("autoShow %s, autoShowHud %s"):format(tostring(rows.show), tostring(rows.hud))
+        assertEqual(S.A.Diagnose().events, "plates", tag .. ": the nameplates are heard")
+        target(S, CLEAVE)
+        assertTrue(RW.IsShown(), tag .. ": the Race window opened")
+        assertTrue(hud(S).IsShown() and hud(S).ShownNearDummy(), tag .. ": the HUD opened with it, the session's")
+    end
+    local S, RW = hudFixture{ show = false, hud = false }
+    assertEqual(S.A.Diagnose().events, "none")
+    target(S, CLEAVE)
+    assertFalse(RW.IsShown() or hud(S).IsShown(), "both rows off: nothing opens")
+end)
+
+test("autoshow hud: turning one row off keeps both windows; turning both off closes both", function()
+    if forever() then return end
+    local S, RW = hudFixture{ hud = true }
+    target(S, CLEAVE)
+    assertTrue(hud(S).IsShown() and RW.IsShown())
+    assertTrue(S.NS.SetByPath("race.autoShowHud", false))
+    assertTrue(hud(S).IsShown() and RW.IsShown(), "auto-show is still on by its other row")
+    assertTrue(S.NS.SetByPath("race.autoShow", false))
+    assertFalse(hud(S).IsShown(), "the HUD it opened closed")
+    assertFalse(RW.IsShown(), "the Race window it opened closed")
+end)
+
+test("autoshow hud: the player's close of the HUD holds both windows shut for the rest of the session", function()
+    if forever() then return end
+    local S, RW = hudFixture()
+    plateUp(S, "nameplate1", CLEAVE)
+    assertTrue(hud(S).IsShown() and RW.IsShown())
+    local closes, rwCloses = hud(S).Closes(), RW.Closes()
+    hud(S).Hide()
+    assertEqual(hud(S).Closes(), closes + 1, "the player's close counted")
+    assertFalse(RW.IsShown(), "the Race window hid with the HUD (T1)")
+    assertEqual(RW.Closes(), rwCloses, "hiding with the HUD is not the player closing the Race window")
+    plateUp(S, "nameplate2", GOLEM)
+    target(S, CLEAVE)
+    assertFalse(hud(S).IsShown(), "auto-show fought the player's close")
+    assertFalse(RW.IsShown(), "and the Race window stays down with it")
+    away(S)
+    plateUp(S, "nameplate1", CLEAVE)
+    assertTrue(hud(S).IsShown() and RW.IsShown(), "a new session opens both again")
+end)
+
+test("autoshow hud: the close control hides the Race window still wanted; Escape closes both as the player's", function()
+    if forever() then return end
+    local S, RW = hudFixture()
+    target(S, CLEAVE)
+    local closes, rwCloses = hud(S).Closes(), RW.Closes()
+    hud(S).__ui().close:GetScript("OnClick")(hud(S).__ui().close)
+    assertFalse(hud(S).IsShown())
+    assertEqual(hud(S).Closes(), closes + 1)
+    assertFalse(RW.IsShown() or RW.Visible(), "the Race window hid with the HUD")
+    assertEqual(RW.Closes(), rwCloses, "the HUD's close control is not the Race window's close")
+    assertTrue(RW.ShownNearDummy(), "still wanted, the session's")
+    target(S, GOLEM)
+    assertFalse(hud(S).IsShown() or RW.IsShown(), "the session leaves both shut")
+    -- Escape: the HUD's frame hidden by the close list, its OnHide heard.
+    S = hudFixture()
+    RW = S.NS.RaceWindow
+    target(S, CLEAVE)
+    closes, rwCloses = hud(S).Closes(), RW.Closes()
+    hud(S).Frame():Hide()
+    hud(S).Frame():__fire("OnHide")
+    assertFalse(hud(S).IsShown())
+    assertEqual(hud(S).Closes(), closes + 1)
+    assertFalse(RW.Visible(), "Escape took the Race window too")
+    assertEqual(RW.Closes(), rwCloses + 1, "as the player's close of it")
+    assertFalse(RW.ShownNearDummy(), "no longer wanted")
+    target(S, GOLEM)
+    assertFalse(hud(S).IsShown() or RW.IsShown())
+end)
+
+test("autoshow hud: a HUD the player opened or pinned is never closed by leaving", function()
+    if forever() then return end
+    local S = hudFixture()
+    hud(S).Show()
+    target(S, CLEAVE)
+    assertFalse(hud(S).ShownNearDummy(), "the player's HUD is not the rule's")
+    away(S)
+    assertTrue(hud(S).IsShown(), "the player's HUD closed by itself")
+    hud(S).Hide()
+    away(S)
+    -- A new session opens it, and the player pins it; then one the player opens as theirs.
+    target(S, CLEAVE)
+    assertTrue(hud(S).ShownNearDummy())
+    hud(S).Pin(true)
+    away(S)
+    assertTrue(hud(S).IsShown(), "a pinned HUD closed by leaving")
+    hud(S).Pin(false)
+    hud(S).Hide()
+    away(S)
+    target(S, CLEAVE)
+    assertTrue(hud(S).ShownNearDummy(), "the rule opened it again")
+    hud(S).Show()
+    away(S)
+    assertTrue(hud(S).IsShown(), "a HUD the player opened since closed by leaving")
+end)
+
+test("autoshow hud: the session's end never closes a live fight's HUD", function()
+    if forever() then return end
+    local S = hudFixture()
+    target(S, CLEAVE)
+    assertTrue(hud(S).IsShown())
+    F.pull(S, S.M.__now + 1)
+    assertTrue(hud(S).IsShown(), "the first hit kept it up")
+    target(S, nil)
+    advance(S, S.A.HIDE_DELAY)
+    assertFalse(S.A.Diagnose().session)
+    assertTrue(hud(S).IsShown(), "the live fight's HUD closed")
+    assertTrue(hud(S).State() == "live" or hud(S).State() == "noBest", hud(S).State())
+end)
+
+test("autoshow hud: a HUD the dummy opened stays up through the first hit whatever the show mode", function()
+    if forever() then return end
+    local S = hudFixture()
+    assertTrue(S.NS.SetByPath("hud.show", "toggle"))
+    target(S, CLEAVE)
+    assertTrue(hud(S).IsShown())
+    F.pull(S, S.M.__now + 1)
+    assertTrue(hud(S).IsShown(), "the first hit shut the HUD the dummy opened")
+end)
+
+test("autoshow hud: the same gates as auto-show: an instance and Race mode off", function()
+    if forever() then return end
+    local S = hudFixture()
+    S.M.__instance.type = "party"
+    target(S, CLEAVE)
+    assertFalse(hud(S).IsShown(), "opened in an instance")
+    S = hudFixture()
+    assertTrue(S.NS.SetByPath("race.enabled", false))
+    target(S, CLEAVE)
+    assertFalse(hud(S).IsShown(), "opened with Race mode off")
+    S = hudFixture()
+    target(S, CLEAVE)
+    assertTrue(hud(S).IsShown())
+    assertTrue(S.NS.SetByPath("race.enabled", false))
+    assertFalse(hud(S).IsShown(), "Race mode off closes a HUD the rule opened")
+end)
+
+-- The owner, 2026-11-13: near a dummy the HUD is held up (no fade), so both windows stay while the
+-- player stands there; the session's end closes both.
+test("autoshow hud: a dummy session holds the HUD up through its fade, and its end closes both", function()
+    if forever() then return end
+    local S, RW = hudFixture()
+    target(S, CLEAVE)
+    local start = F.pull(S, S.M.__now + 1)
+    F.damage(S, 25, start + 1, start + 3, 1)
+    F.settle(S, start + 4)
+    assertEqual(hud(S).State(), "over")
+    assertEqual(hud(S).FadeAt(), nil, "no fade while the session holds it")
+    advance(S, 60)
+    assertTrue(hud(S).IsShown(), "still up a minute on")
+    assertTrue(RW.IsShown() and RW.Visible(), "and the Race window with it")
+    target(S, GOLEM)
+    assertTrue(hud(S).IsShown() and RW.IsShown())
+    away(S)
+    assertFalse(hud(S).IsShown() or RW.IsShown(), "the session's end closes both")
+end)
+
 -- ── auto-arm ────────────────────────────────────────────────────────────────────────────────────
 
 test("autoarm: targeting a dummy out of combat arms at the Race window's length", function()
@@ -385,6 +590,7 @@ test("autoarm: a profile switch re-reads both rows, with no /reload", function()
     local S = fixture()
     S.NS.db:SetProfile("Other")
     assertTrue(S.NS.SetByPath("race.autoShow", false))
+    assertTrue(S.NS.SetByPath("race.autoShowHud", false))
     assertTrue(S.NS.SetByPath("race.autoArm", true))
     S.NS.db:SetProfile("Default")
     assertEqual(S.A.Diagnose().events, "none", "the other profile's rules held on")
@@ -441,4 +647,94 @@ test("autoarm: stood down, nothing is registered and nothing acts; the stand-up 
     target(S, nil)
     target(S, GOLEM)
     assertEqual(S.NS.Race.State(), "armed")
+end)
+
+-- ── the player's own open and close in a dummy session, on the real Race window ────────────────
+
+--- The real Race window and DPS HUD, auto-show on (the HUD with it by default).
+local function real()
+    local S = fixture{ show = true, real = true }
+    return S, S.NS.RaceWindow, S.NS.Hud
+end
+
+local function raceToggle(S) assertTrue(S.NS.SetRaceWindowShown("toggle")) end
+
+test("autoshow window: InSession is live from the first dummy seen to the session's end", function()
+    if forever() then return end
+    local S = real()
+    assertFalse(S.A.InSession())
+    target(S, CLEAVE)
+    assertTrue(S.A.InSession())
+    away(S)
+    assertFalse(S.A.InSession())
+end)
+
+test("autoshow window: detach, reattach, open and close by hand, walk away, come back", function()
+    if forever() then return end
+    local S, RW, Hud = real()
+    target(S, CLEAVE)
+    assertTrue(RW.IsShown() and RW.ShownNearDummy(), "auto-show opened the Race window")
+    assertTrue(Hud.IsShown(), "and the DPS HUD")
+    local closes = RW.Closes()
+    RW.Detach()
+    RW.Attach()
+    assertTrue(RW.IsShown() and RW.ShownNearDummy(), "Detach and Attach change nothing of who opened it")
+    assertEqual(RW.Closes(), closes, "and count no close")
+    raceToggle(S)
+    assertFalse(RW.IsShown(), "the player's close")
+    assertEqual(RW.Closes(), closes + 1)
+    raceToggle(S)
+    assertTrue(RW.IsShown(), "the player's open")
+    assertTrue(RW.ShownNearDummy(), "opened in the session, it is the session's")
+    raceToggle(S)
+    assertFalse(RW.IsShown(), "the player's second close")
+    away(S)
+    assertFalse(RW.IsShown(), "still shut after walking away")
+    assertFalse(Hud.IsShown(), "the DPS HUD closed by its own rule")
+    target(S, CLEAVE)
+    assertTrue(RW.IsShown() and RW.ShownNearDummy(), "a new session opens the Race window again")
+    assertTrue(Hud.IsShown(), "and the DPS HUD")
+    away(S)
+    assertFalse(RW.IsShown(), "and walking away closes it")
+end)
+
+test("autoshow window: the player's open in a session closes on walking away and opens on coming back", function()
+    if forever() then return end
+    local S, RW = real()
+    target(S, CLEAVE)
+    raceToggle(S)
+    assertFalse(RW.IsShown())
+    plateUp(S, "nameplate1", GOLEM)
+    assertFalse(RW.IsShown(), "the player's close still holds it shut in the session")
+    RW.Detach()
+    raceToggle(S)
+    RW.Attach()
+    assertTrue(RW.IsShown(), "opened by hand, detached and reattached")
+    local closes = RW.Closes()
+    away(S)
+    assertFalse(RW.IsShown(), "walking away closes a window the player opened in the session")
+    assertEqual(RW.Closes(), closes, "the session's close is not the player's")
+    plateUp(S, "nameplate1", CLEAVE)
+    assertTrue(RW.IsShown(), "coming back opens it again")
+end)
+
+test("autoshow window: a window the player opened before the session stays theirs", function()
+    if forever() then return end
+    local S, RW = real()
+    raceToggle(S)
+    assertTrue(RW.IsShown())
+    target(S, CLEAVE)
+    assertFalse(RW.ShownNearDummy(), "the player's window is not the session's")
+    RW.Detach()
+    RW.Attach()
+    assertFalse(RW.ShownNearDummy())
+    away(S)
+    assertTrue(RW.IsShown(), "walking away leaves the player's window open")
+    raceToggle(S)
+    assertFalse(RW.IsShown())
+    raceToggle(S)
+    assertFalse(RW.ShownNearDummy(), "opened with no session live, it is the player's")
+    target(S, CLEAVE)
+    away(S)
+    assertTrue(RW.IsShown())
 end)

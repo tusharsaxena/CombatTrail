@@ -17,7 +17,9 @@ local function fresh()
     local S = F.fresh({ mutate = function(m) installPaint(m) end })
     if S.NS.RaceWindow then
         assert(S.NS.SetByPath("race.autoShow", false))
+        assert(S.NS.SetByPath("race.autoShowHud", false))   -- either row is auto-show (W29 decision D4)
         S.NS.RaceWindow.HideAwayFromDummy()
+        S.NS.Hud.HideAwayFromDummy()
     end
     S.M.__now = 1000
     return S
@@ -70,7 +72,10 @@ test("race preview: /ct test race holds the sample race running on the Race wind
     local v = NS.RaceWindow.View()
     assertEqual(v.elapsed, NS.Preview.RACE_STILL_AT, "the race clock holds still")
     assertEqual(v.timeLeft, NS.MockRaces.LENGTH - NS.Preview.RACE_STILL_AT)
-    assertTrue(v.pace ~= nil and v.pace.total ~= nil, "paced on its race board in the sample history")
+    local best = v.bestView.record
+    assertTrue(best ~= nil and best.race.sample, "Best to beat: its race board's best in the sample history")
+    F.near(v.byNow, best.race.score * v.elapsed / best.race.length, "Best by now: the sample best's straight line")
+    assertEqual(#v.checkpoints, 4, "the Checkpoints draw by the same path")
     -- The DPS HUD: the race's fight, live, paced on the race board (a race record).
     assertEqual(NS.Hud.State(), "live")
     local hv = NS.Hud.View()

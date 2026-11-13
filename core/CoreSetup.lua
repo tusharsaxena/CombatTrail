@@ -108,8 +108,12 @@ NS.ClassColor = lib.ClassColor
 -- control in this addon is built through here, so this grep returns this definition and calls to
 -- NS.MakeCloseButton and nothing else:
 --   grep -rn 'MakeCloseButton(' --include='*.lua' . | grep -v '/libs/'
+-- Its art is fitted as every title-bar mark is (Style.FitControlArt, reached at call time), so the
+-- close is the same size as the controls beside it.
 NS.MakeCloseButton = function(parent, onClick)
-    return lib.MakeCloseButton(parent, onClick, addonName)
+    local b = lib.MakeCloseButton(parent, onClick, addonName)
+    if b and b.icon and NS.Style and NS.Style.FitControlArt then NS.Style.FitControlArt(b.icon, "close") end
+    return b
 end
 
 -- The prefix goes in as a FUNCTION so a later change to NS.PREFIX is not frozen in at load.

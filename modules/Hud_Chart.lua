@@ -38,6 +38,11 @@ local _, NS = ...
 -- Race's (FONT.SECTION on Style.SECTION_H), and the HUD lays the pace bar on a line between it and
 -- the plot (Place's `midH`; Hud_States' placeProfile), keeping the heading over the bar when the plot
 -- is off (SetParts).
+--
+-- THE RACE WINDOW'S MINI PACE BARS (owner, 2026-11-13) are this bar built thinner (NewPace's `opts`):
+-- Best by now's, the whole bar over its track; each Checkpoint's, `bare` (no track, the behind half's
+-- fill unpainted, so only the red shortfall and the green ahead grow from the tick), placed at an x
+-- offset inside its cell. Same halves, same clamp, same HudBest.Bounds range.
 
 local Chart = {}
 NS.HudChart = Chart
@@ -578,14 +583,15 @@ function Pace:anchorShortfall()
     self.fillAnchor = fill
 end
 
--- The bar's look, once per Appearance stamp: the behind half in the spell rows' bar look, the ahead
--- half in its texture and the green, the shortfall in the red, both at the look's opacity.
+-- The bar's look, once per Appearance stamp: the behind half in the spell rows' bar look (unpainted,
+-- alpha 0, on a bare bar), the ahead half in its texture and the green, the shortfall in the red,
+-- both at the look's opacity.
 function Pace:restyle()
     local A = NS.HudAppearance
     if self.stamp == A.stamp then return end
     self.stamp = A.stamp
     local look = A.Bar("spells")
-    A.PaintBar(self.behind, look)
+    A.PaintBar(self.behind, look, self.bare and { r = 0, g = 0, b = 0, a = 0 } or nil)
     local r, g, b = Style.Rgb(AHEAD)
     A.PaintBar(self.ahead, look, { r = r, g = g, b = b, a = look.a })
     Style.Fill(self.shortfall, BEHIND, look.a)
@@ -600,15 +606,21 @@ local function halfBar(parent)
 end
 
 --- The pace bar built into `parent`: the track, the behind and ahead halves split at the on-pace
---- tick, the red shortfall, and the tick over both.
+--- tick, the red shortfall, and the tick over both. `opts` (the Race window's mini bars): `barH`, the
+--- bar's height (default the HUD's, PACE_H - 4); `bare`, no track and no behind fill; `tip = false`,
+--- no HUD tooltip (the caller gives its own).
 --- @param parent table
+--- @param opts table|nil
 --- @return table pace
-function Chart.NewPace(parent)
-    local p = setmetatable({}, Pace)
+function Chart.NewPace(parent, opts)
+    opts = opts or {}
+    local p = setmetatable({ barH = opts.barH or (Chart.PACE_H - 4), bare = opts.bare == true }, Pace)
     p.bar = CreateFrame("Frame", nil, parent)
-    p.track = p.bar:CreateTexture(nil, "BACKGROUND")
-    p.track:SetAllPoints(p.bar)
-    Style.Fill(p.track, "ct.pace.track")
+    if not p.bare then
+        p.track = p.bar:CreateTexture(nil, "BACKGROUND")
+        p.track:SetAllPoints(p.bar)
+        Style.Fill(p.track, "ct.pace.track")
+    end
     p.behind = halfBar(p.bar)
     p.ahead = halfBar(p.bar)
     p.shortfall = p.behind:CreateTexture(nil, "ARTWORK")
@@ -619,7 +631,7 @@ function Chart.NewPace(parent)
     Style.Fill(p.tick, "ct.pace.tick")
     p.tick:SetWidth(2)
     p:restyle()
-    NS.HudTips.Attach(p.bar, "pace")
+    if opts.tip ~= false then NS.HudTips.Attach(p.bar, "pace") end
     return p
 end
 
@@ -627,15 +639,16 @@ function Pace:SetShown(on)
     self.bar:SetShown(on and true or false)
 end
 
---- Place it on the PACE_H line at `y` (negative, from `anchor`'s top) across `width`, DPS Race's
---- geometry: the bar 2px under the line's top and 4px shorter than it, the tick in its middle, the
---- behind half left of it and the ahead half right of it; answers the line's height.
+--- Place it on its line at `y` (negative, from `anchor`'s top) across `width`, `x` in (default 0),
+--- DPS Race's geometry: the bar 2px under the line's top and 4px shorter than it (the HUD's line is
+--- PACE_H), the tick in its middle, the behind half left of it and the ahead half right of it;
+--- answers the line's height.
 --- @return number
-function Pace:Place(anchor, y, width)
+function Pace:Place(anchor, y, width, x0)
     self.bar:ClearAllPoints()
-    self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y - 2)
+    self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", x0 or 0, y - 2)
     self.barW = math.max(1, width)
-    local h = Chart.PACE_H - 4
+    local h = self.barH
     self.bar:SetSize(self.barW, h)
     local x = math.floor(self.barW / 2 + 0.5)
     self.tick:ClearAllPoints()
@@ -648,7 +661,7 @@ function Pace:Place(anchor, y, width)
     self.ahead:SetPoint("TOPLEFT", self.bar, "TOPLEFT", x, 0)
     self.ahead:SetSize(math.max(1, self.barW - x), h)
     self:anchorShortfall()
-    return Chart.PACE_H
+    return h + 4
 end
 
 --- The range (plain, HudBest.Bounds: the pace in the middle), then the total (opaque live, plain
@@ -658,11 +671,34 @@ end
 --- @param hi number
 --- @param total any
 function Pace:Set(lo, hi, total)
+    if total == nil then total = lo end
+    self:SetRange(lo, hi)
+    self:SetTotal(total)
+end
+
+--- The range alone (plain, HudBest.Bounds), the halves shown. Pace:Set's first half.
+--- @param lo number
+--- @param hi number
+function Pace:SetRange(lo, hi)
     self:restyle()
     local mid = (lo + hi) / 2
     self.behind:SetMinMaxValues(lo, mid)
     self.ahead:SetMinMaxValues(mid, hi)
-    if total == nil then total = lo end
+    self.behind:Show()
+    self.ahead:Show()
+end
+
+--- The total alone, straight to both halves (opaque: never tested, not even for nil; the caller
+--- holds a plain flag for whether there is one). Pace:Set's second half.
+--- @param total any
+function Pace:SetTotal(total)
     self.behind:SetValue(total)
     self.ahead:SetValue(total)
+end
+
+--- No total to draw: the halves hidden, the track and the tick stay (the Race window's mini bar
+--- before the HUD's first read).
+function Pace:Blank()
+    self.behind:Hide()
+    self.ahead:Hide()
 end

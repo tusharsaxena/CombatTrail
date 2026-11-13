@@ -113,8 +113,9 @@ local function race(out)
     out:add("Diag", "race state=%s mode=%s fight=%s session=%s pending=%s boards=%s", R.State(),
         onOff(NS.RaceMode.On()), f and f.id, f and f.sessionID, pendingCount(), raceBoards())
     local w = NS.RaceWindow.Diagnose()
-    out:add("Diag", "race window shown=%s body=%s attached=%s side=%s ticking=%s", w.shown, w.body, w.attached,
-        w.side, w.ticking)
+    out:add("Diag", "race window shown=%s body=%s attached=%s side=%s matched=%s", w.shown, w.body, w.attached,
+        w.side, w.matched)
+    out:add("Diag", "race beat on=%s", NS.RaceClock.Diagnose().on)
     local c = NS.Countdown.Diagnose()
     out:add("Diag", "countdown shown=%s scheduled=%s owner=%s", c.shown, c.scheduled, c.owner)
     local sample = NS.RaceSample.Diagnose()

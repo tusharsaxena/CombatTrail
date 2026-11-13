@@ -56,6 +56,10 @@ NS.MSG = {
     RACE_RESULT = "Ka0s_CombatTrail_RaceResult",
     -- Payload: (reason): "canceled" (Race.Cancel), "not_dummy" (the pull was not on a training dummy).
     RACE_CANCELED = "Ka0s_CombatTrail_RaceCanceled",
+    -- Sender: modules/RaceClock.lua (Retail only), every RaceClock.TICK seconds while a race, the real
+    -- one or the sample, runs or stops: the race beat both race clocks redraw on (race window redesign
+    -- plan Task W5). Payload: none.
+    RACE_CLOCK = "Ka0s_CombatTrail_RaceClock",
 }
 
 local Bus = LibStub and LibStub("LibKa0s-Bus-1.0", true)

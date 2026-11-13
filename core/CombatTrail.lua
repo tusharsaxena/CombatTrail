@@ -130,7 +130,9 @@ function NS.OnHudInCombatChanged()
     if NS.Hud and NS.Hud.Refresh then NS.Hud.Refresh() end
 end
 
---- The launcher's Show window entry and the HUD key: show or hide the DPS HUD.
+--- The launcher's Show window entry and the HUD key: show or hide the DPS HUD (Hud.Toggle: a close
+--- takes an open Race window with it; an open is the HUD's alone, but near a training dummy with
+--- auto-show on it opens the Race window too).
 function NS.ToggleHud()
     if refused() then return false end
     if not (NS.Hud and NS.Hud.Toggle) then return notBuilt() end

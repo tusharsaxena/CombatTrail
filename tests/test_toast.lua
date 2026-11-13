@@ -26,6 +26,13 @@ local function fresh(mutate)
     return inst.NS, inst.mocks
 end
 
+--- `NS` with a fight's new best toasting: off by default (a race's is on), so a case about a fight
+--- toast turns it on.
+local function fightsOn(NS)
+    assertTrue(NS.SetByPath("toast.fights", true))
+    return NS
+end
+
 local n = 0
 --- A stored-shape record: a fight on the boar's board, or with `o.race` a race on the boss dummy's
 --- 60 s board (its race part: status, length, flags).
@@ -146,7 +153,7 @@ end)
 -- ── the fights (both clients) ──────────────────────────────────────────────────────────────────
 
 test("toast: a new fight best raises the toast; a board's first fight does not", function()
-    local NS = fresh()
+    local NS = fightsOn(fresh())
     save(NS, rec(NS, { id = "first", dps = 1000 }))
     assertNil(shownKey(NS), "a board's first fight has nothing to beat")
     save(NS, rec(NS, { id = "slower", dps = 900 }))
@@ -185,7 +192,7 @@ end)
 
 test("toast: a kind switched off drops its own toasts, waiting or shown, and keeps the other kind's", function()
     if forever() then return end
-    local NS = fresh()
+    local NS = fightsOn(fresh())
     save(NS, rec(NS, { dps = 1000 }))
     save(NS, rec(NS, { id = "fight-best", dps = 2000 }))
     save(NS, rec(NS, { race = true, dps = 1000 }))
@@ -291,7 +298,7 @@ test("toast: Reset position (Master controls) clears the stored place", function
 end)
 
 test("toast: the stand-down takes the toast down and drops what waits; a best while down shows none", function()
-    local NS = fresh()
+    local NS = fightsOn(fresh())
     save(NS, rec(NS, { dps = 1000 }))
     save(NS, rec(NS, { dps = 2000 }))
     save(NS, rec(NS, { dps = 3000 }))
@@ -306,7 +313,7 @@ end)
 -- ── the layout ─────────────────────────────────────────────────────────────────────────────────
 
 test("toast: DPS Race's size: 25% larger, the trophy as tall as the three rows", function()
-    local NS = fresh()
+    local NS = fightsOn(fresh())
     local B = NS.BestToast
     assertEqual(B.SCALE, 1.25)
     assertEqual(B.ROWS_H, B.TITLE_H + B.ROW_GAP + B.CHIP_H + B.ROW_GAP + B.TEXT_H)
@@ -322,7 +329,7 @@ test("toast: DPS Race's size: 25% larger, the trophy as tall as the three rows",
 end)
 
 test("toast: a real toast never moves; as Test toast's sample it drags", function()
-    local NS = fresh()
+    local NS = fightsOn(fresh())
     save(NS, rec(NS, { dps = 1000 }))
     save(NS, rec(NS, { dps = 2000 }))
     local frame = T_(NS):Frame()
@@ -374,7 +381,7 @@ test("toast: a class or spec the client cannot draw takes no room", function()
 end)
 
 test("toast: the rows' text draws larger than the same font unscaled, each row at its font's size", function()
-    local NS = fresh()
+    local NS = fightsOn(fresh())
     save(NS, rec(NS, { dps = 1000 }))
     save(NS, rec(NS, { dps = 2000 }))
     local frame = T_(NS):Frame()
@@ -404,7 +411,7 @@ test("toast: the History page's New-best toast tab, the races row on Retail only
     local want = "toast.fights,toast.sound,toast.soundKey,toast.duration,toast.scale"
     if not forever() then want = "toast.races," .. want end
     assertEqual(table.concat(paths, ","), want)
-    assertEqual(NS.db.profile.toast.fights, true)
+    assertEqual(NS.db.profile.toast.fights, false, "a fight's new best is off by default")
     if forever() then assertNil(NS.defaults.profile.toast.races) else assertEqual(NS.defaults.profile.toast.races, true) end
 end)
 

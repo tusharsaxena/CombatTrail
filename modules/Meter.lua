@@ -215,7 +215,7 @@ end
 -- ---------------------------------------------------------------------------
 
 local lastPet   -- the last PLAIN pet GUID ResolvePet saw
-local shared    -- Meter.ShareLive's one-dispatch read: { at = GetTime(), id, live } while open
+local shared    -- Meter.ShareLive's frame: { at = GetTime(), open, id, live }, served within that frame only
 
 --- The pet's GUID while a pet exists, else nil. In combat the GUID may be opaque: it is only ever
 --- handed back to the client. The last plain one is kept for LastPet.
@@ -562,9 +562,27 @@ local function liveDps(source)
     return nil, nil
 end
 
---- A new fight: the next live read logs the rung that serves it (the fight watchers, on start).
+--- Readers that may land in the same frame bracket their read with this (true, then false): Fight's
+--- FIGHT_TICK (the slices' boundary read) and the DPS HUD's beat (owner, 2026-11-13: its read at
+--- `hud.refreshRate`). The first ReadLive of a session in the frame asks the client and every other
+--- bracket in that same frame (GetTime()) is served it, whichever ran first, so the client is asked
+--- once a frame. It never serves a later frame, nor a read outside a bracket of its frame's opening;
+--- its values stay opaque and are only copied.
+--- @param on boolean
+function Meter.ShareLive(on)
+    local now = GetTime()
+    if not on then
+        if shared then shared.open = false end
+        return
+    end
+    if not (shared and shared.at == now) then shared = { at = now } end
+    shared.open = true
+end
+
+--- A new fight: the next live read logs the rung that serves it (the fight watchers, on start), and
+--- no shared read stands in for it.
 function Meter.NewLiveFight()
-    loggedRung, servedRung = nil, nil
+    loggedRung, servedRung, shared = nil, nil, nil
 end
 
 -- One source's live part, every value copied untouched; nil when the client answers none.
@@ -607,7 +625,9 @@ end
 ---                       creatureName} }}|nil,
 ---                       pet = {total, dps, maxAmount, spells}|nil }
 function Meter.ReadLive(id)
-    if shared and shared.at == GetTime() and shared.id == id and shared.live then return shared.live end
+    local now = GetTime()
+    local share = shared and shared.open and shared.at == now and shared or nil
+    if share and share.id == id and share.live then return share.live end
     local t0 = Perf.on and debugprofilestop()
     liveID = id
     local player = livePlayer()
@@ -619,16 +639,8 @@ function Meter.ReadLive(id)
     liveID = nil
     if t0 then Perf.Note("meter", debugprofilestop() - t0) end
     -- `petOut`: whether a pet exists (plain), so the breakdown knows to draw the pet's name column.
+    -- Shared (Meter.ShareLive) within this frame only.
     local live = { player = player, pet = pet, petOut = Meter.ResolvePet() ~= nil }
-    if shared and shared.at == GetTime() then shared.id, shared.live = id, live end
+    if share then share.id, share.live = id, live end
     return live
-end
-
---- Fight's tick brackets FIGHT_TICK's receivers with this (true, then false), so the HUD and the
---- slices share one ReadLive of a session in that dispatch instead of asking the client twice. The
---- share holds only within the frame it was opened in (GetTime()), so a receiver that raised and
---- skipped the close cannot serve a stale read later. Its values stay opaque and are never kept.
---- @param on boolean
-function Meter.ShareLive(on)
-    shared = on and { at = GetTime() } or nil
 end

@@ -116,6 +116,60 @@ timed". The owner can veto it.
 addon those are the CT HUD's job, so the Race window does not repeat them. The result card keeps the score,
 the delta and the flags, and *Open* opens the fight detail, which has the chart and the spells.
 
+> **Amendment, 2026-11-13 (owner).** The Race window redesign,
+> [`../plans/2026-11-13-race-window-redesign.md`](../plans/2026-11-13-race-window-redesign.md), supersedes
+> parts of §4.1 to §4.3. The Race window's running and result screens no longer draw a pace bar (the HUD's
+> is the race's); the running screen shows one countdown by default (`race.clock` is `"left"`), a time
+> bar, *Best to beat*, *Best by now* and *Checkpoints*, and the result card *Against your best* and *This
+> board*. The HUD now changes during a race: its title bar carries a Race button (ruling O6), it opens with
+> the Race window near a dummy (`race.autoShowHud`, ruling O4), and its clock moves on the race beat,
+> `RACE_CLOCK` at 10 Hz, with the Race window's (ruling O5). Attached, the Race window sits flush and, on
+> the left or right, takes the HUD's height (`raceWindow.matchHud`, ruling O3). The text above is kept as
+> it was decided.
+
+> **Amendment, 2026-11-13 (owner, second batch; redesign plan W9 to W13).** A Race window the player
+> opens while a dummy session is live is tied to that session (`AutoArm.InSession`), so walking away
+> closes it; one open before the session stays the player's. The HUD's toggle (its key, the launcher's
+> *Show window*, `/ct hud toggle`) and `/ct hud hide` close an open Race window with the HUD, each a
+> player's close; opening opens the HUD alone, and `/ct race toggle` and the Race button never touch
+> the HUD. The Race button carries no lit state. On Retail the Race window has a key, *Toggle Race
+> window*, in a Retail-only `Bindings_Mainline.xml` (a documented deviation). The result card drops the
+> time raced row and the vs best chip beside its table, and *This board* is renamed *Top races*. The
+> running screen's time bar empties to the buzzer, it and the countdown turn green to yellow to red,
+> and *Best by now* and each *Checkpoint* show the player's damage (the HUD's last read, text only, no
+> pace bar or difference) beside the best's.
+
+> **Amendment, 2026-11-13 (owner, third batch; redesign plan W14 to W23).** Near a dummy with auto-show
+> on, the HUD's toggle opening the HUD opens the Race window too (tied to the session), even after a
+> close earlier in the session; away from a dummy, and for `/ct hud show`, it opens the HUD alone. The
+> Race button's icon is Open Iconic's plain `flag` (ruling O6's checkered flag is withdrawn), and every
+> header mark is cropped and scaled to one size (`Style.FitControlArt`). An arm resets the HUD to its
+> pre-fight look and never drops a live fight. The race's elapsed time and time left share one count of
+> tenths (`NS.Format.RaceClock`), so the countdown reads 0:00.0 only at the buzzer and the center
+> countdown agrees; the last checkpoint is taken at the buzzer, and the Stop! and waiting screens show
+> all four Checkpoints when there is a best and they fit. The Race window has a resize grip while
+> unlocked (`raceWindow.width`, `raceWindow.height`; width alone when matched to the HUD), and its
+> bodies stretch to it. The clocks' redraw rate is a setting, `hud.clockRate` outside a race and
+> `race.clockRate` in one (4, 5, 10 or 20 a second, default 10): a fight that is not a race now draws
+> its clock on the HUD's own beat, not on FIGHT_TICK (superseding that part of ruling O5), and the meter
+> is still read four times a second. *Best by now*'s *You* is *Current*, and the running screen gains
+> two thin mini pace bars (over Best by now and in each Checkpoint), the HUD's bar driven by the same
+> handed-in figure; this supersedes the second batch's "text only, no pace bar". With a pet on its own
+> meter source, the bars range on the best's player-only figure.
+
+> **Amendment, 2026-11-13 (owner, fourth batch; redesign plan W24 to W28).** One setting replaces the
+> third batch's two: `hud.refreshRate` (*HUD refresh rate*, DPS HUD → Behavior → Refresh, 4, 5, 10 or 20
+> a second, default 10, both clients) drives every live part of both windows, in a fight and in a race;
+> `hud.clockRate` is replaced and `race.clockRate` is gone. Each beat is one meter read and the HUD's
+> whole redraw: the HUD's own beat (`Hud.SyncBeat`) outside a race, the race beat in one, which calls
+> `Hud.OnRaceClock()` and then sends `RACE_CLOCK`, so the Race window redraws on that same read (the
+> HUD no longer hears `RACE_CLOCK`). FIGHT_TICK stays at 4 Hz for the slices and Fight's scan; the
+> footer names the actual rate. This supersedes ruling O5 again. On the Race window, the time bar is
+> drawn like the HUD's pace bar; Best to beat and the idle Your best card show a labeled Damage and DPS
+> pair on one row (no big DPS figure); Best by now uses the same labeled layout, so its values never
+> overlap; and the checkpoint cells are larger (`CP_H` 54, the time in the heading face, the bar 90%
+> wide). The window's content height is 360.
+
 ### 4.3 Attach and detach (owner)
 
 The Race window can be **attached** to the HUD or **detached**, by a setting and by attach/detach buttons on
@@ -194,9 +248,13 @@ A race is **one fight record** with an optional `race` part **(Claude, from the 
   `/ct ignore` stays the lanes' spell ignore, so the late-cast list lives under `race`.
 - **Keybindings (Claude):** Arm / cancel race and Toggle Race window, both Retail. DPS Race's other two (toggle
   HUD, toggle Results) already exist in Combat Trail.
+  *Amended 2026-11-13 (owner):* Toggle Race window ships, Retail only, in `Bindings_Mainline.xml`; Arm /
+  cancel race does not (`/ct race arm` and `cancel` work in a macro).
 - **New-best toast and chat lines (Claude).** The toast fires for a new race best, as in DPS Race, and also for a
   new **fight** best on its board (never a board's first fight), since a boss best is the moment Combat Trail
   exists for and "one behavior" is the owner's bar. Two toggles on the toast section, races and fights, both on.
+  *Amended 2026-11-13 (owner):* a new profile toasts a race's new best and not a fight's (`toast.fights`
+  defaults off); both toggles stay.
   The chat lines on arm and on a race result stay race-only. The CT HUD itself is unchanged.
 - **Launcher:** a "Show race window" entry on Retail.
 - **Words (owner):** the mode is "Race mode", a timed fight is a "race", the window is the "Race window".

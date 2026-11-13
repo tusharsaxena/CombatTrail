@@ -163,6 +163,10 @@ modules\LateIgnore.lua
 modules\RaceScoring.lua
 modules\Race.lua
 modules\RaceWatchers.lua
+# The race beat (race window redesign plan Task W5; Retail only, returns at once on WoW Forever): one
+# 0.1 s AceTimer while a race, the real one or the sample, runs or stops. LOAD-BEARING: captures
+# NS.Perf and registers its bus receiver at FILE SCOPE; reaches NS.Race and NS.RaceSample at CALL time.
+modules\RaceClock.lua
 # Race mode's player-facing parts (Retail only, Task B3): auto-show and auto-arm near a training dummy
 # (LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus receiver at FILE SCOPE, on
 # Retail; reaches NS.Race, NS.Identity, NS.Dummies and NS.RaceWindow at CALL time) and `/ct race`'s
@@ -213,12 +217,14 @@ modules\Hud_States.lua
 # NS.Recorder and NS.db at CALL time only.
 modules\Hud.lua
 # The Race window (Race mode, race plan Task C1; Retail only: each file returns at once on WoW Forever).
-# Its Your best card and its six bodies, then the shell. LOAD-BEARING: modules\RaceWindow_States.lua
-# reads NS.HudStates.COLORS, HEAD_GAP and SECTION_H and NS.Style at FILE SCOPE, so it follows
-# modules\Hud_States.lua; modules\RaceWindow.lua builds its bus receiver at FILE SCOPE through core\Bus.lua
-# and captures NS.Perf and NS.Secrets there. Each reaches NS.Race, NS.Hud, NS.Bests and the Results
-# window's parts at CALL time only.
+# Its Your best card, the board's figures and its six bodies, then the shell. LOAD-BEARING:
+# modules\RaceWindow_Board.lua reads NS.HudStates.COLORS and NS.Style at FILE SCOPE, so it follows
+# modules\Hud_States.lua; modules\RaceWindow_States.lua reads NS.HudStates.COLORS, NS.Style and
+# NS.RaceWindowBoard's layout constants at FILE SCOPE, so it follows both; modules\RaceWindow.lua builds
+# its bus receiver at FILE SCOPE through core\Bus.lua and captures NS.Perf and NS.Secrets there. Each
+# reaches NS.Race, NS.Hud, NS.Bests and the Results window's parts at CALL time only.
 modules\RaceWindow_Best.lua
+modules\RaceWindow_Board.lua
 modules\RaceWindow_States.lua
 modules\RaceWindow.lua
 modules\Countdown.lua

@@ -1,7 +1,8 @@
 local _, NS = ...
--- modules/Hud_Best.lua — the pace data (spec §6, plan Task 3.2): what the stored fight the HUD paces
--- against (modules/Hud.lua PaceRecord: the board's best, or its newest fight) had done by each second
--- of its own clock, and the pace bar's ends around that figure. Adapted from DPS Race @045f479
+-- modules/Hud_Best.lua — the pace data (spec §6, plan Task 3.2): which stored fight the HUD paces
+-- against (Best.PaceRecord, the DPS HUD's Hud.PaceRecord: the board's best, or its newest fight, with
+-- the fight's target line and its curve), what it had done by each second of its own clock, and the
+-- pace bar's ends around that figure. Adapted from DPS Race @045f479
 -- (modules/Hud_Best.lua and modules/Hud_Chart.lua's Pace and PaceBounds) without its race: no race
 -- length, no idle "Your best" card; a fight's own duration is the curve's length. A RACE best is paced
 -- on its own straight line instead (HudBest.RaceCurve, Race mode plan Task C3): its score over its
@@ -225,4 +226,78 @@ function Best.OverView(curve, final, clock)
     local lo, hi = Best.Bounds(ref)
     local pet = type(final.pet) == "table" and Secrets.PlainNumber(final.pet.total) or 0
     return { lo = lo, hi = hi, ref = ref, total = player + pet, playerOnly = false }
+end
+
+-- ── the pace lookup (Hud.PaceRecord's, here since W29) ──────────────────────────────────────────
+
+--- The fight's identity (Identity.Resolve), or an empty one.
+function Best.Identity(fight)
+    local ok, ident = pcall(NS.Identity.Resolve, fight, nil, nil)
+    if ok and type(ident) == "table" then return ident end
+    return {}
+end
+
+-- The board's newest fight in `list` (newest first), for `hud.paceAgainst` "last".
+local function lastOnBoard(probe, list)
+    local boardKey = NS.Bests.Key(probe)
+    if not boardKey then return nil end
+    for _, r in ipairs(list) do
+        if r.status == "final" and NS.Bests.Key(r) == boardKey then return r end
+    end
+    return nil
+end
+
+-- A fight on a shared session (race plan ruling X3): its live total holds the damage from before the
+-- race's arm, which cannot be netted in combat.
+function Best.OnSharedSession(fight)
+    if fight.sharedSession == true then return true end
+    local race = fight.race
+    return type(race) == "table" and type(race.flags) == "table" and race.flags.sharedSession == true
+end
+
+-- The record the pace looks up: the fight's board, or while it carries its race part the race board
+-- (Bests.Key reads a probe with a `race` part as a race: its kind and length).
+local function probeOf(fight, ident)
+    local snap = type(fight.snapshot) == "table" and fight.snapshot or {}
+    local probe = { who = snap.who, boardKey = NS.Identity.BoardKey(ident), identity = ident, status = "final" }
+    local race = fight.race
+    if type(race) == "table" then probe.race = { kind = race.kind, length = race.length } end
+    return probe
+end
+
+--- The stored fight the live fight is paced against (`hud.paceAgainst`): its board's best, its
+--- board's newest fight, or nil (none, an unknown target, a board with nothing on it, a shared
+--- session). While the fight carries its race part, the board is its race board. A sample fight is
+--- paced against the sample history.
+--- @param fight table
+--- @param ident table|nil  the fight's identity (Identity.Resolve), read when nil
+--- @return table|nil record
+function Best.PaceRecord(fight, ident)
+    local against = NS.Hud and NS.Hud.Setting and NS.Hud.Setting("hud.paceAgainst")
+    if against == "none" or type(fight) ~= "table" or Best.OnSharedSession(fight) then return nil end
+    local probe = probeOf(fight, ident or Best.Identity(fight))
+    if fight.sample then
+        local Source = NS.ResultsSource
+        if against == "last" then return lastOnBoard(probe, Source.All()) end
+        return Source.BestFor(probe)
+    end
+    if against == "last" then return lastOnBoard(probe, NS.Recorder.List()) end
+    return NS.Bests.For(probe)
+end
+
+-- "<boss or target> · <instance> · <difficulty>", plain strings only.
+function Best.TargetLine(ident)
+    local parts = {}
+    local name = Secrets.PlainString(ident.encounterName) or Secrets.PlainString(ident.targetName)
+    for _, s in ipairs({ name, Secrets.PlainString(ident.instanceName), Secrets.PlainString(ident.difficultyName) }) do
+        if s and s ~= "" then parts[#parts + 1] = s end
+    end
+    return table.concat(parts, " \194\183 ")
+end
+
+-- The pace record's curve: a race's straight line (its score over its length), else the fight's.
+function Best.CurveOf(pace)
+    if not pace then return nil end
+    if NS.RaceRecord.IsRace(pace) then return NS.HudBest.RaceCurve(pace) end
+    return NS.HudBest.Curve(pace.id, pace)
 end

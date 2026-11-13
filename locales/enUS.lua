@@ -32,12 +32,15 @@ L["The %s cannot use the unit frame %s, so it sits at its own place."] =
 -- Key bindings (launcher-§6)
 L["Toggle DPS HUD"] = "Toggle DPS HUD"
 L["Toggle Results window"] = "Toggle Results window"
+L["Toggle Race window"] = "Toggle Race window"
 L["Toggle lanes"] = "Toggle lanes"
 L["Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."] =
     "Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."
 L["Shows or hides the Results window, with your fight history."] =
     "Shows or hides the Results window, with your fight history."
 L["Shows or hides the Player and Pet cast lanes."] = "Shows or hides the Player and Pet cast lanes."
+L["Shows or hides the Race window, as /ct race toggle and the DPS HUD's flag do."] =
+    "Shows or hides the Race window, as /ct race toggle and the DPS HUD's flag do."
 L["The lanes are off. Press the key again to bring them back."] =
     "The lanes are off. Press the key again to bring them back."
 L["The lanes are on."] = "The lanes are on."
@@ -454,6 +457,11 @@ L["How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it to
     "How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."
 L["HUD scale"] = "HUD scale"
 L["The size of the whole HUD, its text included."] = "The size of the whole HUD, its text included."
+L["Refresh"] = "Refresh"
+L["HUD refresh rate"] = "HUD refresh rate"
+L["%d a second"] = "%d a second"
+L["How many times a second everything live on the DPS HUD redraws during a fight: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows. Faster reads the damage meter more often."] =
+    "How many times a second everything live on the DPS HUD redraws during a fight: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows. Faster reads the damage meter more often."
 L["Clock font"] = "Clock font"
 L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."] =
     "The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."
@@ -598,7 +606,7 @@ L["Results"] = "Results"
 L["Damage"] = "Damage"
 L["DPS"] = "DPS"
 L["DPS \194\183 Live"] = "DPS \194\183 Live"
-L["live \194\183 4 Hz"] = "live \194\183 4 Hz"
+L["live \194\183 %d Hz"] = "live \194\183 %d Hz"
 L["Pinned open"] = "Pinned open"
 L["Fades %d s after the fight"] = "Fades %d s after the fight"
 L["%+.1f%%"] = "%+.1f%%"

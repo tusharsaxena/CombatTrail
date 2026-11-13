@@ -10,7 +10,10 @@ local _, NS = ...
 -- Preview.lua's header) is a hand-over, never a message: the owner (Preview or SimRace) sets the state
 -- here and calls the windows itself. The Race window's Cancel and Stop Now act on the sample, never on a
 -- real race: a Cancel (the result card's close, Cancel on the armed body) ends the preview; Stop Now
--- marks it for the sim to read at once.
+-- marks it for the sim to read at once. Each change of the sample's state tells the race beat
+-- (modules/RaceClock.lua, race window redesign plan Task W5) directly, so a running or stopping sample
+-- moves both race clocks on it, as a real race does; the beat's RACE_CLOCK is the one message a sample
+-- causes, and it carries nothing (no state, no figure).
 --
 -- TWO CLOCKS. Held (test mode): the race clock stands at the held moment (`at`), and the countdown is
 -- the real race's (none). Live (the sim): the clock runs from the first hit's GetTime() (SimRace's
@@ -35,6 +38,12 @@ function RS.On() return held ~= nil end
 --- Whether the sample's clock runs (the sim), so the countdown reads it.
 function RS.Live() return held ~= nil and held.live == true end
 
+-- The race beat re-decides on every change here (a call, never a message).
+local function tellBeat()
+    local RC = NS.RaceClock
+    if RC then RC.Sync() end
+end
+
 local function moving()
     local st = held and held.state
     return st == STATE().RUNNING or st == STATE().STOPPING
@@ -47,21 +56,27 @@ function RS.Hold(sample, state, at)
              inCombat = state == "running" }
     if state == "result" then held.race = sample.record.race end
     if state == "running" then held.lastDamage = at end
+    tellBeat()
 end
 
 --- Start `sample` armed, on a live clock (the sim). SimRace.Set moves it on.
 function RS.Start(sample)
     held = { state = STATE().ARMED, race = sample.race, fight = sample.fight, live = true, inCombat = false }
+    tellBeat()
 end
 
 --- Move the live sample on: any of { state, startedAt, buzzerAt, lastDamage, inCombat, record, race }.
 function RS.Set(fields)
     if not held then return end
     for k, v in pairs(fields) do held[k] = v end
+    if fields.state ~= nil then tellBeat() end
 end
 
 --- The sample goes; the windows read the real race again.
-function RS.Clear() held = nil end
+function RS.Clear()
+    held = nil
+    tellBeat()
+end
 
 -- ── Race's query surface ────────────────────────────────────────────────────────────────────────
 
@@ -116,6 +131,7 @@ function RS.DefaultLength() return NS.Race.DefaultLength() end
 function RS.Cancel()
     if not held then return false end
     held = nil
+    tellBeat()
     if NS.Preview and NS.Preview.IsActive() then NS.Preview.Stop() end
     return true
 end

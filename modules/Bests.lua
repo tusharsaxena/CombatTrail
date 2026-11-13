@@ -246,6 +246,29 @@ function Bests.Before(record, records)
     return prev
 end
 
+--- Every record on `record`'s board, best first, as the board ranks them (the records that count:
+--- final, with a DPS, a race only when complete; flagged races in, as the all-races board holds
+--- them): the Race window's Top races table (race window redesign plan Task W7). `record` itself
+--- joins the list when it counts and the records do not hold it yet (a sample race's read).
+--- @param record table
+--- @param records table|nil  as Before's
+--- @return table ranked  an array, empty when `record` is on no board
+function Bests.Ranked(record, records)
+    local key = Bests.Key(record)
+    local out = {}
+    if not key then return out end
+    local held = false
+    for _, r in ipairs(history(records)) do
+        if counts(r) and Bests.Key(r) == key then
+            out[#out + 1] = r
+            held = held or r == record or r.id == record.id
+        end
+    end
+    if not held and counts(record) then out[#out + 1] = record end
+    table.sort(out, ranksAbove)
+    return out
+end
+
 --- `record` against the best on its board BEFORE it (DPS Race's Delta), for a race or a fight.
 --- @param record table
 --- @param records table|nil  as Before's

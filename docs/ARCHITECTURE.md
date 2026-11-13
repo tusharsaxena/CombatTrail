@@ -25,7 +25,10 @@ Retail a fourth:
   [`superpowers/specs/2026-11-11-race-mode-design.md`](superpowers/specs/2026-11-11-race-mode-design.md),
   and its plan, [`superpowers/plans/2026-11-11-race-mode.md`](superpowers/plans/2026-11-11-race-mode.md),
   whose rulings are cited as "ruling Xn"). A race is a Combat Trail fight that happens to be timed:
-  `Race` rides the fight pipeline and `Recorder` saves it.
+  `Race` rides the fight pipeline and `Recorder` saves it. The Race window's redesign, which makes the
+  DPS HUD and the Race window one panel near a dummy, is
+  [`superpowers/plans/2026-11-13-race-window-redesign.md`](superpowers/plans/2026-11-13-race-window-redesign.md)
+  (its rulings cited as "ruling On").
 
 Core, meter, HUD and Results code is adapted from DPS Race @045f479 with every race concept removed;
 Race mode then ports DPS Race @f8078c7's race layer back on top of it. The lanes are new code grown
@@ -50,10 +53,13 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Spec in Results (the column's second icon, the dropdown, the Spec grouping, the bests' board, the Share line) | the specialization | the predominant talent tree (most points, a tie to the first) stands in, worded "talent tree" (v0.2 plan A4, D5 and D11); none with no points or no talent API, so the class icon never shows twice |
 | The talent-tree section of `/ct probe` | absent | every talent API's answer and the tree picked |
 | Race mode's engine (`modules/Race.lua`: its bus receivers and `Race.Arm`; `modules/RaceWatchers.lua`: its events), gated with `NS.Compat.ForClient({ "retail" })` | present | absent: `Race.Arm` refuses (`"client"`), nothing registers; a saved race still lists and re-scores (`modules/LateIgnore.lua`, both clients) |
-| The Race mode page (`settings/Race.lua`: the page declared `clients = { "retail" }`, its rows registered on Retail only and each declared retail; the keys `race.enabled`, `autoShow`, `autoArm`, `clock`, the countdown's and the buzzer's, and `raceWindow` built under `ForClient` in `defaults/Profile.lua`) | present | absent: no page, no row, no stored key |
+| The Race mode page (`settings/Race.lua`: the page declared `clients = { "retail" }`, its rows registered on Retail only and each declared retail; the keys `race.enabled`, `autoShow`, `autoShowHud`, `autoArm`, `clock`, the countdown's and the buzzer's, and `raceWindow` built under `ForClient` in `defaults/Profile.lua`) | present | absent: no page, no row, no stored key |
 | The `/ct race` verb (`settings/Slash.lua`: the triple declared `clients = { "retail" }`, gated by the library and, degraded, by the stub and `NS.RunVerb`) | present | absent: not in the help, typing it is an unknown verb |
-| Auto-show and auto-arm (`modules/AutoArm.lua`: its bus receivers under `ForClient`, its events only while `NS.RaceMode.On()`) | present | absent: nothing registers |
-| The Race window (`modules/RaceWindow.lua`, `RaceWindow_States.lua`, `RaceWindow_Best.lua`: each returns at once off Retail, so `NS.RaceWindow` is nil) | present | absent: nothing loads, the toggle refuses |
+| Auto-show and auto-arm (`modules/AutoArm.lua`: its bus receivers under `ForClient`, its events only while `NS.RaceMode.On()`): near a training dummy the Race window opens, and the DPS HUD with it (either `race.autoShow` or `race.autoShowHud` on: the Race window never stands without the HUD); a Race window the player opens while that dummy session is live is tied to it (`AutoArm.InSession`), so walking away closes it and the next session opens it again | present | absent: nothing registers, the HUD never opens for a dummy |
+| The Race window (`modules/RaceWindow.lua`, `RaceWindow_States.lua`, `RaceWindow_Best.lua`, `RaceWindow_Board.lua`: each returns at once off Retail, so `NS.RaceWindow` is nil): an extension of the DPS HUD, never on screen while the HUD is hidden (`RaceWindow.IsShown` asks `Hud.IsShown`, and every `Hud.Refresh` ends in `RaceWindow.FollowHud`), hiding with the HUD still wanted and back with it, its every open opening the HUD first, and the HUD never fading while a race holds it (race window redesign plan W29); docked flush beside the DPS HUD, at its height on the left or right (`raceWindow.matchHud`), and sized by its grip while unlocked (`raceWindow.width`, `raceWindow.height`); its screens carry no full pace bar (the HUD's is the race's) and draw stored records and the race clock, plus one live figure, the player's damage (*Current*) beside the best's on the running screen and in the Stop! and waiting screens' Checkpoints (the DPS HUD's last read, `Hud.LiveDamage`), as text and on two thin mini pace bars | present | absent: nothing loads, the toggle refuses |
+| The DPS HUD's Race button (the flag on its title bar, Open Iconic's `flag`, each header icon cropped and scaled to one size by `Style.FitControlArt`, between Results and Settings, gold only under the pointer like every title-bar control; `modules/Hud.lua` builds it under `ForClient`) | present while Race mode is on | absent: not built, the title bar keeps Results, Settings, Lock and Close |
+| The *Toggle Race window* key binding (`Bindings_Mainline.xml`, Retail's bindings file; the button `CombatTrailToggleRace`, its `NS.BINDINGS` row and its label built under `ForClient` in `core/LauncherSetup.lua`) | present, after *Toggle Results window* | absent: `Bindings.xml` keeps the three shared keys, no button, no row |
+| The race beat (`modules/RaceClock.lua`, returns at once off Retail): one AceTimer at `Hud.RefreshInterval()` (1 / `hud.refreshRate`, default 0.1 s) while a race runs or stops; each fire calls `Hud.OnRaceClock()` (one meter read and the HUD's whole redraw), then sends `RACE_CLOCK`, on which the Race window redraws from that same read; outside a race the HUD's own beat (`Hud.SyncBeat`) at the same rate | present | absent: the HUD is always on its own beat (`hud.refreshRate`, both clients) |
 | The race's countdown and buzzer (`modules/Countdown.lua`, returns at once off Retail) and its chat lines on the arm and at the result (`modules/Share.lua`'s receivers under `ForClient`) | present | absent: nothing loads or registers; a saved race still shares |
 | The new-best toast (`modules/BestToast.lua`, History > New-best toast) | a fight's (`toast.fights`) and a race's (`toast.races`) | a fight's only: no `toast.races` key, row or receiver |
 | Races in the Results window (`modules/Results_Races.lua`, `Results_RaceDetail.lua`: the Fights / Races / All filter, the race filters, the race groupings, a race row's length and flag chips, the detail's Timing and Flags, the late-cast right-click, `/ct results races`; each asks `NS.ResultsRaces.On()`, `ForClient({ "retail" })`) | present, whether Race mode is on or off (the filter reads the record) | absent: a saved race lists as a fight, with its race DPS, score and time raced, and no race control |
@@ -63,11 +69,15 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Sample history (test mode and the sim) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
-Race mode has no launcher entry and no key binding on either client: LibKa0s-Launcher's menu is fixed
-(launcher-§2), so the minimap menu stays Enabled, Locked, Test mode, Sim mode and Show window (ruling
-X17), and one static `Bindings.xml` would show a Retail-only binding on WoW Forever (clients-§4), so
-`Bindings.xml` keeps its three (ruling X18). `/ct race show`, `/ct race toggle` and `/ct race arm`
-work in a macro. Neither is a deviation: the spec items are dropped and deferred.
+Race mode has no launcher entry: LibKa0s-Launcher's menu is fixed (launcher-§2), so the minimap menu
+stays Enabled, Locked, Test mode, Sim mode and Show window (ruling X17), a dropped spec item and not a
+deviation. It has one key binding, *Toggle Race window*, on Retail only (the owner's decision of
+2026-11-13, superseding ruling X18's deferral): one static `Bindings.xml` would show it on WoW Forever
+(clients-§4), so Retail reads its own `Bindings_Mainline.xml` (the three shared keys plus the Race key
+after Results) and WoW Forever reads `Bindings.xml` (the three), and `core/LauncherSetup.lua` builds the
+Race key's button, its `NS.BINDINGS` row and its label under `ForClient({ "retail" })`. The per-flavor
+file is a documented deviation (below). `/ct race show`, `/ct race toggle` and `/ct race arm` work in a
+macro too.
 
 ### Secret-value invariants (spec §3)
 
@@ -89,6 +99,14 @@ work in a macro. Neither is a deviation: the spec items are dropped and deferred
   displays a value itself: its anchor (`GetPoint`) and its edges (`GetLeft`, `GetTop`, `GetBottom`,
   for the grow edge, v0.2 Task B3) are read after a drag, each only as a plain number, and the grip's
   sizes are the ones `OnSizeChanged` hands the shell.
+- The Race window's one live figure, the player's damage beside Best by now and in each Checkpoint
+  (Retail), is the DPS HUD's last read handed in (`Hud.LiveDamage`, no second meter read). It reaches
+  two C-side sinks: a label through `NS.Format.Number`, and the mini pace bars'
+  `StatusBar:SetValue`, whose range is plain (`NS.HudBest.Bounds` around the best's figure there).
+  It is never compared, computed on, keyed or tested, with a plain flag beside it saying whether there
+  is one. A checkpoint's reading is held in memory for that race alone; no region is anchored to a
+  label or a bar that may hold a secret, and each bar stands on a plain frame (the body's content, a
+  checkpoint's cell).
 
 ## Module Map
 
@@ -103,9 +121,9 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
 - **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
-- **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, AutoArm, RaceVerb.
+- **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, RaceClock, AutoArm, RaceVerb.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
-- **Race window (Retail):** RaceWindow_Best, RaceWindow_States, RaceWindow, Countdown; and BestToast (the
+- **Race window (Retail):** RaceWindow_Best, RaceWindow_Board, RaceWindow_States, RaceWindow, Countdown; and BestToast (the
   new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Races, Results_Loadout,
   Results_Usage, Results_Targets, Results_RaceDetail, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
@@ -127,14 +145,16 @@ non-setting state with its owner and writers are in [`schema.md`](schema.md).
 ## Message Bus
 
 Every name is declared once in `core/Bus.lua` (`NS.MSG`) and sent with `NS.SendBus`; wire names are
-`Ka0s_CombatTrail_<Event>`. Sixteen messages, so the table, the payloads, the consumers and the
+`Ka0s_CombatTrail_<Event>`. Seventeen messages, so the table, the payloads, the consumers and the
 order rules are in [`message-bus.md`](message-bus.md). By sender:
 
 - **Settings:** `SETTINGS_CHANGED`. **Lanes:** `LANE_PUSH`.
 - **Fight:** `COMBAT_ENTERED`, `FIGHT_STARTED`, `FIGHT_FIRST_HIT`, `FIGHT_TICK`, `FIGHT_ENDED`.
 - **Recorder and Retention:** `FIGHT_SAVED`, `FIGHT_SKIPPED`, `FIGHTS_CHANGED`.
 - **Race (Retail):** `RACE_STATE_CHANGED`, `RACE_ARMED`, `RACE_STARTED`, `RACE_BUZZER`, `RACE_RESULT`,
-  `RACE_CANCELED`.
+  `RACE_CANCELED`; and `RACE_CLOCK`, the race beat (modules/RaceClock.lua), which the Race window hears
+  (the HUD is called directly before the send, not through the bus). The HUD hears `RACE_ARMED` too
+  (it resets to its pre-fight look).
 
 The bus gives no receiver order: Recorder pulls `Race.Finalize` before it judges a fight (ruling X1).
 A race under way is the one thing written before its read: `db.global.pendingRaces[charKey]` from its
@@ -175,8 +195,17 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one
   too. `PLAYER_REGEN_ENABLED` asks for one only after a recon ran in combat, where a sealed link is
   left out of the set. The stand-down drops the events and the timer.
-- **HUD and Results:** no game events; they hear the bus. Results closes on `COMBAT_ENTERED`, the
-  Fight's regen edge, never on a game event of its own.
+- **HUD and Results:** no game events; they hear the bus. The HUD hears the fight messages and, on
+  Retail, `RACE_ARMED` (a fight still on screen goes and the pre-fight look is drawn; a live fight
+  stays), `RACE_STARTED`, `RACE_CANCELED` and `RACE_STATE_CHANGED`; it no longer hears `RACE_CLOCK`.
+  Every live part of it (the clock, Damage and DPS, the pace bar, the chart, the spell rows) reads
+  and redraws on one beat at a time at `hud.refreshRate` (4, 5, 10 or 20 a second, default 10): the
+  race beat's direct call (`Hud.OnRaceClock`) during a race, else its own AceTimer (`Hud.SyncBeat`).
+  Each beat is one `Meter.ReadLive`, taken only while Fight holds the real fight in combat.
+  `FIGHT_TICK` (4 Hz) stays for the slices and Fight's scan; the HUD uses it only to bring a fight
+  live, or to redraw while no beat runs. This supersedes ruling O5 again (round 5, owner 2026-11-13).
+  Results closes on `COMBAT_ENTERED`, the Fight's regen edge, never on
+  a game event of its own.
 
 Every registration goes through `NS.SafeRegisterEvent`, so a name a client does not know costs only
 itself. The pipeline from event to screen is [`data-flow.md`](data-flow.md).
@@ -226,7 +255,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 | `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands |
 | `midnight-quirks.md` | Present | Always, from v2.102.0 of the standard |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more addon-specific shims |
-| `message-bus.md` | Present | Sixteen messages, more than ten |
+| `message-bus.md` | Present | Seventeen messages, more than ten |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `known-limitations.md` | Present | The Known Limitations material passes sixty lines |
 | `taint.md` | Not applicable | Taint Notes stays under sixty lines |
@@ -254,8 +283,9 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 | Rule | What differs | Why | Decided | Re-check trigger |
 |---|---|---|---|---|
 | slash-commands-§2 | The primary slash is `/ct`, which CTMod has long used (it opens CTMod's settings panel), against the MUST NOT on colliding with a well-known addon's slash. `/combattrail` is the long alias. If both addons load, whichever registers `/ct` last owns it. | Owner's choice: "No one uses ctmod nowadays". | 2026-11-10, owner | CTMod (or another addon using `/ct`) is reported in use alongside Combat Trail |
+| toc-file-§3, layout-§1, launcher-§6 | The Race window key ships in a Retail-only `Bindings_Mainline.xml`, a file the client loads per flavor, holding all four bindings (Toggle DPS HUD, Toggle Results window, Toggle Race window, Toggle lanes); `Bindings.xml` keeps the three shared ones for WoW Forever. The client prefers the flavor-suffixed file and reads only one, so on Retail the bindings do not come from `Bindings.xml`. The pair is held in step by `tests/test_bindings.lua`. | The owner wants a Race window key, and Race mode is Retail only: clients-§4 forbids an inert binding on WoW Forever, which one static `Bindings.xml` cannot avoid. | 2026-11-13, owner | The WoW Forever in-game check that its key list shows no Race key (if Forever reads `Bindings_Mainline.xml`, a Forever-specific file name is the fallback), or the standard gaining a per-flavor bindings rule |
 
-One ratified deviation, above. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
+Two ratified deviations, above. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
 addon, so the history is the README's `## Version History` alone (a plan correction, not a
 deviation).
 

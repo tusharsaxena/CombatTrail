@@ -47,7 +47,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `perf` | the library's grammar (`/ct perf help`) | yes | `NS.Perf.OnCommand` |
 | `version` | none | yes | the dispatcher's `CliVersion` |
 | `results` | `show`, `hide`, `toggle`, or nothing; `insights` (the Insights tab, `Results.ShowTab`); `races` on Retail (the list on the Races filter, `Results.ShowRaces`) | no | `Results.OnVerb` |
-| `hud` | `show`, `hide`, `toggle`, `pin`, `unpin` | no | `Hud.OnVerb` |
+| `hud` | `show`, `hide`, `toggle`, `pin`, `unpin`. `hide`, and `toggle` when it closes, take an open Race window with the HUD, each counting as the player's close (`Hud.HideWithRace`); `show` and `toggle`'s open open the HUD, and a Race window still wanted with it (one that hid with the HUD, W29); near a dummy `toggle`'s open opens the Race window too | no | `Hud.OnVerb` |
 | `lock` | none | no | writes `general.locked` true; `NS.ApplyLocked` |
 | `unlock` | none | no | writes `general.locked` false; the lanes' edit overlay and the HUD's drag |
 | `test` | none; on Retail `race [armed\|running\|result]` (test mode holding a sample race in that state, running when none; Race mode off refuses it in one line) | no | `NS.ToggleTestMode`; `NS.TestRace` (modules/Preview.lua) |
@@ -63,8 +63,12 @@ The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` a
 Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,
 `race-died`, `race-flagged`, `race-shared` and `race-sticky`, refused in one line with Race mode off.
 
-The Race window has no launcher entry and no key binding (race plan rulings X17 and X18): `/ct race
-show`, `toggle` and `arm` are the ways in, and each works in a macro.
+The Race window has no launcher entry (race plan ruling X17). On Retail it has a key, *Toggle Race
+window* (`Bindings_Mainline.xml`, the owner's decision of 2026-11-13, superseding ruling X18's
+deferral; a documented deviation), whose button runs the same handler as `/ct race toggle`
+(`NS.ToggleRaceWindow`). `/ct race show`, `toggle` and `arm` work in a macro too. The DPS HUD's
+title-bar Race button (race window redesign ruling O6) runs the same `toggle`. Neither the race verb
+nor the flag ever touches the DPS HUD.
 
 ## Adding a verb
 

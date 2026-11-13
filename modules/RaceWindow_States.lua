@@ -1,27 +1,50 @@
 local _, NS = ...
 -- modules/RaceWindow_States.lua — the Race window's six bodies (Race mode spec §4.1 and §4.2, plan Task
--- C1): idle (the length presets, Custom, the target card, Your best, Arm Race and why it cannot arm),
--- armed (the length and what starts the clock), running (the race clock, the pace bar against the race
--- board's best and the race's chips), Stop! (the tail, the time in combat, the late casts so far, Stop
--- Now and Cancel), waiting (the same figures and the sticky-combat hint) and the result card (score,
--- race DPS, the verdict and flag chips, the pace bar, New Race / Open / Share / Delete). Ported from DPS
--- Race @f8078c7 (modules/Hud_States.lua) without what the DPS HUD draws for every fight: no live Damage
--- or DPS boxes, no damage chart and no spell rows (spec §4.2, "no duplicated widgets"; the DPS HUD opens
--- for a race whatever its own visibility settings say, ruling X7). modules/RaceWindow.lua owns the shell,
--- picks the body and builds the view; each body is built on first show into its content frame and
--- answers Update(view).
+-- C1; race window redesign plan Tasks W6 and W7): idle (the length presets, Custom, the target card,
+-- Your best, Top races when the board has races, Arm Race and why it cannot arm), armed (the length
+-- and what starts the clock), running (the race clock, its caption against the length, the time bar,
+-- the race's chips, Best to beat, Best by now and the Checkpoints, Cancel at the foot), Stop! (the
+-- tail, the time in combat, the late casts so far, Stop Now and Cancel), waiting (the same figures and
+-- the sticky-combat hint) and the result card (score, race DPS, the new-best, flag and time chips,
+-- Against your best, Top races, New Race / Open / Share / Delete at the foot). Ported from DPS Race @f8078c7
+-- (modules/Hud_States.lua) without what the DPS HUD draws for every fight: no live Damage or DPS
+-- boxes, no damage chart, no spell rows and no full pace bar (spec §4.2, "no duplicated widgets": the
+-- pace bar lives on the DPS HUD, beside this window, Task W6; the DPS HUD opens for a race whatever
+-- its own visibility settings say, ruling X7). The running body's mini pace bars, over Best by now and
+-- in each Checkpoint, are the owner's (2026-11-13): the HUD's bar thinner, set against the best's
+-- figure there, drawn by modules/RaceWindow_Board.lua. modules/RaceWindow.lua owns the shell, picks the body
+-- and builds the view; modules/RaceWindow_Board.lua draws the board's figures (Best by now, the
+-- Checkpoints, Against your best, Top races); each body is built on first show into its content
+-- frame and answers Update(view).
+--
+-- FILLED, AT ANY SIZE (ruling O1; the grip, owner 2026-11-13). Each body stacks from the top in config
+-- steps and pins its buttons to the foot of the content frame. Every Update lays out across the
+-- width the shell hands it (`body.width`, the view's `width`: chip rows wrap, button rows and tables
+-- stretch, re-placed when it changes), and a taller content (the DPS HUD's matched height, Task W4,
+-- or the grip) is spent sensibly: the result card and the idle body grow their tables' rows and the
+-- gaps over their headings (RaceWindowBoard.Spread, up to their caps), the running body the gaps
+-- between its sections (RunningGap, up to GAP_MAX, and down to RUN_GAP_MIN when two lines of chips
+-- would otherwise clip Cancel); what is left stays above the buttons. The Stop! and waiting bodies
+-- add the Checkpoints under their own figures when they fit (all four taken by the buzzer), and
+-- keep their stack. CONTENT_H, the window's own content height, is the tallest stack's. Every
+-- section heading is the DPS HUD's (FONT.SECTION on Style.SECTION_H).
 --
 -- THE LOOK IS THE DPS HUD'S (spec §4.3 and §8). Every part is drawn with the HUD's own helpers: the
 -- boxes are NS.HudStates.Card restyled by the `hud.figures` box swatches, the figures take the
 -- `hud.figures` font block, the race clocks the `hud.clock` block (a pair at its size, one clock alone
--- at HudStates.ClockSize's, the elapsed clock green and the time left red), the buttons Style.Button
--- (the picked length in the primary look), the chips the HUD's flat boxes, the pace bar
--- NS.HudChart.NewPace. Each body restyles once per Appearance stamp. The positions are DPS Race's
--- constants, every one config: nothing reads the size of a region a value was written to.
+-- at HudStates.ClockSize's, the elapsed clock green; the countdown and the time bar (the DPS HUD's pace
+-- bar's look: its track, its height, its tick for the quarter marks, no border), which empties to
+-- the buzzer, turn green to yellow to red over the race, RaceWindowBoard.ClockColor, on the race
+-- beat), the buttons Style.Button
+-- (the picked length in the primary look), the chips the HUD's flat boxes. Each body restyles once
+-- per Appearance stamp. The positions are DPS Race's constants and this file's, every one config:
+-- nothing reads the size of a region a value was written to.
 --
--- PLAIN VALUES ONLY, BUT ONE. The clocks, the tail and the time in combat are GetTime() figures, the
--- result's are the stored record's. The running pace bar is handed the live total opaque (the bar's
--- SetValue is the only place it goes), as the DPS HUD's is.
+-- PLAIN VALUES ONLY. The clocks, the time bar, the tail and the time in combat are GetTime() figures;
+-- the best's, the checkpoints' and the result's are stored records' or the best's straight line
+-- (NS.HudBest.RaceCurve). The one live figure, the player's damage (`v.you`, the DPS HUD's last read,
+-- a secret in combat), only passes through to RaceWindow_Board's label and mini pace bars behind the
+-- plain flag `v.hasYou`: nothing here compares, computes on or tests it.
 --
 -- RETAIL ONLY (clients-§4): nothing here loads on WoW Forever.
 
@@ -32,41 +55,78 @@ NS.RaceWindowStates = States
 
 local L = NS.L
 local Style = NS.Style
+local Board = NS.RaceWindowBoard
 local FONT = Style.FONT
 local C = NS.HudStates.COLORS
 local DASH = "\226\128\148"
 local DOT = " \194\183 "
 
 -- ── the stack's constants (DPS Race's) ──────────────────────────────────────────────────────────
--- The idle body, top down, in blocks BLOCK_GAP apart: Race Length (its caption and two rows of
--- presets), Target (its caption and card, and the amber warning under it when one shows), Your best
--- (modules/RaceWindow_Best.lua), then ARM_GAP above Arm Race and the refusal line under it.
-local PRESET_TOP, PRESET_H, PRESET_GAP = 14, 20, 6
+-- The idle body, top down, in blocks BLOCK_GAP apart, each under a heading on SECTION_H: Race Length
+-- (two rows of presets), Target (its card, and the amber warning under it when one shows), Your best
+-- (modules/RaceWindow_Best.lua), Top races when the board has races (modules/RaceWindow_Board.lua),
+-- then ARM_GAP above Arm Race and the refusal line under it. The warning and Top races never show
+-- together: a target that is no training dummy is on no board.
+local SECTION_H = Style.SECTION_H
+local PRESET_TOP, PRESET_H, PRESET_GAP = SECTION_H, 20, 6
 local BLOCK_GAP, ARM_GAP = 8, 14
 local CARD_H = 46
 local IDLE_TARGET_Y = PRESET_TOP + 2 * PRESET_H + PRESET_GAP + BLOCK_GAP
-local IDLE_CARD_Y = IDLE_TARGET_Y + 14
+local IDLE_CARD_Y = IDLE_TARGET_Y + SECTION_H
 local IDLE_WARN_Y = IDLE_CARD_Y + CARD_H + 4
-local BEST_CAPTION_H, BEST_CARD_H = 14, 38
+local BEST_CAPTION_H, BEST_CARD_H = SECTION_H, 38
 local BEST_H = BEST_CAPTION_H + BEST_CARD_H
 local IDLE_BEST_Y_PLAIN = IDLE_CARD_Y + CARD_H + BLOCK_GAP
 local IDLE_BEST_Y_WARNED = IDLE_WARN_Y + 28
+local ARM_H, REASON_H = 24, 14
 local IDLE_ARM_Y_PLAIN = IDLE_BEST_Y_PLAIN + BEST_H + ARM_GAP
-local IDLE_ARM_Y, ARM_H, REASON_H = 220, 24, 14
-local IDLE_ARM_Y_WARNED = math.min(IDLE_ARM_Y, IDLE_BEST_Y_WARNED + BEST_H + ARM_GAP)
+local IDLE_ARM_Y_WARNED = IDLE_BEST_Y_WARNED + BEST_H + ARM_GAP
+local IDLE_BOARD_Y = IDLE_BEST_Y_PLAIN + BEST_H + BLOCK_GAP
+local IDLE_ARM_Y_BOARD = IDLE_BOARD_Y + Board.SectionHeight(Board.TOP_N) + ARM_GAP
 States.BEST_CAPTION_H, States.BEST_CARD_H = BEST_CAPTION_H, BEST_CARD_H
-
---- The content every body fits in: the idle body's whole stack, its tallest (DPS Race's floor, less
---- the Results button the DPS HUD's chart control replaces). The window's content height.
-States.CONTENT_H = IDLE_ARM_Y + ARM_H + 4 + REASON_H
 
 local GAP, ROW_GAP = 8, 4
 local KPI_H, KPI_CAPTIONED_H, KPI_PAD, KPI_CAPTION_H = 46, 60, 5, 14
 local CHIP_H, CHIP_GAP = 18, 5
+
+-- The running body under its clock: the time bar, the chips (one line), Best to beat, Best by now,
+-- the Checkpoints; then GAP over Cancel at the foot.
+-- The time bar is the DPS HUD's pace bar's look (NS.HudChart): its line PACE_H tall, the bar
+-- PACE_H - 4 in it (2px clear over and under), no border, the pace bar's track, its tick's style for
+-- the quarter marks (the tick's hue, TICK_W wide, standing 2px over and under the bar).
+local BAR_H = NS.HudChart.PACE_H
+local TIME_BAR_H, TICK_W = BAR_H - 4, 2
+local BYNOW_H = Board.CAPTION_H + Board.NOW_PACE_LINE + Board.NOW_H
+local CPS_H = Board.CAPTION_H + Board.CP_H
+-- The three gaps that give (over Best by now, over the Checkpoints, over Cancel): GAP at their least
+-- in the window's own height, up to Board.GAP_MAX in a taller one, down to RUN_GAP_MIN in a short one.
+local RUN_GAPS, RUN_GAP_MIN = 3, 2
+local RUN_STACK_H = BAR_H + GAP + CHIP_H + GAP + BEST_H + GAP + BYNOW_H + GAP + CPS_H
+-- The result card at its least: its boxes, the chips (room for two lines), Against your best (four
+-- rows), Top races (the top three and this race's row), each heading GAP under the block above it,
+-- then GAP over the buttons at the foot. A taller content spreads it (resultLayout).
+local RESULT_CHIP_LINES = 2
+local COMPARE_ROWS = 4
+local RESULT_H = KPI_H + GAP + RESULT_CHIP_LINES * CHIP_H + (RESULT_CHIP_LINES - 1) * CHIP_GAP + GAP
+    + Board.SectionHeight(COMPARE_ROWS) + GAP + Board.SectionHeight(Board.TOP_N + 1) + GAP + Style.BUTTON_H
+
+-- The running body's worst case: the largest clock the Appearance rows offer (CLOCK_MAX, one large
+-- clock), two lines of chips, its three giving gaps at their floor (RUN_GAP_MIN), and RUN_SLACK to
+-- spare. RUN_STACK_H counts two of those gaps at GAP; the third is the one over Cancel.
+local CLOCK_MAX, RUN_SLACK = 32, 4
+local RUN_WORST = 24 + NS.HudStates.ClockSize(CLOCK_MAX) + RUN_STACK_H + CHIP_H + CHIP_GAP + GAP
+    + Style.BUTTON_H - RUN_GAPS * (GAP - RUN_GAP_MIN) + RUN_SLACK
+
+--- The content every body fits in: the tallest stack, the idle body's (with Top races, or under the
+--- amber warning), the result card's, or the running body's worst case (RUN_WORST). The window's own
+--- content height (RW.Height); the running body (States.RunningNeed, RunningFloor) fits under it at
+--- every clock size the Appearance rows offer.
+States.CONTENT_H = math.max(IDLE_ARM_Y_PLAIN + ARM_H + 4 + REASON_H, IDLE_ARM_Y_WARNED + ARM_H + 4 + REASON_H,
+    IDLE_ARM_Y_BOARD + ARM_H + 4 + REASON_H, RESULT_H, RUN_WORST)
+States.RESULT_H = RESULT_H
 local STOP_KPI_Y, STOP_CHIPS_Y, STOP_NOTE_Y = 56, 124, 152
 local WAITING_KPI_Y, WAITING_HINT_Y = 40, 108
 local HINT_PADX, HINT_PADY, HINT_ADVANCE, HINT_LINE_H = 8, 6, 5.4, 12
-local HEAD_GAP, SECTION_H = NS.HudStates.HEAD_GAP, NS.HudStates.SECTION_H
 -- The width the bodies lay out at when the shell hands none: 260 less 12 on each side.
 local WIDTH = 236
 States.WIDTH = WIDTH
@@ -86,8 +146,10 @@ local Tips = {
     clock = { L["Race clock"], L["The race's clock. Race mode > Race clock picks what shows here."] },
     elapsed = { L["Elapsed"], L["How long this race has run."] },
     left = { L["Time left"], L["How long until the buzzer."] },
-    pace = { L["Pace bar"], L["Your damage against your best's average on this race board at this point in the race. The tick in the middle is on pace: green is ahead of it, red behind. Your damage and DPS are on the DPS HUD."] },
-    resultPace = { L["Pace bar"], L["This race's score against the best you had on this race board before it. The tick in the middle is level with that best: green is ahead of it, red behind."] },
+    timeBar = { L["Race length"], L["How much of the race is left: the bar empties to the buzzer, a mark at each quarter. It and the countdown turn from green to yellow after half the race, and red for the last 10 seconds."] },
+    bestToBeat = { L["Best to beat"], L["Your best on this race board: the mark this race is after."] },
+    against = { L["Against your best"], L["This race beside the best you had on this race board before it, with the difference."] },
+    board = { L["Top races"], L["Your top races on this race board (character, spec, dummy kind and length), ranked by race DPS."] },
     stop = { L["STOP"], L["The buzzer has gone: stop casting. Damage still landing counts, but a cast that starts after the grace flags the race."] },
     damageStopped = { L["Damage stopped"], L["How long after the buzzer your last damage landed, as far as the race has seen."] },
     combatEnded = { L["Combat ended"], L["Combat ended before the buzzer, this far into the race, so the race is incomplete."] },
@@ -156,12 +218,19 @@ local function text(parent, font, color, justify)
     return fs
 end
 
--- A section label: the header gold.
+-- A section heading: the DPS HUD's (FONT.SECTION, gold).
 local function caption(parent, label, y)
-    local fs = Style.Text(parent, FONT.HEADER)
+    local fs = Style.Text(parent, FONT.SECTION)
     fs:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, y)
     fs:SetText(label)
     return fs
+end
+
+-- Your best's card (modules/RaceWindow_Best.lua) under a heading in the section face, `label`.
+local function bestSection(body, f, y, label)
+    local b = NS.RaceWindowBest.Build(body, f, y, FONT.SECTION)
+    b.caption:SetText(label)
+    return b
 end
 
 local function button(parent, label, onClick, style, tip)
@@ -404,7 +473,15 @@ local function footerButtons(body, specs)
     end
     body.footer = out
     layoutRow(out, body.frame, body.width)
+    body.footerW = body.width
     return out
+end
+
+-- The footer row again across the body's width, when it changed (the grip).
+local function placeFooter(body)
+    if body.footerW == body.width then return end
+    body.footerW = body.width
+    layoutRow(body.footer, body.frame, body.width)
 end
 
 local function wideButton(body, label, name, style, tip)
@@ -454,16 +531,65 @@ local function layoutPresets(body)
     w.customBox:SetAllPoints(w.custom)
 end
 
--- Your best and Arm Race step down under the amber warning and back up without one.
-local function placeArm(body, warned)
-    if body.warned == warned then return end
-    body.warned = warned
+-- The idle stack's tops with its block gaps `gap` (Arm Race's ARM_GAP grows by as much) and Top
+-- races' rows `rowH`: Target, its card, the warning, Your best (under the warning, or a gap under the
+-- card), Top races, Arm Race (under the warning's Your best, under Top races, or under Your best).
+local function idleAt(warned, boarded, gap, rowH)
+    local at = { target = PRESET_TOP + 2 * PRESET_H + PRESET_GAP + gap }
+    at.card = at.target + SECTION_H
+    at.warn = at.card + CARD_H + 4
+    at.best = warned and at.warn + 28 or at.card + CARD_H + gap
+    at.board = at.best + BEST_H + gap
+    local armGap = ARM_GAP + gap - BLOCK_GAP
+    if boarded and not warned then
+        at.arm = at.board + Board.SectionHeight(Board.TOP_N, rowH) + armGap
+    else
+        at.arm = at.best + BEST_H + armGap
+    end
+    at.bottom = at.arm + ARM_H + 4 + REASON_H
+    at.gap, at.rowH = gap, rowH
+    return at
+end
+
+--- The idle body's tops in a content `height` tall: the stack at its least (BLOCK_GAP gaps, ROW_H
+--- rows), its spare spread by RaceWindowBoard.Spread over Top races' rows (when it shows) and the
+--- gaps that grow (over Target, Your best unless under the warning, Top races when it shows, and
+--- Arm Race), each to its cap. Config only.
+--- @return table at  { target, card, warn, best, board, arm, bottom, gap, rowH }
+function States.IdleLayout(warned, boarded, height)
+    local board = boarded and not warned
+    local least = idleAt(warned, board, BLOCK_GAP, Board.ROW_H)
+    local gaps = 2 + (warned and 0 or 1) + (board and 1 or 0)
+    local rows = board and Board.TOP_N + 1 or 0
+    local rowH, gap = Board.Spread((height or States.CONTENT_H) - least.bottom, rows, gaps, BLOCK_GAP)
+    return idleAt(warned, board, gap, rowH)
+end
+
+local function placeTop(region, f, y)
+    region:ClearAllPoints()
+    region:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -y)
+    region:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, -y)
+end
+
+-- The stack again when the warning or Top races comes or goes, or the content's size changes: the
+-- presets across the width, then every block at IdleLayout's tops.
+local function placeArm(body, warned, boarded, height)
+    local key = ("%s%s|%s|%s"):format(warned and "w" or "", boarded and "b" or "", tostring(body.width),
+        tostring(height))
+    if body.placed == key then return end
+    body.placed = key
     local w, f = body.w, body.frame
-    NS.RaceWindowBest.Place(w.best, f, -(warned and IDLE_BEST_Y_WARNED or IDLE_BEST_Y_PLAIN))
-    local y = warned and IDLE_ARM_Y_WARNED or IDLE_ARM_Y_PLAIN
-    w.arm:ClearAllPoints()
-    w.arm:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -y)
-    w.arm:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, -y)
+    layoutPresets(body)
+    local at = States.IdleLayout(warned, boarded, height)
+    body.at = at
+    w.targetCap:ClearAllPoints()
+    w.targetCap:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -at.target)
+    placeTop(w.card.frame, f, at.card)
+    placeTop(w.warn, f, at.warn)
+    NS.RaceWindowBest.Place(w.best, f, -at.best)
+    Board.PlaceCaption(w.boardCap, at.board, body.width)
+    w.board:Place(at.board + Board.CAPTION_H, body.width, at.rowH)
+    placeTop(w.arm, f, at.arm)
 end
 
 local function updatePresets(w, v)
@@ -489,23 +615,29 @@ function Builders.idle(parent)
     w.warn = text(f, FONT.TEXT, C.amber)
     w.warn:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -IDLE_WARN_Y)
     w.warn:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, -IDLE_WARN_Y)
-    w.best = NS.RaceWindowBest.Build(body, f, -IDLE_BEST_Y_PLAIN)
+    w.best = bestSection(body, f, -IDLE_BEST_Y_PLAIN, L["Your best"])
+    w.boardCap = Board.NewCaption(f, L["Top races"])
+    tipZone(f, w.boardCap.title, Tips.board)
+    w.board = Board.NewBoard(f, Board.TOP_N)
     w.arm = button(f, L["Arm Race"], function() act("arm") end, "primary", Tips.arm)
     w.arm:SetHeight(ARM_H)
     w.arm.label:SetFontObject(FONT.TITLE)
     w.reason = text(f, FONT.TEXT, C.amber, "CENTER")
     w.reason:SetPoint("TOPLEFT", w.arm, "BOTTOMLEFT", 0, -4)
     w.reason:SetPoint("TOPRIGHT", w.arm, "BOTTOMRIGHT", 0, -4)
-    placeArm(body, false)
-    layoutPresets(body)
+    placeArm(body, false, false)
 
     function body.Update(self, v)
         restyle(self)
         updatePresets(self.w, v)
         setTarget(self.w.card, v.target)
         self.w.warn:SetText(v.warning or "")
-        placeArm(self, v.warning ~= nil)
+        local boarded = v.board ~= nil and v.board[1] ~= nil
+        placeArm(self, v.warning ~= nil, boarded, v.height)
         NS.RaceWindowBest.Update(self.w.best, v.best)
+        Board.ShowCaption(self.w.boardCap, boarded)
+        self.w.boardCap.note:SetText(v.boardNote or "")
+        self.w.board:Set(boarded and v.board or nil)
         Style.SetEnabled(self.w.arm, v.blocker == nil)
         self.w.reason:SetText(v.blocker and NS.RaceVerb.ArmRefusal(v.blocker, v.detail) or "")
     end
@@ -542,7 +674,8 @@ end
 
 local PAIR = { "elapsed", "left", "elapsedCap", "leftCap", "elapsedTip", "leftTip" }
 
--- The race clock (`race.clock`): "left" or "elapsed" is one large clock; anything else is the pair.
+-- The race clock (`race.clock`): "left" or "elapsed" is one large clock with its caption against the
+-- length under it ("Left of 1:00"); anything else is the pair, each with its own caption.
 local function setClocks(w, v)
     local mode = v.clockMode
     local both = mode ~= "left" and mode ~= "elapsed"
@@ -551,6 +684,9 @@ local function setClocks(w, v)
     w.singleElapsed:SetShown(not both and mode == "elapsed")
     w.clockTip:SetShown(not both)
     w.clockTip.tip = mode == "elapsed" and Tips.elapsed or Tips.left
+    w.ofCap:SetShown(not both)
+    local length = NS.Format.Length(v.length or 0)
+    w.ofCap:SetText(mode == "elapsed" and L["Elapsed of %s"]:format(length) or L["Left of %s"]:format(length))
     w.elapsed:SetText(NS.Format.Clock(v.elapsed or 0))
     w.left:SetText(NS.Format.Clock(v.timeLeft or 0))
     w.single:SetText(NS.Format.Clock(v.timeLeft or 0))
@@ -558,13 +694,37 @@ local function setClocks(w, v)
 end
 
 --- The top the running body's stack starts at for the clock mode: the pair's line and caption, or one
---- large clock. Config only (the `hud.clock` block's size).
+--- large clock and its caption against the length. Config only (the `hud.clock` block's size).
 --- @param mode string|nil  `race.clock`
 --- @return number
 function States.RunningTop(mode)
     local size = NS.HudAppearance.Font("clock").size
-    if mode == "left" or mode == "elapsed" then return 12 + NS.HudStates.ClockSize(size) end
+    if mode == "left" or mode == "elapsed" then return 24 + NS.HudStates.ClockSize(size) end
     return 26 + size
+end
+
+--- The content height the running body needs for the clock mode at its least gaps (GAP): its stack
+--- with `lines` lines of chips (default 1), then GAP over Cancel. RunningFloor is the same at the
+--- gaps' floor (RUN_GAP_MIN), the height under which it would clip.
+--- @return number
+function States.RunningNeed(mode, lines)
+    local extra = ((lines or 1) - 1) * (CHIP_H + CHIP_GAP)
+    return States.RunningTop(mode) + RUN_STACK_H + extra + GAP + Style.BUTTON_H
+end
+
+function States.RunningFloor(mode, lines)
+    return States.RunningNeed(mode, lines) - RUN_GAPS * (GAP - RUN_GAP_MIN)
+end
+
+--- The running body's section gap in a content `height` tall, under chips that end at `top`
+--- (Chips:Bottom, its GAP included): the spare over the stack at GAP shared by the RUN_GAPS gaps,
+--- held to RUN_GAP_MIN..Board.GAP_MAX. Config only.
+--- @return number gap
+function States.RunningGap(height, top)
+    local fixed = top + BEST_H + BYNOW_H + CPS_H + Style.BUTTON_H
+    local spare = (height or States.CONTENT_H) - fixed - RUN_GAPS * GAP
+    local gap = GAP + math.floor(spare / RUN_GAPS)
+    return math.max(RUN_GAP_MIN, math.min(Board.GAP_MAX, gap))
 end
 
 local function buildClocks(body)
@@ -574,6 +734,8 @@ local function buildClocks(body)
     w.singleElapsed = clock(body, f, true, C.green)
     w.singleElapsed:SetPoint("TOP", f, "TOP", 0, -4)
     w.clockTip = tipZone(f, w.single, Tips.left)
+    w.ofCap = Style.Text(f, FONT.CAPTION, nil, "CENTER")
+    w.ofCap:SetPoint("TOP", w.single, "BOTTOM", 0, -2)
     -- The pair: elapsed (green) in the left half, time left (red) in the right, a caption under each.
     w.elapsed = clock(body, f, false, C.green)
     w.elapsed:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -6)
@@ -591,44 +753,115 @@ local function buildClocks(body)
     w.leftTip = tipZone(f, w.left, Tips.left)
 end
 
--- The pace section at `top`: its heading, the bar under it (none without a best), then the chips.
-local function placePace(body, v, top)
-    local w, f = body.w, body.frame
-    local y = top + HEAD_GAP
-    w.paceTitle:ClearAllPoints()
-    w.paceTitle:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -y)
-    w.paceNote:ClearAllPoints()
-    w.paceNote:SetPoint("BOTTOMRIGHT", w.paceTitle, "BOTTOMLEFT", body.width, 0)
-    local pv = v.pace
-    w.pace:SetShown(pv ~= nil)
-    w.paceNote:SetText(pv and L["vs best pace"] or (v.paceWhy or ""))
-    y = y + SECTION_H
-    if pv then
-        w.pace:Place(f, -y, body.width)
-        w.pace:Set(pv.lo, pv.hi, pv.total)
-        y = y + NS.HudChart.PACE_H
+-- ── the time bar ────────────────────────────────────────────────────────────────────────────────
+
+--- The share of the race run: elapsed over the length, held to 0..1 (plain GetTime() figures). The
+--- time bar draws what is left of it (1 - share).
+--- @return number
+function States.TimeShare(elapsed, length)
+    if type(length) ~= "number" or length <= 0 then return 0 end
+    return math.max(0, math.min(1, (tonumber(elapsed) or 0) / length))
+end
+
+local function timeBar(f)
+    local bar = { track = CreateFrame("Frame", nil, f), marks = {} }
+    bar.track:SetHeight(TIME_BAR_H)
+    bar.bg = bar.track:CreateTexture(nil, "BACKGROUND")
+    bar.bg:SetAllPoints(bar.track)
+    Style.Fill(bar.bg, "ct.pace.track")
+    -- Colored on every beat (RaceWindowBoard.ClockColor), never through Style.Fill: a skin switch
+    -- has nothing of its own to put back.
+    bar.fill = bar.track:CreateTexture(nil, "ARTWORK")
+    bar.fill:SetColorTexture(Style.Rgba(C.green))
+    bar.fill:SetPoint("TOPLEFT", bar.track, "TOPLEFT", 0, 0)
+    bar.fill:SetPoint("BOTTOMLEFT", bar.track, "BOTTOMLEFT", 0, 0)
+    for i = 1, 3 do
+        local mark = bar.track:CreateTexture(nil, "OVERLAY")
+        Style.Fill(mark, "ct.pace.tick")
+        mark:SetSize(TICK_W, TIME_BAR_H + 4)
+        bar.marks[i] = mark
     end
-    return y + GAP
+    addTip(bar.track, Tips.timeBar)
+    return bar
+end
+
+-- The bar on its line at `y` across `width` (2px under the line's top, as the pace bar sits): full at
+-- the start, empty at the buzzer (the share left), in the countdown's color (r, g, b); its quarter
+-- marks at config offsets, centered on each quarter and standing 2px over and under it.
+local function setTimeBar(bar, f, y, width, share, r, g, b)
+    bar.track:ClearAllPoints()
+    bar.track:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -(y + 2))
+    bar.track:SetWidth(width)
+    for i, mark in ipairs(bar.marks) do
+        mark:ClearAllPoints()
+        mark:SetPoint("TOP", bar.track, "TOPLEFT", math.floor(width * i / 4 + 0.5), 2)
+    end
+    local w = math.floor(width * (1 - share))
+    bar.fill:SetShown(w > 0)
+    bar.fill:SetWidth(math.max(1, w))
+    bar.fill:SetColorTexture(r, g, b, 1)
+    bar.share, bar.fillW = share, w
+end
+
+-- ── the running stack ───────────────────────────────────────────────────────────────────────────
+
+-- Best to beat: the idle card's content for the race's board, drawn again only when its best or the
+-- Appearance stamp changes (the beat redraws the body ten times a second).
+local function setBestToBeat(body, v)
+    local bv = v.bestView or { state = "empty" }
+    local key = (bv.record and bv.record.id or bv.state) .. "|" .. tostring(NS.HudAppearance.stamp)
+    if body.bestKey == key then return end
+    body.bestKey = key
+    NS.RaceWindowBest.Update(body.w.best, bv)
+end
+
+-- Best by now and the Checkpoints at `y`, `gap` apart, or neither with no best line.
+local function placeBestLine(body, v, y, gap)
+    local w = body.w
+    local on = v.checkpoints ~= nil
+    Board.ShowByNow(w.now, on)
+    Board.ShowCheckpoints(w.cps, on)
+    if not on then return end
+    y = Board.PlaceByNow(w.now, y, body.width) + gap
+    Board.SetByNow(w.now, v.byNow, v.elapsed, v.you, v.hasYou, v.paceRef)
+    Board.PlaceCheckpoints(w.cps, y, body.width)
+    Board.SetCheckpoints(w.cps, v.checkpoints)
+end
+
+local function updateRunning(body, v)
+    local w, f = body.w, body.frame
+    local y = States.RunningTop(v.clockMode)
+    -- The countdown's color over the race, from the time left the countdown draws (the race beat).
+    local r, g, b = Board.ClockColor(v.timeLeft, v.length)
+    w.single:SetTextColor(r, g, b, 1)
+    w.left:SetTextColor(r, g, b, 1)
+    setTimeBar(w.bar, f, y, body.width, States.TimeShare(v.elapsed, v.length), r, g, b)
+    y = y + BAR_H + GAP
+    w.chips.y = -y
+    w.chips.width = body.width
+    w.chips:Set(v.chips)
+    y = w.chips:Bottom()
+    NS.RaceWindowBest.Place(w.best, f, -y)
+    setBestToBeat(body, v)
+    body.gap = States.RunningGap(v.height, y)
+    placeBestLine(body, v, y + BEST_H + body.gap, body.gap)
 end
 
 function Builders.running(parent)
     local body = newBody(parent, "running")
     local f, w = body.frame, body.w
     buildClocks(body)
-    w.paceTitle = Style.Text(f, FONT.SECTION)
-    w.paceTitle:SetText(L["Pace"])
-    w.paceNote = Style.Text(f, FONT.CAPTION, nil, "RIGHT")
-    w.pace = NS.HudChart.NewPace(f)
-    addTip(w.pace.over, Tips.pace)
+    w.bar = timeBar(f)
     w.chips = chips(f, 0)
+    w.best = bestSection(body, f, 0, L["Best to beat"])
+    tipZone(f, w.best.caption, Tips.bestToBeat)
+    w.now = Board.NewByNow(body, f)
+    w.cps = Board.NewCheckpoints(f)
     w.cancel = wideButton(body, L["Cancel"], "cancel", nil, Tips.cancel)
     function body.Update(self, v)
         restyle(self)
         setClocks(self.w, v)
-        local y = placePace(self, v, States.RunningTop(v.clockMode))
-        self.w.chips.y = -y
-        self.w.chips.width = self.width
-        self.w.chips:Set(v.chips)
+        updateRunning(self, v)
     end
     return body
 end
@@ -705,6 +938,24 @@ function States.StopChips(v)
     return list
 end
 
+-- The Checkpoints under a Stop! or waiting body's own figures at `y` (all four taken by the buzzer,
+-- the last with the HUD's last read): shown only with a best line and only where they end GAP above
+-- the buttons; else hidden, the body's own content first.
+local function placeStopCheckpoints(body, v, y)
+    local cps = body.w.cps
+    local fits = y + CPS_H + GAP + Style.BUTTON_H <= (v.height or States.CONTENT_H)
+    local on = v.checkpoints ~= nil and fits
+    Board.ShowCheckpoints(cps, on)
+    body.cpsShown = on
+    if not on then return end
+    Board.PlaceCheckpoints(cps, y, body.width)
+    Board.SetCheckpoints(cps, v.checkpoints)
+end
+
+local function stopNote(v)
+    return L["Damage still landing (DoTs, travel time) counts. Casts that start more than %.1fs after the buzzer are flagged on the result."]:format(v.grace or 0)
+end
+
 function Builders.stop(parent)
     local body = newBody(parent, "stop")
     local f, w = body.frame, body.w
@@ -717,19 +968,27 @@ function Builders.stop(parent)
     w.note = text(f, FONT.TEXT, C.dim)
     w.note:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -STOP_NOTE_Y)
     w.note:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, -STOP_NOTE_Y)
+    w.cps = Board.NewCheckpoints(f)
+    Board.ShowCheckpoints(w.cps, false)
     stopButtons(body)
     function body.Update(self, v)
         restyle(self)
         setStopFigures(self.w, v)
         Style.SetEnabled(self.w.stopNow, v.stopNow ~= true)
-        -- Redrawn while combat may hold for minutes: the chips and the note only when they change.
+        placeFooter(self)
+        -- Redrawn while combat may hold for minutes: the chips and the note only when they change
+        -- (the width too: a resize wraps them again).
         local late, first = States.CountedLate(v.lateCasts)
-        local key = ("%d|%.1f|%.1f"):format(late, first, v.grace or 0)
-        if key == self.shownKey then return end
-        self.shownKey = key
-        self.w.chips.width = self.width
-        self.w.chips:Set(States.StopChips(v))
-        self.w.note:SetText(L["Damage still landing (DoTs, travel time) counts. Casts that start more than %.1fs after the buzzer are flagged on the result."]:format(v.grace or 0))
+        local key = ("%d|%.1f|%.1f|%s"):format(late, first, v.grace or 0, tostring(self.width))
+        if key ~= self.shownKey then
+            self.shownKey = key
+            self.w.chips.width = self.width
+            self.w.chips:Set(States.StopChips(v))
+            local note = stopNote(v)
+            self.w.note:SetText(note)
+            self.noteBottom = STOP_NOTE_Y + States.HintLines(note, self.width) * HINT_LINE_H
+        end
+        placeStopCheckpoints(self, v, self.noteBottom + GAP)
     end
     return body
 end
@@ -759,6 +1018,12 @@ function States.HintHeight(s, width)
     return States.HintLines(s, width - 2 * HINT_PADX) * HINT_LINE_H + 2 * HINT_PADY
 end
 
+--- The sentence the waiting body keeps room for: the sticky-combat hint (RaceWindow.lua's hintFor).
+--- @return string
+function States.HintText()
+    return L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."]
+end
+
 local function waitingTitle(v)
     if not v.inCombat then return L["Reading the result"] end
     if v.stopNow then return L["Reading when combat ends"] end
@@ -779,18 +1044,26 @@ function Builders.waiting(parent)
     w.hintText:SetPoint("TOPLEFT", w.hint, "TOPLEFT", HINT_PADX, -HINT_PADY)
     w.hintText:SetPoint("TOPRIGHT", w.hint, "TOPRIGHT", -HINT_PADX, -HINT_PADY)
     w.hintText:SetJustifyV("TOP")
+    w.cps = Board.NewCheckpoints(f)
+    Board.ShowCheckpoints(w.cps, false)
     stopButtons(body)
     function body.Update(self, v)
         restyle(self)
         self.w.title:SetText(waitingTitle(v))
         setStopFigures(self.w, v)
         Style.SetEnabled(self.w.stopNow, v.stopNow ~= true)
+        placeFooter(self)
+        -- The hint box's room is kept whether it shows or not, so its arrival moves nothing below it
+        -- (the owner, 2026-11-13). Its text is one fixed sentence: the room is that sentence's.
         self.w.hint:SetShown(v.hint ~= nil)
         self.w.hintText:SetText(v.hint or "")
-        if v.hint ~= self.hintShown then
-            self.hintShown = v.hint
-            self.w.hint:SetHeight(States.HintHeight(v.hint or "", self.width))
+        local hintKey = tostring(self.width)
+        if hintKey ~= self.hintShown then
+            self.hintShown = hintKey
+            self.hintH = States.HintHeight(States.HintText(), self.width)
+            self.w.hint:SetHeight(self.hintH)
         end
+        placeStopCheckpoints(self, v, WAITING_HINT_Y + self.hintH + GAP)
     end
     return body
 end
@@ -851,20 +1124,23 @@ local function ignoredChip(race, menu, lines)
 end
 
 -- The verdict against the race board's best before the race (Bests.Delta). A new best with no figure
--- had nothing to beat; a delta of 0 is a tie.
+-- had nothing to beat; a delta of 0 is a tie. A race behind or level only says so where Against your
+-- best does not: that table's DPS Diff is the same figure (owner, 2026-11-13: no chip that repeats
+-- the table), so the new-best mark is the one verdict beside it.
 local function verdictChip(v)
     if v.isNew then
         if v.delta then return { text = L["New best +%.1f%%"]:format(v.delta), color = C.green, tip = Tips.newBestChip } end
         return { text = L["New best"], color = C.green, tip = Tips.firstBestChip }
     end
-    if not v.delta then return nil end
+    if not v.delta or v.compare then return nil end
     local tied = v.delta == 0
     return { text = L["%+.1f%% vs best"]:format(v.delta), color = tied and C.dim or C.red,
              tip = tied and Tips.tiedChip or Tips.behindChip }
 end
 
---- The result card's chips: the verdict, the ignored casts, the flags, the race's time.
---- @param v table  the view (race, record, isNew, delta)
+--- The result card's chips: the verdict (a new best, or behind when no Against your best shows), the
+--- ignored casts, the flags, the race's time (an incomplete race's time in combat against the length).
+--- @param v table  the view (race, record, isNew, delta, compare)
 --- @return table list
 function States.ResultChips(v)
     local race, list = v.race or {}, {}
@@ -892,18 +1168,56 @@ local function resultFigures(w, v)
     return lost
 end
 
--- The pace section under the chips: its heading and the bar, the score against the best before.
-local function placeResultPace(body, v, top)
-    local w, f = body.w, body.frame
-    local pv = v.pace
-    w.paceTitle:SetShown(pv ~= nil)
-    w.pace:SetShown(pv ~= nil)
-    if not pv then return end
-    local y = top + HEAD_GAP
-    w.paceTitle:ClearAllPoints()
-    w.paceTitle:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -y)
-    w.pace:Place(f, -(y + SECTION_H), body.width)
-    w.pace:Set(pv.lo, pv.hi, pv.total)
+--- The result card's row height and heading gap for its tables (`compareRows` and `boardRows` data
+--- rows, 0 for a table not drawn) under chips that end at `top` (Chips:Bottom, its GAP included) in a
+--- content `height` tall: the stack at its least (ROW_H rows, GAP over each heading and the buttons),
+--- the rest spread by RaceWindowBoard.Spread. Config only.
+--- @return number rowH, number gap
+function States.ResultLayout(height, top, compareRows, boardRows)
+    local sections, rows = 0, 0
+    for _, n in ipairs({ compareRows, boardRows }) do
+        if n > 0 then sections, rows = sections + 1, rows + n + 1 end
+    end
+    local least = top - GAP + sections * (GAP + Board.CAPTION_H) + rows * Board.ROW_H + GAP + Style.BUTTON_H
+    return Board.Spread((height or States.CONTENT_H) - least, rows, sections + 1, GAP)
+end
+
+-- One table and its heading at `y`, `gap` under the block above; answers the y under it.
+local function placeSection(cap, tbl, y, gap, width, rowH, n)
+    y = y + gap
+    Board.PlaceCaption(cap, y, width)
+    tbl:Place(y + Board.CAPTION_H, width, rowH)
+    return y + Board.SectionHeight(n, rowH)
+end
+
+-- Against your best and Top races from `top` down (neither for a lost race, each only with rows).
+local function placeTables(body, v, top, lost)
+    local w = body.w
+    local compare = not lost and v.compare or nil
+    local board = not lost and v.board or nil
+    if board and not board[1] then board = nil end
+    Board.ShowCaption(w.againstCap, compare ~= nil)
+    w.against:Set(compare)
+    Board.ShowCaption(w.boardCap, board ~= nil)
+    w.board:Set(board)
+    local nc, nb = compare and #compare or 0, board and #board or 0
+    local rowH, gap = States.ResultLayout(v.height, top, nc, nb)
+    body.rowH, body.gap = rowH, gap
+    local y = top - GAP
+    if compare then y = placeSection(w.againstCap, w.against, y, gap, body.width, rowH, nc) end
+    if not board then return end
+    w.boardCap.note:SetText(v.boardNote or "")
+    placeSection(w.boardCap, w.board, y, gap, body.width, rowH, nb)
+end
+
+local function buildTables(body)
+    local f, w = body.frame, body.w
+    w.againstCap = Board.NewCaption(f, L["Against your best"])
+    tipZone(f, w.againstCap.title, Tips.against)
+    w.against = Board.NewCompare(f)
+    w.boardCap = Board.NewCaption(f, L["Top races"])
+    tipZone(f, w.boardCap.title, Tips.board)
+    w.board = Board.NewBoard(f, Board.TOP_N + 1)
 end
 
 function Builders.result(parent)
@@ -914,10 +1228,7 @@ function Builders.result(parent)
     addTip(w.dps.frame, Tips.resultDps)
     w.chips = chips(f, -KPI_H - GAP)
     w.lost = Style.Text(f, FONT.TEXT, C.red)
-    w.paceTitle = Style.Text(f, FONT.SECTION)
-    w.paceTitle:SetText(L["Pace"])
-    w.pace = NS.HudChart.NewPace(f)
-    addTip(w.pace.over, Tips.resultPace)
+    buildTables(body)
     local links = footerButtons(body, {
         { L["New Race"], "newRace", "primary", tip = Tips.newRace },
         { L["Open"], "open", tip = Tips.open },
@@ -927,6 +1238,7 @@ function Builders.result(parent)
     w.newRace, w.open, w.share, w.delete = links[1], links[2], links[3], links[4]
     function body.Update(self, v)
         restyle(self)
+        placeFooter(self)
         local ww = self.w
         ww.chips.width = self.width
         ww.chips:Set(States.ResultChips(v))
@@ -935,7 +1247,7 @@ function Builders.result(parent)
         ww.lost:ClearAllPoints()
         ww.lost:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, -top)
         ww.lost:SetText(lost and L["Couldn't read the result"] or "")
-        placeResultPace(self, v, top)
+        placeTables(self, v, top, lost)
         Style.SetEnabled(ww.open, v.record ~= nil)
         Style.SetEnabled(ww.share, v.canShare == true)
         Style.SetEnabled(ww.delete, v.record ~= nil)
@@ -944,7 +1256,8 @@ function Builders.result(parent)
 end
 
 --- The running body's chips: the race's dummy kind and length, and a flag already known (a shared
---- session: its live total holds damage from before the arm, so it is never paced).
+--- session: its meter session holds damage from before the arm). The best's figures still show beside
+--- it: they never touch the meter.
 --- @param race table
 --- @return table list
 function States.RunningChips(race)

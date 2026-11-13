@@ -2,10 +2,10 @@ local _, NS = ...
 -- modules/Hud_States.lua — the DPS HUD's two bodies (spec §6, mockup §2): `live` (the fight in
 -- progress; with nothing to pace against the HUD's state reads noBest) and `over` (the fight-over
 -- card). Each is built on first show into the HUD's content frame and answers Update(view), and the
--- live body SetLive(live); modules/Hud.lua owns the shell, decides which body shows and builds the
--- view. Adapted from DPS Race @045f479 (modules/Hud_States.lua) without its race: no idle, armed,
--- Stop! or waiting body, no race length, no late-cast flags, no buttons in the bodies (the title
--- bar's controls are the HUD's acts).
+-- live body SetLive(live) and SetClock(seconds) (the race beat's clock alone); modules/Hud.lua owns
+-- the shell, decides which body shows and builds the view. Adapted from DPS Race @045f479
+-- (modules/Hud_States.lua) without its race: no idle, armed, Stop! or waiting body, no race length,
+-- no late-cast flags, no buttons in the bodies (the title bar's controls are the HUD's acts).
 --
 -- THE STACK, top down, each part switched by its `hud.layout.*` key: the clock, the target line, the
 -- Damage and DPS boxes, on the over card the chips, then the "Damage profile" section (its heading,
@@ -579,10 +579,15 @@ function Builders.live(parent)
         setPetRow(self.w.damage, v.hasPet)
         setPetRow(self.w.dps, v.hasPet)
         local y = placeTop(self, v)
-        self.w.clock:SetText(NS.Format.Clock(v.clock))
+        self:SetClock(v.clock)
         self.w.target:SetText(v.targetLine or "")
         self:SetLive(v.live)
         self.height = placeExtras(self, v, y)
+    end
+
+    --- The clock label: plain seconds.
+    function body.SetClock(self, seconds)
+        self.w.clock:SetText(NS.Format.Clock(seconds))
     end
 
     --- The live figures: opaque values, straight to the formatter and the labels.

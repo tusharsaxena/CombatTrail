@@ -85,8 +85,11 @@ L["The race length the Race window offers until you pick another. The last lengt
     "The race length the Race window offers until you pick another. The last length you arm is remembered until you change this."
 L["Near a training dummy"] = "Near a training dummy"
 L["Show the Race window near a training dummy"] = "Show the Race window near a training dummy"
-L["Open the Race window by itself while a training dummy is your target or has its nameplate up, outside instances. It closes a few seconds after the last one is gone, and stays closed once you close it until you next come near one."] =
-    "Open the Race window by itself while a training dummy is your target or has its nameplate up, outside instances. It closes a few seconds after the last one is gone, and stays closed once you close it until you next come near one."
+L["Open the Race window by itself, with the DPS HUD beside it, while a training dummy is your target or has its nameplate up, outside instances. It closes a few seconds after the last one is gone, and stays closed once you close it until you next come near one."] =
+    "Open the Race window by itself, with the DPS HUD beside it, while a training dummy is your target or has its nameplate up, outside instances. It closes a few seconds after the last one is gone, and stays closed once you close it until you next come near one."
+L["Show the DPS HUD near a training dummy"] = "Show the DPS HUD near a training dummy"
+L["Open the DPS HUD by itself near a training dummy, with the Race window beside it: the Race window never shows without the DPS HUD, so this or Show the Race window near a training dummy opens both. The DPS HUD fades after a fight by its own rules and takes the Race window with it; both come back the next time a dummy is targeted or comes into view. Both close a few seconds after the last dummy is gone, unless a fight is on the DPS HUD or you opened or pinned it yourself. Once you close either, they stay closed until you next come near a dummy."] =
+    "Open the DPS HUD by itself near a training dummy, with the Race window beside it: the Race window never shows without the DPS HUD, so this or Show the Race window near a training dummy opens both. The DPS HUD fades after a fight by its own rules and takes the Race window with it; both come back the next time a dummy is targeted or comes into view. Both close a few seconds after the last dummy is gone, unless a fight is on the DPS HUD or you opened or pinned it yourself. Once you close either, they stay closed until you next come near a dummy."
 L["Arm on a training dummy"] = "Arm on a training dummy"
 L["Arm a race by itself when you target a training dummy out of combat, at the length Arm Race would use; your first hit starts it. Targeting anything else (or nothing) before the pull cancels it. Nothing arms in combat, in instances, over a result, or while a race waits for its result."] =
     "Arm a race by itself when you target a training dummy out of combat, at the length Arm Race would use; your first hit starts it. Targeting anything else (or nothing) before the pull cancels it. Nothing arms in combat, in instances, over a result, or while a race waits for its result."
@@ -126,6 +129,13 @@ L["Keep the Race window beside the DPS HUD, moving with it. Off, it stands on it
 L["Side of the DPS HUD"] = "Side of the DPS HUD"
 L["Which side of the DPS HUD the attached Race window stands on."] =
     "Which side of the DPS HUD the attached Race window stands on."
+L["Match the DPS HUD's height"] = "Match the DPS HUD's height"
+L["Race window width (px)"] = "Race window width (px)"
+L["How many times a second everything live on the DPS HUD and the Race window redraws, in a fight or a race: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows, and the Race window's clock, Best by now and checkpoints. Faster reads the damage meter more often."] =
+    "How many times a second everything live on the DPS HUD and the Race window redraws, in a fight or a race: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows, and the Race window's clock, Best by now and checkpoints. Faster reads the damage meter more often."
+L["Race window height (px)"] = "Race window height (px)"
+L["Attached on the left or right of the DPS HUD, the Race window takes the HUD's height and keeps it as the HUD resizes, never shorter than it needs. Above or below the HUD, or on its own, it keeps its own height."] =
+    "Attached on the left or right of the DPS HUD, the Race window takes the HUD's height and keeps it as the HUD resizes, never shorter than it needs. Above or below the HUD, or on its own, it keeps its own height."
 L["Race mode is DPS Race, now part of Combat Trail: a race is a fight on a training dummy, timed to a set length and kept in your history."] =
     "Race mode is DPS Race, now part of Combat Trail: a race is a fight on a training dummy, timed to a set length and kept in your history."
 L["(all hearthstones, %d)"] = "(all hearthstones, %d)"
@@ -172,10 +182,19 @@ L["The race's clock. Race mode > Race clock picks what shows here."] =
     "The race's clock. Race mode > Race clock picks what shows here."
 L["How long this race has run."] = "How long this race has run."
 L["How long until the buzzer."] = "How long until the buzzer."
-L["Your damage against your best's average on this race board at this point in the race. The tick in the middle is on pace: green is ahead of it, red behind. Your damage and DPS are on the DPS HUD."] =
-    "Your damage against your best's average on this race board at this point in the race. The tick in the middle is on pace: green is ahead of it, red behind. Your damage and DPS are on the DPS HUD."
-L["This race's score against the best you had on this race board before it. The tick in the middle is level with that best: green is ahead of it, red behind."] =
-    "This race's score against the best you had on this race board before it. The tick in the middle is level with that best: green is ahead of it, red behind."
+L["How much of the race is left: the bar empties to the buzzer, a mark at each quarter. It and the countdown turn from green to yellow after half the race, and red for the last 10 seconds."] =
+    "How much of the race is left: the bar empties to the buzzer, a mark at each quarter. It and the countdown turn from green to yellow after half the race, and red for the last 10 seconds."
+L["Best to beat"] = "Best to beat"
+L["Your best on this race board: the mark this race is after."] =
+    "Your best on this race board: the mark this race is after."
+L["Against your best"] = "Against your best"
+L["This race beside the best you had on this race board before it, with the difference."] =
+    "This race beside the best you had on this race board before it, with the difference."
+L["Top races"] = "Top races"
+L["Your top races on this race board (character, spec, dummy kind and length), ranked by race DPS."] =
+    "Your top races on this race board (character, spec, dummy kind and length), ranked by race DPS."
+L["Left of %s"] = "Left of %s"
+L["Elapsed of %s"] = "Elapsed of %s"
 L["STOP"] = "STOP"
 L["The buzzer has gone: stop casting. Damage still landing counts, but a cast that starts after the grace flags the race."] =
     "The buzzer has gone: stop casting. Damage still landing counts, but a cast that starts after the grace flags the race."
@@ -264,6 +283,21 @@ L["Couldn't read the result"] = "Couldn't read the result"
 L["The race board this race counts on: the dummy's kind and the race length, for this character and spec."] =
     "The race board this race counts on: the dummy's kind and the race length, for this character and spec."
 
+-- The race board's figures (modules/RaceWindow_Board.lua)
+L["%+.1f"] = "%+.1f"
+L["Item level"] = "Item level"
+L["This race"] = "This race"
+L["Diff"] = "Diff"
+L["#"] = "#"
+L["Best by now"] = "Best by now"
+L["Current"] = "Current"
+L["Where your best on this race board stood at this second of its race, read off its straight line: its score over the race length, times the time raced. Beside it, Current: your own damage so far, as the DPS HUD last read it. The bar over it is the DPS HUD's pace bar, thinner: green past the middle tick, red short of it."] =
+    "Where your best on this race board stood at this second of its race, read off its straight line: its score over the race length, times the time raced. Beside it, Current: your own damage so far, as the DPS HUD last read it. The bar over it is the DPS HUD's pace bar, thinner: green past the middle tick, red short of it."
+L["Checkpoints"] = "Checkpoints"
+L["best \194\183 current"] = "best \194\183 current"
+L["Your best's damage at each quarter of the race, off its straight line, and under it yours as the clock passed that quarter (the DPS HUD's reading then). A quarter not reached yet shows a dash. Once it is passed, the bar under them grows from its middle tick: green as far as you were ahead of your best there, red as far behind. The passed ones dim and are outlined green; the one the clock is in is outlined amber."] =
+    "Your best's damage at each quarter of the race, off its straight line, and under it yours as the clock passed that quarter (the DPS HUD's reading then). A quarter not reached yet shows a dash. Once it is passed, the bar under them grows from its middle tick: green as far as you were ahead of your best there, red as far behind. The passed ones dim and are outlined green; the one the clock is in is outlined amber."
+
 -- The Race window's Your best card (modules/RaceWindow_Best.lua)
 L["Your best"] = "Your best"
 L["Length: %s"] = "Length: %s"
@@ -281,7 +315,6 @@ L["No target: target a training dummy, then arm."] = "No target: target a traini
 L["%s is no training dummy: a race armed now is canceled when that pull starts."] =
     "%s is no training dummy: a race armed now is canceled when that pull starts."
 L["Your target"] = "Your target"
-L["not paced: shared session"] = "not paced: shared session"
 L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."] =
     "Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."
 
