@@ -24,6 +24,19 @@ local _, NS = ...
 -- the scoring rules, the late-cast list) keep their defaults there, as a saved race re-scores on any
 -- client (defaults/Profile.lua).
 --
+-- THE CALL-OUT'S TABS (callout plan row C5): Call-out look, Call-out sound and Call-out texts, after
+-- the Race tab, are LibKa0s-Callout-1.0's own settings section, drawn by its SettingsTabs /
+-- BuildSettings with this addon's Options instance (NS.Helpers) on the host's write route. Its rows
+-- are the instance's SchemaRows("callout."), registered here as this page's rows (so `/ct get|set|
+-- list|reset`, the page's Defaults, the global reset and the boot check all reach them), each
+-- declared retail like every row here, and skipRender: the section draws its own copy of each, by
+-- the same path, read and written through the Options descriptor, so through NS.SetByPath. Each
+-- row's group is its host tab's key (`callout.look`, ...; the preview's two session rows join the
+-- Look tab's), so the tab takes the group's place in the strip. Their AceDB defaults are seeded
+-- from the rows, before AceDB:New (the library's docs/api/Callout version 2.3, Adopting it), and
+-- the drag's `callout.point` from the instance's default place; that path is the schema's
+-- writeThrough (settings/Schema.lua).
+--
 -- WRITES: every row writes through the seam (NS.SetByPath). The race reads its keys at call time and
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
 -- one armed (Race.ForgetLength); auto-show, its DPS HUD row, auto-arm and the switch re-sync AutoArm,
@@ -159,6 +172,33 @@ row("race.restartGap", { type = "number", label = L["Damage-restart gap (seconds
     validate = within(3, 15, 1),
     tooltip = L["Your damage going quiet for this long after the buzzer, then landing again, flags the race as damage restarted. 3 to 15 seconds. Applies to new races. Saved races keep the value they were raced with."] })
 
+-- The call-out's tabs (THE CALL-OUT'S TABS, above). The library's words for its three tabs, named
+-- for this page, where Look alone would not say whose look it is. A plain table: the library reads
+-- its words with rawget, and NS.L answers an unknown key with the key.
+local CALLOUT_WORDS = {
+    TAB_LOOK = L["Call-out look"], TAB_SOUND = L["Call-out sound"], TAB_TEXTS = L["Call-out texts"],
+}
+
+local function copyOf(v)
+    if type(v) ~= "table" then return v end
+    local t = {}
+    for k, x in pairs(v) do t[k] = copyOf(x) end
+    return t
+end
+
+do
+    local prefix = NS.Countdown.PREFIX
+    local rows, named = NS.Callout:SchemaRows(prefix, { page = PAGE, L = CALLOUT_WORDS })
+    local Write = NS.__schemaLib.Write
+    for _, r in ipairs(rows) do
+        r.clients, r.skipRender = RETAIL, true
+        r.group = prefix .. (r.tab or "look")
+        if not r.sessionOnly then Write(D, r.path, copyOf(r.default)) end
+        out[#out + 1] = r
+    end
+    if named[1] then Write(D, named[1], copyOf(NS.Callout:Get("point"))) end
+end
+
 -- Late-cast ignore list: one plain string of spell IDs written WHOLE through the seam (the Usage tab's
 -- hidden items' shape, settings/History.lua), so the CLI and the page's Defaults reach it like any row.
 -- It carries skipRender: the tab draws it as the library's ID list (afterLate).
@@ -244,9 +284,10 @@ NS.RegisterTabbedPage({
     title           = L["Race mode"],
     panelName       = "CombatTrailRacePanel",
     clients         = RETAIL,
-    defaultsTooltip = L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."],
+    defaultsTooltip = L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look, voice and texts among them. Saved races are not touched."],
     afterGroup      = { [TAB.late] = afterLate },
     beforeGroup     = { [TAB.race] = beforeRace },
+    tabs            = NS.Callout:SettingsTabs({ options = NS.Helpers, L = CALLOUT_WORDS, prefix = NS.Countdown.PREFIX }),
 })
 
 -- The ignore list repaints when it changes from anywhere (`/ct race ignore`, `/ct set`, a right-click)

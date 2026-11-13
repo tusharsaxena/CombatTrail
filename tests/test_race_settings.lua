@@ -121,7 +121,12 @@ end)
 test("race mode: the stored paths, types, defaults and ranges are the pinned set", function()
     if forever() then return end
     local NS = T.load().NS
-    assertEqual(#NS.SchemaForPage("race"), #ROWS, "the page's row count")
+    -- The page's own rows, then the call-out's (tests/test_callout_settings.lua pins those).
+    local own = 0
+    for _, row in ipairs(NS.SchemaForPage("race")) do
+        if not tostring(row.path):find("^callout%.") then own = own + 1 end
+    end
+    assertEqual(own, #ROWS, "the page's own row count")
     for _, r in ipairs(ROWS) do
         local row = NS.FindSchemaRow(r[1])
         assertEqual(row.type, r[2], r[1] .. " type")
@@ -146,7 +151,7 @@ test("race mode: the stored paths, types, defaults and ranges are the pinned set
     assertTrue(NS.SetByPath("raceWindow.side", "LEFT"))
 end)
 
-test("race mode: the page's tabs are Race, Late-cast ignore list and Race window, and it renders quietly", function()
+test("race mode: the page's tabs are Race, the call-out's three, Late-cast ignore list and Race window, and it renders quietly", function()
     if forever() then return end
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
@@ -156,7 +161,8 @@ test("race mode: the page's tabs are Race, Late-cast ignore list and Race window
     local ctx = NS.pageCtx.race
     assertTrue(ctx ~= nil, "the page's ctx")
     local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "race", nil, nil, {})
-    assertEqual(table.concat(keys or {}, ","), "Race,Late-cast ignore list,Race window")
+    assertEqual(table.concat(keys or {}, ","),
+        "Race,callout.look,callout.sound,callout.texts,Late-cast ignore list,Race window")
     -- The switch is the Race tab's first row.
     assertEqual(NS.SchemaForPage("race")[1].path, "race.enabled")
 end)

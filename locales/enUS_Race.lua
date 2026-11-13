@@ -144,8 +144,11 @@ L["Ignore a spell"] = "Ignore a spell"
 L["A spell ID, a shift-clicked spell link, or the name of a spell a race cast late. \"Hearthstone\" adds every hearthstone."] =
     "A spell ID, a shift-clicked spell link, or the name of a spell a race cast late. \"Hearthstone\" adds every hearthstone."
 L["No spell is ignored: every late cast flags its race."] = "No spell is ignored: every late cast flags its race."
-L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."] =
-    "Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."
+L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look, voice and texts among them. Saved races are not touched."] =
+    "Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look, voice and texts among them. Saved races are not touched."
+L["Call-out look"] = "Call-out look"
+L["Call-out sound"] = "Call-out sound"
+L["Call-out texts"] = "Call-out texts"
 
 -- A race's time (modules/Format.lua)
 L["+%.1f"] = "+%.1f"

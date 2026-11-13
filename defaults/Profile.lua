@@ -283,9 +283,10 @@ NS.defaults = {
         raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT", matchHud = true,
             width = 260, height = 0,
             position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
-        -- No `callout` key ships (architecture-§5: the schema drives the defaults, and the race
-        -- call-out's look, voice and words have no rows yet, callout plan row C2). The instance's db
-        -- getter (modules/Countdown.lua) answers nil, so the call-out reads the library's DEFAULTS.
+        -- No `callout` key is written here: the race call-out's look, voice and words are schema rows
+        -- (LibKa0s-Callout-1.0's SchemaRows), and settings/Race.lua seeds `callout` from those rows
+        -- (and `callout.point` from the instance's default place) before AceDB:New, on Retail only
+        -- (architecture-§5: the schema drives the defaults; callout plan row C5).
         -- The new-best toast (modules/BestToast.lua, race plan Task C2; History > New-best toast): a
         -- fight's new best toasts on both clients (`fights`), a race's on Retail only (`races`, ABSENT
         -- on WoW Forever, clients-§4); how long it stays (s), its sound (on, and which: "Default" is

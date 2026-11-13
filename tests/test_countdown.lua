@@ -142,13 +142,13 @@ test("countdown: the packs the seam offers are the CLAUDE.md sounds line, in ord
         "NS.CALLOUT_PACKS is the declaration the vendor gate prunes media/sounds/ to")
 end)
 
-test("countdown: the profile seeds no call-out table, so the call-out reads the library's DEFAULTS", function()
+test("countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS", function()
     if forever() then return end
     local S = fresh()
     local inst = CO(S)
-    assertNil(S.NS.defaults.profile.callout, "no schema row, so no default (architecture-§5)")
-    assertNil(S.NS.db.profile.callout, "nothing writes one")
     local lib = S.M.LibStub("LibKa0s-Callout-1.0")
+    assertEqual(S.NS.defaults.profile.callout.size, lib.DEFAULTS.size, "seeded from the rows (architecture-§5)")
+    assertTrue(S.NS.db.profile.callout ~= nil, "the call-out reads the profile's table")
     assertEqual(inst:Get("size"), lib.DEFAULTS.size, "the library's default size")
     assertEqual(inst:Get("font"), lib.DEFAULTS.font, "the library's default font")
 end)
@@ -375,9 +375,8 @@ end)
 test("countdown: the call-out's voice off keeps the numbers and silences them", function()
     if forever() then return end
     local S = fresh()
-    assertFalse(CO(S):Set("voice", "off"), "no table to write into: the profile seeds none")
-    S.NS.db.profile.callout = {}   -- the table a later settings section would write
     assertTrue(CO(S):Set("voice", "off"))
+    assertEqual(S.NS.GetSetting("callout.voice"), "off", "written through the seam")
     running(S, 30)
     assertEqual(shownAt(S, 127), 5)
     to(S, 134)
@@ -583,11 +582,11 @@ test("countdown: a profile change re-applies the call-out's look and reads the n
         applied = applied + 1
         return real(self, ...)
     end
-    S.NS.db.profile.callout = { size = 120 }   -- a table a later section would write
+    assertTrue(S.NS.SetByPath("callout.size", 120))
     assertEqual(inst:Get("size"), 120, "the getter reads the profile's table")
     S.NS.db:SetProfile("Other")
     assertTrue(applied >= 1, "the profile change re-applied the call-out")
-    assertNil(S.NS.db.profile.callout, "the new profile holds none")
+    assertEqual(S.NS.db.profile.callout.size, 96, "the new profile holds the seeded default")
     assertEqual(inst:Get("size"), S.M.LibStub("LibKa0s-Callout-1.0").DEFAULTS.size, "so it reads the defaults")
 end)
 

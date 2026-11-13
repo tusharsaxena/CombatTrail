@@ -811,7 +811,7 @@ Total.
 - race mode: every control and verb is absent on WoW Forever
 - race mode: the library-absent dispatcher lists and runs the verb on its own client only
 - race mode: the stored paths, types, defaults and ranges are the pinned set
-- race mode: the page's tabs are Race, Late-cast ignore list and Race window, and it renders quietly
+- race mode: the page's tabs are Race, the call-out's three, Late-cast ignore list and Race window, and it renders quietly
 - race mode: the DPS HUD row sits under auto-show, live whatever auto-show says (W29 decision D4)
 - race mode: Match the DPS HUD's height sits on the Race window tab, under the side
 - race mode: a new default length forgets the last one armed
@@ -981,7 +981,7 @@ Total.
 - countdown: absent on WoW Forever, the call-out with it
 - countdown: one call-out, on the addon's folder, skin and two shipped voices
 - countdown: the packs the seam offers are the CLAUDE.md sounds line, in order
-- countdown: the profile seeds no call-out table, so the call-out reads the library's DEFAULTS
+- countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS
 - countdown: the stub answers every member a live call-out has, as an idle call-out does
 - countdown: the library absent, the seam answers the stub and the countdown counts nothing
 - countdown: a countdown the call-out refuses is not reported armed
@@ -1012,6 +1012,18 @@ Total.
 - countdown: a profile change re-applies the call-out's look and reads the new profile's table
 - countdown: a profile that still stores the retired race.countdownCue counts as any other
 - countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
+
+### test_callout_settings.lua (9)
+
+- callout settings: every SchemaRows row is a Race mode row, declared retail, drawn by the section
+- callout settings: absent on WoW Forever, no row, default or writeThrough path
+- callout settings: the defaults are seeded from the rows, and the schema validates against them
+- callout settings: every instance write goes through NS.SetByPath, under callout.
+- callout settings: a drag's point and Reset position are written through NS.SetByPath
+- callout settings: /ct set, get and reset reach a call-out row
+- callout settings: the Race mode page's Defaults and a profile reset put the call-out back
+- callout settings: the Race mode page draws the call-out's three tabs after Race
+- callout settings: each call-out tab is built by the library's section on the host's route
 
 ### test_toast.lua (21)
 
@@ -1739,6 +1751,7 @@ Total.
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 34 |
+| test_callout_settings.lua | 9 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1781,4 +1794,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1455** |
+| **Total** | **1464** |

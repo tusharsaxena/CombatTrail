@@ -12,6 +12,15 @@ end
 
 local lib = LibStub and LibStub("LibKa0s-Options-1.0", true)
 
+--- The panel's color codec: a stored color is `{ r, g, b, a }` by name. One pair, named here and read
+--- by the Options descriptor below and by the race call-out's descriptor (modules/Countdown.lua's
+--- `colorEncode`), so a color the call-out writes through the seam is one the panel's swatch decodes.
+function NS.ColorDecode(c)
+    c = type(c) == "table" and c or {}
+    return c.r or 1, c.g or 1, c.b or 1, c.a or 1
+end
+function NS.ColorEncode(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end
+
 local descriptor = {
     parentTitle   = NS.BRAND,
     mainPanelName = "CombatTrailMainPanel",
@@ -41,11 +50,8 @@ local descriptor = {
     bulkBegin = function(act, scope) NS.Bulk.Begin(act, scope) end,
     bulkEnd   = function(act, scope, count, err, info) NS.Bulk.End(act, scope, count, err, info) end,
 
-    colorDecode = function(c)
-        c = type(c) == "table" and c or {}
-        return c.r or 1, c.g or 1, c.b or 1, c.a or 1
-    end,
-    colorEncode = function(r, g, b, a) return { r = r, g = g, b = b, a = a or 1 } end,
+    colorDecode = NS.ColorDecode,
+    colorEncode = NS.ColorEncode,
 
     -- The landing body is the LIBRARY's (options-ui-§5, §19): NS.LANDING is declared in
     -- settings/General.lua and read at render time.

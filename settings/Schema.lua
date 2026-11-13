@@ -129,6 +129,17 @@ function NS.AnnounceSettingsChanged(path, value)
     NS.SendBus(NS.MSG.SETTINGS_CHANGED, path, value)
 end
 
+-- The paths a write may name with no row (options-ui-§1 route (a)): Master controls' two composed
+-- rows, written by host verbs on a load where the composer is hollow; and, on Retail, the race
+-- call-out's drag-written place, `callout.point`, its named non-setting state (the second answer of
+-- LibKa0s-Callout-1.0's SchemaRows, settings/Race.lua): no control chooses it, so it has no row; the
+-- drag-stop and Reset position write it through NS.SetByPath (modules/Countdown.lua's write route).
+-- Read once, here at :New, so it is named here, not taken from the instance.
+NS.CALLOUT_POINT = "callout.point"
+local WRITE_THROUGH = { "general.enabled", "general.locked" }
+if NS.Compat.ForClient({ "retail" }) then WRITE_THROUGH[#WRITE_THROUGH + 1] = NS.CALLOUT_POINT end
+NS.SCHEMA_WRITE_THROUGH = WRITE_THROUGH
+
 local S = SchemaLib:New({
     rows = NS.Schema,
     -- `global.<...>` paths live in the global store; everything else in the active profile.
@@ -148,9 +159,7 @@ local S = SchemaLib:New({
     format       = function(row, value) return NS.FormatSchemaValue(row, value) end,
     print        = function(line) NS.Print(line) end,
     resetExempt  = RESET_EXEMPT,
-    -- options-ui-§1 route (a): on a load where the Master-controls composer is hollow, the host
-    -- verbs that write these composed rows still land.
-    writeThrough = { "general.enabled", "general.locked" },
+    writeThrough = WRITE_THROUGH,
 })
 NS.SchemaRuntime = S
 

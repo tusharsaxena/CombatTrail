@@ -5,8 +5,17 @@ local _, NS = ...
 -- spoken in the player's chosen voice, and STOP at the buzzer. When `race.finalCountdown` seconds remain
 -- (3-10, default 10) and `race.centerCountdown` is on, the call-out counts down to 1 and goes at the
 -- buzzer; with `race.buzzer` on, it then says STOP. The call-out's own look, voice and words are its
--- settings: the profile's `callout` table when one exists, which no default seeds and nothing writes
--- yet (defaults/Profile.lua, callout plan row C2), so today the library's DEFAULTS.
+-- settings, the profile's `callout` table: schema rows (`callout.*`, the instance's SchemaRows,
+-- registered and seeded into the defaults by settings/Race.lua, callout plan row C5), drawn on the
+-- Race mode page by the library's settings section.
+--
+-- THE WRITE ROUTE (architecture-§5; LibKa0s-Callout-1.0 from 2.3): the descriptor's `path` and `set`
+-- send EVERY write the instance makes, its settings, its colors (in the panel's codec,
+-- NS.ColorEncode), the drag's saved `point` and Reset position, through NS.SetByPath under
+-- `callout.`. The instance only reads its `db`. `callout.point` is the named non-setting state the
+-- drag writes, listed in the schema's writeThrough (settings/Schema.lua). NS.SetByPath and
+-- NS.ColorEncode are read at call time: both are defined by the settings files, which load after
+-- this one.
 --
 -- ONE endsAt (owner, 2026-11-13: the numbers and the Race window's clock had disagreed). The call-out
 -- counts down to RaceClock.EndsAt(), the buzzer's moment on the GetTime() clock, the same value the
@@ -55,15 +64,22 @@ Countdown.FRAME_NAME = "CombatTrailCallout"
 -- A whole second computed from GetTime() differences may land a hair either side of the integer.
 local EPS = 1e-6
 
+--- The rows' prefix: every call-out setting's path is `callout.<key>` (settings/Race.lua).
+Countdown.PREFIX = "callout."
+
 --- The addon's one call-out (core/CalloutSetup.lua; the stub without the library). Its settings are
---- the profile's `callout` table, read at every call, so a profile switch is followed; with none (the
---- profile ships no such key), the getter answers nil and the call-out reads the library's DEFAULTS.
+--- the profile's `callout` table, read at every call, so a profile switch is followed (before the
+--- profile store exists the getter answers nil and the call-out reads the library's DEFAULTS, which
+--- are the rows' defaults). Every write goes through the seam (THE WRITE ROUTE, above).
 NS.Callout = NS.NewCallout({
     name = Countdown.FRAME_NAME,
     db = function()
         local db = NS.db
         return db and db.profile and db.profile.callout or nil
     end,
+    path = Countdown.PREFIX,
+    set = function(path, value) return NS.SetByPath(path, value) end,
+    colorEncode = function(r, g, b, a) return NS.ColorEncode(r, g, b, a) end,
 })
 local CO = NS.Callout
 

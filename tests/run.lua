@@ -146,6 +146,7 @@ local SUITES = {
     "test_race_window_board",
     "test_race_clock",
     "test_countdown",
+    "test_callout_settings",
     "test_toast",
     "test_slices",
     "test_hud_states",
