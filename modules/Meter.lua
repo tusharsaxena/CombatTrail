@@ -14,7 +14,9 @@ local _, NS = ...
 --   * ReadLive(id) is the DISPLAY path. It runs in combat, when every number is secret, and therefore
 --     does nothing to a value but copy it into a table (and ask `== nil` of it, for the live-DPS
 --     rungs). No arithmetic, no comparison, no `#` on a client table, no sort: Blizzard's order is
---     kept, and the player and the pet stay two sources (the HUD can't sum them, spec §6).
+--     kept, and the player and the pet stay two sources (the HUD can't sum them, spec §6). The one
+--     exception is the folded split on a client that folds the pet (Meter.FOLDS_PET, WoW Forever):
+--     it sums the pet's rows only after NS.Secrets proved every value it reads plain (liveFolded).
 --
 -- THE PET (spec §6 and §12). The meter answers the pet as a source of its own, asked for by the pet's
 -- GUID. ResolvePet() is that GUID while a pet exists (passed to the client as it comes, even opaque),
@@ -61,6 +63,10 @@ Meter.SESSION_CURRENT = (SESSION_TYPE and SESSION_TYPE.Current) or 1
 
 --- The pet-split seam (spec §12): true while the meter answers the pet as its own source.
 Meter.PET_SEPARATE = true
+--- Whether this client folds the pet into its owner's source (WoW Forever: the pet's rows sit in the
+--- player's list, each named by creatureName), so the live read splits the pet's figure out of the
+--- player's when every value it needs is plain (liveFolded), else marks a dash (`petDash`).
+Meter.FOLDS_PET = NS.Compat.IsForever() and true or false
 
 -- The reason IsAvailable gives when the client has no meter API at all (Blizzard gives none then).
 local NO_API_REASON = NS.L["Blizzard's damage meter is not available on this client."]
@@ -604,6 +610,71 @@ local function livePart(guid)
              spells = spells, source = source }
 end
 
+-- THE LIVE FOLDED SPLIT (callout plan row C7). On a client that folds the pet into its owner
+-- (Meter.FOLDS_PET, WoW Forever) the pet has no source of its own, so its live figure can only come
+-- out of the player's rows, by the after-combat rule (petsRow: a creature name, else the cast set,
+-- Auto Attack the owner's by the set alone). It is all or nothing: every value the split reads is
+-- first proved plain through NS.Secrets (each row's creatureName, the spell ID the cast set is asked
+-- of, every pet row's amount and rate, the player's total and rate), and the one that is not ends
+-- the split with no number touched. Then the pet's part is the sum of its rows and the player's is
+-- the total less it, so the main figures read the player's part, as on Retail, whenever a Pet
+-- figure is shown. A rate missing anywhere (a row or the player with no amountPerSecond) leaves
+-- both rates nil rather than set a merged rate beside a split damage. The pet's rows stay where the
+-- meter put them in the player's list, marked `isPet` (no array is built per read).
+local NO_SPELLS = {}   -- the folded pet part's spells: its rows stay in the player's list (never written)
+
+-- Whether a live row is the pet's (nil: it cannot be told, something on it is secret).
+local function livePetRow(sp)
+    if Secrets.IsSealed(sp.creatureName) then return nil end
+    if sp.creature then return true end
+    local id = Secrets.PlainNumber(sp.spellID)
+    if id == nil then return nil end
+    local C = NS.Casts
+    return id ~= AUTO_ATTACK and C ~= nil and C.IsPetSpell ~= nil and C.IsPetSpell(id) or false
+end
+
+-- `v` proved plain: true plus the number, true plus nil when it is absent, false when it is not plain
+-- (secret, inaccessible, or not a number). The secret test runs before the nil test.
+local function plainOrAbsent(v)
+    if Secrets.IsSealed(v) then return false, nil end
+    if v == nil then return true, nil end
+    local n = Secrets.PlainNumber(v)
+    return n ~= nil, n
+end
+
+local sums = { total = 0, rate = 0, missing = false }   -- liveFolded's, reset per read (no table a read)
+
+-- One pet row's amount and rate added to `sums`; false when either is not plain.
+local function addPetRow(sp)
+    local amount = Secrets.PlainNumber(sp.total)
+    local ok, r = plainOrAbsent(sp.dps)
+    if amount == nil or not ok then return false end
+    sums.total = sums.total + amount
+    if r == nil then sums.missing = true else sums.rate = sums.rate + r end
+    return true
+end
+
+-- The pet's part split out of the player's live part, or nil when anything it needs is secret (the
+-- player's part is then left untouched: the merged figure).
+local function liveFolded(player)
+    local total = Secrets.PlainNumber(player.total)
+    local okRate, rate = plainOrAbsent(player.dps)
+    if total == nil or not okRate then return nil end
+    sums.total, sums.rate, sums.missing = 0, 0, rate == nil
+    local spells = player.spells
+    for i = 1, #spells do
+        local pets = livePetRow(spells[i])
+        if pets == nil or (pets and not addPetRow(spells[i])) then return nil end
+    end
+    for i = 1, #spells do
+        if livePetRow(spells[i]) then spells[i].isPet = true end
+    end
+    local petRate = (not sums.missing) and sums.rate or nil
+    player.total = math.max(0, total - sums.total)
+    player.dps = petRate and math.max(0, rate - petRate) or nil
+    return { total = sums.total, dps = petRate, spells = NO_SPELLS, folded = true }
+end
+
 local function livePlayer()
     local part = livePart(UnitGUID("player"))
     if not part then return nil end
@@ -623,7 +694,10 @@ end
 --- @param id number|nil
 --- @return table live  { player = {total, dps, rung, maxAmount, spells = { {spellID, total, dps, creature,
 ---                       creatureName} }}|nil,
----                       pet = {total, dps, maxAmount, spells}|nil }
+---                       pet = {total, dps, maxAmount, spells, folded?}|nil, petOut, petDash }
+---                       (on a folding client a plain read splits `pet` out of the player's rows,
+---                       `folded`, and marks those rows `isPet`; a secret one leaves `pet` nil and
+---                       `petDash` true while a pet is out)
 function Meter.ReadLive(id)
     local now = GetTime()
     local share = shared and shared.open and shared.at == now and shared or nil
@@ -637,10 +711,18 @@ function Meter.ReadLive(id)
     -- would draw a confident 0 while the pet's damage sits in the owner's rows.
     if pet and #pet.spells == 0 then pet = nil end
     liveID = nil
-    if t0 then Perf.Note("meter", debugprofilestop() - t0) end
     -- `petOut`: whether a pet exists (plain), so the breakdown knows to draw the pet's name column.
+    local petOut = Meter.ResolvePet() ~= nil
+    -- A folding client: the pet's figure out of the player's rows when they are plain, else a dash
+    -- (`petDash`, plain: the HUD shows the Pet row with no figure and the main figures stay merged).
+    local petDash = false
+    if pet == nil and petOut and Meter.FOLDS_PET then
+        pet = player and liveFolded(player) or nil
+        petDash = pet == nil
+    end
+    if t0 then Perf.Note("meter", debugprofilestop() - t0) end
     -- Shared (Meter.ShareLive) within this frame only.
-    local live = { player = player, pet = pet, petOut = Meter.ResolvePet() ~= nil }
+    local live = { player = player, pet = pet, petOut = petOut, petDash = petDash }
     if share then share.id, share.live = id, live end
     return live
 end

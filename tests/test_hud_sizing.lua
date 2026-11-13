@@ -150,7 +150,8 @@ test("hud sizing: a pet appearing mid-fight keeps the fixed height and the bars"
     local inst, meter, Hud = liveOn(fightOf(8), { pet = true })
     local f = Hud.Frame()
     local h = f.__h
-    assertFalse(Hud.View().hasPet)
+    -- WoW Forever shows the Pet row as soon as a pet is out (the folded split, callout plan row C7).
+    if not inst.NS.Meter.FOLDS_PET then assertFalse(Hud.View().hasPet) end
     meter.SetSession(2, fightOf(8, true))
     H.tick(inst, 102.25, 103)
     assertTrue(Hud.View().hasPet, "the pet's damage arrived")

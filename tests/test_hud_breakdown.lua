@@ -114,6 +114,85 @@ test("breakdown: a folded pet row the meter names a creature on draws as the pet
     meter.SetSecret(false)
 end)
 
+-- WoW Forever's live Pet figure (callout plan row C7): the folded split when every row is plain, the
+-- Pet row with a dash when any is secret, no row with no pet.
+local FOLDED = { damage = 2000, dps = 100, duration = 20, pet = false,
+    spells = { { id = 6603, dmg = 900, dps = 45 }, { id = 6603, dmg = 700, dps = 35, creature = "Wolf" },
+               { id = 17253, dmg = 400, dps = 20, creature = "Wolf" } },
+    enemies = { { name = "Angry Boar", creatureID = 1985, damage = 2000 } } }
+
+local function foldedFight(opts, secret)
+    local inst, meter, Hud = H.fresh(opts)
+    meter.SetSession(1, FOLDED)
+    H.enter(inst, 10)
+    if secret then meter.SetSecret(true) end
+    H.run(inst, 10.25)
+    H.hit(inst, 11, 1)
+    H.tick(inst, 11.25, 13)
+    return inst, meter, Hud
+end
+
+test("hud: forever: plain rows give the Pet figure and the player's part as the main figure", function()
+    local inst, meter, Hud = foldedFight({ pet = true })
+    local NS = inst.NS
+    if not NS.Meter.FOLDS_PET then return end
+    local w = H.body(Hud, "live").w
+    assertTrue(Hud.View().hasPet)
+    assertTrue(w.damage.petValue:IsShown(), "the Pet row is up")
+    assertEqual(w.damage.petValue:GetText(), NS.Format.Number(1100), "the pet's melee and Bite")
+    assertEqual(w.dps.petValue:GetText(), NS.Format.Rate(55))
+    assertEqual(w.damage.value:GetText(), NS.Format.Number(900), "Damage is yours alone")
+    assertEqual(w.dps.value:GetText(), NS.Format.Rate(45))
+    local v = Hud.View()
+    assertTrue(v.live.pet.folded, "the view's read is the split one the pace bar and Hud.LiveDamage see")
+    local curve = { playerAt = function() return 111 end, damageAt = function() return 222 end }
+    local pace = NS.HudBest.LiveView(curve, 2, v.live)
+    assertTrue(pace.playerOnly, "the pace bar sets the player's part against the best's player damage")
+    assertEqual(pace.ref, 111)
+    assertEqual(pace.total, 900)
+    local total, has, petOwn = Hud.LiveDamage(v.fight)
+    assertTrue(has)
+    assertEqual(total, 900, "the race window's figure is the player's part")
+    assertTrue(petOwn, "and says so, so its pace reads the best's player damage")
+    assertTrue(meter ~= nil)
+end)
+
+test("hud: forever: secret rows show the Pet row with a dash and keep the merged main figure", function()
+    local inst, meter, Hud = foldedFight({ pet = true }, true)
+    local NS = inst.NS
+    if not NS.Meter.FOLDS_PET then return meter.SetSecret(false) end
+    local w = H.body(Hud, "live").w
+    assertTrue(Hud.View().hasPet, "the row stays up while a pet is out")
+    assertTrue(w.damage.petValue:IsShown())
+    assertEqual(w.damage.petValue:GetText(), "\226\128\148", "a dash, nothing summed")
+    assertEqual(w.dps.petValue:GetText(), "\226\128\148")
+    assertTrue(T.isSecret(w.damage.value:GetText()), "the main figure is the meter's secret")
+    assertEqual(T.reveal(w.damage.value:GetText()), 2000, "merged: yours and the pet's")
+    local curve = { playerAt = function() return 111 end, damageAt = function() return 222 end }
+    local pace = NS.HudBest.LiveView(curve, 2, Hud.View().live)
+    assertFalse(pace.playerOnly, "the merged figure against the best's merged pace")
+    assertEqual(pace.ref, 222)
+    meter.SetSecret(false)
+end)
+
+test("hud: no pet out: no Pet row live, plain or secret, on either client", function()
+    for _, secret in ipairs({ false, true }) do
+        local _, meter, Hud = foldedFight({}, secret)
+        local w = H.body(Hud, "live").w
+        assertFalse(Hud.View().hasPet)
+        assertFalse(w.damage.petValue:IsShown())
+        meter.SetSecret(false)
+    end
+end)
+
+test("hud: retail: a folded source shows no live Pet row (the pet answers its own source there)", function()
+    local inst, meter, Hud = foldedFight({ pet = true })
+    if inst.NS.Meter.FOLDS_PET then return end
+    assertFalse(Hud.View().hasPet)
+    assertEqual(H.body(Hud, "live").w.damage.value:GetText(), inst.NS.Format.Number(2000), "merged, as before")
+    assertTrue(meter ~= nil)
+end)
+
 test("breakdown: the over card's rows are merged, highest first, with their shares", function()
     local inst, meter, Hud = H.fresh({ pet = true })
     H.whole(inst, meter, 1, PETFIGHT, 10, 40)

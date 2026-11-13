@@ -270,14 +270,17 @@ end
 
 -- The live entries in drawing order: the player's spells, then the pet's ({ spell, isPet }). A row
 -- of the player's that the meter PLAINLY names a creature on (`creature`: a folded source's pet row,
--- WoW Forever, read out of combat) draws as the pet's where it stands. In combat the name is secret
+-- WoW Forever, read out of combat), or that the live folded split marked `isPet` (Meter.ReadLive),
+-- draws as the pet's where it stands. In combat the name is secret
 -- (the owner's rows carry "", the pet's its name), so no row can be colored by it: the share column,
 -- empty live, draws the name instead (ShowLive), blank on the owner's rows.
 local function liveEntries(live)
     local out = {}
     local function add(part, isPet)
         if type(part) ~= "table" or type(part.spells) ~= "table" then return end
-        for _, s in ipairs(part.spells) do out[#out + 1] = { s = s, pet = isPet or s.creature == true } end
+        for _, s in ipairs(part.spells) do
+            out[#out + 1] = { s = s, pet = isPet or s.creature == true or s.isPet == true }
+        end
     end
     add(live.player, false)
     add(live.pet, true)

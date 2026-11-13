@@ -20,7 +20,9 @@ local _, NS = ...
 --     creature ID (the owner's Forever rows carry a sourceCreatureID and no sourceGUID)
 --   * the spell color curve (issue #7, modules/ProbeCurve.lua) and the function lists of the
 --     client namespaces the trials lean on (C_StringUtil, C_CurveUtil)
---   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it; each
+--   * the cast secrecy counts and the meter's secrecy samples 5 s into combat and 2 s after it; with
+--     a pet out each sample also counts the pet's rows in the player's source (a folding client,
+--     WoW Forever) and their secrecy, and says what the HUD's live Pet figure is (split, dash); each
 --     sample also runs the number formatter trial on the live DPS figure (Format.Trial: why the
 --     live figure keeps its decimal tail) and the color curve on the first live spell row's ID.
 --
@@ -378,6 +380,40 @@ local function sourceSecrecy(who, guid)
         secrecy(src.combatSpells))
 end
 
+-- The folded pet (callout plan row C7): the pet's rows in the PLAYER's source, the folding client's
+-- shape (WoW Forever), with each value's secrecy, and what the HUD's live read made of them. Counts
+-- only: a row's creatureName is asked IsSealed first and NamesCreature (plain, non-empty) only after,
+-- and an amount is only asked IsSecret. A row with a secret name cannot be told the pet's, so it is
+-- counted apart. Then ReadLive's answer: "split" (every value plain: the Pet figure is the pet rows'
+-- sum and the main figures the player's part), "dash" (a pet out, something secret: the merged
+-- figure and a dashed Pet row), "own source" (the pet answers a source of its own) or "none".
+local function foldedPetLine()
+    local ok, src, err = sourceOf(UnitGUID("player"))
+    if not ok then return "player " .. err end
+    if not Secrets.CanAccessTable(src) then return "player source " .. show(src) end
+    local rows, sealedName, named, sealedAmount = 0, 0, 0, 0
+    Secrets.SafeIterate(src.combatSpells, function(_, e)
+        rows = rows + 1
+        if not Secrets.CanAccessTable(e) then
+            sealedName = sealedName + 1
+            return
+        end
+        if Secrets.IsSealed(e.creatureName) then
+            sealedName = sealedName + 1
+        elseif Secrets.NamesCreature(e.creatureName) then
+            named = named + 1
+            if Secrets.IsSealed(e.totalAmount) then sealedAmount = sealedAmount + 1 end
+        end
+    end)
+    local live = NS.Meter.ReadLive(nil)
+    local pet = type(live) == "table" and live.pet or nil
+    local figure = (pet and (pet.folded and "split" or "own source"))
+        or (type(live) == "table" and live.petDash and "dash") or "none"
+    return ("pet rows in player source: %d row(s), %d with a secret name, %d named a creature (%d with a secret"
+        .. " amount); player total %s; live Pet figure: %s"):format(rows, sealedName, named, sealedAmount,
+        secrecy(src.totalAmount), figure)
+end
+
 -- The trials on what the HUD draws now: the number formatter on the live DPS figure, the color
 -- curve on the first live spell row's ID (both opaque: secret in combat).
 local function trialSamples(tag)
@@ -399,6 +435,10 @@ local function takeSample(tag)
         if UnitExists("pet") then line = line .. "; " .. sourceSecrecy("pet", UnitGUID("pet")) end
     end
     samples[#samples + 1] = ("meter sample %s: %s"):format(tag, line)
+    if hasMeter() and UnitExists("pet") then
+        local ok, folded = pcall(foldedPetLine)
+        samples[#samples + 1] = ("   %s %s"):format(tag, ok and folded or ("pet rows raised: " .. show(folded)))
+    end
     if hasMeter() then
         local ok, err = pcall(trialSamples, tag)
         if not ok then samples[#samples + 1] = ("   %s trials raised: %s"):format(tag, show(err)) end
