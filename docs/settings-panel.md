@@ -435,7 +435,7 @@ Retail only (race plan Task B3). Tabs: *Race*, *Late-cast ignore list*, *Race wi
 from, then the switch; the race clock's two colored clocks and the window's look are the DPS HUD page's
 appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
 page's, and the New-best toast's section is History's too (ruling X19). The countdown rows and the
-buzzer row carry no reaction of their own: modules/Countdown.lua re-arms a race's marks off their
+buzzer row carry no reaction of their own: modules/Countdown.lua re-arms the race's call-out off their
 SETTINGS_CHANGED.
 
 ### Race
@@ -448,10 +448,9 @@ SETTINGS_CHANGED.
 | Show the DPS HUD near a training dummy | `race.autoShowHud` |
 | Arm on a training dummy | `race.autoArm` |
 | Race clock | `race.clock` |
-| Countdown cue sound | `race.countdownCue` |
 | Center-screen countdown | `race.centerCountdown` |
 | Center countdown from (seconds) | `race.finalCountdown` |
-| Buzzer raid warning and sound | `race.buzzer` |
+| STOP at the buzzer | `race.buzzer` |
 | Sticky-combat hint after (seconds) | `race.hintDelay` |
 | Late-cast grace (seconds) | `race.grace` |
 | Damage-restart gap (seconds) | `race.restartGap` |

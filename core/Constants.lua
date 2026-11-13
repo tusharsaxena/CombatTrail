@@ -38,8 +38,9 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 --                                    re-raises a shown StaticPopup when it opens (frame-layering-§4)
 --   DIALOG             (library)     Blizzard StaticPopups (reset, delete), the LibKa0s debug console
 --                                    and perf panel
---   FULLSCREEN         SCREEN_ALERT  the race's center-screen countdown (modules/Countdown.lua, Race
---                                    mode): over every window, below every menu, never taking the mouse
+--   FULLSCREEN         SCREEN_ALERT  the race's call-out (LibKa0s-Callout-1.0's STRATA, the same tier;
+--                                    modules/Countdown.lua, Race mode): over every window, below every
+--                                    menu, never taking the mouse while locked
 --   FULLSCREEN_DIALOG  (library)     the LibKa0s dropdown menu (the Results filter bars)
 --   TOOLTIP            (Blizzard)    GameTooltip
 --

@@ -15,7 +15,7 @@ local _, NS = ...
 -- and parks it; Unpark (the stepper's Race starts, or at once with no library) stamps combat entry and
 -- starts one AceTimer beat every TICK. The first hit lands MockFights.FIRST_HIT in and starts the race
 -- clock; each beat feeds the lanes, the chart's store and the HUD's tick from the plan, as Sim's fight
--- beat does. At the race length the buzzer goes (Countdown.Buzzer, the real raid warning); an
+-- beat does. At the race length the buzzer goes (Countdown.Buzzer, the real call-out's STOP); an
 -- incomplete scenario's combat ends before it instead. Combat ends `combatEnd` seconds after the
 -- buzzer (sticky: past the hint's delay, `race.hintDelay` + STICKY_EXTRA), and the read lands
 -- RaceScoring.QUIET_BEFORE_READ seconds after the later of the last hit and the combat end (Stop Now:

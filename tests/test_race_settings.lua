@@ -26,7 +26,6 @@ local ROWS = {
     { "race.autoShowHud",     "bool",   true },
     { "race.autoArm",         "bool",   false },
     { "race.clock",           "string", "left" },
-    { "race.countdownCue",    "bool",   true },
     { "race.centerCountdown", "bool",   true },
     { "race.finalCountdown",  "number", 10, 3, 10, 1 },
     { "race.buzzer",          "bool",   true },
@@ -82,7 +81,7 @@ test("race mode: every control and verb is absent on WoW Forever", function()
         assertFalse(tostring(row.path):find("^race") ~= nil, tostring(row.path) .. " on WoW Forever")
     end
     local D = NS.defaults.profile
-    for _, key in ipairs({ "enabled", "autoShow", "autoShowHud", "autoArm", "clock", "countdownCue", "centerCountdown",
+    for _, key in ipairs({ "enabled", "autoShow", "autoShowHud", "autoArm", "clock", "centerCountdown",
                            "finalCountdown", "buzzer" }) do
         assertNil(D.race[key], "race." .. key .. " is stored on WoW Forever")
     end
@@ -138,6 +137,9 @@ test("race mode: the stored paths, types, defaults and ranges are the pinned set
     for _, v in ipairs(NS.FindSchemaRow("race.defaultLength").values) do values[#values + 1] = v.value end
     assertEqual(table.concat(values, ","), "30,60,120,180,300")
     assertTrue(NS.FindSchemaRow("race.lateIgnore").skipRender, "the list is the tab's body")
+    -- The countdown's cue sound is retired with the call-out (callout plan row C2): its voice speaks.
+    assertNil(NS.FindSchemaRow("race.countdownCue"), "no cue sound row")
+    assertNil(NS.defaults.profile.race.countdownCue, "no cue sound default")
     assertFalse(NS.SetByPath("race.clock", "never"), "a clock mode that is none")
     assertFalse(NS.SetByPath("raceWindow.side", "MIDDLE"), "a side that is none")
     assertFalse(NS.SetByPath("race.grace", 6), "grace past 5")

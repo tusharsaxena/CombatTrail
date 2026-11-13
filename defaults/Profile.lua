@@ -52,12 +52,14 @@ end
 -- both clients, as a saved race re-scores there too. The switch (Race mode on, which stops new races
 -- only), auto-show near a dummy (on), the DPS HUD opening with it (on, race window redesign ruling
 -- O4) and auto-arm on targeting one (off), the race clock's mode ("left", one countdown, by ruling O2;
--- "both" or "elapsed"), the countdown's cue, its center numbers and where they start (s), and the
--- buzzer's raid warning (DPS Race's defaults; modules/Countdown.lua reads the last four).
+-- "both" or "elapsed"), the countdown's center numbers and where they start (s), and the buzzer's
+-- STOP (DPS Race's defaults; modules/Countdown.lua reads the last three). The countdown's cue sound
+-- (`countdownCue`) is retired with no migration (callout plan row C2: the call-out's voice speaks the
+-- numbers): AceDB stores only differences, and nothing reads a stored one.
 local function raceMode(r)
     if NS.Compat.ForClient({ "retail" }) then
         r.enabled, r.autoShow, r.autoShowHud, r.autoArm, r.clock = true, true, true, false, "left"
-        r.countdownCue, r.centerCountdown, r.finalCountdown, r.buzzer = true, true, 10, true
+        r.centerCountdown, r.finalCountdown, r.buzzer = true, 10, true
     end
     return r
 end

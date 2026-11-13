@@ -3,8 +3,9 @@ local _, NS = ...
 -- strip order. Race holds the switch first (`race.enabled`: off stops new races, NS.RaceMode.On()),
 -- then DPS Race's Race section in the order of a race: the length a race arms at, auto-show (and the
 -- DPS HUD opening with it, drawn disabled while auto-show is off: disabledIf) and auto-arm near a
--- training dummy (modules/AutoArm.lua), the race clock's mode, the countdown, the
--- buzzer with the sticky-combat hint's delay, and the scoring rules a new race freezes into its part
+-- training dummy (modules/AutoArm.lua), the race clock's mode, the countdown (when the call-out
+-- counts, and from what second; its look and voice are the call-out's own settings), the
+-- buzzer's STOP with the sticky-combat hint's delay, and the scoring rules a new race freezes into its part
 -- (grace, restart gap). Late-cast ignore list holds the list (modules/LateIgnore.lua), read when a
 -- race's flags are, drawn as the library's spell ID list. Race window holds where the window stands:
 -- attached beside the DPS HUD, and on which side (Task C1 reads both), and whether, on the left or
@@ -27,8 +28,8 @@ local _, NS = ...
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
 -- one armed (Race.ForgetLength); auto-show, its DPS HUD row, auto-arm and the switch re-sync AutoArm,
 -- and the switch going off (or a profile that has it off) cancels a race still armed.
--- The countdown re-arms a race's marks off its rows' SETTINGS_CHANGED and the buzzer reads its row as
--- it sounds (modules/Countdown.lua); the Race window reads its keys off SETTINGS_CHANGED (Task C1).
+-- The countdown re-arms the race's call-out off its rows' SETTINGS_CHANGED and the buzzer reads its row
+-- as it says STOP (modules/Countdown.lua); the Race window reads its keys off SETTINGS_CHANGED (Task C1).
 
 local L = NS.L
 local PAGE = "race"
@@ -137,8 +138,6 @@ row("race.clock", { type = "string", label = L["Race clock"], values = CLOCKS, v
     tooltip = L["What the Race window's clock shows while a race runs: the time elapsed and the time left side by side, or one of them alone, drawn larger."] })
 
 at(TAB.race, L["Countdown"])
-row("race.countdownCue", { type = "bool", label = L["Countdown cue sound"], startsLine = true,
-    tooltip = L["A sound at 10, 5, 3, 2 and 1 seconds left, and with each number of the center countdown. Takes effect at once, in the race in progress too."] })
 row("race.centerCountdown", { type = "bool", label = L["Center-screen countdown"], startsLine = true,
     tooltip = L["Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."] })
 row("race.finalCountdown", { type = "number", label = L["Center countdown from (seconds)"], min = 3, max = 10, step = 1,
@@ -146,8 +145,8 @@ row("race.finalCountdown", { type = "number", label = L["Center countdown from (
     tooltip = L["How many seconds before the buzzer the center countdown starts. 3 to 10."] })
 
 at(TAB.race, L["At the buzzer"])
-row("race.buzzer", { type = "bool", label = L["Buzzer raid warning and sound"], startsLine = true,
-    tooltip = L["A raid warning that says STOP, with a sound, the moment the race ends."] })
+row("race.buzzer", { type = "bool", label = L["STOP at the buzzer"], startsLine = true,
+    tooltip = L["The call-out in the middle of the screen says STOP, in its voice, the moment the race ends."] })
 row("race.hintDelay", { type = "number", label = L["Sticky-combat hint after (seconds)"], min = 5, max = 60, step = 1,
     validate = within(5, 60, 1),
     tooltip = L["How long combat may hold after the buzzer before the Race window suggests ways to drop it. 5 to 60 seconds."] })

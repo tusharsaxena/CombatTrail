@@ -19,7 +19,8 @@ set up in `core/DebugLogSetup.lua`; the library documents the console itself.
 | `Casts`, `Identity`, `Fight`, `Meter` | The fight pipeline: a cast list, an identity read, the state machine's edges, a meter read that failed |
 | `Race` | Race mode's engine (Retail): an arm and its refusals, the clock, the buzzer, an early combat end, a late cast, a restart, a cancel and the read; the race beat on and off (RaceClock) |
 | `AutoArm` | Auto-show and auto-arm (Retail): a dummy session beginning and ending, an auto-arm and its refusal, an auto-arm canceled by a target change |
-| `Countdown` | The race's final seconds (Retail): the frame built (digits or the font fallback), an animation the client refused, the buzzer's STOP |
+| `Countdown` | The race's final seconds (Retail): the call-out handed the race's countdown, the buzzer's STOP |
+| `Callout` | LibKa0s-Callout-1.0's own lines (Retail): a voice file the copy does not carry, text to speech unavailable, a host callback that raised |
 | `Toast` | The new-best toast: a new best queued with its gain, and the toast shell's own lines |
 | `Recorder`, `Retention`, `Loadouts` | A save or skip with its reason, a purge, a loadout interned |
 | `Hud`, `Format` | The HUD's open and fade decisions (an open near a training dummy among them); a formatter constructor passed over and why, and which path served a number (written when it changes) |
