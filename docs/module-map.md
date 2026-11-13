@@ -49,6 +49,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/PoolSetup.lua` | `NS.Pool`, the widget pool the lanes, the HUD and the Results window use |
 | `core/WidgetsSetup.lua` | Dropdowns, menus, the test and sim strips and the copy box, from LibKa0s-Widgets |
 | `core/ToastSetup.lua` | `NS.NewToast`, the alert-toast shell from LibKa0s-Toast, and its degraded stub |
+| `core/CalloutSetup.lua` | `NS.NewCallout`, the center-screen call-out from LibKa0s-Callout, its degraded stub, the shipped voice packs and the settings defaults |
 | `core/ChartsSetup.lua` | `NS.Charts` (LibKa0s-Charts) and `NS.ChartsHost()`, the Results window's look for the Insights charts |
 | `core/LifecycleSetup.lua` | The one stand-down latch and the modules it suspends and resumes |
 | `core/PerfSetup.lua` | `NS.Perf`, the performance harness and its buckets |
@@ -105,7 +106,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceWindow_Board.lua` | The race board's figures the Race window draws: Best by now and the Checkpoints (the best's straight line, the player's figure as *Current* and their mini pace bars), Against your best and Top races on one column grid, `Board.Spread` (the result card's rows and gaps in a taller window) and `Board.ClockColor` (the countdown's and the time bar's green to amber to red) (Race mode, Retail) |
 | `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card, and the layouts that stretch them to the window's size: `States.ResultLayout`, `States.IdleLayout`, `States.RunningGap` (Race mode, Retail) |
 | `modules/RaceWindow.lua` | The Race window's shell: flush beside the DPS HUD (at its height on the left or right) or on its own, its size and resize grip, when it shows, the view and the acts (Race mode, Retail) |
-| `modules/Countdown.lua` | A race's final seconds: the countdown cue, the center-screen numbers, and the buzzer's raid warning (Race mode, Retail) |
+| `modules/Countdown.lua` | A race's final seconds on the addon's one call-out (`NS.Callout`): the center numbers counted to the race's endsAt, spoken, and STOP at the buzzer (Race mode, Retail) |
 | `modules/BestToast.lua` | The new-best toast: a race's (Retail) or a fight's (both clients) new best on its board |
 | `modules/Sizing.lua` | The one smooth-resize pattern every resizable window uses |
 | `modules/Results_Source.lua` | Where the Results window reads fights: the store, or the sample history |

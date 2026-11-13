@@ -1,15 +1,15 @@
--- tests/test_countdown.lua — modules/Countdown.lua (Race mode plan Task C2): a race's final seconds and
--- its buzzer, ported from DPS Race @f8078c7 (its tests/test_countdown.lua, the buzzer case of its
--- test_hud.lua and the countdown case of its test_layers.lua) onto Combat Trail's race through the REAL
--- Fight and Race (tests/race_fixture.lua fires the events). The center-screen numbers
--- (race.centerCountdown, race.finalCountdown) and the countdown cue (race.countdownCue), one timer per
--- mark, one sound per second at most, the Blizzard BigGold digit art with its font fallback, hidden at
+-- tests/test_countdown.lua — modules/Countdown.lua on LibKa0s-Callout-1.0 (callout plan row C2; Race
+-- mode plan Task C2 before it): a race's final seconds and its buzzer, through the REAL Fight and Race
+-- (tests/race_fixture.lua fires the events) and the REAL vendored call-out. The center numbers
+-- (race.centerCountdown, race.finalCountdown) counted to the race's one endsAt, which the Race window's
+-- clock reads too; the call-out's voice (the bundled packs, numbers from its `speakFrom`); hidden at
 -- the buzzer, on a cancel, on an early combat end and at the stand-down; the /reload cases; the
--- buzzer's raid warning (race.buzzer); and the module's absence on WoW Forever.
+-- buzzer's STOP (race.buzzer); the seam's stub; and the module's absence on WoW Forever.
 --
 -- THE CLOCK. The race is armed at 100 and its first hit lands at 102, so a 30 s race's buzzer is at
 -- 132 and its numbers run 10 at 122 to 1 at 131. `to(S, t)` walks the clock there in quarter seconds,
--- servicing the timer queue at each step, so every mark fires on its own second as the client would.
+-- servicing the timer queue and then running one client frame (every armed OnUpdate, which is the
+-- call-out's clock) at each step, as the client would.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -17,19 +17,15 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local F = dofile(T.root .. "/tests/race_fixture.lua")(T)
 local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
 
-local CUE, BUZZ = 25477, 8959
-
 local function forever() return T.NS.Compat.IsForever() end
 
--- The client calls the countdown and the buzzer make, recorded: each sound with its time, each raid
--- warning's text.
+-- The client calls the call-out makes, recorded: each sound file with its time.
 local function record(m)
-    m.__sounds, m.__notices = {}, {}
-    m.PlaySound = function(id) m.__sounds[#m.__sounds + 1] = { id = id, t = m.__now } end
-    m.SOUNDKIT = { UI_BATTLEGROUND_COUNTDOWN_TIMER = CUE, RAID_WARNING = BUZZ }
-    m.RaidWarningFrame = {}
-    m.ChatTypeInfo = { RAID_WARNING = { r = 1, g = 0.28, b = 0 } }
-    m.RaidNotice_AddMessage = function(_, text) m.__notices[#m.__notices + 1] = text end
+    m.__files = {}
+    m.PlaySoundFile = function(file, channel)
+        m.__files[#m.__files + 1] = { file = file, channel = channel, t = m.__now }
+        return true, #m.__files
+    end
 end
 
 local function fresh(opts)
@@ -44,13 +40,34 @@ local function fresh(opts)
 end
 
 local function C(S) return S.NS.Countdown end
+local function CO(S) return S.NS.Callout end
 
---- Walk the clock to `t` in quarter seconds, servicing the timers at each step.
+--- The frames with an OnUpdate armed now (the kit's live set, M.__timers()).
+local function onUpdates(S)
+    local out = {}
+    for _, h in ipairs(S.M.__timers()) do
+        if type(h) == "table" and h.__scripts and h.__scripts.OnUpdate then out[#out + 1] = h end
+    end
+    return out
+end
+
+--- One client frame: every armed OnUpdate runs.
+local function frame(S)
+    for _, f in ipairs(onUpdates(S)) do f:__fire("OnUpdate", 0) end
+end
+
+--- Set the clock to `t`, service the timers, then run one frame.
+local function step(S, t)
+    F.run(S, t)
+    frame(S)
+end
+
+--- Walk the clock to `t` in quarter seconds, one step each.
 local function to(S, t)
     local now = S.M.__now
     while now < t - 1e-9 do
         now = math.min(t, now + 0.25)
-        F.run(S, now)
+        step(S, now)
     end
 end
 
@@ -67,25 +84,62 @@ local function shownAt(S, t)
 end
 
 local function frameShown(S)
-    local u = C(S).__ui()
-    return u ~= nil and u.frame:IsShown() == true
+    local st = CO(S):Stats()
+    return st.built == true and st.shown == true
 end
 
---- The times the sound `id` played, as "120,121".
-local function soundTimes(S, id)
+--- The voice lines played, as "5@127,4@128": each file's name without its folder and extension.
+local function spoken(S)
     local out = {}
-    for _, s in ipairs(S.M.__sounds) do
-        if s.id == id then out[#out + 1] = ("%g"):format(s.t) end
+    for _, f in ipairs(S.M.__files) do
+        out[#out + 1] = ("%s@%g"):format(tostring(f.file):match("([^\\/]+)%.ogg$") or f.file, f.t)
     end
     return table.concat(out, ",")
 end
 
 -- ── the clients ────────────────────────────────────────────────────────────────────────────────
 
-test("countdown: absent on WoW Forever", function()
+test("countdown: absent on WoW Forever, the call-out with it", function()
     if not forever() then return end
     local S = F.fresh()
     assertNil(S.NS.Countdown, "no countdown on WoW Forever")
+    assertNil(S.NS.Callout, "no call-out on WoW Forever")
+    assertNil(S.NS.defaults.profile.callout, "no call-out settings on WoW Forever")
+end)
+
+-- ── the seam ───────────────────────────────────────────────────────────────────────────────────
+
+test("countdown: one call-out, on the addon's folder, skin and two shipped voices", function()
+    if forever() then return end
+    local S = fresh()
+    local inst = CO(S)
+    assertTrue(inst ~= S.NS.CalloutStub, "the live call-out")
+    local keys = {}
+    for i, v in ipairs(inst:Voices()) do keys[i] = v.key end
+    assertEqual(table.concat(keys, ","), "female,male,tts,off", "the two packs CLAUDE.md declares, then tts and off")
+    assertEqual(table.concat(S.NS.CALLOUT_PACKS, ","), "callout/female-kathleen,callout/male-joe")
+    assertEqual(inst:Get("voice"), "female", "the library's default voice")
+    assertTrue(S.NS.db.profile.callout ~= nil, "its settings are the profile's callout table")
+    assertEqual(S.NS.db.profile.callout.size, inst:Get("size"))
+end)
+
+test("countdown: the stub answers every member a live call-out has, as an idle call-out does", function()
+    if forever() then return end
+    local S = fresh()
+    T.assertSurfaceParity(CO(S), S.NS.CalloutStub, "Callout instance")
+    local stub = S.NS.CalloutStub
+    assertFalse(stub.Countdown())
+    assertFalse(stub.Show("STOP"))
+    assertFalse((stub.Running()))
+    assertFalse(stub.Stats().running)
+end)
+
+test("countdown: the library absent, the seam answers the stub and the countdown counts nothing", function()
+    if forever() then return end
+    local inst = T.load({ libFiles = {} })
+    assertTrue(inst.NS.Callout == inst.NS.CalloutStub, "the stub stands in")
+    assertNil(inst.NS.Countdown.Shown())
+    assertFalse(inst.NS.Countdown.Buzzer(), "the buzzer raises nothing")
 end)
 
 -- ── the numbers ────────────────────────────────────────────────────────────────────────────────
@@ -95,23 +149,36 @@ test("countdown: 10..1 show one per second in the last 10 s, then go at the buzz
     local S = fresh()
     running(S, 30)
     assertNil(shownAt(S, 121.75), "a number before the final 10 s")
-    assertNil(C(S).__ui(), "the frame is built lazily, at the first number")
     assertEqual(shownAt(S, 122), 10)
     assertTrue(frameShown(S))
+    assertEqual(CO(S):Stats().endsAt, 132, "counted to the race's one endsAt")
+    assertEqual(CO(S):Stats().endsAt, S.NS.RaceClock.EndsAt())
     assertEqual(shownAt(S, 122.75), 10, "a number holds for its second")
     assertEqual(shownAt(S, 123), 9)
     assertEqual(shownAt(S, 127.5), 5)
     assertEqual(shownAt(S, 131.5), 1)
     assertNil(shownAt(S, 132), "the buzzer clears it")
-    assertFalse(frameShown(S))
     assertEqual(S.NS.Race.State(), "stopping")
+end)
+
+test("countdown: the call-out is not handed the race until the lead before its window", function()
+    if forever() then return end
+    local S = fresh()
+    running(S, 30)
+    to(S, 120.75)
+    assertEqual(#onUpdates(S), 0, "no frame clock for the whole race: one lead-in timer instead")
+    assertFalse(CO(S):Stats().built, "the frame is built lazily")
+    assertEqual(C(S).Diagnose().scheduled, 1, "the lead-in waits")
+    to(S, 121)
+    assertTrue(CO(S):Running(), "handed the countdown one second before its first number")
+    assertNil(C(S).Shown())
 end)
 
 -- The three clocks at the race's end (owner, 2026-11-13: the center read 1 while the Race window read
 -- 0:00.0 and the HUD 0:59.9): the Race window's countdown, the DPS HUD's clock and the center number,
--- each drawn on the race beat from the same GetTime(), agree on every tenth.
+-- each read from the same GetTime() and the same endsAt, agree on every tenth.
 local function clocks(S, t)
-    F.run(S, t)
+    step(S, t)
     local hud = S.NS.Hud.__ui()
     local v = S.NS.RaceWindow.View()
     local left = v.key == "running" and S.NS.Format.Clock(v.timeLeft) or v.key
@@ -140,95 +207,44 @@ test("countdown: the center number, the Race window's countdown and the HUD's cl
     assertEqual(at:match("(%S+)$"), "nil", "and the number gone")
 end)
 
-test("countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu", function()
+test("countdown: a new number redraws the Race window in its own frame, off the beat", function()
     if forever() then return end
     local S = fresh()
+    S.NS.Hud.Show()
+    S.NS.RaceWindow.Show()
     running(S, 30)
-    to(S, 122)
-    local u = assert(C(S).__ui())
-    assertEqual(u.frame:GetFrameStrata(), "FULLSCREEN")
-    assertEqual(S.NS.Constants.LAYERS.STRATA.SCREEN_ALERT, "FULLSCREEN")
-    local hud = S.NS.Hud.Frame and S.NS.Hud.Frame()
-    assertTrue(u.frame ~= hud, "not the HUD's frame")
-    local rw = S.NS.RaceWindow.__ui()
-    assertTrue(rw == nil or u.frame ~= rw.frame, "not the Race window's frame")
+    to(S, 126.75)
+    assertEqual(S.NS.Format.Clock(S.NS.RaceWindow.View().timeLeft), "0:05.3")
+    -- The clock moves to 127 with no timer serviced: only the call-out's frame runs.
+    F.at(S, 127)
+    frame(S)
+    assertEqual(C(S).Shown(), 5)
+    assertEqual(S.NS.Format.Clock(S.NS.RaceWindow.View().timeLeft), "0:05.0",
+        "the window read 0:05.0 in the frame the call-out showed 5")
 end)
 
-test("countdown: the frame never takes the mouse, and each number pops in", function()
+test("countdown: the call-out's frame is FULLSCREEN, never the HUD's or the Race window's, and mouse-free while locked", function()
     if forever() then return end
     local S = fresh({ mutate = function(m)
         local create = m.CreateFrame
         m.CreateFrame = function(...)
             local f = create(...)
             rawset(f, "EnableMouse", function(self, on) rawset(self, "__mouse", on and true or false) end)
+            rawset(f, "SetFrameStrata", function(self, s) rawset(self, "__strata", s) end)
             return f
         end
     end })
     running(S, 30)
     to(S, 122)
-    local u = assert(C(S).__ui())
-    assertEqual(rawget(u.frame, "__mouse"), false, "mouse-disabled")
-    assertTrue(u.pop ~= nil, "the pop animation")
-    local plays = 0
-    local play = u.pop.Play
-    rawset(u.pop, "Play", function(g, ...) plays = plays + 1 return play(g, ...) end)
-    to(S, 131)
-    assertEqual(plays, 9, "one pop per number after the first: 9 down to 1")
-end)
-
-test("countdown: the digits are Blizzard's BigGold set, cut by texcoord", function()
-    if forever() then return end
-    local S = fresh()
-    running(S, 30)
-    to(S, 122)
-    local u = C(S).__ui()
-    assertEqual(u.mode, "texture")
-    local ones, tens = u.digits[1], u.digits[2]
-    assertEqual(ones.__texture, "Interface\\Timer\\BigTimerNumbers")
-    assertEqual(u.glows[1].__texture, "Interface\\Timer\\BigTimerNumbersGlow")
-    local h = 170 / 512
-    -- The cell (left, right, top, bottom), as the four corners the client answers.
-    local function cell(l, r, t, b) return table.concat({ l, t, l, b, r, t, r, b }, ",") end
-    -- "10": the ones digit 0 (column 0, row 0), the tens digit 1 (column 1, row 0).
-    assertEqual(table.concat(ones.__texCoord, ","), cell(0, 0.25, 0, h))
-    assertEqual(table.concat(tens.__texCoord, ","), cell(0.25, 0.5, 0, h))
-    assertTrue(tens:IsShown())
-    to(S, 128)
-    -- "4": column 0, row 1; the tens digit hidden.
-    assertEqual(table.concat(ones.__texCoord, ","), cell(0, 0.25, h, 2 * h))
-    assertFalse(tens:IsShown())
-end)
-
-test("countdown: without the digit art it falls back to a large outlined number", function()
-    if forever() then return end
-    local S = fresh()
-    running(S, 30)
-    -- The client answers false for an asset it cannot load: the next frame built takes the font.
-    local make = S.M.CreateFrame
-    S.M.CreateFrame = function(...)
-        local f = make(...)
-        local tex = f.CreateTexture
-        f.CreateTexture = function(self, ...)
-            local t = tex(self, ...)
-            local set = t.SetTexture
-            t.SetTexture = function(region, path)
-                if path == "Interface\\Timer\\BigTimerNumbers" then return false end
-                return set(region, path)
-            end
-            return t
-        end
-        return f
-    end
-    to(S, 129)
-    S.M.CreateFrame = make
-    local u = C(S).__ui()
-    assertEqual(u.mode, "font")
-    assertEqual(u.text:GetText(), "3")
-    assertTrue(u.text:IsShown())
-    local _, size, flags = u.text:GetFont()
-    assertEqual(size, 110)
-    assertTrue(tostring(flags):find("OUTLINE", 1, true) ~= nil)
-    assertFalse(u.digits[1]:IsShown())
+    local f = assert(CO(S):Frame())
+    assertEqual(rawget(f, "__strata"), "FULLSCREEN")
+    assertEqual(S.NS.Constants.LAYERS.STRATA.SCREEN_ALERT, "FULLSCREEN", "the T5 alert tier the call-out sits on")
+    assertEqual(rawget(f, "__mouse"), false, "mouse-transparent")
+    assertTrue(CO(S):Locked())
+    local hud = S.NS.Hud.Frame and S.NS.Hud.Frame()
+    assertTrue(f ~= hud, "not the HUD's frame")
+    local rw = S.NS.RaceWindow.__ui()
+    assertTrue(rw == nil or f ~= rw.frame, "not the Race window's frame")
 end)
 
 test("countdown: finalCountdown 3 starts at 3", function()
@@ -242,14 +258,27 @@ test("countdown: finalCountdown 3 starts at 3", function()
     assertEqual(shownAt(S, 131), 1)
 end)
 
-test("countdown: switched off, no frame is ever built and only the cue marks sound", function()
+test("countdown: a smaller window mid-countdown takes the number down until it is reached", function()
+    if forever() then return end
+    local S = fresh()
+    running(S, 30)
+    assertEqual(shownAt(S, 124), 8)
+    assertTrue(S.NS.SetByPath("race.finalCountdown", 3))
+    assertNil(C(S).Shown())
+    assertFalse(frameShown(S), "8 is not left on screen")
+    assertNil(shownAt(S, 128.75))
+    assertEqual(shownAt(S, 129), 3)
+end)
+
+test("countdown: switched off, nothing is counted, shown or said", function()
     if forever() then return end
     local S = fresh()
     assertTrue(S.NS.SetByPath("race.centerCountdown", false))
+    assertTrue(S.NS.SetByPath("race.buzzer", false))
     running(S, 30)
     to(S, 133)
-    assertNil(C(S).__ui())
-    assertEqual(soundTimes(S, CUE), "122,127,129,130,131")
+    assertFalse(CO(S):Stats().built, "no frame is ever built")
+    assertEqual(spoken(S), "")
 end)
 
 test("countdown: switching it off mid-countdown hides the number at once", function()
@@ -261,6 +290,7 @@ test("countdown: switching it off mid-countdown hides the number at once", funct
     assertTrue(S.NS.SetByPath("race.centerCountdown", false))
     assertFalse(frameShown(S))
     assertNil(shownAt(S, 127))
+    assertEqual(#onUpdates(S), 0)
 end)
 
 test("countdown: works with the DPS HUD and the Race window closed", function()
@@ -272,44 +302,45 @@ test("countdown: works with the DPS HUD and the Race window closed", function()
     assertEqual(shownAt(S, 126), 6)
 end)
 
--- ── the sounds ─────────────────────────────────────────────────────────────────────────────────
+-- ── the voice ──────────────────────────────────────────────────────────────────────────────────
 
-test("countdown: one cue per second of the numbers, never two in a second", function()
+test("countdown: the voice says 5 down to 1 and STOP, each once, from the shipped pack", function()
     if forever() then return end
     local S = fresh()
     running(S, 30)
-    to(S, 133)
-    assertEqual(soundTimes(S, CUE), "122,123,124,125,126,127,128,129,130,131")
-    local R = fresh()
-    assertTrue(R.NS.SetByPath("race.finalCountdown", 3))
-    running(R, 30)
-    to(R, 133)
-    assertEqual(soundTimes(R, CUE), "122,127,129,130,131", "the cue marks and the numbers' seconds share their sounds")
+    to(S, 134)
+    assertEqual(spoken(S), "5@127,4@128,3@129,2@130,1@131,stop@132",
+        "numbers above the call-out's speakFrom (5) are shown, not spoken")
+    local file = S.M.__files[1].file
+    assertTrue(file:find("AddOns\\CombatTrail\\libs\\LibKa0s\\media\\sounds\\callout\\female-kathleen\\", 1, true) ~= nil,
+        "the addon's own copy of the pack: " .. file)
+    assertEqual(S.M.__files[1].channel, "Master")
 end)
 
-test("countdown: the cue off keeps the numbers and silences every second", function()
+test("countdown: a refresh mid-countdown never repeats a number", function()
     if forever() then return end
     local S = fresh()
-    assertTrue(S.NS.SetByPath("race.countdownCue", false))
+    running(S, 30)
+    to(S, 127.5)
+    C(S).Refresh()
+    C(S).Refresh()
+    assertEqual(C(S).Shown(), 5)
+    assertEqual(spoken(S), "5@127")
+end)
+
+test("countdown: the call-out's voice off keeps the numbers and silences them", function()
+    if forever() then return end
+    local S = fresh()
+    assertTrue(CO(S):Set("voice", "off"))
     running(S, 30)
     assertEqual(shownAt(S, 127), 5)
-    to(S, 133)
-    assertEqual(soundTimes(S, CUE), "")
-end)
-
-test("countdown: switching the cue off mid-race silences the marks still ahead", function()
-    if forever() then return end
-    local S = fresh()
-    running(S, 30)
-    to(S, 124.5)
-    assertTrue(S.NS.SetByPath("race.countdownCue", false))
-    to(S, 133)
-    assertEqual(soundTimes(S, CUE), "122,123,124")
+    to(S, 134)
+    assertEqual(spoken(S), "")
 end)
 
 -- ── the lifecycle ──────────────────────────────────────────────────────────────────────────────
 
-test("countdown: a cancel at 5 s left hides it and nothing more shows or sounds", function()
+test("countdown: a cancel at 5 s left hides it and nothing more shows or is said", function()
     if forever() then return end
     local S = fresh()
     running(S, 30)
@@ -320,8 +351,9 @@ test("countdown: a cancel at 5 s left hides it and nothing more shows or sounds"
     assertFalse(frameShown(S))
     to(S, 133)
     assertNil(C(S).Shown())
-    assertEqual(soundTimes(S, CUE), "122,123,124,125,126,127")
+    assertEqual(spoken(S), "5@127")
     assertEqual(C(S).Diagnose().scheduled, 0)
+    assertEqual(#onUpdates(S), 0)
 end)
 
 test("countdown: combat ending before the buzzer hides it", function()
@@ -336,7 +368,7 @@ test("countdown: combat ending before the buzzer hides it", function()
     assertEqual(C(S).Diagnose().scheduled, 0)
 end)
 
-test("countdown: the stand-down takes the number and every mark, and nothing re-arms them", function()
+test("countdown: the stand-down suspends the call-out, and nothing re-arms it until the stand-up", function()
     if forever() then return end
     local S = fresh()
     running(S, 30)
@@ -344,10 +376,14 @@ test("countdown: the stand-down takes the number and every mark, and nothing re-
     assertTrue(frameShown(S))
     assertTrue(S.NS.SetByPath("general.enabled", false))
     assertFalse(frameShown(S))
+    assertTrue(CO(S):Suspended())
     assertEqual(C(S).Diagnose().scheduled, 0)
-    to(S, 133)
+    assertEqual(#onUpdates(S), 0, "no OnUpdate left armed while stood down")
+    to(S, 127)
     assertNil(C(S).Shown())
-    assertEqual(soundTimes(S, CUE), "122,123,124")
+    assertEqual(spoken(S), "")
+    assertTrue(S.NS.SetByPath("general.enabled", true))
+    assertFalse(CO(S):Suspended())
 end)
 
 --- A race run to `at` (30 s, the first hit at 102), then a /reload at `now`, still in combat.
@@ -367,12 +403,11 @@ test("countdown: a /reload with 4 s left resumes at 4 and counts 3, 2, 1", funct
     local R = reloaded(110, 128)
     assertEqual(R.NS.Race.State(), "running")
     assertEqual(C(R).Shown(), 4, "the number of the moment shows at once")
-    assertEqual(#R.M.__sounds, 0, "the resume itself plays no sound")
     assertEqual(shownAt(R, 129), 3)
     assertEqual(shownAt(R, 130), 2)
     assertEqual(shownAt(R, 131), 1)
     assertNil(shownAt(R, 132))
-    assertEqual(soundTimes(R, CUE), "129,130,131")
+    assertEqual(spoken(R), "4@128,3@129,2@130,1@131,stop@132")
 end)
 
 test("countdown: a /reload before the window shows nothing until it opens", function()
@@ -389,29 +424,31 @@ test("countdown: a /reload past the buzzer shows nothing", function()
     local R = reloaded(110, 133)
     assertEqual(R.NS.Race.State(), "stopping")
     assertNil(C(R).Shown())
-    assertNil(C(R).__ui())
+    assertFalse(CO(R):Stats().built)
 end)
 
 -- ── the buzzer ─────────────────────────────────────────────────────────────────────────────────
 
-test("countdown: the buzzer raises the raid warning's STOP with its sound, once, only when enabled", function()
+test("countdown: the buzzer shows the call-out's STOP, once, only when enabled", function()
     if forever() then return end
     local S = fresh()
     running(S, 30)
     to(S, 131.75)
-    assertEqual(#S.M.__notices, 0, "no warning before the buzzer")
+    assertTrue(CO(S):Stats().key ~= "STOP", "no STOP before the buzzer")
     to(S, 132)
-    assertEqual(table.concat(S.M.__notices, ","), "STOP")
-    assertEqual(soundTimes(S, BUZZ), "132")
-    to(S, 134)
-    assertEqual(#S.M.__notices, 1, "one warning")
+    local st = CO(S):Stats()
+    assertEqual(st.key, "STOP")
+    assertEqual(st.kind, "stop")
+    assertTrue(st.shown)
+    to(S, 136)
+    assertEqual(#onUpdates(S), 0, "its hold over, it fades and the frame clock sleeps")
     local Q = fresh()
     assertTrue(Q.NS.SetByPath("race.buzzer", false))
     running(Q, 30)
     to(Q, 133)
     assertEqual(Q.NS.Race.State(), "stopping", "the race still stops")
-    assertEqual(#Q.M.__notices, 0, "no warning with the buzzer off")
-    assertEqual(soundTimes(Q, BUZZ), "")
+    assertTrue(CO(Q):Stats().key ~= "STOP", "no STOP with the buzzer off")
+    assertEqual(spoken(Q), "5@127,4@128,3@129,2@130,1@131")
 end)
 
 test("countdown: a canceled race and a race ending early raise no buzzer", function()
@@ -421,22 +458,24 @@ test("countdown: a canceled race and a race ending early raise no buzzer", funct
     to(S, 120)
     assertTrue(S.NS.Race.Cancel())
     to(S, 134)
-    assertEqual(#S.M.__notices, 0)
+    assertTrue(CO(S):Stats().key ~= "STOP")
     local E = fresh()
     running(E, 30)
     F.leave(E, 120)
     to(E, 134)
-    assertEqual(#E.M.__notices, 0)
+    assertTrue(CO(E):Stats().key ~= "STOP")
+    assertEqual(spoken(E), "")
 end)
 
 -- ── the fences ─────────────────────────────────────────────────────────────────────────────────
 
-test("countdown: never broadcasts a pull timer nor drives Blizzard's TimerTracker", function()
+test("countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own", function()
     local fh = assert(io.open(T.root .. "/modules/Countdown.lua", "rb"))
     local body = fh:read("*a")
     fh:close()
     local code = body:gsub("%-%-[^\n]*", "")
-    for _, name in ipairs({ "C_PartyInfo", "DoCountdown", "TimerTracker", "StartTimer_", "OnUpdate" }) do
+    for _, name in ipairs({ "C_PartyInfo", "DoCountdown", "TimerTracker", "StartTimer_", "OnUpdate", "PlaySound",
+                            "RaidNotice_AddMessage", "C_Timer" }) do
         assertFalse(code:find(name, 1, true) ~= nil, "modules/Countdown.lua calls " .. name)
     end
 end)

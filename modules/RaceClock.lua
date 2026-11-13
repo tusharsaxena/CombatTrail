@@ -18,7 +18,15 @@ local _, NS = ...
 -- change of the sample race (modules/RaceSample.lua calls it, as a sample never reaches the bus), and
 -- at the stand-up (Resume). A new `hud.refreshRate` (or profile) restarts a running beat at its rate.
 -- The stand-down's CancelAllTimers takes the timer, and Suspend forgets it.
--- The countdown and the buzzer keep their own timers (modules/Countdown.lua, modules/Race.lua).
+-- The buzzer keeps its own timer (modules/Race.lua).
+--
+-- ONE endsAt (callout plan row C2, owner 2026-11-13: the center numbers and the Race window's clock
+-- had disagreed). RC.EndsAt is the buzzer's moment on the GetTime() clock for the race the beat
+-- follows (Race.EndsAt, or the live sample's): the Race window's time left is that endsAt less now
+-- (Race.TimeLeft), and the center call-out (modules/Countdown.lua) counts down to the same value, its
+-- number ceil(endsAt - now) read on the frame. The beat's rate would still leave the window up to one
+-- interval behind a new number, so the call-out's onTick runs one beat at once (RC.Kick): the number
+-- and the window's 0:0n.0 are drawn in the same frame from the same GetTime().
 --
 -- THE BEAT ON THE BUS, A SAMPLE'S TOO. RACE_CLOCK carries no payload: it says "draw the clocks now"
 -- and nothing about any race, so a sample's beat moves no receiver's state (the sample rule of
@@ -107,6 +115,20 @@ end
 
 --- Whether the beat runs now.
 function RC.On() return timer ~= nil end
+
+--- The buzzer's moment (GetTime() clock) of the race the beat follows while it runs, else nil: the one
+--- value the Race window's countdown and the center call-out both read.
+--- @return number|nil
+function RC.EndsAt()
+    local R = src()
+    return R and R.EndsAt and R.EndsAt() or nil
+end
+
+--- One beat now, off the timer (the center call-out's new number): the DPS HUD and the Race window
+--- redraw in this frame. Nothing while no beat runs.
+function RC.Kick()
+    if timer then beat() end
+end
 
 --- The fight of the race the beat runs for (the HUD redraws its clock on the beat only for it), or nil
 --- while no beat runs.

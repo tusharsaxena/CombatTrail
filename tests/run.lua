@@ -34,6 +34,8 @@ do
         "SkinEUI.lua", "SkinAce.lua",
         -- The Insights charts (core/ChartsSetup.lua, Race mode plan Task D2).
         "Charts.lua", "ChartsRender.lua",
+        -- The race call-out (core/CalloutSetup.lua, callout plan row C2).
+        "Callout.lua", "CalloutSettings.lua",
     }
     local present = {}
     for _, path in ipairs(LIB_FILES) do present[path:match("([^/]+)$")] = true end
@@ -225,10 +227,6 @@ Kit.skinValues = {
     rows = {
         { file = "modules/Results_Timeline.lua", substring = "local DISC =",
           why = "a white disc shape tinted through Style.Vertex, the legend's swatch: a shape, not skin data", cause = "L10" },
-        { file = "modules/Countdown.lua", substring = "Countdown.TEXTURE =",
-          why = "the race countdown's digits are Blizzard's start-timer art (BigGold), the same under every skin, as DPS Race's are", cause = "C2" },
-        { file = "modules/Countdown.lua", substring = "Countdown.GLOW =",
-          why = "the start-timer digits' matching glow sheet, Blizzard's art under every skin", cause = "C2" },
     },
 }
 

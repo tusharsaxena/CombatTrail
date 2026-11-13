@@ -1,7 +1,7 @@
 -- tests/test_sim_race.lua — the sim's race scenarios (race plan Task E1, R:test-sim#3, #6, #14):
 -- DPS Race's sim race cases (@f8078c7 tests/test_sim.lua, test_sample_parity.lua, test_countdown.lua)
 -- on Combat Trail's sim (modules/SimRace.lua through modules/Sim.lua). A made-up race arms on the Race
--- window, starts its clock on the first hit, counts down with the real marks, buzzes, reads after the
+-- window, starts its clock on the first hit, counts down on the real call-out, buzzes, reads after the
 -- quiet and holds its card, the HUD's over card and the result line, then opens the Results window on
 -- it; nothing reaches the bus or the store and NS.Race never moves. The gate holds each step; Race mode
 -- off refuses the eight; WoW Forever has none of them (its last case).
@@ -62,12 +62,20 @@ local function sim(S, key)
     return S.M.__now
 end
 
--- Play the race clock (seconds past the first hit) to `rc`, a beat at a time.
+-- One client frame: every armed OnUpdate runs (the race call-out's frame clock, modules/Countdown.lua).
+local function frame(S)
+    for _, h in ipairs(S.M.__timers()) do
+        if type(h) == "table" and h.__scripts and h.__scripts.OnUpdate then h:__fire("OnUpdate", 0) end
+    end
+end
+
+-- Play the race clock (seconds past the first hit) to `rc`, a beat and a frame at a time.
 local function playTo(S, t0, rc)
     local stop = t0 + S.NS.MockFights.FIRST_HIT + rc
     while S.M.__now < stop - 1e-9 do
         S.M.__now = math.min(stop, S.M.__now + S.NS.SimRace.TICK)
         S.M.__fireTimers()
+        frame(S)
     end
 end
 
@@ -94,7 +102,7 @@ test("sim race: race-newbest arms, races on its clock, buzzes, reads after the q
     assertTrue(NS.Hud.View().fight.race ~= nil)
     assertTrue(#NS.LaneRender.__icons("player") > 0, "the lanes play")
     playTo(S, t0, 25.5)
-    assertEqual(NS.Countdown.Shown(), 5, "the real marks count the sim's race down")
+    assertEqual(NS.Countdown.Shown(), 5, "the real call-out counts the sim's race down")
     playTo(S, t0, 30.2)
     assertEqual(NS.RaceWindow.View().key, "stop", "the buzzer: Stop!")
     assertNil(NS.Countdown.Shown(), "the buzzer clears the countdown")

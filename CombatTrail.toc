@@ -77,6 +77,9 @@ core\PoolSetup.lua
 # Reads LibStub (LibKa0s-Widgets-1.0) at FILE SCOPE and NS.Icon at CALL time only.
 core\WidgetsSetup.lua
 core\ToastSetup.lua
+# NS.NewCallout and its stub (LibKa0s-Callout-1.0) at FILE SCOPE: modules\Countdown.lua builds the
+# addon's one call-out through it at FILE SCOPE, so it sits above the modules.
+core\CalloutSetup.lua
 # NS.Charts (LibKa0s-Charts-1.0) at FILE SCOPE; NS.ChartsHost reads NS.Style, NS.ResultsTable and NS.Skin at
 # CALL time only (the Insights tab, Race mode plan Task D2).
 core\ChartsSetup.lua

@@ -115,7 +115,7 @@ Load order is the TOC's: libraries, the locale, `core/` in dependency order, `de
 scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
-  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
+  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, CalloutSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
   LauncherSetup, CombatTrail, Database.
 - **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race, enUS_Insights.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.

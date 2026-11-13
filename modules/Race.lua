@@ -179,11 +179,20 @@ function Race.Elapsed()
     return GetTime() - cur.startedAt
 end
 
---- Seconds until the buzzer while running; 0 once stopping.
+--- The buzzer's moment on the GetTime() clock while running (the first hit plus the length), else nil.
+--- ONE endsAt (callout plan row C2): the time left below, the Race window's countdown and the
+--- center call-out (modules/Countdown.lua, through RaceClock.EndsAt) all read it, so they cross each
+--- second on the same frame.
+function Race.EndsAt()
+    if not live() or state ~= STATE.RUNNING then return nil end
+    return cur.startedAt + cur.race.length
+end
+
+--- Seconds until the buzzer while running (Race.EndsAt less now); 0 once stopping.
 function Race.TimeLeft()
     if not live() then return nil end
     if state == STATE.STOPPING then return 0 end
-    return math.max(0, cur.race.length - (GetTime() - cur.startedAt))
+    return math.max(0, Race.EndsAt() - GetTime())
 end
 
 --- Seconds since the buzzer while stopping; nil for a race that ended before it.
