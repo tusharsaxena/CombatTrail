@@ -12,8 +12,14 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
   `allRows`, `applyDefault`).
 - A bare `/ct` opens the settings panel.
 - **The disabled gate.** While the `disabled` hold is taken every verb but the live set answers the one
-  refusal line. The live set is the library's thirteen reserved verbs plus this addon's `lane` and
-  `ignore` (`HOST_LIVE_VERBS`), which read and write the lanes' own settings as `get` and `set` do.
+  refusal line. The live set is the library's thirteen reserved verbs plus this addon's `lane`,
+  `ignore` and `dummy` (`HOST_LIVE_VERBS`), which read and write the lanes' own settings and the
+  training-dummy list as `get` and `set` do, and on Retail `race`, which answers its `ignore` word (the
+  late-cast list's settings) and refuses every other word itself with the hold's one line (race plan
+  ruling X10).
+- **Per client.** `race` is declared `clients = { "retail" }` on its triple (clients-§4): the library
+  leaves it out of the help and the landing page on WoW Forever, where typing it is an unknown verb.
+  The degraded stub and `NS.RunVerb` apply the same gate.
 - **The perf hold.** Every feature verb is wrapped in `feature()`, which answers
   `NS.StoodDownRefusal()`'s line while a capture holds the addon down.
 - **One handler per act.** A feature verb calls the same handler as the launcher menu and the key
@@ -40,18 +46,29 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `diagnostics` | none | yes | `NS.DebugLog:RunDiagnostics` (modules/Diagnostics.lua's sections) |
 | `perf` | the library's grammar (`/ct perf help`) | yes | `NS.Perf.OnCommand` |
 | `version` | none | yes | the dispatcher's `CliVersion` |
-| `results` | `show`, `hide`, `toggle`, or nothing | no | `Results.OnVerb` |
-| `hud` | `show`, `hide`, `toggle`, `pin`, `unpin` | no | `Hud.OnVerb` |
+| `results` | `show`, `hide`, `toggle`, or nothing; `insights` (the Insights tab, `Results.ShowTab`); `races` on Retail (the list on the Races filter, `Results.ShowRaces`) | no | `Results.OnVerb` |
+| `hud` | `show`, `hide`, `toggle`, `pin`, `unpin`. `hide`, and `toggle` when it closes, take an open Race window with the HUD, each counting as the player's close (`Hud.HideWithRace`); `show` and `toggle`'s open open the HUD, and a Race window still wanted with it (one that hid with the HUD, W29); near a dummy `toggle`'s open opens the Race window too | no | `Hud.OnVerb` |
 | `lock` | none | no | writes `general.locked` true; `NS.ApplyLocked` |
 | `unlock` | none | no | writes `general.locked` false; the lanes' edit overlay and the HUD's drag |
-| `test` | none | no | `NS.ToggleTestMode` (modules/Preview.lua) |
+| `test` | none; on Retail `race [armed\|running\|result]` (test mode holding a sample race in that state, running when none; Race mode off refuses it in one line) | no | `NS.ToggleTestMode`; `NS.TestRace` (modules/Preview.lua) |
 | `sim` | nothing (the step panel), `start scenario`, a scenario, or `stop` | no | `NS.RunSimVerb` (modules/Sim.lua, the library's sim grammar) |
 | `purge` | none | no | `Retention.OnVerb` |
 | `probe` | nothing, `start`, `stop` | no | `Probe.OnVerb` |
 | `lane` | `player` or `pet`, then `on` or `off` | yes | `NS.Lanes.OnVerb` (settings/Lanes.lua) |
 | `ignore` | `add` or `remove` a spell, `list`, `reset`, then an optional `player` or `pet` | yes | `LaneIgnore.OnVerb` |
+| `dummy` | nothing or `show`; `add [category]` (the target; `single` when none is typed), `remove [creature ID or name]` (the target when none), `capture` (the target, not marked), `defaults`. Both clients | yes | `Dummies.OnVerb` (modules/Dummies.lua) |
+| `race` | Retail only. `arm [length]` (`90`, `1:30`, `3m`, `1m30s`; 0:10 to 15:00; none: the Race window's pick, else the length the next race arms at; a typed length becomes the window's pick, as in DPS Race), `cancel`, `show`, `hide`, `toggle` (the Race window, through `NS.SetRaceWindowShown`), `ignore [show\|add\|remove\|defaults] <spell>` (the late-cast ignore list). Race mode off refuses the arm and the window in one line | `ignore` only | `RaceVerb.OnVerb` (modules/RaceVerb.lua) |
 
-The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`.
+The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`, then on Retail
+Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,
+`race-died`, `race-flagged`, `race-shared` and `race-sticky`, refused in one line with Race mode off.
+
+The Race window has no launcher entry (race plan ruling X17). On Retail it has a key, *Toggle Race
+window* (`Bindings_Mainline.xml`, the owner's decision of 2026-11-13, superseding ruling X18's
+deferral; a documented deviation), whose button runs the same handler as `/ct race toggle`
+(`NS.ToggleRaceWindow`). `/ct race show`, `toggle` and `arm` work in a macro too. The DPS HUD's
+title-bar Race button (race window redesign ruling O6) runs the same `toggle`. Neither the race verb
+nor the flag ever touches the DPS HUD.
 
 ## Adding a verb
 

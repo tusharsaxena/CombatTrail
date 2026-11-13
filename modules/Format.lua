@@ -150,9 +150,65 @@ local function instance()
     return formatter or nil
 end
 
+-- ── AbbreviateNumbers with the ladder (Retail) ──────────────────────────────────────────────────
+--
+-- Retail's AbbreviateNumbers is taken to accept a second argument, a config CreateAbbreviateConfig
+-- builds from a breakpoint list in the ladder's shape, and a secret from addon code as the plain call
+-- does (the checks below are what decide it, not this assumption).
+-- Without it the live figures drew the plain table's "24M" and FloorToNearestString's whole
+-- "363477" (the owner's Retail screenshot, 2026-11-13). The config is built once and trusted only
+-- when it renders CONFIG_CHECKS exactly: the ladder's two checks, and a fraction under a thousand that
+-- must come back whole, since a rate goes here too. A client whose AbbreviateNumbers ignores the
+-- config renders "2.8M" for the first check and is never used. Not measured in game: `/ct probe`'s
+-- trial and `/ct debug`'s path line say whether it served.
+
+local CONFIG_CHECKS = { CHECKS[1], CHECKS[2], { value = 69.5625, text = "69" } }
+-- nil = not built yet, false = this client has none that passes, else the config.
+local ladderConfig
+
+local function abbreviateWith(v, config)
+    return AbbreviateNumbers(v, config)
+end
+
+-- The config, or false (logged why).
+local function buildConfig()
+    local make = CreateAbbreviateConfig
+    if type(make) ~= "function" or type(AbbreviateNumbers) ~= "function" then return false end
+    local ok, config = pcall(make, LADDER)
+    if not ok or not Secrets.IsPresent(config) then
+        debug("CreateAbbreviateConfig built no config (%s)", ok and "it answered nothing" or ("raised: " .. errText(config)))
+        return false
+    end
+    for _, check in ipairs(CONFIG_CHECKS) do
+        local okDraw, out = pcall(abbreviateWith, check.value, config)
+        if not okDraw or out ~= check.text then
+            debug("AbbreviateNumbers with the ladder's config rendered %s as %s; not used", tostring(check.value),
+                okDraw and tostring(out) or ("an error: " .. errText(out)))
+            return false
+        end
+    end
+    debug("AbbreviateNumbers with the ladder's config passed its checks; secret numbers and rates go to it")
+    return config
+end
+
+-- A secret through AbbreviateNumbers with the ladder's config: the client's answer, or nil. A config
+-- that raises on a secret is dropped for the session, as a formatter is.
+local function viaConfig(v)
+    if ladderConfig == nil then ladderConfig = buildConfig() end
+    if not ladderConfig then return nil end
+    local ok, out = pcall(abbreviateWith, v, ladderConfig)
+    if ok and Secrets.IsPresent(out) then return out end
+    if NS.DebugChanged then
+        NS.DebugChanged("format:configfail", "Format", "AbbreviateNumbers with the ladder's config failed on a secret (%s)",
+            ok and "it answered nothing" or ("raised: " .. errText(out)))
+    end
+    if not ok then ladderConfig = false end
+    return nil
+end
+
 --- Drop the formatter so the next number builds a fresh one (the harness's seam between instances).
 function Format.Reset()
-    formatter, formatterName = nil, nil
+    formatter, formatterName, ladderConfig = nil, nil, nil
 end
 
 -- A plain number abbreviated in Lua, truncated as the client truncates.
@@ -185,6 +241,11 @@ local function native(v)
         end
         if not ok then formatter = false end
     end
+    local configured = viaConfig(v)
+    if Secrets.IsPresent(configured) then
+        servedBy("AbbreviateNumbers with the ladder's config")
+        return configured
+    end
     local client = AbbreviateNumbers
     if type(client) == "function" then
         local ok, out = pcall(client, v)
@@ -215,8 +276,13 @@ function Format.Number(v)
     return v
 end
 
---- A per-second rate as short text, never a decimal tail. A plain rate abbreviates in Lua, as
---- Number does ("30.1K", "69"). A secret rate (the live DPS) goes to C_StringUtil.FloorToNearestString,
+--- A per-second rate as short text. A plain rate abbreviates in Lua, as Number does ("30.1K",
+--- "69"). A secret rate (the live DPS) goes first to AbbreviateNumbers with the ladder's config where
+--- that passed its checks ("363.4K"). On Retail it then goes to the plain AbbreviateNumbers, the same
+--- path that draws the live Damage beside it ("309K"): the owner's Retail screenshot, 2026-11-13, had
+--- the Damage abbreviated and the DPS whole ("309060") while the config served neither. A rate under
+--- a thousand may show the client's decimals there, the cost of an abbreviated figure. Elsewhere
+--- (WoW Forever) it goes to C_StringUtil.FloorToNearestString,
 --- which takes a secret from an addon and answers it whole: `/ct probe` on WoW Forever, 2026-11-11,
 --- "ok, a secret" in combat and "69" for 69.5625 after it, where AbbreviateNumbers drew "69.5625"
 --- and both client formatters refuse a secret from tainted code. Whole, not abbreviated: a live
@@ -226,6 +292,18 @@ end
 function Format.Rate(v)
     if v == nil then return "" end
     if Secrets.PlainNumber(v) then return Format.Number(v) end
+    local configured = viaConfig(v)
+    if Secrets.IsPresent(configured) then
+        servedBy("AbbreviateNumbers with the ladder's config", "format:rate")
+        return configured
+    end
+    if NS.Compat.IsRetail() and type(AbbreviateNumbers) == "function" then
+        local ok, out = pcall(AbbreviateNumbers, v)
+        if ok and Secrets.IsPresent(out) then
+            servedBy("AbbreviateNumbers", "format:rate")
+            return out
+        end
+    end
     local floor = NS.Compat.NamespaceFunction("C_StringUtil", "FloorToNearestString")
     if floor then
         local ok, got = pcall(floor, v)
@@ -263,6 +341,16 @@ local function trialOf(c, list, v)
     return answerOf(pcall(formatWith, f, v))
 end
 
+-- AbbreviateNumbers on `v` with a fresh config from the ladder, described: Format.Trial's Retail line.
+local function configTrial(v)
+    local make = CreateAbbreviateConfig
+    if type(make) ~= "function" then return "CreateAbbreviateConfig missing" end
+    if type(AbbreviateNumbers) ~= "function" then return "AbbreviateNumbers missing" end
+    local ok, config = pcall(make, LADDER)
+    if not ok then return "CreateAbbreviateConfig raised: " .. errText(config) end
+    return answerOf(pcall(abbreviateWith, v, config))
+end
+
 --- `/ct probe`'s trial of value `v` (the live DPS figure, secret in combat): each client formatter
 --- built afresh with the ladder (the rule formatter with the whole-number rule too), the one in
 --- use, AbbreviateNumbers, C_StringUtil's whole-number helpers and string.format, each answer
@@ -282,6 +370,7 @@ function Format.Trial(v)
     out[#out + 1] = "   formatter in use: " .. inUse
     local abbr = AbbreviateNumbers
     out[#out + 1] = "   AbbreviateNumbers: " .. (type(abbr) == "function" and answerOf(pcall(abbr, v)) or "missing")
+    out[#out + 1] = "   AbbreviateNumbers with the ladder's config: " .. configTrial(v)
     for _, name in ipairs(STRING_UTIL_TRIALS) do
         local fn = NS.Compat.NamespaceFunction("C_StringUtil", name)
         out[#out + 1] = ("   C_StringUtil.%s: %s"):format(name, fn and answerOf(pcall(fn, v)) or "missing")
@@ -300,6 +389,23 @@ function Format.Clock(seconds)
     return ("%d:%02d.%d"):format(math.floor(whole / 60), whole % 60, tenths % 10)
 end
 
+--- A race's clock in the tenths every race clock draws (owner, 2026-11-13: the countdown, the time
+--- elapsed beside it, the DPS HUD's clock and the center countdown agree): the elapsed time truncated
+--- to its tenth, as Format.Clock draws the HUD's, and the time left the rest of the length, so the time
+--- left is rounded UP to its tenth. It reads 0:00.0 only at the buzzer, every whole second n is reached
+--- on the tenth the center countdown shows n (modules/Countdown.lua: whole seconds left, rounded up),
+--- and the two always add up to the length. Plain numbers only; each answer is a multiple of 0.1 that
+--- Format.Clock draws exactly.
+--- @param elapsed number  seconds since the race's first hit
+--- @param length number  the race length (s)
+--- @return number elapsed, number left
+function Format.RaceClock(elapsed, length)
+    local total = math.floor((tonumber(length) or 0) * 10 + 0.5)
+    local tenths = math.floor((tonumber(elapsed) or 0) * 10 + 1e-6)
+    tenths = math.max(0, math.min(total, tenths))
+    return tenths / 10, (total - tenths) / 10
+end
+
 --- A length as "m:ss" ("4:12"). Plain numbers only.
 --- @param seconds number
 --- @return string
@@ -307,6 +413,31 @@ function Format.Length(seconds)
     if type(seconds) ~= "number" or seconds < 0 then seconds = 0 end
     local whole = math.floor(seconds + 0.5)
     return ("%d:%02d"):format(math.floor(whole / 60), whole % 60)
+end
+
+--- An offset in seconds with its sign and one decimal ("+3.1"): the Race window's tail and time in
+--- combat after the buzzer (DPS Race's Format.Seconds). Plain numbers only.
+--- @param x number
+--- @return string
+function Format.Seconds(x)
+    if type(x) ~= "number" then x = 0 end
+    return L["+%.1f"]:format(x)
+end
+
+--- A race's time off its part (DPS Race's Format.RunTime on the race part): the race length and the
+--- damage tail after the buzzer ("2:00 +11.1s"), or for an incomplete race its time in combat
+--- against the length ("1:04 / 2:00"). Plain numbers only.
+--- @param race table  a race part
+--- @return string
+function Format.RaceTime(race)
+    race = type(race) == "table" and race or {}
+    local length = Format.Length(race.length)
+    if race.status == "incomplete" and type(race.endedAt) == "number" then
+        return L["%s / %s"]:format(Format.Length(race.endedAt), length)
+    end
+    local tail = race.tail
+    if type(tail) ~= "number" or tail < 0.05 then return length end
+    return length .. " " .. L["+%.1fs"]:format(tail)
 end
 
 --- A percentage, one decimal ("27.6%"). Plain numbers only.

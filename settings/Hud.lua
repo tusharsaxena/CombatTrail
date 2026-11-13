@@ -57,6 +57,10 @@ local POINTS, POINT_OK = choices(
     "TOPLEFT", L["Top left"], "TOP", L["Top"], "TOPRIGHT", L["Top right"], "LEFT", L["Left"],
     "CENTER", L["Center"], "RIGHT", L["Right"], "BOTTOMLEFT", L["Bottom left"], "BOTTOM", L["Bottom"],
     "BOTTOMRIGHT", L["Bottom right"])
+-- The live refreshes a second (`hud.refreshRate`: modules/Hud.lua's beat and the race beat,
+-- modules/RaceClock.lua, so both windows in encounters and races alike).
+local RATES, RATE_OK = choices(4, L["%d a second"]:format(4), 5, L["%d a second"]:format(5),
+    10, L["%d a second"]:format(10), 20, L["%d a second"]:format(20))
 -- frame-layering-§1: a player-chosen strata offers BACKGROUND to HIGH, never DIALOG.
 local STRATA = { "BACKGROUND", "LOW", "MEDIUM", "HIGH" }
 local STRATAS, STRATA_OK = choices(
@@ -154,6 +158,12 @@ row("overCard", { type = "bool", label = L["Show fight-over card"], startsLine =
     tooltip = L["Show the final damage, DPS and spell percentages once the fight ends. Off, a HUD that opened by itself closes when the fight ends."] })
 row("showSkipReason", { type = "bool", label = L["Show why a fight was not saved"],
     tooltip = L["Say on the card why a fight was not stored, such as too short or filtered out. Needs Show fight-over card."] })
+at(TAB.behavior, L["Refresh"])
+row("refreshRate", { type = "number", label = L["HUD refresh rate"], values = RATES, validate = RATE_OK,
+    startsLine = true,
+    tooltip = NS.Compat.ForClient({ "retail" })
+        and L["How many times a second everything live on the DPS HUD and the Race window redraws, in a fight or a race: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows, and the Race window's clock, Best by now and checkpoints. Faster reads the damage meter more often."]
+        or L["How many times a second everything live on the DPS HUD redraws during a fight: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows. Faster reads the damage meter more often."] })
 
 -- Layout
 at(TAB.layout, L["Parts"])

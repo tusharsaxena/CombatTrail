@@ -30,6 +30,14 @@ The difference from DPS Race **(owner)**: DPS Race runs timed races against trai
 records real fights (raids, dungeons, delves, PvP, the open world and dummies) with no arming and no clock to
 race.
 
+**Since 2026-11-11 (owner): Race mode.** DPS Race is retired as an addon and rebuilt inside Combat Trail as
+**Race mode**, on Retail only: a race is a Combat Trail fight on a training dummy that happens to be timed,
+armed by the player (or by auto-arm), clocked from the first hit to a buzzer, and saved as a fight record with
+a `race` part. It is specified in [`2026-11-11-race-mode-design.md`](2026-11-11-race-mode-design.md) ("the
+Race mode spec") and built by [`../plans/2026-11-11-race-mode.md`](../plans/2026-11-11-race-mode.md). The
+three things above are unchanged for every fight that is not a race; this document stays the v0.1.0 design,
+with the Race mode spec layered on it.
+
 Success means the owner deletes CastTrail, plays with Combat Trail on both clients, and uses the Results
 window to check rotations and gear changes after real pulls.
 
@@ -42,13 +50,21 @@ window to check rotations and gear changes after real pulls.
   suite on both kit profiles, the automated-test bundle, README, ARCHITECTURE, smoke-tests and DEPENDENCIES.
 - **Every visual element can be customized** **(owner)**: colors, fonts, sizes, textures, visibility and position, per lane
   and per window, on top of the selected skin.
+- **Race mode** (owner, 2026-11-11; added after v0.1.0's design, Race mode spec): every DPS Race feature as
+  Race mode, Retail only and absent on WoW Forever (clients-§4), and training dummies (the built-in seed and the
+  player's own list) on both clients. Its exceptions to the spec items are the Race mode plan's rulings X17 (no
+  launcher entry for the Race window) and X18 (no key bindings in that run).
 
 **Non-goals (v0.1.0)**
 - Lanes other than Player and Pet. Target, Focus and Party 1-5 come later (issue #1) **(owner)**.
-- The Insights tab, deferred to v2 (issue #2) **(owner)**.
+- The Insights tab, deferred to v2 (issue #2) **(owner)**. It landed with Race mode (Race mode plan Task D2):
+  a Results tab over every saved fight, races as a filter.
 - Creating new lanes. The dropdown only selects between the fixed lanes **(owner)**.
 - Parsing the combat log for damage. Every number comes from `C_DamageMeter`, as in DPS Race and Multi Meters.
 - Importing CastTrail's settings **(Claude)**.
+- ~~Timed races against training dummies~~ (DPS Race's job when v0.1.0 was designed). No longer a non-goal:
+  Race mode brings them in (owner, 2026-11-11; Race mode spec).
+- Carrying DPS Race's saved runs, settings or bests over **(Claude)**, per Race mode spec §2.
 - Masque support **(Claude)**. The owner didn't answer this question, so the icons use LibKa0s skins only.
 - Group or raid meters (other players' damage). This is a personal tool.
 
@@ -150,7 +166,7 @@ quiet-wait pattern in `Race.lua` and `Meter.lua`). Edge cases:
 - **Chained trash** (one long combat, many targets): one session gives one fight. The primary target is the enemy that took
   the most damage, and the identity line says "+N others".
 - **An encounter starting mid-combat:** if the meter splits there, the pre-encounter part is its own fight (usually
-  under 30 s, so not stored) and the boss part is the encounter fight. If the meter doesn't split, the whole session is
+  under the minimum length, so not stored) and the boss part is the encounter fight. If the meter doesn't split, the whole session is
   one fight carrying the encounter identity.
 - **A meter reset mid-fight:** the fight is marked *lost* (as in DpsRace) and isn't stored.
 - **The live HUD** follows the same session: the clock starts on the session's first damage update.
@@ -160,9 +176,9 @@ it passes the recording filters:
 
 | Filter | Default |
 |---|---|
-| Minimum length | **30 s** **(owner)** |
+| Minimum length | **30 s** on Retail, **15 s** on WoW Forever **(owner, Race mode spec §3)** |
 | Bosses only | off |
-| Content types | raids, dungeons (Retail: incl. Mythic+), delves*, battlegrounds, arenas*, open world, training dummies: all on; scenarios off **(Claude)** |
+| Content types | raids, dungeons (Retail: incl. Mythic+), delves*, battlegrounds, arenas*, open world, training dummies, scenarios: all on **(owner, Race mode spec §3)** |
 
 **Identity (Claude).** The identity is read after combat, as plain values:
 - **Encounter:** `ENCOUNTER_START` and `ENCOUNTER_END` (`encounterID`, name, difficultyID, group size) inside the fight.
@@ -173,7 +189,9 @@ it passes the recording filters:
 - **Content:** `GetInstanceInfo()` (instance type, difficultyID, instance name and map) and, since v0.2, the zone and
   subzone (`GetZoneText`, `GetSubZoneText`: the open world's instance name is the continent); delve (Retail);
   Mythic+ keystone level (Retail, `C_ChallengeMode`); training dummy from a **per-client** dummy creature-ID
-  seed list (start from DpsRace `DummyList.lua`; Forever gets its own list, possibly empty by decision).
+  seed list (start from DpsRace `DummyList.lua`; Forever gets its own list, possibly empty by decision),
+  plus the player's own list on both clients (`modules/Dummies.lua`, History > Training dummies,
+  `/ct dummy`; race plan Task A2).
 - **Who:** character, realm (Forever's two-word names and long realm labels, client-quirks §5), class, spec,
   item level, pet name and family. On Forever (v0.2 owner decision D5) the client answers one class-wide spec,
   so the talent tree with the most points stands in for the spec everywhere (the row's second icon, the Spec

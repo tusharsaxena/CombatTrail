@@ -228,6 +228,11 @@ end
 
 test("format: a secret rate is written whole by FloorToNearestString, never with its decimal tail", function()
     local NS = withFloor{ abbreviated = "floor", secretRaises = true, abbreviate = true }
+    if NS.Compat.IsRetail() then
+        -- Retail: the plain AbbreviateNumbers, as the live Damage beside it.
+        assertEqual(T.reveal(NS.Format.Rate(T.secret(FRACTION))), T.reveal(NS.Format.Number(T.secret(FRACTION))))
+        return
+    end
     local out = NS.Format.Rate(T.secret(69.5625))
     assertTrue(T.isSecret(out), "the helper's secret string, untouched")
     assertEqual(T.reveal(out), "69")
@@ -246,7 +251,8 @@ test("format: a total and a rate drawn in turn log each path once, not a line pe
         NS.Format.Rate(T.secret(59.047619))
     end
     assertEqual(logged(inst, "numbers served by AbbreviateNumbers"), 1)
-    assertEqual(logged(inst, "rates served by FloorToNearestString"), 1)
+    local ratePath = NS.Compat.IsRetail() and "rates served by AbbreviateNumbers" or "rates served by FloorToNearestString"
+    assertEqual(logged(inst, ratePath), 1)
 end)
 
 test("format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain", function()
@@ -258,6 +264,37 @@ test("format: a plain rate abbreviates in Lua; with no helper a secret rate take
     assertEqual(bare.Format.Rate(T.secret(FRACTION)), "30.1K", "the client formatter, as Number")
 end)
 
+-- Retail's AbbreviateNumbers takes a config (CreateAbbreviateConfig) and a secret: the live figures
+-- drew "24M" and a whole "363477" there (the owner, 2026-11-13), the plain global's table and
+-- FloorToNearestString, while the config carries the ladder.
+test("format: a secret goes to AbbreviateNumbers with the ladder's config once it passes the checks", function()
+    local NS, m = fresh{ abbreviated = "floor", secretRaises = true, config = "floor" }
+    assertEqual(T.reveal(NS.Format.Number(T.secret(24390000))), "24.39M")
+    assertEqual(T.reveal(NS.Format.Number(T.secret(FRACTION))), "30.1K")
+    assertTrue(T.isSecret(m.__abbreviated[#m.__abbreviated]), "the secret itself was handed over")
+end)
+
+test("format: a secret rate takes the ladder's config before FloorToNearestString", function()
+    local NS = withFloor{ abbreviated = "floor", secretRaises = true, config = "floor" }
+    local out = NS.Format.Rate(T.secret(363477.4))
+    assertTrue(T.isSecret(out), "the client's secret string, untouched")
+    assertEqual(T.reveal(out), "363.4K")
+    assertEqual(T.reveal(NS.Format.Rate(T.secret(69.5625))), "69", "no decimal tail under a thousand")
+end)
+
+test("format: a config that draws a fraction raw is never used; the rate takes the client's next path", function()
+    local NS = withFloor{ abbreviated = "floor", secretRaises = true, config = "raw" }
+    local whole = NS.Compat.IsRetail() and "abbr" or "30190"
+    assertEqual(T.reveal(NS.Format.Rate(T.secret(FRACTION))), whole, "Retail: AbbreviateNumbers; else FloorToNearestString")
+    assertEqual(NS.Format.Number(T.secret(FRACTION)), "abbr", "the plain AbbreviateNumbers")
+end)
+
+test("format: the probe's trial runs AbbreviateNumbers with the ladder's config", function()
+    local NS = fresh{ abbreviated = "floor", config = "floor" }
+    local all = table.concat(NS.Format.Trial(FRACTION), "\n")
+    assertTrue(all:find('AbbreviateNumbers with the ladder\'s config: ok, "30.1K"', 1, true) ~= nil, all)
+end)
+
 test("format: Clock, Length, Pct and SignedPct take plain numbers", function()
     local F = T.NS.Format
     assertEqual(F.Clock(161.34), "2:41.3")
@@ -266,4 +303,39 @@ test("format: Clock, Length, Pct and SignedPct take plain numbers", function()
     assertEqual(F.Pct(27.63), "27.6%")
     assertEqual(F.Pct(nil), "")
     assertEqual(F.SignedPct(2.14), "+2.1%")
+end)
+
+-- The race clock (owner, 2026-11-13): one count of tenths, the elapsed truncated, the time left the
+-- rest of the length (rounded up), so the two add up and 0:00.0 is the buzzer's alone.
+test("format: RaceClock splits a race into the elapsed and the time left at the same tenth", function()
+    local F = T.NS.Format
+    local function at(elapsed, length)
+        local e, l = F.RaceClock(elapsed, length or 60)
+        return F.Clock(e) .. " " .. F.Clock(l)
+    end
+    assertEqual(at(0), "0:00.0 1:00.0", "the first hit")
+    assertEqual(at(0.05), "0:00.0 1:00.0", "inside the first tenth")
+    assertEqual(at(0.1), "0:00.1 0:59.9", "on a tenth's edge")
+    assertEqual(at(58.95), "0:58.9 0:01.1")
+    assertEqual(at(59), "0:59.0 0:01.0", "one second left: the center countdown's 1 pops here")
+    assertEqual(at(59.05), "0:59.0 0:01.0")
+    assertEqual(at(59.9), "0:59.9 0:00.1")
+    assertEqual(at(59.95), "0:59.9 0:00.1", "the last tenth reads 0:00.1, never 0:00.0 before the buzzer")
+    assertEqual(at(60), "1:00.0 0:00.0", "the buzzer")
+    assertEqual(at(61.3), "1:00.0 0:00.0", "held at the length")
+    assertEqual(at(-1), "0:00.0 1:00.0")
+    for _, e in ipairs({ 0.3, 7.7, 29.95, 44.44, 59.99 }) do
+        local a, b = F.RaceClock(e, 60)
+        assertTrue(math.abs(a + b - 60) < 1e-9, "they add up to the length at " .. e)
+    end
+end)
+
+test("format: Seconds signs an offset, and RaceTime reads a race part's length, tail or early end", function()
+    local F = T.NS.Format
+    assertEqual(F.Seconds(3.14), "+3.1")
+    assertEqual(F.Seconds(nil), "+0.0")
+    assertEqual(F.RaceTime({ length = 120, status = "complete", tail = 11.12 }), "2:00 +11.1s")
+    assertEqual(F.RaceTime({ length = 120, status = "complete", tail = 0.01 }), "2:00", "no tail worth a figure")
+    assertEqual(F.RaceTime({ length = 120, status = "incomplete", endedAt = 64 }), "1:04 / 2:00")
+    assertEqual(F.RaceTime(nil), "0:00")
 end)

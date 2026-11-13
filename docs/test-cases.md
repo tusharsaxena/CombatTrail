@@ -19,15 +19,16 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 2 and the fight record's format is 2
+- load: the settings stamp is 2 and the fight record's format is 4
 - load: a schema 1 store loads empty at version 2, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
 
-### test_loadorder.lua (4)
+### test_loadorder.lua (5)
 
 - load order: the runner loaded exactly the TOC's files, in the TOC's order
 - load order: the locale and the namespace come first, the AceAddon promotion after the printer
+- load order: the hearthstones and the defaults load before the ignore list, and the race before the recorder
 - load order: every derived path exists on disk
 - load order: no libs/ path leaked into the addon's own list
 
@@ -62,13 +63,13 @@ Total.
 ### test_slash.lua (19)
 
 - slash: help lists every verb spec §8 names
-- slash: help lists every COMMANDS verb, in order
+- slash: help lists every COMMANDS verb this client has, in order
 - slash: an unknown verb says so and prints the help
 - slash: bare /ct opens the settings panel
 - slash: /ct and /combattrail are both registered on the one dispatcher
 - slash: disable and enable write general.enabled through the seam
 - slash: a feature verb refuses with the one line while disabled; settings verbs still answer
-- slash: disabled, each feature verb answers one refusal line; lane and ignore still act
+- slash: disabled, each feature verb answers one refusal line; lane, ignore and dummy still act
 - slash: under the perf hold alone a feature verb answers the capture line
 - slash: lock and unlock write general.locked
 - slash: test turns test mode on and off
@@ -347,7 +348,7 @@ Total.
 - meter: Call reports a missing function and a raising one without throwing
 - meter: ReadFinal keeps the player's part when only the pet's read raises
 
-### test_format.lua (19)
+### test_format.lua (25)
 
 - format: a plain fractional DPS abbreviates in Lua, never through the client formatter
 - format: a secret goes to a formatter that passes both checks
@@ -367,9 +368,15 @@ Total.
 - format: a secret rate is written whole by FloorToNearestString, never with its decimal tail
 - format: a total and a rate drawn in turn log each path once, not a line per redraw
 - format: a plain rate abbreviates in Lua; with no helper a secret rate takes Number's chain
+- format: a secret goes to AbbreviateNumbers with the ladder's config once it passes the checks
+- format: a secret rate takes the ladder's config before FloorToNearestString
+- format: a config that draws a fraction raw is never used; the rate takes the client's next path
+- format: the probe's trial runs AbbreviateNumbers with the ladder's config
 - format: Clock, Length, Pct and SignedPct take plain numbers
+- format: RaceClock splits a race into the elapsed and the time left at the same tenth
+- format: Seconds signs an offset, and RaceTime reads a race part's length, tail or early end
 
-### test_fight.lua (30)
+### test_fight.lua (36)
 
 - fight: the states and the timing constants are the plan's
 - fight: normal combat → started, ticks, ended final
@@ -401,6 +408,12 @@ Total.
 - fight: an encounter that starts in combat while idle starts a fight
 - fight: COMBAT_ENTERED is sent on the regen edge from idle, on the grace carry-on and on park+begin
 - fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in combat, or while stood down
+- fight: FIGHT_FIRST_HIT is sent once, on the first damage update of a bound session
+- fight: Hurry reads a settling fight at once; idle or another fight's id does nothing
+- fight: Hurry in combat settles at the combat end with no wait
+- fight: Adopt rebuilds a resumed race's fight in combat, with no FIGHT_STARTED; refused while busy
+- fight: Adopt out of combat reads the fight on the next timer, without the settle's wait
+- fight: ShareSessions lets an unbound fight bind a listed session, marked shared; none by default
 
 ### test_identity.lua (47)
 
@@ -422,7 +435,7 @@ Total.
 - identity: a world boss keeps its creature key, level aside
 - identity: a sealed level or GUID leaves the fields nil and never raises
 - identity: where carries the zone and subzone; sealed or raising ones are absent
-- identity: the dummy list is picked once, per client; Forever's is empty by decision
+- identity: the dummy seed is picked once, per client; Forever's is empty by decision
 - identity: dummy creature -> content dummy
 - identity: a dummy found only by the snapshot's target is still a dummy
 - identity: no enemies and no snapshot -> Unknown target, key nil
@@ -451,6 +464,39 @@ Total.
 - identity: forever: Prime reads the trees out of combat, so the session's first sealed read has one
 - identity: the stand-up primes the trees (core/CombatTrail.lua RegisterGameEvents)
 - identity: retail: the talent trees are absent and the spec is the client's
+
+### test_dummies.lua (30)
+
+- dummies: the seed is picked once per client; Forever's is empty by decision
+- dummies: Lookup answers the seed by creature ID, with its name and category
+- dummies: Lookup answers a copy, so a caller cannot edit the seed
+- dummies: five categories in order, each with an enUS label, and Other for no dummy
+- dummies: Parse reads entries and hides, ascending, the last of an ID winning
+- dummies: Normalize drops a custom entry for a built-in and a hide of a non-built-in
+- dummies: the row refuses what does not parse and stores what it normalizes
+- dummies: Add marks a creature, Lookup answers it, Remove takes it off
+- dummies: a custom dummy added with no category is single target
+- dummies: a built-in is switched off and back on, never recategorized
+- dummies: Defaults clears the list; a profile switch reads the other profile's
+- dummies: a typed category word is a key or its label; auto and nonsense are none
+- dummies: a custom dummy makes a fight's content "dummy" on WoW Forever too
+- dummies: a built-in switched off is open-world content again
+- dummies: test mode's sample dummy keeps its seed name when the player switches it off
+- dummies: Read and Capture keep what the game says, by map, and count the captures
+- dummies: a sealed field is left out of the read, and a player is no creature
+- dummies: Resolve takes an ID or a captured or seeded name
+- dummies: a captured custom dummy answers its captured name
+- dummies: the Training dummies section is on both clients
+- dummies: the row's default empties the list
+- dummies: the tab draws Add your target, the list, a box per built-in and Reset list
+- dummies: Add your target counts the target as single target, and says so with none
+- dummies: Add your target says what the verb says: no creature, and nothing new
+- dummy verb: add marks the target, captures it and says what it saved
+- dummy verb: add refuses a word that is no category, no target, and a player
+- dummy verb: on a built-in, add says so and captures; remove switches it off, add brings it back
+- dummy verb: remove takes a typed creature ID or name; show lists yours and the switched-off
+- dummy verb: capture saves without marking; an unknown word prints the usage
+- dummy verb: answers while the addon is disabled, on both clients
 
 ### test_cast_codec.lua (7)
 
@@ -533,20 +579,22 @@ Total.
 - gear sets: Sweep mid-fight keeps the live fight's set after a swap in combat
 - gear sets: the stored size estimate counts the sets
 
-### test_filters.lua (10)
+### test_filters.lua (12)
 
 - filters: the history defaults are the plan's
+- filters: the minimum length defaults to 30 s on Retail and 15 s on WoW Forever
+- filters: every content kind is saved by default, scenarios too
 - filters: the content toggles are exactly this client's content kinds
 - filters: retail: the mplus, delve and arena toggles are present and on
 - forever: mplus/delve/arena filter keys absent
-- filters: 22 s fight skipped as short
+- filters: a fight under the minimum length is skipped as short
 - filters: the minimum length follows the setting
 - filters: bossesOnly drops non-encounter
 - filters: content toggle drops world
-- filters: scenarios are dropped by default, a kind without a toggle too
+- filters: scenarios are stored by default, a kind without a toggle is dropped
 - filters: the short check comes before the content check
 
-### test_bests.lua (10)
+### test_bests.lua (21)
 
 - bests: best per character×spec×boardKey
 - bests: For with exclude answers the runner-up
@@ -558,10 +606,22 @@ Total.
 - bests: the boards follow a save and a delete
 - bests: the character key carries the client, so boards never mix Retail and Forever
 - bests: forever: the predominant tree splits the boards as a spec does (D5)
+- bests: a race counts only on its race board, never the dummy's fight board
+- bests: race boards split by character, spec, dummy kind and length
+- bests: a race's kind is read from the dummy list now, else the stored kind
+- bests: a dummy list change redraws the race boards
+- bests: a profile change redraws the race boards (its own Training dummies list)
+- bests: incomplete and lost races never count; the highest race DPS holds the board
+- bests: an incomplete or flagged race never holds the clean board
+- bests: Compute's second argument still skips a record; the clean view is its third
+- bests: HoldingIDs names the holders of the all and the clean boards
+- bests: Before is the best on the board fought before; Delta the verdict against it
+- bests: Delta works for fights too, and defaults its list to the store
 
-### test_retention.lua (13)
+### test_retention.lua (14)
 
 - retention: purge removes >7 days except bests
+- retention: a race holding a best survives the purge
 - retention: keepBests off lets an old best go
 - retention: days=0 keeps forever
 - retention: purge of 600 fights keeps bests and caps at 500
@@ -578,7 +638,7 @@ Total.
 ### test_record.lua (18)
 
 - record: a real fight becomes a stored record with the spec §5 fields
-- record: 22 s fight skipped as short
+- record: a 10 s fight is skipped as short
 - record: a lost fight is skipped as lost
 - record: a filtered fight is skipped as filtered
 - record: a fight with no readable character is skipped as unknown
@@ -596,7 +656,377 @@ Total.
 - record: three fights in the same gear share one gear set; a swap between fights is a second
 - record: targets merge enemies of one name, highest first, whole, capped
 
-### test_slices.lua (18)
+### test_race_record.lua (16)
+
+- race record: a complete race is saved however short
+- race record: an incomplete race is saved too, with its endedAt
+- race record: a canceled race saves the pull as a plain dummy fight under the normal filters
+- race record: a lost race is not a race
+- race record: a race still needs a character
+- race record: Recorder asks the race to finalize before it judges the fight
+- race record: no secret reaches the race part
+- race record: Plain answers nil for anything but a table, and copies the spec §6 fields
+- race record: Plain keeps the first hit's offset only when it is a plain number (ruling X9)
+- race record: FirstHit is the race clock's zero on the fight clock, 0 for no shift
+- race record: OnClock answers casts moved onto a later zero, a copy, the list untouched
+- race record: IsRace is a record with a race part
+- race record: Dps is the race DPS for a race, the fight DPS otherwise
+- race record: ScoreDps is the score over the length, over endedAt when incomplete
+- race record: Flagged reads the race part's flags and its status
+- database: schema 3 records load unchanged under 4
+
+### test_race_scoring.lua (20)
+
+- race scoring: late cast boundaries
+- race scoring: QUIET_BEFORE_READ is 2.5s
+- race scoring: Dps complete = score / length
+- race scoring: Dps incomplete = score / endedAt
+- race scoring: Flags order and text
+- race scoring: Flags names late-cast spells through an optional resolver
+- race scoring: SplitLate keeps the recorded order and splits by the ignore set; a sealed cast always counts
+- race scoring: Flags flags only the counted late casts and carries the count, the casts and the ignored
+- race scoring: IgnoredText names the ignored casts in one line, nil with none
+- race scoring: a clean complete race has no flags; lost stands alone at the end
+- race timeline: tail from probe run 4 = 3.03
+- race timeline: tail from probe run 6 = 8.49
+- race timeline: restart detected after 10s quiet at gap 6
+- race timeline: DoT ticks every 2s are not a restart
+- race timeline: the quiet stretch starts at the buzzer when the last damage was before it
+- race timeline: a gap of exactly the setting counts as a restart
+- race timeline: no damage after the buzzer gives tail 0 and no restart
+- race timeline: a gap that spans a resume is measured from the resume
+- race timeline: an out-of-order or non-number update is handled
+- race timeline: two timelines are independent
+
+### test_late_ignore.lua (12)
+
+- late ignore: the hearthstone table holds 59 positive IDs, once each, with 8690, Dalaran and Garrison, never 556
+- late ignore: the setting parses sorted and once each, refuses anything else, and joins back
+- late ignore: Normalize drops a variant while 8690 is listed and keeps it alone
+- late ignore: the default is the profile's, and 8690 stands for every hearthstone in Set only
+- late ignore: Resolve takes a number, a link, a hearthstone's name and a default the character does not know
+- late ignore: a variant's name resolves to that variant when it is listed on its own, else to 8690
+- late ignore: on a degraded load a number, a link and a hearthstone still resolve
+- late ignore: the known spells are every late cast's spell, newest race first, then the defaults
+- late ignore: a profile switch re-scores the flags by the other profile's list and drops the clean board
+- late ignore: an edit of the list alone drops the cached clean board
+- late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
+- late ignore: Label names a spell, the hearthstones' entry and an unknown one
+
+### test_race.lua (60)
+
+- race: the states, the lengths and the timings are the plan's
+- race: arming refuses on WoW Forever and registers nothing there
+- race: arm refuses while armed or racing, out of range, in combat, settling, and with the meter unavailable
+- race: arm refuses while a fight is still settling
+- race: arm refuses while stood down
+- race: an arm remembers its length, and the next arm defaults to it
+- race: the first hit on a dummy starts the clock, on the fight's firstHitT
+- race: an armed race cancels when a non-dummy pull starts, and that pull is a normal fight
+- race: a pull with no target cancels the arm
+- race: an armed pull that never hits keeps the arm for the next pull
+- race: buzzer at start+length moves to stopping and emits RACE_BUZZER, never early
+- race: a complete race is read after the settle and saved once, as a race with its score and DPS
+- race: the record keeps the first hit's offset from combat entry, the race clock's zero (ruling X9)
+- race: the race part is on the fight before Recorder builds it, and RACE_RESULT follows FIGHT_SAVED
+- race: a race is saved however short, past the minimum length
+- race: combat end before the buzzer -> incomplete with endedAt
+- race: Feign Death before the buzzer ends the race as incomplete while the fight carries on
+- race: an incomplete race whose fight carries on scores the whole fight over its own race clock
+- race: death -> incomplete, died flag
+- race: death after the buzzer flags died and the race stays complete
+- race: tail and combat end are stored relative to the buzzer
+- race: restart after a 10s gap sets flags.restartedAt
+- race: updates for another session never move the timeline
+- race: a sealed meter type or session ID is taken as the race's own, and nothing secret is kept
+- race: cast started 0.5s after buzzer is not late at grace 1.0
+- race: cast started 1.4s after buzzer is recorded as late with spellID
+- race: a late cast of an ignored spell is still stored raw; the list is read, never applied, at capture
+- race: cast that started before buzzer and succeeded after is not late
+- race: an empowered cast held across the buzzer is never late
+- race: a channel begun after the grace is late once; its stop clears it
+- race: an interrupted cast leaves nothing open; a later instant of the same spell is late
+- race: a cast matches its own success by castGUID, not by spell
+- race: secret spell IDs and castGUIDs are judged without ever being stored
+- race: auto-repeat successes after the buzzer are never late casts
+- race: a pet's cast is never judged
+- race: the grace in force is the race's own, not the profile's
+- race: a meter reset while running loses the race; nothing is saved and the buzzer never goes
+- race: a meter reset while stopping -> lost
+- race: a meter reset while armed forgets the arm-time sessions and keeps the arm
+- race: a shared session is flagged and netted against the arm baseline, saved once
+- race: a plain fight never binds a session alive before it
+- race: a fresh session heard after a shared start replaces the shared one
+- race: a split mid-race keeps the race on its first fight
+- race: a session bound only on a tick's look at the list flags sessionFromList
+- race: Stop Now acts only while stopping
+- race: Stop Now after combat ends reads at once
+- race: Stop Now in combat waits for combat to end and skips the quiet
+- race: Stop Now on a race that ended before the buzzer reads it as incomplete
+- race: Cancel while armed stores nothing and arms again
+- race: Cancel after the first hit leaves a plain dummy fight
+- race: Cancel after the first hit of a short pull saves nothing under the minimum length
+- race: cancel on a result dismisses it and keeps the record; race again arms
+- race: an arm from a result arms a new race
+- race: the arm's snapshots replace the fight's combat-entry reads
+- race: a re-pull after the buzzer inside the grace is one fight, saved once, its combat end the last
+- race: a new pull past the grace while the race's fight settles is never mixed into the race
+- race: a split after a shared start keeps the race's clock and takes the arm's snapshots
+- race: inputs in the wrong state change nothing
+- race: the watchers register only what the race's state needs
+- race: a stand-down drops the armed race silently, with its registrations
+
+### test_race_resume.lua (26)
+
+- resume: the slot is written at the first hit, plain, and nothing reaches the fight store
+- resume: the slot is cleared at the result and at a cancel
+- resume: arming refuses while this character's slot waits to be resumed
+- resume: running past buzzer becomes stopping+reloaded
+- resume: a resumed race keeps its first hit's offset; a slot without the combat entry has none
+- resume: running before buzzer keeps running with remaining time
+- resume: stopping out of combat reads immediately
+- resume: stopping in combat waits for the combat end
+- resume: an incomplete race waiting for its read stays incomplete
+- resume: an incomplete race whose fight carried on keeps its own race clock after a reload
+- resume: a carried-on incomplete race read at the resume divides by its last damage, not the reload
+- resume: running before the buzzer with combat already over is incomplete and read at once
+- resume: session gone becomes lost
+- resume: a slot that cannot be raced is cleared, and a new race can be armed
+- resume: nothing stored leaves the race idle and touches nothing
+- resume: an armed race with no first hit is dropped and the window is idle
+- resume: a slot another character left is not resumed here and does not block the arm
+- resume: after a restart of the machine the clock comes from the stored date
+- resume: a reload that outlasts the restart gap while DoTs tick is not a restart
+- resume: the tail and a restart heard before a /reload survive it
+- resume: the stamps before a /reload keep a DoT tail across it from looking like a restart
+- resume: a shared session resumed is still netted against the arm's baseline, saved once
+- resume: a stand-down mid-race whose combat ends unseen never hangs in stopping
+- resume: an armed race is dropped by the stand-down and not resumed
+- resume: a stood-down login resumes nothing until the addon is enabled
+- resume: nothing is resumed on WoW Forever
+
+### test_race_settings.lua (25)
+
+- race mode: the page, its rows and the verb are present on Retail, each declared retail
+- race mode: every control and verb is absent on WoW Forever
+- race mode: the library-absent dispatcher lists and runs the verb on its own client only
+- race mode: the stored paths, types, defaults and ranges are the pinned set
+- race mode: the page's tabs are Race, Late-cast ignore list and Race window, and it renders quietly
+- race mode: the DPS HUD row sits under auto-show, live whatever auto-show says (W29 decision D4)
+- race mode: Match the DPS HUD's height sits on the Race window tab, under the side
+- race mode: a new default length forgets the last one armed
+- race mode: the page's Defaults brings every race row back, the ignore list too
+- race mode: Ignore, Unignore and Reset write the late-cast list through its row
+- race verb: arm takes 90, 1:30 and 3m, and refuses 0 and 901 with one line
+- race verb: a bare arm takes the remembered length, and a refusal says why
+- race verb: a bare arm arms the Race window's pick, and a typed length becomes its pick
+- race verb: cancel says what it did in the state it found
+- race verb: show, hide and toggle reach the Race window
+- race verb: ignore shows, adds, removes and resets the late-cast list
+- race verb: disabled, only race ignore answers; every other word is the refusal line
+- race verb: under the perf hold alone, race arm answers the capture line
+- race mode off: arming refuses and the Race window stays hidden
+- race mode off: an armed race is canceled with the switch; a running race runs on
+- race mode off: a profile switch to Race mode off cancels an armed race, as the switch does
+- race mode: the Race window's width and height are grip-written rows the tab does not draw
+- race window grip: shown only while unlocked, at the stored size
+- race window grip: matched to the HUD's height it drags the width alone
+- race window grip: detached, TOP or BOTTOM, or match-height off, it drags both, never under the least
+
+### test_autoarm.lua (41)
+
+- autoarm: on WoW Forever nothing registers and a dummy target arms and shows nothing
+- autoarm: a new profile shows the Race window near a dummy and never arms by itself
+- autoarm: both rules off register nothing
+- autoarm: each rule registers only what it needs, and turning both off drops it all
+- autoshow: a dummy target opens the Race window, and leaving it closes it after the debounce
+- autoshow: a dummy's nameplate opens the Race window, with no target at all
+- autoshow: nameplates churning inside the debounce never close the window
+- autoshow: the hide's fire scans the nameplates again before it closes
+- autoshow: a secret GUID is no dummy
+- autoshow: the player's close keeps it closed for the rest of the dummy session
+- autoshow: a window the player opened is theirs, and never closed by leaving
+- autoshow: a race holds the window; its idle edge starts the debounce
+- autoshow: turning the rule off closes the window it opened
+- autoshow hud: a new profile opens the DPS HUD with the Race window, as an auto open
+- autoshow hud: either row opens both windows near a dummy; both off, neither (W29 D4)
+- autoshow hud: turning one row off keeps both windows; turning both off closes both
+- autoshow hud: the player's close of the HUD holds both windows shut for the rest of the session
+- autoshow hud: the close control hides the Race window still wanted; Escape closes both as the player's
+- autoshow hud: a HUD the player opened or pinned is never closed by leaving
+- autoshow hud: the session's end never closes a live fight's HUD
+- autoshow hud: a HUD the dummy opened stays up through the first hit whatever the show mode
+- autoshow hud: the same gates as auto-show: an instance and Race mode off
+- autoshow hud: a fade hides both; the session's next ask opens both again (W29 #6)
+- autoarm: targeting a dummy out of combat arms at the Race window's length
+- autoarm: with no length from the Race window, the race's own default
+- autoarm: a target that is no dummy arms nothing
+- autoarm: Race.Arm's refusals hold, silently: in combat, meter unavailable
+- autoarm: no arm in test mode
+- autoarm: targeting anything else before the pull disarms; another dummy keeps it
+- autoarm: a target change in combat never disarms, and a started race is no longer the rule's
+- autoarm: a race the player armed is never the rule's to disarm
+- autoarm: Cancel works as ever, and the next target change to a dummy arms again
+- autoarm: a profile switch re-reads both rows, with no /reload
+- autoarm: Race mode off, neither rule registers or acts; on again, both come back
+- autoarm: neither rule acts in an instance or a battleground
+- autoarm: entering an instance closes the dummy's window
+- autoarm: stood down, nothing is registered and nothing acts; the stand-up rebuilds
+- autoshow window: InSession is live from the first dummy seen to the session's end
+- autoshow window: detach, reattach, open and close by hand, walk away, come back
+- autoshow window: the player's open in a session closes on walking away and opens on coming back
+- autoshow window: a window the player opened before the session stays theirs
+
+### test_race_window.lua (51)
+
+- race window: absent on WoW Forever, with nothing of it loaded
+- race window: present on Retail, with its frame name and its hooks
+- race window: the six bodies follow the race, idle to the result card
+- race window: combat ending before the buzzer waits for the read
+- race window: an early end back in combat counts the time since the race ended, and the hint comes
+- race window: idle after a plain fight's settle offers Arm Race again
+- race window: idle offers the five lengths and Custom, and Arm Race arms the pick
+- race window: a typed length is taken, and one out of range is refused with the length line
+- race window: a changed Default race length takes effect over the pick
+- race window: in combat Arm Race is disabled and the line under it says why
+- race window: the target card names the dummy, its kind and its creature ID
+- race window: a target that is no training dummy, or none, is warned about
+- race window: Your best is empty before the first race, then the race board's best
+- race window: Stop! counts the late casts the ignore list leaves, beside the grace
+- race window: the waiting body's hint comes after the hint delay in combat, and Stop Now is taken once
+- race window: a damage tail in combat past the hint delay waits, and never goes back to Stop!
+- race window: the waiting body keeps the hint's room before the hint shows
+- race window: the hint box is sized to its words, never measured
+- race window: the result card shows the score, the race DPS and its chips
+- race window: a slower second race is behind its best, set against it in Against your best
+- race window: New Race goes back to Arm Race at the race's length, the window kept
+- race window: Open opens the race in Results, Share prompts, Delete asks first
+- race window: a result card whose race is deleted goes back to Arm Race
+- race window: closing a result card dismisses it and keeps the race
+- race window: a lost race shows dashes and says it could not be read
+- race window: the result chips name each flag in a short word, its full text the tip
+- race window: the running clocks follow the race clock setting
+- race window: the running body sets the race against the race board's best, with no pace bar
+- race window: Best by now and each Checkpoint show your damage, kept as the clock passes it
+- race window: with no best on the board the running body says so and hides the best's line
+- race window: no live boxes, no chart and no spell rows in any body
+- race window: it wears the HUD's skin and appearance
+- race window: attached, it stands flush beside the HUD on each side and moves with it
+- race window: attached with the HUD hidden it stands where the HUD would
+- race window: a HUD that drew once, hidden, is placed again for the window beside it
+- race window: docked LEFT or RIGHT it takes the DPS HUD's height
+- race window: the matched height follows the HUD's resizes, its parts, the grip and the scale
+- race window: a HUD shorter than the window's minimum leaves the minimum
+- race window: TOP, BOTTOM, detached or the row off keep the window's own height
+- race window: unticking Attach in the settings keeps it where it stands, as Detach does
+- race window: detached, it keeps its own place across a reload
+- race window: locked, or attached, its title bar drags nothing
+- race window: auto-show near a dummy, the debounced close, and the player's close counted
+- race window: an arm opens it, and it closes when that race goes back to idle; the player's stays
+- race window: with Race mode off it stays hidden
+- race window: it has no timer of its own; the race beat redraws it while racing and shown
+- race window: a race opens the DPS HUD whatever its own rules say; a plain fight does not
+- race window: the buzzer takes the last checkpoint with the DPS HUD's last read, so all four show
+- race window: a race ending early takes no checkpoint past its end
+- race window pet: with the pet on its own source the pace bars take the best's player-only line
+- race window pet: no pet source, or a best with no player-only figure, gives no paceRef
+
+### test_race_window_board.lua (26)
+
+- race window board: Best by now and the Checkpoints read the best's straight line
+- race window board: Against your best sets this race beside the best before it
+- race window board: an incomplete race's shorter time shows on its chips, not in the table
+- race window board: Against your best and Top races stand on one column grid
+- race window board: every section heading is the DPS HUD's
+- race window board: the countdown turns green to yellow to red over the race
+- race window board: Top races ranks the board's races, this one's row under the top three
+- race window board: the result card's Top races ranks a race outside the top three
+- race window board: the idle body shows Top races only once the board has races
+- race window board: every body's stack fits the window's own content height
+- race window board: Spread grows the rows, then the gaps, each to its cap
+- race window board: a taller window keeps the stack's top, spreads its gaps and keeps the buttons at the foot
+- race window board: a taller window spreads the result card's tables down to its buttons
+- race window board: Best by now and the Checkpoints draw the best in blue, Current in white, labels in muted gold
+- race window board: a checkpoint reads time, best, Current, then its mini bar; Best by now's bar sits over its card
+- race window board: the mini pace bars take Current through SetValue on plain Bounds; a checkpoint's waits for its capture
+- race window board: nothing on the running body is anchored to a bar that took the reading
+- race window board: the running body fills every size without clipping or overlap
+- race window board: two lines of running chips at the largest clock still clear Cancel
+- race window board: the idle body fills every size, its gaps and Top races' rows spread in a taller one
+- race window board: the result and Stop! bodies' buttons and chips follow the width
+- race window board: the Stop! and waiting bodies add the Checkpoints, all four by the buzzer, when they fit
+- race window board: the time bar is the DPS HUD's pace bar's look: no border, its track, height and tick
+- race window board: Best to beat labels its Damage and DPS in gold, a matched pair, the line kept
+- race window board: Best by now's figures never run under their labels, at any width
+- race window board: a checkpoint's time is a size above its figures, set apart over the best, the bar 90% wide
+
+### test_race_clock.lua (13)
+
+- race clock: absent on WoW Forever
+- race clock: no beat outside a race, nor while armed or on a plain fight
+- race clock: the beat runs while the race runs and stops, and ends with the result
+- race clock: a canceled race and the stand-down stop the beat
+- race clock: each fire sends one RACE_CLOCK
+- race clock: during a race the HUD's clock moves on the beat, not on FIGHT_TICK
+- hud beat: a plain fight reads and redraws 10 times a second by default, FIGHT_TICK leaving it
+- hud beat: Damage, DPS, the pace view and the spell rows move on each beat
+- hud beat: each rate, and a switch mid-fight
+- hud beat: no read in the settle, and it stops with the window and the fight
+- race clock: the race beat runs at hud.refreshRate, reads once, and the Race window draws that read
+- race clock: the held sample race beats while running, and stops with test mode
+- race clock: the sim's race beats from its first hit through Stop!, and stops at its read
+
+### test_countdown.lua (23)
+
+- countdown: absent on WoW Forever
+- countdown: 10..1 show one per second in the last 10 s, then go at the buzzer
+- countdown: the center number, the Race window's countdown and the HUD's clock agree at the boundaries
+- countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu
+- countdown: the frame never takes the mouse, and each number pops in
+- countdown: the digits are Blizzard's BigGold set, cut by texcoord
+- countdown: without the digit art it falls back to a large outlined number
+- countdown: finalCountdown 3 starts at 3
+- countdown: switched off, no frame is ever built and only the cue marks sound
+- countdown: switching it off mid-countdown hides the number at once
+- countdown: works with the DPS HUD and the Race window closed
+- countdown: one cue per second of the numbers, never two in a second
+- countdown: the cue off keeps the numbers and silences every second
+- countdown: switching the cue off mid-race silences the marks still ahead
+- countdown: a cancel at 5 s left hides it and nothing more shows or sounds
+- countdown: combat ending before the buzzer hides it
+- countdown: the stand-down takes the number and every mark, and nothing re-arms them
+- countdown: a /reload with 4 s left resumes at 4 and counts 3, 2, 1
+- countdown: a /reload before the window shows nothing until it opens
+- countdown: a /reload past the buzzer shows nothing
+- countdown: the buzzer raises the raid warning's STOP with its sound, once, only when enabled
+- countdown: a canceled race and a race ending early raise no buzzer
+- countdown: never broadcasts a pull timer nor drives Blizzard's TimerTracker
+
+### test_toast.lua (21)
+
+- toast: a complete race that beats its board's best toasts once, whatever the windows show
+- toast: none for an incomplete or lost race, a race that is no best, or with races off
+- toast: a race's payload names the spec and class, its dummy kind and length, the DPS and the gain
+- toast: a flagged race may toast, its flags on the last line as the Race window words them
+- toast: a new fight best raises the toast; a board's first fight does not
+- toast: each toggle silences its kind
+- toast: a kind switched off drops its own toasts, waiting or shown, and keeps the other kind's
+- toast: with no previous best to name, the DPS line is the DPS alone in the text color
+- toast: two real races, the second faster, toast once on its result
+- toast sound: Default plays the shell's alert; another key its file; an unknown key falls back
+- toast sound: the list leads with Default, then every LibSharedMedia sound in order
+- toast: Test toast queues a sample, and a second click replaces it
+- toast: Reset position (Master controls) clears the stored place
+- toast: the stand-down takes the toast down and drops what waits; a best while down shows none
+- toast: DPS Race's size: 25% larger, the trophy as tall as the three rows
+- toast: a real toast never moves; as Test toast's sample it drags
+- toast: the class and spec icons sit between New best: and the words
+- toast: a class or spec the client cannot draw takes no room
+- toast: the rows' text draws larger than the same font unscaled, each row at its font's size
+- toast: the History page's New-best toast tab, the races row on Retail only
+- toast: the stub answers every member a live toast has, as an empty toast does
+
+### test_slices.lua (19)
 
 - slices: a 2 s step, at most 60 columns, a column that grows with the fight
 - slices: a read copies the handles into each step it is the first read at or after
@@ -606,6 +1036,7 @@ Total.
 - slices: a 5 minute fight re-buckets into 50 columns of 6 s, each its last step's total
 - slices: a column whose last step is a hole takes its latest filled step, and an empty one stays empty
 - slices: an expected length sizes the columns before the fight reaches it
+- slices: a shift lays the columns from a later zero, each still its latest filled step (ruling X9)
 - slices: the views are cached until the next capture
 - slices: Tail is the last 60 steps, one column a step
 - slices: a closed store takes no more reads, and only KEEP closed stores are held
@@ -645,13 +1076,20 @@ Total.
 - hud: Locked stops the drag; Reset position puts it back
 - hud: disabled addon: hidden, no timer, and no fight opens it
 
-### test_hud_pace.lua (5)
+### test_hud_pace.lua (12)
 
 - pace: uses the best's slices when present, else its linear pace
 - pace: the bounds sit the best's pace in the middle; the range is held to the slider
 - pace: split at the tick, red short of it, green past it; a separate pet paces player-only
 - pace: a total with no pet source of its own runs against the best's merged pace
 - pace: no best, or the layout's pace off, hides the bar
+- hud pace: during a race the HUD paces against the race board's best, not the dummy's fight board
+- hud pace: with pace against the last fight, a race paces on its race board's newest race
+- hud pace: after the race the next plain dummy fight paces on the fight board again
+- hud pace: a race canceled mid-pull paces its fight on the dummy's fight board again
+- hud pace: a race part that lands after the HUD went live re-paces on RACE_STARTED
+- hud pace: a race resumed after a /reload goes live on the HUD and paces on its race board
+- hud pace: a race on a shared session draws no pace bar and no chart, live or on the card
 
 ### test_hud_chart.lua (7)
 
@@ -739,6 +1177,40 @@ Total.
 - hud sizing: switching the mode mid-fight redraws without error
 - hud sizing: grow up chosen before the window is built takes the bottom edge at its first show
 
+### test_hud_race_button.lua (31)
+
+- hud race button: absent on WoW Forever
+- hud race button: built and shown on Retail with Race mode on, the plain flag
+- hud race button: Results, Race, Settings, Lock, Close left to right; off, the strip closes up
+- hud race button: hidden with the title bar
+- hud race button: a click toggles the Race window as /ct race toggle does
+- hud race button: gold only under the pointer, never for the Race window being open
+- hud toggle: closing the HUD closes an open Race window with it, each a player's close
+- hud toggle: opening the HUD opens the HUD alone, never the Race window
+- hud toggle: closing the HUD with the Race window shut counts no Race window close
+- hud toggle: the key and the launcher's Show window run the same rule
+- hud toggle: /ct hud toggle and /ct hud hide close both; /ct hud show opens the HUD alone
+- hud toggle: the Race window's toggle closes it alone; opened with the HUD shut it opens both (W29 #3)
+- hud toggle: on WoW Forever, with no Race window, it closes and opens the HUD
+- header art: every measured box is the vendored art's
+- header art: every title-bar mark of the DPS HUD and the Race window is one size, the close too
+- hud toggle: in a dummy session the opening toggle opens the Race window too, tied to the session
+- hud toggle: it opens the Race window even when the player closed it in the session
+- hud toggle: with auto-show off, or Race mode off, the opening toggle opens the HUD alone
+- hud toggle: away from a dummy the opening toggle opens the HUD alone
+- hud race armed: the HUD drops the last fight and goes back to its look before any fight
+- hud race armed: an arm with the HUD closed opens both windows, the HUD showing no old fight
+- w29 #1: the HUD's fade takes the Race window with it; the next fight's HUD brings it back
+- w29 #1: hud.overCard off closes the HUD at the fight's end, the Race window with it
+- w29 #2: the HUD's close control hides the Race window, still wanted, back with the HUD
+- w29 #2: Escape closes both, each as the player's close, whichever the close list reaches first
+- w29 #4: a result with the HUD closed by the player opens both windows
+- w29 #5: the stand-up brings the player's Race window back with the HUD first
+- w29 #5: Race mode back on brings a wanted Race window back with the HUD first
+- w29 D2: no fade while the race holds the HUD; the race's idle edge starts it, and both go
+- w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
+- w29 #7: a profile switch to one whose HUD is always up opens it
+
 ### test_sizing.lua (7)
 
 - sizing: a size change the grip did not start redraws at once
@@ -825,7 +1297,78 @@ Total.
 - sections: a rebuilt pane reads the folds back; Reset position keeps them
 - sections: the Note's arrow shows with a note only; Add Note opens a folded Note
 
-### test_share.lua (6)
+### test_results_races.lua (27)
+
+- results: Races shows only races, Fights only fights, All both
+- results: under Races the length, dummy kind, Hide flagged and Include incomplete filters apply
+- results: only bests keeps each board's best
+- results: a race row shows its race DPS, length chip and flags
+- results: the race lengths take DPS Race's colors, and any other length a neutral gray
+- results: an incomplete race is compared but never leads its group
+- results: group by length, by target and length, and by spec, target and length
+- results: under the date groupings a race is measured on its race board, not the dummy's fights
+- results: a race's chart runs on the race clock, with the buzzer line at its length (ruling X9)
+- results: a shared-session race has no chart in its detail, as on the HUD
+- results: a race's Timeline runs on the race clock and draws the buzzer line (ruling X9)
+- results: the race detail has Timing and Flags
+- results: the timing strip places the buzzer, grace, tail, late casts and combat end
+- results: the detail's figures are the race's: score, race DPS, DPS · Incomplete
+- results: the Delta box's runner-up reads its race DPS
+- results: the Compare and the DPS tip read the race DPS
+- results: a carried-on incomplete race's DPS tip names the span it divides by (ruling X16)
+- results: the row menu offers Ignore for late casts only for a race with a late cast
+- results: an ignore-list edit re-scores Hide flagged in the list
+- results: /ct results races opens the list on the Races filter
+- results: saved races list on WoW Forever with no race control
+- results: Race mode off still lists saved races
+- results: the Races bar fits the window's least width
+- results: switching to Races shows the race filters and hides Bosses only
+- results: a race row's chips and target text follow a column drag
+- results: an incomplete race's Delta is shown muted, compared but never the best
+- results: the sample history's clean board drops on an ignore-list edit
+
+### test_insights_data.lua (14)
+
+- insights: Filter opens wide; on Retail Include incomplete and Clean only judge the races
+- insights: Options lists each facet's values among the fights every other filter passes, with counts
+- insights: a closed dropdown names its choices on the All head, and a pick by its name alone
+- insights: Normalize sets a selection with no fights back, never the one just changed, in bar order
+- insights: Compute on no fights returns zero cards and empty sections
+- insights: the general sections run on all fights
+- insights: a race contributes its race DPS, never its fight's
+- insights: mixed boards compare by percent of each board's best
+- insights: board tabs, the races' kind x length first in the catalog's order, then the fight boards
+- insights: new bests beat an earlier best on their board, in date order; a board's first never counts
+- insights: counts by character, dummy kind, race length and day, gap days included
+- insights: Compute buckets the damage tail, the 25 s outlier in 20+
+- insights: Compute lists late casts by spell, ignored apart, a sealed one as Unknown
+- insights: on WoW Forever there is no Races filter and no race-only section
+
+### test_insights.lua (21)
+
+- insights tab: built on its first show, its label lit while it shows; /ct results insights opens it
+- insights tab: the dropdowns list the stored fights with their counts, led by All
+- insights tab: a filter redraws the cards and narrows the other dropdowns
+- insights tab: the cards state their figures, each hover naming its value
+- insights tab: CardGrid packs four a row, and every short row is shared out, none half empty
+- insights tab: above 60 fights the progression is one column a day, a day keyed with its year
+- insights tab: Consistency on a board tab is a worst-to-best range per spec, the average marked
+- insights tab: the wheel scrolls the content, clamped to it
+- insights: the Clean races card counts races only, under Races and All, never under Fights
+- insights: the race-only sections show under the Races filter only
+- insights tab: a tab per board, Overall first, the sections under it read the tab picked
+- insights tab: a Recent New Bests row opens its fight on the Fights tab; a right-click its row menu
+- insights tab: Late Casts lists the counted spells, then the ignored ones dimmed; a right-click ignores
+- insights tab: Late Casts keeps room for the ignored spells when the counted ones pass ten
+- insights tab: with no fight the empty state shows, and every card and section hides
+- insights tab: Save, Clear and Reset keep the view at results.insights
+- insights tab: the sample history fills the tab; Save refuses, and the player's view comes back
+- insights tab: Resize re-plans the bar and the scroll frame and rebinds nothing
+- insights tab: the bar fits the window's least width, and takes one row in the expanded view
+- insights tab: a load with no library keeps the tab and says why there are no charts
+- insights charts: the host pools through NS.Pool and draws in the window's look
+
+### test_share.lua (13)
 
 - share: line format and length <= 255
 - share: talents link appended when enabled
@@ -833,13 +1376,22 @@ Total.
 - share: the row menu's Share is live for a stored fight
 - share: the whisper box offers the target as the client addresses them (realm on Retail, full regional name on Forever)
 - share: forever: the line names the predominant talent tree (D5)
+- share: a race's line names its race length and race DPS, and an incomplete race says so
+- share: arming prints the armed line with the length and the target
+- share: a result prints the score line with the delta, the flags and the tail
+- share: the score line counts only the late casts the ignore list leaves
+- share: the race's own result is printed once, when it resolves
+- share: a lost race prints that it could not be read, and has no score line
+- share: on WoW Forever a saved race still shares, and no race line is printed
 
-### test_timeline.lua (12)
+### test_timeline.lua (14)
 
 - timeline: rows order long CDs first
 - timeline: decodes packed casts
 - timeline: pet toggle hides pet rows
 - timeline: compare lanes align to their own fight start
+- timeline: a race runs on the race clock, from its first hit, with its buzzer (ruling X9)
+- timeline: a race's axis reaches its last cast after the buzzer
 - timeline: the compare target is the pick, else the best, else the runner-up
 - timeline: the axis, the zoom and the stacking arithmetic
 - timeline: opens from the detail over the Results window, under its cover
@@ -894,9 +1446,9 @@ Total.
 - usage edit: never-show list hides
 - usage edit: a sample fight changes in memory only
 
-### test_history_page.lua (16)
+### test_history_page.lua (17)
 
-- history page: four tabs, Recording filters first and Usage last
+- history page: six tabs, Recording filters first and New-best toast last
 - history page: every history.* key, the Results window's settings and the hidden list have a row
 - history page: the rows sit on their tabs, the hidden list on Usage
 - history page: every row's default is the shipped one (defaults/Profile.lua is the only source)
@@ -908,6 +1460,7 @@ Total.
 - history page: Window scale reaches the Results window and every follower
 - history page: Row height reaches the Results list
 - history page: the words follow options-ui-§21 and no subsection restates its tab (options-ui-§7)
+- history page: the minimum length tooltip names this client's default
 - history page: every tab renders without printing
 - history page: the page's Defaults puts every row back and leaves the fights
 - history page: /ct set reaches a history path
@@ -931,10 +1484,36 @@ Total.
 - sim: the verb starts it through the step session, and stop ends it
 - sim: combat ends it; a refused start leaves nothing on
 
-### test_bindings.lua (11)
+### test_race_preview.lua (8)
 
-- bindings: NS.BINDINGS is Bindings.xml's order, Show window first, each with a tooltip
-- bindings: Bindings.xml is the addon's own category, no header, no default, labeled
+- race preview: /ct test race holds the sample race running on the Race window and the HUD
+- race preview: each state word holds its body, and in test mode switches it in place
+- race preview: an unknown word prints the usage; Race mode off refuses the race word
+- race preview: arming a real race ends test mode and hands it the Race window
+- race preview: a start during a real race is refused
+- race preview: the sample card's acts never touch the real race
+- race preview: the sample history holds races beside the fights, every status, kind and length
+- race preview: on WoW Forever there is no sample race, no race word and no race in the history
+
+### test_sim_race.lua (9)
+
+- sim race: race-newbest arms, races on its clock, buzzes, reads after the quiet; nothing on the bus
+- sim race: the running body's Current and Checkpoints come from the sample's plan, never the meter
+- sim race: race-behind reads behind the best on its board: no new best, no toast
+- sim race: incomplete and died end before the buzzer, with no buzzer, and read out of combat
+- sim race: race-flagged's late cast flags the card; race-shared has no pace
+- sim race: race-sticky's wait says combat holds on, the hint shows after its delay
+- sim race: the gate holds the race, the read, then the card; Stop Now reads at the combat end
+- sim race: the eight follow the fight scenarios; Race mode off refuses them
+- sim race: WoW Forever has no race scenario
+
+### test_bindings.lua (14)
+
+- bindings: NS.BINDINGS is the bindings file's order, Show window first, each with a tooltip
+- bindings: this client's bindings file is the addon's own category, no header, no default, labeled
+- bindings: the pair in step: Bindings_Mainline.xml is Bindings.xml with the Race key after Results
+- bindings: on WoW Forever no Race key: no button, no row, no label
+- bindings: the Race key runs /ct race toggle's handler (Retail)
 - bindings: the General page ends in the Keybindings tab, after Master controls
 - bindings: the tab's rows are NS.BINDINGS in order, labeled as the client labels them
 - bindings: a key bound in the tab is the client's key
@@ -945,11 +1524,14 @@ Total.
 - bindings: stood down, each key answers the refusal line and changes nothing
 - bindings: the General Defaults tooltip says it leaves key bindings alone
 
-### test_diagnostics.lua (6)
+### test_diagnostics.lua (9)
 
 - diagnostics: the report carries every section of this addon's own
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
+- diagnostics: Retail's race section names the race, the pending races, the boards and its windows
+- diagnostics: the race line counts a real race's pending slot while it runs, then its race board
+- diagnostics: test mode's held sample race shows in the preview and race lines
 - diagnostics: stood down, the runtime sections say so and the stored ones still print
 - diagnostics: the report arms no timer and registers no event
 - diagnostics: a rejected event is listed
@@ -1048,7 +1630,7 @@ Total.
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
 
-### test_skin_switch.lua (40)
+### test_skin_switch.lua (48)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the HUD's window shell changes
@@ -1090,6 +1672,14 @@ Total.
 - skin switch: an interrupted cast's mark changes with the Scope ignored
 - skin switch: a lane's edit overlay changes
 - skin switch: a lane's edit overlay changes with the Scope ignored
+- skin switch: the Race window's shell changes
+- skin switch: the Race window's shell changes with the Scope ignored
+- skin switch: the Race window's footer changes
+- skin switch: the Race window's footer changes with the Scope ignored
+- skin switch: the Race window's target card changes
+- skin switch: the Race window's target card changes with the Scope ignored
+- skin switch: the Race window's Arm Race button changes
+- skin switch: the Race window's Arm Race button changes with the Scope ignored
 
 ### test_skin_values.lua (3)
 
@@ -1102,7 +1692,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_load.lua | 13 |
-| test_loadorder.lua | 4 |
+| test_loadorder.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
 | test_slash.lua | 19 |
@@ -1114,42 +1704,61 @@ Total.
 | test_lanes_page.lua | 25 |
 | test_probe.lua | 33 |
 | test_meter.lua | 37 |
-| test_format.lua | 19 |
-| test_fight.lua | 30 |
+| test_format.lua | 25 |
+| test_fight.lua | 36 |
 | test_identity.lua | 47 |
+| test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
-| test_filters.lua | 10 |
-| test_bests.lua | 10 |
-| test_retention.lua | 13 |
+| test_filters.lua | 12 |
+| test_bests.lua | 21 |
+| test_retention.lua | 14 |
 | test_record.lua | 18 |
-| test_slices.lua | 18 |
+| test_race_record.lua | 16 |
+| test_race_scoring.lua | 20 |
+| test_late_ignore.lua | 12 |
+| test_race.lua | 60 |
+| test_race_resume.lua | 26 |
+| test_race_settings.lua | 25 |
+| test_autoarm.lua | 41 |
+| test_race_window.lua | 51 |
+| test_race_window_board.lua | 26 |
+| test_race_clock.lua | 13 |
+| test_countdown.lua | 23 |
+| test_toast.lua | 21 |
+| test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
-| test_hud_pace.lua | 5 |
+| test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 11 |
 | test_hud_appearance.lua | 8 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
+| test_hud_race_button.lua | 31 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 42 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
-| test_share.lua | 6 |
-| test_timeline.lua | 12 |
+| test_results_races.lua | 27 |
+| test_insights_data.lua | 14 |
+| test_insights.lua | 21 |
+| test_share.lua | 13 |
+| test_timeline.lua | 14 |
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_usage_edit.lua | 4 |
-| test_history_page.lua | 16 |
+| test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 5 |
-| test_bindings.lua | 11 |
-| test_diagnostics.lua | 6 |
+| test_race_preview.lua | 8 |
+| test_sim_race.lua | 9 |
+| test_bindings.lua | 14 |
+| test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
 | test_docs.lua | 15 |
 | test_eol.lua | 2 |
@@ -1158,7 +1767,7 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_client_globals.lua | 3 |
 | test_diagnostics_contract.lua | 8 |
-| test_skin_switch.lua | 40 |
+| test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **911** |
+| **Total** | **1444** |

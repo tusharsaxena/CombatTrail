@@ -35,6 +35,11 @@ libs\LibDBIcon-1.0\lib.xml
 # LOAD-BEARING: creates NS.L, which core\LifecycleSetup.lua, core\DebugLogSetup.lua and
 # core\LauncherSetup.lua read at FILE SCOPE.
 locales\enUS.lua
+# LOAD-BEARING: Race mode's topic file (localization-§6) fills NS.L, which it reads at FILE SCOPE from
+# locales\enUS.lua, so it sits directly after it.
+locales\enUS_Race.lua
+# The Insights tab's strings (Race mode plan Task D2): the same topic-file shape, after enUS_Race.lua.
+locales\enUS_Insights.lua
 
 # Core -- dependency-correct order (layout-§1). Every LOAD-BEARING note says what resolves at load;
 # core\State.lua, core\Bus.lua, core\PoolSetup.lua and core\Database.lua are conventional and may
@@ -71,6 +76,10 @@ core\Bus.lua
 core\PoolSetup.lua
 # Reads LibStub (LibKa0s-Widgets-1.0) at FILE SCOPE and NS.Icon at CALL time only.
 core\WidgetsSetup.lua
+core\ToastSetup.lua
+# NS.Charts (LibKa0s-Charts-1.0) at FILE SCOPE; NS.ChartsHost reads NS.Style, NS.ResultsTable and NS.Skin at
+# CALL time only (the Insights tab, Race mode plan Task D2).
+core\ChartsSetup.lua
 # LOAD-BEARING: core\PerfSetup.lua hands NS.lifecycle to LibKa0s-Perf-1.0, which RAISES at :New
 # without it, so the latch is built first.
 core\LifecycleSetup.lua
@@ -93,9 +102,12 @@ core\Database.lua
 defaults\IgnoreSeeds.lua
 # LOAD-BEARING: reads NS.DEFAULT_SKIN (core\SkinSetup.lua), NS.L and NS.IGNORE_SEEDS at FILE SCOPE.
 defaults\Profile.lua
-# The training dummies, per client. LOAD-BEARING: reads NS.Compat at FILE SCOPE and publishes
-# NS.DUMMIES; modules\Identity.lua reads it at CALL time.
+# The training dummies' seed, per client. LOAD-BEARING: reads NS.Compat at FILE SCOPE and publishes
+# NS.DUMMY_SEED; modules\Dummies.lua reads it at CALL time.
 defaults\Dummies.lua
+# Every hearthstone variant (Race mode). LOAD-BEARING: publishes NS.HEARTHSTONE_SPELLS, which
+# modules\LateIgnore.lua reads at FILE SCOPE.
+defaults\Hearthstones.lua
 
 # Modules -- conventional order: each reaches the others at CALL time, except as noted.
 # The lanes' cast capture. LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus
@@ -124,8 +136,13 @@ modules\ProbeCurve.lua
 # `/ct probe`: the in-game checks of the meter, the casts and the pet. Registers nothing until armed;
 # reaches NS.Meter, NS.DebugLog, NS.Compat and NS.db at CALL time only.
 modules\Probe.lua
+# The training dummies: the seed, the player's own list and the captures. LOAD-BEARING: reads
+# NS.defaults (defaults\Profile.lua) and captures NS.Secrets and NS.L at FILE SCOPE; reaches
+# NS.DUMMY_SEED, NS.Identity, NS.Format and NS.db at CALL time only. Before modules\Identity.lua,
+# which asks it whether a target is a dummy.
+modules\Dummies.lua
 # Who, where and against what a fight was, and its board key. Captures NS.Secrets and NS.L at FILE
-# SCOPE; reaches NS.Compat and NS.DummyName at CALL time only.
+# SCOPE; reaches NS.Compat and NS.Dummies at CALL time only.
 modules\Identity.lua
 # The fight state machine: idle -> combat -> settling, bound to the meter's sessions. LOAD-BEARING:
 # captures NS.Secrets and NS.Constants.FIGHT at FILE SCOPE; reaches NS.Meter, NS.Watchers and NS.addon
@@ -134,6 +151,28 @@ modules\Fight.lua
 # The fight's event wiring, one set per fight state. Captures NS.Perf at FILE SCOPE; reaches NS.Fight
 # at CALL time only.
 modules\Watchers.lua
+# Race mode's engine (Retail only), on the fight above: the race's damage timeline (pure), the late-cast
+# ignore list (LOAD-BEARING: reads NS.defaults and NS.HEARTHSTONE_SPELLS at FILE SCOPE), the scoring
+# rules (pure; NS.L, NS.LateIgnore and NS.RaceRecord at CALL time), the race state machine
+# (LOAD-BEARING: captures NS.Secrets and registers its bus receiver at FILE SCOPE, on Retail; reaches
+# NS.Fight, NS.Meter, NS.Dummies, NS.RaceTimeline, NS.RaceScoring and NS.addon at CALL time) and its
+# event wiring (captures NS.Perf at FILE SCOPE; reaches NS.Race at CALL time). Before
+# modules\Recorder.lua, which pulls NS.Race.Finalize at CALL time.
+modules\RaceTimeline.lua
+modules\LateIgnore.lua
+modules\RaceScoring.lua
+modules\Race.lua
+modules\RaceWatchers.lua
+# The race beat (race window redesign plan Task W5; Retail only, returns at once on WoW Forever): one
+# 0.1 s AceTimer while a race, the real one or the sample, runs or stops. LOAD-BEARING: captures
+# NS.Perf and registers its bus receiver at FILE SCOPE; reaches NS.Race and NS.RaceSample at CALL time.
+modules\RaceClock.lua
+# Race mode's player-facing parts (Retail only, Task B3): auto-show and auto-arm near a training dummy
+# (LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus receiver at FILE SCOPE, on
+# Retail; reaches NS.Race, NS.Identity, NS.Dummies and NS.RaceWindow at CALL time) and `/ct race`'s
+# words (registers nothing; reaches NS.Race and NS.LateIgnore at CALL time).
+modules\AutoArm.lua
+modules\RaceVerb.lua
 # The stored cast list's format: pure.
 modules\CastCodec.lua
 # Each fight's cast list. LOAD-BEARING: calls NS.LaneCasts.Listen and registers its bus receiver at FILE
@@ -148,6 +187,9 @@ modules\Loadouts.lua
 # Bests and Recorder each register their bus receiver at FILE SCOPE; Recorder captures NS.Secrets and
 # NS.L there. Each reaches the others, NS.db and the fight modules above at CALL time only.
 modules\Filters.lua
+# The fight record's race part (Race mode): pure; reaches NS.Secrets at FILE SCOPE, so it follows
+# core\Secrets.lua; Bests and Recorder reach it at CALL time.
+modules\RaceRecord.lua
 modules\Bests.lua
 modules\Recorder.lua
 # The purge (at login, daily, `/ct purge`) and the store's size. Reaches NS.Recorder, NS.Bests,
@@ -174,6 +216,19 @@ modules\Hud_States.lua
 # and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.Meter, NS.Identity, NS.Bests,
 # NS.Recorder and NS.db at CALL time only.
 modules\Hud.lua
+# The Race window (Race mode, race plan Task C1; Retail only: each file returns at once on WoW Forever).
+# Its Your best card, the board's figures and its six bodies, then the shell. LOAD-BEARING:
+# modules\RaceWindow_Board.lua reads NS.HudStates.COLORS and NS.Style at FILE SCOPE, so it follows
+# modules\Hud_States.lua; modules\RaceWindow_States.lua reads NS.HudStates.COLORS, NS.Style and
+# NS.RaceWindowBoard's layout constants at FILE SCOPE, so it follows both; modules\RaceWindow.lua builds
+# its bus receiver at FILE SCOPE through core\Bus.lua and captures NS.Perf and NS.Secrets there. Each
+# reaches NS.Race, NS.Hud, NS.Bests and the Results window's parts at CALL time only.
+modules\RaceWindow_Best.lua
+modules\RaceWindow_Board.lua
+modules\RaceWindow_States.lua
+modules\RaceWindow.lua
+modules\Countdown.lua
+modules\BestToast.lua
 # The Results window (spec §7). Sizing is the resize helper every resizable window shares; the source,
 # the table, the tooltips' words and the fight list each capture NS.L, NS.Style or NS.HudStates.COLORS
 # at FILE SCOPE (so they follow modules\Hud_States.lua) and reach the others at CALL time, except as
@@ -181,20 +236,29 @@ modules\Hud.lua
 # FILE SCOPE; modules\Results.lua reads NS.ResultsFights and NS.ResultsTable at FILE SCOPE (its minimum
 # width) and builds its bus receiver there. The detail's parts (the loadout, the usage, the detail pane)
 # and the share line register nothing and reach each other at CALL time; modules\Share.lua defines its
-# whisper popup at FILE SCOPE. LOAD-BEARING: modules\Results_TimelineData.lua reads
+# whisper popup at FILE SCOPE. Race mode's Results parts (plan Task D1): modules\Results_Races.lua (the
+# race filters, groupings, chips and tips) reads NS.ResultsTable and NS.Dummies.CATEGORIES at FILE
+# SCOPE, so it follows modules\Results_Table.lua; it and modules\Results_RaceDetail.lua (the detail's
+# Timing and Flags) are reached by the fight list, the tips and the detail at CALL time, before
+# modules\Results.lua. LOAD-BEARING: modules\Results_TimelineData.lua reads
 # NS.ResultsTable.COLORS at FILE SCOPE, and modules\Results_Timeline.lua reads NS.ResultsTimelineData and
 # NS.ResultsTable there; modules\Results_TimelineMarks.lua (the timeline's cast marks, v0.2 Task D1) takes
 # NS.ResultsTimeline and reads NS.ResultsTimelineData, NS.ResultsTable and NS.Constants.PALETTE at FILE
 # SCOPE, so it follows modules\Results_Timeline.lua, which reaches it at CALL time; modules\Results_Gear.lua and modules\Results_Compare.lua read NS.ResultsTable
-# and NS.ResultsTimeline (its colors and its shell) at FILE SCOPE.
+# and NS.ResultsTimeline (its colors and its shell) at FILE SCOPE. The Insights tab (Race mode plan Task D2):
+# modules\Results_InsightsData.lua (its pure half) reads NS.L and NS.Dummies.CATEGORIES at FILE SCOPE, and
+# modules\Results_Insights.lua (the tab) reads NS.ResultsTable and NS.Format there; modules\Results.lua
+# builds the tab on its first show, at CALL time.
 modules\Sizing.lua
 modules\Results_Source.lua
 modules\Results_Table.lua
 modules\Results_Tips.lua
 modules\Results_Fights.lua
+modules\Results_Races.lua
 modules\Results_Loadout.lua
 modules\Results_Usage.lua
 modules\Results_Targets.lua
+modules\Results_RaceDetail.lua
 modules\Results_Detail.lua
 modules\Share.lua
 modules\Results_TimelineData.lua
@@ -202,14 +266,23 @@ modules\Results_Timeline.lua
 modules\Results_TimelineMarks.lua
 modules\Results_Gear.lua
 modules\Results_Compare.lua
+modules\Results_InsightsData.lua
+modules\Results_Insights.lua
 modules\Results.lua
 # Test mode and the sim (plan Task 5.1). The rotation is data picked per client at FILE SCOPE (reads
 # NS.Compat); the sample history and fights reach every other module at CALL time. LOAD-BEARING:
 # modules\Preview.lua registers its bus receiver at FILE SCOPE, and modules\Sim.lua builds its step
-# session at FILE SCOPE from NS.SimLib and NS.SimSeam (core\SimSetup.lua) and NS.L.
+# session at FILE SCOPE from NS.SimLib and NS.SimSeam (core\SimSetup.lua) and NS.L. Race mode's parts
+# (race plan Task E1; Retail only, each returns at once on WoW Forever): the sample races and the sample
+# race the Race window reads (reached at CALL time), and the sim's race scenarios. LOAD-BEARING:
+# modules\SimRace.lua publishes NS.SimRace.SCENARIOS, which modules\Sim.lua appends at FILE SCOPE, so it
+# precedes it.
 modules\MockRotations.lua
 modules\MockFights.lua
+modules\MockRaces.lua
+modules\RaceSample.lua
 modules\Preview.lua
+modules\SimRace.lua
 modules\Sim.lua
 # `/ct diagnostics`'s own sections (debug-logging-§14): read at RUN time by core\DebugLogSetup.lua's
 # descriptor; reaches every module above at CALL time only.
@@ -224,9 +297,12 @@ settings\Slash.lua
 # NS.RegisterTabbedPage, which settings\Lanes.lua, Hud.lua and History.lua call at FILE SCOPE.
 settings\OptionsSetup.lua
 # LOAD-BEARING: General registers FIRST and Profiles LAST -- the page order IS the registration order
-# (General, Lanes, DPS HUD, History, Profiles).
+# (General, Lanes, DPS HUD, History, Race mode on Retail, Profiles).
 settings\General.lua
 settings\Lanes.lua
 settings\Hud.lua
 settings\History.lua
+# The Race mode page, Retail only (declared on its page and its rows; nothing registers on WoW Forever).
+# LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format and NS.LateIgnore at FILE SCOPE.
+settings\Race.lua
 settings\Profiles.lua

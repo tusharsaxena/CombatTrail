@@ -18,6 +18,7 @@ local _, NS = ...
 -- Hand-written ladders across clients and patches:
 --   Compat.SpellTexture(id)      C_Spell.GetSpellTexture, then the bare global; the id is passed through
 --                                untouched, so the caller runs it in pcall (it may be secret)
+--   Compat.IsAutoRepeatSpell(id)  C_Spell.IsAutoRepeatSpell, nil without it (Race mode's late casts)
 --   Compat.CanAccessTable(t)     canaccesstable, then issecrettable, then "readable"
 --   Compat.ChatSender()          C_ChatInfo.SendChatMessage, then the bare global (deprecated 11.2.0)
 --   Compat.NamespaceFunctions(ns)  Compat.NamespaceFunction(ns, name)
@@ -494,6 +495,17 @@ function Compat.SpellName(id)
     if spell and spell.GetSpellName then return (spell.GetSpellName(id)) end
     local bare = GetSpellInfo
     if bare then return (bare(id)) end
+    return nil
+end
+
+--- Whether spell `id` is an auto-repeat spell repeating now (Auto Shot, a wand's Shoot), or nil without
+--- the API (Race mode's late-cast judge, modules/Race.lua). It may answer secret in combat; the caller
+--- runs it in pcall and reads it through NS.Secrets.
+--- @param id number
+--- @return boolean|nil
+function Compat.IsAutoRepeatSpell(id)
+    local spell = C_Spell
+    if spell and spell.IsAutoRepeatSpell then return (spell.IsAutoRepeatSpell(id)) end
     return nil
 end
 

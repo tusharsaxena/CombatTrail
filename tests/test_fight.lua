@@ -610,3 +610,122 @@ test("fight: COMBAT_ENTERED is not sent on a meter split, ENCOUNTER_START in com
     enter(inst, 50)
     assertEqual(#heard.entered, 1, "nothing while stood down")
 end)
+
+-- ── the race's seams (Race mode plan Task B1, rulings X2, X3 and X5) ───────────────────────────
+
+test("fight: FIGHT_FIRST_HIT is sent once, on the first damage update of a bound session", function()
+    local inst, meter = fresh()
+    local NS = inst.NS
+    local hits = {}
+    NS.NewBusTarget():RegisterMessage(NS.MSG.FIGHT_FIRST_HIT, function(_, f) hits[#hits + 1] = f end)
+    enter(inst, 10)
+    update(inst, 10.5, 1)                 -- no session yet: not a hit on this fight
+    assertEqual(#hits, 0)
+    meter.SetSession(1, FIGHT)
+    update(inst, 11, 1)
+    update(inst, 12, 1)
+    assertEqual(#hits, 1, "once")
+    assertEqual(hits[1], NS.Fight.Current())
+    assertEqual(hits[1].firstHitT, 11)
+end)
+
+test("fight: Hurry reads a settling fight at once; idle or another fight's id does nothing", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    assertFalse(NS.Fight.Hurry("none"), "idle")
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    update(inst, 11, 1)
+    leave(inst, 40)
+    assertFalse(NS.Fight.Hurry("another"), "not this fight")
+    assertEqual(#heard.ended, 0)
+    assertTrue(NS.Fight.Hurry(NS.Fight.Current().id))
+    assertEqual(#heard.ended, 1, "read now, no grace, no quiet")
+    assertEqual(heard.ended[1].reason, "final")
+    assertEqual(NS.Fight.State(), "idle")
+end)
+
+test("fight: Hurry in combat settles at the combat end with no wait", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    update(inst, 11, 1)
+    assertTrue(NS.Fight.Hurry(NS.Fight.Current().id))
+    settle(inst, 20)
+    assertEqual(#heard.ended, 0, "nothing is read in combat")
+    leave(inst, 40)
+    local queued = inst.mocks.__timers[#inst.mocks.__timers]
+    assertTrue(queued ~= nil and queued.delay <= 0.01, "the settle is queued with no grace")
+    update(inst, 40.2, 1)                 -- a trailing update would hold the quiet
+    settle(inst, 40.2)
+    assertEqual(#heard.ended, 1, "read at the combat end")
+end)
+
+test("fight: Adopt rebuilds a resumed race's fight in combat, with no FIGHT_STARTED; refused while busy", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    meter.SetSession(1, FIGHT)
+    NS.Meter.Prime()                      -- the stand-up's priming: session 1 is the baseline
+    assertNil(NS.Fight.Adopt({ sessions = {} }), "no session, no fight")
+    at(inst, 50)
+    inst.mocks.__inCombat = true
+    local f = NS.Fight.Adopt({ sessions = { 1 }, startT = 10, firstHitT = 11, snapshot = { who = { name = "Tush" } },
+                               stats = { crit = 20 }, talents = { "t" }, gearSet = "g1", boundBy = "entry",
+                               inCombat = true })
+    assertTrue(f ~= nil)
+    assertEqual(NS.Fight.State(), "combat")
+    assertEqual(NS.Fight.Current(), f)
+    assertEqual(f.sessionID, 1, "bound to the kept session, though primed as older")
+    assertEqual(f.startT, 10)
+    assertEqual(f.firstHitT, 11)
+    assertEqual(f.snapshot.who.name, "Tush")
+    assertEqual(f.loadout.talents[1], "t")
+    assertEqual(f.gearSet, "g1")
+    assertEqual(f.boundBy, "entry")
+    assertTrue(NS.Fight.Timers().tick ~= nil, "it ticks")
+    assertEqual(#heard.started, 0, "not a new fight")
+    assertNil(NS.Fight.Adopt({ sessions = { 1 }, inCombat = true }), "refused while a fight is in progress")
+    update(inst, 52, 1)
+    assertEqual(f.lastUpdateT, 52)
+    leave(inst, 60)
+    settle(inst, 70)
+    assertEqual(#heard.ended, 1)
+    assertEqual(heard.ended[1].fight, f)
+    assertEqual(heard.ended[1].reason, "final")
+end)
+
+test("fight: Adopt out of combat reads the fight on the next timer, without the settle's wait", function()
+    local inst, meter, heard = fresh()
+    local NS = inst.NS
+    meter.SetSession(1, FIGHT)
+    at(inst, 50)
+    local f = NS.Fight.Adopt({ sessions = { 1 }, startT = 10, firstHitT = 11, inCombat = false })
+    assertEqual(NS.Fight.State(), "settling")
+    assertEqual(f.combatEndT, 50)
+    assertEqual(#heard.ended, 0, "never read inside the call")
+    settle(inst, 50)
+    assertEqual(#heard.ended, 1, "read with no grace and no quiet")
+    assertEqual(heard.ended[1].reason, "final")
+    assertEqual(NS.Fight.State(), "idle")
+end)
+
+test("fight: ShareSessions lets an unbound fight bind a listed session, marked shared; none by default", function()
+    local inst, meter = fresh()
+    local NS = inst.NS
+    meter.SetSession(5, SECOND)
+    NS.Meter.Prime()                      -- session 5 is older than any fight to come
+    enter(inst, 10)
+    update(inst, 11, 5)
+    assertNil(NS.Fight.Current().sessionID, "a plain fight never binds a session from before it")
+    leave(inst, 12)
+    settle(inst, 20)
+    NS.Fight.ShareSessions({ [5] = true })
+    enter(inst, 30)
+    update(inst, 31, 5)
+    local f = NS.Fight.Current()
+    assertEqual(f.sessionID, 5)
+    assertTrue(f.sharedSession)
+    assertEqual(f.boundBy, "shared")
+    NS.Fight.ShareSessions(nil)
+end)

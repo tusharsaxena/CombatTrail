@@ -2,8 +2,9 @@ local _, NS = ...
 -- modules/Results_Tips.lua — what the Results window's fight table says on hover: a tooltip for
 -- every cell, beside the window (modules/Results_Table.lua's SideTip), one for every group header,
 -- and one for every column header, LootHistory's way (the column's name in gold, then what it
--- shows). Adapted from DPS Race @045f479 (modules/Results_Tips.lua) without its race: no race
--- length, tail or late-cast lines, no dummy category. The fight detail's figures, chart and
+-- shows). Adapted from DPS Race @045f479 (modules/Results_Tips.lua); a race's score, race DPS and
+-- race length cells, and its flags under the target, are modules/Results_Races.lua's (CellTip,
+-- TargetTip: Race mode plan Task D1). The fight detail's figures, chart and
 -- breakdown are Tips.Detail's (below); the compare's hovers join with its pane (plan Task 4.4).
 --
 -- PURE OVER THE STORED RECORD. Each builder takes a fight record and answers its lines, { title,
@@ -33,6 +34,8 @@ Tips.Grouped = grouped
 local function dimLine(text) return { text, NS.Style.Rgb("ct.dim") } end
 
 local function who(record) return type(record.who) == "table" and record.who or {} end
+-- A race cell's own lines (Results_Races.CellTip), or nil for a fight.
+local function raceTip(key, record) return NS.ResultsRaces.CellTip(key, record) end
 local function ident(record) return type(record.identity) == "table" and record.identity or {} end
 
 -- ── one builder per column key ──────────────────────────────────────────────────────────────────
@@ -82,7 +85,7 @@ function CELL.target(record)
     end
     if i.isBoss then lines[#lines + 1] = L["A boss fight"] end
     if i.unknown then lines[#lines + 1] = dimLine(L["No readable target: this fight never counts as a best."]) end
-    return lines
+    return NS.ResultsRaces.TargetTip(record, lines)
 end
 
 function CELL.content(record)
@@ -99,11 +102,15 @@ function CELL.content(record)
 end
 
 function CELL.len(record)
+    local race = raceTip("len", record)
+    if race then return race end
     return { L["Length %s"]:format(NS.Format.Length(record.duration)),
              L["The meter's session, from the first hit to the end of combat."] }
 end
 
 function CELL.damage(record)
+    local race = raceTip("damage", record)
+    if race then return race end
     local d = type(record.damage) == "table" and record.damage or {}
     local lines = { L["%s damage"]:format(grouped(d.merged)) }
     if type(d.pet) == "number" and d.pet > 0 then
@@ -114,6 +121,8 @@ function CELL.damage(record)
 end
 
 function CELL.dps(record)
+    local race = raceTip("dps", record)
+    if race then return race end
     local lines = { L["%s DPS"]:format(grouped(record.dps)), L["Damage over the fight's length."] }
     if type(record.meterDps) == "number" then
         lines[#lines + 1] = dimLine(L["Blizzard's meter said %s."]:format(grouped(record.meterDps)))

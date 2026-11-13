@@ -66,6 +66,10 @@ local function parts(d)
     }
 end
 
+-- The sections a fight's detail draws, in order: a race's Timing and Flags are tests/test_results_races.lua's
+-- (a fight has neither heading nor arrow).
+local FIGHT = { "chart", "spells", "loadout", "usage", "targets", "note" }
+
 -- The heading under each section's (the one its fold moves up), the last section's none.
 local NEXT = { chart = "spells", spells = "loadout", loadout = "usage", usage = "targets", targets = "note" }
 
@@ -73,11 +77,11 @@ test("sections: every heading has an arrow, open (chevron-down) by default, its 
     local NS = fresh()
     local D = NS.ResultsDetail
     local d = open(NS)
-    assertEqual(table.concat(D.SECTIONS, ","), "chart,spells,loadout,usage,targets,note")
+    assertEqual(table.concat(D.SECTIONS, ","), "chart,timing,spells,loadout,usage,targets,flags,note")
     assertEqual(D.ARROW, 14)
     assertEqual(D.INDENT, D.ARROW + 2)
     local p = parts(d)
-    for _, key in ipairs(D.SECTIONS) do
+    for _, key in ipairs(FIGHT) do
         local arrow = d.heads[key]
         assertTrue(arrow ~= nil, key .. " has no arrow")
         assertTrue(arrow:IsShown(), key .. "'s arrow is hidden")
@@ -106,7 +110,7 @@ test("sections: the arrow folds a section, hides its body, stores it, and moves 
         usage = U.ROW_H + 8,
         targets = 2 * NS.ResultsTargets.ROW_H + 8,
     }
-    for _, key in ipairs(D.SECTIONS) do
+    for _, key in ipairs(FIGHT) do
         local nextKey = NEXT[key]
         local before = nextKey and y(p[nextKey][1])
         local contentH = d.contentH
@@ -137,7 +141,7 @@ test("sections: a left click on the heading's text folds it; a right click does 
     local D = NS.ResultsDetail
     local d = open(NS)
     local p = parts(d)
-    for _, key in ipairs(D.SECTIONS) do
+    for _, key in ipairs(FIGHT) do
         local hover = p[key][3]
         assertTrue(hover ~= nil, key .. " has no heading hover")
         hover:__fire("OnMouseUp", "RightButton")

@@ -10,14 +10,16 @@ that resets that page on the current profile. Every row is a schema row (`settin
 |---|---|
 | General | The master switches (enable, lock, debug console, minimap button, test mode, sim mode, the HUD in combat), the skin and its overrides, and the key bindings |
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
-| DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, and the look of each part |
-| History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, and the items Usage never lists |
+| DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
+| History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
+| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock and how often it redraws, the countdown and the buzzer, the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
 
 The tree below is page, then tab in strip order, then row, as the schema produces it. Rows a client
 cannot have are absent there (clients-§4): the Delves and Arenas rows of the Lanes page's Visibility
 tab, and the Mythic+, Delves and Arenas rows of the History page's Recording filters, exist only on
-Retail.
+Retail. The whole Race mode page is Retail's: on WoW Forever it is not registered, and none of its rows
+or stored keys exist (`settings/Race.lua`).
 
 ## General
 
@@ -53,11 +55,17 @@ Tabs: *Master controls*, *Look and skin*, *Keybindings* (settings/General.lua).
 ### Keybindings
 
 The library's Keybindings tab over `NS.BINDINGS` (core/LauncherSetup.lua): *Toggle DPS HUD*,
-*Toggle Results window* and *Toggle lanes*. The keys are the game's, not the profile's, so Defaults
+*Toggle Results window*, on Retail *Toggle Race window*, and *Toggle lanes*. *Toggle DPS HUD* closes
+an open Race window with the HUD, and opens the HUD alone. The keys are the game's, not the profile's, so Defaults
 never reaches them; the same bindings show under Options → Keybindings → Ka0s Combat Trail.
 
 Master controls also carries *Reset position* (the lanes, the HUD and the Results window back to their
-starting places) and *Reset all settings*, which asks first.
+starting places, and with them the detached Race window's place on Retail and the new-best toast's
+dragged place: `NS.ResetPositions`, core/CombatTrail.lua) and *Reset all settings*, which asks first.
+Race mode adds one key binding on Retail, *Toggle Race window*, after *Toggle Results window* (the
+owner's decision of 2026-11-13, superseding ruling X18; its row is built under `ForClient` and its
+binding lives in Retail's `Bindings_Mainline.xml`, a documented deviation). WoW Forever's tab keeps
+its three.
 
 ## Lanes
 
@@ -194,7 +202,12 @@ shift-clicked link, remove one, or reset the list to the client's seed. `/ct ign
 ## DPS HUD
 
 Tabs: *Behavior*, *Layout*, *Clock and figures*, *Damage chart*, *Spell rows*, *Window*
-(settings/Hud.lua, `NS.HUD_TAB_ORDER`). The Clock and figures tab holds two font blocks, the clock's
+(settings/Hud.lua, `NS.HUD_TAB_ORDER`). Behavior ends with a *Refresh* group whose one row, *HUD refresh
+rate* (`hud.refreshRate`: 4, 5, 10 or 20 a second, default 10, on both clients), sets how often every
+live part of both windows redraws, in a fight or a race: one beat reads the meter once and redraws the
+clock, Damage and DPS, the pace bar, the damage chart and the spell rows, and in a race the Race
+window's clock, Best by now and checkpoints from that same read. The footer says the rate ("live · 10
+Hz"). Its tooltip names the Race window on Retail only. The Clock and figures tab holds two font blocks, the clock's
 (`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
 and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
 tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600).
@@ -218,6 +231,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Pace bar range | `hud.paceRange` |
 | Show fight-over card | `hud.overCard` |
 | Show why a fight was not saved | `hud.showSkipReason` |
+| HUD refresh rate | `hud.refreshRate` |
 
 ### Layout
 
@@ -337,7 +351,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 
 ## History
 
-Tabs: *Recording filters*, *History*, *Results window*, *Usage* (settings/History.lua,
+Tabs: *Recording filters*, *History*, *Results window*, *Usage*, *Training dummies*, *New-best toast* (settings/History.lua,
 `NS.HISTORY_TAB_ORDER`; the History tab's internal key stays `retention`). The History tab also shows
 the stored count and its estimated size, and carries *Purge history…*.
 
@@ -384,6 +398,119 @@ same key, and an open timeline redraws with its zoom and pan kept.
 | Row | Key |
 |---|---|
 | Hidden items | `global.usage.hidden` (drawn as a list with add and remove, not a text box) |
+
+### Training dummies
+
+On both clients (race plan Task A2). A blurb, *Add your target* (captures the target and counts it as
+a single-target dummy), the library's ID list over the player's own dummies (a creature ID or a
+captured name; the X takes one off), one checkbox per built-in (clear it to switch the built-in off;
+none on WoW Forever, whose seed is empty), then *Reset list* last.
+
+| Row | Key |
+|---|---|
+| Your training dummies | `dummies.custom` (skipRender: drawn as the tab's body, not a text box) |
+
+### New-best toast
+
+On both clients (race plan Task C2, ruling X19: the section sits on a page both clients have, with only
+the races row Retail's). The rows, then *Test toast* last (a sample toast run as a real one; drag it to
+place it while it shows, and General > Master controls' *Reset position* puts it back). Duration and sound
+are read as each toast shows; the scale re-anchors a shown toast. A race or fight toggle switched off takes
+that kind's toasts down, waiting or shown, and leaves the other kind's. A new profile toasts a race's
+new best and not a fight's: *Toast a fight's new best* starts off.
+
+| Row | Key |
+|---|---|
+| Toast a race's new best (Retail only) | `toast.races` |
+| Toast a fight's new best | `toast.fights` |
+| Play a sound | `toast.sound` |
+| Toast sound | `toast.soundKey` |
+| Toast duration (seconds) | `toast.duration` |
+| Toast scale | `toast.scale` |
+
+## Race mode
+
+Retail only (race plan Task B3). Tabs: *Race*, *Late-cast ignore list*, *Race window*
+(settings/Race.lua, `NS.RACE_TABS`). The Race tab opens on the page's one note on where Race mode came
+from, then the switch; the race clock's two colored clocks and the window's look are the DPS HUD page's
+appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
+page's, and the New-best toast's section is History's too (ruling X19). The countdown rows and the
+buzzer row carry no reaction of their own: modules/Countdown.lua re-arms a race's marks off their
+SETTINGS_CHANGED.
+
+### Race
+
+| Row | Key |
+|---|---|
+| Race mode | `race.enabled` |
+| Default race length | `race.defaultLength` |
+| Show the Race window near a training dummy | `race.autoShow` |
+| Show the DPS HUD near a training dummy | `race.autoShowHud` |
+| Arm on a training dummy | `race.autoArm` |
+| Race clock | `race.clock` |
+| Countdown cue sound | `race.countdownCue` |
+| Center-screen countdown | `race.centerCountdown` |
+| Center countdown from (seconds) | `race.finalCountdown` |
+| Buzzer raid warning and sound | `race.buzzer` |
+| Sticky-combat hint after (seconds) | `race.hintDelay` |
+| Late-cast grace (seconds) | `race.grace` |
+| Damage-restart gap (seconds) | `race.restartGap` |
+
+Under the headings *Race mode*, *Length*, *Near a training dummy*, *Clock*, *Countdown*, *At the buzzer*
+and *Scoring rules*. *Near a training dummy* holds three rows. *Show the Race window near a training
+dummy* (on) opens the Race window while a dummy is the target or has its nameplate up, outside
+instances; a Race window the player opens during that dummy session closes with it too, and one the
+player closes stays closed until the next session. *Show the DPS HUD near a training dummy* (on) does
+the same: the Race window never shows without the DPS HUD (race window redesign plan W29), so either
+row on opens both near a dummy, the DPS HUD as an auto open that fades after a fight by its own rules
+and takes the Race window with it, both opening again at the dummy session's next ask. Both close with
+the session unless a fight is on the HUD or the player opened or pinned it, and once the player closes
+either, both stay closed until the next dummy session. Neither row depends on the other. *Arm on a training dummy*
+(off) arms a race on targeting one out of combat. *Race clock* offers *Elapsed and time left*, *Time
+left* and *Elapsed*; *Time left* (one large countdown, green to amber to red over the race) is a new profile's, and a profile that saved
+the pair keeps it. How often the race clocks and the rest redraw is the DPS HUD page's *HUD refresh
+rate*. A new default length forgets the length last armed (`Race.ForgetLength`); the
+switch and the three dummy rows re-sync auto-show's and auto-arm's events (`AutoArm.Sync`), and the switch
+going off cancels a race still armed (one running runs on), as does a profile switch, copy or reset
+that lands on Race mode off (the page's `SETTINGS_CHANGED` receiver, path `profile`). Grace and the
+restart gap apply to new races: each race keeps the values it armed with.
+
+### Late-cast ignore list
+
+A blurb, the library's spell ID list (an add box for a spell ID, a link or a name a race cast late; the
+X takes one off; 8690 says it stands for every hearthstone), then *Reset list* (the six defaults).
+
+| Row | Key |
+|---|---|
+| Late-cast ignore list | `race.lateIgnore` (skipRender: drawn as the tab's body, not a text box) |
+
+### Race window
+
+| Row | Key |
+|---|---|
+| Attach to the DPS HUD | `raceWindow.attached` |
+| Side of the DPS HUD | `raceWindow.side` |
+| Match the DPS HUD's height | `raceWindow.matchHud` |
+
+Attached (on), the Race window stands flush against the DPS HUD on the side picked (right by default),
+its top or left edge level with the HUD's, and moves with it; off, it stands where its title bar was
+dragged to, and General's *Lock frame* holds it. *Match the DPS HUD's height* (on) applies on the left
+or right: the Race window takes the HUD's height and follows each HUD resize (the grip, auto-grow, a
+part or the title bar or footer shown or hidden), never shorter than the height its tallest screen
+needs. Above or below the HUD, detached, or with the row off, it keeps its own height. Both windows
+take the DPS HUD's scale, so equal heights line up.
+
+Its size has two hidden rows (skipRender; the window's resize grip is their control, and the tab's
+Defaults and `/ct set` reach them like any row):
+
+| Row | Key |
+|---|---|
+| Race window width (px) | `raceWindow.width` (skipRender: set by the grip; 260 to 600, default 260) |
+| Race window height (px) | `raceWindow.height` (skipRender: set by the grip; 0 to 1000, default 0, the content height) |
+
+The grip shows only while the frames are unlocked. Matched left or right of the HUD it drags the width
+alone (the height is the HUD's); otherwise it drags both. It never goes below 260 wide or below the
+height the content needs, and the screens' bodies stretch to fill what it gives them.
 
 ## Profiles
 

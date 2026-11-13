@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/Results_Source.lua — where the Results window reads its fights (spec §7): the store, or,
 -- while test mode or the sim is on (plan Task 5.1), an in-memory sample history that is never written
--- anywhere. Adapted from DPS Race @045f479 (modules/Results_Source.lua) without its race: no
--- clean-only board, no late-cast ignore list, no race's run joining the sample at its start.
+-- anywhere. Adapted from DPS Race @045f479 (modules/Results_Source.lua); the sample's boards hold its
+-- races on their race boards (modules/Bests.lua Key), all races and the clean view apart, and are
+-- dropped on a late-cast ignore list or Training dummies edit (Source.Invalidate, Race mode plan D1).
 --
 -- ONE SEAM. Every Results file asks this module, never NS.Recorder or NS.Bests, for the fights it
 -- lists, a fight by id, whether a fight holds its best, and to store a note or delete a fight. With
@@ -22,6 +23,7 @@ NS.ResultsSource = Source
 
 local mock        -- the sample history in place, or nil
 local board       -- the sample's bests board, dropped on a change
+local clean       -- the sample's clean view of it (no flagged race)
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Results", fmt, ...) end
@@ -34,11 +36,14 @@ local function newerFirst(a, b)
     return tostring(a.id) > tostring(b.id)
 end
 
--- The shell redraws on every change of source or sample (modules/Results.lua).
+-- The shell redraws on every change of source or sample (modules/Results.lua); a change to the sample
+-- history in place reaches the Race window's sample card too (a deleted sample race's card goes).
 local function changed(swapped)
-    board = nil
+    board, clean = nil, nil
     local R = NS.Results
     if R and type(R.OnSourceChanged) == "function" then R.OnSourceChanged(swapped) end
+    local RW = NS.RaceWindow
+    if not swapped and RW and RW.SampleChanged then RW.SampleChanged() end
 end
 
 local function forgetCharts(dataset)
@@ -141,6 +146,23 @@ function Source.BestFor(record, exclude)
         if r ~= record and r.id ~= record.id then others[#others + 1] = r end
     end
     return NS.Bests.Compute(others)[key]
+end
+
+--- The best on `record`'s CLEAN board (no race with a flag: modules/Bests.lua CleanFor), among the
+--- store's fights or the sample's.
+--- @return table|nil best
+function Source.CleanFor(record)
+    if not mock then return NS.Bests.CleanFor(record) end
+    local key = NS.Bests.Key(record)
+    if not key then return nil end
+    clean = clean or NS.Bests.Compute(mock.fights, nil, { cleanOnly = true })
+    return clean[key]
+end
+
+--- Drop the sample's boards (a race's flags and kind are read now: the late-cast ignore list or the
+--- Training dummies list changed); the store's are Bests' own, dropped on the same edit.
+function Source.Invalidate()
+    board, clean = nil, nil
 end
 
 --- Store a note. The sample's note lives in memory.

@@ -27,7 +27,6 @@ the spec (`superpowers/specs/2026-11-10-combat-trail-design.md`, §1 and §2).
 | Keep a stored fight's damage chart past the session | The chart's samples are secret in combat and are never persisted |
 | Lanes for target, focus or party members | v0.1.0 has the Player and Pet lanes only; more lanes are issue #1 |
 | Create new lanes | The lane picker selects between the two fixed lanes |
-| The Insights tab | Deferred to a later version (issue #2) |
 | Other players' damage (group or raid meters) | A personal tool; Details and Blizzard's meter already do this |
 | Import CastTrail's settings | CastTrail was a throwaway; Combat Trail starts from its own defaults |
 | Masque support | The icons use the addon's skins only |

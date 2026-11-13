@@ -2,7 +2,9 @@ local addonName, NS = ...
 -- core/Database.lua — AceDB setup, the profile callbacks and the schemaVersion migration runner.
 
 -- The runner's target: the highest step's `to` (savedvariables-§1). Distinct from the FIGHT RECORD
--- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings.
+-- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
+-- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
+-- record as it is, and an older one simply reads as a fight.
 NS.SCHEMA_VERSION = 2
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets

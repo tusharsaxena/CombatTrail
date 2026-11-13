@@ -22,6 +22,11 @@ local _, NS = ...
 --
 -- NOTHING REACHES THE BUS OR THE STORE. The sample fight goes to the HUD's receivers directly, so
 -- the recorder, the casts, the usage and the bests never hear it, and the record is never saved.
+--
+-- RACE MODE'S EIGHT (Retail, race plan Task E1): the race scenarios (`race-newbest` ... `race-sticky`,
+-- modules/SimRace.lua) follow the fight scenarios in help and in the step window; this file hands a
+-- race scenario's start, unpark, steps, gate, cancel and phase to NS.SimRace. With Race mode off a race
+-- scenario is refused with one line.
 
 local Sim = {}
 NS.Sim = Sim
@@ -36,10 +41,12 @@ Sim.SCENARIOS = {
     { key = "behind", label = "Behind the best", factor = 0.93, desc = "saved, behind your best" },
     { key = "first", label = "First fight", board = "salhadaar",
       desc = "the first fight on its board: no best, no pace bar" },
-    { key = "short", label = "Too short", factor = 0.98, length = 22,
+    { key = "short", label = "Too short", factor = 0.98, length = 10,
       desc = "shorter than the recording filters' minimum: not saved" },
     { key = "lost", label = "Lost fight", factor = 0.97, lost = true, desc = "the meter loses the fight: not saved" },
 }
+-- Race mode's race scenarios (Retail only: modules/SimRace.lua loads nowhere else).
+for _, s in ipairs(NS.SimRace and NS.SimRace.SCENARIOS or {}) do Sim.SCENARIOS[#Sim.SCENARIOS + 1] = s end
 Sim.DEFAULT = "newbest"
 Sim.BOARD = "vorasius"
 --- The fight's length (spec §8): 45 s in real time.
@@ -150,6 +157,7 @@ end
 --- first step, or Enter's own with no stepper.
 --- @return boolean started
 function Sim.Unpark()
+    if phase == "race" then return NS.SimRace.Unpark() end
     if phase ~= "parked" or not sample then return false end
     local fight = sample.fight
     fight.startT = GetTime()
@@ -169,6 +177,11 @@ local function launch(key)
     cancelTimer()
     local s = find(key) or find(Sim.DEFAULT)
     scenario = s.key
+    if s.race then
+        sample, record, overAt, lastAt, phase = nil, nil, nil, 0, "race"
+        fighting, ended, carded = false, false, false
+        return NS.SimRace.Launch(s)
+    end
     sample = NS.MockFights.Sample({ id = "sim-" .. s.key, board = s.board or Sim.BOARD,
                                     length = s.length or Sim.LENGTH, factor = s.factor }, NS.Preview.Dataset())
     record, overAt, lastAt, phase = nil, nil, 0, "parked"
@@ -196,6 +209,7 @@ local STEP_MOMENTS = {
 
 local function timeline(_, opts)
     local s = find(opts.scenario) or find(Sim.DEFAULT)
+    if s.race then return NS.SimRace.Timeline(s) end
     return {
         { kind = "combat", label = L["Combat starts"] },
         { kind = "fight", label = L["Fighting (%d s)"]:format(s.length or Sim.LENGTH) },
@@ -211,6 +225,7 @@ end
 --- @return boolean open
 --- @return string|nil line
 function Sim.Gate()
+    if phase == "race" then return NS.SimRace.Gate() end
     if not sample then return true end
     if fighting and phase == "fight" then return false, L["The fight is still on."] end
     if ended and phase == "settle" then return false, L["Waiting for the meter's final read."] end
@@ -221,8 +236,14 @@ function Sim.Gate()
 end
 
 local function playStep(step)
-    STEP_MOMENTS[step.kind]()
+    local moment = STEP_MOMENTS[step.kind]
+    if moment then moment() elseif NS.SimRace then NS.SimRace.Play(step.kind) end
     return step.label
+end
+
+-- The line refusing scenario `key` now (a race scenario with Race mode off), or nil.
+local function raceRefusal(key)
+    return NS.SimRace and NS.SimRace.Refusal(key) or nil
 end
 
 -- The scenario lines the library's usage ends with (an unknown word).
@@ -235,6 +256,11 @@ end
 -- The session's prepare (Start, the panel's Start, Restart): the preview on in sim mode, the fight
 -- parked, the panel shown. Preview.Start's `session` start leaves the session it is building alone.
 local function prepare(_, _, opts, ready)
+    local line = raceRefusal(opts.scenario)
+    if line then
+        NS.Print(line)
+        return Sim.session:Stop("refused")
+    end
     if not NS.Preview.Start({ mode = "sim", scenario = opts.scenario, session = true }) then
         return Sim.session:Stop("refused")
     end
@@ -343,7 +369,7 @@ end
 function Sim.Open(key, arm)
     local session = Sim.session
     local s = find(key) or find(Sim.DEFAULT)
-    local line = NS.Preview.Refusal()
+    local line = raceRefusal(s.key) or NS.Preview.Refusal()
     if line then
         NS.Print(line)
         return false
@@ -363,6 +389,7 @@ end
 --- prepare switching the preview to it) leaves the session alone.
 function Sim.Cancel(keepSession)
     cancelTimer()
+    if NS.SimRace then NS.SimRace.Cancel() end
     if not keepSession then stopSession("stop") end
     if sample then NS.Slices.Forget(sample.fight.id) end
     sample, scenario, phase, overAt, record = nil, nil, nil, nil, nil
@@ -372,6 +399,10 @@ end
 --- What the sim is doing, for the diagnostics report and the suites.
 --- @return table  { scenario, phase ("none" | "parked" | "fight" | "settle" | "over" | "results"), ticking }
 function Sim.Diagnose()
+    if phase == "race" then
+        local r = NS.SimRace.Diagnose()
+        return { scenario = scenario, phase = r.phase, ticking = r.ticking }
+    end
     return { scenario = scenario or "none", phase = phase or "none", ticking = timer ~= nil }
 end
 
@@ -394,6 +425,11 @@ function Sim.Start(word)
         return false
     end
     if Sim.session then return Sim.Open(word, true) end
+    local line = raceRefusal(word)
+    if line then
+        NS.Print(line)
+        return false
+    end
     return NS.Preview.Start({ mode = "sim", scenario = word })
 end
 

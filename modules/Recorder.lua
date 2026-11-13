@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/Recorder.lua — the fight record and its store (spec §5, plan Task 2.5). Adapted from DPS
--- Race @045f479 (modules/Recorder.lua) without its race: no arming, no pending run a /reload resumes,
--- no race settings frozen in. Its snapshots moved out: who, the target and where are
+-- Race @045f479 (modules/Recorder.lua); a race is a fight record with a `race` part (Race mode, its
+-- spec §6, modules/RaceRecord.lua), which the race engine leaves on the fight. Its snapshots moved out: who, the target and where are
 -- modules/Identity.lua's (taken at combat entry), the loadout modules/Loadouts.lua's and the stats
 -- modules/Stats.lua's.
 --
@@ -13,6 +13,13 @@ local _, NS = ...
 -- was), so a short fight reads "short" whoever fought it. A fight that
 -- passes becomes a record, stored, and FIGHT_SAVED(record). An Unknown TARGET is still stored (spec
 -- §5): it has no board key and never counts as a best (modules/Bests.lua).
+--
+-- A RACE (Race mode spec §3.4, §4.1). Before anything else the receiver asks the race engine to
+-- finalize the fight's race part (NS.Race.Finalize(fight, final, reason), ruling X1: the bus gives no
+-- receiver order, so Recorder pulls it in). A part whose status is "complete" or "incomplete" is saved
+-- WITHOUT the recording filters (its length is the one the player picked, as short as 0:10), still
+-- needing a character; any other part (lost, canceled) is taken off the fight first, and the pull is
+-- judged as a plain dummy fight by the normal rules. A fight that ended "lost" saves nothing.
 --
 -- NOTHING IS WRITTEN BEFORE FIGHT_ENDED "final": a fight in memory is never a partial record, so a
 -- /reload or a logout mid-fight leaves the store as it was (Review Focus 4).
@@ -32,8 +39,8 @@ local _, NS = ...
 -- packed string; Recorder.Spells unpacks it to { { spellID, total, isPet } }), casts (CastCodec's
 -- packed string), cooldowns ({ [spellID] = ms }, the timeline's),
 -- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, targets? (CT_SCHEMA
--- 3: Recorder.Targets, the enemies your damage reached), note?, client, build, version,
--- status = "final" }.
+-- 3: Recorder.Targets, the enemies your damage reached), race? (CT_SCHEMA 4: RaceRecord.Plain's race
+-- part), note?, client, build, version, status = "final" }.
 
 local Recorder = {}
 NS.Recorder = Recorder
@@ -43,7 +50,8 @@ local L = NS.L
 
 --- The fight record's format version (spec §5). Distinct from NS.SCHEMA_VERSION, the settings'.
 -- 3 (issue #6) adds the optional `targets`; a CT_SCHEMA 2 record reads the same, with no targets.
-Recorder.CT_SCHEMA = 3
+-- 4 (Race mode) adds the optional `race`; an older record reads the same, as a fight (no migration).
+Recorder.CT_SCHEMA = 4
 --- The most targets a record keeps (the highest).
 Recorder.TARGETS_MAX = 10
 --- The longest note a record keeps.
@@ -338,7 +346,7 @@ function Recorder.Build(fight, final, identity, duration, enemies)
         dps = duration > 0 and round1(total / duration) or 0, meterDps = round1(merged.dps),
         spells = spellsOf(merged), casts = casts, cooldowns = cooldowns, gearSet = gearSet,
         stats = NS.Stats.Fill(plainCopy(fight.stats, 0)), loadout = loadout, usage = usage,
-        targets = Recorder.Targets(enemies),
+        targets = Recorder.Targets(enemies), race = NS.RaceRecord.Plain(fight.race),
         client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version, status = "final",
     }
     local record = plainCopy(raw, 0)
@@ -363,15 +371,35 @@ local function hasWho(fight)
     return type(who) == "table" and Secrets.PlainString(who.name) ~= nil
 end
 
+local SAVED_RACE = { complete = true, incomplete = true }
+
+-- The race engine settles the fight's race part (ruling X1), then a part that is not saved as a race
+-- (lost, canceled) comes off the fight. Whether the fight is now a race that is saved.
+local function settleRace(fight, final, reason)
+    local Race = NS.Race
+    if Race and type(Race.Finalize) == "function" then Race.Finalize(fight, final, reason) end
+    local race = fight.race
+    if type(race) ~= "table" then
+        fight.race = nil
+        return false
+    end
+    if SAVED_RACE[Secrets.PlainString(race.status) or ""] then return true end
+    fight.race = nil
+    return false
+end
+
 --- FIGHT_ENDED's receiver: store the fight, or say why not.
 function Recorder.OnFightEnded(fight, final, reason)
     if type(fight) ~= "table" then return end
+    local isRace = settleRace(fight, final, reason)
     if reason ~= "final" or type(final) ~= "table" then return skip(fight, "lost") end
     local enemies = enemiesOf(fight)
     local identity = NS.Identity.Resolve(fight, final, enemies)
     local duration = durationOf(fight, final)
-    local ok, why = NS.Filters.Passes(identity, duration)
-    if not ok then return skip(fight, why) end
+    if not isRace then
+        local ok, why = NS.Filters.Passes(identity, duration)
+        if not ok then return skip(fight, why) end
+    end
     if not hasWho(fight) then return skip(fight, "unknown") end
     local record = Recorder.Build(fight, final, identity, duration, enemies)
     -- The fight remembers its record, so the chart's in-session store (modules/Slices.lua) answers it.

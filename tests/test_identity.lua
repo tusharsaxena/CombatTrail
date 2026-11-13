@@ -300,22 +300,29 @@ end)
 
 -- ── training dummies ───────────────────────────────────────────────────────────────────────────
 
-test("identity: the dummy list is picked once, per client; Forever's is empty by decision", function()
+-- WoW Forever's seed is empty (defaults/Dummies.lua), so a case lends it the one entry it needs, to
+-- exercise the same path on both clients. The seed and the player's list are tests/test_dummies.lua's.
+local function lendDummy(NS, id)
+    if NS.DUMMY_SEED[id] == nil then
+        NS.DUMMY_SEED[id] = { name = "Raider's Training Dummy", category = "boss" }
+    end
+end
+
+test("identity: the dummy seed is picked once, per client; Forever's is empty by decision", function()
     local _, NS = fresh()
-    local want = NS.Compat.IsForever() and NS.Dummies.Forever or NS.Dummies.Retail
-    assertTrue(NS.DUMMIES == want, "the client's list")
-    assertTrue(next(NS.Dummies.Forever) == nil, "no Forever dummy creature ID is known yet")
-    assertEqual(NS.Dummies.Retail[31146], "Raider's Training Dummy")
-    assertNil(NS.DummyName(nil))
-    assertNil(NS.DummyName(1985))
+    local want = NS.Compat.IsForever() and NS.DummySeeds.Forever or NS.DummySeeds.Retail
+    assertTrue(NS.DUMMY_SEED == want, "the client's seed")
+    assertTrue(next(NS.DummySeeds.Forever) == nil, "no Forever dummy creature ID is known yet")
+    assertEqual(NS.DummySeeds.Retail[31146].name, "Raider's Training Dummy")
+    assertNil(NS.Dummies.Name(nil))
+    assertNil(NS.Dummies.Name(1985))
     restoreProfile()
 end)
 
 test("identity: dummy creature -> content dummy", function()
     local _, NS = fresh()
-    -- Forever's list is empty, so the case lends it one entry to exercise the same path.
     local id = 31146
-    if NS.DUMMIES[id] == nil then NS.DUMMIES[id] = "Raider's Training Dummy" end
+    lendDummy(NS, id)
     local ident = NS.Identity.Resolve({ snapshot = NS.Identity.Snapshot() }, nil,
                                       { { name = "Raider's Training Dummy", creatureID = id, total = 9000 } })
     assertEqual(ident.content, "dummy")
@@ -326,7 +333,7 @@ end)
 
 test("identity: a dummy found only by the snapshot's target is still a dummy", function()
     local _, NS, m = fresh()
-    if NS.DUMMIES[31146] == nil then NS.DUMMIES[31146] = "Raider's Training Dummy" end
+    lendDummy(NS, 31146)
     target(m, creatureGUID(31146), "Raider's Training Dummy", "worldboss")
     local snap = NS.Identity.Snapshot()
     assertEqual(snap.target.creatureID, 31146)

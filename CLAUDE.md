@@ -64,4 +64,4 @@ commit as the vendored bytes. The second is the **icon declaration** (`library-s
 gate holds `libs/LibKa0s/media/icons/` to exactly those names. They are the marks the library draws
 for this addon (the debug console's copy, clear and close, the skin picker's settings gear and eye,
 and the small marks beside skinned controls) plus the ones the HUD and the Results window draw as
-they arrive from DPS Race, and the paw on pet spell rows.
+they arrive from DPS Race, the paw on pet spell rows, and the flag on the HUD's Race button.

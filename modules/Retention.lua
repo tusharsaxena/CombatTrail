@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/Retention.lua — how long stored fights are kept (spec §5, plan Task 2.5). The purge removes
 -- every fight older than `history.days` days (0 keeps them for ever), except a fight holding a best
--- while `history.keepBests` is on (modules/Bests.lua), then caps the store at `history.maxFights`
+-- while `history.keepBests` is on (modules/Bests.lua HoldingIDs: a fight board's, a race board's or
+-- its clean view's, so races follow the one rule, Race mode spec §3.5), then caps the store at `history.maxFights`
 -- (0 is no cap): the oldest non-best fights go first. It runs at login (and every stand-up), once a
 -- day while logged in (out of combat), and from `/ct purge`. Each run also puts db.global.fightOrder back in step
 -- with the store (newest first, no id without its record), and sweeps the talent loadouts and the

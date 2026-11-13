@@ -19,7 +19,7 @@ local _, NS = ...
 -- Never math.random here.
 --
 -- CLIENTS (clients-§4). Each board declares the clients it exists on: Mythic+, delves, arenas and
--- the training dummies (an empty catalog on WoW Forever, defaults/Dummies.lua) are Retail's, so the
+-- the training dummies (an empty seed on WoW Forever, defaults/Dummies.lua) are Retail's, so the
 -- Forever history holds none of them. The figures are scaled per client, picked once at FILE SCOPE.
 
 local MockFights = {}
@@ -111,13 +111,15 @@ local function boards()
                             difficultyID = 0, maxPlayers = 3, pvpBracket = "r3" },
                   target = { name = "Samplerogue" } }
     out.dummy = { where = { instanceType = "none", instanceName = "Silvermoon City", difficultyID = 0 },
-                  target = { name = NS.DummyName(31146), creatureID = 31146 } }
+                  -- The seed's name, not the player's list's: a switched-off built-in keeps its name here.
+                  target = { name = (NS.Dummies.BuiltIn(31146) or {}).name, creatureID = 31146 } }
     return out
 end
 
 --- The board `key` as a fight carries it ({ where, encounter?, target }), or nil when this client
---- has no such board.
+--- has no such board. A table is taken as the board itself (a race sample's dummy, modules/MockRaces.lua).
 function MockFights.Board(key)
+    if type(key) == "table" then return key end
     return boards()[key]
 end
 
@@ -182,7 +184,8 @@ function MockFights.Character(key)
              specIcon = CLIENT.specIcon, trees = CLIENT.trees, ilvl = c.ilvl, petName = c.pet, petFamily = "Wolf" }
 end
 
---- The identity a fight against board `key` resolves to (modules/Identity.lua's own Resolve).
+--- The identity a fight against board `key` (a key or a board table) resolves to (modules/Identity.lua's
+--- own Resolve).
 --- @return table|nil identity
 function MockFights.Identity(key)
     local b = MockFights.Board(key)
@@ -471,7 +474,8 @@ function MockFights.Record(o, plan)
     return record, plan
 end
 
---- The sample history for the Results window: { fights, slices }, built fresh (Source.Use's shape).
+--- The sample history for the Results window: { fights, slices }, built fresh (Source.Use's shape),
+--- the sample races among the fights on Retail.
 --- @return table dataset
 function MockFights.Dataset()
     local now, have = time(), boards()
@@ -487,6 +491,8 @@ function MockFights.Dataset()
             if h.chart then data.slices[record.id] = MockFights.Slices(plan) end
         end
     end
+    -- Race mode's sample races beside the fights (Retail only: modules/MockRaces.lua loads nowhere else).
+    if NS.MockRaces then NS.MockRaces.AddTo(data, now) end
     return data
 end
 

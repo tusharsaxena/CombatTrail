@@ -38,6 +38,28 @@ NS.MSG = {
     -- Sender: modules/Recorder.lua (Delete, SetNote) and modules/Retention.lua (a purge that removed
     -- anything). Payload: none; the store changed other than by a save.
     FIGHTS_CHANGED = "Ka0s_CombatTrail_FightsChanged",
+    -- Sender: modules/Fight.lua, once per fight, the moment its first damage update for a bound
+    -- session is heard (Race mode ruling X2: the race clock). Payload: (fight), `fight.firstHitT` set.
+    FIGHT_FIRST_HIT = "Ka0s_CombatTrail_FightFirstHit",
+    -- Senders below: modules/Race.lua (Race mode, Retail only), each after the race state has moved.
+    -- `race` is the in-memory race part (modules/RaceRecord.lua's shape, status "running" until the
+    -- fight is read). Payload: (race, from, to), on every transition of Race.STATE.
+    RACE_STATE_CHANGED = "Ka0s_CombatTrail_RaceStateChanged",
+    -- Payload: (race), a race armed at its length, waiting for the pull.
+    RACE_ARMED = "Ka0s_CombatTrail_RaceArmed",
+    -- Payload: (race, fight), the clock started on the fight's first hit.
+    RACE_STARTED = "Ka0s_CombatTrail_RaceStarted",
+    -- Payload: (race), the buzzer went at the race length.
+    RACE_BUZZER = "Ka0s_CombatTrail_RaceBuzzer",
+    -- Payload: (record, race): after FIGHT_SAVED for the race's fight, its stored record; nil when
+    -- nothing was stored (the race was lost, or the fight had no readable character).
+    RACE_RESULT = "Ka0s_CombatTrail_RaceResult",
+    -- Payload: (reason): "canceled" (Race.Cancel), "not_dummy" (the pull was not on a training dummy).
+    RACE_CANCELED = "Ka0s_CombatTrail_RaceCanceled",
+    -- Sender: modules/RaceClock.lua (Retail only), every RaceClock.TICK seconds while a race, the real
+    -- one or the sample, runs or stops: the race beat both race clocks redraw on (race window redesign
+    -- plan Task W5). Payload: none.
+    RACE_CLOCK = "Ka0s_CombatTrail_RaceClock",
 }
 
 local Bus = LibStub and LibStub("LibKa0s-Bus-1.0", true)

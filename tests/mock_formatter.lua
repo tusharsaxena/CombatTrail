@@ -12,6 +12,9 @@
 --            ladder (no format) is refused
 -- `spec.userdata` = true hands each instance out as a userdata proxy, as a client object may be.
 -- `spec.secretRaises` = true makes every instance raise on a secret, while it passes its plain checks.
+-- `spec.config` ("floor" or "raw") installs Retail's CreateAbbreviateConfig(list) and an AbbreviateNumbers
+-- that applies a config handed to it, in that mode (a secret in, a secret string out); with no config
+-- it answers "abbr" as the plain global does.
 --
 -- Loaded as `local Formatter = dofile(T.root .. "/tests/mock_formatter.lua")(T)`.
 
@@ -106,10 +109,22 @@ return function(T)
         if spec.abbreviated then util.CreateAbbreviatedNumberFormatter = ctor(spec.abbreviated, "abbreviated") end
         if spec.numeric then util.CreateNumericRuleFormatter = ctor(spec.numeric, "numeric") end
         m.C_StringUtil = util
-        if spec.abbreviate then
-            m.AbbreviateNumbers = function(v)
+        if spec.abbreviate or spec.config then
+            m.AbbreviateNumbers = function(v, config)
                 m.__abbreviated[#m.__abbreviated + 1] = v
+                if spec.config and type(config) == "table" and config.breakpointData then
+                    local n = T.reveal(v)
+                    local bp = pick(config.breakpointData, n)
+                    local out = bp and render(spec.config, bp, n) or tostring(n)
+                    return T.isSecret(v) and T.secret(out) or out
+                end
                 return "abbr"
+            end
+        end
+        if spec.config then
+            m.CreateAbbreviateConfig = function(list)
+                if type(list) ~= "table" then error("CreateAbbreviateConfig wants an array", 2) end
+                return { breakpointData = list }
             end
         end
     end

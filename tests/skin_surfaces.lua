@@ -19,7 +19,8 @@
 -- a later surface would see.
 --
 -- `window` is this file's own field (the kit reads only its own): the window a surface belongs to,
--- which tests/test_skin_surfaces.lua reads to hold the coverage to all six.
+-- which tests/test_skin_surfaces.lua reads to hold the coverage to all six, and on Retail a seventh:
+-- the Race window (race plan Task C1), which wears the HUD's skin and is absent on WoW Forever.
 --
 -- Not declared: meaning colors (the content chips' data hues, the class color, the over card's gain),
 -- game art (spell and item icons), the ticks and the now line (thin flat lines, skinning-§9's Leave
@@ -95,6 +96,17 @@ return function(T)
         return NS.LaneAnchor.__overlay("player")
     end
 
+    -- The Race window (Retail only), opened on its idle body.
+    local function race()
+        local RW = NSof().RaceWindow
+        RW.Show()
+        return assert(RW.__ui(), "the Race window was never built")
+    end
+    local function raceBody()
+        local u = race()
+        return u.body[u.current]
+    end
+
     local function writeSetting(path)
         return function(on) NSof().SetByPath(path, on) end
     end
@@ -109,7 +121,7 @@ return function(T)
         NS.LaneAnchor.SetUnlocked(false)
     end
 
-    return {
+    local declared = {
         owner = "CombatTrail",
         skin = function() return live().mocks.LibStub("LibKa0s-Skin-1.0") end,
         reset = closeAll,
@@ -150,4 +162,12 @@ return function(T)
             { window = "lanes", name = "a lane's edit overlay", build = overlay },
         },
     }
+    if T.NS.Compat.ForClient({ "retail" }) then
+        local list = declared.surfaces
+        list[#list + 1] = { window = "race", name = "the Race window's shell", build = function() return race().frame end }
+        list[#list + 1] = { window = "race", name = "the Race window's footer", build = function() return race().footLeft end }
+        list[#list + 1] = { window = "race", name = "the Race window's target card", build = function() return raceBody().w.card.name end }
+        list[#list + 1] = { window = "race", name = "the Race window's Arm Race button", build = function() return raceBody().w.arm end }
+    end
+    return declared
 end

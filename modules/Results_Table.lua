@@ -278,9 +278,23 @@ local Cells = {}
 -- A text cell; a column with `bar` also draws a fill under its text, as long as its value's place
 -- between the smallest and the largest in its group (Table:measure, Tbl.BarShare), over the row's own
 -- stripe, in the palette's bar blue (Tbl.BAR_COLOR).
+-- A column with `chips(record)` also draws up to CHIP_MAX boxed chips before its text (a race row's
+-- length and flag chips, modules/Results_Races.lua), each its own part (cell.chip1, ...).
 function Cells.text(row, col)
     local cell = { fs = Tbl.Text(row, FONT.TEXT, C.text, col.justify) }
     if col.bar then cell.bar = row:CreateTexture(nil, "BORDER", nil, 2) end
+    if col.chips then
+        for i = 1, Tbl.CHIP_MAX do
+            local chip = Style.FlatBox(row)
+            chip:SetHeight(Tbl.CHIP_H)
+            chip.fs = Tbl.Text(chip, FONT.TEXT, C.text, "CENTER")
+            chip.icon = chip:CreateTexture(nil, "ARTWORK")
+            chip.icon:SetSize(Tbl.BADGE_ICON, Tbl.BADGE_ICON)
+            chip.icon:SetPoint("LEFT", chip, "LEFT", 4, 0)
+            chip:Hide()
+            cell["chip" .. i] = chip
+        end
+    end
     return cell
 end
 
@@ -330,6 +344,8 @@ local function paint(fs, color)
 end
 
 Tbl.CHIP_H = 16
+Tbl.CHIP_MAX = 2            -- the chips a text cell draws before its text
+Tbl.CHIP_GAP = 4            -- between two chips, and between the last and the text
 
 local Bind = {}
 
@@ -358,11 +374,70 @@ local function bindBar(cell, col, record)
     cell.bar:SetWidth(math.max(1, math.floor((cell.barW or 0) * share + 0.5)))
 end
 
+-- The tag's icon (a catalog name), tinted the tag's color, before the word: answers the room the
+-- word shifts right by.
+local function bindBadgeIcon(cell, icon, color)
+    local path = icon and NS.Icon(icon)
+    cell.icon:SetShown(path ~= nil)
+    if not path then return 0 end
+    cell.icon:SetTexture(path)
+    Style.Vertex(cell.icon, color, 1)
+    return Tbl.BADGE_ICON + 2
+end
+
+-- Paint one chip ({ text, color, icon }) boxed in its color: answers its width (config, never measured).
+local function bindChip(chip, item)
+    local color = item.color or C.text
+    local extra = bindBadgeIcon(chip, item.icon, color)
+    local w = Tbl.BadgeWidth(item.text or "", true, extra)
+    chip.fs:SetText(item.text or "")
+    paint(chip.fs, color)
+    chip.fs:ClearAllPoints()
+    chip.fs:SetPoint("CENTER", chip, "CENTER", extra / 2, 0)
+    chip.fs:SetWidth(math.max(1, w - 6 - extra))
+    Style.TintBox(chip, color, Style.BADGE_EDGE_A)
+    chip:SetWidth(w)
+    chip:Show()
+    return w
+end
+
+-- Anchor the cell's chips from its left edge (placeCell's x), at the widths its last bind drew, and
+-- the text after them; with none drawn, the text at its own place. placeCell runs it again, so a
+-- column drag or a resize that moves the cell takes its chips along.
+local function placeChips(cell)
+    local row, x = cell.rowOf(), 0
+    for i, w in ipairs(cell.chipW or {}) do
+        local chip = cell["chip" .. i]
+        chip:ClearAllPoints()
+        chip:SetPoint("LEFT", row, "LEFT", cell.x + x, 0)
+        x = x + w + Tbl.CHIP_GAP
+    end
+    cell.fs:ClearAllPoints()
+    cell.fs:SetPoint("LEFT", row, "LEFT", cell.x + x, 0)
+    cell.fs:SetWidth(math.max(10, cell.w - x))
+end
+
+-- Paint the record's chips (the unused ones hidden) and place them.
+local function bindChips(cell, col, record)
+    local list = col.chips(record) or {}
+    cell.chipW = {}
+    for i = 1, Tbl.CHIP_MAX do
+        local chip, item = cell["chip" .. i], list[i]
+        if item then
+            cell.chipW[i] = bindChip(chip, item)
+        else
+            chip:Hide()
+        end
+    end
+    placeChips(cell)
+end
+
 function Bind.text(cell, col, record)
     local s, color = col.text(record)
     cell.fs:SetText(s or "")
     paint(cell.fs, color)
     if cell.bar then bindBar(cell, col, record) end
+    if col.chips and cell.rowOf then bindChips(cell, col, record) end
 end
 
 --- How many icons an items cell `width` px wide holds (at least one). Pure.
@@ -427,17 +502,6 @@ function Tbl.SetCheckLabel(check, text)
     check:SetHitRectInsets(0, -(1 + Tbl.BadgeWidth(text, false)), 0, 0)
 end
 
--- The tag's icon (a catalog name), tinted the tag's color, before the word: answers the room the
--- word shifts right by.
-local function bindBadgeIcon(cell, icon, color)
-    local path = icon and NS.Icon(icon)
-    cell.icon:SetShown(path ~= nil)
-    if not path then return 0 end
-    cell.icon:SetTexture(path)
-    Style.Vertex(cell.icon, color, 1)
-    return Tbl.BADGE_ICON + 2
-end
-
 -- The column's text answers the word, its color and, for a tag, its icon's catalog name.
 function Bind.badge(cell, col, record)
     local s, color, icon = col.text(record)
@@ -485,6 +549,9 @@ local function placeCell(row, cell, col, x, w)
     cell.fs:ClearAllPoints()
     cell.fs:SetPoint("LEFT", row, "LEFT", x, 0)
     cell.fs:SetWidth(math.max(10, w))
+    -- Where a chip column's Bind re-anchors its text (a closure: showCells shows every table part).
+    cell.rowOf, cell.x, cell.w = function() return row end, x, w
+    if cell.chipW then placeChips(cell) end
     if not cell.bar then return end
     -- The bar spans the cell and a little of the gap each side; the text sits inside it.
     cell.barW = w + 4

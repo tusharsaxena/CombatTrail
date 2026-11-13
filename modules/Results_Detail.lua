@@ -6,7 +6,9 @@ local _, NS = ...
 -- Usage (modules/Results_Usage.lua); the note; and the footer in DPS Race's order, Add Note, Share,
 -- Timeline and Compare, with Delete at the right edge. Placed by the shell (modules/Results.lua)
 -- beside the list, or in its place with a Back control. Adapted from DPS Race @045f479
--- (modules/Results_Detail.lua) without its race: no timing strip, no flags, no late casts.
+-- (modules/Results_Detail.lua); a race's Timing and Flags sections, its figures (score and race DPS)
+-- and its late-cast right-click are modules/Results_RaceDetail.lua's (Race mode plan Task D1), placed
+-- here through its Build, Fill and Layout seams.
 --
 -- THE FOLDING SECTIONS (v0.2 plan Task C3, DPS Race's mechanism): every section heading (Damage
 -- profile, Spell breakdown, Gear and Talents, Usage, Note) has an arrow left of its text, chevron-down
@@ -64,7 +66,7 @@ Detail.BUTTON_GAP = 6
 Detail.DELETE_W = 78
 -- The folding sections, in the pane's order, and their heading's arrow: ARROW px square, the text
 -- INDENT in from the left edge (the arrow and 2 px).
-Detail.SECTIONS = { "chart", "spells", "loadout", "usage", "targets", "note" }
+Detail.SECTIONS = { "chart", "timing", "spells", "loadout", "usage", "targets", "flags", "note" }
 Detail.ARROW = 14
 Detail.INDENT = Detail.ARROW + 2
 
@@ -119,8 +121,10 @@ function Detail.Meta(record)
     local i, w = ident(record), who(record)
     local ilvl = type(w.ilvl) == "number" and L["ilvl %s"]:format(Tbl().Ilvl(w.ilvl)) or nil
     local where = joinParts({ w.realm, ilvl, placeOf(record, i) }, 3)
-    local what = joinParts({ Fights().TargetName(record), levelText(i), i.difficultyName, Fights().TierText(record),
-                             NS.Format.Length(record.duration), w.petName and L["pet %s"]:format(w.petName) }, 6)
+    -- A race (Retail) names its dummy kind and its race time in place of the fight's length.
+    local kind, raceTime = NS.ResultsRaces.MetaParts(record)
+    local what = joinParts({ Fights().TargetName(record), kind or levelText(i), i.difficultyName, Fights().TierText(record),
+                             raceTime or NS.Format.Length(record.duration), w.petName and L["pet %s"]:format(w.petName) }, 6)
     local stamp = joinParts({ Tbl().Date(record.t, "%d %b %Y %H:%M"),
                               record.build and L["build %s"]:format(tostring(record.build)),
                               record.version and ("v" .. tostring(record.version)) }, 3)
@@ -148,12 +152,14 @@ function Detail.DeltaBox(record, ctx)
     local C = Tbl().COLORS
     if type(ctx) ~= "table" then return L["Delta"], DASH, C.dim, false end
     if Fights().IsTop(record, ctx) then
-        local second = ctx.second and tonumber(ctx.second.dps)
+        local second = ctx.second and NS.RaceRecord.Dps(ctx.second)
         if not second or second <= 0 then return L["Leads by"], DASH, C.dim, true end
         return L["Leads by"], NS.Format.SignedPct((ctx.top / second - 1) * 100), C.green, true
     end
     local pct = Fights().Delta(record, ctx.top)
     if pct == nil then return L["Delta"], DASH, C.dim, false end
+    -- An incomplete race is compared, muted: it never sets the best.
+    if Fights().Unranked(record) then return L["Delta"], NS.Format.SignedPct(pct), C.dim, false end
     return L["Delta"], NS.Format.SignedPct(pct), pct < 0 and C.red or C.green, false
 end
 
@@ -166,17 +172,25 @@ function Detail.PetShare(record)
 end
 
 --- The chart's view for a stored fight (modules/Hud_Chart.lua's OverView over the in-session slices,
---- scaled to the record's plain player damage), or nil when this session holds none.
+--- scaled to the record's plain player damage), or nil when this session holds none. A race's runs on
+--- its race clock, from its first hit, with its buzzer line (ruling X9; not on WoW Forever, where it
+--- lists as a fight: modules/Results_Races.lua Clock); a shared-session race has none.
 --- @param record table
 --- @return table|nil view
 function Detail.ChartView(record)
     if not NS.Slices.Drawable(record) then return nil end
+    -- A shared session's steps hold its damage from before the arm, which the record's own damage
+    -- does not: no chart, as on the DPS HUD (modules/Hud.lua, DPS Race's rule).
+    local race = type(record.race) == "table" and record.race or nil
+    if race and type(race.flags) == "table" and race.flags.sharedSession then return nil end
     local d = record.damage
     local player = tonumber(d.player) or tonumber(d.merged)
     local final = { duration = record.duration, player = { total = player } }
+    local clock = NS.ResultsRaces.Clock(record)
     local casts = NS.CastCodec.Decode(record.casts)
+    if clock then casts = NS.RaceRecord.OnClock(casts, clock.shift) end
     local cooldowns = NS.HudChart.Cooldowns(casts, record.cooldowns)
-    return NS.HudChart.OverView({ id = record.id }, nil, final, cooldowns)
+    return NS.HudChart.OverView({ id = record.id }, nil, final, cooldowns, clock)
 end
 
 -- ── the folded sections (stored) ────────────────────────────────────────────────────────────────
@@ -454,6 +468,7 @@ function Detail.Build(parent, hooks)
     local c = p.content
     buildHeader(p, c)
     buildChart(p, c)
+    NS.ResultsRaceDetail.Build(p, c)
     buildBreakdown(p, c)
     NS.ResultsLoadout.Build(p, c)
     NS.ResultsUsage.Build(p, c)
@@ -495,10 +510,13 @@ function Pane:RefreshDelta()
     if self.record then self:fillDelta(self.record) end
 end
 
+-- A race's figures are its score and race DPS (modules/Results_RaceDetail.lua Figures).
 function Pane:fillFigures(record)
-    local w, d = self.w, type(record.damage) == "table" and record.damage or {}
-    w.damage.value:SetText(type(d.merged) == "number" and NS.Format.Number(d.merged) or DASH)
-    w.dps.value:SetText(type(record.dps) == "number" and NS.Format.Number(record.dps) or DASH)
+    local w = self.w
+    local damage, dps, dpsLabel = NS.ResultsRaceDetail.Figures(record)
+    w.damage.value:SetText(damage and NS.Format.Number(damage) or DASH)
+    w.dps.value:SetText(dps and NS.Format.Number(dps) or DASH)
+    w.dps.label:SetText(dpsLabel)
     w.meterDps.value:SetText(type(record.meterDps) == "number" and NS.Format.Number(record.meterDps) or DASH)
     self:fillDelta(record)
 end
@@ -554,6 +572,7 @@ function Pane:Show(record)
     NS.ResultsLoadout.Fill(self)
     NS.ResultsUsage.Fill(self, same)
     NS.ResultsTargets.Fill(self)
+    NS.ResultsRaceDetail.Fill(self)
     self.noteText = type(record.note) == "string" and record.note or ""
     self.w.note:SetText(self.noteText)
     self:fillButtons(record)
@@ -691,10 +710,12 @@ function Pane:Layout(width, height, narrow)
     if not self.record then return end
     local y = self:layoutHeader(0, cw)
     y = self:layoutChart(y, cw)
+    y = NS.ResultsRaceDetail.LayoutTiming(self, y, cw)
     y = self:layoutSpells(y, cw)
     y = NS.ResultsLoadout.Layout(self, y, cw)
     y = NS.ResultsUsage.Layout(self, y, cw)
     y = NS.ResultsTargets.Layout(self, y, cw)
+    y = NS.ResultsRaceDetail.LayoutFlags(self, y, cw)
     y = self:layoutNote(y, cw)
     self.contentH = -y + 8
     self.content:SetHeight(math.max(1, self.contentH))

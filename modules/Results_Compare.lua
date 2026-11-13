@@ -3,7 +3,8 @@ local _, NS = ...
 -- *Compare* button that sets the fight beside another, figure by figure and spell by spell.
 -- Adapted from DPS Race @045f479 (modules/Results_Compare.lua) without its race, and drawn as the
 -- mockup draws it: its own window over the Results window, where DPS Race drew the compare inside
--- the detail behind a toggle.
+-- the detail behind a toggle. A race takes part by its race DPS (NS.RaceRecord.Dps, Race mode plan
+-- Task D1), the figure its race board ranks.
 --
 -- THE OTHER FIGHT (Compare.Pick, the one answer the timeline, the gear view and this window read,
 -- through the detail pane's CompareTarget). The fight picked from a row's right-click menu (*Compare
@@ -96,7 +97,7 @@ end
 
 --- Whether a fight can take part in a compare: a stored record with its DPS.
 function Compare.Usable(record)
-    return type(record) == "table" and type(record.dps) == "number"
+    return type(NS.RaceRecord.Dps(record)) == "number"
 end
 
 --- The default other fight: the best on `record`'s board among `records` (the source's fights by
@@ -170,7 +171,8 @@ function Compare.Kpis(a, b)
     local out = {}
     for _, k in ipairs({
         { key = "damage", va = merged(a), vb = merged(b) },
-        { key = "dps", va = num(a and a.dps), vb = num(b and b.dps) },
+        -- A race's race DPS (spec §7: the figure its board ranks).
+        { key = "dps", va = num(NS.RaceRecord.Dps(a)), vb = num(NS.RaceRecord.Dps(b)) },
         { key = "length", va = num(a and a.duration), vb = num(b and b.duration) },
     }) do
         out[#out + 1] = { key = k.key, a = k.va, b = k.vb, pct = Compare.Pct(k.va, k.vb) }

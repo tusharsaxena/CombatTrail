@@ -307,10 +307,12 @@ function Appearance.ApplyWindow(f)
     f:SetAlpha(Appearance.Number("hud.window.alpha", 0.1, 1))
 end
 
---- A HUD look changed: every part restyles on its next draw, and the HUD redraws now.
+--- A HUD look changed: every part restyles on its next draw, and the HUD redraws now, with the Race
+--- window, which wears the same blocks (race plan Task C1; absent on WoW Forever).
 function Appearance.Changed()
     Appearance.stamp = Appearance.stamp + 1
     if NS.Hud and NS.Hud.Refresh then NS.Hud.Refresh() end
+    if NS.RaceWindow and NS.RaceWindow.IsShown() then NS.RaceWindow.Refresh() end
 end
 
 -- A skin switch: the skin's own tokens (a FromSkin companion, a Card's paint) changed under the

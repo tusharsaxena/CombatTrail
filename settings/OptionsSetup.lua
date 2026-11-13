@@ -76,7 +76,9 @@ local descriptor = {
 --- function answering the selected instance, which every render hands the rows filter as the ctx's
 --- `unit`, and `banner(ctx)`, which draws the band's picker before the strip, on every render a tab
 --- click included. `afterDefaults()` runs after the page's Defaults, for what no row holds.
---- @param spec table { key, title, panelName, defaultsTooltip, afterGroup?, beforeGroup?, tabs?, redrawOnDefaults?, unit?, banner?, afterDefaults? }
+--- `clients` declares a page one client has (clients-§4, the Race mode page's `{ "retail" }`): the
+--- library never queues it on another, so its builder never runs there.
+--- @param spec table { key, title, panelName, defaultsTooltip, afterGroup?, beforeGroup?, tabs?, redrawOnDefaults?, unit?, banner?, afterDefaults?, clients? }
 NS.pageCtx = NS.pageCtx or {}   -- each built page's ctx, by key, for a page that repaints off the bus
 function NS.RegisterTabbedPage(spec)
     NS.RegisterOptionsPage(spec.key, spec.title, function(mainCategory)
@@ -104,7 +106,7 @@ function NS.RegisterTabbedPage(spec)
         H.SetRenderer(ctx, render)
         NS.pageCtx[spec.key] = ctx
         return Settings.RegisterCanvasLayoutSubcategory(mainCategory, ctx.panel, spec.title)
-    end)
+    end, spec.clients and { clients = spec.clients } or nil)
 end
 
 if not lib then
@@ -171,6 +173,6 @@ NS.Helpers = lib:New(descriptor)
 local Helpers = NS.Helpers
 
 -- The three entry points the rest of the addon calls.
-NS.RegisterOptionsPage = function(key, name, builder) Helpers.RegisterOptionsPage(key, name, builder) end
+NS.RegisterOptionsPage = function(key, name, builder, opts) Helpers.RegisterOptionsPage(key, name, builder, opts) end
 NS.CreateOptionsPanel  = function() Helpers.CreateOptionsPanel() end
 NS.OpenOptionsPanel    = function() Helpers.OpenOptionsPanel() end   -- the `config` verb

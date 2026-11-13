@@ -7,7 +7,13 @@
 	     own category and none carries a header, so Options -> Keybindings shows a "Ka0s Combat Trail"
 	     section with no blank row. No default key: the player picks one there or on the General
 	     page's Keybindings tab. The button names are permanent; renaming one unbinds every player's
-	     key. Not listed in the TOC: the client reads this file by name. -->
+	     key. Not listed in the TOC: the client reads this file by name.
+	     THE PAIR (a documented deviation, docs/ARCHITECTURE.md: toc-file-§3, layout-§1, launcher-§6).
+	     The client prefers a flavor-suffixed file over this one and reads only one: Retail reads
+	     Bindings_Mainline.xml, which holds these three plus the Retail-only Toggle Race window key
+	     (Race mode is Retail's, clients-§4), and WoW Forever reads this file. The two MUST stay in
+	     step: a binding added, renamed or reordered here is changed there in the same commit
+	     (tests/test_bindings.lua holds them to it). -->
 	<Binding name="CLICK CombatTrailToggleHud:LeftButton" category="BINDING_HEADER_COMBATTRAIL"/>
 	<Binding name="CLICK CombatTrailToggleResults:LeftButton" category="BINDING_HEADER_COMBATTRAIL"/>
 	<Binding name="CLICK CombatTrailToggleLanes:LeftButton" category="BINDING_HEADER_COMBATTRAIL"/>

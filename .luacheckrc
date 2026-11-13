@@ -78,6 +78,24 @@ files["modules/Identity.lua"] = {
                      "GetInstanceInfo", "GetDifficultyInfo", "GetZoneText", "GetSubZoneText" },
 }
 
+-- The training dummies' captures (`/ct dummy capture`): what the game says about the target and where
+-- the player stands, each read pcall'd at CALL time, so a client without one leaves the field absent.
+files["modules/Dummies.lua"] = {
+    read_globals = { "UnitLevel", "UnitClassification", "UnitHealthMax", "UnitCreatureType", "UnitIsPVP",
+                     "UnitFactionGroup", "UnitReaction", "GetZoneText", "GetSubZoneText", "C_Map" },
+}
+
+-- Auto-show and auto-arm near a training dummy (Race mode): the instance type that keeps both off, and
+-- the nameplates up now (each pcall'd at CALL time).
+files["modules/AutoArm.lua"] = { read_globals = { "GetInstanceInfo", "C_NamePlate" } }
+-- A race's final seconds (Race mode): the countdown cue and the buzzer's sound, and the raid warning's
+-- STOP (each read bare at CALL time, type-checked and pcall'd).
+files["modules/Countdown.lua"] = {
+    read_globals = { "PlaySound", "SOUNDKIT", "RaidNotice_AddMessage", "RaidWarningFrame", "ChatTypeInfo" },
+}
+-- The new-best toast's scaled text: a named copy of a font object (type-checked at CALL time).
+files["modules/Style.lua"] = { read_globals = { "CreateFont" } }
+
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
 -- time, so a client without one leaves the field absent).
 files["modules/Usage.lua"] = {
@@ -97,7 +115,8 @@ files["core/WidgetsSetup.lua"] = { read_globals = { "MenuUtil" } }
 files["core/SkinSetup.lua"] = { read_globals = { "ITEM_QUALITY_COLORS" } }
 -- The secret-safe number: the client's abbreviated-number formatter is Compat's; with none, the plain
 -- fallback is the client's AbbreviateNumbers, type-checked at CALL time (modules/Format.lua).
-files["modules/Format.lua"] = { read_globals = { "AbbreviateNumbers" } }
+-- Retail's AbbreviateNumbers also takes a CreateAbbreviateConfig config, which carries the ladder.
+files["modules/Format.lua"] = { read_globals = { "AbbreviateNumbers", "CreateAbbreviateConfig" } }
 -- The Results window's table: the class colors, names and icons, a spec's name and icon (read bare
 -- and type-checked, WoW Forever has no specializations), the cursor a hovered row follows, and the
 -- client's date formatter.
@@ -107,6 +126,8 @@ files["modules/Results_Table.lua"] = {
 }
 -- The fight list's date range: today from local midnight (the client's date formatter).
 files["modules/Results_Fights.lua"] = { read_globals = { "date" } }
+-- The Insights tab's local days: midnight and the next one (the client's date formatter).
+files["modules/Results_InsightsData.lua"] = { read_globals = { "date" } }
 -- The Results window: the popups it closes with it, and the talent tree it steps aside for (read
 -- bare at CALL time, type-checked).
 files["modules/Results.lua"] = { read_globals = { "StaticPopup_Hide", "PlayerSpellsFrame" } }

@@ -30,9 +30,16 @@ local _, NS = ...
 -- list, whose IDs are plain in combat, is read instead (at most once per TICK).
 --
 -- INPUTS come only from modules/Watchers.lua, with `t` from GetTime(). OUTPUTS are FIGHT_STARTED,
--- FIGHT_TICK and FIGHT_ENDED (core/Bus.lua), each sent after the state has moved. Timers are the
+-- FIGHT_FIRST_HIT, FIGHT_TICK and FIGHT_ENDED (core/Bus.lua), each sent after the state has moved. Timers are the
 -- addon object's AceTimers, so the stand-down's CancelAllTimers takes them too; Suspend drops the fight
 -- in memory without a message (no record was opened), and the stand-up starts IDLE.
+--
+-- THE RACE'S THREE SEAMS (Race mode, modules/Race.lua). Fight.ShareSessions(set): while a race is armed,
+-- an in-combat update naming a session of `set` (the ones the client held at the arm) binds an unbound
+-- fight to it, marked `sharedSession` (ruling X3: a pull that carried on a session alive at the arm;
+-- plain fights never bind one). Fight.Hurry(id): *Stop Now* reads the race's fight without the settle's
+-- wait (ruling X5), at once while settling, at the combat end while in combat. Fight.Adopt(spec): a race
+-- resumed after a /reload gets back the fight its meter session belongs to (Task B2).
 
 local Fight = {}
 NS.Fight = Fight
@@ -55,6 +62,7 @@ local seq = 0          -- fight IDs this session
 local tickTimer, settleTimer
 local sealedTries = 0
 local lastScan = -math.huge
+local shareable        -- the session IDs an unbound fight may bind as shared (Fight.ShareSessions), or nil
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Fight", fmt, ...) end
@@ -271,7 +279,7 @@ onSettle = function()
     settleTimer = nil
     if isDown() or state ~= STATE.SETTLING or not cur then return end
     local now, due = GetTime(), settleDue()
-    if now < due then return scheduleSettle(due - now) end
+    if now < due and not cur.hurry then return scheduleSettle(due - now) end
     finishAll()
 end
 
@@ -299,9 +307,10 @@ local function split(id, t)
     NS.SendBus(NS.MSG.FIGHT_STARTED, cur)
 end
 
-local function adopt(id, t)
+local function adopt(id, t, via)
     if cur.sessionID == nil then
         addSession(cur, id)
+        cur.boundBy = via or "event"
         debug("fight %s bound to session %d", cur.id, id)
     elseif mergesInto(cur, t) then
         addSession(cur, id)
@@ -311,15 +320,16 @@ local function adopt(id, t)
     end
 end
 
--- Read the list: lose the fight if a session of its is gone, else adopt every new session.
-local function scan(t)
+-- Read the list: lose the fight if a session of its is gone, else adopt every new session. `via` says
+-- what asked ("tick" from the tick while unbound), kept on the fight as `boundBy` when it binds.
+local function scan(t, via)
     if not cur then return end
     lastScan = t
     local all, ok = NS.Meter.SessionIDs()
     if not ok then return end
     if goneFrom(cur, all) then return loseAll("session gone") end
     for _, id in ipairs(NS.Meter.SessionsAfter(cur.scanFrom, all)) do
-        if not owned(id) then adopt(id, t) end
+        if not owned(id) then adopt(id, t, via) end
     end
 end
 
@@ -329,7 +339,10 @@ local function begin(t)
     cur = newFight(t)
     sealedTries = 0
     local first = NS.Meter.SessionAfter(t)
-    if first ~= nil and not owned(first) then addSession(cur, first) end
+    if first ~= nil and not owned(first) then
+        addSession(cur, first)
+        cur.boundBy = "entry"
+    end
     if NS.Meter.NewLiveFight then NS.Meter.NewLiveFight() end
     debug("fight %s started at %.2f (session %s)", cur.id, t, tostring(cur.sessionID))
     setState(STATE.COMBAT)
@@ -340,7 +353,7 @@ end
 
 onTick = function()
     if isDown() or state ~= STATE.COMBAT or not cur then return end
-    if cur.sessionID == nil then scan(GetTime()) end
+    if cur.sessionID == nil then scan(GetTime(), "tick") end
     if not cur then return end
     NS.Meter.ShareLive(true)
     NS.SendBus(NS.MSG.FIGHT_TICK, cur)
@@ -394,19 +407,32 @@ function Fight.OnCombatStart(t)
     begin(t)
 end
 
---- PLAYER_REGEN_ENABLED: the fight settles.
+--- PLAYER_REGEN_ENABLED: the fight settles (at once, for a fight *Stop Now* hurried).
 function Fight.OnCombatEnd(t)
     if isDown() or state ~= STATE.COMBAT then return end
     cur.combatEndT = t
     stopTick()
     setState(STATE.SETTLING)
-    scheduleSettle(C.GRACE)
+    scheduleSettle(cur.hurry and 0 or C.GRACE)
 end
 
--- A damage update was heard for the current fight at `t`.
+-- A damage update was heard for the current fight at `t`; the first one for a bound session is the
+-- fight's first hit, said once on the bus.
 local function heard(t)
     cur.lastUpdateT = t
-    if cur.firstHitT == nil and cur.sessionID ~= nil then cur.firstHitT = t end
+    if cur.firstHitT == nil and cur.sessionID ~= nil then
+        cur.firstHitT = t
+        NS.SendBus(NS.MSG.FIGHT_FIRST_HIT, cur)
+    end
+end
+
+-- An unbound fight takes a session the race allowed (Fight.ShareSessions) when an update in combat
+-- names it: the pull carried on a session alive at the arm.
+local function bindShared(id)
+    if id == nil or cur.sessionID ~= nil or not shareable or not shareable[id] or owned(id) then return end
+    addSession(cur, id)
+    cur.sharedSession, cur.boundBy = true, "shared"
+    debug("fight %s bound to session %d, alive at the race's arm (shared)", cur.id, id)
 end
 
 --- DAMAGE_METER_COMBAT_SESSION_UPDATED(statType, sessionID). Only damage counts: a plain other type
@@ -418,6 +444,7 @@ function Fight.OnMeterUpdate(t, statType, sessionID)
     if state == STATE.COMBAT then
         local unknown = id == nil or not owned(id)
         if (id ~= nil and unknown) or (id == nil and t - lastScan >= C.TICK) then scan(t) end
+        if cur then bindShared(id) end
     end
     if cur and (id == nil or cur.sessionSet[id]) then heard(t) end
 end
@@ -461,17 +488,91 @@ function Fight.OnEncounterEnd(t, _, _, _, _, success)
     if state == STATE.IDLE then setState(STATE.IDLE) end
 end
 
+-- ── the race's seams (modules/Race.lua) ─────────────────────────────────────────────────────────
+
+--- The sessions an unbound fight may bind as shared, `{ [id] = true }`, or nil for none (the rule for
+--- every plain fight). Set by an armed race, cleared when it starts, ends or is canceled.
+--- @param set table|nil
+function Fight.ShareSessions(set)
+    shareable = type(set) == "table" and set or nil
+end
+
+-- Whether fight `id` is the current one or a parked one.
+local function holds(id)
+    if cur and cur.id == id then return true end
+    for _, f in ipairs(parked) do
+        if f.id == id then return true end
+    end
+    return false
+end
+
+--- *Stop Now* for the race's fight `id`: settling, every waiting fight is read now (a sealed read
+--- still retries); in combat, the settle runs at the combat end with no wait. Nothing else moves.
+--- @param id string  the fight's id
+--- @return boolean acted
+function Fight.Hurry(id)
+    if isDown() or state == STATE.IDLE or not holds(id) then return false end
+    cur.hurry = true
+    if state == STATE.SETTLING then
+        stopSettle()
+        finishAll()
+    end
+    return true
+end
+
+-- The resumed fight's table: the race's kept fields, on a fresh id. New sessions are looked for from
+-- the resume (the sessions the stand-up primed are older than any).
+local function adoptedFight(spec, now)
+    seq = seq + 1
+    local f = { id = ("%d-%d"):format(time(), seq), startT = spec.startT or now, scanFrom = now, sessions = {},
+                sessionSet = {}, snapshot = spec.snapshot, stats = spec.stats, gearSet = spec.gearSet,
+                firstHitT = spec.firstHitT, lastUpdateT = spec.lastUpdateT, sharedSession = spec.sharedSession,
+                raceBaseline = spec.raceBaseline, boundBy = spec.boundBy or "resume", resumed = true }
+    if spec.talents ~= nil then f.loadout = { talents = spec.talents } end
+    for _, id in ipairs(spec.sessions) do addSession(f, id) end
+    return f
+end
+
+--- A race resumed after a /reload or a stand-up (Race.Resume, race plan Task B2): the fight it rode,
+--- rebuilt from what the race kept and bound to its sessions. In combat it is the current fight
+--- (COMBAT, the tick on, the combat end settling it as ever); out of combat the combat ended unheard,
+--- so it is read now, without the settle's wait (as Hurry reads), on the next timer. No FIGHT_STARTED
+--- or FIGHT_FIRST_HIT: the fight began before the reload, and its casts, usage and chart went with it.
+--- @param spec table  { sessions (plain IDs, at least one), startT, firstHitT, lastUpdateT?, snapshot,
+---                    stats?, talents?, gearSet?, sharedSession?, raceBaseline?, boundBy?, inCombat }
+--- @return table|nil fight  nil while stood down, while a fight is in progress, or with no session
+function Fight.Adopt(spec)
+    if isDown() or state ~= STATE.IDLE or type(spec) ~= "table" or type(spec.sessions) ~= "table"
+        or spec.sessions[1] == nil then
+        return nil
+    end
+    local now = GetTime()
+    cur, parked, sealedTries = adoptedFight(spec, now), {}, 0
+    debug("fight %s resumed on session %s (%s)", cur.id, tostring(cur.sessionID),
+        spec.inCombat and "in combat" or "read now")
+    if spec.inCombat then
+        setState(STATE.COMBAT)
+        startTick()
+    else
+        cur.combatEndT, cur.hurry = now, true
+        setState(STATE.SETTLING)
+        scheduleSettle(0)
+    end
+    return cur
+end
+
 -- ── the lifecycle (core/LifecycleSetup.lua) ─────────────────────────────────────────────────────
 
 --- The stand-down: the fight in memory goes, silently, with its timers; the state is IDLE.
 function Fight.Suspend()
     stopTick()
     stopSettle()
-    cur, parked, encounter, sealedTries = nil, {}, nil, 0
+    cur, parked, encounter, sealedTries, shareable = nil, {}, nil, 0, nil
     state = STATE.IDLE
 end
 
---- The stand-up: nothing to rebuild; a combat already under way is not picked up (Review Focus 4).
+--- The stand-up: nothing to rebuild; a combat already under way is not picked up (Review Focus 4),
+--- unless a race was under way: Race.Resume adopts its fight (Fight.Adopt).
 function Fight.Resume()
     state = STATE.IDLE
 end

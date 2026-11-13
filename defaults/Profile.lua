@@ -36,15 +36,38 @@ local function visibility()
     return v
 end
 
--- What the recording filters store, per content kind (spec §5): every kind on but scenarios. The
+-- What the recording filters store, per content kind (spec §5): every kind on, scenarios too. The
 -- keys are modules/Identity.lua's Identity.CONTENT for this client (a suite holds the two equal):
 -- Mythic+, delves and arenas are Retail-only, so on WoW Forever their keys are ABSENT (clients-§4).
 local function content()
-    local c = { raid = true, dungeon = true, bg = true, world = true, dummy = true, scenario = false }
+    local c = { raid = true, dungeon = true, bg = true, world = true, dummy = true, scenario = true }
     if NS.Compat.ForClient({ "retail" }) then
         c.mplus, c.delve, c.arena = true, true, true
     end
     return c
+end
+
+-- Race mode's own keys (the Race mode page, race plan Task B3), Retail only, so ABSENT on WoW Forever
+-- (clients-§4); the rest of the race table (the length, the scoring rules, the late-cast list) is on
+-- both clients, as a saved race re-scores there too. The switch (Race mode on, which stops new races
+-- only), auto-show near a dummy (on), the DPS HUD opening with it (on, race window redesign ruling
+-- O4) and auto-arm on targeting one (off), the race clock's mode ("left", one countdown, by ruling O2;
+-- "both" or "elapsed"), the countdown's cue, its center numbers and where they start (s), and the
+-- buzzer's raid warning (DPS Race's defaults; modules/Countdown.lua reads the last four).
+local function raceMode(r)
+    if NS.Compat.ForClient({ "retail" }) then
+        r.enabled, r.autoShow, r.autoShowHud, r.autoArm, r.clock = true, true, true, false, "left"
+        r.countdownCue, r.centerCountdown, r.finalCountdown, r.buzzer = true, true, 10, true
+    end
+    return r
+end
+
+-- The new-best toast's keys: `races` only on Retail, where a race can be run (clients-§4). A race's
+-- new best toasts out of the box; a fight's is opt-in (History > New-best toast).
+local function toastDefaults()
+    local t = { fights = false, duration = 10, sound = true, soundKey = "Default", scale = 1.0 }
+    if NS.Compat.ForClient({ "retail" }) then t.races = true end
+    return t
 end
 
 -- One lane's every setting (spec §4's table, tab by tab). The two lanes differ only where `over` says.
@@ -150,6 +173,8 @@ NS.defaults = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
             width = 260, scale = 1, sizeMode = "fixed", bars = 5, grow = "down",
+            -- Both windows' live refreshes a second (modules/Hud.lua's beat, the race beat): 4, 5, 10 or 20.
+            refreshRate = 10,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
             clock = { font = "JetBrains Mono", fontSize = 26, fontColor = rgba(0.92, 0.91, 0.88, 1),
@@ -185,11 +210,12 @@ NS.defaults = {
                        footer = true, strata = "MEDIUM", alpha = 1 },
         },
         -- The recording filters and retention (spec §5; modules/Filters.lua, modules/Retention.lua):
-        -- the minimum length in seconds, bosses only, one toggle per content kind (content(), above),
+        -- the minimum length in seconds (30 on Retail, 15 on WoW Forever, where fights run shorter),
+        -- bosses only, one toggle per content kind (content(), above),
         -- the days a fight is kept (0 = for ever), whether a fight holding a best is kept past them,
         -- and the store's cap (0 = none).
         history = {
-            minLength = 30, bossesOnly = false, content = content(),
+            minLength = NS.Compat.ForClient({ "forever" }) and 15 or 30, bossesOnly = false, content = content(),
             days = 7, keepBests = true, maxFights = 500,
         },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view
@@ -207,9 +233,19 @@ NS.defaults = {
         -- NS.ResultsDetail.SECTIONS, open stored as nothing), which Reset position keeps; and
         -- `timelineMarks`, how the ability timeline's By ability lanes draw a cast (v0.2 Task D1,
         -- modules/Results_TimelineMarks.lua): "icon" (its ability's icon) or "tick" (a thin line).
+        -- The view's race filters (Race mode plan Task D1, modules/Results_Races.lua; Retail only, read
+        -- as "all" on WoW Forever): `kind` "all" | "fights" | "races"; under "races" alone, `length`
+        -- (seconds or "all"), `dummyKind` (a dummy category or "all"), `hideFlagged`,
+        -- `includeIncomplete` (DPS Race's default: on) and `onlyBest`.
         results = {
             view = { character = "current", spec = "all", content = "all", board = "all", difficulty = "all",
-                     days = 7, bossesOnly = false, group = "datechar", sort = "date", desc = true },
+                     days = 7, bossesOnly = false, group = "datechar", sort = "date", desc = true,
+                     kind = "all", length = "all", dummyKind = "all", hideFlagged = false,
+                     includeIncomplete = true, onlyBest = false },
+            -- The Insights tab's stock view (modules/Results_Insights.lua, Race mode plan Task D2): every
+            -- character, spec, content and date, fights and races; Clean only and Include incomplete off.
+            insights = { character = "all", spec = "all", content = "all", days = 0, kind = "all",
+                         length = "all", dummyKind = "all", cleanOnly = false, includeIncomplete = false },
             window = { point = "CENTER", relPoint = "CENTER", x = 0, y = 0, height = 520,
                        view = "collapsed" },
             scale = 1, rowHeight = 18,
@@ -218,6 +254,39 @@ NS.defaults = {
             collapsedSections = {},
             timelineMarks = "icon",
         },
+        -- The player's own training dummies (modules/Dummies.lua, race plan Task A2): one string of
+        -- `id:category` (a dummy of the player's) and `-id` (a built-in switched off) entries, written
+        -- whole through the seam. Empty: the client's seed alone (defaults/Dummies.lua).
+        dummies = { custom = "" },
+        -- Race mode (modules/Race.lua, race plan Task B1; Retail only, its page is Task B3's): the
+        -- length a race arms at until the player picks one (s; `lastLength`, no default, is the last
+        -- one armed, state the race writes, not a setting), the grace after the buzzer before a cast
+        -- start is late (s) and the quiet after the buzzer before damage counts as restarted (s), both
+        -- frozen into each race as it arms, and the seconds in combat after the buzzer before the
+        -- Race window's drop-combat hint (DPS Race's). The late-cast ignore list (modules/LateIgnore.lua)
+        -- is the one read at score time, never frozen, so an edit re-scores every saved race: spell
+        -- IDs, ascending and comma-separated, 8690 standing for every hearthstone
+        -- (defaults/Hearthstones.lua): Invisibility, Vanish, Feign Death, Hearthstone, Shadowmeld,
+        -- Greater Invisibility. On both clients: a saved race (account-wide) re-scores on WoW Forever too.
+        -- The Retail-only part (raceMode(), below, Task B3) adds the Race mode page's own keys.
+        race = raceMode({ defaultLength = 60, grace = 1.0, restartGap = 6, hintDelay = 15,
+                          lateIgnore = "66,1856,5384,8690,58984,110959" }),
+        -- The Race window's place (Race mode, Task B3; Retail only, so ABSENT on WoW Forever,
+        -- clients-§4): attached beside the DPS HUD, on its `side` ("RIGHT", "LEFT", "TOP", "BOTTOM"),
+        -- and on LEFT or RIGHT at the HUD's height while `matchHud` (race window redesign plan Task W4);
+        -- detached, it stands at `position` (modules/RaceWindow.lua, Task C1), written by its title
+        -- bar's drag and put back by Master controls' Reset position. Its `width` (260-600 px) and,
+        -- when its height is not the HUD's, its `height` (0-1000 px, never less than it needs: 0 is
+        -- that least) are written by its grip (owner, 2026-11-13).
+        raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT", matchHud = true,
+            width = 260, height = 0,
+            position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
+        -- The new-best toast (modules/BestToast.lua, race plan Task C2; History > New-best toast): a
+        -- fight's new best toasts on both clients (`fights`), a race's on Retail only (`races`, ABSENT
+        -- on WoW Forever, clients-§4); how long it stays (s), its sound (on, and which: "Default" is
+        -- the toast shell's alert, any other a LibSharedMedia key) and its scale. `point` (no default)
+        -- is where *Test toast*'s drag put it, cleared by Master controls' Reset position.
+        toast = toastDefaults(),
         -- The skin this addon wears (skinning-§2: per addon, per profile; core/SkinSetup.lua): the
         -- source and the skin, the client's default skin (WoW Forever on Forever, Ka0s Default on
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the
@@ -239,6 +308,14 @@ NS.defaults = {
         -- The items the Results detail's Usage never lists (modules/Usage.lua, spec §7's "never show"
         -- list): item IDs, comma-separated. Global, as the fight store it filters is.
         usage = { hidden = "" },
+        -- What the game said about each creature `/ct dummy` captured, by creature ID
+        -- (modules/Dummies.lua): data, not a setting. Global, as a creature is the same on every
+        -- profile.
+        dummies = { captures = {} },
+        -- The race under way, per character (modules/Race.lua, race plan Task B2): written at its first
+        -- hit and cleared at its result or a cancel, so Race.Resume carries it on after a /reload.
+        -- Keyed by Bests.CharKey ("name|realm|client"); plain fields only. Data, not a setting.
+        pendingRaces = {},
         -- LibDBIcon's own table, handed straight to :Register (launcher-§3). Global, because the
         -- button belongs to the installation and a profile switch must not move it.
         minimap = { hide = false },

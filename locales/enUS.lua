@@ -32,12 +32,15 @@ L["The %s cannot use the unit frame %s, so it sits at its own place."] =
 -- Key bindings (launcher-§6)
 L["Toggle DPS HUD"] = "Toggle DPS HUD"
 L["Toggle Results window"] = "Toggle Results window"
+L["Toggle Race window"] = "Toggle Race window"
 L["Toggle lanes"] = "Toggle lanes"
 L["Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."] =
     "Shows or hides the DPS HUD, as the launcher's Show window entry and /ct hud do."
 L["Shows or hides the Results window, with your fight history."] =
     "Shows or hides the Results window, with your fight history."
 L["Shows or hides the Player and Pet cast lanes."] = "Shows or hides the Player and Pet cast lanes."
+L["Shows or hides the Race window, as /ct race toggle and the DPS HUD's flag do."] =
+    "Shows or hides the Race window, as /ct race toggle and the DPS HUD's flag do."
 L["The lanes are off. Press the key again to bring them back."] =
     "The lanes are off. Press the key again to bring them back."
 L["The lanes are on."] = "The lanes are on."
@@ -73,8 +76,8 @@ L["Restore every General setting on this profile to its addon default: Master co
     "Restore every General setting on this profile to its addon default: Master controls and the look and skin."
 L["It fills the lanes, the HUD and the Results window with sample data."] =
     "It fills the lanes, the HUD and the Results window with sample data."
-L["Move the lanes, the DPS HUD and the Results window back to where they started."] =
-    "Move the lanes, the DPS HUD and the Results window back to where they started."
+L["Move the lanes, the DPS HUD, the Results window and the new-best toast back to where they started."] =
+    "Move the lanes, the DPS HUD, the Results window and the new-best toast back to where they started."
 L["Show DPS HUD in combat"] = "Show DPS HUD in combat"
 L["Open the DPS HUD whenever you enter combat. Off, it opens only when you show it."] =
     "Open the DPS HUD whenever you enter combat. Off, it opens only when you show it."
@@ -454,6 +457,11 @@ L["How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it to
     "How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."
 L["HUD scale"] = "HUD scale"
 L["The size of the whole HUD, its text included."] = "The size of the whole HUD, its text included."
+L["Refresh"] = "Refresh"
+L["HUD refresh rate"] = "HUD refresh rate"
+L["%d a second"] = "%d a second"
+L["How many times a second everything live on the DPS HUD redraws during a fight: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows. Faster reads the damage meter more often."] =
+    "How many times a second everything live on the DPS HUD redraws during a fight: the clock, Damage and DPS, the pace bar, the damage chart and the spell rows. Faster reads the damage meter more often."
 L["Clock font"] = "Clock font"
 L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."] =
     "The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."
@@ -598,7 +606,7 @@ L["Results"] = "Results"
 L["Damage"] = "Damage"
 L["DPS"] = "DPS"
 L["DPS \194\183 Live"] = "DPS \194\183 Live"
-L["live \194\183 4 Hz"] = "live \194\183 4 Hz"
+L["live \194\183 %d Hz"] = "live \194\183 %d Hz"
 L["Pinned open"] = "Pinned open"
 L["Fades %d s after the fight"] = "Fades %d s after the fight"
 L["%+.1f%%"] = "%+.1f%%"
@@ -665,8 +673,8 @@ L["Sim: a made-up fight, not your data. /ct sim ends it."] =
     "Sim: a made-up fight, not your data. /ct sim ends it."
 L["Test mode: sample fights. Nothing here is saved."] = "Test mode: sample fights. Nothing here is saved."
 L["Combat Trail \226\128\148 Results \194\183 Test"] = "Combat Trail \226\128\148 Results \194\183 Test"
-L["Usage: /ct results, or /ct results show, hide or toggle"] =
-    "Usage: /ct results, or /ct results show, hide or toggle"
+L["Usage: /ct results, or /ct results show, hide, toggle or insights"] =
+    "Usage: /ct results, or /ct results show, hide, toggle or insights"
 L["Edit Note"] = "Edit Note"
 L["Add Note"] = "Add Note"
 L["Share"] = "Share"
@@ -1044,8 +1052,8 @@ L["Training dummies"] = "Training dummies"
 L["Scenarios"] = "Scenarios"
 L["Which fights"] = "Which fights"
 L["Minimum fight length (seconds)"] = "Minimum fight length (seconds)"
-L["A fight shorter than this is shown on the DPS HUD but not stored."] =
-    "A fight shorter than this is shown on the DPS HUD but not stored."
+L["A fight shorter than this is shown on the DPS HUD but not stored. The default is %d seconds."] =
+    "A fight shorter than this is shown on the DPS HUD but not stored. The default is %d seconds."
 L["Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."] =
     "Store only boss encounters. Trash, the open world and training dummies are still shown on the DPS HUD."
 L["Content to store"] = "Content to store"
@@ -1094,8 +1102,31 @@ L["Hide an item"] = "Hide an item"
 L["An item ID, a shift-clicked item link, or the name of an item a fight listed."] =
     "An item ID, a shift-clicked item link, or the name of an item a fight listed."
 L["No item is hidden."] = "No item is hidden."
-L["Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."] =
-    "Restore every History setting on this profile to its addon default, and empty the account-wide hidden items. Stored fights are not touched."
+-- The Training dummies tab (settings/History.lua, race plan Task A2)
+L["Your training dummies"] = "Your training dummies"
+L["The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."] =
+    "The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."
+L["\194\183 %s"] = "\194\183 %s"
+L["Target a creature first."] = "Target a creature first."
+L["Built-in training dummies. Clear one to stop counting it as a dummy."] =
+    "Built-in training dummies. Clear one to stop counting it as a dummy."
+L["%s (%d) \194\183 %s"] = "%s (%d) \194\183 %s"
+L["Count this built-in as a training dummy. Cleared, a fight on it is stored as open world."] =
+    "Count this built-in as a training dummy. Cleared, a fight on it is stored as open world."
+L["Your own training dummies: a fight on one is stored as a Training dummies fight. Target a dummy and click Add your target, or type /ct dummy add; either saves what the game says about it."] =
+    "Your own training dummies: a fight on one is stored as a Training dummies fight. Target a dummy and click Add your target, or type /ct dummy add; either saves what the game says about it."
+L["Add your target"] = "Add your target"
+L["Count your target as a training dummy (single target; /ct dummy add <category> gives another) and save what the game says about it: its level, health, zone and where you stand. A built-in that is switched off is switched back on."] =
+    "Count your target as a training dummy (single target; /ct dummy add <category> gives another) and save what the game says about it: its level, health, zone and where you stand. A built-in that is switched off is switched back on."
+L["Add a creature"] = "Add a creature"
+L["A creature ID, or the name of a creature you captured. It is counted as single target."] =
+    "A creature ID, or the name of a creature you captured. It is counted as single target."
+L["No training dummies of your own yet."] = "No training dummies of your own yet."
+L["Reset list"] = "Reset list"
+L["Remove your own training dummies, and switch back on any built-in you switched off. Stored fights are not touched."] =
+    "Remove your own training dummies, and switch back on any built-in you switched off. Stored fights are not touched."
+L["Restore every History setting on this profile to its addon default, your training dummies among them, and empty the account-wide hidden items. Stored fights are not touched."] =
+    "Restore every History setting on this profile to its addon default, your training dummies among them, and empty the account-wide hidden items. Stored fights are not touched."
 
 -- Test mode and the sim (modules/Preview.lua, modules/Sim.lua, modules/MockFights.lua). The sample
 -- history's difficulty and spec names stand in for the client's own; its boss, place and character
@@ -1134,3 +1165,75 @@ L["Beast Mastery"] = "Beast Mastery"
 L["Sample note: every cooldown in the opener"] = "Sample note: every cooldown in the opener"
 L["Sample note: tier 8 with the bountiful key"] = "Sample note: tier 8 with the bountiful key"
 L["Sample note: a clean dummy pull"] = "Sample note: a clean dummy pull"
+
+-- The training dummies (modules/Dummies.lua, race plan Task A2): the categories, the captures' line
+-- and `/ct dummy`
+L["Single target"] = "Single target"
+L["Cleave"] = "Cleave"
+L["Dungeoneer"] = "Dungeoneer"
+L["Boss-level"] = "Boss-level"
+L["PvP"] = "PvP"
+L["Usage: %s dummy [show|add|remove|capture|defaults] [category or creature ID]"] =
+    "Usage: %s dummy [show|add|remove|capture|defaults] [category or creature ID]"
+L["%s (%d)"] = "%s (%d)"
+L["Creature %d"] = "Creature %d"
+L["skull level"] = "skull level"
+L["level %d"] = "level %d"
+L["%s %s"] = "%s %s"
+L["%s, %s"] = "%s, %s"
+L["%s %.1f, %.1f"] = "%s %.1f, %.1f"
+L["%s health"] = "%s health"
+L["PvP flagged"] = "PvP flagged"
+L["not PvP flagged"] = "not PvP flagged"
+L["Your target is not a creature, so it cannot be a training dummy."] =
+    "Your target is not a creature, so it cannot be a training dummy."
+L["No training dummies of your own. Target one and type %s dummy add."] =
+    "No training dummies of your own. Target one and type %s dummy add."
+L["Your training dummies:"] = "Your training dummies:"
+L["  %s \194\183 %s"] = "  %s \194\183 %s"
+L["Built-in training dummies: %d, %d switched off."] = "Built-in training dummies: %d, %d switched off."
+L["  %s (off)"] = "  %s (off)"
+L["%s is a training dummy now: %s."] = "%s is a training dummy now: %s."
+L["%s is a training dummy again: %s."] = "%s is a training dummy again: %s."
+L["%s is already a built-in training dummy: %s."] = "%s is already a built-in training dummy: %s."
+L["%s is already a training dummy: %s."] = "%s is already a training dummy: %s."
+L["'%s' is no category. Use single, cleave, dungeoneer, boss or pvp."] =
+    "'%s' is no category. Use single, cleave, dungeoneer, boss or pvp."
+L["Saved: %s"] = "Saved: %s"
+L["No creature '%s' is known. Use its creature ID."] = "No creature '%s' is known. Use its creature ID."
+L["%s is no longer a training dummy."] = "%s is no longer a training dummy."
+L["%s, a built-in training dummy, is switched off. %s dummy add on it brings it back."] =
+    "%s, a built-in training dummy, is switched off. %s dummy add on it brings it back."
+L["%s is not a training dummy."] = "%s is not a training dummy."
+L["Your training dummies are cleared: only the built-in ones count."] =
+    "Your training dummies are cleared: only the built-in ones count."
+L["Your training dummies: /ct dummy show|add|remove|capture|defaults"] =
+    "Your training dummies: /ct dummy show|add|remove|capture|defaults"
+
+-- The new-best toast (modules/BestToast.lua, race plan Task C2): its History tab, its words, and the
+-- incomplete word a shared race line carries (modules/Share.lua), on both clients
+L["New-best toast"] = "New-best toast"
+L["Toast a fight's new best"] = "Toast a fight's new best"
+L["When a stored fight sets a new best on its board (character and spec on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."] =
+    "When a stored fight sets a new best on its board (character and spec on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."
+L["When a stored fight sets a new best on its board (character and talent tree on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."] =
+    "When a stored fight sets a new best on its board (character and talent tree on one boss or target at one difficulty), a toast near the top of the screen says by how much. A board's first fight has nothing to beat and shows none."
+L["Play a sound"] = "Play a sound"
+L["Play an alert sound as the toast appears."] = "Play an alert sound as the toast appears."
+L["Toast sound"] = "Toast sound"
+L["The sound the toast plays. Default is the game's alert; every other entry comes from LibSharedMedia. Play a sound turns it on and off."] =
+    "The sound the toast plays. Default is the game's alert; every other entry comes from LibSharedMedia. Play a sound turns it on and off."
+L["Toast duration (seconds)"] = "Toast duration (seconds)"
+L["How long the toast stays before it closes by itself. It waits while the pointer is over it, and closes at once on its X or a right-click. 3 to 30."] =
+    "How long the toast stays before it closes by itself. It waits while the pointer is over it, and closes at once on its X or a right-click. 3 to 30."
+L["Toast scale"] = "Toast scale"
+L["The toast's size. It grows and shrinks about the place you dragged it to. 0.5 to 2.0."] =
+    "The toast's size. It grows and shrinks about the place you dragged it to. 0.5 to 2.0."
+L["Test toast"] = "Test toast"
+L["Show a sample new-best toast with the duration, sound and scale above. Drag it to place it while it shows; Reset position (General > Master controls) puts it back."] =
+    "Show a sample new-best toast with the duration, sound and scale above. Drag it to place it while it shows; Reset position (General > Master controls) puts it back."
+L["New best:"] = "New best:"
+L["%s DPS, %s better than previous best (%s)"] = "%s DPS, %s better than previous best (%s)"
+L["Default"] = "Default"
+L["Training Dummy"] = "Training Dummy"
+L["incomplete"] = "incomplete"

@@ -30,6 +30,8 @@ end
 function NS:OnEnable()
     if NS.IsStoodDown() then return end
     NS.RegisterGameEvents()
+    -- A race a /reload cut off, carried on once the meter is primed (modules/Race.lua, Task B2).
+    if NS.Race then NS.Race.Resume() end
     -- The first-run skin picker (core/SkinSetup.lua), once per session on a profile that has not
     -- closed it: two seconds in, off the login spike, on an AceTimer the stand-down cancels. The
     -- stored skin was applied in OnInitialize; in combat the show holds for PLAYER_REGEN_ENABLED.
@@ -58,6 +60,11 @@ function NS.RegisterGameEvents()
     if NS.Identity then NS.Identity.Prime() end
     -- The fight watchers' events for the fight state machine's current state (modules/Watchers.lua).
     if NS.Watchers then NS.Watchers.Sync() end
+    -- The race's events for the race's current state, Retail only (modules/RaceWatchers.lua).
+    if NS.RaceWatchers then NS.RaceWatchers.Sync() end
+    -- Auto-show and auto-arm near a training dummy: their target and nameplate events, for the rules
+    -- on, with Race mode on, on Retail (modules/AutoArm.lua).
+    if NS.AutoArm then NS.AutoArm.Sync() end
     -- The equipment recon's events, and one recon now: at login and every stand-up, whatever the gear
     -- became while the addon was not watching is interned as the current set (modules/Loadouts.lua).
     if NS.Loadouts then NS.Loadouts.Sync() end
@@ -84,9 +91,11 @@ local function notBuilt()
 end
 
 -- The modules with a frame the player places: each is reached at CALL time and joins in the task
--- that builds it (the lanes, the DPS HUD and the Results window, plan milestones 1, 3 and 4). A module
+-- that builds it (the lanes, the DPS HUD and the Results window, plan milestones 1, 3 and 4; the
+-- Race window, race plan Task C1, Retail only; the new-best toast, Task C2, whose Reset position clears
+-- the place its sample was dragged to). A module
 -- carries `SetLocked(locked)` and `ResetPosition()`.
-local PLACED = { "Lanes", "Hud", "Results" }
+local PLACED = { "Lanes", "Hud", "RaceWindow", "BestToast", "Results" }
 
 local function eachPlaced(method, ...)
     for _, name in ipairs(PLACED) do
@@ -121,7 +130,9 @@ function NS.OnHudInCombatChanged()
     if NS.Hud and NS.Hud.Refresh then NS.Hud.Refresh() end
 end
 
---- The launcher's Show window entry and the HUD key: show or hide the DPS HUD.
+--- The launcher's Show window entry and the HUD key: show or hide the DPS HUD (Hud.Toggle: a close
+--- takes an open Race window with it; an open is the HUD's alone, but near a training dummy with
+--- auto-show on it opens the Race window too).
 function NS.ToggleHud()
     if refused() then return false end
     if not (NS.Hud and NS.Hud.Toggle) then return notBuilt() end
@@ -131,6 +142,30 @@ end
 
 function NS.IsHudShown()
     return NS.Hud ~= nil and NS.Hud.IsShown ~= nil and NS.Hud.IsShown() == true
+end
+
+--- The Race window's words, by the act each one asks of it.
+local RACE_WINDOW_ACT = { show = "Show", hide = "Hide", toggle = "Toggle" }
+
+--- `/ct race show|hide|toggle` (Race mode, Retail): show, hide or toggle the Race window (Task C1's
+--- NS.RaceWindow). With Race mode off it does nothing and says why in one line (spec §8).
+--- @param how string  "show" | "hide" | "toggle"
+function NS.SetRaceWindowShown(how)
+    if refused() then return false end
+    if not NS.RaceMode.On() then
+        NS.Print(L["Race mode is off. Turn it on at the top of the Race mode settings page."])
+        return false
+    end
+    local W = NS.RaceWindow
+    local act = W and W[RACE_WINDOW_ACT[how] or "Toggle"]
+    if not act then return notBuilt() end
+    act()
+    return true
+end
+
+--- `/ct race toggle`: show or hide the Race window.
+function NS.ToggleRaceWindow()
+    return NS.SetRaceWindowShown("toggle")
 end
 
 --- The Results window key and `/ct results`: show or hide the Results window.
@@ -184,15 +219,22 @@ function NS.IsTestMode()
     return NS.Preview.Mode() == "test"
 end
 
---- The Test mode row's own set: start or stop test mode.
+--- The Test mode row's own set: start or stop test mode (a start takes the options queued for it:
+--- `/ct test race`'s, modules/Preview.lua TestRace).
 function NS.SetTestMode(on)
-    if on then NS.Preview.Start({ mode = "test" }) else NS.Preview.Stop() end
+    if on then NS.Preview.Start() else NS.Preview.Stop() end
 end
 
 --- `/ct test` and the launcher's Test mode entry: through the row's write seam, so the box follows.
 function NS.ToggleTestMode()
     if refused() then return false end
     return NS.SetByPath("general.testMode", not NS.IsTestMode())
+end
+
+--- `/ct test race [armed|running|result]` (Race mode, Retail): test mode holding a sample race.
+function NS.TestRace(word)
+    if refused() then return false end
+    return NS.Preview.TestRace(word)
 end
 
 --- Whether Sim mode reads on: the sim's step window shown or a sim running (modules/Sim.lua).

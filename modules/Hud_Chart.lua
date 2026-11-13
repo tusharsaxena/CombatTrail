@@ -5,7 +5,8 @@ local _, NS = ...
 -- pace bar sets the fight's damage against the paced best's at this point (modules/Hud_Best.lua).
 -- Adapted from DPS Race @045f479 (modules/Hud_Chart.lua) without its race: no race length or buzzer
 -- (the chart spans the fight, or the best's duration while that is longer), no shared session, and a
--- pace bar that carries the pet.
+-- pace bar that carries the pet. The one race part is the Results detail's (ruling X9): OverView with a
+-- race's clock runs the columns from its first hit and marks its buzzer with a line (Strip:drawBuzzer).
 --
 -- A VISUAL INDICATOR, NO MATH ON A VALUE. A column's value is the player's live total copied at its
 -- step: secret in combat, and it stays secret. It goes to StatusBar:SetValue and nowhere else. The
@@ -37,6 +38,11 @@ local _, NS = ...
 -- Race's (FONT.SECTION on Style.SECTION_H), and the HUD lays the pace bar on a line between it and
 -- the plot (Place's `midH`; Hud_States' placeProfile), keeping the heading over the bar when the plot
 -- is off (SetParts).
+--
+-- THE RACE WINDOW'S MINI PACE BARS (owner, 2026-11-13) are this bar built thinner (NewPace's `opts`):
+-- Best by now's, the whole bar over its track; each Checkpoint's, `bare` (no track, the behind half's
+-- fill unpainted, so only the red shortfall and the green ahead grow from the tick), placed at an x
+-- offset inside its cell. Same halves, same clamp, same HudBest.Bounds range.
 
 local Chart = {}
 NS.HudChart = Chart
@@ -54,6 +60,9 @@ Chart.ICON = 12         -- a cooldown icon's size
 Chart.ICON_GAP = 1      -- between two rows of icons
 Chart.RESERVE = Chart.ICON + Chart.ICON_GAP   -- the plot's headroom on top: one row of icons
 Chart.PACE_H = 12       -- the pace bar's line: the bar 8px tall, 2px clear over and under it
+-- A race's buzzer line (the Results detail and the Timeline, ruling X9): the Timing strip's race hue
+-- (modules/Results_RaceDetail.lua RD.RACE), DPS Race's data hue, the same under every skin.
+Chart.BUZZER = { 0.53, 0.53, 0.93 }
 
 local ICON_CROP = { 0.08, 0.92, 0.08, 0.92 }
 
@@ -174,9 +183,9 @@ function Chart.Cooldowns(casts, spells)
     return out
 end
 
--- The view's columns from the fight's store, over `span` seconds.
-local function columnsOf(fightID, span)
-    local cols = NS.Slices.Columns(fightID, span, Chart.MaxColumns())
+-- The view's columns from the fight's store, over `span` seconds from `shift` seconds in (default 0).
+local function columnsOf(fightID, span, shift)
+    local cols = NS.Slices.Columns(fightID, span, Chart.MaxColumns(), shift)
     if not cols then return nil end
     return { count = cols.count, step = cols.step, values = cols.values, span = cols.count * cols.step }
 end
@@ -217,20 +226,33 @@ function Chart.LiveView(fight, curve, live, elapsed, cooldowns)
     return view
 end
 
+-- The fight-over chart's span and its clock: the fight's length (its duration or its steps, the
+-- longer) from `shift` seconds in, and never short of the race `length` (0 for a fight).
+local function overSpan(rec, final, clock)
+    local duration = final and NS.Secrets.PlainNumber(final.duration) or 0
+    local shift, length = clock and clock.shift or 0, clock and clock.length or 0
+    local steps = (rec.count or 0) * NS.Slices.STEP
+    return math.max(duration - shift, steps - shift, length, NS.Slices.STEP), shift, length
+end
+
 --- The fight-over card's chart: the fight's columns over its length, scaled to its plain final
---- player damage, against the best it was paced on when there is one. Nil when this session holds no
---- columns for it.
+--- player damage, against the best it was paced on when there is one. With a race's `clock` (the
+--- Results detail, ruling X9) the columns run from its first hit (`shift` seconds in), the span reaches
+--- at least its `length`, and `buzzer` is where that length falls (a fraction of the span). Nil when
+--- this session holds no columns for it.
 --- @param fight table
 --- @param curve table|nil
 --- @param final table|nil  the after-combat read (plain)
---- @param cooldowns table|nil
+--- @param cooldowns table|nil  on the chart's clock (a race's already moved onto its race clock)
+--- @param clock table|nil  { shift, length } (modules/Results_Races.lua Clock)
 --- @return table|nil view
-function Chart.OverView(fight, curve, final, cooldowns)
+function Chart.OverView(fight, curve, final, cooldowns, clock)
     local rec = NS.Slices.Get(fight.id)
     if not rec or (rec.filled or 0) == 0 then return nil end
-    local duration = final and NS.Secrets.PlainNumber(final.duration) or 0
-    local view = columnsOf(fight.id, math.max(duration, (rec.count or 0) * NS.Slices.STEP, NS.Slices.STEP))
+    local span, shift, length = overSpan(rec, final, clock)
+    local view = columnsOf(fight.id, span, shift)
     if not view then return nil end
+    if length > 0 then view.buzzer = length / view.span end
     local player = final and final.player and NS.Secrets.PlainNumber(final.player.total)
     if not player or player <= 0 then return nil end
     view.cooldowns, view.note = cooldowns, ""
@@ -283,6 +305,10 @@ function Chart.New(parent)
     s.over:SetFrameLevel((s.plot:GetFrameLevel() or 0) + NS.Constants.LAYERS.LEVEL.CHART_OVERLAY)
     s.line = s.over:CreateLine(nil, "OVERLAY")
     s.line:SetThickness(Chart.LINE_W)
+    s.buzzer = s.over:CreateTexture(nil, "OVERLAY")
+    s.buzzer:SetColorTexture(Chart.BUZZER[1], Chart.BUZZER[2], Chart.BUZZER[3], 1)
+    s.buzzer:SetWidth(Chart.LINE_W)
+    s.buzzer:Hide()
     s.zero = s.over:CreateTexture(nil, "OVERLAY")
     s.zero:SetHeight(1)
     Style.Fill(s.zero, "ct.chart.grid")
@@ -416,6 +442,17 @@ function Strip:drawLine(level)
     self.line:SetEndPoint("BOTTOMLEFT", self.over, (self.width or 0) - Chart.INSET, Chart.INSET + h * level)
 end
 
+-- A race's buzzer line at `at` (a plain fraction of the plot's width), up the plot; hidden with none.
+function Strip:drawBuzzer(at)
+    self.buzzer:SetShown(at ~= nil)
+    if at == nil then return end
+    local inner = (self.width or 0) - 2 * Chart.INSET
+    local x = Chart.INSET + inner * math.max(0, math.min(1, at)) - Chart.LINE_W / 2
+    self.buzzer:ClearAllPoints()
+    self.buzzer:SetPoint("TOPLEFT", self.over, "TOPLEFT", x, -Chart.INSET)
+    self.buzzer:SetHeight(math.max(1, (self.frameH or 0) - 2 * Chart.INSET))
+end
+
 --- Draw `view` (Chart.LiveView's or OverView's). Its `max` may be secret (live with no best): it, as
 --- each column's value, only reaches SetMinMaxValues and SetValue.
 function Strip:Draw(view)
@@ -425,6 +462,7 @@ function Strip:Draw(view)
     for i = 1, count do self:fill(i, self.cols[i], view.values[i], view.max) end
     for i = count + 1, #self.cols do self.cols[i]:Hide() end
     self:drawLine(view and view.best or nil)
+    self:drawBuzzer(view and view.buzzer or nil)
     local span = view and view.span or 0
     self:drawIcons(view and view.cooldowns or nil, span)
     self.note:SetText(view and view.note or "")
@@ -545,14 +583,15 @@ function Pace:anchorShortfall()
     self.fillAnchor = fill
 end
 
--- The bar's look, once per Appearance stamp: the behind half in the spell rows' bar look, the ahead
--- half in its texture and the green, the shortfall in the red, both at the look's opacity.
+-- The bar's look, once per Appearance stamp: the behind half in the spell rows' bar look (unpainted,
+-- alpha 0, on a bare bar), the ahead half in its texture and the green, the shortfall in the red,
+-- both at the look's opacity.
 function Pace:restyle()
     local A = NS.HudAppearance
     if self.stamp == A.stamp then return end
     self.stamp = A.stamp
     local look = A.Bar("spells")
-    A.PaintBar(self.behind, look)
+    A.PaintBar(self.behind, look, self.bare and { r = 0, g = 0, b = 0, a = 0 } or nil)
     local r, g, b = Style.Rgb(AHEAD)
     A.PaintBar(self.ahead, look, { r = r, g = g, b = b, a = look.a })
     Style.Fill(self.shortfall, BEHIND, look.a)
@@ -567,15 +606,21 @@ local function halfBar(parent)
 end
 
 --- The pace bar built into `parent`: the track, the behind and ahead halves split at the on-pace
---- tick, the red shortfall, and the tick over both.
+--- tick, the red shortfall, and the tick over both. `opts` (the Race window's mini bars): `barH`, the
+--- bar's height (default the HUD's, PACE_H - 4); `bare`, no track and no behind fill; `tip = false`,
+--- no HUD tooltip (the caller gives its own).
 --- @param parent table
+--- @param opts table|nil
 --- @return table pace
-function Chart.NewPace(parent)
-    local p = setmetatable({}, Pace)
+function Chart.NewPace(parent, opts)
+    opts = opts or {}
+    local p = setmetatable({ barH = opts.barH or (Chart.PACE_H - 4), bare = opts.bare == true }, Pace)
     p.bar = CreateFrame("Frame", nil, parent)
-    p.track = p.bar:CreateTexture(nil, "BACKGROUND")
-    p.track:SetAllPoints(p.bar)
-    Style.Fill(p.track, "ct.pace.track")
+    if not p.bare then
+        p.track = p.bar:CreateTexture(nil, "BACKGROUND")
+        p.track:SetAllPoints(p.bar)
+        Style.Fill(p.track, "ct.pace.track")
+    end
     p.behind = halfBar(p.bar)
     p.ahead = halfBar(p.bar)
     p.shortfall = p.behind:CreateTexture(nil, "ARTWORK")
@@ -586,7 +631,7 @@ function Chart.NewPace(parent)
     Style.Fill(p.tick, "ct.pace.tick")
     p.tick:SetWidth(2)
     p:restyle()
-    NS.HudTips.Attach(p.bar, "pace")
+    if opts.tip ~= false then NS.HudTips.Attach(p.bar, "pace") end
     return p
 end
 
@@ -594,15 +639,16 @@ function Pace:SetShown(on)
     self.bar:SetShown(on and true or false)
 end
 
---- Place it on the PACE_H line at `y` (negative, from `anchor`'s top) across `width`, DPS Race's
---- geometry: the bar 2px under the line's top and 4px shorter than it, the tick in its middle, the
---- behind half left of it and the ahead half right of it; answers the line's height.
+--- Place it on its line at `y` (negative, from `anchor`'s top) across `width`, `x` in (default 0),
+--- DPS Race's geometry: the bar 2px under the line's top and 4px shorter than it (the HUD's line is
+--- PACE_H), the tick in its middle, the behind half left of it and the ahead half right of it;
+--- answers the line's height.
 --- @return number
-function Pace:Place(anchor, y, width)
+function Pace:Place(anchor, y, width, x0)
     self.bar:ClearAllPoints()
-    self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", 0, y - 2)
+    self.bar:SetPoint("TOPLEFT", anchor, "TOPLEFT", x0 or 0, y - 2)
     self.barW = math.max(1, width)
-    local h = Chart.PACE_H - 4
+    local h = self.barH
     self.bar:SetSize(self.barW, h)
     local x = math.floor(self.barW / 2 + 0.5)
     self.tick:ClearAllPoints()
@@ -615,7 +661,7 @@ function Pace:Place(anchor, y, width)
     self.ahead:SetPoint("TOPLEFT", self.bar, "TOPLEFT", x, 0)
     self.ahead:SetSize(math.max(1, self.barW - x), h)
     self:anchorShortfall()
-    return Chart.PACE_H
+    return h + 4
 end
 
 --- The range (plain, HudBest.Bounds: the pace in the middle), then the total (opaque live, plain
@@ -625,11 +671,34 @@ end
 --- @param hi number
 --- @param total any
 function Pace:Set(lo, hi, total)
+    if total == nil then total = lo end
+    self:SetRange(lo, hi)
+    self:SetTotal(total)
+end
+
+--- The range alone (plain, HudBest.Bounds), the halves shown. Pace:Set's first half.
+--- @param lo number
+--- @param hi number
+function Pace:SetRange(lo, hi)
     self:restyle()
     local mid = (lo + hi) / 2
     self.behind:SetMinMaxValues(lo, mid)
     self.ahead:SetMinMaxValues(mid, hi)
-    if total == nil then total = lo end
+    self.behind:Show()
+    self.ahead:Show()
+end
+
+--- The total alone, straight to both halves (opaque: never tested, not even for nil; the caller
+--- holds a plain flag for whether there is one). Pace:Set's second half.
+--- @param total any
+function Pace:SetTotal(total)
     self.behind:SetValue(total)
     self.ahead:SetValue(total)
+end
+
+--- No total to draw: the halves hidden, the track and the tick stay (the Race window's mini bar
+--- before the HUD's first read).
+function Pace:Blank()
+    self.behind:Hide()
+    self.ahead:Hide()
 end

@@ -2,15 +2,22 @@ local _, NS = ...
 -- modules/Share.lua — Share (spec §7, mockup §9): one line about a stored fight, sent to a chat
 -- channel the player picks from a menu, only out of combat, with the fight's talents link after it
 -- when History > Results window's "Include talents link when sharing" (`results.shareTalents`) is on.
--- Adapted from DPS Race @045f479 (modules/Share.lua) without its race: no armed line, no score line
--- at a race's end, no late casts.
+-- Adapted from DPS Race @045f479 (modules/Share.lua); its race's lines came with Race mode (race plan
+-- Task C2, DPS Race @f8078c7).
 --
 -- THE LINE (mockup §9's party line): "Combat Trail · Vorasius HC · 4:12 · 186.9K DPS · Beast
 -- Mastery 721.4 · top: Kill Command 25.4%, Barbed Shot 17.1%". What the fight was against and its
 -- difficulty (the keystone level, the delve tier after it), the length, the DPS, the spec (the class
 -- where the client has none) and the item level, then the two spells that did the most of the
 -- fight's merged damage. A line past one chat message (Share.MAX_CHAT bytes) drops its top spells,
--- then is cut, so it always fits.
+-- then is cut, so it always fits. A RACE shares in the same shape: its length is the race length,
+-- its DPS the race DPS (RaceRecord.Dps), and an incomplete race says so after it (spec §9).
+--
+-- THE RACE'S OWN LINES (Race mode, Retail only), printed to the player's own chat, never sent: on the
+-- arm (RACE_ARMED: "Armed: 1:00 on Raider's Training Dummy. First hit starts the clock."), and when
+-- the race resolves (RACE_RESULT): the score line ("1.54M damage · 51.3K DPS in 0:30 on Raider's
+-- Training Dummy — new best (+2.4%) · 1 late cast · tail +3.1s", the delta only for a complete race,
+-- the late casts the ignore list leaves), or for a lost race the line that says it could not be read.
 --
 -- PLAIN VALUES ONLY. A stored fight's fields went through NS.Secrets on their way in (spec §5), so
 -- everything here formats plain values; nothing reads the meter. Every `|` in text that reaches a
@@ -105,14 +112,17 @@ local function topText(record, count)
     return L["top: %s"]:format(table.concat(parts, ", "))
 end
 
+-- A race's length and DPS are the race's (and an incomplete race says so); a fight's its own.
 local function lineWith(record, count)
+    local race = NS.RaceRecord.IsRace(record) and record.race or nil
     local parts = {
         L["Combat Trail"],
         Share.Against(record),
-        NS.Format.Length(record.duration),
-        L["%s DPS"]:format(NS.Format.Number(tonumber(record.dps) or 0)),
-        whoText(record),
+        NS.Format.Length(race and race.length or record.duration),
+        L["%s DPS"]:format(NS.Format.Number(NS.RaceRecord.Dps(record) or 0)),
     }
+    if race and race.status == "incomplete" then parts[#parts + 1] = L["incomplete"] end
+    parts[#parts + 1] = whoText(record)
     parts[#parts + 1] = topText(record, count)
     return clean(table.concat(parts, SEP))
 end
@@ -291,4 +301,91 @@ function Share.Prompt(record, owner)
         Share.FillMenu(root, record)
     end)
     return true
+end
+
+-- ── the race's own lines (Race mode, Retail only) ───────────────────────────────────────────────
+
+local EMDASH = " \226\128\148 "
+
+--- "Armed: 1:00 on Raider's Training Dummy. First hit starts the clock." `targetName` is the target at
+--- the arm (no fight exists yet), the dummy kind's name with none.
+--- @param race table  the race part
+--- @param targetName string|nil
+--- @return string
+function Share.ArmedLine(race, targetName)
+    local length = type(race) == "table" and race.length or nil
+    return clean(L["Armed: %s on %s. First hit starts the clock."]:format(NS.Format.Length(length),
+        targetName or L["your target"]))
+end
+
+local function deltaText(pct, isNew)
+    if isNew then
+        if pct then return L["new best (+%.1f%%)"]:format(pct) end
+        return L["new best"]
+    end
+    if pct then return L["%+.1f%% vs best"]:format(pct) end
+    return nil
+end
+
+-- The tail of the score line: the delta, the counted late casts, incomplete, the damage tail.
+local function resultTail(race, pct, isNew)
+    local tail = {}
+    tail[#tail + 1] = deltaText(pct, isNew)
+    -- The counted late casts only: the ignore list's never flag a race.
+    local late = #(NS.RaceScoring.SplitLate(race))
+    if late > 0 then tail[#tail + 1] = late == 1 and L["1 late cast"] or L["%d late casts"]:format(late) end
+    if race.status == "incomplete" then tail[#tail + 1] = L["incomplete"] end
+    if type(race.tail) == "number" then tail[#tail + 1] = L["tail +%.1fs"]:format(race.tail) end
+    return tail
+end
+
+--- The score line the player sees when a race resolves: "1.54M damage · 51.3K DPS in 0:30 on
+--- Raider's Training Dummy — new best (+2.4%) · 1 late cast · tail +3.1s".
+--- @param record table  a stored race (complete or incomplete)
+--- @param pct number|nil  Bests.Delta's percentage
+--- @param isNew boolean|nil  Bests.Delta's new-best answer
+--- @return string
+function Share.ResultLine(record, pct, isNew)
+    local race = type(record.race) == "table" and record.race or {}
+    local line = L["%s damage \194\183 %s DPS in %s on %s"]:format(NS.Format.Number(tonumber(race.score) or 0),
+        NS.Format.Number(NS.RaceRecord.Dps(record) or 0), NS.Format.Length(race.length),
+        NS.ResultsFights.TargetName(record))
+    local tail = resultTail(race, pct, isNew)
+    if #tail == 0 then return clean(line) end
+    return clean(line .. EMDASH .. table.concat(tail, SEP))
+end
+
+--- RACE_RESULT: the score line for a stored race, the delta only for a complete one; the lost line
+--- for a race that could not be read (its pull, if stored, is a plain fight).
+--- @param record table|nil
+--- @param race table|nil  the race part
+--- @return string|nil printed
+function Share.OnRaceResult(record, race)
+    local status = type(race) == "table" and race.status or nil
+    if status == "lost" or not NS.RaceRecord.IsRace(record) then
+        if status ~= "lost" then return nil end
+        local line = L["Couldn't read the race's result, so it is not saved as a race."]
+        NS.Print(line)
+        return line
+    end
+    local pct, isNew
+    if record.race.status == "complete" then pct, isNew = NS.Bests.Delta(record) end
+    local line = Share.ResultLine(record, pct, isNew)
+    NS.Print(line)
+    return line
+end
+
+-- The target at the arm, by name (plain), or nil.
+local function armTarget()
+    local snap = NS.Identity.Snapshot()
+    local target = type(snap) == "table" and snap.target or nil
+    return type(target) == "table" and target.name or nil
+end
+
+if NS.Compat.ForClient({ "retail" }) then
+    local bus = NS.NewBusTarget()
+    if bus then
+        bus:RegisterMessage(NS.MSG.RACE_ARMED, function(_, race) NS.Print(Share.ArmedLine(race, armTarget())) end)
+        bus:RegisterMessage(NS.MSG.RACE_RESULT, function(_, record, race) Share.OnRaceResult(record, race) end)
+    end
 end

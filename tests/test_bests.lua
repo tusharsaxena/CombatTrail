@@ -163,3 +163,187 @@ test("bests: forever: the predominant tree splits the boards as a spec does (D5)
     assertTrue(NS.Bests.Key(bm):find("|tree:HUNTER:1|", 1, true) ~= nil, NS.Bests.Key(bm))
     assertEqual(NS.Bests.BestCurve("c:1985:0", NS.Bests.CharKey(mm.who), "tree:HUNTER:2"), mm.id)
 end)
+
+-- ── race boards (Race mode plan Task A3, the Race mode spec §5) ─────────────────────────────────
+
+-- A race record on dummy `npc` (a Retail seed dummy by default): `o` sets the race part (length,
+-- kind, status, flags, dps) over rec's fight fields. Its fight board key is the dummy's.
+local DUMMY = 31146
+local function race(NS, o)
+    local r = onNpc(NS, { dps = o.fightDps or 100, name = o.name, specID = o.specID, t = o.t, id = o.id },
+        o.npc or DUMMY, 80)
+    r.identity.content = "dummy"
+    r.race = { length = o.length or 60, kind = o.kind or "single", status = o.status or "complete",
+               flags = o.flags or {}, score = (o.dps or 1000) * (o.length or 60), dps = o.dps or 1000 }
+    return r
+end
+
+test("bests: a race counts only on its race board, never the dummy's fight board", function()
+    local NS = fresh()
+    local fight = onNpc(NS, { dps = 500 }, DUMMY, 80)
+    fight.identity.content = "dummy"
+    local r = race(NS, { dps = 9000, fightDps = 9500 })
+    save(NS, fight, r)
+    local B = NS.Bests
+    assertTrue(B.Key(r) ~= B.Key(fight), "two boards")
+    assertEqual(B.Key(r), B.RaceKey(r), "a race's key is its race key")
+    assertTrue(B.Key(r):find("|race:", 1, true) ~= nil, B.Key(r))
+    assertTrue(B.IsBest(fight), "the fight still holds the dummy's board")
+    assertTrue(B.IsBest(r), "the race holds its race board")
+    assertEqual(B.For(fight), fight)
+    assertEqual(B.For(r), r)
+    assertNil(B.RaceKey(fight), "a fight has no race key")
+end)
+
+test("bests: race boards split by character, spec, dummy kind and length", function()
+    local NS = fresh()
+    local a = race(NS, { dps = 1000 })
+    local b = race(NS, { dps = 2000 })
+    local spec = race(NS, { dps = 100, specID = 64 })
+    local char = race(NS, { dps = 100, name = "Alt" })
+    local len = race(NS, { dps = 100, length = 120 })
+    save(NS, a, b, spec, char, len)
+    local B = NS.Bests
+    assertEqual(B.For(a), b, "the same character, spec, kind and length share one board")
+    for _, r in ipairs({ spec, char, len }) do assertTrue(B.IsBest(r), r.id .. " is alone on its board") end
+    assertTrue(B.RaceKey(a):find("race:" .. B.RaceKind(a) .. ":60", 1, true) ~= nil, B.RaceKey(a))
+    local nameless = race(NS, {})
+    nameless.who.name = nil
+    assertNil(B.RaceKey(nameless), "no character, no board")
+    local noLength = race(NS, {})
+    noLength.race.length = nil
+    assertNil(B.RaceKey(noLength), "no length, no board")
+end)
+
+test("bests: a race's kind is read from the dummy list now, else the stored kind", function()
+    local NS = fresh()
+    -- A creature on no list: the stored kind holds the board.
+    local stored = race(NS, { npc = 999001, kind = "boss" })
+    assertEqual(NS.Bests.RaceKind(stored), "boss")
+    -- The player adds it as a cleave dummy: its race moves boards, and back when it is removed.
+    assertTrue(NS.Dummies.Add(999001, "cleave"))
+    assertEqual(NS.Bests.RaceKind(stored), "cleave")
+    assertTrue(NS.Dummies.Remove(999001))
+    assertEqual(NS.Bests.RaceKind(stored), "boss")
+    local none = race(NS, { npc = 999002 })
+    none.race.kind = nil
+    assertNil(NS.Bests.RaceKey(none), "no kind at all, no board")
+end)
+
+test("bests: a dummy list change redraws the race boards", function()
+    local NS = fresh()
+    local a = race(NS, { npc = 999003, kind = "single", dps = 1000 })
+    local b = race(NS, { npc = 999004, kind = "single", dps = 2000 })
+    save(NS, a, b)
+    assertFalse(NS.Bests.IsBest(a), "one board")
+    assertTrue(NS.Dummies.Add(999003, "cleave"))
+    assertTrue(NS.Bests.IsBest(a), "moved to the cleave board, where it is alone")
+end)
+
+test("bests: a profile change redraws the race boards (its own Training dummies list)", function()
+    local NS = fresh()
+    local a = race(NS, { npc = 999005, kind = "single", dps = 1000 })
+    local b = race(NS, { npc = 999006, kind = "single", dps = 2000 })
+    save(NS, a, b)
+    assertFalse(NS.Bests.IsBest(a), "one board")
+    -- The new profile's list makes the creature a cleave dummy; the switch announces "profile" only.
+    NS.db.profile.dummies.custom = "999005:cleave"
+    NS.AnnounceSettingsChanged("profile", "Other")
+    assertTrue(NS.Bests.IsBest(a), "moved to the cleave board, where it is alone")
+end)
+
+test("bests: incomplete and lost races never count; the highest race DPS holds the board", function()
+    local NS = fresh()
+    local done = race(NS, { dps = 1000, fightDps = 99999 })
+    local incomplete = race(NS, { dps = 5000, status = "incomplete" })
+    local lost = race(NS, { dps = 6000, status = "lost" })
+    save(NS, done, incomplete, lost)
+    assertTrue(NS.Bests.IsBest(done))
+    assertFalse(NS.Bests.IsBest(incomplete))
+    assertFalse(NS.Bests.IsBest(lost))
+    local better = race(NS, { dps = 1001, fightDps = 1 })
+    save(NS, better)
+    assertTrue(NS.Bests.IsBest(better), "ranked by the race DPS, not the fight's")
+end)
+
+test("bests: an incomplete or flagged race never holds the clean board", function()
+    local NS = fresh()
+    local clean = race(NS, { dps = 1000 })
+    local flagged = race(NS, { dps = 3000, flags = { lateCasts = { { t = 1.4, spellID = 133 } } } })
+    local died = race(NS, { dps = 2500, flags = { died = true } })
+    local incomplete = race(NS, { dps = 4000, status = "incomplete" })
+    save(NS, clean, flagged, died, incomplete)
+    local B = NS.Bests
+    assertEqual(B.For(clean), flagged, "a flag informs and never voids: it holds the all-races board")
+    assertEqual(B.CleanFor(clean), clean, "the clean board leaves every flagged race out")
+    assertEqual(B.CleanFor(flagged), clean, "the same board, seen from a flagged race")
+    local cleanBoard = B.Board({ cleanOnly = true })
+    assertEqual(cleanBoard[B.Key(clean)], clean)
+    local fight = rec({ dps = 10 })
+    save(NS, fight)
+    assertEqual(B.CleanFor(fight), fight, "a fight has no flags, so it is its own clean board")
+    assertNil(B.CleanFor(rec({ unknown = true })), "no board")
+end)
+
+test("bests: Compute's second argument still skips a record; the clean view is its third", function()
+    local NS = fresh()
+    local a, b = race(NS, { dps = 1000 }), race(NS, { dps = 2000, flags = { reloaded = true } })
+    local key = NS.Bests.Key(a)
+    assertEqual(NS.Bests.Compute({ a, b })[key], b)
+    assertEqual(NS.Bests.Compute({ a, b }, b)[key], a, "skip")
+    assertEqual(NS.Bests.Compute({ a, b }, nil, { cleanOnly = true })[key], a, "clean")
+end)
+
+test("bests: HoldingIDs names the holders of the all and the clean boards", function()
+    local NS = fresh()
+    local clean = race(NS, { dps = 1000 })
+    local flagged = race(NS, { dps = 3000, flags = { sharedSession = true } })
+    local slow = race(NS, { dps = 500 })
+    local fight = rec({ dps = 10 })
+    local ids = NS.Bests.HoldingIDs({ clean, flagged, slow, fight })
+    assertTrue(ids[clean.id], "the clean holder")
+    assertTrue(ids[flagged.id], "the all-races holder")
+    assertTrue(ids[fight.id], "a fight board's holder")
+    assertNil(ids[slow.id])
+end)
+
+test("bests: Before is the best on the board fought before; Delta the verdict against it", function()
+    local NS = fresh()
+    local first = race(NS, { dps = 1000, t = 100 })
+    local second = race(NS, { dps = 1200, t = 200 })
+    local third = race(NS, { dps = 1100, t = 300 })
+    local otherBoard = race(NS, { dps = 5000, t = 150, length = 120 })
+    local incomplete = race(NS, { dps = 9000, t = 160, status = "incomplete" })
+    local later = race(NS, { dps = 9999, t = 900 })
+    local all = { first, second, third, otherBoard, incomplete, later }
+    local B = NS.Bests
+    assertNil(B.Before(first, all), "nothing before the first")
+    assertEqual(B.Before(third, all), second, "ignores later races, other boards and ones that never count")
+    local pct, isNew, prev = B.Delta(second, all)
+    assertTrue(math.abs(pct - 20) < 1e-9, tostring(pct))
+    assertTrue(isNew)
+    assertEqual(prev, first)
+    pct, isNew, prev = B.Delta(third, all)
+    assertTrue(pct < 0)
+    assertFalse(isNew)
+    assertEqual(prev, second)
+    pct, isNew, prev = B.Delta(first, all)
+    assertNil(pct)
+    assertTrue(isNew, "the first complete race on its board is a new best")
+    assertNil(prev)
+    pct, isNew, prev = B.Delta(incomplete, all)
+    assertNil(pct)
+    assertFalse(isNew, "a race that does not count is never a new best")
+    assertNil(prev)
+end)
+
+test("bests: Delta works for fights too, and defaults its list to the store", function()
+    local NS = fresh()
+    local a, b = rec({ dps = 1000, t = 100 }), rec({ dps = 1500, t = 200 })
+    save(NS, a, b)
+    local pct, isNew, prev = NS.Bests.Delta(b)
+    assertTrue(math.abs(pct - 50) < 1e-9, tostring(pct))
+    assertTrue(isNew)
+    assertEqual(prev, a)
+    assertEqual(NS.Bests.Before(b), a, "the store by default")
+end)

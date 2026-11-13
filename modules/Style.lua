@@ -2,8 +2,16 @@ local _, NS = ...
 -- modules/Style.lua — the look the HUD and the Results window share with the other Ka0s windows
 -- (LootHistory's browser is the reference; BankLedger and MultiMeters agree): Blizzard's font objects
 -- for every label, the header gold, the title-bar geometry, and the title-bar controls that turn gold
--- under the pointer. Ported from DPS Race @045f479 (modules/Style.lua) without the new-best toast's
--- scaled text (no toast in Combat Trail).
+-- under the pointer. Ported from DPS Race @045f479 (modules/Style.lua); the new-best toast's scaled
+-- text (Style.ScaledText) came with the toast (race plan Task C2, DPS Race @f8078c7).
+--
+-- ONE ART SIZE ON THE TITLE BAR (owner, 2026-11-13). The catalog's marks fill their 64 px cells
+-- unevenly (the lock is 48 x 56, the gear the whole cell), so a 12 px texture each drew them at
+-- uneven sizes. Style.FitControlArt crops a control's texture to its mark's measured box
+-- (Style.ART_BOX, held to the vendored art by tests/test_hud_race_button.lua) and sizes it so the
+-- longest side is Style.CONTROL_ART: every title-bar mark, the library's close among them
+-- (NS.MakeCloseButton), is the same size and centered in its slot. A mark with no box draws its
+-- whole cell at that size.
 --
 -- FONT OBJECTS, NOT FONT FILES. A label takes one of Blizzard's font objects (`GameFontNormal` and its
 -- family), never a path and a size, so it reads at the size and weight the rest of the collection
@@ -216,6 +224,17 @@ Style.TAB_STRIP_H = 26
 Style.TAB_W, Style.TAB_PITCH = 90, 94
 Style.CONTROL = 18
 Style.CONTROL_PITCH = 22
+-- A title-bar mark's longest side (px), the library's close art's own (Core's CLOSE_ART).
+Style.CONTROL_ART = 12
+-- The catalog's cell (px), and each title-bar mark's visible box in it, top-down and end-exclusive:
+-- { left, top, right, bottom }, measured off the vendored art (alpha above 0).
+Style.ART_GRID = 64
+Style.ART_BOX = {
+    chart = { 0, 0, 64, 56 }, close = { 0, 0, 63, 63 }, flag = { 0, 0, 64, 64 }, lock = { 8, 0, 56, 56 },
+    unlock = { 8, 0, 56, 64 }, move = { 0, 0, 56, 56 }, settings = { 0, 0, 64, 64 },
+    ["chevron-left"] = { 8, 0, 52, 64 }, ["chevron-right"] = { 8, 0, 52, 64 },
+    ["chevron-up"] = { 0, 8, 64, 52 }, ["chevron-down"] = { 0, 8, 64, 52 },
+}
 
 -- The text role each font object answers when no color is named: the gold objects are headings (the
 -- skin's title face), the white ones the highlight white, the gray ones the disabled gray (Ka0s
@@ -340,6 +359,64 @@ function Style.PlainText(parent, font, justify)
     return fs
 end
 
+-- The pixel height of the two font objects a scaled surface draws at a multiple of (Style.ScaledText:
+-- the new-best toast, modules/BestToast.lua), as the client defines them. A config table, never read
+-- off a string.
+Style.FONT_SIZE = {
+    GameFontNormal         = 12,
+    GameFontHighlightSmall = 10,
+}
+
+-- The scaled copies of the font objects, by "<font>@<scale>": a font object's name, or false where the
+-- client has no CreateFont (the string then carries the size itself).
+local scaledFonts = {}
+
+--- A named copy of `font` at `scale` times its Style.FONT_SIZE height, or nil. Named, so the skin's
+--- Ignore fonts puts a string back on THIS object, at the scaled size, rather than on the stock one.
+local function scaledFont(font, scale)
+    local key = font .. "@" .. scale
+    if scaledFonts[key] == nil then
+        scaledFonts[key] = false
+        local base, size = rawget(_G, font), Style.FONT_SIZE[font]
+        if size and type(CreateFont) == "function" and type(base) == "table" and base.GetFont then
+            local name = ("CombatTrail_%s_%d"):format(font, math.floor(scale * 100 + 0.5))
+            local obj = CreateFont(name)
+            if type(obj) == "table" then
+                if obj.CopyFontObject then obj:CopyFontObject(base) end
+                local path, _, flags = base:GetFont()
+                obj:SetFont(path or STANDARD_TEXT_FONT, size * scale, flags or "")
+                scaledFonts[key] = name
+            end
+        end
+    end
+    return scaledFonts[key] or nil
+end
+
+--- Style.Text at `scale` times `font`'s height (Style.FONT_SIZE): the same role and color, so the skin
+--- paints it as it paints Style.Text, keeping the scale. Used where a whole surface is drawn larger:
+--- the new-best toast (ported from DPS Race @f8078c7, its Style.ScaledText).
+--- @param parent table
+--- @param font string  a Style.FONT value that Style.FONT_SIZE names
+--- @param scale number
+--- @param color table|string|nil
+--- @param justify string|nil
+--- @return table
+function Style.ScaledText(parent, font, scale, color, justify)
+    font = font or Style.FONT.TEXT
+    local obj = scaledFont(font, scale)
+    local fs = parent:CreateFontString(nil, "OVERLAY", obj or font)
+    local size = Style.FONT_SIZE[font]
+    if not obj and size then
+        local path, _, flags = fs:GetFont()
+        fs:SetFont(path or STANDARD_TEXT_FONT or "Fonts\\FRIZQT__.TTF", size * scale, flags or "")
+    end
+    fontOf[fs] = font
+    Style.Paint(fs, color, font)
+    fs:SetJustifyH(justify or "LEFT")
+    fs:SetWordWrap(false)
+    return fs
+end
+
 --- The texture markup for a catalog icon tinted `color`, at the line's height, with a Blizzard
 --- fallback when the catalog cannot answer (an inline texture ignores its FontString's color, so the
 --- tint is in the markup: LootHistory's sort arrows).
@@ -392,7 +469,8 @@ end
 -- ONE CONTROL AT A TIME (MultiMeters' HeaderControls). A strip remembers which control the pointer
 -- is on; an enter names it and repaints the strip, a leave un-names it ONLY IF IT IS STILL THE ONE
 -- NAMED: frames leave in no guaranteed order, so a leave arriving after the next control's enter
--- must not take the gold off the control the pointer is on now. Full alpha in both states.
+-- must not take the gold off the control the pointer is on now. Full alpha in both states; no
+-- control wears the gold at rest.
 
 local function paintControl(b, c)
     if b.icon then b.icon:SetVertexColor(c[1], c[2], c[3], 1) end
@@ -403,7 +481,9 @@ end
 --- Repaint every control of `strip` for the control under the pointer.
 --- @param strip table  Style.NewStrip's
 function Style.PaintStrip(strip)
-    for _, b in ipairs(strip.controls) do paintControl(b, strip.hovered == b and Style.GOLD or Style.REST) end
+    for _, b in ipairs(strip.controls) do
+        paintControl(b, strip.hovered == b and Style.GOLD or Style.REST)
+    end
 end
 
 local strips = setmetatable({}, { __mode = "k" })
@@ -599,7 +679,7 @@ function Style.ControlButton(parent, name, glyph, tip, onClick)
     b:SetSize(Style.CONTROL, Style.CONTROL)
     b.icon = b:CreateTexture(nil, "OVERLAY")
     b.icon:SetPoint("CENTER", b, "CENTER", 0, 0)
-    b.icon:SetSize(12, 12)
+    b.icon:SetSize(Style.CONTROL_ART, Style.CONTROL_ART)
     b.glyph = b:CreateFontString(nil, "OVERLAY", Style.FONT.TEXT)
     b.glyph:SetPoint("CENTER", b, "CENTER", 0, 0)
     b.tip = tip
@@ -615,12 +695,35 @@ function Style.ControlButton(parent, name, glyph, tip, onClick)
     return b
 end
 
---- Draw `name` on a control (the glyph when the catalog has no path). The tint is left as it is.
+--- Crop and size a title-bar mark's texture so its art's longest side is CONTROL_ART (Style.ART_BOX;
+--- a mark with no box: its whole cell at that size).
+--- @param tex table  the texture
+--- @param name string  the catalog icon
+function Style.FitControlArt(tex, name)
+    local box, grid, side = Style.ART_BOX[name], Style.ART_GRID, Style.CONTROL_ART
+    if not box then
+        tex:SetTexCoord(0, 1, 0, 1)
+        tex:SetSize(side, side)
+        return
+    end
+    local w, h = box[3] - box[1], box[4] - box[2]
+    local k = side / math.max(w, h)
+    tex:SetTexCoord(box[1] / grid, box[3] / grid, box[2] / grid, box[4] / grid)
+    tex:SetSize(w * k, h * k)
+end
+
+--- Draw `name` on a control (the glyph when the catalog has no path), fitted (FitControlArt). The
+--- tint is left as it is.
 function Style.SetControlIcon(b, name, glyph)
     local path = NS.Icon(name)
     b.icon:SetShown(path ~= nil)
     b.glyph:SetShown(path == nil)
-    if path then b.icon:SetTexture(path) else b.glyph:SetText(glyph) end
+    if path then
+        b.icon:SetTexture(path)
+        Style.FitControlArt(b.icon, name)
+    else
+        b.glyph:SetText(glyph)
+    end
     b.iconName = name
 end
 
@@ -629,7 +732,7 @@ end
 -- white label that turns gold under the pointer), with the slots a style or a state paints from
 -- another token: primary and danger keep a tinted box, and a disabled one its box and label faded
 -- (the ct.*.off* tokens, core/SkinSetup.lua). Ported from DPS Race @045f479 (modules/Hud_States.lua's
--- buttons) for the Results window, minus the selected-preset look the race's length picker had.
+-- buttons) for the Results window and the Race window (whose picked length takes the primary look).
 
 local BUTTON_STYLES = {
     normal  = { on = {}, off = { bg = "ct.btn.offBg", border = "ct.btn.offBorder", disabled = "ct.btn.offText" } },
@@ -688,6 +791,17 @@ function Style.Button(parent, label, onClick, style)
     end)
     paintButton(b)
     return b
+end
+
+--- Give a Style.Button another style ("normal" | "primary" | "danger"), repainting it: the Race
+--- window's picked length draws in the primary look (DPS Race's selected preset).
+--- @param b table
+--- @param style string
+function Style.SetButtonStyle(b, style)
+    local name = BUTTON_STYLES[style] and style or "normal"
+    if b.styleName == name then return end
+    b.styleName, b.style = name, BUTTON_STYLES[name]
+    paintButton(b)
 end
 
 --- Enable or disable a Style.Button, repainting it.
