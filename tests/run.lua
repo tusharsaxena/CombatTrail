@@ -176,6 +176,7 @@ local SUITES = {
     "test_sim",
     "test_race_preview",
     "test_sim_race",
+    "test_showcase",
     "test_bindings",
     "test_diagnostics",
     "test_skin_surfaces",

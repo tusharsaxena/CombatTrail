@@ -33,6 +33,14 @@ local _, NS = ...
 -- and the Race window's result card on the sample race, which joins the sample history, and the
 -- new-best toast's preview. Armed holds the HUD on test mode's own sample fight. With Race mode off
 -- the race word is refused with one line (the switch stops new races; a sample race is one).
+--
+-- THE ALERTS (callout plan row C6, owner 2026-11-14). Plain `/ct test` stays the HUD's alone. The
+-- race word's result, a new best over the sample history, also shows the call-out's NEW_BEST
+-- (Countdown.SampleSay, the toast's rule). Its running body holds the race clock still, so the
+-- sample has no endsAt (RaceSample.EndsAt) and no countdown runs: the countdown and the buzzer's STOP
+-- are the sim's, on the sample's running clock (modules/SimRace.lua). Every stop and switch of the
+-- preview takes the samples' alerts down (Countdown.EndSample, BestToast.EndSample): no toast and no
+-- call-out outlives the sample that earned it, and none of them writes a record or a best.
 
 local Preview = { active = false }
 NS.Preview = Preview
@@ -214,6 +222,7 @@ local function startRaceTest(word)
     elseif word == "result" then
         holdResult(sample)
         NS.BestToast.ShowPreview(sample.record)
+        if NS.BestToast.Earns(sample.record) then NS.Countdown.SampleSay("NEW_BEST") end
     else
         holdFight()
     end
@@ -229,9 +238,14 @@ local function stopTest()
     if raceWord then
         raceWord = nil
         NS.RaceSample.Clear()
-        NS.BestToast.EndPreview()
         NS.RaceWindow.EndSample()
     end
+end
+
+-- The samples' alerts down: the toasts a sample earned, the call-out's countdown and words (Retail).
+local function endAlerts()
+    if NS.BestToast then NS.BestToast.EndSample() end
+    if NS.Countdown then NS.Countdown.EndSample() end
 end
 
 -- ── the switch ──────────────────────────────────────────────────────────────────────────────────
@@ -255,6 +269,7 @@ end
 local function stopRun(keepSession)
     if NS.Sim then NS.Sim.Cancel(keepSession) end
     stopTest()
+    endAlerts()
     if NS.Hud then NS.Hud.EndSample(false) end
     clearLanes()
 end
@@ -318,6 +333,7 @@ function Preview.RaceState() return Preview.Mode() == "test" and raceWord or nil
 function Preview.SetRace(word)
     if Preview.Mode() ~= "test" or not isRaceWord(word) or not NS.RaceSample then return false end
     stopTest()
+    endAlerts()
     if NS.Hud then NS.Hud.EndSample(false) end
     clearLanes()
     dataset = NS.MockFights.Dataset()

@@ -35,6 +35,13 @@ local _, NS = ...
 -- RaceClock.EndsAt is the sample's, armed by the sim's own Countdown.Refresh at each step; test mode's
 -- held sample has none and counts nothing.
 --
+-- THE SAMPLES' WORDS (callout plan row C6, owner 2026-11-14): test mode's held race and the sim say
+-- on the call-out what their scenario earns, through Countdown.SampleSay: NEW_BEST on a new best (the
+-- toast's rule, BestToast.Earns), FAILED on a race that ends before its buzzer. Only those stock keys,
+-- only with Race mode on, never for a real race. Countdown.EndSample is the samples' cleanup (the
+-- preview's stop and switch, modules/Preview.lua): the sample's countdown and anything a sample put up
+-- (its buzzer's STOP, its words) come down at once.
+--
 -- A RESUME mid-window (a /reload, a stand-up, a countdown row changed mid-race) shows the number of
 -- the moment at once and counts on from there. The rows carry no onChange: their SETTINGS_CHANGED
 -- (and a profile change, which also re-applies the call-out's look) re-arm it here.
@@ -87,6 +94,7 @@ local CO = NS.Callout
 local lead       -- the lead-in AceTimer, while it waits
 local armedAt    -- the endsAt the call-out counts down to, nil while it counts nothing
 local armedFrom  -- the window it was armed with
+local sampleUp   -- a sample race or the sim put the call-out up (EndSample takes it down)
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Countdown", fmt, ...) end
@@ -169,7 +177,38 @@ function Countdown.Buzzer()
     takeDown()
     local shown = CO:Show("STOP") ~= false
     if shown then debug("buzzer: STOP") end
+    if shown and NS.RaceSample and NS.RaceSample.On() then sampleUp = true end
     return shown
+end
+
+-- ── the samples' words ──────────────────────────────────────────────────────────────────────────
+
+--- The stock keys a sample may earn (THE SAMPLES' WORDS, above).
+Countdown.SAMPLE_WORDS = { NEW_BEST = true, FAILED = true }
+
+--- Test mode's or the sim's stock call-out `key` (one of SAMPLE_WORDS): shown with its voice, with
+--- Race mode on and the addon not stood down. A running countdown is taken down first.
+--- @param key string
+--- @return boolean shown
+function Countdown.SampleSay(key)
+    if not Countdown.SAMPLE_WORDS[key] or NS.IsStoodDown() then return false end
+    if not (NS.RaceMode and NS.RaceMode.On()) then return false end
+    takeDown()
+    local shown = CO:Show(key) ~= false
+    if shown then
+        sampleUp = true
+        debug("sample: %s", key)
+    end
+    return shown
+end
+
+--- The samples' cleanup: the countdown re-decided (a sample's goes with its clock) and anything a
+--- sample put up taken down now. A real race's call-out is left alone.
+function Countdown.EndSample()
+    Countdown.Refresh()
+    if not sampleUp then return end
+    sampleUp = nil
+    if not racing() then CO:Hide() end
 end
 
 -- ── the public surface ──────────────────────────────────────────────────────────────────────────

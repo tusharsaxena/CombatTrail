@@ -23,6 +23,11 @@ local _, NS = ...
 -- NOTHING REACHES THE BUS OR THE STORE. The sample fight goes to the HUD's receivers directly, so
 -- the recorder, the casts, the usage and the bests never hear it, and the record is never saved.
 --
+-- THE SAMPLES' ALERTS (callout plan row C6): a saved sim fight that is a new best on its board in
+-- the sample history (the `newbest` scenario) is offered to the new-best toast as a real save is
+-- (BestToast.OnFight, `toast.fights`), and on Retail with Race mode on the call-out says NEW_BEST
+-- (Countdown.SampleSay). The preview's stop takes both down (modules/Preview.lua).
+--
 -- RACE MODE'S EIGHT (Retail, race plan Task E1): the race scenarios (`race-newbest` ... `race-sticky`,
 -- modules/SimRace.lua) follow the fight scenarios in help and in the step window; this file hands a
 -- race scenario's start, unpark, steps, gate, cancel and phase to NS.SimRace. With Race mode off a race
@@ -133,6 +138,8 @@ local function endFight(fight, now)
     fight.recordID = record.id
     NS.ResultsSource.Put(record)
     NS.Hud.OnFightSaved(record)
+    if NS.BestToast then NS.BestToast.OnFight(record) end
+    if NS.Countdown and NS.BestToast and NS.BestToast.Earns(record) then NS.Countdown.SampleSay("NEW_BEST") end
 end
 
 --- One beat: the fight moves on, combat ends at its length, the read lands after the settle, and the

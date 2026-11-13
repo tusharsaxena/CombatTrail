@@ -24,6 +24,13 @@ local _, NS = ...
 -- functions (Share.OnRaceResult, BestToast.OnRace), and RESULT_HOLD seconds later the Results window
 -- opens on it.
 --
+-- THE CALL-OUT'S WORDS (callout plan row C6, owner 2026-11-14): the countdown runs to the sample's own
+-- endsAt (RaceSample.EndsAt, which RaceClock.EndsAt follows while the sample's clock runs) and STOP
+-- shows at its buzzer (Countdown.Buzzer); a race that ends before its buzzer (race-incomplete,
+-- race-died) says FAILED as it ends, and a read that is a new best says NEW_BEST beside its toast
+-- (Countdown.SampleSay, the toast's rule). No scenario is canceled or runs out of time past its buzzer,
+-- so CANCELED and TIME_UP are never said. The preview's stop takes them down (modules/Preview.lua).
+--
 -- NOTHING REACHES THE BUS OR THE STORE, as every sample (modules/Preview.lua's header): the windows are
 -- called directly, the record lives in the sample history only, and NS.Race never moves. The one
 -- message is the race beat's RACE_CLOCK (modules/RaceClock.lua), which carries nothing: while the
@@ -161,7 +168,8 @@ local function stopRace(fight, early)
         readAt = math.max(length + (scen.tail or 0), combatAt) + NS.RaceScoring.QUIET_BEFORE_READ
     end
     refreshWindows()
-    if not early and NS.Countdown then NS.Countdown.Buzzer() end
+    if not NS.Countdown then return end
+    if early then NS.Countdown.SampleSay("FAILED") else NS.Countdown.Buzzer() end
 end
 
 -- The read: the record joins the sample history, every card shows it, the result line and the toast.
@@ -177,7 +185,10 @@ local function read(fight)
     NS.RaceSample.Set({ state = ST().RESULT, record = record, race = record.race })
     refreshWindows()
     if NS.Share then NS.Share.OnRaceResult(record, record.race) end
-    if NS.BestToast then NS.BestToast.OnRace(record) end
+    if NS.BestToast then
+        NS.BestToast.OnRace(record)
+        if record.race.status == "complete" and NS.BestToast.Earns(record) then NS.Countdown.SampleSay("NEW_BEST") end
+    end
     debug("sim race %s: read, %s", scen.key, tostring(record.race.status))
 end
 

@@ -14,6 +14,13 @@ local _, NS = ...
 -- show on the toast's last line as the Race window's chips word them. One toast per record, queued
 -- under its record id.
 --
+-- THE SAMPLES (callout plan row C6, owner 2026-11-14): test mode's held race result shows its toast
+-- as the shell's preview (ShowPreview); the sim's new best (a race scenario's read, the fight
+-- scenarios' save) is offered as a real one is, judged against the sample history (Bests reads it
+-- while the preview is on), and remembered as a sample's. EndSample, the preview's stop and switch,
+-- takes every sample toast down, waiting or on screen; a real one stays. Nothing here writes a record
+-- or a best.
+--
 -- THE SHELL is LibKa0s-Toast-1.0 through core/ToastSetup.lua: one at a time, the countdown
 -- (`toast.duration`) paused under the pointer, the close mark and a right-click, the scale
 -- (`toast.scale`) and the sound (`toast.sound`, `toast.soundKey`: Default is the shell's alert, any
@@ -68,6 +75,7 @@ local TROPHY_FALLBACK = "Interface\\Icons\\Achievement_Dungeon_GloryoftheHero"
 
 local toast       -- the shell's instance (or the seam's stub)
 local kindOf = {} -- record id -> "races" | "fights": each toast queued, so a kind switched off drops its own
+local samples = {} -- record id -> true: a sample record's toast (EndSample drops them)
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("Toast", fmt, ...) end
@@ -364,14 +372,28 @@ toast = NS.NewToast({
 
 -- ── the triggers ────────────────────────────────────────────────────────────────────────────────
 
+--- Whether `record` earns the new-best toast: Bests.Delta says it is a new best AND names a
+--- percentage (a board's first is a new best with nothing to beat, and does not). The samples'
+--- NEW_BEST call-out follows the same rule (modules/Countdown.lua SampleSay).
+--- @param record table|nil
+--- @return boolean earns, number|nil pct, table|nil prev
+function BestToast.Earns(record)
+    if type(record) ~= "table" then return false end
+    local pct, isNew, prev = NS.Bests.Delta(record)
+    return (isNew and pct ~= nil) == true, pct, prev
+end
+
 -- A record that may be a new best over an earlier one on its board: toast it if it is, under its
 -- kind ("races" | "fights").
 local function offer(record, kind)
-    local pct, isNew, prev = NS.Bests.Delta(record)
-    if not (isNew and pct ~= nil) then return false end
+    local earns, pct, prev = BestToast.Earns(record)
+    if not earns then return false end
     debug("new best %s: %+.1f%%", tostring(record.id), pct)
     local shown = toast:Show(BestToast.Payload(record, pct, prev), { key = record.id }) == true
-    if shown and record.id ~= nil then kindOf[record.id] = kind end
+    if shown and record.id ~= nil then
+        kindOf[record.id] = kind
+        if record.sample then samples[record.id] = true end
+    end
     return shown
 end
 
@@ -426,8 +448,8 @@ end
 --- @return boolean shown
 function BestToast.ShowPreview(record)
     if not racesOn() or not isRace(record) or record.race.status ~= "complete" then return false end
-    local pct, isNew, prev = NS.Bests.Delta(record)
-    if not (isNew and pct ~= nil) then return false end
+    local earns, pct, prev = BestToast.Earns(record)
+    if not earns then return false end
     toast:Preview(BestToast.Payload(record, pct, prev))
     return true
 end
@@ -435,6 +457,17 @@ end
 --- The preview's end: its toast goes, a real one waiting or on screen stays.
 function BestToast.EndPreview()
     toast:Remove(NS.TOAST_PREVIEW)
+end
+
+--- The samples' cleanup (test mode's and the sim's stop and switch): the preview's toast and every
+--- sample record's, waiting or on screen, go; a real one stays.
+function BestToast.EndSample()
+    BestToast.EndPreview()
+    for id in pairs(samples) do
+        toast:Remove(id)
+        kindOf[id] = nil
+    end
+    samples = {}
 end
 
 --- Re-read the scale and the stored point.
@@ -446,7 +479,7 @@ function BestToast.ResetPosition() toast:ResetPosition() end
 --- The stand-down: nothing on screen, nothing waiting.
 function BestToast.Suspend()
     toast:Clear()
-    kindOf = {}
+    kindOf, samples = {}, {}
 end
 
 --- The toast instance, for the suites.
