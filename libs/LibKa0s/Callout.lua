@@ -16,8 +16,17 @@
 -- (the frame's global name), `addon` and `vendorPath` (where the payload sits, for the voice packs
 -- and the bundled fonts), `soundsBase` (the folder holding the packs, overriding the one `addon`
 -- implies), `skin` (a registered skin owner, for the "Skin font" choice and the drag strip),
--- `label` (the drag strip's text) and `debug` (`debug(tag, msg)`). docs/api/Callout/version-1.1-docs.md
+-- `label` (the drag strip's text) and `debug` (`debug(tag, msg)`). docs/api/Callout/version-2.3-docs.md
 -- is the full contract.
+--
+-- ── WHERE A WRITE GOES (minor 2) ─────────────────────────────────────────────────────────────
+--
+-- With `d.path` (the prefix the host registered the call-out's schema rows under, `"callout."`) and
+-- `d.set` (the host's single write seam, `NS.SetByPath`), every write the instance makes, a drag's
+-- saved point included, is `d.set(d.path .. key, value)`: architecture-§5's helper validates, stores,
+-- reacts and announces, and the instance only ever READS `d.db`. Without them the instance writes
+-- `d.db` itself, as at minor 1; that route still works and is not conforming for a Ka0s host, whose
+-- every setting needs a row and whose every write goes through its helper.
 --
 -- ── TIMING ───────────────────────────────────────────────────────────────────────────────────
 --
@@ -51,7 +60,11 @@ local core = LibStub and LibStub("LibKa0s-Core-1.0", true)
 local NEEDS_CORE = 1
 if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary; module absent
 
-local MAJOR, MINOR = "LibKa0s-Callout-1.0", 1
+-- Minor 1: the major (plan row L3).
+-- Minor 2 (plan row L11, v1.98.0): the host-write route (`d.path` and `d.set`, `d.colorEncode`),
+-- the leaf keys `texts.<KEY>`, `muted.<KEY>` and `colors.<kind>` that Get and Set take, and a color
+-- read in either shape.
+local MAJOR, MINOR = "LibKa0s-Callout-1.0", 2
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -225,9 +238,18 @@ local function copy(v)
   return t
 end
 
-local function validColor(c)
-  return type(c) == "table" and finite(c[1]) and finite(c[2]) and finite(c[3])
+--- A stored color's channels, in either shape: named keys (`{ r =, g =, b = }`, the Options
+--- descriptor's default codec) or an array (`{ r, g, b }`, what the instance writes into `d.db`
+--- itself). Nil for anything else.
+local function rgb(c)
+  if type(c) ~= "table" then return nil end
+  local r, g, b = c.r, c.g, c.b
+  if r == nil and g == nil and b == nil then r, g, b = c[1], c[2], c[3] end
+  if finite(r) and finite(g) and finite(b) then return r, g, b end
+  return nil
 end
+
+local function validColor(c) return rgb(c) ~= nil end
 
 local function debugOut(S, msg)
   local sink = S.d.debug
@@ -299,10 +321,124 @@ end
 
 local function colorOf(S, kind)
   local t = store(S)
-  local c = t and type(t.colors) == "table" and t.colors[kind]
-  if validColor(c) then return c[1], c[2], c[3] end
-  c = lib.DEFAULTS.colors[kind] or lib.DEFAULTS.colors.info
+  local r, g, b = rgb(t and type(t.colors) == "table" and t.colors[kind])
+  if r then return r, g, b end
+  local c = lib.DEFAULTS.colors[kind] or lib.DEFAULTS.colors.info
   return c[1], c[2], c[3]
+end
+
+-- ── the write route (minor 2) ────────────────────────────────────────────────────────────────
+
+--- The host's prefix for this instance's rows, ending in one dot; nil without `d.path`.
+local function prefixOf(S)
+  local p = S.d.path
+  if not nonEmpty(p) then return nil end
+  return p:sub(-1) == "." and p or (p .. ".")
+end
+
+--- Whether every write goes through the host's seam: `d.set` and `d.path` both given.
+local function hostWrites(S) return type(S.d.set) == "function" and prefixOf(S) ~= nil end
+
+--- A color as this instance stores it: the host's `d.colorEncode` when it gives one; else, for a
+--- host that names its rows (`d.path`) or for a schema row's default (`named`), the named-key shape
+--- the Options descriptor's default codec reads; else the array the instance has always written
+--- into `d.db`.
+local function encodeColor(S, r, g, b, named)
+  if type(S.d.colorEncode) == "function" then return S.d.colorEncode(r, g, b, 1) end
+  if named or prefixOf(S) then return { r = r, g = g, b = b, a = 1 } end
+  return { r, g, b }
+end
+
+-- The leaf keys: one stock key's own text or mute, one kind's color. `texts.GO`, `muted.STOP`,
+-- `colors.warn`. Each is one schema row on the host's route.
+local LEAF_OF = {
+  texts = function(sub) return lib.STOCK[sub] ~= nil end,
+  muted = function(sub) return lib.STOCK[sub] ~= nil end,
+  colors = function(sub) return KIND[sub] == true end,
+}
+local LEAF_VALID = {
+  texts = function(v) return type(v) == "string" end,
+  muted = function(v) return type(v) == "boolean" end,
+  colors = validColor,
+}
+
+--- `head, sub` for a leaf key (`"texts", "GO"`), nil for any other.
+local function leafOf(key)
+  if type(key) ~= "string" then return nil end
+  local head, sub = key:match("^(%a+)%.([%w_]+)$")
+  if head and LEAF_OF[head] and LEAF_OF[head](sub) then return head, sub end
+  return nil
+end
+
+--- A key Get and Set take: a setting of SETTINGS, or a leaf.
+local function known(key) return VALID[key] ~= nil or leafOf(key) ~= nil end
+
+--- What `key` may hold, for this instance: a pack the host does not ship is no voice.
+local function validFor(S, key, v)
+  local head = leafOf(key)
+  if head then return LEAF_VALID[head](v) end
+  if not VALID[key] or not VALID[key](v) then return false end
+  if key == "voice" and PACK[v] and not offered(S)[v] then return false end
+  return true
+end
+
+--- The default a write of nil puts back, as this instance stores it. A leaf's is what an empty
+--- `texts` / `muted` reads as (`""`, `false`) and its kind's default color; the voice's is the first
+--- pack the host ships when the default pack is not among them.
+local function defaultOf(S, key, named)
+  local head, sub = leafOf(key)
+  if head == "texts" then return "" end
+  if head == "muted" then return false end
+  if head == "colors" then
+    local c = lib.DEFAULTS.colors[sub]
+    return encodeColor(S, c[1], c[2], c[3], named)
+  end
+  if key == "voice" then
+    local v = lib.DEFAULTS.voice
+    if offered(S)[v] then return v end
+    for _, p in ipairs(lib.PACKS) do
+      if offered(S)[p.key] then return p.key end
+    end
+    return lib.OFF
+  end
+  return copy(lib.DEFAULTS[key])
+end
+
+--- A whole `texts` / `muted` table on the host's route, where only its leaves have rows: one leaf
+--- write per stock key, `d.set(prefix .. head .. "." .. KEY, v)`, a key the table leaves out (or a
+--- nil table) written as its default. Every leaf is written; answers whether every one landed.
+local function writeWhole(S, head, value)
+  local ok = true
+  for _, k in ipairs(lib.STOCK_ORDER) do
+    local leaf, v = head .. "." .. k, nil
+    if type(value) == "table" then v = value[k] end
+    if v == nil then v = defaultOf(S, leaf) end
+    if S.d.set(prefixOf(S) .. leaf, v) == false then ok = false end
+  end
+  return ok
+end
+
+--- Write one validated value. On the host's route that is `d.set(prefix .. key, value)`, nil sent as
+--- the default (a schema row's validate takes no nil), and a whole `texts` / `muted` split into its
+--- leaves; else it is stored into `d.db`, a leaf by a copy of its table with the one key changed,
+--- and nil removes it. Answers whether it landed.
+local function write(S, key, value)
+  if hostWrites(S) then
+    if key == "texts" or key == "muted" then return writeWhole(S, key, value) end
+    if value == nil then value = defaultOf(S, key) end
+    return S.d.set(prefixOf(S) .. key, copy(value)) ~= false
+  end
+  local t = store(S)
+  if not t then return false end
+  local head, sub = leafOf(key)
+  if not head then
+    t[key] = copy(value)
+    return true
+  end
+  local whole = head == "colors" and copy(type(t.colors) == "table" and t.colors or {}) or copy(get(S, head))
+  whole[sub] = copy(value)
+  t[head] = whole
+  return true
 end
 
 -- ── the font ─────────────────────────────────────────────────────────────────────────────────
@@ -453,12 +589,15 @@ local function applyPosition(S)
   S.frame:SetPoint(pt[1], UIParent, pt[2] or pt[1], pt[3] or 0, pt[4] or 0)
 end
 
+--- The drag's point, written like any other write: through the host's seam on its route (a raise
+--- there reaches the error handler, not the drag's script), into `d.db` otherwise.
 local function savePosition(S)
   local point, _, relativePoint, x, y = S.frame:GetPoint(1)
-  local t = store(S)
-  if type(point) ~= "string" or not t then return end
-  t.point = { point, type(relativePoint) == "string" and relativePoint or point,
+  if type(point) ~= "string" then return end
+  local pt = { point, type(relativePoint) == "string" and relativePoint or point,
     finite(x) and x or 0, finite(y) and y or 0 }
+  if not validPoint(pt) then return end
+  call(S, write, S, "point", pt)
 end
 
 local function onDragStart(S)
@@ -837,23 +976,35 @@ function METHODS:Resume() state(self).suspended = false end
 
 function METHODS:Suspended() return state(self).suspended == true end
 
+--- A leaf as the instance reads it: a stock key's own text (`""` for none), its mute, a kind's
+--- color as `{ r, g, b, r =, g =, b = }`.
+local function getLeaf(S, head, sub)
+  if head == "texts" then return get(S, "texts")[sub] or "" end
+  if head == "muted" then return get(S, "muted")[sub] == true end
+  local r, g, b = colorOf(S, sub)
+  return { r, g, b, r = r, g = g, b = b }
+end
+
 --- One setting, as the instance reads it: the host's stored value, or the default when it holds
---- none or one that is not valid.
+--- none or one that is not valid. From minor 2 a leaf key (`texts.GO`, `muted.STOP`, `colors.go`)
+--- answers that one entry.
 function METHODS:Get(key)
   local S = state(self)
+  local head, sub = leafOf(key)
+  if head then return getLeaf(S, head, sub) end
   if not VALID[key] then return nil end
   if key == "voice" then return voiceOf(S) end
   return copy(get(S, key))
 end
 
---- Write one setting into the host's table and apply it. nil clears it back to the default. Answers
---- false for an unknown key, an invalid value or no table to write into.
+--- Write one setting and apply it. nil clears it back to the default. On the host's route (`d.path`
+--- and `d.set`) the write is `d.set(d.path .. key, value)`, a whole `texts` / `muted` as one write
+--- per stock key's leaf; otherwise it lands in `d.db`. Answers
+--- false for an unknown key, an invalid value, no table to write into, or a host seam that refused.
 function METHODS:Set(key, value)
   local S = state(self)
-  local t = store(S)
-  if not (t and VALID[key]) or (value ~= nil and not VALID[key](value)) then return false end
-  if key == "voice" and PACK[value] and not offered(S)[value] then return false end   -- not shipped
-  t[key] = copy(value)
+  if not known(key) or (value ~= nil and not validFor(S, key, value)) then return false end
+  if not write(S, key, value) then return false end
   self:Apply()
   return true
 end
@@ -862,18 +1013,17 @@ function METHODS:GetColor(kind)
   return colorOf(state(self), KIND[kind] and kind or "info")
 end
 
---- A kind's color, written as { r, g, b } into the host's `colors`; no r clears it to the default.
+--- A kind's color, written into the host's `colors` (as `{ r, g, b }` into `d.db`, or through the
+--- host's seam in its own shape, `d.colorEncode`'s); no r clears it to the default.
 function METHODS:SetColor(kind, r, g, b)
   local S = state(self)
-  local t = store(S)
-  if not (t and KIND[kind]) then return false end
-  if r == nil then
-    if type(t.colors) == "table" then t.colors[kind] = nil end
-  else
+  if not KIND[kind] then return false end
+  local value
+  if r ~= nil then
     if not validColor({ r, g, b }) then return false end
-    if type(t.colors) ~= "table" then t.colors = {} end
-    t.colors[kind] = { r, g, b }
+    value = encodeColor(S, r, g, b)
   end
+  if not write(S, "colors." .. kind, value) then return false end
   self:Apply()
   return true
 end
@@ -913,8 +1063,7 @@ function METHODS:Locked() return state(self).locked end
 --- Forget the saved point: the frame goes back to the default.
 function METHODS:ResetPosition()
   local S = state(self)
-  local t = store(S)
-  if t then t.point = nil end
+  write(S, "point", nil)
   if S.frame then applyPosition(S) end
 end
 
@@ -966,6 +1115,10 @@ function lib:New(d)   -- luacheck: ignore 212/self
   if type(d) ~= "table" or (type(d.db) ~= "table" and type(d.db) ~= "function") then
     error(MAJOR .. ": New(d): d.db (the host's settings table, or a getter) is required", 2)
   end
+  -- A seam with no prefix would leave every write going around it, silently: refuse it here.
+  if d.set ~= nil and (type(d.set) ~= "function" or not nonEmpty(d.path)) then
+    error(MAJOR .. ": New(d): d.set (the host's write seam) needs d.path, the prefix its rows sit under", 2)
+  end
   local inst = {}
   for name, fn in pairs(METHODS) do inst[name] = fn end
   STATE[inst] = { d = d, anims = {}, logged = {}, locked = true, suspended = false, awake = false }
@@ -975,3 +1128,18 @@ end
 -- The method table every New copies, for this major's paired files (CalloutSettings.lua adds the
 -- settings section to it) and nobody else. Private: a host calls methods on an instance.
 lib.__methods = METHODS
+
+-- What CalloutSettings.lua's schema rows (minor 3) read off an instance, private for the same
+-- reason: a row's validate (`__validFor`), its default (`__defaultFor`, a color in the host's shape),
+-- a color row's reader (`__colorFor`, the kind's color as it reads, re-encoded in the host's shape,
+-- so a stored array still reaches a swatch that decodes named keys), the host's prefix
+-- (`__prefixOf`, nil without `d.path`) and whether a leaf key is one (`__known`).
+lib.__validFor = function(inst, key, v) return validFor(state(inst), key, v) end
+lib.__defaultFor = function(inst, key) return copy(defaultOf(state(inst), key, true)) end
+lib.__colorFor = function(inst, kind)
+  local S = state(inst)
+  local r, g, b = colorOf(S, kind)
+  return encodeColor(S, r, g, b, true)
+end
+lib.__prefixOf = function(inst) return prefixOf(state(inst)) end
+lib.__known = known

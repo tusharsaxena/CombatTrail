@@ -22,6 +22,13 @@
 -- its tab through `BuildSettings(ctx, { options, tab })`; with no `opts.tab` the three sections are
 -- drawn one under another, each under its heading, for a host that gives the call-out one tab.
 --
+-- ON THE HOST'S ROUTE (minor 3: the descriptor's `path` and `set`, or `opts.prefix`), the Options
+-- build draws the rows `SchemaRows(prefix)` answers, each carrying its path, which the host has
+-- registered in its own schema: the Options instance reads and writes them through its descriptor,
+-- so architecture-§5's helper validates, stores, reacts (the row's onChange is the instance's Apply)
+-- and announces, and the host's slash get / set / reset reaches every one. The Play pick and the
+-- unlock toggle are session rows there too.
+--
 -- WITHOUT one, `parent` is a plain frame and the section is built of plain frames, one control per
 -- line: a check button for a toggle, a value between - and + buttons for a number, a button that
 -- steps through the choices for a list, a swatch that opens the client's color picker for a color.
@@ -47,9 +54,20 @@
 -- each read at build time and optional.
 
 local lib = LibStub and LibStub("LibKa0s-Callout-1.0", true)
-if not lib or type(lib.__methods) ~= "table" then return end
+-- Minor 3 reads the shell's minor-2 privates (`__validFor`, `__defaultFor`, `__colorFor`, `__prefixOf`): an older
+-- shell gets no settings section rather than one that raises.
+if not lib or type(lib.__methods) ~= "table" or type(lib.__validFor) ~= "function"
+  or type(lib.__colorFor) ~= "function" then return end
 
-local SETTINGS_MINOR = 1
+-- Minor 1: the section (plan row L4).
+-- Minor 2 (plan row L2, v1.97.0): `FONT_FACES`, the call-out's display faces (Oxanium Bold, the
+-- default, and LibKa0s-Media-1.0 13's Bebas Neue and Russo One), lead the font row after "Skin font"
+-- and "Game default", each offered when the host's LibSharedMedia lists it (without LSM, when the
+-- winning Media copy ships it); every other face follows, sorted, as before.
+-- Minor 3 (plan row L11, v1.98.0): `SchemaRows`, the settings as schema rows a host registers
+-- under its own prefix (architecture-§5), and the Options build on the host's route, where every row
+-- carries its path and is written through the host's seam. Needs the Callout shell at minor 2.
+local SETTINGS_MINOR = 3
 if lib.__settingsMinor and lib.__settingsMinor >= SETTINGS_MINOR
   and lib.__settingsShellMinor == lib.MINOR then return end
 lib.__settingsMinor      = SETTINGS_MINOR
@@ -93,6 +111,7 @@ lib.SETTINGS_STRINGS = {
   VOICE = "Voice",
   VOICE_TIP = "A bundled voice, the game's text to speech (the voices your system has installed), or off.",
   TTS_VOICE = "Text to speech voice", TTS_VOICE_TIP = "Which of the game's voices speaks.",
+  TTS_VOICE_DEFAULT = "Default (%s)",
   TTS_RATE = "Speech rate", TTS_RATE_TIP = "How fast text to speech speaks, -10 to 10.",
   TTS_VOLUME = "Speech volume", TTS_VOLUME_TIP = "How loud text to speech speaks, 0 to 100.",
   CHANNEL = "Sound channel", CHANNEL_TIP = "The game's volume slider the voice follows.",
@@ -171,9 +190,14 @@ local function channelValues(L)
   return listOf(L, { { "Master", "CHANNEL_MASTER" }, { "SFX", "CHANNEL_SFX" }, { "Dialog", "CHANNEL_DIALOG" } })
 end
 
---- Every face the font row offers, in order: the skin's and the game's first, then every
---- LibSharedMedia face (or, without it, every LibKa0s-Media-1.0 face), as `{ value, text }`.
-local function fontChoices()
+-- The call-out's display faces, in the order the font row offers them after the skin's and the
+-- game's: the owner's choice of 2026-11-13 (Orbitron, also planned, does not ship). Each is a
+-- LibKa0s-Media-1.0 key and its LSM name.
+lib.FONT_FACES = { lib.FONT_DEFAULT, "Ka0s Bebas Neue", "Ka0s Russo One" }
+
+--- Every face LibSharedMedia lists (or, without it, every LibKa0s-Media-1.0 face), sorted, as a list
+--- and a set.
+local function listedFaces()
   local names, seen = {}, {}
   local function add(n)
     if type(n) == "string" and not seen[n] then seen[n] = true; names[#names + 1] = n end
@@ -186,11 +210,28 @@ local function fontChoices()
   if #names == 0 and Media and type(Media.FONTS) == "table" then
     for n in pairs(Media.FONTS) do add(n) end
   end
-  add(lib.FONT_DEFAULT)
   table.sort(names)
+  return names, seen
+end
+
+--- Every face the font row offers, in order: the skin's and the game's first, then `FONT_FACES`
+--- (the default always, the others when they are listed: by LibSharedMedia when it lists any face,
+--- else by LibKa0s-Media-1.0's `FONTS`), then every other listed face, sorted, as `{ value, text }`.
+--- A face the Media copy ships but LibSharedMedia, present, does not list is not offered: Media's
+--- RegisterLSM refused it for the client's locale (its langmask), and drawn from the raw file it
+--- would render the player's text as boxes.
+local function fontChoices()
+  local names, seen = listedFaces()
   local out = { { value = lib.FONT_SKIN, text = lib.FONT_SKIN }, { value = lib.FONT_GAME, text = lib.FONT_GAME } }
+  local taken = { [lib.FONT_SKIN] = true, [lib.FONT_GAME] = true }
+  for _, n in ipairs(lib.FONT_FACES) do
+    if n == lib.FONT_DEFAULT or seen[n] then
+      taken[n] = true
+      out[#out + 1] = { value = n, text = n }
+    end
+  end
   for _, n in ipairs(names) do
-    if n ~= lib.FONT_SKIN and n ~= lib.FONT_GAME then out[#out + 1] = { value = n, text = n } end
+    if not taken[n] then out[#out + 1] = { value = n, text = n } end
   end
   return out
 end
@@ -203,11 +244,38 @@ end
 
 -- ── the rows ─────────────────────────────────────────────────────────────────────────────────
 --
--- Path-less schema rows (Options' W15 arm): each reads and writes through the instance. `tab` is
--- the tab's key; `group` its label, so RenderRows draws a heading per tab when all three are drawn.
+-- Every row is built by one binder, `B = { inst, prefix }`, in one of two shapes:
+--
+-- PATH-LESS (`B.prefix` nil; SettingsRows and the plain build): Options' W15 arm, read and written
+-- through the row's own `get` / `set`, which call the instance's Get / Set. On the host's write route
+-- (the descriptor's `path` and `set`) those writes still reach the host's seam, through the instance.
+--
+-- SCHEMA ROWS (`B.prefix` the host's prefix; SchemaRows, and the Options build on the host's route,
+-- minor 3): `path = prefix .. key`, `default` as the instance stores it, `validate` the instance's
+-- own rule, and `onChange` the instance's Apply. The host registers them in its own schema, so
+-- architecture-§5's helper writes every one of them and its slash get / set / reset reaches each.
+-- `tab` is the tab's key; `group` its label, so RenderRows draws a heading per tab when all three
+-- are drawn.
 
-local function setting(inst, key)
-  return function() return inst:Get(key) end, function(v) inst:Set(key, v) end
+--- Bind `t` to setting `key`. `less` overrides the path-less row's get / set; `more` adds fields
+--- to a schema row (a `normalize`, a `values` function, a color row's `get`). A schema row's `get`
+--- comes with no `set`: Schema.Get answers through it, and a write still stores through the host's
+--- seam (prepareWrite stores a row with no `set`), so it must answer the stored value's equal at the
+--- default, or the host's reset count reads the row as changed.
+local function bind(B, key, t, less, more)
+  local inst = B.inst
+  t.key = key
+  if not B.prefix then
+    t.get = less and less.get or function() return inst:Get(key) end
+    t.set = less and less.set or function(v) inst:Set(key, v) end
+    return t
+  end
+  t.path = B.prefix .. key
+  t.default = lib.__defaultFor(inst, key)
+  t.validate = function(v) return lib.__validFor(inst, key, v) end
+  t.onChange = function() inst:Apply() end
+  for k, v in pairs(more or {}) do t[k] = v end
+  return t
 end
 
 local function row(list, tab, group, subgroup, t)
@@ -216,103 +284,122 @@ local function row(list, tab, group, subgroup, t)
   return t
 end
 
-local function slider(inst, label, tip, key, lo, hi, step)
-  local get, set = setting(inst, key)
-  return { type = "number", label = label, tooltip = tip, min = lo, max = hi, step = step,
-    get = get, set = set, key = key }
+local function slider(B, label, tip, key, lo, hi, step)
+  return bind(B, key, { type = "number", label = label, tooltip = tip, min = lo, max = hi, step = step })
 end
 
-local function choice(inst, label, tip, key, values)
-  local get, set = setting(inst, key)
-  return { type = "string", label = label, tooltip = tip, values = values, get = get, set = set, key = key }
+local function choice(B, label, tip, key, values)
+  return bind(B, key, { type = "string", label = label, tooltip = tip, values = values })
 end
 
-local function lookRows(inst, L, out)
-  local g = word(L, "TAB_LOOK")
-  local fontGet, fontSet = setting(inst, "font")
-  row(out, "look", g, nil, { type = "string", label = word(L, "FONT"), tooltip = word(L, "FONT_TIP"),
-    dialogControl = "Ka0sMedia_Font", values = fontChoices, get = fontGet, set = fontSet, key = "font",
-    startsLine = true })
-  row(out, "look", g, nil, slider(inst, word(L, "SIZE"), word(L, "SIZE_TIP"), "size", lib.SIZE_MIN, lib.SIZE_MAX, 1))
-  row(out, "look", g, nil, choice(inst, word(L, "OUTLINE"), word(L, "OUTLINE_TIP"), "outline", outlineValues(L)))
-  row(out, "look", g, nil, choice(inst, word(L, "GLOW"), word(L, "GLOW_TIP"), "glow", glowValues(L)))
-  local shadowGet, shadowSet = setting(inst, "shadow")
-  row(out, "look", g, nil, { type = "bool", label = word(L, "SHADOW"), tooltip = word(L, "SHADOW_TIP"),
-    get = shadowGet, set = shadowSet, key = "shadow", startsLine = true })
+local function lookRows(B, L, out)
+  local inst, g = B.inst, word(L, "TAB_LOOK")
+  row(out, "look", g, nil, bind(B, "font", { type = "string", label = word(L, "FONT"), tooltip = word(L, "FONT_TIP"),
+    dialogControl = "Ka0sMedia_Font", values = fontChoices, startsLine = true }))
+  row(out, "look", g, nil, slider(B, word(L, "SIZE"), word(L, "SIZE_TIP"), "size", lib.SIZE_MIN, lib.SIZE_MAX, 1))
+  row(out, "look", g, nil, choice(B, word(L, "OUTLINE"), word(L, "OUTLINE_TIP"), "outline", outlineValues(L)))
+  row(out, "look", g, nil, choice(B, word(L, "GLOW"), word(L, "GLOW_TIP"), "glow", glowValues(L)))
+  row(out, "look", g, nil, bind(B, "shadow", { type = "bool", label = word(L, "SHADOW"), tooltip = word(L, "SHADOW_TIP"),
+    startsLine = true }))
   local noShadow = function() return not inst:Get("shadow") end
-  local x = row(out, "look", g, nil, slider(inst, word(L, "SHADOW_X"), word(L, "SHADOW_OFFSET_TIP"), "shadowX", -20, 20, 1))
-  local y = row(out, "look", g, nil, slider(inst, word(L, "SHADOW_Y"), word(L, "SHADOW_OFFSET_TIP"), "shadowY", -20, 20, 1))
+  local x = row(out, "look", g, nil, slider(B, word(L, "SHADOW_X"), word(L, "SHADOW_OFFSET_TIP"), "shadowX", -20, 20, 1))
+  local y = row(out, "look", g, nil, slider(B, word(L, "SHADOW_Y"), word(L, "SHADOW_OFFSET_TIP"), "shadowY", -20, 20, 1))
   x.disabledIf, y.disabledIf, x.startsLine = noShadow, noShadow, true
-  local anim = row(out, "look", g, nil, choice(inst, word(L, "ANIM"), word(L, "ANIM_TIP"), "anim", animValues(L)))
+  local anim = row(out, "look", g, nil, choice(B, word(L, "ANIM"), word(L, "ANIM_TIP"), "anim", animValues(L)))
   anim.startsLine = true
-  row(out, "look", g, nil, slider(inst, word(L, "HOLD"), word(L, "HOLD_TIP"), "hold", 0.2, 10, 0.1))
+  row(out, "look", g, nil, slider(B, word(L, "HOLD"), word(L, "HOLD_TIP"), "hold", 0.2, 10, 0.1))
 end
 
-local function soundRows(inst, L, out)
-  local g = word(L, "TAB_SOUND")
-  local voices = {}
-  for i, v in ipairs(inst:Voices()) do voices[i] = { value = v.key, text = v.name } end
-  local voice = row(out, "sound", g, nil, choice(inst, word(L, "VOICE"), word(L, "VOICE_TIP"), "voice", voices))
+--- The voice choices: the packs the host ships (`d.packs`), then text to speech and off.
+local function voiceValues(inst)
+  local out = {}
+  for i, v in ipairs(inst:Voices()) do out[i] = { value = v.key, text = v.name } end
+  return out
+end
+
+--- The client's text to speech voices as choices; empty without one.
+local function ttsValues(inst)
+  local out = {}
+  for i, v in ipairs(inst:TtsVoices()) do out[i] = { value = v.voiceID, text = v.name } end
+  return out
+end
+
+--- The schema row's choices: the stored default, `false` (the client's first voice), leads as
+--- "Default (<first voice>)", so the dropdown names the voice spoken rather than showing blank. A
+--- path-less row maps `false` to the first voice through its own `get` instead; a schema row has no
+--- `get` here, since one answering the first voice's id would read as changed at the default.
+local function ttsSchemaValues(inst, L)
+  local out = ttsValues(inst)
+  if out[1] then table.insert(out, 1, { value = false, text = word(L, "TTS_VOICE_DEFAULT"):format(out[1].text) }) end
+  return out
+end
+
+--- The text to speech rows. Path-less (and in the Options build), only on a client that lists a
+--- voice; as schema rows (`all`), always, since the settings exist whether or not this client has a
+--- voice, with the choices read when they are drawn. Drawn disabled off "tts".
+local function ttsRows(B, L, out, g, all)
+  local inst = B.inst
+  local tts = inst:TtsVoices()
+  if #tts == 0 and not all then return end
+  local notTts = function() return inst:Get("voice") ~= lib.TTS end
+  local pickGet = function()
+    local want = inst:Get("ttsVoice")
+    for _, v in ipairs(tts) do if v.voiceID == want then return want end end
+    return tts[1] and tts[1].voiceID
+  end
+  local values = B.prefix and function() return ttsSchemaValues(inst, L) end or ttsValues(inst)
+  row(out, "sound", g, nil, bind(B, "ttsVoice", { type = "number", label = word(L, "TTS_VOICE"),
+    tooltip = word(L, "TTS_VOICE_TIP"), values = values, startsLine = true, disabledIf = notTts },
+    { get = pickGet }))
+  local rate = row(out, "sound", g, nil, slider(B, word(L, "TTS_RATE"), word(L, "TTS_RATE_TIP"), "ttsRate", -10, 10, 1))
+  local vol = row(out, "sound", g, nil, slider(B, word(L, "TTS_VOLUME"), word(L, "TTS_VOLUME_TIP"), "ttsVolume", 0, 100, 1))
+  rate.disabledIf, vol.disabledIf, rate.startsLine = notTts, notTts, true
+end
+
+local function soundRows(B, L, out, all)
+  local inst, g = B.inst, word(L, "TAB_SOUND")
+  local voices = B.prefix and function() return voiceValues(inst) end or voiceValues(inst)
+  local voice = row(out, "sound", g, nil, choice(B, word(L, "VOICE"), word(L, "VOICE_TIP"), "voice", voices))
   voice.startsLine = true
-  row(out, "sound", g, nil, choice(inst, word(L, "CHANNEL"), word(L, "CHANNEL_TIP"), "channel", channelValues(L)))
-  local from = row(out, "sound", g, nil, slider(inst, word(L, "SPEAK_FROM"), word(L, "SPEAK_FROM_TIP"),
+  row(out, "sound", g, nil, choice(B, word(L, "CHANNEL"), word(L, "CHANNEL_TIP"), "channel", channelValues(L)))
+  local from = row(out, "sound", g, nil, slider(B, word(L, "SPEAK_FROM"), word(L, "SPEAK_FROM_TIP"),
     "speakFrom", 1, lib.MAX_FROM, 1))
   from.startsLine = true
-  -- Text to speech: only on a client that has it and lists a voice; drawn disabled off "tts".
-  local tts = inst:TtsVoices()
-  if #tts == 0 then return end
-  local notTts = function() return inst:Get("voice") ~= lib.TTS end
-  local list = {}
-  for i, v in ipairs(tts) do list[i] = { value = v.voiceID, text = v.name } end
-  local pick = row(out, "sound", g, nil, { type = "number", label = word(L, "TTS_VOICE"), tooltip = word(L, "TTS_VOICE_TIP"),
-    values = list, key = "ttsVoice", startsLine = true, disabledIf = notTts,
-    get = function()
-      local want = inst:Get("ttsVoice")
-      for _, v in ipairs(tts) do if v.voiceID == want then return want end end
-      return tts[1].voiceID
-    end,
-    set = function(v) inst:Set("ttsVoice", v) end })
-  local rate = row(out, "sound", g, nil, slider(inst, word(L, "TTS_RATE"), word(L, "TTS_RATE_TIP"), "ttsRate", -10, 10, 1))
-  local vol = row(out, "sound", g, nil, slider(inst, word(L, "TTS_VOLUME"), word(L, "TTS_VOLUME_TIP"), "ttsVolume", 0, 100, 1))
-  rate.disabledIf, vol.disabledIf, rate.startsLine = notTts, notTts, true
-  return pick
+  ttsRows(B, L, out, g, all)
 end
 
---- A copy of a table setting with one key changed (nil removes it), written back whole.
-local function writeKeyed(inst, key, k, v)
-  local t = inst:Get(key)
-  t[k] = v
-  inst:Set(key, t)
-end
+local function trim(v) return type(v) == "string" and v:match("^%s*(.-)%s*$") or "" end
 
-local function textsRows(inst, L, out, withText)
-  local g = word(L, "TAB_TEXTS")
-  local colors = word(L, "COLORS")
+local function colorRows(B, L, out, g)
+  local inst, colors = B.inst, word(L, "COLORS")
   for i, kind in ipairs(lib.KINDS) do
-    row(out, "texts", g, colors, { type = "color", label = word(L, KIND_WORD[kind]), tooltip = word(L, "KIND_TIP"),
-      hasAlpha = false, key = "colors." .. kind, startsLine = i == 1,
-      get = function() return bothShapes(inst:GetColor(kind)) end,
-      set = function(c)
-        local r, gg, b = fromEither(c)
-        if r then inst:SetColor(kind, r, gg, b) end
-      end })
+    row(out, "texts", g, colors, bind(B, "colors." .. kind, { type = "color", label = word(L, KIND_WORD[kind]),
+      tooltip = word(L, "KIND_TIP"), hasAlpha = false, startsLine = i == 1 }, {
+        get = function() return bothShapes(inst:GetColor(kind)) end,
+        set = function(c)
+          local r, gg, b = fromEither(c)
+          if r then inst:SetColor(kind, r, gg, b) end
+        end }, { get = function() return lib.__colorFor(inst, kind) end }))
   end
+end
+
+local function textsRows(B, L, out, withText)
+  local inst, g = B.inst, word(L, "TAB_TEXTS")
+  colorRows(B, L, out, g)
   local stock = word(L, "STOCK_TEXTS")
   for _, key in ipairs(lib.STOCK_ORDER) do
-    local shown = lib.STOCK[key].text
+    local shown, textKey, muteKey = lib.STOCK[key].text, "texts." .. key, "muted." .. key
     if withText then
-      row(out, "texts", g, stock, { type = "string", dialogControl = "EditBox", label = shown, startsLine = true,
-        tooltip = word(L, "TEXT_TIP"):format(shown, shown), key = "texts." .. key,
-        get = function() return inst:Get("texts")[key] or "" end,
-        set = function(v)
-          local text = type(v) == "string" and v:match("^%s*(.-)%s*$") or ""
-          writeKeyed(inst, "texts", key, text ~= "" and text or nil)
-        end })
+      row(out, "texts", g, stock, bind(B, textKey, { type = "string", dialogControl = "EditBox", label = shown,
+        startsLine = true, tooltip = word(L, "TEXT_TIP"):format(shown, shown) }, {
+          set = function(v)
+            local text = trim(v)
+            inst:Set(textKey, text ~= "" and text or nil)
+          end }, { normalize = trim }))
     end
-    row(out, "texts", g, stock, { type = "bool", label = word(L, "MUTE"):format(shown),
-      tooltip = word(L, "MUTE_TIP"):format(shown), key = "muted." .. key, startsLine = not withText,
-      get = function() return inst:Get("muted")[key] == true end,
-      set = function(v) writeKeyed(inst, "muted", key, v and true or nil) end })
+    row(out, "texts", g, stock, bind(B, muteKey, { type = "bool", label = word(L, "MUTE"):format(shown),
+      tooltip = word(L, "MUTE_TIP"):format(shown), startsLine = not withText }, {
+        set = function(v) inst:Set(muteKey, v and true or nil) end }))
   end
 end
 
@@ -320,11 +407,11 @@ end
 --- one tab's (`opts.tab`). `opts.L` overrides the words; `opts.plain` leaves the text boxes out.
 function METHODS:SettingsRows(opts)
   opts = type(opts) == "table" and opts or {}
-  local out = {}
+  local out, B = {}, { inst = self }
   local tab = opts.tab
-  if tab == nil or tab == "look" then lookRows(self, opts.L, out) end
-  if tab == nil or tab == "sound" then soundRows(self, opts.L, out) end
-  if tab == nil or tab == "texts" then textsRows(self, opts.L, out, not opts.plain) end
+  if tab == nil or tab == "look" then lookRows(B, opts.L, out) end
+  if tab == nil or tab == "sound" then soundRows(B, opts.L, out, false) end
+  if tab == nil or tab == "texts" then textsRows(B, opts.L, out, not opts.plain) end
   return out
 end
 
@@ -377,21 +464,63 @@ end
 
 local function playPicked(inst) return inst:Show(session(inst).play) end
 
--- The preview block's own rows: the text Play shows, and the unlock toggle. Session state only.
-local function previewRows(inst, L)
+-- The preview block's own rows: the text Play shows, and the unlock toggle. Session state only:
+-- `sessionOnly`, each storing through its own get / set, never in the host's profile. As schema rows
+-- they carry a path too (`prefix .. "play"`, `prefix .. "unlocked"`), so the host's Options build
+-- reaches them through its seam like every other row, and a reset puts back GO and the lock.
+local function previewRows(B, L)
+  local inst = B.inst
   local v = session(inst)
-  return {
-    { type = "string", label = word(L, "PLAY_KEY"), tooltip = word(L, "PLAY_KEY_TIP"), values = stockValues(),
-      key = "play", startsLine = true, sessionOnly = true,
-      get = function() return v.play end, set = function(k) if lib.STOCK[k] then v.play = k end end },
-    { type = "bool", label = word(L, "UNLOCK"), tooltip = word(L, "UNLOCK_TIP"), key = "unlocked", sessionOnly = true,
-      get = function() return inst:Locked() == false end, set = function(on) inst:SetLocked(not on) end },
-  }
+  local play = { type = "string", label = word(L, "PLAY_KEY"), tooltip = word(L, "PLAY_KEY_TIP"), values = stockValues(),
+    key = "play", startsLine = true, sessionOnly = true,
+    get = function() return v.play end, set = function(k) if lib.STOCK[k] then v.play = k end end }
+  local unlock = { type = "bool", label = word(L, "UNLOCK"), tooltip = word(L, "UNLOCK_TIP"), key = "unlocked",
+    sessionOnly = true,
+    get = function() return inst:Locked() == false end, set = function(on) inst:SetLocked(not on) end }
+  if B.prefix then
+    local g = word(L, "PREVIEW")
+    play.path, play.default, play.group, play.preview = B.prefix .. "play", "GO", g, true
+    play.validate = function(k) return lib.STOCK[k] ~= nil end
+    unlock.path, unlock.default, unlock.group, unlock.preview = B.prefix .. "unlocked", false, g, true
+    unlock.validate = function(on) return type(on) == "boolean" end
+  end
+  return { play, unlock }
+end
+
+--- `p` as a prefix ending in one dot, or nil.
+local function asPrefix(p)
+  if type(p) ~= "string" or p == "" then return nil end
+  return p:sub(-1) == "." and p or (p .. ".")
+end
+
+--- The call-out's settings as schema rows (architecture-§5), for the host to register in its own
+--- schema under `prefix` (`"callout."`; the descriptor's `path` when nil): one row per setting a
+--- control chooses, each `path = prefix .. key` with its `type`, `default` (what the instance reads
+--- with nothing stored: `DEFAULTS`' value, a color in the host's shape), `validate`, `onChange` (the
+--- instance's Apply), `min` / `max` / `step` or `values`, `label`, `tooltip`, `group` and `tab`; then
+--- the two session rows. `opts.L` overrides the words, `opts.page` sets every row's `page`. The
+--- second answer is the named non-setting state the host owns beside them: `{ prefix .. "point" }`,
+--- the drag's saved position, which no control sets (a host lists it in its schema's
+--- `writeThrough`, or writes it in its own `d.set`, and names it either way).
+function METHODS:SchemaRows(prefix, opts)
+  opts = type(opts) == "table" and opts or {}
+  prefix = asPrefix(prefix) or lib.__prefixOf(self)
+  if not prefix then error(lib.MAJOR .. ": SchemaRows(prefix): a prefix (or the descriptor's path) is required", 2) end
+  local B, L, out = { inst = self, prefix = prefix }, opts.L, {}
+  lookRows(B, L, out)
+  soundRows(B, L, out, true)
+  textsRows(B, L, out, true)
+  for _, r in ipairs(previewRows(B, L)) do out[#out + 1] = r end
+  if opts.page ~= nil then
+    for _, r in ipairs(out) do r.page = opts.page end
+  end
+  return out, { prefix .. "point" }
 end
 
 -- ── the Options build ────────────────────────────────────────────────────────────────────────
 
-local function optionsPreview(inst, O, ctx, L, view)
+local function optionsPreview(B, O, ctx, L, view)
+  local inst = B.inst
   local label = O.TextRow(ctx, sampleText(inst), { justify = "CENTER" })
   view.preview = label
   if label then
@@ -404,7 +533,7 @@ local function optionsPreview(inst, O, ctx, L, view)
     { text = word(L, "TEST_COUNTDOWN"), tooltip = word(L, "TEST_COUNTDOWN_TIP"),
       onClick = function() inst:TestCountdown() end },
     { text = word(L, "PLAY"), tooltip = word(L, "PLAY_TIP"), onClick = function() playPicked(inst) end })
-  O.RenderRows(ctx, previewRows(inst, L), nil, nil, { noHeadings = true })
+  O.RenderRows(ctx, previewRows(B, L), nil, nil, { noHeadings = true })
   O.InlineButtonPair(ctx, { text = word(L, "RESET_POSITION"), tooltip = word(L, "RESET_POSITION_TIP"),
     onClick = function() inst:ResetPosition() end })
 end
@@ -419,9 +548,18 @@ local function buildOptions(inst, ctx, opts)
     if type(O[member]) ~= "function" then return nil end   -- an instance without it builds nothing
   end
   if not O.EnsureScroll(ctx) then return nil end
-  optionsPreview(inst, O, ctx, L, view)
-  view.rows = inst:SettingsRows({ tab = opts.tab, L = L })
-  O.RenderRows(ctx, view.rows, nil, nil, { noHeadings = opts.tab ~= nil })
+  -- On the host's route (`opts.prefix`, else the descriptor's `path`) every row carries its path,
+  -- and the Options instance reads and writes it through its own descriptor: the host's seam, its
+  -- reactions and its announce. The rows are the ones SchemaRows answers, which the host registered.
+  local B = { inst = inst, prefix = asPrefix(opts.prefix) or lib.__prefixOf(inst) }
+  optionsPreview(B, O, ctx, L, view)
+  view.prefix = B.prefix
+  view.rows = {}
+  local tab = opts.tab
+  if tab == nil or tab == "look" then lookRows(B, L, view.rows) end
+  if tab == nil or tab == "sound" then soundRows(B, L, view.rows, false) end
+  if tab == nil or tab == "texts" then textsRows(B, L, view.rows, true) end
+  O.RenderRows(ctx, view.rows, nil, nil, { noHeadings = tab ~= nil })
   return view
 end
 
@@ -435,7 +573,9 @@ function METHODS:SettingsTabs(opts)
   for i, tab in ipairs(lib.SETTINGS_TABS) do
     out[i] = { key = prefix .. tab, label = word(opts.L, TAB_WORD[tab]),
       tooltip = word(opts.L, TAB_WORD[tab] .. "_TIP"), before = opts.before,
-      render = function(ctx) self:BuildSettings(ctx, { options = opts.options, tab = tab, L = opts.L }) end }
+      render = function(ctx)
+        self:BuildSettings(ctx, { options = opts.options, tab = tab, L = opts.L, prefix = opts.prefix })
+      end }
   end
   return out
 end
@@ -573,7 +713,7 @@ local function buildPlain(inst, parent, opts)
   end
   view.refresh = refresh
   local y = plainPreview(inst, parent, L, view, -PLAIN_PAD)
-  for _, r in ipairs(previewRows(inst, L)) do y = plainRow(parent, r, y, view, refresh) end
+  for _, r in ipairs(previewRows({ inst = inst }, L)) do y = plainRow(parent, r, y, view, refresh) end
   view.rows = inst:SettingsRows({ tab = opts.tab, L = L, plain = true })
   local heading
   for _, r in ipairs(view.rows) do
