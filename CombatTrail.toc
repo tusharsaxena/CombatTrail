@@ -293,7 +293,8 @@ modules\Diagnostics.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua
-# calls at FILE SCOPE and core\LifecycleSetup.lua's NS.SyncEnabledHold reads at CALL time.
+# calls at FILE SCOPE and core\LifecycleSetup.lua's NS.SyncEnabledHold reads at CALL time, and
+# NS.__schemaLib, whose Write settings\Race.lua uses at FILE SCOPE to seed the call-out's defaults.
 settings\Schema.lua
 settings\Slash.lua
 # LOAD-BEARING: publishes NS.Helpers, which every page file below captures at FILE SCOPE, and
@@ -306,6 +307,7 @@ settings\Lanes.lua
 settings\Hud.lua
 settings\History.lua
 # The Race mode page, Retail only (declared on its page and its rows; nothing registers on WoW Forever).
-# LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format and NS.LateIgnore at FILE SCOPE.
+# LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format, NS.LateIgnore, NS.Countdown (PREFIX, MIN, MAX) and
+# NS.Callout (SchemaRows, Get, SettingsTabs) at FILE SCOPE.
 settings\Race.lua
 settings\Profiles.lua

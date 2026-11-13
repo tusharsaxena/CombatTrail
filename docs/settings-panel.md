@@ -12,7 +12,7 @@ that resets that page on the current profile. Every row is a schema row (`settin
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
-| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock and how often it redraws, the countdown and the buzzer, the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
+| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock and how often it redraws, the countdown and the buzzer, the center call-out's look, voice and words (its Call-out look, sound and texts tabs), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
 
 The tree below is page, then tab in strip order, then row, as the schema produces it. Rows a client
