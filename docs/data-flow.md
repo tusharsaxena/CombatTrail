@@ -153,3 +153,9 @@ history. `modules/Sim.lua` plays the same shape in real time on an AceTimer beat
 player's own recording filters. A real FIGHT_STARTED ends both. The one message a sample sends is
 the race beat's: a sample race running or stopping calls `RaceClock.Sync`, and its `RACE_CLOCK`
 carries no payload, so it only moves the two windows' clocks.
+
+The samples' alerts are calls too, never messages (callout plan row C6): a sim fight's save calls
+`BestToast.OnFight`, a sim race's read `BestToast.OnRace`, and `/ct test race result`
+`BestToast.ShowPreview`, each judged on the sample history (`Bests` reads it while the preview is
+on); the call-out's words go through `Countdown.SampleSay`. The preview's stop and switch call
+`BestToast.EndSample` and `Countdown.EndSample`, so no toast or call-out outlives its sample.

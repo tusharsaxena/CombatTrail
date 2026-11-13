@@ -67,6 +67,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | The Insights tab (`modules/Results_Insights.lua`, `Results_InsightsData.lua`, `/ct results insights`): the cards, DPS Progression, the board tabs with Spec Comparison and Consistency, By Character, By Character x Content, Recent New Bests over every saved fight | present, plus the Fights / Races / All filter, Clean only and Include incomplete, the Clean races card, and under Races the race length and dummy kind filters and the race-only sections (Races By Character x Length, Late Casts, Races Per Day, Damage Tail After The Buzzer; ruling X12) | present with no race control: a saved race counts as a fight, with its race DPS |
 | The DPS HUD opening for a race whatever `hud.show`, `hud.instancesOnly` and `general.hudInCombat` say (ruling X7) | present | absent: there is no race |
 | Race mode's samples (`modules/MockRaces.lua`, `RaceSample.lua`, `SimRace.lua`: each returns at once off Retail): `/ct test race [armed\|running\|result]`, the sim's eight `race-` scenarios, and the `race` section of `/ct diagnostics` | present | absent: `test race` is plain `test`, the sim lists no race scenario, the report has no race section |
+| The samples' alerts (callout plan row C6): the new-best toast for a sim fight's new best (`toast.fights`), and on Retail the toast's preview on `/ct test race result` and a sim race's new best (`toast.races`), with the call-out's words a sample earns (`Countdown.SampleSay`: NEW_BEST, FAILED; Race mode on), all taken down by the preview's stop and switch (`Countdown.EndSample`, `BestToast.EndSample`) | present | the sim fight's toast only: no call-out, no race |
 | Sample history (test mode and the sim) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
@@ -109,9 +110,11 @@ macro too.
   label or a bar that may hold a secret, and each bar stands on a plain frame (the body's content, a
   checkpoint's cell).
 - The center call-out (Retail, `modules/Countdown.lua` on LibKa0s-Callout-1.0) never carries a figure:
-  it is handed a `GetTime()` endsAt, a window of whole seconds and stock keys (`STOP`), so what it
-  shows and says is a number of seconds or a stock word, never a meter value. Its settings are
-  plain schema rows (`callout.*`), written through `NS.SetByPath` like every other row.
+  it is handed a `GetTime()` endsAt, a window of whole seconds and stock keys (`STOP`; for test mode's
+  and the sim's samples alone, `NEW_BEST` and `FAILED`), so what it shows and says is a number of
+  seconds or a stock word, never a meter value. Whether a sample earns NEW_BEST is decided on the
+  sample history's plain records (`BestToast.Earns`). Its settings are plain schema rows
+  (`callout.*`), written through `NS.SetByPath` like every other row.
 
 ## Module Map
 

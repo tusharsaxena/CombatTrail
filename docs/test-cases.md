@@ -1532,6 +1532,20 @@ Total.
 - sim race: the eight follow the fight scenarios; Race mode off refuses them
 - sim race: WoW Forever has no race scenario
 
+### test_showcase.lua (11)
+
+- showcase: every sample record adds up: rows to the damage, player plus pet, DPS over its length
+- showcase: one fixed set, the same for every character (the sample realm, not the player's)
+- showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace
+- showcase: /ct test stays the HUD's alone: no toast, no call-out
+- showcase: test race running: two checkpoints passed, the third next, on the best's line
+- showcase: test race result: the new-best toast and NEW_BEST; both go when test mode stops
+- showcase: sim race-newbest: countdown to the sample's endsAt, STOP, then NEW_BEST and the toast
+- showcase: sim race-incomplete and race-died say FAILED as they end; race-behind earns nothing
+- showcase: Race mode off keeps the samples' words off
+- showcase: sim newbest toasts the fight (toast.fights) and says NEW_BEST on Retail; stop clears both
+- showcase: a real toast outlives the samples' cleanup
+
 ### test_bindings.lua (14)
 
 - bindings: NS.BINDINGS is the bindings file's order, Show window first, each with a tooltip
@@ -1783,6 +1797,7 @@ Total.
 | test_sim.lua | 5 |
 | test_race_preview.lua | 8 |
 | test_sim_race.lua | 9 |
+| test_showcase.lua | 11 |
 | test_bindings.lua | 14 |
 | test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
@@ -1796,4 +1811,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1466** |
+| **Total** | **1477** |

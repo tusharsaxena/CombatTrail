@@ -11,7 +11,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
-| (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM86) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM88; the showcase and the samples' alerts: SM-CT-M6, M7) | |
 
 ## How to run it
 
@@ -209,6 +209,8 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays in real time; the card says New best, then Not saved. The `race-` scenarios are Retail's (SM-CT-RM42) |
 | SM-CT-M4 | Both | `/ct sim` step window | Anchored beside the HUD |
 | SM-CT-M5 | Forever | The WoW Forever mock spell and item IDs | Every sample icon draws |
+| SM-CT-M6 | Both | `/ct test` on two different characters (another class, another realm); read the HUD and the Results window | The same showcase on both: Samplehunter and Mockarrow on Samplerealm, the same fights and figures. The HUD at 0:25: Damage and DPS each with the Pet figure under it, DPS the damage over 0:25 (2.71M at 108.4K on Retail), the spell rows adding up to the damage, the pet's rows marked with the paw and named Grimfang in the right column, cooldown marks on the chart against the best's pace, the pace bar ahead of the best. `/ct test` shows no toast and no call-out |
+| SM-CT-M7 | Both | History → *Toast a fight's new best* on; `/ct sim newbest`, then `behind`; then `/ct sim newbest` and stop the sim while its toast is up | The new best's card is joined by the new-best toast and, on Retail with Race mode on, the call-out's NEW BEST; behind shows neither; stopping the sim takes the toast and the call-out down at once. Nothing is saved, and the History list and the HUD's real bests are unchanged |
 
 ## 9. Training dummies and the recording rules
 
@@ -312,6 +314,8 @@ macro.
 | SM-CT-RM41 | Retail | `/ct test race armed`, `running`, `result`, then bare `/ct test race` | The Race window holds a sample race in each body (running when none is named), under the sample strip, beside the HUD's sample fight; Results shows 40 sample fights and 16 sample races |
 | SM-CT-RM42 | Retail | `/ct sim race-newbest`, then `race-incomplete`, `race-flagged`, `race-shared` and `race-sticky` | Each plays in real time: armed, running with the countdown and the STOP warning, then its ending (the new best with its toast; incomplete; the late-cast flag; the shared-session flag; the sticky-combat hint), the chat lines, then the Results window on the sample race. Nothing is saved |
 | SM-CT-RM43 | Retail | Race mode off, then `/ct test race` and `/ct sim race-newbest`; then a real `/ct race arm 30` while test mode is on | Both refuse in one line; the arm ends test mode with *Test mode ended: a race was armed.* |
+| SM-CT-RM87 | Retail | `/ct test race running`, then `result`, then `armed`, then `result` again and `/ct test` off | Running: 0:18 on the clock, 0:08 and 0:15 passed (green), 0:23 next (amber), each checkpoint's best figure on the best's straight line, no center number (the held clock stands still). Result: the new-best toast and the call-out's NEW BEST, said in the chosen voice. Each switch and the stop take both down at once; nothing is saved |
+| SM-CT-RM88 | Retail | `/ct sim race-newbest`, then `race-incomplete`, `race-died` and `race-behind` | race-newbest: the center numbers count to the Race window's 0:00.0 and STOP shows at the buzzer, then at the result the toast and NEW BEST. race-incomplete and race-died: FAILED as combat ends before the buzzer, no STOP, no toast. race-behind: STOP at the buzzer, no toast, no NEW BEST. `/ct sim stop` (or the step panel's Stop) mid-countdown or with a word or toast up takes them down at once |
 | SM-CT-RM44 | Retail | *Share* on the result card to Say, then a race from the Results row menu | One line with the race's length, target, damage and DPS; refused in combat |
 | SM-CT-RM45 | Retail | `/ct diagnostics` while idle, then while a race runs | A race section: the race state, its fight and session, the pending races, the race boards, the Race window (with `matched=`), `race beat on=false` idle and `on=true` while the race runs, the countdown and the sample race; the windows section has the toast line |
 | SM-CT-RM46 | Forever | `/ct test race`, `/ct sim` and `/ct diagnostics` | `test race` is plain test mode; the sim's list has no `race-` scenario; the report has no race section but keeps the toast line |
@@ -401,8 +405,10 @@ The items the build assumed and the owner confirms, each answered by a row above
   SM-CT-D12.
 - The center call-out (Retail): its voice packs, its numbers against the Race window's countdown, the
   resume and the stand-down: SM-CT-RM77 to SM-CT-RM80; its settings section, the `/ct` reach of its
-  rows and the 20 s countdown: SM-CT-RM81 to SM-CT-RM86.
-- Race mode (Retail): SM-CT-RM1 to SM-CT-RM86, with SM-CT-F20 (the reload cases), SM-CT-R25 (the race
+  rows and the 20 s countdown: SM-CT-RM81 to SM-CT-RM86; the samples' toasts and words in `/ct test race`
+  and `/ct sim`: SM-CT-RM87, SM-CT-RM88, SM-CT-M7.
+- The one showcase sample set, the same on every character: SM-CT-M6.
+- Race mode (Retail): SM-CT-RM1 to SM-CT-RM88, with SM-CT-F20 (the reload cases), SM-CT-R25 (the race
   clock on the chart and the Timeline) and SM-CT-S9 to SM-CT-S11 (the page, the verb, its absence on
   WoW Forever).
 - The race's first-hit clock, the shared session and the Feign Death split: SM-CT-RM6, SM-CT-RM20,

@@ -68,6 +68,17 @@ The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` a
 Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,
 `race-died`, `race-flagged`, `race-shared` and `race-sticky`, refused in one line with Race mode off.
 
+Both verbs draw one fixed showcase (modules/MockFights.lua, modules/MockRaces.lua), the same on every
+character, and the alerts a scenario earns (callout plan row C6). Bare `/ct test` stays the HUD's,
+the lanes' and the Results window's alone: no toast, no call-out. `/ct test race result` adds the
+new-best toast's preview and the call-out's NEW_BEST; `running` holds its clock still, so it counts
+nothing. In `/ct sim`, `newbest` toasts its save (`toast.fights`) and says NEW_BEST on Retail with
+Race mode on; a race scenario counts down to the sample's own endsAt (`RaceSample.EndsAt`) and shows
+STOP at its buzzer, `race-newbest` then toasts (`toast.races`) and says NEW_BEST, and
+`race-incomplete` and `race-died` say FAILED as they end. Every stop and switch of either takes the
+toasts and the call-out down (`Countdown.EndSample`, `BestToast.EndSample`), and nothing writes a
+record or a best.
+
 The Race window has no launcher entry (race plan ruling X17). On Retail it has a key, *Toggle Race
 window* (`Bindings_Mainline.xml`, the owner's decision of 2026-11-13, superseding ruling X18's
 deferral; a documented deviation), whose button runs the same handler as `/ct race toggle`

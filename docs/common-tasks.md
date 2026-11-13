@@ -77,7 +77,9 @@ function above CCN 15. Write the failing test first.
   `board` or `lost` where it differs) and its locale strings, then a case in `tests/test_sim.lua`. A
   race scenario (Retail) is a row in `SimRace.SCENARIOS` in `modules/SimRace.lua` instead (`key` under
   the `race-` prefix, `label`, `factor`, `desc`, and `kind`, `status`/`endAt`, `died`, `late`, `shared`
-  or `sticky` where it differs), with its case in `tests/test_sim_race.lua`.
+  or `sticky` where it differs), with its case in `tests/test_sim_race.lua`. A scenario that earns an
+  alert (a new best, an early end) gets it through the real triggers (`BestToast.OnFight`/`OnRace`,
+  `Countdown.SampleSay`); hold it in `tests/test_showcase.lua`, with the cleanup on stop.
 
 ## Regenerate the case inventory
 
