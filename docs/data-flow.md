@@ -136,7 +136,10 @@ FIGHT_ENDED
   frame clock, so a number flips in the frame the true time left crosses it; each new number calls
   `RaceClock.Kick()`, one race beat at once, so the Race window draws 0:0n.0 in that frame. The last
   `speakFrom` (5) numbers are spoken from the chosen pack. RACE_BUZZER cancels the count and shows STOP
-  (`race.buzzer`); any other way out of running takes the number down silently.
+  (`race.buzzer`); any other way out of running takes the number down silently. Its settings flow
+  the other way only through the seam: the Race mode page's call-out tabs, `/ct set` and the drag all
+  write `callout.*` through `NS.SetByPath`, whose row reaction (`onChange`, the instance's `Apply`)
+  repaints the call-out.
 - **The Results window** (modules/Results.lua) reads `Results_Source`, which is the store or, in test
   mode and the sim, the sample history. The list, the detail, the timeline, the compare and the gear
   view all read stored records; the detail's chart reads Slices while this session holds it.

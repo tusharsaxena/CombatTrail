@@ -19,7 +19,12 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
   ruling X10).
 - **Per client.** `race` is declared `clients = { "retail" }` on its triple (clients-§4): the library
   leaves it out of the help and the landing page on WoW Forever, where typing it is an unknown verb.
-  The degraded stub and `NS.RunVerb` apply the same gate.
+  The degraded stub and `NS.RunVerb` apply the same gate. The schema CLI follows the rows: on Retail
+  `list`, `get`, `set` and `reset` reach the Race mode page's rows, the race call-out's `callout.*` rows
+  among them (`/ct set callout.size 150`, `/ct reset callout.voice`; the instance's own validation
+  refuses what it would refuse, and the row's reaction re-applies the call-out), and on WoW Forever no
+  such path exists. `callout.point`, the call-out's drag-written place, has no row: the CLI does not
+  list or reset it; Reset position on the call-out's tabs puts it back.
 - **The perf hold.** Every feature verb is wrapped in `feature()`, which answers
   `NS.StoodDownRefusal()`'s line while a capture holds the addon down.
 - **One handler per act.** A feature verb calls the same handler as the launcher menu and the key

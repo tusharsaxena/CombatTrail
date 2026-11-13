@@ -430,20 +430,15 @@ new best and not a fight's: *Toast a fight's new best* starts off.
 
 ## Race mode
 
-Retail only (race plan Task B3). Tabs: *Race*, *Late-cast ignore list*, *Race window*
-(settings/Race.lua, `NS.RACE_TABS`). The Race tab opens on the page's one note on where Race mode came
+Retail only (race plan Task B3). Tabs: *Race*, *Call-out look*, *Call-out sound*, *Call-out texts*,
+*Late-cast ignore list*, *Race window* (settings/Race.lua, `NS.RACE_TABS` for the page's own three; the
+call-out's three are LibKa0s-Callout-1.0's settings section, callout plan row C5). The Race tab opens on the page's one note on where Race mode came
 from, then the switch; the race clock's two colored clocks and the window's look are the DPS HUD page's
 appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
 page's, and the New-best toast's section is History's too (ruling X19). The countdown rows carry no
 reaction of their own: modules/Countdown.lua re-arms the race's call-out off their SETTINGS_CHANGED;
 the buzzer row is read when the buzzer goes (Countdown.Buzzer). They decide when the call-out speaks
-for the race; the call-out's own look (font,
-size, outline, shadow, glow, animation, hold, place), voice (the two packs, Game TTS or off, the
-channel, the numbers spoken from) and words would be a profile `callout` table (schema.md: none
-ships), which has **no section on this page yet**: LibKa0s-Callout-1.0's settings section (`SettingsTabs`, its Look, Sound and
-Texts tabs with the preview, *Test countdown*, *Play* and *Unlock to move*) writes the table through
-the instance, not `NS.SetByPath`, so adding it waits on the owner's architecture-§5 call (callout plan
-row C2, blocked). Until then the call-out draws and speaks its defaults.
+for the race; the call-out's own look, voice and words are its own three tabs (below).
 
 ### Race
 
@@ -479,7 +474,47 @@ rate*. A new default length forgets the length last armed (`Race.ForgetLength`);
 switch and the three dummy rows re-sync auto-show's and auto-arm's events (`AutoArm.Sync`), and the switch
 going off cancels a race still armed (one running runs on), as does a profile switch, copy or reset
 that lands on Race mode off (the page's `SETTINGS_CHANGED` receiver, path `profile`). Grace and the
-restart gap apply to new races: each race keeps the values it armed with.
+restart gap apply to new races: each race keeps the values it armed with. *Center countdown from*
+takes 3 to 20 seconds (`Countdown.MIN` and `MAX`; 20 is the call-out's longest countdown); numbers above
+the call-out's *Speak numbers from* are shown, not said.
+
+### Call-out look, Call-out sound, Call-out texts
+
+The call-out's own settings: LibKa0s-Callout-1.0's settings section (the library's docs/api/Callout,
+version 2.3, The settings section), drawn by `NS.Callout:SettingsTabs({ options = NS.Helpers, prefix =
+"callout." })` as three host tabs on the host's write route. Each tab's render calls the instance's
+`BuildSettings(ctx, { options, tab, prefix })`, which draws through this addon's Options instance:
+every control is the panel's own dropdown, slider, checkbox, edit box or color swatch, in the skin and
+under the combat lock, read by the descriptor's `get` and written by its `set`, so through
+`NS.SetByPath`. The rows it draws are the instance's `SchemaRows("callout.")`, which settings/Race.lua
+registers as this page's rows: so the page's Defaults, the global reset and `/ct get|set|list|reset`
+reach every one. Registered, each is skipRender (the section draws its own copy by the same path) and
+grouped by its host tab's key (`callout.look`, `callout.sound`, `callout.texts`; the preview's two
+session rows join the Look tab's), so the tab takes the group's place in the strip. The tab labels
+are the library's words overridden for this page (`TAB_LOOK` *Call-out look*, and so on).
+
+Over each tab: the live preview (`5  GO!  STOP` in the chosen face, outline and shadow), *Test
+countdown* (5 to GO! on the real call-out), *Text to play* and *Play*, *Unlock to move* (the drag
+strip; the drag writes `callout.point`) and *Reset position*. None of them touches a race.
+
+| Tab | Row | Key |
+|---|---|---|
+| Call-out look | Font | `callout.font` |
+| Call-out look | Size | `callout.size` |
+| Call-out look | Outline | `callout.outline` |
+| Call-out look | Glow | `callout.glow` |
+| Call-out look | Shadow | `callout.shadow` |
+| Call-out look | Shadow X offset, Shadow Y offset (disabled with no shadow) | `callout.shadowX`, `callout.shadowY` |
+| Call-out look | Animation | `callout.anim` |
+| Call-out look | Hold | `callout.hold` |
+| Call-out sound | Voice (female, male, Game TTS, off) | `callout.voice` |
+| Call-out sound | Sound channel | `callout.channel` |
+| Call-out sound | Speak numbers from | `callout.speakFrom` |
+| Call-out sound | Text to speech voice, Speech rate, Speech volume (only with a client voice listed; disabled unless the voice is Game TTS) | `callout.ttsVoice`, `callout.ttsRate`, `callout.ttsVolume` |
+| Call-out texts | Colors: one swatch per kind | `callout.colors.<kind>` (`number`, `info`, `go`, `stop`, `warn`, `error`) |
+| Call-out texts | Stock texts: the player's own words per key (empty is the stock text) | `callout.texts.<KEY>` (23 keys) |
+| Call-out texts | Stock texts: Mute per key | `callout.muted.<KEY>` |
+| every tab (preview) | Text to play, Unlock to move (session only, never stored) | `callout.play`, `callout.unlocked` |
 
 ### Late-cast ignore list
 

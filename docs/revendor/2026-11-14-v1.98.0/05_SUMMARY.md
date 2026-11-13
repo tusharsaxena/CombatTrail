@@ -42,7 +42,15 @@ commit (`core/CalloutSetup.lua`), with the document's `function() return {}, {} 
 ## Adopted, declined, unreached
 
 Adopted: the Callout's settings on the host's write route (02_CANDIDATES 1), in this run's commits
-after the re-vendor, recorded in row C5 of `docs/superpowers/plans/2026-11-13-callout-adoption.md`.
+after the re-vendor (`6279466`), recorded in row C5 of
+`docs/superpowers/plans/2026-11-13-callout-adoption.md`:
+
+- `519226d`: the descriptor's `path`, `set` (`NS.SetByPath`) and `colorEncode` (`NS.ColorEncode`); the
+  `SchemaRows("callout.")` rows registered on the Race mode page and seeded into the defaults;
+  `callout.point` in the schema's `writeThrough`; the section drawn as three host tabs via
+  `SettingsTabs` on the route; `tests/test_callout_settings.lua`.
+- `338321f`: `race.finalCountdown` up to 20, the Callout's `MAX_FROM`.
+- The documentation commit that follows them (the row's Docs note).
 Nothing declined, no issue filed (unattended run). Role stays unreached from the v1.96.0 bundle.
 
 ## Gates (the re-vendor commit)

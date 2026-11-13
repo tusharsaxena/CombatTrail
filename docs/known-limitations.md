@@ -170,16 +170,15 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **The center call-out's voice packs are not yet listened to in game.** The two packs
   (`female-kathleen`, `male-joe`, synthesized with Piper) passed the library's file checks only; how
   they sound, and their volume against the game's on the Master channel, waits for SM-CT-RM77.
-- **The call-out's own settings have no section yet.** Its look, voice and words would be a profile
-  `callout` table (none ships: no schema row yet), which LibKa0s-Callout-1.0's settings section writes
-  outside `NS.SetByPath`; that section waits
-  on the owner's architecture-§5 call (callout plan row C2), so the call-out draws and speaks its
-  defaults: Oxanium at 96, the female voice, numbers spoken from 5. The Race mode page's *Center-screen
-  countdown*, *Center countdown from* and *STOP at the buzzer* rows still decide when it shows.
+- **The call-out's settings section is not yet checked in game.** The Race mode page's Call-out look,
+  sound and texts tabs (LibKa0s-Callout-1.0's section on the host's write route) pass the headless
+  suites, which draw them through the mock panel; the preview, the drag and each look wait for
+  SM-CT-RM81 to SM-CT-RM85.
 - **Game TTS depends on the voices the client has installed.** The call-out's *Game TTS* voice speaks
   through `C_VoiceChat.SpeakText` with a voice from `C_VoiceChat.GetTtsVoices()`, so a client with
   none installed (or a language pack without English voices) says nothing, and the voice and its rate
-  differ by system. It is not offered until the settings section lands.
+  differ by system. Its rows (*Text to speech voice*, *Speech rate*, *Speech volume*) are drawn only
+  while the client lists a voice.
 - **A resume inside the countdown speaks the number of the moment.** A `/reload` or a stand-up with
   4 s left shows 4 and says it at once (the old countdown showed it silently): the library has no
   silent first number.

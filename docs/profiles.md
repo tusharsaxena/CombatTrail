@@ -7,9 +7,9 @@ How AceDB profiles work here (documentation-§3, Tier 2: the Profiles page ships
 Everything under `CombatTrailDB.profiles[<name>]`: the master switches, both lanes, the DPS HUD, the
 recording filters and retention, the Results window's view, place and look, the player's own training
 dummies (`dummies.custom`, History > Training dummies) and the skin (`defaults/Profile.lua`,
-[`schema.md`](schema.md)). The race call-out's look, voice and words would be a profile `callout` table
-(Retail), read through the instance at every call; no default seeds it and nothing writes it yet, so
-it draws the library's defaults. A new character starts on the `Default` profile
+[`schema.md`](schema.md)). The race call-out's look, voice and words are the profile's `callout` table
+(Retail), seeded from its schema rows and read through the instance at every call; every write to it
+goes through `NS.SetByPath`, so it is per profile like every other setting. A new character starts on the `Default` profile
 shared by every character (`AceDB:New(..., true)`).
 
 ## What a profile does not hold
@@ -36,4 +36,4 @@ first-run skin picker is closed, the new profile's skin is applied first so ever
 the `disabled` hold is re-decided from the new `general.enabled`, the skin picker shows again on a
 profile that has not seen it, and `SETTINGS_CHANGED("profile", key)` tells every module to redraw
 from the new values (on Retail the race call-out re-applies its look from the new profile, `NS.Callout:Apply` in
-modules/Countdown.lua: its `callout` table when one exists, else the library's defaults). One debug line records each act.
+modules/Countdown.lua: the new profile's `callout` table, its defaults filled in by AceDB). One debug line records each act.
