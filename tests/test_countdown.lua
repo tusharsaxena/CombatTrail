@@ -302,6 +302,32 @@ test("countdown: finalCountdown 3 starts at 3", function()
     assertEqual(shownAt(S, 131), 1)
 end)
 
+test("countdown: finalCountdown 20 starts at 20, said from the call-out's speakFrom", function()
+    if forever() then return end
+    local S = fresh()
+    assertTrue(S.NS.SetByPath("race.finalCountdown", 20))
+    running(S, 30)
+    assertNil(shownAt(S, 111.75), "nothing before the last 20 s")
+    assertEqual(shownAt(S, 112), 20, "20 at 20 s left")
+    assertEqual(shownAt(S, 122), 10)
+    to(S, 133)
+    assertEqual(spoken(S), "5@127,4@128,3@129,2@130,1@131,stop@132", "numbers above speakFrom are shown, not said")
+end)
+
+test("countdown: finalCountdown takes 3 to 20 and refuses the rest", function()
+    if forever() then return end
+    local S = fresh()
+    assertEqual(S.NS.Countdown.MIN, 3)
+    assertEqual(S.NS.Countdown.MAX, 20, "the call-out's longest countdown")
+    assertEqual(S.NS.Countdown.MAX, S.M.LibStub("LibKa0s-Callout-1.0").MAX_FROM)
+    assertFalse(S.NS.SetByPath("race.finalCountdown", 21))
+    assertFalse(S.NS.SetByPath("race.finalCountdown", 2))
+    assertTrue(S.NS.SetByPath("race.finalCountdown", 15))
+    S.NS.db.profile.race.finalCountdown = 99   -- a stored value past the range (an edited file)
+    running(S, 30)
+    assertEqual(shownAt(S, 112), 20, "clamped to 20")
+end)
+
 test("countdown: a smaller window mid-countdown takes the number down until it is reached", function()
     if forever() then return end
     local S = fresh()

@@ -102,8 +102,8 @@ L["Center-screen countdown"] = "Center-screen countdown"
 L["Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."] =
     "Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."
 L["Center countdown from (seconds)"] = "Center countdown from (seconds)"
-L["How many seconds before the buzzer the center countdown starts. 3 to 10."] =
-    "How many seconds before the buzzer the center countdown starts. 3 to 10."
+L["How many seconds before the buzzer the center countdown starts. 3 to 20. Numbers above the call-out's Speak numbers from are shown, not said."] =
+    "How many seconds before the buzzer the center countdown starts. 3 to 20. Numbers above the call-out's Speak numbers from are shown, not said."
 L["At the buzzer"] = "At the buzzer"
 L["STOP at the buzzer"] = "STOP at the buzzer"
 L["The call-out in the middle of the screen says STOP, in its voice, the moment the race ends."] =

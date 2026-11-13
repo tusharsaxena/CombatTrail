@@ -976,7 +976,7 @@ Total.
 - race clock: the held sample race beats while running, and stops with test mode
 - race clock: the sim's race beats from its first hit through Stop!, and stops at its read
 
-### test_countdown.lua (34)
+### test_countdown.lua (36)
 
 - countdown: absent on WoW Forever, the call-out with it
 - countdown: one call-out, on the addon's folder, skin and two shipped voices
@@ -991,6 +991,8 @@ Total.
 - countdown: a new number redraws the Race window in its own frame, off the beat
 - countdown: the call-out's frame is FULLSCREEN, never the HUD's or the Race window's, and mouse-free while locked
 - countdown: finalCountdown 3 starts at 3
+- countdown: finalCountdown 20 starts at 20, said from the call-out's speakFrom
+- countdown: finalCountdown takes 3 to 20 and refuses the rest
 - countdown: a smaller window mid-countdown takes the number down until it is reached
 - countdown: switched off, nothing is counted, shown or said
 - countdown: switching it off mid-countdown hides the number at once
@@ -1750,7 +1752,7 @@ Total.
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
-| test_countdown.lua | 34 |
+| test_countdown.lua | 36 |
 | test_callout_settings.lua | 9 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
@@ -1794,4 +1796,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1464** |
+| **Total** | **1466** |

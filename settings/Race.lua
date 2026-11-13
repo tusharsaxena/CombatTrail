@@ -153,9 +153,9 @@ row("race.clock", { type = "string", label = L["Race clock"], values = CLOCKS, v
 at(TAB.race, L["Countdown"])
 row("race.centerCountdown", { type = "bool", label = L["Center-screen countdown"], startsLine = true,
     tooltip = L["Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."] })
-row("race.finalCountdown", { type = "number", label = L["Center countdown from (seconds)"], min = 3, max = 10, step = 1,
-    validate = within(3, 10, 1),
-    tooltip = L["How many seconds before the buzzer the center countdown starts. 3 to 10."] })
+row("race.finalCountdown", { type = "number", label = L["Center countdown from (seconds)"],
+    min = NS.Countdown.MIN, max = NS.Countdown.MAX, step = 1, validate = within(NS.Countdown.MIN, NS.Countdown.MAX, 1),
+    tooltip = L["How many seconds before the buzzer the center countdown starts. 3 to 20. Numbers above the call-out's Speak numbers from are shown, not said."] })
 
 at(TAB.race, L["At the buzzer"])
 row("race.buzzer", { type = "bool", label = L["STOP at the buzzer"], startsLine = true,

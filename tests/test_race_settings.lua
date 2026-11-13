@@ -27,7 +27,7 @@ local ROWS = {
     { "race.autoArm",         "bool",   false },
     { "race.clock",           "string", "left" },
     { "race.centerCountdown", "bool",   true },
-    { "race.finalCountdown",  "number", 10, 3, 10, 1 },
+    { "race.finalCountdown",  "number", 10, 3, 20, 1 },
     { "race.buzzer",          "bool",   true },
     { "race.hintDelay",       "number", 15, 5, 60, 1 },
     { "race.grace",           "number", 1.0, 0, 5, 0.1 },

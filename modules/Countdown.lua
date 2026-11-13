@@ -3,7 +3,7 @@ local _, NS = ...
 -- row C2; Race mode spec §4.2 before it). The addon's one call-out instance (NS.Callout, through the
 -- core/CalloutSetup.lua seam) shows the race's last seconds as big numbers in the middle of the screen,
 -- spoken in the player's chosen voice, and STOP at the buzzer. When `race.finalCountdown` seconds remain
--- (3-10, default 10) and `race.centerCountdown` is on, the call-out counts down to 1 and goes at the
+-- (3-20, default 10; the call-out counts up to 20, its MAX_FROM) and `race.centerCountdown` is on, the call-out counts down to 1 and goes at the
 -- buzzer; with `race.buzzer` on, it then says STOP. The call-out's own look, voice and words are its
 -- settings, the profile's `callout` table: schema rows (`callout.*`, the instance's SchemaRows,
 -- registered and seeded into the defaults by settings/Race.lua, callout plan row C5), drawn on the
@@ -56,8 +56,9 @@ if not NS.Compat.ForClient({ "retail" }) then return end
 local Countdown = {}
 NS.Countdown = Countdown
 
--- The numbers' window bounds (race.finalCountdown's range).
-Countdown.MIN, Countdown.MAX = 3, 10
+-- The numbers' window bounds (race.finalCountdown's range): up to 20, the longest countdown
+-- LibKa0s-Callout-1.0 runs (its MAX_FROM). Numbers above the call-out's `speakFrom` are shown, not said.
+Countdown.MIN, Countdown.MAX = 3, 20
 -- The seconds before the first number that the call-out is handed the countdown.
 Countdown.LEAD = 1
 Countdown.FRAME_NAME = "CombatTrailCallout"
