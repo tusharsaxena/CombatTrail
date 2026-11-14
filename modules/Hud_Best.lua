@@ -194,9 +194,10 @@ end
 
 --- The live pace bar's view: the bounds around the best's pace at `t` (the fight's clock) and the
 --- one total the bar is handed (opaque, copied and never tested but for nil): the player's source
---- total. Where the pet folds into it (WoW Forever) or there is no pet, that is the merged figure,
---- against the best's merged pace; where the pet has a live source of its own (`live.pet`), the two
---- secrets cannot be summed, so the player's alone runs against the best's player damage.
+--- total. Where there is no pet, or the pet folds into it (WoW Forever) and its rows are secret (the
+--- Pet figure's dash), that is the merged figure, against the best's merged pace; where the pet has a
+--- live part of its own (`live.pet`: its own source, or the folded split of plain rows, which leaves
+--- the player's part in `live.player`), the player's alone runs against the best's player damage.
 --- @param curve table
 --- @param t number
 --- @param live table|nil  NS.Meter.ReadLive's

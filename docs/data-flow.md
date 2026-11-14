@@ -41,6 +41,11 @@ PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
      every live part, only while Fight holds the fight in combat (in the settle it redraws from the
      last read); Meter.ShareLive brackets let the beat and the slices' boundary tick share one read
      in a frame
+     (WoW Forever, Meter.FOLDS_PET: with no pet source, the read splits the pet's figure out of
+     the player's rows when every value it reads is plain and every row was readable, the main
+     figures then the player's part, pet out or not, so a pet that dies mid-fight keeps the split;
+     else the merged figure and, with a pet out, petDash, the Pet row's dash; callout plan rows C7
+     and C9)
   PLAYER_REGEN_ENABLED
   -> COMBAT -> SETTLING; a re-entry within GRACE (4 s) carries the same fight on
   quiet for SETTLE (2 s) after GRACE
@@ -116,7 +121,7 @@ FIGHT_ENDED
   two C-side sinks: a label through `NS.Format.Number`, and the two mini pace bars'
   `StatusBar:SetValue` (the HUD's pace bar built thinner, `Chart.NewPace` with opts), whose plain range
   is `NS.HudBest.Bounds` around the best's figure there at the HUD's Pace range. Where the pet has a
-  live source of its own (Retail's pet classes, `Hud.LiveDamage`'s third answer `petOwn`), the figure
+  live part of its own (Retail's pet source, or WoW Forever's folded split of plain rows; `Hud.LiveDamage`'s third answer `petOwn`), the figure
   is the player's alone, so the bars range on the best's player-only line (`paceRef`). Each
   Checkpoint keeps the reading of the beat the clock passed it, in memory for that race alone (a dash
   for one passed unseen before a `/reload`); the last one is taken at the buzzer, in the stopping
@@ -130,6 +135,21 @@ FIGHT_ENDED
   close; `Hud.OnRaceIdle`, at the race's idle edge, starts that fade. A dummy session holds it the
   same way (owner, 2026-11-13): no fade and no overCard close while it lasts, and its end
   (`Hud.HideAwayFromDummy`) closes a HUD the session opened, or starts the fade of one it held.
+- **The center call-out** (modules/Countdown.lua on `NS.Callout`, Retail) reads no meter value. While
+  a race (real or sample) runs, it is handed `RaceClock.EndsAt()` (Race.EndsAt, or the live sample's)
+  a second before the `race.finalCountdown` window and shows `ceil(endsAt - GetTime())`, read on its own
+  frame clock, so a number flips in the frame the true time left crosses it; each new number calls
+  `RaceClock.Kick()`, one race beat at once, so the Race window draws 0:0n.0 in that frame. The last
+  `speakFrom` (5) numbers are spoken from the chosen pack. RACE_BUZZER cancels the count and shows STOP
+  (`race.buzzer`). Leaving running with no buzzer (combat dropped or the player died: the race's
+  plain `endedAt`) takes the number down and says FAILED; a cancel or a lost read says nothing.
+  RACE_RESULT of a complete race that is a new best (`BestToast.Earns`, whether or not the toast is
+  on) says NEW_BEST. Both are `Countdown.EndWord` and `Countdown.ResultWord`, the rule the samples
+  ask too (callout plan row C9), with Race mode on; each is the library's stock word in the call-out's voice (no own text or mute,
+  callout plan row C11). Its settings flow the other way only through the seam: the Race mode page's
+  Callout tab, `/ct set` and the drag all
+  write `callout.*` through `NS.SetByPath`, whose row reaction (`onChange`, the instance's `Apply`)
+  repaints the call-out.
 - **The Results window** (modules/Results.lua) reads `Results_Source`, which is the store or, in test
   mode and the sim, the sample history. The list, the detail, the timeline, the compare and the gear
   view all read stored records; the detail's chart reads Slices while this session holds it.
@@ -143,3 +163,11 @@ history. `modules/Sim.lua` plays the same shape in real time on an AceTimer beat
 player's own recording filters. A real FIGHT_STARTED ends both. The one message a sample sends is
 the race beat's: a sample race running or stopping calls `RaceClock.Sync`, and its `RACE_CLOCK`
 carries no payload, so it only moves the two windows' clocks.
+
+The samples' alerts are calls too, never messages (callout plan row C6): a sim fight's save calls
+`BestToast.OnFight`, a sim race's read `BestToast.OnRace`, and `/ct test race result`
+`BestToast.ShowPreview`, each judged on the sample history (`Bests` reads it while the preview is
+on); the call-out's words are a real race's rule (`Countdown.EndWord`, `Countdown.ResultWord`)
+said through `Countdown.SampleSay`. `/ct test race running` is a still frame: its clock holds, so it
+counts nothing; only the sim's race scenarios run the countdown. The preview's stop and switch call
+`BestToast.EndSample` and `Countdown.EndSample`, so no toast or call-out outlives its sample.

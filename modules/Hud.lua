@@ -706,7 +706,8 @@ local function hasPet()
         local pet = view.final and view.final.pet
         return type(pet) == "table" and Secrets.PlainNumber(pet.total) ~= nil
     end
-    return type(live) == "table" and live.pet ~= nil
+    -- A folding client's dash (Meter.ReadLive's petDash) shows the row too, with no figure.
+    return type(live) == "table" and (live.pet ~= nil or live.petDash == true)
 end
 
 -- Seconds since the fight's combat entry: the slices' and the casts' zero (the chart's time axis).

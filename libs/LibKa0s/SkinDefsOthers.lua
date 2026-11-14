@@ -49,7 +49,10 @@ if lib.__defsShellMinor ~= lib.MINOR or not lib.skins.ka0s then return end   -- 
 -- `icon.outline` through HUD_LOOK's `outline` (SkinDefs minor 26), the window icon outline the owner
 -- signed off (option 2): Glass white at 0.35, Ember #8A3C1C, WoW Midnight #7A6532, WoW Forever
 -- #5A5048, and every other skin its `icon.border`. `icon.border`, the HUD hosts' edge, does not move.
-local OTHERS_MINOR = 8
+-- Minor 9 (LibKa0s plan 2026-11-13-callout, L2): `__FACE_SIZES` rows for the Callout's two display
+-- faces (Media minor 13), Ka0s Bebas Neue and Ka0s Russo One, measured by the same script. No skin
+-- draws either; a font override of one now draws at Ka0s Default's width.
+local OTHERS_MINOR = 9
 -- Paired on the SHELL's minor as well as this file's own: see SkinDefs.lua.
 if lib.__othersMinor and lib.__othersMinor >= OTHERS_MINOR
   and lib.__othersShellMinor == lib.MINOR then return end
@@ -335,6 +338,7 @@ lib.__FACE_SIZES = {
   ["Ka0s Atkinson"]            = { 12, 14, 12 },
   ["Ka0s Atkinson Bold"]       = { 11, 13, 11 },
   ["Ka0s Avant Garde"]         = { 11, 13, 11 },
+  ["Ka0s Bebas Neue"]          = { 15.5, 18, 15.5 },
   ["Ka0s Bitter"]              = { 11.5, 13, 11.5 },
   ["Ka0s Bitter Bold"]         = { 11, 12.5, 11 },
   ["Ka0s Doris PP"]            = { 10.5, 12.5, 10.5 },
@@ -357,6 +361,7 @@ lib.__FACE_SIZES = {
   ["Ka0s Philosopher"]         = { 12.5, 14, 12.5 },
   ["Ka0s Philosopher Bold"]    = { 12, 13.5, 12 },
   ["Ka0s Prototype"]           = { 12, 14, 12 },
+  ["Ka0s Russo One"]           = { 10.5, 12, 10.5 },
   ["Ka0s Segoe UI"]            = { 12, 14, 12 },
   ["Ka0s Segoe UI Bold"]       = { 11, 13, 11 },
   ["Ka0s Segoe UI Light"]      = { 12.5, 14.5, 12.5 },

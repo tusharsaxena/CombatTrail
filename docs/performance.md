@@ -38,6 +38,12 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   and the pet's) and the whole redraw, so the HUD's meter cost scales with the rate: 10 a second is
   2.5 times the old 4 Hz, 20 is 5 times. No read in the settle (Fight out of combat): the beat then
   redraws from the last read. Hidden, nothing reads.
+- On WoW Forever, with no pet source, the live read also splits the pet's figure out of the player's rows
+  (callout plan row C7): two passes over the rows it already copied, each value proved plain first,
+  and one small table for the pet's part. It builds no row array (the pet's rows stay in the player's
+  list, marked), keeps its sums in one file-scope table, asks the cast set through
+  `Casts.IsPetSpell` (no copy of the set), and stops at the first secret value, so a sealed fight
+  costs one pass to its first row.
 - `FIGHT_TICK` stays 0.25 s for its other receivers (the chart's slices, the unbound scan): raising it
   to the HUD's rate would multiply their work for nothing, and the slices' 2 s steps need no finer tick.
 - The race beat is one AceTimer at 1 / `hud.refreshRate`, running only while a race runs or waits for
@@ -49,6 +55,12 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   damage it draws beside the best's is the HUD's last read, taken as a field lookup
   (`Hud.LiveDamage`), not a read. The clock's color costs one blend (`RaceWindowBoard.ClockColor`), two
   `SetTextColor` calls and one `SetColorTexture` per beat.
+- The center call-out (LibKa0s-Callout-1.0, Retail) runs an OnUpdate only while it counts or holds a
+  call-out: modules/Countdown.lua keeps one AceTimer waiting through the race and hands the call-out
+  the countdown a second before its window, so its frame clock runs for at most the window plus that
+  second (11 s at the default 10) and STOP's hold, and sleeps the moment neither is up. Its animations
+  are AnimationGroups the client runs, with no OnUpdate of their own. Each new number costs one race
+  beat off the timer (`RaceClock.Kick`), at most ten in a race.
 - The equipment recon walks the gear once per burst of `PLAYER_EQUIPMENT_CHANGED` /
   `UNIT_INVENTORY_CHANGED` (one coalesced 0.5 s timer), never per event and never per fight: the pull
   takes the current set's key.

@@ -597,7 +597,8 @@ function Builders.live(parent)
         setValue(self.w.damage.value, player and player.total)
         setValue(self.w.dps.value, player and player.dps, true)
         setValue(self.w.damage.petValue, pet and pet.total)
-        -- The pet's own rate, opaque: a dash where the meter folds the pet into you (WoW Forever).
+        -- The pet's own rate, opaque. Where the meter folds the pet into you (WoW Forever) `pet` is
+        -- the live split of plain rows, or nil (a dash, the row kept by the view's hasPet: petDash).
         setValue(self.w.dps.petValue, pet and pet.dps, true)
     end
     return body

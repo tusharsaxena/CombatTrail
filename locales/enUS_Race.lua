@@ -98,19 +98,16 @@ L["Race clock"] = "Race clock"
 L["What the Race window's clock shows while a race runs: the time elapsed and the time left side by side, or one of them alone, drawn larger."] =
     "What the Race window's clock shows while a race runs: the time elapsed and the time left side by side, or one of them alone, drawn larger."
 L["Countdown"] = "Countdown"
-L["Countdown cue sound"] = "Countdown cue sound"
-L["A sound at 10, 5, 3, 2 and 1 seconds left, and with each number of the center countdown. Takes effect at once, in the race in progress too."] =
-    "A sound at 10, 5, 3, 2 and 1 seconds left, and with each number of the center countdown. Takes effect at once, in the race in progress too."
 L["Center-screen countdown"] = "Center-screen countdown"
 L["Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."] =
     "Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."
 L["Center countdown from (seconds)"] = "Center countdown from (seconds)"
-L["How many seconds before the buzzer the center countdown starts. 3 to 10."] =
-    "How many seconds before the buzzer the center countdown starts. 3 to 10."
+L["How many seconds before the buzzer the center countdown starts. 3 to 20. Numbers above the call-out's Speak numbers from are shown, not said."] =
+    "How many seconds before the buzzer the center countdown starts. 3 to 20. Numbers above the call-out's Speak numbers from are shown, not said."
 L["At the buzzer"] = "At the buzzer"
-L["Buzzer raid warning and sound"] = "Buzzer raid warning and sound"
-L["A raid warning that says STOP, with a sound, the moment the race ends."] =
-    "A raid warning that says STOP, with a sound, the moment the race ends."
+L["STOP at the buzzer"] = "STOP at the buzzer"
+L["The call-out in the middle of the screen says STOP, in its voice, the moment the race ends."] =
+    "The call-out in the middle of the screen says STOP, in its voice, the moment the race ends."
 L["Sticky-combat hint after (seconds)"] = "Sticky-combat hint after (seconds)"
 L["How long combat may hold after the buzzer before the Race window suggests ways to drop it. 5 to 60 seconds."] =
     "How long combat may hold after the buzzer before the Race window suggests ways to drop it. 5 to 60 seconds."
@@ -147,8 +144,8 @@ L["Ignore a spell"] = "Ignore a spell"
 L["A spell ID, a shift-clicked spell link, or the name of a spell a race cast late. \"Hearthstone\" adds every hearthstone."] =
     "A spell ID, a shift-clicked spell link, or the name of a spell a race cast late. \"Hearthstone\" adds every hearthstone."
 L["No spell is ignored: every late cast flags its race."] = "No spell is ignored: every late cast flags its race."
-L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."] =
-    "Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."
+L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look and voice among them. Saved races are not touched."] =
+    "Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look and voice among them. Saved races are not touched."
 
 -- A race's time (modules/Format.lua)
 L["+%.1f"] = "+%.1f"
@@ -318,7 +315,9 @@ L["Your target"] = "Your target"
 L["Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."] =
     "Combat is holding. Walk out of range, or use an ability that drops combat (Feign Death, Vanish, Shadowmeld, Invisibility). Your score is safe: it waits for combat to end, however long that takes."
 
--- The center countdown and the buzzer (modules/Countdown.lua) use STOP above; the race toast's row
+-- STOP above is the Race window's Stop! body (modules/RaceWindow_States.lua). The call-out's STOP at
+-- the buzzer (modules/Countdown.lua) is LibKa0s-Callout-1.0's stock word, never this string: translating
+-- STOP here does not change the call-out. Below: the race toast's row
 -- (settings/History.lua) and the race's own chat lines (modules/Share.lua), race plan Task C2
 L["Toast a race's new best"] = "Toast a race's new best"
 L["When a race sets a new best on its board (character, spec, dummy kind and length), a toast near the top of the screen says by how much. A board's first race has nothing to beat and shows none."] =

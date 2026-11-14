@@ -1,8 +1,10 @@
 -- tests/test_sim.lua — modules/Sim.lua, `/ct sim [scenario]` (spec §8 "Sim mode", plan Task 5.1): a
--- made-up 45 s fight played in real time through the lanes, the HUD's live view and its fight-over
+-- made-up 15 s fight played in real time through the lanes, the HUD's live view and its fight-over
 -- card, then the Results window on the sim's fight beside the sample history. Each scenario reaches
 -- its card and its chips; nothing reaches the bus's fight messages or SavedVariables; the step
--- session parks the fight until its first step; the preview's end conditions end it.
+-- session parks the fight until its first step; the preview's end conditions end it. The fight is
+-- shorter than Retail's minimum length, so the saved scenarios are exempt from it and `short` alone is
+-- judged by it (callout plan row C10).
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -57,7 +59,7 @@ test("sim newbest ends with New best chip", function()
     assertTrue(#NS.LaneRender.__icons("pet") > 0, "and the Pet lane")
     local rec = NS.Slices.Get("sim-newbest")
     assertTrue(rec ~= nil and rec.filled >= 4, "the chart's store fills, a step every 2 s")
-    play(M, 45 - 10 + NS.Sim.SETTLE + 0.5)
+    play(M, NS.Sim.LENGTH - 10 + NS.Sim.SETTLE + 0.5)
     assertEqual(NS.Hud.State(), "over", "the fight-over card")
     local chips = NS.Hud.Chips()
     assertTrue(chips[1]:find("New best +", 1, true) == 1, "the New best chip with its gain: " .. tostring(chips[1]))
@@ -94,7 +96,7 @@ end)
 test("sim: behind saves under the best; first has no pace; lost is not saved", function()
     local NS, M = fresh()
     sim(NS, "behind")
-    play(M, 45 + NS.Sim.SETTLE + 0.5)
+    play(M, NS.Sim.LENGTH + NS.Sim.SETTLE + 0.5)
     local chips = NS.Hud.Chips()
     assertEqual(chips[1], "Saved", "no New best behind the best")
     assertEqual(#chips, 1)
@@ -103,13 +105,46 @@ test("sim: behind saves under the best; first has no pace; lost is not saved", f
     sim(NS, "first")
     play(M, 5)
     assertEqual(NS.Hud.State(), "noBest", "nothing on the board to pace against")
-    play(M, 40 + NS.Sim.SETTLE + 0.5)
+    play(M, NS.Sim.LENGTH - 5 + NS.Sim.SETTLE + 0.5)
     assertEqual(NS.Hud.Chips()[1], "New best", "the first fight on a board is its best, no gain")
     NS.Preview.Stop()
 
     sim(NS, "lost")
-    play(M, 45 + NS.Sim.SETTLE + 0.5)
+    play(M, NS.Sim.LENGTH + NS.Sim.SETTLE + 0.5)
     assertEqual(NS.Hud.Chips()[1], "Not saved: the meter lost this fight")
+    untouched(NS)
+end)
+
+test("sim: the fight is 15 s, under Retail's minimum length, and still saves", function()
+    local NS, M = fresh()
+    assertEqual(NS.Sim.LENGTH, 15)
+    NS.db.profile.history.minLength = 30
+    sim(NS, "newbest")
+    play(M, NS.Sim.LENGTH + NS.Sim.SETTLE + 0.5)
+    assertEqual(NS.Hud.Chips()[2], "Saved", "exempt from the minimum length")
+    assertEqual(NS.ResultsSource.Get("sim-newbest").duration, 15, "the record is the 15 s fight")
+    NS.Preview.Stop()
+    NS.db.profile.history.content = {}
+    sim(NS, "behind")
+    play(M, NS.Sim.LENGTH + NS.Sim.SETTLE + 0.5)
+    assertEqual(NS.ResultsSource.Get("sim-behind"), nil, "the rest of the filters still judge it")
+    untouched(NS)
+end)
+
+test("sim short is judged by the player's own minimum length", function()
+    local NS, M = fresh()
+    for _, min in ipairs({ 30, 15, 20 }) do
+        NS.db.profile.history.minLength = min
+        sim(NS, "short")
+        play(M, 10 + NS.Sim.SETTLE + 0.5)
+        assertEqual(NS.Hud.Chips()[1], ("Not saved: shorter than %d s"):format(min))
+        NS.Preview.Stop()
+    end
+    NS.db.profile.history.minLength = 5
+    sim(NS, "short")
+    play(M, 10 + NS.Sim.SETTLE + 0.5)
+    assertEqual(NS.Hud.Chips()[1], "Saved", "longer than a 5 s minimum: the real filter passes it")
+    NS.Preview.Stop()
     untouched(NS)
 end)
 

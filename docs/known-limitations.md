@@ -29,8 +29,14 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   double counting. *Unverified* in combat. On WoW Forever, out of combat, the pet's source came back
   empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage is most likely
   folded into the player's, and fights since show it is: the pet's rows sit in the player's source,
-  each named by `creatureName` (midnight-quirks.md), and are split out by that name. While in combat
-  the Pet figure reads a dash there, because summing the pet's secret rows is not allowed.
+  each named by `creatureName` (midnight-quirks.md), and are split out by that name. In combat the
+  HUD shows the Pet row whenever a pet is out: when every value the split needs is plain it shows
+  the pet's figure and your own part as the main Damage and DPS, as on Retail, and keeps them if the
+  pet dies or is dismissed mid-fight; when any is secret, or a row could not be read at all, the Pet
+  figure reads a dash and the main figures stay merged (yours and the pet's), because summing secret
+  rows, or a partial list, is not allowed. Which of the two a WoW Forever fight gets is *unverified*: `/ct probe`'s
+  samples report it (debug.md). A live pet row the meter names no creature on is the pet's only by
+  the cast set, which does not know whose Auto Attack is whose.
 - **Targets are read after combat, by name.** The fight detail's Targets section (issue #6) comes
   from the meter's EnemyDamageTaken view, which is secret in combat, so the HUD never shows it.
   Enemies of one name are one row (the meter keys them by creature ID), at most ten are kept, and
@@ -47,7 +53,8 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 
 - **In-combat behavior is unverified.** The 2026-11-10 probe (build 70862) ran out of combat only:
   whether the meter's values, cast spell IDs and the pet's GUID are secret in combat there is assumed
-  to match Retail until the probe reports.
+  to match Retail until the probe reports; its samples' *pet rows in player source* line says which
+  of the live Pet figure's two forms (the split or the dash) this client gets (SM-CT-P8).
 - **No built-in training dummies.** No dummy creature ID has been measured, so a dummy fight reads as
   open world until the player adds the dummy to their own list (History > Training dummies, or
   `/ct dummy add` on the target).
@@ -59,7 +66,19 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   and every stand-up and refreshed by every out-of-combat read, so a respec followed by a pull
   before any out-of-combat read could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.
-- **Spell and item IDs in the sample rotation are unverified** in game.
+- **`/ct test race running` is a still frame with no center countdown.** By the owner's decision
+  (2026-11-14) test mode holds the race clock still at 0:18, so the held sample has no endsAt and
+  nothing counts; the countdown and the buzzer's STOP play only in the sim's race scenarios, on the
+  sample's running clock (callout plan row C6).
+- **CANCELED and TIME UP are never said.** A race says STOP at its buzzer, FAILED as it ends before
+  it and NEW BEST at a new best's result, real or sample (callout plan row C9); a cancel says nothing,
+  and no race runs out of time past its buzzer. The sim's `newbest` fight also says NEW BEST, which a
+  real fight does not: the call-out speaks for races alone.
+- **Spell and item IDs in the sample rotation are partly unverified** in game. On WoW Forever
+  (1.60.1 build 70938, 2026-11-14) every spell row drew its name in `/ct test` and `/ct sim` but
+  Multi-Shot rank 5 (25294), which that client does not know; the row is now rank 1, 2643, with the
+  same timing and size, so the figures did not move (callout plan row C12). The rest waits for
+  SM-CT-M5.
 
 ## Design limits of v0.1.0
 
@@ -129,7 +148,7 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   nothing until you target it. A nameplate that came up in combat with a sealed GUID is counted at the
   next rescan (the debounced hide's), not when it came.
 - **Race mode is Retail only.** WoW Forever has no Race mode page, `/ct race` verb, Race window,
-  countdown, race toast or race filter (clients-§4); a race saved on Retail lists there as a fight
+  countdown, call-out, race toast or race filter (clients-§4); a race saved on Retail lists there as a fight
   with its race DPS.
 - **No launcher entry for the Race window** (ruling X17). The minimap menu is LibKa0s-Launcher's
   fixed set. Its key, *Toggle Race window*, is Retail's alone, in `Bindings_Mainline.xml` (a
@@ -167,6 +186,32 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   line, and the bars fall back to its whole figure.
 - **A checkpoint passed before a `/reload` shows a dash for your figure.** Its reading was held in
   memory for that race alone, so a resumed race keeps the best's figure there but not yours.
+- **The center call-out's voice packs are not yet listened to in game.** The eight packs (Arena
+  announcer (John), the default; Female Kathleen, Kristin, Cori and Bella; Male Joe, John and Norman;
+  seven synthesized with Piper, Bella with Kokoro) passed the library's file checks, and the owner
+  listened to their sample reels outside the game on 2026-11-14. How each sounds in game, and its
+  volume against the game's on the Master channel, waits for SM-CT-RM77 and SM-CT-RM90.
+- **The call-out's settings tab is not yet checked in game.** The Race mode page's one Callout tab
+  (LibKa0s-Callout-1.0's section on the host's write route: a Preview block over the Look and Sound
+  side tabs, the glow's rows as AuraMaster's) passes the headless suites, which draw it through the
+  mock panel; the side tabs, the Preview block (with no sample line since LibKa0s v1.102.0), the drag,
+  the glow and each look, the owner's new defaults among them, wait for SM-CT-RM81 to SM-CT-RM86,
+  SM-CT-RM91 and SM-CT-RM92.
+- **The call-out's words cannot be changed or muted.** The stock words (STOP, FAILED, NEW BEST and
+  the numbers) and their voice are the addon's: the Callout tab has no text or mute per word, and
+  `/ct set callout.texts.*` or `callout.muted.*` is refused (callout plan row C11). *Voice* off
+  silences them all; *Center-screen countdown* and *STOP at the buzzer* turn the race's parts off.
+- **Game TTS depends on the voices the client has installed.** The call-out's *Game TTS* voice speaks
+  through `C_VoiceChat.SpeakText` with a voice from `C_VoiceChat.GetTtsVoices()`, so a client with
+  none installed (or a language pack without English voices) says nothing, and the voice and its rate
+  differ by system. Its rows (*Text to speech voice*, *Speech rate*, *Speech volume*) are drawn only
+  while the client lists a voice.
+- **A resume inside the countdown speaks the number of the moment.** A `/reload` or a stand-up with
+  4 s left shows 4 and says it at once (the old countdown showed it silently): the library has no
+  silent first number.
+- **Only the last five numbers are spoken.** The call-out's `speakFrom` default (5) shows the higher
+  numbers silently, where the old cue sounded on every second; there is no GO at the start, as the
+  countdown runs to the race's end.
 - **The Race window matches the DPS HUD's height only on the left or right.** Above or below the HUD
   it keeps its own height, and it is never shorter than its tallest screen needs, so a HUD shrunk below
   that leaves the Race window taller than the HUD.

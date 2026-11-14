@@ -21,6 +21,15 @@ local _, NS = ...
 -- CLIENTS (clients-§4). Each board declares the clients it exists on: Mythic+, delves, arenas and
 -- the training dummies (an empty seed on WoW Forever, defaults/Dummies.lua) are Retail's, so the
 -- Forever history holds none of them. The figures are scaled per client, picked once at FILE SCOPE.
+--
+-- ONE SHOWCASE (callout plan row C6, owner 2026-11-14): the set is fixed, the same for every
+-- character that opens it: the two hunters live on MockFights.REALM, never the player's realm.
+-- Every view reads the one plan, so they agree: a record's damage is its player plus its pet and its
+-- spell rows add up to it, its DPS is that damage over its length, the live read's DPS is its damage
+-- over the HUD's clock (seconds past the first hit), the live pet rows carry the pet's name for the
+-- breakdown's name column (as Meter.ReadLive's do while a pet is out), and the Race window's
+-- checkpoints are its best's straight line. The player's own settings still apply as they do to a
+-- real fight: the recording filters, a lane's ignore list, the late-cast ignore list.
 
 local MockFights = {}
 NS.MockFights = MockFights
@@ -57,7 +66,9 @@ local CLIENT = FOREVER and {
 }
 MockFights.SCALE = CLIENT.scale
 
--- The two made-up hunters: the main one every sample fight of the HUD and the sim is fought by.
+-- The two made-up hunters: the main one every sample fight of the HUD and the sim is fought by,
+-- both on one made-up realm.
+MockFights.REALM = "Samplerealm"
 local CHARS = {
     me = { name = "Samplehunter", ilvl = FOREVER and 66.2 or 721.4, pet = "Grimfang" },
     alt = { name = "Mockarrow", ilvl = FOREVER and 63.0 or 716.0, pet = "Ashpaw" },
@@ -172,14 +183,13 @@ MockFights.HISTORY = HISTORY
 
 -- ── who ─────────────────────────────────────────────────────────────────────────────────────────
 
---- A made-up hunter as a record's `who` carries it ("me", the main one, or "alt"), on the player's
---- realm and client.
+--- A made-up hunter as a record's `who` carries it ("me", the main one, or "alt"), on the sample
+--- realm and the player's client.
 --- @param key string|nil
 --- @return table who
 function MockFights.Character(key)
     local c = CHARS[key] or CHARS.me
-    local me = NS.Identity.Who()
-    return { name = c.name, realm = me.realm, client = NS.Compat.ClientKey(), class = "HUNTER",
+    return { name = c.name, realm = MockFights.REALM, client = NS.Compat.ClientKey(), class = "HUNTER",
              level = CLIENT.level, specID = CLIENT.specID, specName = CLIENT.specName and L[CLIENT.specName],
              specIcon = CLIENT.specIcon, trees = CLIENT.trees, ilvl = c.ilvl, petName = c.pet, petFamily = "Wolf" }
 end
@@ -327,12 +337,14 @@ function MockFights.TotalAt(plan, t)
     return player, pet, rows
 end
 
--- One source's part of a read, over `secs` seconds; nil with no spell of its own.
-local function part(spells, isPet, total, secs)
+-- One source's part of a read, over `secs` seconds; nil with no spell of its own. `name`, for a live
+-- read: each row's creature name as the meter carries it (the pet's on the pet's rows, "" on the
+-- player's).
+local function part(spells, isPet, total, secs, name)
     local list, max = {}, 0
     for _, sp in ipairs(spells) do
         if sp.isPet == isPet then
-            list[#list + 1] = { spellID = sp.spellID, total = sp.total, dps = sp.total / secs }
+            list[#list + 1] = { spellID = sp.spellID, total = sp.total, dps = sp.total / secs, creatureName = name }
             max = math.max(max, sp.total)
         end
     end
@@ -340,16 +352,19 @@ local function part(spells, isPet, total, secs)
     return { total = total, dps = total / secs, maxAmount = max, spells = list }
 end
 
---- The live read `t` seconds into the fight, in Meter.ReadLive's shape (plain, where a real one is
---- opaque); a source with no hit yet is nil, as the meter has no row for it.
---- @return table live  { player = {total, dps, rung, maxAmount, spells}|nil, pet = {...}|nil }
+--- The live read `t` seconds into the fight (combat entry's clock), in Meter.ReadLive's shape (plain,
+--- where a real one is opaque); a source with no hit yet is nil, as the meter has no row for it. Its
+--- DPS is the damage over the HUD's clock, the seconds past the first hit (at least one). With the
+--- plan's pet named (MockFights.Fight), the pet is out: `petOut`, and the pet's rows carry its name.
+--- @return table live  { player = {total, dps, rung, maxAmount, spells}|nil, pet = {...}|nil, petOut }
 function MockFights.LiveAt(plan, t)
     t = math.min(t, plan.length)
     local player, pet, spells = MockFights.TotalAt(plan, t)
-    local secs = math.max(1, t)
-    local p = part(spells, false, player, secs)
+    local secs = math.max(1, t - MockFights.FIRST_HIT)
+    local petName = plan.petName
+    local p = part(spells, false, player, secs, petName and "" or nil)
     if p then p.rung = "sample" end
-    return { player = p, pet = part(spells, true, pet, secs) }
+    return { player = p, pet = part(spells, true, pet, secs, petName), petOut = petName ~= nil }
 end
 
 --- The read after combat, in Meter.ReadFinal's shape, over `duration` seconds.
@@ -505,6 +520,8 @@ end
 --- @return table fight
 function MockFights.Fight(o)
     local b = MockFights.Board(o.board) or MockFights.Board("vorasius")
+    -- The pet out with its name: the HUD's live pet rows show it (LiveAt).
+    if o.plan and type(o.who) == "table" then o.plan.petName = o.who.petName end
     return { id = o.id, sample = true, plan = o.plan, sessions = {},
              snapshot = { who = o.who, target = b.target, where = b.where }, encounter = b.encounter }
 end

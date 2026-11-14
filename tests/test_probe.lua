@@ -440,6 +440,53 @@ test("probe: pet is separate source: unknown with no pet, or while the values ar
     assertTrue(line ~= nil and line:find("secret", 1, true) ~= nil, text(lines))
 end)
 
+-- The folded pet (callout plan row C7): each sample counts the pet's rows in the player's source and
+-- their secrecy, and says what the HUD's live Pet figure is, so the owner can see on WoW Forever
+-- whether the meter's values and the pet's rows are secret in combat.
+local FOLDED = { damage = 1700, dps = 85, duration = 20, pet = false, spells = {
+    { id = 133, dmg = 1000, dps = 50, creature = "" }, { id = 6603, dmg = 300, dps = 15, creature = "Wolf" },
+    { id = 17253, dmg = 400, dps = 20, creature = "Wolf" },
+} }
+
+test("probe: each sample with a pet out counts the pet's rows in the player's source and their secrecy", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst, meter = withMeter(function(m) m.__unitExists.pet = true end)
+        meter.SetPetGUID("Pet-0-1-2")
+        meter.SetSession(1, FOLDED)
+        local Probe = inst.NS.Probe
+        slash(inst, "probe")
+        meter.SetSecret(true)
+        enterCombat(inst)
+        inst.mocks.__fireTimers()
+        meter.SetSecret(false)
+        leaveCombat(inst)
+        inst.mocks.__fireTimers()
+        local lines = Probe.Report()
+        local folds = inst.NS.Meter.FOLDS_PET
+        local secret = lineWith(lines, "combat+5s pet rows in player source: 3 row(s), 3 with a secret name, "
+            .. "0 named a creature (0 with a secret amount); player total secret; live Pet figure: "
+            .. (folds and "dash" or "none"))
+        assertTrue(secret ~= nil, text(lines))
+        local plain = lineWith(lines, "afterCombat+2s pet rows in player source: 3 row(s), 0 with a secret name, "
+            .. "2 named a creature (0 with a secret amount); player total plain; live Pet figure: "
+            .. (folds and "split" or "none"))
+        assertTrue(plain ~= nil, text(lines))
+    end)
+    restore()
+    assertTrue(ok, tostring(err))
+end)
+
+test("probe: no pet out: the samples carry no pet-rows line", function()
+    local inst, meter = withMeter()
+    session(meter)
+    slash(inst, "probe")
+    enterCombat(inst)
+    inst.mocks.__fireTimers()
+    assertTrue(lineWith(inst.NS.Probe.Report(), "pet rows in player source") == nil)
+    assertTrue(meter ~= nil)
+end)
+
 test("probe: pace pet-fill anchor check builds hidden bars and reports ok", function()
     local inst, meter = withMeter()
     session(meter)

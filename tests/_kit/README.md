@@ -207,6 +207,18 @@ the declaration using this file's own parser (`VendorSync.parseIconLine`, `iconD
 `iconCatalog`, `requiredIcons`). `opts.iconsPattern` overrides how the line is spelled, and a pair's
 `icons` field names the folder held to it. See `docs/api/testkit/version-40-docs.md`.
 
+**From revision 55 it holds `media/sounds/` to the consumer's sound declaration** (`library-stack-§7`,
+*The sound subset*, standard v2.108.0). The Callout's voice packs, `media/sounds/callout/<voice>/`,
+are the second carve-out: a consumer declares, in one line directly under its `LibKa0s icons:`
+line, `LibKa0s sounds: none.`, `LibKa0s sounds: all.` or a comma-separated list of packs
+(`LibKa0s sounds: callout/female-kathleen.`), and the library pair then requires exactly those packs'
+files under `libs/LibKa0s/media/sounds/`, each pack's license and credits included, byte-identical
+to the tag, and nothing else there. **No line means none**, unlike icons: the folder must then be
+empty or absent. A pack the tag does not carry fails. `tools/prune-icons.lua` prunes both folders in
+one run with this file's parser (`VendorSync.parseSoundLine`, `soundDeclaration`, `soundCatalog`,
+`requiredSounds`). `opts.soundsPattern` overrides how the line is spelled, and a pair's `sounds`
+field names the folder held to it. See `docs/api/testkit/version-55-docs.md`.
+
 ## `test_eol.lua`
 
 The first of the kit's own suites. Its first case holds every file `git ls-files` reports to the

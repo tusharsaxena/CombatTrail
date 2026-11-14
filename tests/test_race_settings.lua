@@ -26,9 +26,8 @@ local ROWS = {
     { "race.autoShowHud",     "bool",   true },
     { "race.autoArm",         "bool",   false },
     { "race.clock",           "string", "left" },
-    { "race.countdownCue",    "bool",   true },
     { "race.centerCountdown", "bool",   true },
-    { "race.finalCountdown",  "number", 10, 3, 10, 1 },
+    { "race.finalCountdown",  "number", 10, 3, 20, 1 },
     { "race.buzzer",          "bool",   true },
     { "race.hintDelay",       "number", 15, 5, 60, 1 },
     { "race.grace",           "number", 1.0, 0, 5, 0.1 },
@@ -82,7 +81,7 @@ test("race mode: every control and verb is absent on WoW Forever", function()
         assertFalse(tostring(row.path):find("^race") ~= nil, tostring(row.path) .. " on WoW Forever")
     end
     local D = NS.defaults.profile
-    for _, key in ipairs({ "enabled", "autoShow", "autoShowHud", "autoArm", "clock", "countdownCue", "centerCountdown",
+    for _, key in ipairs({ "enabled", "autoShow", "autoShowHud", "autoArm", "clock", "centerCountdown",
                            "finalCountdown", "buzzer" }) do
         assertNil(D.race[key], "race." .. key .. " is stored on WoW Forever")
     end
@@ -122,7 +121,12 @@ end)
 test("race mode: the stored paths, types, defaults and ranges are the pinned set", function()
     if forever() then return end
     local NS = T.load().NS
-    assertEqual(#NS.SchemaForPage("race"), #ROWS, "the page's row count")
+    -- The page's own rows, then the call-out's (tests/test_callout_settings.lua pins those).
+    local own = 0
+    for _, row in ipairs(NS.SchemaForPage("race")) do
+        if not tostring(row.path):find("^callout%.") then own = own + 1 end
+    end
+    assertEqual(own, #ROWS, "the page's own row count")
     for _, r in ipairs(ROWS) do
         local row = NS.FindSchemaRow(r[1])
         assertEqual(row.type, r[2], r[1] .. " type")
@@ -138,13 +142,16 @@ test("race mode: the stored paths, types, defaults and ranges are the pinned set
     for _, v in ipairs(NS.FindSchemaRow("race.defaultLength").values) do values[#values + 1] = v.value end
     assertEqual(table.concat(values, ","), "30,60,120,180,300")
     assertTrue(NS.FindSchemaRow("race.lateIgnore").skipRender, "the list is the tab's body")
+    -- The countdown's cue sound is retired with the call-out (callout plan row C2): its voice speaks.
+    assertNil(NS.FindSchemaRow("race.countdownCue"), "no cue sound row")
+    assertNil(NS.defaults.profile.race.countdownCue, "no cue sound default")
     assertFalse(NS.SetByPath("race.clock", "never"), "a clock mode that is none")
     assertFalse(NS.SetByPath("raceWindow.side", "MIDDLE"), "a side that is none")
     assertFalse(NS.SetByPath("race.grace", 6), "grace past 5")
     assertTrue(NS.SetByPath("raceWindow.side", "LEFT"))
 end)
 
-test("race mode: the page's tabs are Race, Late-cast ignore list and Race window, and it renders quietly", function()
+test("race mode: the page's tabs are Race, Callout, Late-cast ignore list and Race window, and it renders quietly", function()
     if forever() then return end
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
@@ -154,7 +161,8 @@ test("race mode: the page's tabs are Race, Late-cast ignore list and Race window
     local ctx = NS.pageCtx.race
     assertTrue(ctx ~= nil, "the page's ctx")
     local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "race", nil, nil, {})
-    assertEqual(table.concat(keys or {}, ","), "Race,Late-cast ignore list,Race window")
+    assertEqual(table.concat(keys or {}, ","),
+        "Race,callout,Late-cast ignore list,Race window")
     -- The switch is the Race tab's first row.
     assertEqual(NS.SchemaForPage("race")[1].path, "race.enabled")
 end)

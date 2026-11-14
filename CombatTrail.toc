@@ -77,6 +77,9 @@ core\PoolSetup.lua
 # Reads LibStub (LibKa0s-Widgets-1.0) at FILE SCOPE and NS.Icon at CALL time only.
 core\WidgetsSetup.lua
 core\ToastSetup.lua
+# NS.NewCallout and its stub (LibKa0s-Callout-1.0) at FILE SCOPE: modules\Countdown.lua builds the
+# addon's one call-out through it at FILE SCOPE, so it sits above the modules.
+core\CalloutSetup.lua
 # NS.Charts (LibKa0s-Charts-1.0) at FILE SCOPE; NS.ChartsHost reads NS.Style, NS.ResultsTable and NS.Skin at
 # CALL time only (the Insights tab, Race mode plan Task D2).
 core\ChartsSetup.lua
@@ -222,7 +225,7 @@ modules\Hud.lua
 # modules\Hud_States.lua; modules\RaceWindow_States.lua reads NS.HudStates.COLORS, NS.Style and
 # NS.RaceWindowBoard's layout constants at FILE SCOPE, so it follows both; modules\RaceWindow.lua builds
 # its bus receiver at FILE SCOPE through core\Bus.lua and captures NS.Perf and NS.Secrets there. Each
-# reaches NS.Race, NS.Hud, NS.Bests and the Results window's parts at CALL time only.
+# reaches NS.Race, NS.Hud, NS.Bests, NS.Sim and the Results window's parts at CALL time only.
 modules\RaceWindow_Best.lua
 modules\RaceWindow_Board.lua
 modules\RaceWindow_States.lua
@@ -276,7 +279,8 @@ modules\Results.lua
 # (race plan Task E1; Retail only, each returns at once on WoW Forever): the sample races and the sample
 # race the Race window reads (reached at CALL time), and the sim's race scenarios. LOAD-BEARING:
 # modules\SimRace.lua publishes NS.SimRace.SCENARIOS, which modules\Sim.lua appends at FILE SCOPE, so it
-# precedes it.
+# precedes it. modules\Sim.lua reaches NS.RaceWindow and NS.Hud at CALL time only (what its window docks
+# beside).
 modules\MockRotations.lua
 modules\MockFights.lua
 modules\MockRaces.lua
@@ -290,7 +294,8 @@ modules\Diagnostics.lua
 
 # Settings (last -- depend on everything else being initialized)
 # LOAD-BEARING: publishes NS.RegisterSchemaRows, NS.GetSetting and NS.SetByPath, which settings\General.lua
-# calls at FILE SCOPE and core\LifecycleSetup.lua's NS.SyncEnabledHold reads at CALL time.
+# calls at FILE SCOPE and core\LifecycleSetup.lua's NS.SyncEnabledHold reads at CALL time, and
+# NS.__schemaLib, whose Write settings\Race.lua uses at FILE SCOPE to seed the call-out's defaults.
 settings\Schema.lua
 settings\Slash.lua
 # LOAD-BEARING: publishes NS.Helpers, which every page file below captures at FILE SCOPE, and
@@ -303,6 +308,7 @@ settings\Lanes.lua
 settings\Hud.lua
 settings\History.lua
 # The Race mode page, Retail only (declared on its page and its rows; nothing registers on WoW Forever).
-# LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format and NS.LateIgnore at FILE SCOPE.
+# LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format, NS.LateIgnore, NS.Countdown (PREFIX, MIN, MAX) and
+# NS.Callout (SchemaRows, Get, SettingsTab) at FILE SCOPE.
 settings\Race.lua
 settings\Profiles.lua

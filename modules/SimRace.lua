@@ -15,7 +15,7 @@ local _, NS = ...
 -- and parks it; Unpark (the stepper's Race starts, or at once with no library) stamps combat entry and
 -- starts one AceTimer beat every TICK. The first hit lands MockFights.FIRST_HIT in and starts the race
 -- clock; each beat feeds the lanes, the chart's store and the HUD's tick from the plan, as Sim's fight
--- beat does. At the race length the buzzer goes (Countdown.Buzzer, the real raid warning); an
+-- beat does. At the race length the buzzer goes (Countdown.Buzzer, the real call-out's STOP); an
 -- incomplete scenario's combat ends before it instead. Combat ends `combatEnd` seconds after the
 -- buzzer (sticky: past the hint's delay, `race.hintDelay` + STICKY_EXTRA), and the read lands
 -- RaceScoring.QUIET_BEFORE_READ seconds after the later of the last hit and the combat end (Stop Now:
@@ -23,6 +23,13 @@ local _, NS = ...
 -- window show their cards, the result line prints and the toast offers itself through their real
 -- functions (Share.OnRaceResult, BestToast.OnRace), and RESULT_HOLD seconds later the Results window
 -- opens on it.
+--
+-- THE CALL-OUT'S WORDS (callout plan row C6, owner 2026-11-14): the countdown runs to the sample's own
+-- endsAt (RaceSample.EndsAt, which RaceClock.EndsAt follows while the sample's clock runs) and STOP
+-- shows at its buzzer (Countdown.Buzzer); a race that ends before its buzzer (race-incomplete,
+-- race-died) says FAILED as it ends, and a read that is a new best says NEW_BEST beside its toast
+-- (Countdown.SampleSay of Countdown.EndWord and ResultWord: a real race's rule, callout plan row C9). No scenario is canceled or runs out of time past its buzzer,
+-- so CANCELED and TIME_UP are never said. The preview's stop takes them down (modules/Preview.lua).
 --
 -- NOTHING REACHES THE BUS OR THE STORE, as every sample (modules/Preview.lua's header): the windows are
 -- called directly, the record lives in the sample history only, and NS.Race never moves. The one
@@ -161,7 +168,8 @@ local function stopRace(fight, early)
         readAt = math.max(length + (scen.tail or 0), combatAt) + NS.RaceScoring.QUIET_BEFORE_READ
     end
     refreshWindows()
-    if not early and NS.Countdown then NS.Countdown.Buzzer() end
+    if not NS.Countdown then return end
+    if early then NS.Countdown.SampleSay(NS.Countdown.EndWord(sample.race)) else NS.Countdown.Buzzer() end
 end
 
 -- The read: the record joins the sample history, every card shows it, the result line and the toast.
@@ -178,6 +186,7 @@ local function read(fight)
     refreshWindows()
     if NS.Share then NS.Share.OnRaceResult(record, record.race) end
     if NS.BestToast then NS.BestToast.OnRace(record) end
+    if NS.Countdown then NS.Countdown.SampleSay(NS.Countdown.ResultWord(record)) end
     debug("sim race %s: read, %s", scen.key, tostring(record.race.status))
 end
 

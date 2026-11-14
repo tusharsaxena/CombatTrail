@@ -49,6 +49,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/PoolSetup.lua` | `NS.Pool`, the widget pool the lanes, the HUD and the Results window use |
 | `core/WidgetsSetup.lua` | Dropdowns, menus, the test and sim strips and the copy box, from LibKa0s-Widgets |
 | `core/ToastSetup.lua` | `NS.NewToast`, the alert-toast shell from LibKa0s-Toast, and its degraded stub |
+| `core/CalloutSetup.lua` | `NS.NewCallout`, the center-screen call-out from LibKa0s-Callout, its degraded stub and the shipped voice packs |
 | `core/ChartsSetup.lua` | `NS.Charts` (LibKa0s-Charts) and `NS.ChartsHost()`, the Results window's look for the Insights charts |
 | `core/LifecycleSetup.lua` | The one stand-down latch and the modules it suspends and resumes |
 | `core/PerfSetup.lua` | `NS.Perf`, the performance harness and its buckets |
@@ -66,9 +67,9 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/LaneAnchor.lua` | Where a lane sits (free, docked, unit frame), its strata and level, and the edit overlay |
 | `modules/LaneVisibility.lua` | When a lane shows and how opaque it is |
 | `modules/LaneIgnore.lua` | Each lane's ignore list and the `/ct ignore` verb |
-| `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read (`Meter.ShareLive` lets the HUD's beat and the slices' boundary tick share one read in a frame) and the after-combat read |
+| `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read (`Meter.ShareLive` lets the HUD's beat and the slices' boundary tick share one read in a frame; on WoW Forever, `Meter.FOLDS_PET`, the live split of the pet's plain rows out of the player's, pet out or not, else `petDash`) and the after-combat read |
 | `modules/ProbeCurve.lua` | `/ct probe`'s spell color curve trial (issue #7): can the client map a secret spell ID to a color |
-| `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers |
+| `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers (with a pet out, each sample's pet rows in the player's source and the live Pet figure's form) |
 | `modules/Dummies.lua` | The training dummies: the seed with the player's own list, the captures and `/ct dummy` (both clients) |
 | `modules/Identity.lua` | Who fought, where and against what, and the board key |
 | `modules/Fight.lua` | The fight state machine, one fight per meter session |
@@ -104,8 +105,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked, and `Best.Figure`, the labeled Damage and DPS pair on one row that Best to beat and Best by now share (Race mode, Retail) |
 | `modules/RaceWindow_Board.lua` | The race board's figures the Race window draws: Best by now and the Checkpoints (the best's straight line, the player's figure as *Current* and their mini pace bars), Against your best and Top races on one column grid, `Board.Spread` (the result card's rows and gaps in a taller window) and `Board.ClockColor` (the countdown's and the time bar's green to amber to red) (Race mode, Retail) |
 | `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card, and the layouts that stretch them to the window's size: `States.ResultLayout`, `States.IdleLayout`, `States.RunningGap` (Race mode, Retail) |
-| `modules/RaceWindow.lua` | The Race window's shell: flush beside the DPS HUD (at its height on the left or right) or on its own, its size and resize grip, when it shows, the view and the acts (Race mode, Retail) |
-| `modules/Countdown.lua` | A race's final seconds: the countdown cue, the center-screen numbers, and the buzzer's raid warning (Race mode, Retail) |
+| `modules/RaceWindow.lua` | The Race window's shell: flush beside the DPS HUD (at its height on the left or right) or on its own, its size and resize grip, when it shows, the view and the acts; `RaceWindow.Frame` and `RaceWindow.DockSide`, which the sim window reads to dock beside it or the HUD while it is up, and each show and hide docking a shown sim window again (`Sim.Redock`) (Race mode, Retail) |
+| `modules/Countdown.lua` | A race's final seconds on the addon's one call-out (`NS.Callout`, its every write through `NS.SetByPath`): the center numbers counted to the race's endsAt, spoken, and STOP at the buzzer (Race mode, Retail) |
 | `modules/BestToast.lua` | The new-best toast: a race's (Retail) or a fight's (both clients) new best on its board |
 | `modules/Sizing.lua` | The one smooth-resize pattern every resizable window uses |
 | `modules/Results_Source.lua` | Where the Results window reads fights: the store, or the sample history |
@@ -133,16 +134,16 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceSample.lua` | The sample race: the stand-in for `NS.Race` the Race window and the countdown read in test mode and the sim (Retail only, Race mode plan E1) |
 | `modules/Preview.lua` | Test mode and the sim's shared shell; `/ct test race` |
 | `modules/SimRace.lua` | The sim's eight race scenarios: their script, steps and gate (Retail only, Race mode plan E1) |
-| `modules/Sim.lua` | `/ct sim`: a made-up fight in real time, its scenarios and its step session |
+| `modules/Sim.lua` | `/ct sim`: a made-up fight in real time, its scenarios and its step session, whose window docks beside the DPS HUD, or, while the Race window is up, beside whichever of the two reaches further right (`Sim.Redock`) |
 | `modules/Diagnostics.lua` | This addon's sections of `/ct diagnostics` |
 | `settings/Schema.lua` | The schema array and the one write seam |
 | `settings/Slash.lua` | `NS.COMMANDS` and the slash descriptor |
-| `settings/OptionsSetup.lua` | The LibKa0s-Options descriptor (`NS.Helpers`) and `NS.RegisterTabbedPage` |
+| `settings/OptionsSetup.lua` | The LibKa0s-Options descriptor (`NS.Helpers`), the panel's color codec (`NS.ColorEncode`, `NS.ColorDecode`) and `NS.RegisterTabbedPage` |
 | `settings/General.lua` | The General page: Master controls, Look and skin, Keybindings |
 | `settings/Lanes.lua` | The Lanes page and the `/ct lane` verb |
 | `settings/Hud.lua` | The DPS HUD page |
 | `settings/History.lua` | The History page |
-| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the late-cast ignore list, the Race window's place and height, and its size rows the grip writes (Retail only) |
+| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the race call-out's rows (its `SchemaRows` with `texts = false`, seeded into the defaults) and its one Callout tab (the library's settings section), the late-cast ignore list, the Race window's place and height, and its size rows the grip writes (Retail only) |
 | `settings/Profiles.lua` | The Profiles page |
 
 ## Not shipped

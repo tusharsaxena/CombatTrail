@@ -3,6 +3,7 @@
 	<Script file="CorePixel.lua"/>
 	<Script file="Env.lua"/>
 	<Script file="Compat.lua"/>
+	<Script file="Role.lua"/>
 	<Script file="Lifecycle.lua"/>
 	<Script file="Bus.lua"/>
 	<Script file="Schema.lua"/>
@@ -10,6 +11,10 @@
 	<Script file="Item.lua"/>
 	<Script file="Glow.lua"/>
 	<Script file="Toast.lua"/>
+	<Script file="Callout.lua"/>
+	<Script file="CalloutSettings.lua"/>
+	<Script file="WaypointArrow.lua"/>
+	<Script file="WaypointArrowSettings.lua"/>
 	<Script file="Charts.lua"/>
 	<Script file="ChartsRender.lua"/>
 	<Script file="Media.lua"/>

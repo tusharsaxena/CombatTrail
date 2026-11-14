@@ -1,7 +1,7 @@
 -- tests/test_sim_race.lua — the sim's race scenarios (race plan Task E1, R:test-sim#3, #6, #14):
 -- DPS Race's sim race cases (@f8078c7 tests/test_sim.lua, test_sample_parity.lua, test_countdown.lua)
 -- on Combat Trail's sim (modules/SimRace.lua through modules/Sim.lua). A made-up race arms on the Race
--- window, starts its clock on the first hit, counts down with the real marks, buzzes, reads after the
+-- window, starts its clock on the first hit, counts down on the real call-out, buzzes, reads after the
 -- quiet and holds its card, the HUD's over card and the result line, then opens the Results window on
 -- it; nothing reaches the bus or the store and NS.Race never moves. The gate holds each step; Race mode
 -- off refuses the eight; WoW Forever has none of them (its last case).
@@ -62,12 +62,20 @@ local function sim(S, key)
     return S.M.__now
 end
 
--- Play the race clock (seconds past the first hit) to `rc`, a beat at a time.
+-- One client frame: every armed OnUpdate runs (the race call-out's frame clock, modules/Countdown.lua).
+local function frame(S)
+    for _, h in ipairs(S.M.__timers()) do
+        if type(h) == "table" and h.__scripts and h.__scripts.OnUpdate then h:__fire("OnUpdate", 0) end
+    end
+end
+
+-- Play the race clock (seconds past the first hit) to `rc`, a beat and a frame at a time.
 local function playTo(S, t0, rc)
     local stop = t0 + S.NS.MockFights.FIRST_HIT + rc
     while S.M.__now < stop - 1e-9 do
         S.M.__now = math.min(stop, S.M.__now + S.NS.SimRace.TICK)
         S.M.__fireTimers()
+        frame(S)
     end
 end
 
@@ -93,8 +101,12 @@ test("sim race: race-newbest arms, races on its clock, buzzes, reads after the q
     assertEqual(NS.Hud.State(), "live", "the HUD's live view")
     assertTrue(NS.Hud.View().fight.race ~= nil)
     assertTrue(#NS.LaneRender.__icons("player") > 0, "the lanes play")
+    -- The one endsAt (callout plan row C3): the beat and the call-out read the sample's, the real race has none.
+    assertTrue(NS.RaceSample.EndsAt() ~= nil, "the live sample has an endsAt")
+    assertEqual(NS.RaceClock.EndsAt(), NS.RaceSample.EndsAt(), "the race beat follows the sample's endsAt")
+    assertNil(NS.Race.EndsAt(), "the real race, idle, has none")
     playTo(S, t0, 25.5)
-    assertEqual(NS.Countdown.Shown(), 5, "the real marks count the sim's race down")
+    assertEqual(NS.Countdown.Shown(), 5, "the real call-out counts the sim's race down")
     playTo(S, t0, 30.2)
     assertEqual(NS.RaceWindow.View().key, "stop", "the buzzer: Stop!")
     assertNil(NS.Countdown.Shown(), "the buzzer clears the countdown")
@@ -300,6 +312,138 @@ test("sim race: the eight follow the fight scenarios; Race mode off refuses them
     assertTrue(has(lines, "Race mode is off"), "one line")
     assertFalse(NS.Preview.IsActive())
     assertTrue(NS.Sim.Start("newbest"), "the fight scenarios still play")
+    NS.Preview.Stop()
+end)
+
+-- A fresh instance whose sim window (LibKa0s-Sim-1.0's step panel, `CombatTrailSimPanel`, which the
+-- library publishes no handle for) is a global, as in the client, and records its points: the kit's
+-- base frame keeps none (its SetPoint stores nothing and its GetPoint answers the frame).
+local PANEL = "CombatTrailSimPanel"
+local function named()
+    local S = F.fresh({ mutate = function(m)
+        installPaint(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, name, ...)
+            local f = create(kind, name, ...)
+            if name ~= PANEL or type(f) ~= "table" then return f end
+            local points = {}
+            rawset(f, "SetPoint", function(_, ...) points[#points + 1] = { ... } end)
+            rawset(f, "ClearAllPoints", function() points = {} end)
+            rawset(f, "GetPoint", function(_, i) return unpack(points[i or 1] or {}) end)
+            m[name] = f
+            return f
+        end
+    end })
+    assert(S.NS.SetByPath("race.autoShow", false))
+    S.NS.RaceWindow.HideAwayFromDummy()
+    S.M.__now = 1000
+    return S
+end
+
+-- The sim window's first point: what it stands on, while shown.
+local function panelDock(S)
+    local f = S.M[PANEL]
+    if type(f) ~= "table" or not S.NS.Sim.session:IsPanelShown() then return nil end
+    local point, rel, relPoint = f:GetPoint(1)
+    return point, rel, relPoint
+end
+
+test("sim race: the sim window docks right of the HUD in a fight scenario (characterization)", function()
+    if forever() then return end
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.Sim.Open("newbest"), "the session starts, its panel shown")
+    assertFalse(NS.RaceWindow.Visible(), "no Race window in a fight scenario")
+    local point, rel, relPoint = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel ~= nil and rel == NS.Hud.Frame(), "on the DPS HUD")
+    assertEqual(relPoint, "TOPRIGHT")
+    NS.Preview.Stop()
+end)
+
+test("sim race: with the Race window up the sim window docks beside it, then back beside the HUD", function()
+    if forever() then return end
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.Sim.Open("race-newbest"), "the session starts, its panel shown")
+    assertTrue(NS.RaceWindow.Visible(), "the race scenario shows the Race window")
+    local rw = NS.RaceWindow.Frame()
+    assertTrue(rw ~= nil and rw == NS.RaceWindow.__ui().frame, "the accessor answers the built frame")
+    local point, rel, relPoint = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel == rw, "right of the Race window, not over it")
+    assertEqual(relPoint, "TOPRIGHT")
+    -- The Race window goes away mid-sim: the shown panel goes back beside the HUD.
+    NS.RaceWindow.Hide(true)
+    assertFalse(NS.RaceWindow.Visible())
+    point, rel = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel ~= nil and rel == NS.Hud.Frame(), "back on the DPS HUD")
+    -- It comes back: beside it again.
+    NS.RaceWindow.ShowSample()
+    assertTrue(NS.RaceWindow.Visible())
+    point, rel = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel == rw, "beside the Race window again")
+    NS.Preview.Stop()
+end)
+
+-- Attached on another side the panel docks beside whichever frame reaches further right, never on the HUD.
+local function sideCase(side, rwRight, hudRight)
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.SetByPath("raceWindow.side", side))
+    assertTrue(NS.Sim.Open("race-newbest"), "the session starts, its panel shown")
+    assertTrue(NS.RaceWindow.Visible(), "the race scenario shows the Race window")
+    local rw, hud = NS.RaceWindow.Frame(), NS.Hud.Frame()
+    if rwRight then rawset(rw, "GetRight", function() return rwRight end) end
+    if hudRight then rawset(hud, "GetRight", function() return hudRight end) end
+    NS.Sim.Redock()
+    local point, rel, relPoint = panelDock(S)
+    NS.Preview.Stop()
+    return point, rel, relPoint, rw, hud
+end
+
+test("sim race: attached LEFT the Race window is left of the HUD, so the sim window docks beside the HUD", function()
+    if forever() then return end
+    local point, rel, relPoint, _, hud = sideCase("LEFT")
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel ~= nil and rel == hud, "right of the DPS HUD, not over it")
+    assertEqual(relPoint, "TOPRIGHT")
+end)
+
+test("sim race: attached TOP or BOTTOM the sim window docks beside the frame reaching further right", function()
+    if forever() then return end
+    local _, rel, _, rw = sideCase("TOP", 900, 700)
+    assertTrue(rel ~= nil and rel == rw, "a Race window wider than the HUD: beside it")
+    local _, rel2, _, _, hud = sideCase("TOP", 600, 700)
+    assertTrue(rel2 ~= nil and rel2 == hud, "a Race window narrower than the HUD: beside the HUD")
+    local _, rel3, _, _, hud3 = sideCase("BOTTOM")
+    assertTrue(rel3 ~= nil and rel3 == hud3, "edges not known yet: beside the HUD it stands on")
+end)
+
+test("sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one", function()
+    if forever() then return end
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.Sim.Open("race-newbest"))
+    local session = NS.Sim.session
+    session:HidePanel()
+    NS.RaceWindow.Hide(true)
+    NS.RaceWindow.ShowSample()
+    assertFalse(session:IsPanelShown(), "a hidden sim window stays hidden")
+    session:ShowPanel()
+    local f = S.M[PANEL]
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", S.M.UIParent, "CENTER", 40, 25)
+    f:__fire("OnDragStop")
+    NS.RaceWindow.Hide(true)
+    local point, rel, _, x, y = f:GetPoint(1)
+    assertEqual(point, "CENTER", "the dragged point holds")
+    assertTrue(rel == S.M.UIParent)
+    assertEqual(x, 40)
+    assertEqual(y, 25)
+    session:ResetPanelPosition()
     NS.Preview.Stop()
 end)
 

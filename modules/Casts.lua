@@ -214,6 +214,14 @@ function Casts.Finish(fightID)
     return done.casts, done.spells, done.dropped
 end
 
+--- Whether the pet cast spell `id` this session: PetSpellSet's question without its copy, for the live
+--- read's folded split (modules/Meter.lua, at the HUD's refresh rate). `id` must be plain.
+--- @param id number
+--- @return boolean
+function Casts.IsPetSpell(id)
+    return petSpells[id] == true
+end
+
 --- Let a fight's capture go without a list (a lost fight).
 function Casts.Drop(fightID)
     unpark(fightID)

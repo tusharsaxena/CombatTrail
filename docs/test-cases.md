@@ -19,8 +19,8 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 2 and the fight record's format is 4
-- load: a schema 1 store loads empty at version 2, keeping the account's other state
+- load: the settings stamp is 3 and the fight record's format is 4
+- load: a schema 1 store loads empty at version 3, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
 
@@ -272,7 +272,7 @@ Total.
 - lanes link: the Pet lane's tabs show only the rows it keeps while linked, with a note
 - lanes link: Copy from Player lane gives the Pet lane its own copy and unlinks it
 
-### test_probe.lua (33)
+### test_probe.lua (35)
 
 - probe: report runs with no C_DamageMeter
 - probe: the enemy view lists each enemy's every field (issue #6's feasibility)
@@ -295,6 +295,8 @@ Total.
 - probe: pet is separate source: no while the pet's own source is empty
 - probe: pet is separate source: no while the player's source holds the pet's spells
 - probe: pet is separate source: unknown with no pet, or while the values are secret
+- probe: each sample with a pet out counts the pet's rows in the player's source and their secrecy
+- probe: no pet out: the samples carry no pet-rows line
 - probe: pace pet-fill anchor check builds hidden bars and reports ok
 - probe: pace pet-fill anchor reports a SetPoint that raised
 - probe: stand-down drops its registrations; stand-up brings them back while armed
@@ -308,7 +310,7 @@ Total.
 - probe: forever: a talent read that raises prints one line and the rest of the report
 - probe: retail: no talent-tree section (clients-§4)
 
-### test_meter.lua (37)
+### test_meter.lua (50)
 
 - meter: the stat and session constants come from the client enum
 - meter: without the enum, the documented values stand and the enemy view is unread
@@ -323,7 +325,7 @@ Total.
 - meter: ResolvePet answers the pet's GUID, nil with no pet, and remembers the last plain one
 - meter: ReadLive returns opaque player and pet tables
 - meter: ReadLive with no pet GUID returns pet=nil
-- meter: ReadLive with a pet the meter has no source for returns pet=nil
+- meter: ReadLive with a pet the meter has no source for returns pet=nil (Retail)
 - meter: ReadLive reads the Current session, or one session by ID
 - meter: ReadLive answers no sources with no session, and nil with no API or a raising client
 - meter: the player's live DPS rungs: the source, the local row, the Dps type, else nil
@@ -341,6 +343,19 @@ Total.
 - meter: the pet with no cast set yet still splits by creature name
 - meter: ReadLive flags a row the meter plainly names a creature on; a secret name says nothing
 - meter: a creature name still secret after combat seals the record read
+- meter: forever: plain live rows split the pet's figure out of the player's
+- meter: forever: a secret live read leaves the merged figure and marks the Pet row's dash
+- meter: forever: a plain total with no rate splits the damage and leaves both rates nil
+- meter: forever: the cast set names a pet row live; Auto Attack stays the owner's by the set
+- meter: forever: a pet out with no rows of its own yet reads a plain 0
+- meter: no pet out and no pet rows: no Pet part and no dash, on either client
+- meter: forever: the pet gone mid-fight keeps the split, the Pet figure and no dash
+- meter: forever: the cast set still names the pet's rows once the pet is gone
+- meter: forever: the slices' player series stays the player's part when the pet goes
+- meter: forever: an unreadable row refuses the split: a dash, the merged figure
+- meter: forever: an unreadable row list refuses the split rather than a confident Pet 0
+- meter: retail: the folded rows are never split live (the pet's own source is the figure)
+- meter: FOLDS_PET is this client's: WoW Forever folds, Retail does not
 - meter: PET_SEPARATE=false path tags by cast set
 - meter: ReadEnemies sorts by damage taken
 - meter: ReadEnemies is empty with a reason while sealed, missing or without the enum
@@ -811,7 +826,7 @@ Total.
 - race mode: every control and verb is absent on WoW Forever
 - race mode: the library-absent dispatcher lists and runs the verb on its own client only
 - race mode: the stored paths, types, defaults and ranges are the pinned set
-- race mode: the page's tabs are Race, Late-cast ignore list and Race window, and it renders quietly
+- race mode: the page's tabs are Race, Callout, Late-cast ignore list and Race window, and it renders quietly
 - race mode: the DPS HUD row sits under auto-show, live whatever auto-show says (W29 decision D4)
 - race mode: Match the DPS HUD's height sits on the Race window tab, under the side
 - race mode: a new default length forgets the last one armed
@@ -857,7 +872,7 @@ Total.
 - autoshow hud: the session's end never closes a live fight's HUD
 - autoshow hud: a HUD the dummy opened stays up through the first hit whatever the show mode
 - autoshow hud: the same gates as auto-show: an instance and Race mode off
-- autoshow hud: a fade hides both; the session's next ask opens both again (W29 #6)
+- autoshow hud: a dummy session holds the HUD up through its fade, and its end closes both
 - autoarm: targeting a dummy out of combat arms at the Race window's length
 - autoarm: with no length from the Race window, the race's own default
 - autoarm: a target that is no dummy arms nothing
@@ -976,31 +991,66 @@ Total.
 - race clock: the held sample race beats while running, and stops with test mode
 - race clock: the sim's race beats from its first hit through Stop!, and stops at its read
 
-### test_countdown.lua (23)
+### test_countdown.lua (43)
 
-- countdown: absent on WoW Forever
+- countdown: absent on WoW Forever, the call-out with it
+- countdown: one call-out, on the addon's folder, skin and eight shipped voices, Arena John the default
+- countdown: the packs the seam offers are the CLAUDE.md sounds line, in order
+- countdown: all eight packs ship, each on disk with every line the call-out speaks
+- countdown: Text to play offers Countdown 10 to 1 first
+- countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS
+- countdown: the stub answers every member a live call-out has, as an idle call-out does
+- countdown: the library absent, the seam answers the stub and the countdown counts nothing
+- countdown: a countdown the call-out refuses is not reported armed
 - countdown: 10..1 show one per second in the last 10 s, then go at the buzzer
+- countdown: the call-out is not handed the race until the lead before its window
 - countdown: the center number, the Race window's countdown and the HUD's clock agree at the boundaries
-- countdown: its own frame, center of UIParent, FULLSCREEN, over every window and below every menu
-- countdown: the frame never takes the mouse, and each number pops in
-- countdown: the digits are Blizzard's BigGold set, cut by texcoord
-- countdown: without the digit art it falls back to a large outlined number
+- countdown: a new number redraws the Race window in its own frame, off the beat
+- countdown: the call-out's frame is FULLSCREEN, never the HUD's or the Race window's, and mouse-free while locked
 - countdown: finalCountdown 3 starts at 3
-- countdown: switched off, no frame is ever built and only the cue marks sound
+- countdown: finalCountdown 20 starts at 20, said from the call-out's speakFrom
+- countdown: finalCountdown takes 3 to 20 and refuses the rest
+- countdown: a smaller window mid-countdown takes the number down until it is reached
+- countdown: switched off, nothing is counted, shown or said
 - countdown: switching it off mid-countdown hides the number at once
 - countdown: works with the DPS HUD and the Race window closed
-- countdown: one cue per second of the numbers, never two in a second
-- countdown: the cue off keeps the numbers and silences every second
-- countdown: switching the cue off mid-race silences the marks still ahead
-- countdown: a cancel at 5 s left hides it and nothing more shows or sounds
-- countdown: combat ending before the buzzer hides it
-- countdown: the stand-down takes the number and every mark, and nothing re-arms them
+- countdown: the voice says 5 down to 1 and STOP, each once, from the shipped pack
+- countdown: a refresh mid-countdown never repeats a number
+- countdown: the call-out's voice off keeps the numbers and silences them
+- countdown: a cancel at 5 s left hides it and nothing more shows or is said
+- countdown: combat ending before the buzzer takes the number down and says FAILED
+- countdown: the stand-down suspends the call-out, and nothing re-arms it until the stand-up
 - countdown: a /reload with 4 s left resumes at 4 and counts 3, 2, 1
 - countdown: a /reload before the window shows nothing until it opens
 - countdown: a /reload past the buzzer shows nothing
-- countdown: the buzzer raises the raid warning's STOP with its sound, once, only when enabled
+- countdown: the buzzer shows the call-out's STOP, once, only when enabled
 - countdown: a canceled race and a race ending early raise no buzzer
-- countdown: never broadcasts a pull timer nor drives Blizzard's TimerTracker
+- countdown: the player dying before the buzzer says FAILED; after it, nothing more
+- countdown: a real race that is a new best says NEW_BEST at its result; a first or slower one does not
+- countdown: NEW_BEST does not ask the toast's switch; Race mode off keeps every word off
+- countdown: a real race's FAILED is the stock word, said: no own text or mute is stored
+- countdown: one rule for a real race and a sample: EndWord and ResultWord
+- countdown: the call-out is handed the race's one endsAt, the value RaceClock and Race read
+- countdown: the stand-up re-arms from the race's endsAt and shows the number of the moment
+- countdown: a stand-down during the lead-in drops the timer; the stand-up waits again
+- countdown: a profile change re-applies the call-out's look and reads the new profile's table
+- countdown: a profile that still stores the retired race.countdownCue counts as any other
+- countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
+
+### test_callout_settings.lua (12)
+
+- callout settings: every SchemaRows row is a Race mode row, declared retail, drawn by the section
+- callout settings: absent on WoW Forever, no row, default or writeThrough path
+- callout settings: the defaults are seeded from the rows, and the schema validates against them
+- callout settings: every instance write goes through NS.SetByPath, under callout.
+- callout settings: a drag's point and Reset position are written through NS.SetByPath
+- callout settings: /ct set, get and reset reach a call-out row
+- callout settings: the glow's rows are reached by /ct set, get and reset
+- callout settings: the Race mode page's Defaults and a profile reset put the call-out back
+- callout settings: the Race mode page draws one Callout tab after Race
+- callout settings: the one tab is the library's side layout on the host's route: Preview, Look and Sound
+- callout settings: the migration rewrites a stored glow choice, drops the texts and mutes, keeps a voice
+- callout settings: a fresh profile is untouched by the migration and speaks with Arena John
 
 ### test_toast.lua (21)
 
@@ -1101,11 +1151,16 @@ Total.
 - chart: hud.chart.columns caps the columns; the layout's chart off hides it
 - chart: the pure layout helpers
 
-### test_hud_breakdown.lua (11)
+### test_hud_breakdown.lua (16)
 
 - breakdown never sorts or computes in combat (mock secret values)
 - breakdown: pet rows carry paw and pet color
 - breakdown: a folded pet row the meter names a creature on draws as the pet's, live
+- hud: forever: plain rows give the Pet figure and the player's part as the main figure
+- hud: forever: secret rows show the Pet row with a dash and keep the merged main figure
+- hud: forever: the pet gone mid-fight keeps the Pet row and the player's part as Damage
+- hud: no pet out and no pet rows: no Pet row live, plain or secret, on either client
+- hud: retail: a folded source shows no live Pet row (the pet answers its own source there)
 - breakdown: the over card's rows are merged, highest first, with their shares
 - breakdown: hud.bars caps the rows and the wheel scrolls past them
 - breakdown: the layout's spell rows off hides them
@@ -1476,11 +1531,13 @@ Total.
 - preview: a sample fight is the same each time, and its parts agree
 - preview: the first-run skin picker shows the HUD's sample in the skin, and its close puts it back
 
-### test_sim.lua (5)
+### test_sim.lua (7)
 
 - sim newbest ends with New best chip
 - sim short ends Not saved
 - sim: behind saves under the best; first has no pace; lost is not saved
+- sim: the fight is 15 s, under Retail's minimum length, and still saves
+- sim short is judged by the player's own minimum length
 - sim: the verb starts it through the step session, and stop ends it
 - sim: combat ends it; a refused start leaves nothing on
 
@@ -1495,7 +1552,7 @@ Total.
 - race preview: the sample history holds races beside the fights, every status, kind and length
 - race preview: on WoW Forever there is no sample race, no race word and no race in the history
 
-### test_sim_race.lua (9)
+### test_sim_race.lua (14)
 
 - sim race: race-newbest arms, races on its clock, buzzes, reads after the quiet; nothing on the bus
 - sim race: the running body's Current and Checkpoints come from the sample's plan, never the meter
@@ -1505,7 +1562,27 @@ Total.
 - sim race: race-sticky's wait says combat holds on, the hint shows after its delay
 - sim race: the gate holds the race, the read, then the card; Stop Now reads at the combat end
 - sim race: the eight follow the fight scenarios; Race mode off refuses them
+- sim race: the sim window docks right of the HUD in a fight scenario (characterization)
+- sim race: with the Race window up the sim window docks beside it, then back beside the HUD
+- sim race: attached LEFT the Race window is left of the HUD, so the sim window docks beside the HUD
+- sim race: attached TOP or BOTTOM the sim window docks beside the frame reaching further right
+- sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one
 - sim race: WoW Forever has no race scenario
+
+### test_showcase.lua (12)
+
+- showcase: every sample record adds up: rows to the damage, player plus pet, DPS over its length
+- showcase: every WoW Forever sample spell row is one the client names; Multi-Shot is rank 1
+- showcase: one fixed set, the same for every character (the sample realm, not the player's)
+- showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace
+- showcase: /ct test stays the HUD's alone: no toast, no call-out
+- showcase: test race running: two checkpoints passed, the third next, on the best's line
+- showcase: test race result: the new-best toast and NEW_BEST; both go when test mode stops
+- showcase: sim race-newbest: countdown to the sample's endsAt, STOP, then NEW_BEST and the toast
+- showcase: sim race-incomplete and race-died say FAILED as they end; race-behind earns nothing
+- showcase: Race mode off keeps the samples' words off
+- showcase: sim newbest toasts the fight (toast.fights) and says NEW_BEST on Retail; stop clears both
+- showcase: a real toast outlives the samples' cleanup
 
 ### test_bindings.lua (14)
 
@@ -1702,8 +1779,8 @@ Total.
 | test_lane_anchor.lua | 33 |
 | test_lane_visibility.lua | 30 |
 | test_lanes_page.lua | 25 |
-| test_probe.lua | 33 |
-| test_meter.lua | 37 |
+| test_probe.lua | 35 |
+| test_meter.lua | 50 |
 | test_format.lua | 25 |
 | test_fight.lua | 36 |
 | test_identity.lua | 47 |
@@ -1727,13 +1804,14 @@ Total.
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
-| test_countdown.lua | 23 |
+| test_countdown.lua | 43 |
+| test_callout_settings.lua | 12 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
-| test_hud_breakdown.lua | 11 |
+| test_hud_breakdown.lua | 16 |
 | test_hud_appearance.lua | 8 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
@@ -1754,9 +1832,10 @@ Total.
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
-| test_sim.lua | 5 |
+| test_sim.lua | 7 |
 | test_race_preview.lua | 8 |
-| test_sim_race.lua | 9 |
+| test_sim_race.lua | 14 |
+| test_showcase.lua | 12 |
 | test_bindings.lua | 14 |
 | test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
@@ -1770,4 +1849,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1444** |
+| **Total** | **1515** |

@@ -241,12 +241,14 @@ test("meter: ReadLive with no pet GUID returns pet=nil", function()
     end
 end)
 
-test("meter: ReadLive with a pet the meter has no source for returns pet=nil", function()
+test("meter: ReadLive with a pet the meter has no source for returns pet=nil (Retail)", function()
     local NS, meter = withPet()
+    if NS.Meter.FOLDS_PET then return end   -- WoW Forever splits it out of the player's rows (below)
     meter.SetSession(17, copy(FIGHT, { pet = false }))
     local live = NS.Meter.ReadLive()
     assertTrue(live.player ~= nil)
     assertNil(live.pet)
+    assertFalse(live.petDash, "Retail draws no dash for a pet with no source")
 end)
 
 test("meter: ReadLive reads the Current session, or one session by ID", function()
@@ -535,6 +537,203 @@ test("meter: a creature name still secret after combat seals the record read", f
     assertNil(r)
     assertEqual(err, "sealed")
     meter.SetSecret(false)
+end)
+
+-- ── the live folded split (callout plan row C7): WoW Forever's Pet figure in combat ─────────────────
+
+-- FOLDED with the player's rate: 360 over the rows' 280 + 16 + 23 + 33 + 0 + the rest.
+local FOLDED_RATE = copy(FOLDED, { dps = 360 })
+
+local function petMarks(live)
+    local out = {}
+    for i, sp in ipairs(live.player.spells) do out[i] = sp.isPet and "p" or "-" end
+    return table.concat(out)
+end
+
+test("meter: forever: plain live rows split the pet's figure out of the player's", function()
+    local NS, meter = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(31, FOLDED_RATE)
+    local live = NS.Meter.ReadLive()
+    assertTrue(live.pet ~= nil and live.pet.folded == true, "the folded split")
+    assertEqual(live.pet.total, 1700, "the pet's melee and its Bite")
+    assertEqual(live.pet.dps, 56, "their rates, 23 + 33")
+    assertEqual(live.player.total, 9000, "the main Damage is the player's part, as on Retail")
+    assertEqual(live.player.dps, 304, "and the main DPS, 360 - 56")
+    assertFalse(live.petDash)
+    assertEqual(petMarks(live), "--pp-", "the pet's rows marked where the meter put them")
+    assertEqual(#live.pet.spells, 0, "no array is built: the rows stay in the player's list")
+end)
+
+test("meter: forever: a secret live read leaves the merged figure and marks the Pet row's dash", function()
+    local NS, meter = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(32, FOLDED_RATE)
+    meter.SetSecret(true)
+    local live = NS.Meter.ReadLive()
+    assertNil(live.pet, "nothing summed: the pet's rows are secret")
+    assertTrue(live.petDash, "a pet is out: the HUD shows its row with a dash")
+    assertTrue(T.isSecret(live.player.total), "the player's total untouched")
+    assertEqual(T.reveal(live.player.total), 10700, "the merged figure")
+    assertEqual(petMarks(live), "-----", "no row marked")
+    meter.SetSecret(false)
+end)
+
+test("meter: forever: a plain total with no rate splits the damage and leaves both rates nil", function()
+    local NS, meter = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(33, copy(FOLDED, { dps = 360, sourceDps = false, rowDps = false }))
+    local live = NS.Meter.ReadLive()
+    assertEqual(live.pet and live.pet.total, 1700)
+    assertEqual(live.player.total, 9000)
+    assertNil(live.player.dps, "no merged rate beside a split damage")
+    assertNil(live.pet.dps)
+end)
+
+test("meter: forever: the cast set names a pet row live; Auto Attack stays the owner's by the set", function()
+    local NS, meter = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    local heard = { [17253] = true, [6603] = true }
+    NS.Casts = { IsPetSpell = function(id) return heard[id] == true end }
+    meter.SetSession(34, { damage = 10000, dps = 300, duration = 30, pet = false, spells = {
+        { id = 6603, dmg = 500, dps = 16 }, { id = 17253, dmg = 1000, dps = 33 }, { id = 11366, dmg = 8500, dps = 251 },
+    } })
+    local live = NS.Meter.ReadLive()
+    assertEqual(live.pet and live.pet.total, 1000, "the pet's Bite by the cast set")
+    assertEqual(live.player.total, 9000, "Auto Attack is the owner's")
+    assertEqual(petMarks(live), "-p-")
+    NS.Casts = nil
+end)
+
+test("meter: forever: a pet out with no rows of its own yet reads a plain 0", function()
+    local NS, meter = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(35, copy(FIGHT, { pet = false }))
+    local live = NS.Meter.ReadLive()
+    assertEqual(live.pet and live.pet.total, 0)
+    assertEqual(live.player.total, 9000, "the player's own")
+end)
+
+test("meter: no pet out and no pet rows: no Pet part and no dash, on either client", function()
+    local NS, meter = fresh()
+    meter.SetSession(36, copy(FIGHT, { pet = false }))
+    local live = NS.Meter.ReadLive()
+    assertNil(live.pet)
+    assertFalse(live.petDash)
+    assertFalse(live.petOut)
+    meter.SetSecret(true)
+    live = NS.Meter.ReadLive()
+    assertNil(live.pet)
+    assertFalse(live.petDash)
+    meter.SetSecret(false)
+end)
+
+-- The pet dies or is dismissed mid-fight (callout plan row C9): its rows stay in the player's source,
+-- so the split goes on with no pet out and the main figures stay the player's part.
+test("meter: forever: the pet gone mid-fight keeps the split, the Pet figure and no dash", function()
+    local NS, meter, inst = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(38, FOLDED_RATE)
+    local live = NS.Meter.ReadLive()
+    assertEqual(live.player.total, 9000, "split while the pet is out")
+    inst.mocks.__unitExists.pet = false
+    live = NS.Meter.ReadLive()
+    assertFalse(live.petOut, "no pet out now")
+    assertEqual(live.player.total, 9000, "the main Damage stays the player's part, not the merged 10700")
+    assertEqual(live.player.dps, 304)
+    assertEqual(live.pet and live.pet.total, 1700, "the Pet figure stays")
+    assertFalse(live.petDash)
+    assertEqual(petMarks(live), "--pp-")
+    -- A secret read with no pet out: the merged figure, no Pet row and no dash.
+    meter.SetSecret(true)
+    live = NS.Meter.ReadLive()
+    assertNil(live.pet)
+    assertFalse(live.petDash, "no dash with no pet out")
+    meter.SetSecret(false)
+end)
+
+test("meter: forever: the cast set still names the pet's rows once the pet is gone", function()
+    local NS, meter, inst = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    NS.Casts.Record("pet", 17253, 1, false)          -- the session's set: it outlives the pet
+    meter.SetSession(39, { damage = 10000, dps = 300, duration = 30, pet = false, spells = {
+        { id = 17253, dmg = 1000, dps = 33 }, { id = 11366, dmg = 9000, dps = 267 },
+    } })
+    inst.mocks.__unitExists.pet = false
+    local live = NS.Meter.ReadLive()
+    assertEqual(live.pet and live.pet.total, 1000, "the pet's Bite by the cast set, pet gone")
+    assertEqual(live.player.total, 9000)
+end)
+
+test("meter: forever: the slices' player series stays the player's part when the pet goes", function()
+    local NS, meter, inst = withPet()
+    if not NS.Meter.FOLDS_PET then return end
+    local S = NS.Slices
+    S.Reset()
+    meter.SetSession(40, FOLDED_RATE)
+    local fight = { id = "c9", startT = 0, sessionID = 40 }
+    S.Begin(fight.id)
+    S.OnTick(fight, 2)
+    inst.mocks.__unitExists.pet = false
+    S.OnTick(fight, 4)
+    local rec = S.Get(fight.id)
+    assertEqual(rec.count, 2)
+    assertEqual(rec.values[1], 9000, "pet out: the player's part")
+    assertEqual(rec.values[2], 9000, "pet gone: still the player's part, never the merged figure")
+    assertEqual(rec.pet[1], 1700)
+    assertEqual(rec.pet[2], 1700)
+    S.Reset()
+end)
+
+-- A row (or the list) the client will not let the addon read is skipped by the live part; a split
+-- summed over what is left would read a Pet figure too low, so it is refused (a dash).
+local function lockedFresh(lock)
+    local NS, meter, inst = fresh(function(m)
+        m.__unitExists.pet = true
+        m.canaccesstable = function(t) return not lock(t) end
+    end)
+    meter.SetPetGUID(PET)
+    return NS, meter, inst
+end
+
+test("meter: forever: an unreadable row refuses the split: a dash, the merged figure", function()
+    local NS, meter = lockedFresh(function(t) return rawget(t, "spellID") == 17253 end)
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(41, FOLDED_RATE)
+    local live = NS.Meter.ReadLive()
+    assertTrue(live.player.sealedRows, "the live part says a row was skipped")
+    assertNil(live.pet, "no Pet figure summed without the Bite")
+    assertTrue(live.petDash)
+    assertEqual(live.player.total, 10700, "the merged figure, untouched")
+end)
+
+test("meter: forever: an unreadable row list refuses the split rather than a confident Pet 0", function()
+    local NS, meter = lockedFresh(function(t) return type(rawget(t, 1)) == "table" end)
+    if not NS.Meter.FOLDS_PET then return end
+    meter.SetSession(42, FOLDED_RATE)
+    local live = NS.Meter.ReadLive()
+    assertTrue(live.player.sealedRows)
+    assertEqual(#live.player.spells, 0)
+    assertNil(live.pet, "not a Pet 0")
+    assertTrue(live.petDash)
+    assertEqual(live.player.total, 10700)
+end)
+
+test("meter: retail: the folded rows are never split live (the pet's own source is the figure)", function()
+    local NS, meter = withPet()
+    if NS.Meter.FOLDS_PET then return end
+    assertFalse(NS.Compat.IsForever())
+    meter.SetSession(37, FOLDED_RATE)
+    local live = NS.Meter.ReadLive()
+    assertNil(live.pet)
+    assertFalse(live.petDash)
+    assertEqual(live.player.total, 10700, "untouched")
+    assertEqual(petMarks(live), "-----")
+end)
+
+test("meter: FOLDS_PET is this client's: WoW Forever folds, Retail does not", function()
+    local NS = fresh()
+    assertEqual(NS.Meter.FOLDS_PET, NS.Compat.IsForever())
 end)
 
 test("meter: PET_SEPARATE=false path tags by cast set", function()

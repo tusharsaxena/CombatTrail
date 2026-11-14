@@ -20,7 +20,7 @@ Retail a fourth:
   `CombatTrailDB.global.fights`, read back by the Results window, the timeline, the compare and the
   gear view (spec §5, §7).
 - **Race mode (Retail).** DPS Race, retired as an addon and rebuilt here: a fight on a training dummy
-  timed against a set length, with its own Race window, countdown and buzzer, race boards and a
+  timed against a set length, with its own Race window, a spoken center countdown and buzzer, race boards and a
   `race` part on the fight record (the Race mode spec,
   [`superpowers/specs/2026-11-11-race-mode-design.md`](superpowers/specs/2026-11-11-race-mode-design.md),
   and its plan, [`superpowers/plans/2026-11-11-race-mode.md`](superpowers/plans/2026-11-11-race-mode.md),
@@ -28,7 +28,8 @@ Retail a fourth:
   `Race` rides the fight pipeline and `Recorder` saves it. The Race window's redesign, which makes the
   DPS HUD and the Race window one panel near a dummy, is
   [`superpowers/plans/2026-11-13-race-window-redesign.md`](superpowers/plans/2026-11-13-race-window-redesign.md)
-  (its rulings cited as "ruling On").
+  (its rulings cited as "ruling On"). The center countdown runs on LibKa0s-Callout-1.0; its adoption is
+  [`superpowers/plans/2026-11-13-callout-adoption.md`](superpowers/plans/2026-11-13-callout-adoption.md).
 
 Core, meter, HUD and Results code is adapted from DPS Race @045f479 with every race concept removed;
 Race mode then ports DPS Race @f8078c7's race layer back on top of it. The lanes are new code grown
@@ -53,20 +54,22 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Spec in Results (the column's second icon, the dropdown, the Spec grouping, the bests' board, the Share line) | the specialization | the predominant talent tree (most points, a tie to the first) stands in, worded "talent tree" (v0.2 plan A4, D5 and D11); none with no points or no talent API, so the class icon never shows twice |
 | The talent-tree section of `/ct probe` | absent | every talent API's answer and the tree picked |
 | Race mode's engine (`modules/Race.lua`: its bus receivers and `Race.Arm`; `modules/RaceWatchers.lua`: its events), gated with `NS.Compat.ForClient({ "retail" })` | present | absent: `Race.Arm` refuses (`"client"`), nothing registers; a saved race still lists and re-scores (`modules/LateIgnore.lua`, both clients) |
-| The Race mode page (`settings/Race.lua`: the page declared `clients = { "retail" }`, its rows registered on Retail only and each declared retail; the keys `race.enabled`, `autoShow`, `autoShowHud`, `autoArm`, `clock`, the countdown's and the buzzer's, and `raceWindow` built under `ForClient` in `defaults/Profile.lua`) | present | absent: no page, no row, no stored key |
+| The Race mode page (`settings/Race.lua`: the page declared `clients = { "retail" }`, its rows registered on Retail only and each declared retail; the keys `race.enabled`, `autoShow`, `autoShowHud`, `autoArm`, `clock`, the countdown's and the buzzer's and `raceWindow` built under `ForClient` in `defaults/Profile.lua`; the call-out's `callout.*` rows, the instance's `SchemaRows("callout.", { texts = false })` (no stock-text or mute row: the words are the addon's), registered and seeded into `profile.callout` by `settings/Race.lua` on Retail alone, drawn as the page's one Callout tab (a Preview block over the Look and Sound side tabs) by the library's settings section, and `callout.point` in the schema's `writeThrough` on Retail alone, schema.md) | present | absent: no page, no row, no stored key, no `callout` table |
 | The `/ct race` verb (`settings/Slash.lua`: the triple declared `clients = { "retail" }`, gated by the library and, degraded, by the stub and `NS.RunVerb`) | present | absent: not in the help, typing it is an unknown verb |
 | Auto-show and auto-arm (`modules/AutoArm.lua`: its bus receivers under `ForClient`, its events only while `NS.RaceMode.On()`): near a training dummy the Race window opens, and the DPS HUD with it (either `race.autoShow` or `race.autoShowHud` on: the Race window never stands without the HUD); a Race window the player opens while that dummy session is live is tied to it (`AutoArm.InSession`), so walking away closes it and the next session opens it again | present | absent: nothing registers, the HUD never opens for a dummy |
 | The Race window (`modules/RaceWindow.lua`, `RaceWindow_States.lua`, `RaceWindow_Best.lua`, `RaceWindow_Board.lua`: each returns at once off Retail, so `NS.RaceWindow` is nil): an extension of the DPS HUD, never on screen while the HUD is hidden (`RaceWindow.IsShown` asks `Hud.IsShown`, and every `Hud.Refresh` ends in `RaceWindow.FollowHud`), hiding with the HUD still wanted and back with it, its every open opening the HUD first, and the HUD never fading while a race holds it (race window redesign plan W29); docked flush beside the DPS HUD, at its height on the left or right (`raceWindow.matchHud`), and sized by its grip while unlocked (`raceWindow.width`, `raceWindow.height`); its screens carry no full pace bar (the HUD's is the race's) and draw stored records and the race clock, plus one live figure, the player's damage (*Current*) beside the best's on the running screen and in the Stop! and waiting screens' Checkpoints (the DPS HUD's last read, `Hud.LiveDamage`), as text and on two thin mini pace bars | present | absent: nothing loads, the toggle refuses |
 | The DPS HUD's Race button (the flag on its title bar, Open Iconic's `flag`, each header icon cropped and scaled to one size by `Style.FitControlArt`, between Results and Settings, gold only under the pointer like every title-bar control; `modules/Hud.lua` builds it under `ForClient`) | present while Race mode is on | absent: not built, the title bar keeps Results, Settings, Lock and Close |
 | The *Toggle Race window* key binding (`Bindings_Mainline.xml`, Retail's bindings file; the button `CombatTrailToggleRace`, its `NS.BINDINGS` row and its label built under `ForClient` in `core/LauncherSetup.lua`) | present, after *Toggle Results window* | absent: `Bindings.xml` keeps the three shared keys, no button, no row |
 | The race beat (`modules/RaceClock.lua`, returns at once off Retail): one AceTimer at `Hud.RefreshInterval()` (1 / `hud.refreshRate`, default 0.1 s) while a race runs or stops; each fire calls `Hud.OnRaceClock()` (one meter read and the HUD's whole redraw), then sends `RACE_CLOCK`, on which the Race window redraws from that same read; outside a race the HUD's own beat (`Hud.SyncBeat`) at the same rate | present | absent: the HUD is always on its own beat (`hud.refreshRate`, both clients) |
-| The race's countdown and buzzer (`modules/Countdown.lua`, returns at once off Retail) and its chat lines on the arm and at the result (`modules/Share.lua`'s receivers under `ForClient`) | present | absent: nothing loads or registers; a saved race still shares |
+| The race's countdown and buzzer (`modules/Countdown.lua`, returns at once off Retail) on the addon's one center call-out, `NS.Callout` (LibKa0s-Callout-1.0 through the `core/CalloutSetup.lua` seam, which loads on both clients and answers `NS.CalloutStub` without the library): the last `race.finalCountdown` seconds as big numbers counted to `RaceClock.EndsAt()`, the same endsAt the Race window's countdown reads, each new number running one race beat at once (`RaceClock.Kick`), the last five spoken in a shipped voice pack (eight, Arena John the default), STOP at the buzzer, FAILED as a race ends before its buzzer and NEW_BEST at a new best's result (callout plan row C9: `Countdown.EndWord` and `Countdown.ResultWord`, the one rule the samples ask too); every write the call-out makes (its settings, colors, the drag's point, Reset position) goes through `NS.SetByPath` under `callout.` (the library's host write route, Callout 4.5 since LibKa0s v1.102.0); and its chat lines on the arm and at the result (`modules/Share.lua`'s receivers under `ForClient`) | present | absent: nothing loads or registers, no `NS.Callout`; the seam's file loads and builds nothing; a saved race still shares |
 | The new-best toast (`modules/BestToast.lua`, History > New-best toast) | a fight's (`toast.fights`) and a race's (`toast.races`) | a fight's only: no `toast.races` key, row or receiver |
 | Races in the Results window (`modules/Results_Races.lua`, `Results_RaceDetail.lua`: the Fights / Races / All filter, the race filters, the race groupings, a race row's length and flag chips, the detail's Timing and Flags, the late-cast right-click, `/ct results races`; each asks `NS.ResultsRaces.On()`, `ForClient({ "retail" })`) | present, whether Race mode is on or off (the filter reads the record) | absent: a saved race lists as a fight, with its race DPS, score and time raced, and no race control |
 | The Insights tab (`modules/Results_Insights.lua`, `Results_InsightsData.lua`, `/ct results insights`): the cards, DPS Progression, the board tabs with Spec Comparison and Consistency, By Character, By Character x Content, Recent New Bests over every saved fight | present, plus the Fights / Races / All filter, Clean only and Include incomplete, the Clean races card, and under Races the race length and dummy kind filters and the race-only sections (Races By Character x Length, Late Casts, Races Per Day, Damage Tail After The Buzzer; ruling X12) | present with no race control: a saved race counts as a fight, with its race DPS |
 | The DPS HUD opening for a race whatever `hud.show`, `hud.instancesOnly` and `general.hudInCombat` say (ruling X7) | present | absent: there is no race |
 | Race mode's samples (`modules/MockRaces.lua`, `RaceSample.lua`, `SimRace.lua`: each returns at once off Retail): `/ct test race [armed\|running\|result]`, the sim's eight `race-` scenarios, and the `race` section of `/ct diagnostics` | present | absent: `test race` is plain `test`, the sim lists no race scenario, the report has no race section |
+| The samples' alerts (callout plan row C6): the new-best toast for a sim fight's new best (`toast.fights`), and on Retail the toast's preview on `/ct test race result` and a sim race's new best (`toast.races`), with the call-out's words a sample earns by a real race's rule (`Countdown.SampleSay` of `Countdown.EndWord` / `ResultWord`: NEW_BEST, FAILED; Race mode on), all taken down by the preview's stop and switch (`Countdown.EndSample`, `BestToast.EndSample`) | present | the sim fight's toast only: no call-out, no race |
 | Sample history (test mode and the sim) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
+| The DPS HUD's live Pet figure (`Meter.ReadLive`; `Meter.FOLDS_PET` is `NS.Compat.IsForever()`) | the pet's own meter source; no Pet row until that source has rows | the meter folds the pet into the player's source, so the figure is split out of the player's rows by the after-combat rule (a creature name, else the cast set) when every value it reads is plain, and the main Damage and DPS are then the player's part, as on Retail; with any of them secret the Pet row shows a dash and the main figures stay merged; the row is up whenever a pet is out (callout plan row C7) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
 Race mode has no launcher entry: LibKa0s-Launcher's menu is fixed (launcher-§2), so the minimap menu
@@ -99,6 +102,19 @@ macro too.
   displays a value itself: its anchor (`GetPoint`) and its edges (`GetLeft`, `GetTop`, `GetBottom`,
   for the grow edge, v0.2 Task B3) are read after a drag, each only as a plain number, and the grip's
   sizes are the ones `OnSizeChanged` hands the shell.
+- The live folded pet split (WoW Forever, `Meter.ReadLive`'s `liveFolded`, callout plan row C7) is the
+  one live read that does arithmetic, and only on values `NS.Secrets` proved plain first: each row's
+  `creatureName` (`IsSealed`, then `NamesCreature`), the spell ID the cast set is asked of
+  (`PlainNumber`), every pet row's amount and rate and the player's total and rate. One value that is
+  not plain, or a row (or the row list) the live part had to skip (its plain `sealedRows` flag), ends
+  it before any number is touched: the pet part stays nil, the player's part stays the merged opaque
+  figure and, with a pet out, the plain flag `petDash` puts the Pet row up with a dash. The split
+  does not ask whether a pet is out (callout row C9): a pet that dies mid-fight leaves its rows in
+  the player's source, so the main figures and the slices' player series stay the player's part for
+  the whole fight. Split, the
+  player's part is the total less the pet's, so `live.pet` is set exactly when `live.player` is the
+  player's alone, which is what the pace bar's `playerOnly` (`HudBest.LiveView`) and the Race
+  window's `Hud.LiveDamage` read.
 - The Race window's one live figure, the player's damage beside Best by now and in each Checkpoint
   (Retail), is the DPS HUD's last read handed in (`Hud.LiveDamage`, no second meter read). It reaches
   two C-side sinks: a label through `NS.Format.Number`, and the mini pace bars'
@@ -107,6 +123,14 @@ macro too.
   is one. A checkpoint's reading is held in memory for that race alone; no region is anchored to a
   label or a bar that may hold a secret, and each bar stands on a plain frame (the body's content, a
   checkpoint's cell).
+- The center call-out (Retail, `modules/Countdown.lua` on LibKa0s-Callout-1.0) never carries a figure:
+  it is handed a `GetTime()` endsAt, a window of whole seconds and stock keys (`STOP`, `NEW_BEST`
+  and `FAILED`, for a real race and a sample alike), so what it shows and says is a number of
+  seconds or a stock word, never a meter value. FAILED reads the race part's plain `endedAt`;
+  whether a race earns NEW_BEST is decided on plain stored records (`BestToast.Earns`, the sample
+  history's for a sample). It says the library's stock words in its own voice: no per-word text or
+  mute is stored (callout plan row C11). Its settings are plain schema rows
+  (`callout.*`), written through `NS.SetByPath` like every other row.
 
 ## Module Map
 
@@ -115,7 +139,7 @@ Load order is the TOC's: libraries, the locale, `core/` in dependency order, `de
 scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
-  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
+  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, CalloutSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
   LauncherSetup, CombatTrail, Database.
 - **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race, enUS_Insights.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
@@ -123,7 +147,8 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
 - **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, RaceClock, AutoArm, RaceVerb.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
-- **Race window (Retail):** RaceWindow_Best, RaceWindow_Board, RaceWindow_States, RaceWindow, Countdown; and BestToast (the
+- **Race window (Retail):** RaceWindow_Best, RaceWindow_Board, RaceWindow_States, RaceWindow, Countdown (the center call-out,
+  through the CalloutSetup seam); and BestToast (the
   new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Races, Results_Loadout,
   Results_Usage, Results_Targets, Results_RaceDetail, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
@@ -189,6 +214,11 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
 - **Auto-show and auto-arm (AutoArm, Retail only, Race mode on):** with either rule on,
   `PLAYER_TARGET_CHANGED` and `PLAYER_ENTERING_WORLD`; with auto-show on, `NAME_PLATE_UNIT_ADDED` and
   `_REMOVED` too; both off, Race mode off or stood down, nothing.
+- **The countdown (Countdown, Retail only):** no game events. It hears `RACE_STATE_CHANGED` (out of
+  running with no buzzer: FAILED), `RACE_BUZZER`, `RACE_RESULT` (a new best: NEW_BEST) and
+  `SETTINGS_CHANGED`; while a race runs, one AceTimer waits until a second before
+  the countdown's window, and the call-out's own OnUpdate runs from then to the buzzer and through
+  STOP's hold, never longer. The stand-down cancels the timer and suspends the call-out.
 - **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges.
 - **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
   `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an
@@ -224,10 +254,12 @@ itself. The pipeline from event to screen is [`data-flow.md`](data-flow.md).
 ## Known Limitations
 
 The in-combat chart is session-only, the HUD has no live percentage or delta, the pet split rests on
-the meter exposing the pet as its own source, and a set of client behaviors still waits for the
+the meter exposing the pet as its own source (on WoW Forever, where it does not, the live Pet figure
+is a dash whenever the meter's values are secret in combat), and a set of client behaviors still waits for the
 owner's in-game checks. Race mode reads on Combat Trail's settle, scores the pet's damage with the
 player's, ends a race at the first combat end before the buzzer, and resumes after a `/reload` without
-the casts or chart from before it. The full list is [`known-limitations.md`](known-limitations.md); the checks
+the casts or chart from before it. The center call-out's eight voice packs, its one settings tab and its glow wait for
+an in-game check. The full list is [`known-limitations.md`](known-limitations.md); the checks
 are in [`smoke-tests.md`](smoke-tests.md).
 
 ## Documentation map

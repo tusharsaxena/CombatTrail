@@ -3,7 +3,7 @@ local _, NS = ...
 -- the Race window (modules/RaceWindow.lua) and the countdown (modules/Countdown.lua) read while test
 -- mode holds a sample race (`/ct test race [armed|running|result]`, modules/Preview.lua) or the sim
 -- plays a race scenario (modules/SimRace.lua). Ported from DPS Race @f8078c7 (modules/SampleRace.lua):
--- it answers Race's query surface (State, Current, Fight, Result, Elapsed, TimeLeft, SinceBuzzer,
+-- it answers Race's query surface (State, Current, Fight, Result, Elapsed, EndsAt, TimeLeft, SinceBuzzer,
 -- LastDamage, StopRequested, DefaultLength) so every body is drawn by one path.
 --
 -- IT NEVER MOVES NS.Race, AND NOTHING OF IT REACHES THE BUS. Combat Trail's rule for a sample (modules/
@@ -96,9 +96,18 @@ function RS.Elapsed()
     return GetTime() - held.startedAt
 end
 
+--- The buzzer's moment on the GetTime() clock while the live sample runs (Race.EndsAt's), else nil:
+--- a held sample (test mode) stands still, so it has none.
+function RS.EndsAt()
+    if not (held and held.live and held.startedAt) or held.state ~= STATE().RUNNING then return nil end
+    return held.startedAt + held.race.length
+end
+
 function RS.TimeLeft()
     if not moving() then return nil end
     if held.state == STATE().STOPPING then return 0 end
+    local endsAt = RS.EndsAt()
+    if endsAt then return math.max(0, endsAt - GetTime()) end
     local elapsed = RS.Elapsed()
     if not elapsed then return nil end
     return math.max(0, held.race.length - elapsed)

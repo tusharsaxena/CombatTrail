@@ -52,12 +52,14 @@ end
 -- both clients, as a saved race re-scores there too. The switch (Race mode on, which stops new races
 -- only), auto-show near a dummy (on), the DPS HUD opening with it (on, race window redesign ruling
 -- O4) and auto-arm on targeting one (off), the race clock's mode ("left", one countdown, by ruling O2;
--- "both" or "elapsed"), the countdown's cue, its center numbers and where they start (s), and the
--- buzzer's raid warning (DPS Race's defaults; modules/Countdown.lua reads the last four).
+-- "both" or "elapsed"), the countdown's center numbers and where they start (s), and the buzzer's
+-- STOP (DPS Race's defaults; modules/Countdown.lua reads the last three). The countdown's cue sound
+-- (`countdownCue`) is retired with no migration (callout plan row C2: the call-out's voice speaks the
+-- numbers): AceDB stores only differences, and nothing reads a stored one.
 local function raceMode(r)
     if NS.Compat.ForClient({ "retail" }) then
         r.enabled, r.autoShow, r.autoShowHud, r.autoArm, r.clock = true, true, true, false, "left"
-        r.countdownCue, r.centerCountdown, r.finalCountdown, r.buzzer = true, true, 10, true
+        r.centerCountdown, r.finalCountdown, r.buzzer = true, 10, true
     end
     return r
 end
@@ -281,6 +283,10 @@ NS.defaults = {
         raceWindow = NS.Compat.ForClient({ "retail" }) and { attached = true, side = "RIGHT", matchHud = true,
             width = 260, height = 0,
             position = { point = "CENTER", relPoint = "CENTER", x = 0, y = 160 } } or nil,
+        -- No `callout` key is written here: the race call-out's look, voice and words are schema rows
+        -- (LibKa0s-Callout-1.0's SchemaRows), and settings/Race.lua seeds `callout` from those rows
+        -- (and `callout.point` from the instance's default place) before AceDB:New, on Retail only
+        -- (architecture-§5: the schema drives the defaults; callout plan row C5).
         -- The new-best toast (modules/BestToast.lua, race plan Task C2; History > New-best toast): a
         -- fight's new best toasts on both clients (`fights`), a race's on Retail only (`races`, ABSENT
         -- on WoW Forever, clients-§4); how long it stays (s), its sound (on, and which: "Default" is

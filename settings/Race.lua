@@ -3,8 +3,9 @@ local _, NS = ...
 -- strip order. Race holds the switch first (`race.enabled`: off stops new races, NS.RaceMode.On()),
 -- then DPS Race's Race section in the order of a race: the length a race arms at, auto-show (and the
 -- DPS HUD opening with it, drawn disabled while auto-show is off: disabledIf) and auto-arm near a
--- training dummy (modules/AutoArm.lua), the race clock's mode, the countdown, the
--- buzzer with the sticky-combat hint's delay, and the scoring rules a new race freezes into its part
+-- training dummy (modules/AutoArm.lua), the race clock's mode, the countdown (when the call-out
+-- counts, and from what second; its look and voice are the call-out's own settings), the
+-- buzzer's STOP with the sticky-combat hint's delay, and the scoring rules a new race freezes into its part
 -- (grace, restart gap). Late-cast ignore list holds the list (modules/LateIgnore.lua), read when a
 -- race's flags are, drawn as the library's spell ID list. Race window holds where the window stands:
 -- attached beside the DPS HUD, and on which side (Task C1 reads both), and whether, on the left or
@@ -23,12 +24,27 @@ local _, NS = ...
 -- the scoring rules, the late-cast list) keep their defaults there, as a saved race re-scores on any
 -- client (defaults/Profile.lua).
 --
+-- THE CALL-OUT'S TAB (callout plan rows C5, C11): one "Callout" tab after the Race tab,
+-- LibKa0s-Callout-1.0's own settings section, drawn by its SettingsTab (a Preview block over the
+-- Look and Sound side tabs, BuildSettings' `layout = "side"`) with this addon's Options instance
+-- (NS.Helpers) on the host's write route. Its rows are the instance's SchemaRows("callout.",
+-- { texts = false }), registered here as this page's rows (so `/ct get|set|list|reset`, the page's
+-- Defaults, the global reset and the boot check all reach them), each declared retail like every
+-- row here, and skipRender: the section draws its own copy of each, by the same path, read and
+-- written through the Options descriptor, so through NS.SetByPath. Every row's group is the one
+-- tab's key (`callout`), so the tab takes the group's place in the strip. `texts = false` leaves
+-- out the stock texts' words and mutes (owner, 2026-11-14): the words the call-out says are the
+-- addon's, so no row, and the seam refuses `callout.texts.*` and `callout.muted.*`. Their AceDB
+-- defaults are seeded from the rows, before AceDB:New (the library's docs/api/Callout version 4.5,
+-- Adopting it), and the drag's `callout.point` from the instance's default place; that path is the
+-- schema's writeThrough (settings/Schema.lua).
+--
 -- WRITES: every row writes through the seam (NS.SetByPath). The race reads its keys at call time and
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
 -- one armed (Race.ForgetLength); auto-show, its DPS HUD row, auto-arm and the switch re-sync AutoArm,
 -- and the switch going off (or a profile that has it off) cancels a race still armed.
--- The countdown re-arms a race's marks off its rows' SETTINGS_CHANGED and the buzzer reads its row as
--- it sounds (modules/Countdown.lua); the Race window reads its keys off SETTINGS_CHANGED (Task C1).
+-- The countdown re-arms the race's call-out off its rows' SETTINGS_CHANGED and the buzzer reads its row
+-- as it says STOP (modules/Countdown.lua); the Race window reads its keys off SETTINGS_CHANGED (Task C1).
 
 local L = NS.L
 local PAGE = "race"
@@ -137,17 +153,15 @@ row("race.clock", { type = "string", label = L["Race clock"], values = CLOCKS, v
     tooltip = L["What the Race window's clock shows while a race runs: the time elapsed and the time left side by side, or one of them alone, drawn larger."] })
 
 at(TAB.race, L["Countdown"])
-row("race.countdownCue", { type = "bool", label = L["Countdown cue sound"], startsLine = true,
-    tooltip = L["A sound at 10, 5, 3, 2 and 1 seconds left, and with each number of the center countdown. Takes effect at once, in the race in progress too."] })
 row("race.centerCountdown", { type = "bool", label = L["Center-screen countdown"], startsLine = true,
     tooltip = L["Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."] })
-row("race.finalCountdown", { type = "number", label = L["Center countdown from (seconds)"], min = 3, max = 10, step = 1,
-    validate = within(3, 10, 1),
-    tooltip = L["How many seconds before the buzzer the center countdown starts. 3 to 10."] })
+row("race.finalCountdown", { type = "number", label = L["Center countdown from (seconds)"],
+    min = NS.Countdown.MIN, max = NS.Countdown.MAX, step = 1, validate = within(NS.Countdown.MIN, NS.Countdown.MAX, 1),
+    tooltip = L["How many seconds before the buzzer the center countdown starts. 3 to 20. Numbers above the call-out's Speak numbers from are shown, not said."] })
 
 at(TAB.race, L["At the buzzer"])
-row("race.buzzer", { type = "bool", label = L["Buzzer raid warning and sound"], startsLine = true,
-    tooltip = L["A raid warning that says STOP, with a sound, the moment the race ends."] })
+row("race.buzzer", { type = "bool", label = L["STOP at the buzzer"], startsLine = true,
+    tooltip = L["The call-out in the middle of the screen says STOP, in its voice, the moment the race ends."] })
 row("race.hintDelay", { type = "number", label = L["Sticky-combat hint after (seconds)"], min = 5, max = 60, step = 1,
     validate = within(5, 60, 1),
     tooltip = L["How long combat may hold after the buzzer before the Race window suggests ways to drop it. 5 to 60 seconds."] })
@@ -159,6 +173,29 @@ row("race.grace", { type = "number", label = L["Late-cast grace (seconds)"], min
 row("race.restartGap", { type = "number", label = L["Damage-restart gap (seconds)"], min = 3, max = 15, step = 1,
     validate = within(3, 15, 1),
     tooltip = L["Your damage going quiet for this long after the buzzer, then landing again, flags the race as damage restarted. 3 to 15 seconds. Applies to new races. Saved races keep the value they were raced with."] })
+
+-- The call-out's tab (THE CALL-OUT'S TAB, above), in the library's own words ("Callout").
+local CALLOUT_TAB = "callout"
+
+local function copyOf(v)
+    if type(v) ~= "table" then return v end
+    local t = {}
+    for k, x in pairs(v) do t[k] = copyOf(x) end
+    return t
+end
+
+do
+    local prefix = NS.Countdown.PREFIX
+    local rows, named = NS.Callout:SchemaRows(prefix, { page = PAGE, texts = false })
+    local Write = NS.__schemaLib.Write
+    for _, r in ipairs(rows) do
+        r.clients, r.skipRender = RETAIL, true
+        r.group = CALLOUT_TAB
+        if not r.sessionOnly then Write(D, r.path, copyOf(r.default)) end
+        out[#out + 1] = r
+    end
+    if named[1] then Write(D, named[1], copyOf(NS.Callout:Get("point"))) end
+end
 
 -- Late-cast ignore list: one plain string of spell IDs written WHOLE through the seam (the Usage tab's
 -- hidden items' shape, settings/History.lua), so the CLI and the page's Defaults reach it like any row.
@@ -245,9 +282,10 @@ NS.RegisterTabbedPage({
     title           = L["Race mode"],
     panelName       = "CombatTrailRacePanel",
     clients         = RETAIL,
-    defaultsTooltip = L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list among them. Saved races are not touched."],
+    defaultsTooltip = L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look and voice among them. Saved races are not touched."],
     afterGroup      = { [TAB.late] = afterLate },
     beforeGroup     = { [TAB.race] = beforeRace },
+    tabs            = { NS.Callout:SettingsTab({ options = NS.Helpers, key = CALLOUT_TAB, prefix = NS.Countdown.PREFIX }) },
 })
 
 -- The ignore list repaints when it changes from anywhere (`/ct race ignore`, `/ct set`, a right-click)
