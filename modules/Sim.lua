@@ -204,7 +204,7 @@ local function launch(key)
 end
 
 -- ── the stepper ─────────────────────────────────────────────────────────────────────────────────
--- LibKa0s-Sim-1.0's step window beside the HUD. The fight plays on its own clock, in real time:
+-- LibKa0s-Sim-1.0's step window beside the HUD (beside the Race window while that is up). The fight plays on its own clock, in real time:
 -- Combat starts releases the parked fight; Fighting does not jump, and the gate (Sim.Gate) holds every
 -- later step until the fight has got there; after Combat ends it holds until the final read, and
 -- after Fight-over card until the card has shown for RESULT_HOLD. The session fakes no client answer
@@ -282,6 +282,16 @@ local function prepare(_, _, opts, ready)
     ready()
 end
 
+-- What the sim window docks beside (callout plan row C12): the Race window while it is on screen
+-- (Retail, the race scenarios: it stands beside the DPS HUD, where the panel would cover it), the DPS
+-- HUD otherwise. The library docks right of it, left when the right has no room, or floats; a point
+-- the player dragged this session wins over both.
+local function dockFrame()
+    local RW = NS.RaceWindow
+    if RW and RW.Visible() then return RW.Frame() end
+    return NS.Hud.Frame()
+end
+
 local function newSession()
     local lib = NS.SimLib
     if not (lib and lib.New) then return nil end
@@ -306,7 +316,7 @@ local function newSession()
         print = function(line) if not quiet then NS.Print(line) end end,
         panel = {
             title = function() return L["Combat Trail - SIM"] end,
-            anchorTo = function() return NS.Hud.Frame() end,
+            anchorTo = dockFrame,
         },
     })
 end
@@ -365,6 +375,14 @@ if Sim.session then
         hide(...)
         if was and not session:IsPanelShown() then repaintSettings() end
     end
+end
+
+--- Dock a shown sim window again, beside what dockFrame answers now: the Race window's show and hide
+--- call it (modules/RaceWindow.lua). A hidden window stays hidden, and a dragged point holds (the
+--- library's ShowPanel places it at that point).
+function Sim.Redock()
+    local session = Sim.session
+    if session and session:IsPanelShown() then session:ShowPanel() end
 end
 
 local function stopSession(reason)

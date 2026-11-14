@@ -11,7 +11,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
-| (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15; the sim window beside the Race window: SM-CT-M4) | |
 
 ## How to run it
 
@@ -209,7 +209,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-M1 | Both | `/ct test` | Sample casts loop on the lanes, the HUD holds a sample fight, the Results window shows the sample history, each under its strip |
 | SM-CT-M2 | Both | Enter combat in test mode | Test mode ends; nothing was saved |
 | SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays 15 s in real time (*Fighting (15 s)*); the card says New best and Saved, then Not saved: shorter than 30 s (15 s on Forever, the minimum length's default), then Not saved for the lost fight. The `race-` scenarios are Retail's (SM-CT-RM42) |
-| SM-CT-M4 | Both | `/ct sim` step window | Anchored beside the HUD |
+| SM-CT-M4 | Both | `/ct sim` step window; on Retail, `/ct sim race-newbest` until the *Armed* step shows the Race window, then close the Race window with the sim still on | Anchored beside the HUD (right of it, left when the right has no room). On Retail, while the Race window is up the step window stands beside the Race window, never over it, and closing the Race window moves it back beside the HUD. A step window dragged this session stays where it was put |
 | SM-CT-M5 | Forever | The WoW Forever mock spell and item IDs | Every sample icon draws |
 | SM-CT-M6 | Both | `/ct test` on two different characters (another class, another realm); read the HUD and the Results window | The same showcase on both: Samplehunter and Mockarrow on Samplerealm, the same fights and figures. The HUD at 0:25: Damage and DPS each with the Pet figure under it, DPS the damage over 0:25 (2.71M at 108.4K on Retail), the spell rows adding up to the damage, the pet's rows marked with the paw and named Grimfang in the right column, cooldown marks on the chart against the best's pace, the pace bar ahead of the best. `/ct test` shows no toast and no call-out |
 | SM-CT-M7 | Both | History → *Toast a fight's new best* on; `/ct sim newbest`, then `behind`; then `/ct sim newbest` and stop the sim while its toast is up | The new best's card is joined by the new-best toast and, on Retail with Race mode on, the call-out's NEW BEST; behind shows neither; stopping the sim takes the toast and the call-out down at once. Nothing is saved, and the History list and the HUD's real bests are unchanged |

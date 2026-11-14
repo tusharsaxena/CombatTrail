@@ -315,6 +315,104 @@ test("sim race: the eight follow the fight scenarios; Race mode off refuses them
     NS.Preview.Stop()
 end)
 
+-- A fresh instance whose sim window (LibKa0s-Sim-1.0's step panel, `CombatTrailSimPanel`, which the
+-- library publishes no handle for) is a global, as in the client, and records its points: the kit's
+-- base frame keeps none (its SetPoint stores nothing and its GetPoint answers the frame).
+local PANEL = "CombatTrailSimPanel"
+local function named()
+    local S = F.fresh({ mutate = function(m)
+        installPaint(m)
+        local create = m.CreateFrame
+        m.CreateFrame = function(kind, name, ...)
+            local f = create(kind, name, ...)
+            if name ~= PANEL or type(f) ~= "table" then return f end
+            local points = {}
+            rawset(f, "SetPoint", function(_, ...) points[#points + 1] = { ... } end)
+            rawset(f, "ClearAllPoints", function() points = {} end)
+            rawset(f, "GetPoint", function(_, i) return unpack(points[i or 1] or {}) end)
+            m[name] = f
+            return f
+        end
+    end })
+    assert(S.NS.SetByPath("race.autoShow", false))
+    S.NS.RaceWindow.HideAwayFromDummy()
+    S.M.__now = 1000
+    return S
+end
+
+-- The sim window's first point: what it stands on, while shown.
+local function panelDock(S)
+    local f = S.M[PANEL]
+    if type(f) ~= "table" or not S.NS.Sim.session:IsPanelShown() then return nil end
+    local point, rel, relPoint = f:GetPoint(1)
+    return point, rel, relPoint
+end
+
+test("sim race: the sim window docks right of the HUD in a fight scenario (characterization)", function()
+    if forever() then return end
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.Sim.Open("newbest"), "the session starts, its panel shown")
+    assertFalse(NS.RaceWindow.Visible(), "no Race window in a fight scenario")
+    local point, rel, relPoint = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel ~= nil and rel == NS.Hud.Frame(), "on the DPS HUD")
+    assertEqual(relPoint, "TOPRIGHT")
+    NS.Preview.Stop()
+end)
+
+test("sim race: with the Race window up the sim window docks beside it, then back beside the HUD", function()
+    if forever() then return end
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.Sim.Open("race-newbest"), "the session starts, its panel shown")
+    assertTrue(NS.RaceWindow.Visible(), "the race scenario shows the Race window")
+    local rw = NS.RaceWindow.Frame()
+    assertTrue(rw ~= nil and rw == NS.RaceWindow.__ui().frame, "the accessor answers the built frame")
+    local point, rel, relPoint = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel == rw, "right of the Race window, not over it")
+    assertEqual(relPoint, "TOPRIGHT")
+    -- The Race window goes away mid-sim: the shown panel goes back beside the HUD.
+    NS.RaceWindow.Hide(true)
+    assertFalse(NS.RaceWindow.Visible())
+    point, rel = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel ~= nil and rel == NS.Hud.Frame(), "back on the DPS HUD")
+    -- It comes back: beside it again.
+    NS.RaceWindow.ShowSample()
+    assertTrue(NS.RaceWindow.Visible())
+    point, rel = panelDock(S)
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel == rw, "beside the Race window again")
+    NS.Preview.Stop()
+end)
+
+test("sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one", function()
+    if forever() then return end
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.Sim.Open("race-newbest"))
+    local session = NS.Sim.session
+    session:HidePanel()
+    NS.RaceWindow.Hide(true)
+    NS.RaceWindow.ShowSample()
+    assertFalse(session:IsPanelShown(), "a hidden sim window stays hidden")
+    session:ShowPanel()
+    local f = S.M[PANEL]
+    f:ClearAllPoints()
+    f:SetPoint("CENTER", S.M.UIParent, "CENTER", 40, 25)
+    f:__fire("OnDragStop")
+    NS.RaceWindow.Hide(true)
+    local point, rel, _, x, y = f:GetPoint(1)
+    assertEqual(point, "CENTER", "the dragged point holds")
+    assertTrue(rel == S.M.UIParent)
+    assertEqual(x, 40)
+    assertEqual(y, 25)
+    session:ResetPanelPosition()
+    NS.Preview.Stop()
+end)
+
 test("sim race: WoW Forever has no race scenario", function()
     if not forever() then return end
     local NS = T.load().NS

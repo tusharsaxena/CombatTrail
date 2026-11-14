@@ -774,6 +774,14 @@ local function syncEvents()
     for _, event in ipairs(IDLE_EVENTS) do NS.SafeRegisterEvent(events, event, onEvent, NS.rejectedEvents) end
 end
 
+-- The sim window (`/ct sim`'s step panel, modules/Sim.lua) docks beside this window while it is up
+-- and beside the DPS HUD otherwise, so each show and hide of the frame docks a shown one again.
+-- modules/Sim.lua loads after this file, so it is reached at call time.
+local function redockSim()
+    local Sim = NS.Sim
+    if Sim and Sim.Redock then Sim.Redock() end
+end
+
 local function hideWindow()
     if windowShown() then
         hiding = true
@@ -790,6 +798,7 @@ function onHide()
     wanted, autoShown, dummyShown = false, false, false
     closes = closes + 1
     syncEvents()
+    redockSim()
     if src().State() == S().RESULT and not isDown() then src().Cancel() end
 end
 
@@ -803,6 +812,9 @@ end
 
 --- Whether the frame is on screen now (the HUD's Escape reads it).
 function RW.Visible() return windowShown() end
+
+--- The window's frame, or nil before its first show builds it (the sim window docks beside it).
+function RW.Frame() return ui and ui.frame or nil end
 
 --- The DPS HUD's Refresh tells this window it may have hidden or come back (modules/Hud.lua): the
 --- frame re-decides only when it disagrees with the decision, so the HUD's frequent refreshes cost a
@@ -824,6 +836,7 @@ end
 --- Re-decide and redraw. The one place the frame follows the decision.
 function RW.Refresh()
     locked = setting("general.locked") == true
+    local was = windowShown()
     if not RW.IsShown() then
         hideWindow()
     else
@@ -833,6 +846,7 @@ function RW.Refresh()
         if not windowShown() then ui.frame:Show() end
     end
     syncEvents()
+    if windowShown() ~= was then redockSim() end
 end
 
 --- Draw again now (the body on screen, with the window's place and look).

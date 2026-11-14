@@ -105,7 +105,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked, and `Best.Figure`, the labeled Damage and DPS pair on one row that Best to beat and Best by now share (Race mode, Retail) |
 | `modules/RaceWindow_Board.lua` | The race board's figures the Race window draws: Best by now and the Checkpoints (the best's straight line, the player's figure as *Current* and their mini pace bars), Against your best and Top races on one column grid, `Board.Spread` (the result card's rows and gaps in a taller window) and `Board.ClockColor` (the countdown's and the time bar's green to amber to red) (Race mode, Retail) |
 | `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card, and the layouts that stretch them to the window's size: `States.ResultLayout`, `States.IdleLayout`, `States.RunningGap` (Race mode, Retail) |
-| `modules/RaceWindow.lua` | The Race window's shell: flush beside the DPS HUD (at its height on the left or right) or on its own, its size and resize grip, when it shows, the view and the acts (Race mode, Retail) |
+| `modules/RaceWindow.lua` | The Race window's shell: flush beside the DPS HUD (at its height on the left or right) or on its own, its size and resize grip, when it shows, the view and the acts; `RaceWindow.Frame`, the frame the sim window docks beside while it is up, and each show and hide docking a shown sim window again (`Sim.Redock`) (Race mode, Retail) |
 | `modules/Countdown.lua` | A race's final seconds on the addon's one call-out (`NS.Callout`, its every write through `NS.SetByPath`): the center numbers counted to the race's endsAt, spoken, and STOP at the buzzer (Race mode, Retail) |
 | `modules/BestToast.lua` | The new-best toast: a race's (Retail) or a fight's (both clients) new best on its board |
 | `modules/Sizing.lua` | The one smooth-resize pattern every resizable window uses |
@@ -134,7 +134,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceSample.lua` | The sample race: the stand-in for `NS.Race` the Race window and the countdown read in test mode and the sim (Retail only, Race mode plan E1) |
 | `modules/Preview.lua` | Test mode and the sim's shared shell; `/ct test race` |
 | `modules/SimRace.lua` | The sim's eight race scenarios: their script, steps and gate (Retail only, Race mode plan E1) |
-| `modules/Sim.lua` | `/ct sim`: a made-up fight in real time, its scenarios and its step session |
+| `modules/Sim.lua` | `/ct sim`: a made-up fight in real time, its scenarios and its step session, whose window docks beside the DPS HUD, or beside the Race window while that is up (`Sim.Redock`) |
 | `modules/Diagnostics.lua` | This addon's sections of `/ct diagnostics` |
 | `settings/Schema.lua` | The schema array and the one write seam |
 | `settings/Slash.lua` | `NS.COMMANDS` and the slash descriptor |

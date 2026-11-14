@@ -74,6 +74,10 @@ A fight scenario plays 15 s in real time (`Sim.LENGTH`; its step window reads *F
 Retail's 30 s minimum length, so `newbest`, `behind`, `first` and `lost` are exempt from the minimum
 and judged by the rest of the recording filters; `short` has its own 10 s and is judged by the
 player's own minimum, so its card reads *Not saved: shorter than N s* (callout plan row C10).
+The step window docks right of the DPS HUD, or left of it when the right has no room; on Retail,
+while the Race window is on screen (a race scenario's *Armed* step on), it docks beside the Race
+window instead, and the Race window's show and hide dock a shown step window again
+(`Sim.Redock`; a hidden one stays hidden, a point dragged this session holds; callout plan row C12).
 
 Both verbs draw one fixed showcase (modules/MockFights.lua, modules/MockRaces.lua), the same on every
 character, and the alerts a scenario earns (callout plan row C6). Bare `/ct test` stays the HUD's,
