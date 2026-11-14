@@ -68,7 +68,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-L5 | Both | Hover and right-click the minimap button | Status tooltip; menu with Enabled, Locked, Test mode, Sim mode, Show window |
 | SM-CT-L6 | Both | The three bindings (Toggle DPS HUD, Toggle Results window, Toggle lanes) pressed in game | Each toggles its target; the lanes key brings back exactly the lanes it turned off |
 | SM-CT-L7 | Both | The bindings under Options → Keybindings → Ka0s Combat Trail and General → Keybindings | The same keys in both places |
-| SM-CT-L8 | Both | The first login on v0.2 over a v0.1 SavedVariables with stored fights | No Lua error; Results is empty, `/ct diag` reads `schema stored=2 code=2 fightFormat=4`; the hidden items and the minimap button are kept |
+| SM-CT-L8 | Both | The first login on v0.2 over a v0.1 SavedVariables with stored fights | No Lua error; Results is empty, `/ct diag` reads `schema stored=3 code=3 fightFormat=4`; the hidden items and the minimap button are kept |
 | SM-CT-L9 | Both | Lanes → pick Pet lane → tick Link to Player lane; change the Player lane's icon size, border color and Visibility; then Copy from Player lane | The Pet lane takes each change at once and keeps its place and label; its tabs show only Size and position's place rows and the label text, with the note on General; Copy from unticks the link and the two drift apart from there |
 
 ## 2. Lanes

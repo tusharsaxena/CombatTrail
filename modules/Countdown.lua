@@ -39,8 +39,8 @@ local _, NS = ...
 -- it earns, by ONE rule for a real race and a sample alike: FAILED as it ends before its buzzer
 -- (Countdown.EndWord: combat dropped or the player died, the race's plain `endedAt`), NEW_BEST at its
 -- read when it is complete and a new best (Countdown.ResultWord: the toast's rule, BestToast.Earns,
--- whether or not the toast is on). Only those stock keys (the call-out applies their per-word mute
--- and custom text), only with Race mode on. A real race's words come off the bus (RACE_STATE_CHANGED
+-- whether or not the toast is on). Only those stock keys, in the call-out's own words and voice (no
+-- per-word text or mute: the addon's, callout plan row C11), only with Race mode on. A real race's words come off the bus (RACE_STATE_CHANGED
 -- leaving running, RACE_RESULT) through Countdown.RaceSay; test mode's held race and the sim, which
 -- send nothing on the bus, ask the same rule and say it through Countdown.SampleSay.
 -- Countdown.EndSample is the samples' cleanup (the preview's stop and switch, modules/Preview.lua):

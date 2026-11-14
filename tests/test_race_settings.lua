@@ -151,7 +151,7 @@ test("race mode: the stored paths, types, defaults and ranges are the pinned set
     assertTrue(NS.SetByPath("raceWindow.side", "LEFT"))
 end)
 
-test("race mode: the page's tabs are Race, the call-out's three, Late-cast ignore list and Race window, and it renders quietly", function()
+test("race mode: the page's tabs are Race, Callout, Late-cast ignore list and Race window, and it renders quietly", function()
     if forever() then return end
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
@@ -162,7 +162,7 @@ test("race mode: the page's tabs are Race, the call-out's three, Late-cast ignor
     assertTrue(ctx ~= nil, "the page's ctx")
     local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "race", nil, nil, {})
     assertEqual(table.concat(keys or {}, ","),
-        "Race,callout.look,callout.sound,callout.texts,Late-cast ignore list,Race window")
+        "Race,callout,Late-cast ignore list,Race window")
     -- The switch is the Race tab's first row.
     assertEqual(NS.SchemaForPage("race")[1].path, "race.enabled")
 end)

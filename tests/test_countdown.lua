@@ -144,6 +144,40 @@ test("countdown: the packs the seam offers are the CLAUDE.md sounds line, in ord
         "NS.CALLOUT_PACKS is the declaration the vendor gate prunes media/sounds/ to")
 end)
 
+test("countdown: all eight packs ship, each on disk with every line the call-out speaks", function()
+    if forever() then return end
+    local S = fresh()
+    local lib = S.M.LibStub("LibKa0s-Callout-1.0")
+    assertEqual(#S.NS.CALLOUT_PACKS, 8, "the owner's eight voices (callout plan row C11)")
+    assertEqual(#S.NS.CALLOUT_PACKS, #lib.PACKS, "every pack the library offers")
+    for i, row in ipairs(lib.PACKS) do
+        assertEqual(S.NS.CALLOUT_PACKS[i], "callout/" .. row.folder, "in the library's order")
+        local dir = T.root .. "/libs/LibKa0s/media/sounds/callout/" .. row.folder .. "/"
+        for _, line in ipairs(lib.LINES) do
+            local fh = io.open(dir .. line .. lib.SOUND_EXT, "rb")
+            assertTrue(fh ~= nil, row.folder .. "/" .. line .. lib.SOUND_EXT .. " ships")
+            if fh then fh:close() end
+        end
+        local credits = io.open(dir .. "CREDITS.md", "rb")
+        assertTrue(credits ~= nil, row.folder .. " ships its credits")
+        if credits then credits:close() end
+    end
+    assertEqual(lib.PACKS[1].key, "male-arena-john", "Arena John leads")
+    assertEqual(lib.DEFAULTS.voice, "male-arena-john", "and is the default")
+end)
+
+test("countdown: Text to play offers Countdown 10 to 1 first", function()
+    if forever() then return end
+    local S = fresh()
+    local lib = S.M.LibStub("LibKa0s-Callout-1.0")
+    local play = S.NS.FindSchemaRow("callout.play")
+    assertTrue(play ~= nil and play.sessionOnly, "the preview's session row")
+    local values = type(play.values) == "function" and play.values() or play.values
+    assertEqual(values[1].value, lib.PLAY_COUNTDOWN, "the countdown entry leads the list")
+    assertEqual(values[1].value, "countdown10")
+    assertTrue(play.validate(lib.PLAY_COUNTDOWN), "and the row takes it")
+end)
+
 test("countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS", function()
     if forever() then return end
     local S = fresh()
@@ -611,16 +645,19 @@ test("countdown: NEW_BEST does not ask the toast's switch; Race mode off keeps e
     assertEqual(spoken(E), "", "Race mode off: no FAILED")
 end)
 
-test("countdown: a real race's FAILED keeps the call-out's per-word mute and own text", function()
+test("countdown: a real race's FAILED is the stock word, said: no own text or mute is stored", function()
     if forever() then return end
     local S = fresh()
-    assertTrue(S.NS.SetByPath("callout.muted.FAILED", true))
-    assertTrue(S.NS.SetByPath("callout.texts.FAILED", "TOO SOON"))
+    -- The stock texts and mutes are the addon's (callout plan row C11, SchemaRows' texts = false): no
+    -- row, so the seam refuses them and the call-out keeps its own word and voice.
+    assertFalse(S.NS.SetByPath("callout.muted.FAILED", true), "no mute row")
+    assertFalse(S.NS.SetByPath("callout.texts.FAILED", "TOO SOON"), "no own-text row")
+    assertFalse(CO(S):Set("muted.FAILED", true), "the instance's own write is refused by the seam")
     running(S, 30)
     F.leave(S, 120)
     assertEqual(CO(S):Stats().key, "FAILED")
-    assertEqual(spoken(S), "", "muted: shown, never said")
-    assertEqual(CO(S):Stats().text, "TOO SOON", "the player's own text")
+    assertEqual(CO(S):Stats().text, "FAILED", "the stock word")
+    assertTrue(spoken(S):find("failed", 1, true) ~= nil, "and said: " .. spoken(S))
 end)
 
 test("countdown: one rule for a real race and a sample: EndWord and ResultWord", function()

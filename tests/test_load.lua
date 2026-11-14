@@ -100,12 +100,12 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 2 and the fight record's format is 4", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 2)
+test("load: the settings stamp is 3 and the fight record's format is 4", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 3)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 4)
 end)
 
-test("load: a schema 1 store loads empty at version 2, keeping the account's other state", function()
+test("load: a schema 1 store loads empty at version 3, keeping the account's other state", function()
     local old = { schema = 1, id = "f-old", t = 1000, duration = 60, status = "final", dps = 100 }
     local NS = boot({ global = {
         schemaVersion = 1,
@@ -114,7 +114,7 @@ test("load: a schema 1 store loads empty at version 2, keeping the account's oth
         usage = { hidden = "6948" }, minimap = { hide = true },
     } })
     local g = NS.db.global
-    assertEqual(g.schemaVersion, 2, "stamped")
+    assertEqual(g.schemaVersion, 3, "stamped")
     assertEqual(count(g.fights), 0, "fights emptied")
     assertEqual(#g.fightOrder, 0, "fightOrder emptied")
     assertEqual(count(g.loadouts), 0, "loadouts emptied")
@@ -137,7 +137,7 @@ end)
 test("load: a fresh install runs step 2 harmlessly", function()
     local NS = boot(nil)
     local g = NS.db.global
-    assertEqual(g.schemaVersion, 2)
+    assertEqual(g.schemaVersion, 3)
     assertEqual(type(g.fights), "table")
     assertEqual(type(g.fightOrder), "table")
     assertEqual(count(g.fights), 0)

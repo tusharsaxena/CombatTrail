@@ -1,11 +1,30 @@
 local addonName, NS = ...
 -- core/Database.lua — AceDB setup, the profile callbacks and the schemaVersion migration runner.
 
+-- Step 3 asks the call-out major to rewrite its own retired glow choice (its MigrateGlow), so the
+-- mapping is the library's and never a copy here; nil without the library, and the step then only
+-- drops the retired keys.
+local Callout = LibStub and LibStub("LibKa0s-Callout-1.0", true)
+
+-- Beside a retired glow string, a stored intensity or thickness EQUAL to its default is AceDB's copy
+-- (savedvariables-§1: AceDB writes defaults into the stored profile it initializes, so presence is
+-- not a choice), never the player's: those keys are new with the boolean glow, so no player set one
+-- under the old choice. Cleared before MigrateGlow, which keeps any valid one it finds, so the
+-- choice's own look (strong: 70%, 5 px) lands. A value that differs from the default is kept.
+local function clearCopiedGlowDefaults(t)
+    local legacy = Callout and Callout.GLOW_LEGACY and Callout.GLOW_LEGACY[t.glow]
+    local D = legacy and NS.defaults and NS.defaults.profile and NS.defaults.profile.callout
+    if not D then return end
+    for key in pairs(legacy) do
+        if key ~= "glow" and t[key] ~= nil and t[key] == D[key] then t[key] = nil end
+    end
+end
+
 -- The runner's target: the highest step's `to` (savedvariables-§1). Distinct from the FIGHT RECORD
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 2
+NS.SCHEMA_VERSION = 3
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -20,6 +39,21 @@ local STEPS = {
     { to = 2, run = function()
         local g = NS.db.global
         g.fights, g.fightOrder, g.loadouts, g.gearSets = {}, {}, {}, {}
+    end },
+    -- 2 -> 3, per profile: the race call-out at LibKa0s-Callout-1.0 3.4 (callout plan row C11).
+    -- `callout.glow` was "off" | "soft" | "strong" and is a boolean row now: the library's
+    -- Callout:MigrateGlow rewrites the stored choice as the keys it implied (glow, glowIntensity,
+    -- glowThickness, each only where no valid one is stored), before the Schema's boot check reads
+    -- the bool row. `callout.texts` and `callout.muted` lose their rows (SchemaRows' texts = false: the
+    -- words are the addon's), and the instance would still read a stored own text or mute, so both
+    -- tables are dropped rather than left behind. A stored voice is kept as it is. Idempotent: a
+    -- fresh profile has no `callout` table stored, and a migrated one has a boolean glow and no texts.
+    { to = 3, perProfile = true, run = function(_, profile)
+        local t = type(profile) == "table" and profile.callout
+        if type(t) ~= "table" then return end
+        clearCopiedGlowDefaults(t)
+        if Callout and Callout.MigrateGlow then Callout:MigrateGlow(t) end
+        t.texts, t.muted = nil, nil
     end },
 }
 NS.__migrationSteps = STEPS   -- test seam only

@@ -24,18 +24,20 @@ local _, NS = ...
 -- the scoring rules, the late-cast list) keep their defaults there, as a saved race re-scores on any
 -- client (defaults/Profile.lua).
 --
--- THE CALL-OUT'S TABS (callout plan row C5): Call-out look, Call-out sound and Call-out texts, after
--- the Race tab, are LibKa0s-Callout-1.0's own settings section, drawn by its SettingsTabs /
--- BuildSettings with this addon's Options instance (NS.Helpers) on the host's write route. Its rows
--- are the instance's SchemaRows("callout."), registered here as this page's rows (so `/ct get|set|
--- list|reset`, the page's Defaults, the global reset and the boot check all reach them), each
--- declared retail like every row here, and skipRender: the section draws its own copy of each, by
--- the same path, read and written through the Options descriptor, so through NS.SetByPath. Each
--- row's group is its host tab's key (`callout.look`, ...; the preview's two session rows join the
--- Look tab's), so the tab takes the group's place in the strip. Their AceDB defaults are seeded
--- from the rows, before AceDB:New (the library's docs/api/Callout version 2.3, Adopting it), and
--- the drag's `callout.point` from the instance's default place; that path is the schema's
--- writeThrough (settings/Schema.lua).
+-- THE CALL-OUT'S TAB (callout plan rows C5, C11): one "Callout" tab after the Race tab,
+-- LibKa0s-Callout-1.0's own settings section, drawn by its SettingsTab (a Preview block over the
+-- Look and Sound side tabs, BuildSettings' `layout = "side"`) with this addon's Options instance
+-- (NS.Helpers) on the host's write route. Its rows are the instance's SchemaRows("callout.",
+-- { texts = false }), registered here as this page's rows (so `/ct get|set|list|reset`, the page's
+-- Defaults, the global reset and the boot check all reach them), each declared retail like every
+-- row here, and skipRender: the section draws its own copy of each, by the same path, read and
+-- written through the Options descriptor, so through NS.SetByPath. Every row's group is the one
+-- tab's key (`callout`), so the tab takes the group's place in the strip. `texts = false` leaves
+-- out the stock texts' words and mutes (owner, 2026-11-14): the words the call-out says are the
+-- addon's, so no row, and the seam refuses `callout.texts.*` and `callout.muted.*`. Their AceDB
+-- defaults are seeded from the rows, before AceDB:New (the library's docs/api/Callout version 3.4,
+-- Adopting it), and the drag's `callout.point` from the instance's default place; that path is the
+-- schema's writeThrough (settings/Schema.lua).
 --
 -- WRITES: every row writes through the seam (NS.SetByPath). The race reads its keys at call time and
 -- freezes grace and the restart gap into each race as it arms; a new default length forgets the last
@@ -172,12 +174,8 @@ row("race.restartGap", { type = "number", label = L["Damage-restart gap (seconds
     validate = within(3, 15, 1),
     tooltip = L["Your damage going quiet for this long after the buzzer, then landing again, flags the race as damage restarted. 3 to 15 seconds. Applies to new races. Saved races keep the value they were raced with."] })
 
--- The call-out's tabs (THE CALL-OUT'S TABS, above). The library's words for its three tabs, named
--- for this page, where Look alone would not say whose look it is. A plain table: the library reads
--- its words with rawget, and NS.L answers an unknown key with the key.
-local CALLOUT_WORDS = {
-    TAB_LOOK = L["Call-out look"], TAB_SOUND = L["Call-out sound"], TAB_TEXTS = L["Call-out texts"],
-}
+-- The call-out's tab (THE CALL-OUT'S TAB, above), in the library's own words ("Callout").
+local CALLOUT_TAB = "callout"
 
 local function copyOf(v)
     if type(v) ~= "table" then return v end
@@ -188,11 +186,11 @@ end
 
 do
     local prefix = NS.Countdown.PREFIX
-    local rows, named = NS.Callout:SchemaRows(prefix, { page = PAGE, L = CALLOUT_WORDS })
+    local rows, named = NS.Callout:SchemaRows(prefix, { page = PAGE, texts = false })
     local Write = NS.__schemaLib.Write
     for _, r in ipairs(rows) do
         r.clients, r.skipRender = RETAIL, true
-        r.group = prefix .. (r.tab or "look")
+        r.group = CALLOUT_TAB
         if not r.sessionOnly then Write(D, r.path, copyOf(r.default)) end
         out[#out + 1] = r
     end
@@ -284,10 +282,10 @@ NS.RegisterTabbedPage({
     title           = L["Race mode"],
     panelName       = "CombatTrailRacePanel",
     clients         = RETAIL,
-    defaultsTooltip = L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look, voice and texts among them. Saved races are not touched."],
+    defaultsTooltip = L["Restore every Race mode setting on this profile to its addon default, the late-cast ignore list and the call-out's look and voice among them. Saved races are not touched."],
     afterGroup      = { [TAB.late] = afterLate },
     beforeGroup     = { [TAB.race] = beforeRace },
-    tabs            = NS.Callout:SettingsTabs({ options = NS.Helpers, L = CALLOUT_WORDS, prefix = NS.Countdown.PREFIX }),
+    tabs            = { NS.Callout:SettingsTab({ options = NS.Helpers, key = CALLOUT_TAB, prefix = NS.Countdown.PREFIX }) },
 })
 
 -- The ignore list repaints when it changes from anywhere (`/ct race ignore`, `/ct set`, a right-click)

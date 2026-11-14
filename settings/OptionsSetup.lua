@@ -142,7 +142,7 @@ if not lib then
         "RenderSchema", "RenderGrid", "SessionCheckbox", "SetRenderer", "RefreshAllPanels",
         "RefreshScalars", "RefreshPanel", "RestoreDefaults", "PatchAlwaysShowScrollbar",
         "RegisterOptionsPage", "CreateOptionsPanel", "OpenOptionsPanel", "SetChromeHeight", "TabStrip",
-        "PageBanner", "RenderTabbedSchema", "SelectTab", "ChoiceGrid", "IdInput", "IdList", "NavRail",
+        "PageBanner", "RenderTabbedSchema", "SelectTab", "ChoiceGrid", "IdInput", "IdList", "NavRail", "SideTabs",
         "Drawer", "Relayout", "KeybindingsTab", "KeybindRows",
     }) do
         Helpers[name] = function() end
