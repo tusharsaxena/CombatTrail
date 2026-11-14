@@ -373,8 +373,9 @@ toast = NS.NewToast({
 -- ── the triggers ────────────────────────────────────────────────────────────────────────────────
 
 --- Whether `record` earns the new-best toast: Bests.Delta says it is a new best AND names a
---- percentage (a board's first is a new best with nothing to beat, and does not). The samples'
---- NEW_BEST call-out follows the same rule (modules/Countdown.lua SampleSay).
+--- percentage (a board's first is a new best with nothing to beat, and does not). The call-out's
+--- NEW_BEST, for a real race and a sample alike, follows the same rule (modules/Countdown.lua
+--- ResultWord).
 --- @param record table|nil
 --- @return boolean earns, number|nil pct, table|nil prev
 function BestToast.Earns(record)

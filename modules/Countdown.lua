@@ -53,8 +53,9 @@ local _, NS = ...
 --
 -- THE BUZZER (RACE_BUZZER, whether or not the Race window is shown): leaving running has already
 -- taken the countdown down (RACE_STATE_CHANGED comes first), and with `race.buzzer` on the call-out
--- shows the stock STOP with its voice, held for the call-out's hold. Leaving running any other way (a
--- cancel, combat ending early) takes the number down and says nothing.
+-- shows the stock STOP with its voice, held for the call-out's hold. Leaving running any other way
+-- takes the number down: combat ending early or the player dying says FAILED (THE RACE'S WORDS,
+-- above); a cancel says nothing.
 --
 -- THE STAND-DOWN: the lead-in timer goes and the call-out is suspended (NS.Callout:Suspend: no
 -- countdown, nothing shown, no OnUpdate, Show and Countdown refused) until the stand-up resumes it.
