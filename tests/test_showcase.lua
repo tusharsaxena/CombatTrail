@@ -116,6 +116,28 @@ test("showcase: every sample record adds up: rows to the damage, player plus pet
     end
 end)
 
+-- The WoW Forever rotation's spells the owner saw the client name in /ct test and /ct sim (1.60.1 build
+-- 70938, 2026-11-14). Multi-Shot rank 5 (25294) drew "Unknown spell" with no icon there; rank 1 (2643,
+-- the base ID, in the Retail rotation too) replaces it (callout plan row C12).
+local FOREVER_SEEN = { [19574] = true, [3045] = true, [25295] = true, [20904] = true, [14287] = true,
+                       [75] = true, [3009] = true, [17253] = true, [6603] = true }
+
+test("showcase: every WoW Forever sample spell row is one the client names; Multi-Shot is rank 1", function()
+    local rows, multi = T.NS.MockRotations.Forever, nil
+    for _, row in ipairs(rows) do
+        assertTrue(row.id ~= 25294, "Multi-Shot rank 5 is unknown to the Forever client")
+        if row.id == 2643 then multi = row end
+        if not row.use and row.id ~= 2643 then
+            assertTrue(FOREVER_SEEN[row.id] == true, "a spell seen drawing a name in game: " .. tostring(row.id))
+        end
+    end
+    assertTrue(multi ~= nil, "Multi-Shot rank 1 (2643)")
+    assertEqual(multi.hit, 1.8, "its timing and size kept")
+    assertEqual(multi.from, 3.0)
+    assertEqual(multi.every, 10)
+    assertEqual(multi.cd, 10000)
+end)
+
 test("showcase: one fixed set, the same for every character (the sample realm, not the player's)", function()
     local S = fresh()
     local NS = S.NS

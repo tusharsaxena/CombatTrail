@@ -17,8 +17,13 @@ local _, NS = ...
 -- none (a cast that deals no damage of its own: Bestial Wrath), major (a long cooldown), use + item +
 -- slot (an on-use trinket or a potion: the Usage section's sample) }.
 --
--- The spell and item IDs are the clients' own as far as they are known; the Forever ranks are
--- UNVERIFIED in game (a sample with a wrong ID draws the question-mark icon, nothing else breaks).
+-- The spell and item IDs are the clients' own as far as they are known. On WoW Forever (1.60.1 build
+-- 70938, /ct test and /ct sim, 2026-11-14) these drew their names in game: Bestial Wrath 19574, Rapid
+-- Fire 3045, Serpent Sting 25295, Aimed Shot 20904, Arcane Shot 14287, Auto Shot 75, Claw 3009, Bite
+-- 17253 and Auto Attack 6603. Multi-Shot rank 5 (25294) did not (an "Unknown spell" row with no icon),
+-- so the row is rank 1, 2643, the base ID every client knows (callout plan row C12); its timing and
+-- size are rank 5's, so the figures are unchanged. A wrong ID draws "Unknown spell" and no icon;
+-- nothing else breaks.
 -- Names and icons come from the client (C_Spell), as for a real fight.
 
 NS.MockRotations = {
@@ -44,7 +49,7 @@ NS.MockRotations = {
         { id = 3045, from = 0.9, every = 300, cd = 300000, none = true, major = true },    -- Rapid Fire
         { id = 25295, hit = 0.5, from = 1.2, every = 15, cd = 0, ticks = 5, gap = 3 },      -- Serpent Sting
         { id = 20904, hit = 3.0, from = 1.8, every = 6, cd = 6000 },                       -- Aimed Shot
-        { id = 25294, hit = 1.8, from = 3.0, every = 10, cd = 10000 },                     -- Multi-Shot
+        { id = 2643, hit = 1.8, from = 3.0, every = 10, cd = 10000 },                      -- Multi-Shot
         { id = 14287, hit = 1.2, from = 4.2, every = 6, cd = 6000 },                       -- Arcane Shot
         { id = 75, hit = 1.0, from = 1.0, every = 2.8, passive = true },                   -- Auto Shot
         { id = 3009, hit = 0.8, from = 1.3, every = 3, cd = 0, pet = true },               -- Claw

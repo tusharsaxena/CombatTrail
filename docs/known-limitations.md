@@ -74,7 +74,11 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   it and NEW BEST at a new best's result, real or sample (callout plan row C9); a cancel says nothing,
   and no race runs out of time past its buzzer. The sim's `newbest` fight also says NEW BEST, which a
   real fight does not: the call-out speaks for races alone.
-- **Spell and item IDs in the sample rotation are unverified** in game.
+- **Spell and item IDs in the sample rotation are partly unverified** in game. On WoW Forever
+  (1.60.1 build 70938, 2026-11-14) every spell row drew its name in `/ct test` and `/ct sim` but
+  Multi-Shot rank 5 (25294), which that client does not know; the row is now rank 1, 2643, with the
+  same timing and size, so the figures did not move (callout plan row C12). The rest waits for
+  SM-CT-M5.
 
 ## Design limits of v0.1.0
 
