@@ -308,6 +308,6 @@ settings\Hud.lua
 settings\History.lua
 # The Race mode page, Retail only (declared on its page and its rows; nothing registers on WoW Forever).
 # LOAD-BEARING: reads NS.Race.LENGTHS, NS.Format, NS.LateIgnore, NS.Countdown (PREFIX, MIN, MAX) and
-# NS.Callout (SchemaRows, Get, SettingsTabs) at FILE SCOPE.
+# NS.Callout (SchemaRows, Get, SettingsTab) at FILE SCOPE.
 settings\Race.lua
 settings\Profiles.lua
