@@ -145,8 +145,9 @@ FIGHT_ENDED
   plain `endedAt`) takes the number down and says FAILED; a cancel or a lost read says nothing.
   RACE_RESULT of a complete race that is a new best (`BestToast.Earns`, whether or not the toast is
   on) says NEW_BEST. Both are `Countdown.EndWord` and `Countdown.ResultWord`, the rule the samples
-  ask too (callout plan row C9), with Race mode on; the call-out applies each word's mute and text. Its settings flow
-  the other way only through the seam: the Race mode page's call-out tabs, `/ct set` and the drag all
+  ask too (callout plan row C9), with Race mode on; each is the library's stock word in the call-out's voice (no own text or mute,
+  callout plan row C11). Its settings flow the other way only through the seam: the Race mode page's
+  Callout tab, `/ct set` and the drag all
   write `callout.*` through `NS.SetByPath`, whose row reaction (`onChange`, the instance's `Apply`)
   repaints the call-out.
 - **The Results window** (modules/Results.lua) reads `Results_Source`, which is the store or, in test

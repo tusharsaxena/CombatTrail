@@ -12,7 +12,7 @@ that resets that page on the current profile. Every row is a schema row (`settin
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
-| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock and how often it redraws, the countdown and the buzzer, the center call-out's look, voice and words (its Call-out look, sound and texts tabs), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
+| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock and how often it redraws, the countdown and the buzzer, the center call-out's look and voice (its one Callout tab: a preview, then Look and Sound), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
 
 The tree below is page, then tab in strip order, then row, as the schema produces it. Rows a client
@@ -430,15 +430,15 @@ new best and not a fight's: *Toast a fight's new best* starts off.
 
 ## Race mode
 
-Retail only (race plan Task B3). Tabs: *Race*, *Call-out look*, *Call-out sound*, *Call-out texts*,
-*Late-cast ignore list*, *Race window* (settings/Race.lua, `NS.RACE_TABS` for the page's own three; the
-call-out's three are LibKa0s-Callout-1.0's settings section, callout plan row C5). The Race tab opens on the page's one note on where Race mode came
+Retail only (race plan Task B3). Tabs: *Race*, *Callout*, *Late-cast ignore list*, *Race window*
+(settings/Race.lua, `NS.RACE_TABS` for the page's own three; *Callout* is LibKa0s-Callout-1.0's
+settings section as one tab, callout plan rows C5 and C11). The Race tab opens on the page's one note on where Race mode came
 from, then the switch; the race clock's two colored clocks and the window's look are the DPS HUD page's
 appearance blocks (spec §8), and its lock is General's *Lock frame*. The training dummies are the History
 page's, and the New-best toast's section is History's too (ruling X19). The countdown rows carry no
 reaction of their own: modules/Countdown.lua re-arms the race's call-out off their SETTINGS_CHANGED;
 the buzzer row is read when the buzzer goes (Countdown.Buzzer). They decide when the call-out speaks
-for the race; the call-out's own look, voice and words are its own three tabs (below).
+for the race; the call-out's own look and voice are its own tab (below).
 
 ### Race
 
@@ -478,43 +478,59 @@ restart gap apply to new races: each race keeps the values it armed with. *Cente
 takes 3 to 20 seconds (`Countdown.MIN` and `MAX`; 20 is the call-out's longest countdown); numbers above
 the call-out's *Speak numbers from* are shown, not said.
 
-### Call-out look, Call-out sound, Call-out texts
+### Callout
 
-The call-out's own settings: LibKa0s-Callout-1.0's settings section (the library's docs/api/Callout,
-version 2.3, The settings section), drawn by `NS.Callout:SettingsTabs({ options = NS.Helpers, prefix =
-"callout." })` as three host tabs on the host's write route. Each tab's render calls the instance's
-`BuildSettings(ctx, { options, tab, prefix })`, which draws through this addon's Options instance:
-every control is the panel's own dropdown, slider, checkbox, edit box or color swatch, in the skin and
-under the combat lock, read by the descriptor's `get` and written by its `set`, so through
-`NS.SetByPath`. The rows it draws are the instance's `SchemaRows("callout.")`, which settings/Race.lua
-registers as this page's rows: so the page's Defaults, the global reset and `/ct get|set|list|reset`
-reach every one. Registered, each is skipRender (the section draws its own copy by the same path) and
-grouped by its host tab's key (`callout.look`, `callout.sound`, `callout.texts`; the preview's two
-session rows join the Look tab's), so the tab takes the group's place in the strip. The tab labels
-are the library's words overridden for this page (`TAB_LOOK` *Call-out look*, and so on).
+The call-out's own settings: LibKa0s-Callout-1.0's settings section as one tab (the library's
+docs/api/Callout, version 3.4, The one tab), drawn by `NS.Callout:SettingsTab({ options = NS.Helpers,
+key = "callout", prefix = "callout." })` as one host tab on the host's write route, labeled in the
+library's own word, *Callout*. Its render calls the instance's `BuildSettings(ctx, { options, layout =
+"side", prefix })`, which draws through this addon's Options instance: every control is the panel's
+own dropdown, slider, checkbox, color swatch or side-tab list (`O.SideTabs`, OptionsNav minor 7), in
+the skin and under the combat lock, read by the descriptor's `get` and written by its `set`, so
+through `NS.SetByPath`. The rows it draws are the instance's `SchemaRows("callout.", { texts = false
+})`, which settings/Race.lua registers as this page's rows: so the page's Defaults, the global reset
+and `/ct get|set|list|reset` reach every one. Registered, each is skipRender (the section draws its own
+copy by the same path) and grouped under the one tab's key, `callout`, so the tab takes the group's
+place in the strip.
 
-Over each tab: the live preview (`5  GO!  STOP` in the chosen face, outline and shadow), *Test
-countdown* (5 to GO! on the real call-out), *Text to play* and *Play*, *Unlock to move* (the drag
-strip; the drag writes `callout.point`) and *Reset position*. None of them touches a race.
+Top to bottom: a **Preview** heading over the live preview (`5  GO!  STOP` in the chosen face,
+outline and shadow), *Test countdown* (5 to GO! on the real call-out) and *Play*, *Text to play* (the
+stock words, led by *Countdown 10 to 1*, which counts the real call-out down from 10 with no finish),
+*Unlock to move* (the drag strip; the drag writes `callout.point`) and *Reset position*. None of them
+touches a race. Under it, the **side tabs**: a list on the left, *Look* and *Sound*, and the selected
+one's rows on the right. Look is selected first; the pick is session state, never saved.
 
-| Tab | Row | Key |
+**No stock texts.** The call-out's words and their mutes are the addon's to control (owner,
+2026-11-14): `texts = false` leaves their 46 rows out, so nothing draws them, the seam refuses
+`callout.texts.*` and `callout.muted.*`, and the call-out says the library's stock words in its voice.
+
+| Side tab | Row | Key |
 |---|---|---|
-| Call-out look | Font | `callout.font` |
-| Call-out look | Size | `callout.size` |
-| Call-out look | Outline | `callout.outline` |
-| Call-out look | Glow | `callout.glow` |
-| Call-out look | Shadow | `callout.shadow` |
-| Call-out look | Shadow X offset, Shadow Y offset (disabled with no shadow) | `callout.shadowX`, `callout.shadowY` |
-| Call-out look | Animation | `callout.anim` |
-| Call-out look | Hold | `callout.hold` |
-| Call-out sound | Voice (female, male, Game TTS, off) | `callout.voice` |
-| Call-out sound | Sound channel | `callout.channel` |
-| Call-out sound | Speak numbers from | `callout.speakFrom` |
-| Call-out sound | Text to speech voice, Speech rate, Speech volume (only with a client voice listed; disabled unless the voice is Game TTS) | `callout.ttsVoice`, `callout.ttsRate`, `callout.ttsVolume` |
-| Call-out texts | Colors: one swatch per kind | `callout.colors.<kind>` (`number`, `info`, `go`, `stop`, `warn`, `error`) |
-| Call-out texts | Stock texts: the player's own words per key (empty is the stock text) | `callout.texts.<KEY>` (23 keys) |
-| Call-out texts | Stock texts: Mute per key | `callout.muted.<KEY>` |
-| every tab (preview) | Text to play, Unlock to move (session only, never stored) | `callout.play`, `callout.unlocked` |
+| Look | Font | `callout.font` |
+| Look | Size | `callout.size` |
+| Look | Outline | `callout.outline` |
+| Look | Shadow | `callout.shadow` |
+| Look | Shadow X offset, Shadow Y offset (disabled with no shadow) | `callout.shadowX`, `callout.shadowY` |
+| Look | Animation | `callout.anim` |
+| Look | Hold | `callout.hold` |
+| Look (Glow) | Glow behind the text | `callout.glow` |
+| Look (Glow) | Glow color, and its swatch | `callout.glowCustom`, `callout.glowColor` |
+| Look (Glow) | Use class color | `callout.useClassColorGlow` |
+| Look (Glow) | Use the skin's color | `callout.glowColorFromSkin` |
+| Look (Glow) | Intensity (percent), Thickness (px) | `callout.glowIntensity`, `callout.glowThickness` |
+| Look (Glow) | X offset, Y offset | `callout.glowX`, `callout.glowY` |
+| Look (Colors) | one swatch per kind | `callout.colors.<kind>` (`number`, `info`, `go`, `stop`, `warn`, `error`) |
+| Sound | Voice (the eight packs, Game TTS, off; Arena announcer (John) first and the default) | `callout.voice` |
+| Sound | Sound channel | `callout.channel` |
+| Sound | Speak numbers from | `callout.speakFrom` |
+| Sound | Text to speech voice, Speech rate, Speech volume (only with a client voice listed; disabled unless the voice is Game TTS) | `callout.ttsVoice`, `callout.ttsRate`, `callout.ttsVolume` |
+| Preview | Text to play, Unlock to move (session only, never stored) | `callout.play`, `callout.unlocked` |
+
+**The glow, as AuraMaster's.** Laid out in AuraMaster's two columns under Look's *Glow* heading. The
+color follows AuraMaster's order: *Use class color* wins, then *Use the skin's color*, then the
+*Glow color* swatch, else each word's own kind color. Every Glow row but the toggle and the
+class-color pair is disabled while the glow is off. A profile from before stored *Off*, *Soft* or
+*Strong*; the 2 -> 3 migration turns it into these keys (`docs/schema.md`, Migrations).
 
 ### Late-cast ignore list
 

@@ -19,8 +19,8 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 2 and the fight record's format is 4
-- load: a schema 1 store loads empty at version 2, keeping the account's other state
+- load: the settings stamp is 3 and the fight record's format is 4
+- load: a schema 1 store loads empty at version 3, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
 
@@ -826,7 +826,7 @@ Total.
 - race mode: every control and verb is absent on WoW Forever
 - race mode: the library-absent dispatcher lists and runs the verb on its own client only
 - race mode: the stored paths, types, defaults and ranges are the pinned set
-- race mode: the page's tabs are Race, the call-out's three, Late-cast ignore list and Race window, and it renders quietly
+- race mode: the page's tabs are Race, Callout, Late-cast ignore list and Race window, and it renders quietly
 - race mode: the DPS HUD row sits under auto-show, live whatever auto-show says (W29 decision D4)
 - race mode: Match the DPS HUD's height sits on the Race window tab, under the side
 - race mode: a new default length forgets the last one armed
@@ -991,11 +991,13 @@ Total.
 - race clock: the held sample race beats while running, and stops with test mode
 - race clock: the sim's race beats from its first hit through Stop!, and stops at its read
 
-### test_countdown.lua (41)
+### test_countdown.lua (43)
 
 - countdown: absent on WoW Forever, the call-out with it
-- countdown: one call-out, on the addon's folder, skin and two shipped voices
+- countdown: one call-out, on the addon's folder, skin and eight shipped voices, Arena John the default
 - countdown: the packs the seam offers are the CLAUDE.md sounds line, in order
+- countdown: all eight packs ship, each on disk with every line the call-out speaks
+- countdown: Text to play offers Countdown 10 to 1 first
 - countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS
 - countdown: the stub answers every member a live call-out has, as an idle call-out does
 - countdown: the library absent, the seam answers the stub and the countdown counts nothing
@@ -1026,7 +1028,7 @@ Total.
 - countdown: the player dying before the buzzer says FAILED; after it, nothing more
 - countdown: a real race that is a new best says NEW_BEST at its result; a first or slower one does not
 - countdown: NEW_BEST does not ask the toast's switch; Race mode off keeps every word off
-- countdown: a real race's FAILED keeps the call-out's per-word mute and own text
+- countdown: a real race's FAILED is the stock word, said: no own text or mute is stored
 - countdown: one rule for a real race and a sample: EndWord and ResultWord
 - countdown: the call-out is handed the race's one endsAt, the value RaceClock and Race read
 - countdown: the stand-up re-arms from the race's endsAt and shows the number of the moment
@@ -1035,7 +1037,7 @@ Total.
 - countdown: a profile that still stores the retired race.countdownCue counts as any other
 - countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
 
-### test_callout_settings.lua (9)
+### test_callout_settings.lua (12)
 
 - callout settings: every SchemaRows row is a Race mode row, declared retail, drawn by the section
 - callout settings: absent on WoW Forever, no row, default or writeThrough path
@@ -1043,9 +1045,12 @@ Total.
 - callout settings: every instance write goes through NS.SetByPath, under callout.
 - callout settings: a drag's point and Reset position are written through NS.SetByPath
 - callout settings: /ct set, get and reset reach a call-out row
+- callout settings: the glow's rows are reached by /ct set, get and reset
 - callout settings: the Race mode page's Defaults and a profile reset put the call-out back
-- callout settings: the Race mode page draws the call-out's three tabs after Race
-- callout settings: each call-out tab is built by the library's section on the host's route
+- callout settings: the Race mode page draws one Callout tab after Race
+- callout settings: the one tab is the library's side layout on the host's route: Preview, Look and Sound
+- callout settings: the migration rewrites a stored glow choice, drops the texts and mutes, keeps a voice
+- callout settings: a fresh profile is untouched by the migration and speaks with Arena John
 
 ### test_toast.lua (21)
 
@@ -1793,8 +1798,8 @@ Total.
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
-| test_countdown.lua | 41 |
-| test_callout_settings.lua | 9 |
+| test_countdown.lua | 43 |
+| test_callout_settings.lua | 12 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1838,4 +1843,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1504** |
+| **Total** | **1509** |

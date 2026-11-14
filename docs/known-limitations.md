@@ -182,13 +182,20 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   line, and the bars fall back to its whole figure.
 - **A checkpoint passed before a `/reload` shows a dash for your figure.** Its reading was held in
   memory for that race alone, so a resumed race keeps the best's figure there but not yours.
-- **The center call-out's voice packs are not yet listened to in game.** The two packs
-  (`female-kathleen`, `male-joe`, synthesized with Piper) passed the library's file checks only; how
-  they sound, and their volume against the game's on the Master channel, waits for SM-CT-RM77.
-- **The call-out's settings section is not yet checked in game.** The Race mode page's Call-out look,
-  sound and texts tabs (LibKa0s-Callout-1.0's section on the host's write route) pass the headless
-  suites, which draw them through the mock panel; the preview, the drag and each look wait for
-  SM-CT-RM81 to SM-CT-RM85.
+- **The center call-out's voice packs are not yet listened to in game.** The eight packs (Arena
+  announcer (John), the default; Female Kathleen, Kristin, Cori and Bella; Male Joe, John and Norman;
+  seven synthesized with Piper, Bella with Kokoro) passed the library's file checks, and the owner
+  listened to their sample reels outside the game on 2026-11-14. How each sounds in game, and its
+  volume against the game's on the Master channel, waits for SM-CT-RM77 and SM-CT-RM90.
+- **The call-out's settings tab is not yet checked in game.** The Race mode page's one Callout tab
+  (LibKa0s-Callout-1.0's section on the host's write route: a Preview block over the Look and Sound
+  side tabs, the glow's rows as AuraMaster's) passes the headless suites, which draw it through the
+  mock panel; the side tabs, the preview, the drag, the glow and each look wait for SM-CT-RM81 to
+  SM-CT-RM86 and SM-CT-RM91.
+- **The call-out's words cannot be changed or muted.** The stock words (STOP, FAILED, NEW BEST and
+  the numbers) and their voice are the addon's: the Callout tab has no text or mute per word, and
+  `/ct set callout.texts.*` or `callout.muted.*` is refused (callout plan row C11). *Voice* off
+  silences them all; *Center-screen countdown* and *STOP at the buzzer* turn the race's parts off.
 - **Game TTS depends on the voices the client has installed.** The call-out's *Game TTS* voice speaks
   through `C_VoiceChat.SpeakText` with a voice from `C_VoiceChat.GetTtsVoices()`, so a client with
   none installed (or a language pack without English voices) says nothing, and the voice and its rate

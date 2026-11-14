@@ -7,9 +7,13 @@ How AceDB profiles work here (documentation-§3, Tier 2: the Profiles page ships
 Everything under `CombatTrailDB.profiles[<name>]`: the master switches, both lanes, the DPS HUD, the
 recording filters and retention, the Results window's view, place and look, the player's own training
 dummies (`dummies.custom`, History > Training dummies) and the skin (`defaults/Profile.lua`,
-[`schema.md`](schema.md)). The race call-out's look, voice and words are the profile's `callout` table
+[`schema.md`](schema.md)). The race call-out's look and voice are the profile's `callout` table
 (Retail), seeded from its schema rows and read through the instance at every call; every write to it
-goes through `NS.SetByPath`, so it is per profile like every other setting. A new character starts on the `Default` profile
+goes through `NS.SetByPath`, so it is per profile like every other setting. Its words are the addon's:
+no profile holds a stock text or a mute (callout plan row C11). Schema 3 migrated every stored
+profile's `callout` table once (`docs/schema.md`, Migrations): a retired Off / Soft / Strong glow became
+the glow's keys, stored texts and mutes were dropped, and a chosen voice was kept, so only a profile
+that never chose one speaks with the new default, Arena John. A new character starts on the `Default` profile
 shared by every character (`AceDB:New(..., true)`).
 
 ## What a profile does not hold

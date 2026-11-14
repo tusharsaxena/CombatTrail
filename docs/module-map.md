@@ -143,7 +143,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `settings/Lanes.lua` | The Lanes page and the `/ct lane` verb |
 | `settings/Hud.lua` | The DPS HUD page |
 | `settings/History.lua` | The History page |
-| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the race call-out's rows (its `SchemaRows`, seeded into the defaults) and its three tabs (the library's settings section), the late-cast ignore list, the Race window's place and height, and its size rows the grip writes (Retail only) |
+| `settings/Race.lua` | The Race mode page: the switch, the Race tab, the race call-out's rows (its `SchemaRows` with `texts = false`, seeded into the defaults) and its one Callout tab (the library's settings section), the late-cast ignore list, the Race window's place and height, and its size rows the grip writes (Retail only) |
 | `settings/Profiles.lua` | The Profiles page |
 
 ## Not shipped

@@ -22,9 +22,12 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
   The degraded stub and `NS.RunVerb` apply the same gate. The schema CLI follows the rows: on Retail
   `list`, `get`, `set` and `reset` reach the Race mode page's rows, the race call-out's `callout.*` rows
   among them (`/ct set callout.size 150`, `/ct reset callout.voice`; the instance's own validation
-  refuses what it would refuse, and the row's reaction re-applies the call-out), and on WoW Forever no
-  such path exists. `callout.point`, the call-out's drag-written place, has no row: the CLI does not
-  list or reset it; Reset position on the call-out's tabs puts it back.
+  refuses what it would refuse, and the row's reaction re-applies the call-out; the glow's rows, such as
+  `/ct set callout.glowThickness 5`, among them), and on WoW Forever no such path exists. The stock
+  words have no row (`texts = false`, callout plan row C11): `/ct set|get callout.texts.<KEY>` and
+  `callout.muted.<KEY>` answer that the setting is not found. `callout.point`, the call-out's
+  drag-written place, has no row: the CLI does not list or reset it; Reset position on the Callout
+  tab puts it back.
 - **The perf hold.** Every feature verb is wrapped in `feature()`, which answers
   `NS.StoodDownRefusal()`'s line while a capture holds the addon down.
 - **One handler per act.** A feature verb calls the same handler as the launcher menu and the key
