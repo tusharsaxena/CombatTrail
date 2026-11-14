@@ -25,7 +25,10 @@ local addonName, NS = ...
 local Callout = LibStub and LibStub("LibKa0s-Callout-1.0", true)
 
 --- The voice packs this copy ships: the CLAUDE.md `LibKa0s sounds:` line.
-NS.CALLOUT_PACKS = { "callout/female-kathleen", "callout/male-joe" }
+NS.CALLOUT_PACKS = {
+    "callout/male-arena-john", "callout/female-kathleen", "callout/female-kristin", "callout/female-cori",
+    "callout/female-bella", "callout/male-joe", "callout/male-john", "callout/male-norman",
+}
 
 -- The instance's surface, each member a no-op (the library's docs/api/Callout, the degradation stub).
 NS.CalloutStub = {
@@ -34,13 +37,14 @@ NS.CalloutStub = {
     Hide = function() end, Suspend = function() end, Resume = function() end,
     Suspended = function() return false end, Get = function() return nil end,
     Set = function() return false end, GetColor = function() return 1, 1, 1 end,
+    GetGlowColor = function() return 1, 1, 1 end,
     SetColor = function() return false end, Apply = function() end, SetLocked = function() end,
     Locked = function() return true end, ResetPosition = function() end,
     Voices = function() return {} end, TtsVoices = function() return {} end,
     Frame = function() return nil end, Look = function() return {} end,
     Preview = function() return false end, TestCountdown = function() return false end,
     SettingsRows = function() return {} end, SchemaRows = function() return {}, {} end,
-    SettingsTabs = function() return {} end,
+    SettingsTabs = function() return {} end, SettingsTab = function() return nil end,
     BuildSettings = function() return nil end,
     Stats = function() return { built = false, shown = false, running = false, awake = false,
         suspended = false, locked = true, logged = 0 } end,

@@ -109,15 +109,17 @@ end)
 
 -- ── the seam ───────────────────────────────────────────────────────────────────────────────────
 
-test("countdown: one call-out, on the addon's folder, skin and two shipped voices", function()
+test("countdown: one call-out, on the addon's folder, skin and eight shipped voices, Arena John the default", function()
     if forever() then return end
     local S = fresh()
     local inst = CO(S)
     assertTrue(inst ~= S.NS.CalloutStub, "the live call-out")
     local keys = {}
     for i, v in ipairs(inst:Voices()) do keys[i] = v.key end
-    assertEqual(table.concat(keys, ","), "female,male,tts,off", "the two packs CLAUDE.md declares, then tts and off")
-    assertEqual(inst:Get("voice"), "female", "the library's default voice")
+    assertEqual(table.concat(keys, ","),
+        "male-arena-john,female,female-kristin,female-cori,female-bella,male,male-john,male-norman,tts,off",
+        "the eight packs CLAUDE.md declares, in the library's order, then tts and off")
+    assertEqual(inst:Get("voice"), "male-arena-john", "the library's default voice: the arena announcer")
 end)
 
 --- The root CLAUDE.md's `LibKa0s sounds:` line, split into its pack names (as the kit's vendor gate
@@ -382,7 +384,7 @@ test("countdown: the voice says 5 down to 1 and STOP, each once, from the shippe
     assertEqual(spoken(S), "5@127,4@128,3@129,2@130,1@131,stop@132",
         "numbers above the call-out's speakFrom (5) are shown, not spoken")
     local file = S.M.__files[1].file
-    assertTrue(file:find("AddOns\\CombatTrail\\libs\\LibKa0s\\media\\sounds\\callout\\female-kathleen\\", 1, true) ~= nil,
+    assertTrue(file:find("AddOns\\CombatTrail\\libs\\LibKa0s\\media\\sounds\\callout\\male-arena-john\\", 1, true) ~= nil,
         "the addon's own copy of the pack: " .. file)
     assertEqual(S.M.__files[1].channel, "Master")
 end)

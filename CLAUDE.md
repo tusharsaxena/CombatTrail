@@ -49,16 +49,16 @@ auto-stage/commit/push and never bump the version without an explicit instructio
 
 This addon vendors **[LibKa0s](https://github.com/tusharsaxena/LibKa0s)** into `libs/LibKa0s/` and
 its test kit into `tests/_kit/`, both copied whole from the tag below (`git -C ../LibKa0s archive
-v1.98.0`, commit 9dd6d0954efd27feb6bb27a8f4f72be674587e64), with `libs/LibKa0s/media/icons/` and
+v1.100.0`, commit 3de352cc9b3f9a3dcc492e3167f2c7eaf860da2e), with `libs/LibKa0s/media/icons/` and
 `libs/LibKa0s/media/sounds/` pruned to their declarations by the tag's own `tools/prune-icons.lua`.
 **Never edit anything under `libs/` or `tests/_kit/`**: a library problem is filed on LibKa0s and
 re-vendored back, because the next re-vendor silently reverts a local edit. The Ace3,
 LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's (the set that loads on both
 clients).
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.98.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.100.0 (MIT).
 LibKa0s icons: arrow-left, chart, chat, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
-LibKa0s sounds: callout/female-kathleen, callout/male-joe.
+LibKa0s sounds: callout/male-arena-john, callout/female-kathleen, callout/female-kristin, callout/female-cori, callout/female-bella, callout/male-joe, callout/male-john, callout/male-norman.
 
 The first of those three lines is the **provenance line**: `tests/test_vendor_sync.lua` reads it and
 compares both vendored payloads against that tag in the sibling checkout, so it moves in the same
@@ -69,5 +69,6 @@ and the small marks beside skinned controls) plus the ones the HUD and the Resul
 they arrive from DPS Race, the paw on pet spell rows, and the flag on the HUD's Race button. The
 third is the **sound declaration** (`library-stack-§7`, *The sound subset*): the same gate holds
 `libs/LibKa0s/media/sounds/` to exactly those voice packs, each folder whole with its license and
-credits. They are the two voices `LibKa0s-Callout-1.0` offers for the race countdown; with no line
-the gate would hold the folder empty.
+credits. They are the eight voices `LibKa0s-Callout-1.0` offers for the race countdown, in the
+library's `PACKS` order (Arena John, the default, first); with no line the gate would hold the folder
+empty.

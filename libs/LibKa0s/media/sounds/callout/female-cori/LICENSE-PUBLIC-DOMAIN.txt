@@ -1,0 +1,12 @@
+Public domain status of this voice pack's sources
+
+The Piper voice used for these clips (en_GB-cori-high) was trained by Bryce Beattie on
+recordings from LibriVox (https://librivox.org). LibriVox recordings are in the public domain in the
+United States: https://librivox.org/pages/public-domain/
+
+The model author states the voice's license as "public domain" and imposes no further license or
+restriction: https://brycebeattie.com/files/tts/
+Model card: https://huggingface.co/rhasspy/piper-voices/blob/main/en/en_GB/cori/high/MODEL_CARD
+
+No license text is owed for a public-domain source, so this file records the status in place of one.
+The clips in this folder are that voice's synthesized output.

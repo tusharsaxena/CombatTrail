@@ -46,7 +46,7 @@ test("callout settings: every SchemaRows row is a Race mode row, declared retail
     local want, named = NS.Callout:SchemaRows("callout.")
     local got, n = calloutRows(NS)
     assertEqual(n, #want, "one registered row per SchemaRows row")
-    assertEqual(#want, 15 + #Callout.KINDS + 2 * #Callout.STOCK_ORDER + 2, "the scalars, colors, texts, mutes and the two session rows")
+    assertEqual(#want, 23 + #Callout.KINDS + 2 * #Callout.STOCK_ORDER + 2, "the scalars, colors, texts, mutes and the two session rows")
     for _, w in ipairs(want) do
         local row = got[w.path]
         assertTrue(row ~= nil, w.path .. " is registered")

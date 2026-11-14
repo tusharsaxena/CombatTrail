@@ -29,6 +29,16 @@
 -- and announces, and the host's slash get / set / reset reaches every one. The Play pick and the
 -- unlock toggle are session rows there too.
 --
+-- ONE TAB (minor 4, the owner's redesign of 2026-11-14, plan row L13): `SettingsTab` answers a single
+-- host tab, "Callout", drawn by `BuildSettings(ctx, { options, layout = "side" })`: a "Preview"
+-- heading over the preview block, then the Options instance's side tabs (O.SideTabs), Look (the
+-- face rows and the six colors) and Sound. The stock texts' words and mutes are not drawn, and
+-- `SchemaRows(prefix, { texts = false })` leaves their rows out of the host's schema too, so on the
+-- route the host's seam refuses the instance's Set("texts.<KEY>") and Set("muted.<KEY>") and nothing
+-- is stored. A host wanting its own words registers `SchemaRows(prefix)` without the option (the
+-- rows stay undrawn) or passes them per call through Show. The documented shape for a host on the
+-- route; `SettingsTabs` and the three-tab build stay as they were.
+--
 -- WITHOUT one, `parent` is a plain frame and the section is built of plain frames, one control per
 -- line: a check button for a toggle, a value between - and + buttons for a number, a button that
 -- steps through the choices for a list, a swatch that opens the client's color picker for a color.
@@ -39,7 +49,8 @@
 -- Over each tab: a sample line ("5  GO!  STOP", each in its kind's color) drawn in the chosen face,
 -- outline and shadow at the chosen size up to PREVIEW_MAX, repainted on every write (a refresher in
 -- the page's `refreshers`, which the Options instance's write runs); "Test countdown" counts the
--- real call-out down from 5 to GO; "Play" shows the stock text picked beside it, with its voice.
+-- real call-out down from 5 to GO; "Play" shows the stock text picked beside it, with its voice, or
+-- (minor 4) counts down from 10 to 1, numbers only, when "Countdown 10 to 1" is picked.
 -- The picked text is session state, never saved. "Unlock to move" is the instance's SetLocked: the
 -- real call-out shows its sample and takes the mouse until locked again (never saved either).
 --
@@ -54,10 +65,11 @@
 -- each read at build time and optional.
 
 local lib = LibStub and LibStub("LibKa0s-Callout-1.0", true)
--- Minor 3 reads the shell's minor-2 privates (`__validFor`, `__defaultFor`, `__colorFor`, `__prefixOf`): an older
--- shell gets no settings section rather than one that raises.
+-- Minor 3 reads the shell's minor-2 privates (`__validFor`, `__defaultFor`, `__colorFor`, `__prefixOf`),
+-- and minor 4 its minor-3 glow settings (`__glowColorFor`): an older shell gets no settings section
+-- rather than one whose rows it refuses.
 if not lib or type(lib.__methods) ~= "table" or type(lib.__validFor) ~= "function"
-  or type(lib.__colorFor) ~= "function" then return end
+  or type(lib.__colorFor) ~= "function" or type(lib.__glowColorFor) ~= "function" then return end
 
 -- Minor 1: the section (plan row L4).
 -- Minor 2 (plan row L2, v1.97.0): `FONT_FACES`, the call-out's display faces (Oxanium Bold, the
@@ -67,7 +79,13 @@ if not lib or type(lib.__methods) ~= "table" or type(lib.__validFor) ~= "functio
 -- Minor 3 (plan row L11, v1.98.0): `SchemaRows`, the settings as schema rows a host registers
 -- under its own prefix (architecture-§5), and the Options build on the host's route, where every row
 -- carries its path and is written through the host's seam. Needs the Callout shell at minor 2.
-local SETTINGS_MINOR = 3
+-- Minor 4 (plan row L13, v1.100.0): `SettingsTab`, the section as one host tab (a Preview block over
+-- Look and Sound side tabs, through the Options instance's O.SideTabs, OptionsNav minor 7; Colors in
+-- Look; no stock texts), `BuildSettings`' `opts.layout = "side"`, `SchemaRows`' and `SettingsRows`'
+-- `opts.texts = false`, and the Play list's "Countdown 10 to 1"; and (plan row L15) the Glow rows in
+-- Look, AuraMaster's text glow (on/off, Glow color, Use class color, Use the skin's color, Intensity,
+-- Thickness, X and Y offset) in place of the Off / Soft / Strong choice. Needs the shell at minor 3.
+local SETTINGS_MINOR = 4
 if lib.__settingsMinor and lib.__settingsMinor >= SETTINGS_MINOR
   and lib.__settingsShellMinor == lib.MINOR then return end
 lib.__settingsMinor      = SETTINGS_MINOR
@@ -79,7 +97,8 @@ lib.MODULES.CalloutSettings = SETTINGS_MINOR
 local METHODS = lib.__methods
 
 lib.SETTINGS_STRINGS = {
-  TAB_LOOK = "Look", TAB_SOUND = "Sound", TAB_TEXTS = "Texts",
+  TAB_LOOK = "Look", TAB_SOUND = "Sound", TAB_TEXTS = "Texts", TAB_CALLOUT = "Callout",
+  TAB_CALLOUT_TIP = "The call-out: a preview to test it with, how it looks and what it says.",
   TAB_LOOK_TIP = "How the call-out looks: its face, size, outline, shadow, glow and animation.",
   TAB_SOUND_TIP = "What the call-out says: a bundled voice, the game's text to speech, or nothing.",
   TAB_TEXTS_TIP = "Each kind's color, and each stock text's own words and voice.",
@@ -89,7 +108,8 @@ lib.SETTINGS_STRINGS = {
   PLAY = "Play",
   PLAY_TIP = "Shows the text picked in Text to play, with its voice.",
   PLAY_KEY = "Text to play",
-  PLAY_KEY_TIP = "The stock text Play shows. Not saved.",
+  PLAY_KEY_TIP = "The stock text Play shows, or a countdown from 10 to 1. Not saved.",
+  PLAY_COUNTDOWN = "Countdown 10 to 1",
   UNLOCK = "Unlock to move",
   UNLOCK_TIP = "Shows the call-out with a drag strip so you can move it. Lock it again when it is in place. Not saved.",
   RESET_POSITION = "Reset position",
@@ -102,8 +122,20 @@ lib.SETTINGS_STRINGS = {
   SHADOW = "Shadow", SHADOW_TIP = "A black shadow behind the text.",
   SHADOW_X = "Shadow X offset", SHADOW_Y = "Shadow Y offset",
   SHADOW_OFFSET_TIP = "How far the shadow sits from the text, -20 to 20.",
-  GLOW = "Glow", GLOW_TIP = "A halo in the text's color behind it.",
-  GLOW_OFF = "Off", GLOW_SOFT = "Soft", GLOW_STRONG = "Strong",
+  GLOW = "Glow",
+  GLOW_ON = "Glow behind the text",
+  GLOW_ON_TIP = "Draw a soft glow behind the text, in addition to its outline and shadow.",
+  GLOW_CUSTOM = "Glow color",
+  GLOW_CUSTOM_TIP = "Draw the glow in the color of the swatch below. Off, the glow takes each word's kind color.",
+  GLOW_COLOR = "Color", GLOW_COLOR_TIP = "The glow's own color, drawn while Glow color is on.",
+  GLOW_CLASS = "Use class color",
+  GLOW_CLASS_TIP = "Draw the glow in your class color instead of the swatch or the kind color.",
+  GLOW_SKIN = "Use the skin's color",
+  GLOW_SKIN_TIP = "Draw the glow in your skin's glow color. Use class color, when on, wins.",
+  GLOW_INTENSITY = "Intensity", GLOW_INTENSITY_TIP = "How strongly the glow shows, 5 to 100%.",
+  GLOW_THICKNESS = "Thickness (px)", GLOW_THICKNESS_TIP = "How far the glow reaches out from the text, 1 to 6 pixels.",
+  GLOW_X = "X offset", GLOW_X_TIP = "Nudge the glow off the text, sideways, in pixels.",
+  GLOW_Y = "Y offset", GLOW_Y_TIP = "Nudge the glow off the text, up or down, in pixels.",
   ANIM = "Animation", ANIM_TIP = "How a call-out arrives on screen.",
   ANIM_SLAM = "Slam", ANIM_PULSE = "Pulse", ANIM_GLOW = "Glow", ANIM_BLINK = "Blink",
   ANIM_SHAKE = "Shake", ANIM_NONE = "None",
@@ -134,6 +166,12 @@ local KIND_WORD = { number = "KIND_NUMBER", info = "KIND_INFO", go = "KIND_GO", 
   warn = "KIND_WARN", error = "KIND_ERROR" }
 lib.SETTINGS_TABS = { "look", "sound", "texts" }
 local TAB_WORD = { look = "TAB_LOOK", sound = "TAB_SOUND", texts = "TAB_TEXTS" }
+-- Minor 4: the one tab's side tabs, in order, and the Play list's countdown entry (a value no stock
+-- key can take: those are upper case) with the number it counts down from.
+lib.SETTINGS_SIDE_TABS = { "look", "sound" }
+lib.PLAY_COUNTDOWN = "countdown10"
+local PLAY_COUNTDOWN_FROM = 10
+local LAYOUTS = { side = true }
 
 -- The plain build's line pitch and column.
 local PLAIN_LINE, PLAIN_LABEL_W, PLAIN_CONTROL_W, PLAIN_PAD = 26, 200, 160, 8
@@ -175,10 +213,6 @@ end
 local function outlineValues(L)
   return listOf(L, { { "NONE", "OUTLINE_NONE" }, { "OUTLINE", "OUTLINE_OUTLINE" },
     { "THICKOUTLINE", "OUTLINE_THICK" }, { "MONOCHROME", "OUTLINE_MONO" } })
-end
-
-local function glowValues(L)
-  return listOf(L, { { "off", "GLOW_OFF" }, { "soft", "GLOW_SOFT" }, { "strong", "GLOW_STRONG" } })
 end
 
 local function animValues(L)
@@ -236,11 +270,14 @@ local function fontChoices()
   return out
 end
 
-local function stockValues()
-  local out = {}
-  for i, key in ipairs(lib.STOCK_ORDER) do out[i] = { value = key, text = lib.STOCK[key].text } end
+--- The Play list: "Countdown 10 to 1" first (minor 4), then every stock text in the major's order.
+local function playValues(L)
+  local out = { { value = lib.PLAY_COUNTDOWN, text = word(L, "PLAY_COUNTDOWN") } }
+  for _, key in ipairs(lib.STOCK_ORDER) do out[#out + 1] = { value = key, text = lib.STOCK[key].text } end
   return out
 end
+
+local function playable(k) return k == lib.PLAY_COUNTDOWN or lib.STOCK[k] ~= nil end
 
 -- ── the rows ─────────────────────────────────────────────────────────────────────────────────
 --
@@ -292,13 +329,51 @@ local function choice(B, label, tip, key, values)
   return bind(B, key, { type = "string", label = label, tooltip = tip, values = values })
 end
 
+local function check(B, L, key, w)
+  return bind(B, key, { type = "bool", label = word(L, w), tooltip = word(L, w .. "_TIP") })
+end
+
+--- The glow's rows (minor 4, plan row L15) under their "Glow" subgroup, in AuraMaster's two columns:
+---
+---   [Glow behind the text]  [Glow color]
+---   [Color]                 [Use class color]
+---   [Use the skin's color]
+---   [Intensity]             [Thickness (px)]
+---   [X offset]              [Y offset]
+---
+--- The swatch and its class-color companion are options-ui-§17's pair, adjacent and never dimmed;
+--- every other row but the toggle dims while the glow is off.
+local function glowRows(B, L, out, g)
+  local inst, sub = B.inst, word(L, "GLOW")
+  local off = function() return not inst:Get("glow") end
+  local function add(t, startsLine, dims)
+    t.startsLine, t.disabledIf = startsLine or nil, dims and off or nil
+    return row(out, "look", g, sub, t)
+  end
+  add(check(B, L, "glow", "GLOW_ON"), true)
+  add(check(B, L, "glowCustom", "GLOW_CUSTOM"), false, true)
+  add(bind(B, "glowColor", { type = "color", label = word(L, "GLOW_COLOR"), tooltip = word(L, "GLOW_COLOR_TIP"),
+    hasAlpha = false, classColorSource = "player" }, {
+      get = function() return bothShapes(fromEither(inst:Get("glowColor"))) end,
+      set = function(c) inst:Set("glowColor", c) end },
+    { get = function() return lib.__glowColorFor(inst) end }), true)
+  local class = add(check(B, L, "useClassColorGlow", "GLOW_CLASS"))
+  class.classColorSource = "player"
+  add(check(B, L, "glowColorFromSkin", "GLOW_SKIN"), true, true)
+  local pct = add(slider(B, word(L, "GLOW_INTENSITY"), word(L, "GLOW_INTENSITY_TIP"), "glowIntensity", 0.05, 1, 0.05),
+    true, true)
+  pct.isPercent = true
+  add(slider(B, word(L, "GLOW_THICKNESS"), word(L, "GLOW_THICKNESS_TIP"), "glowThickness", 1, 6, 1), false, true)
+  add(slider(B, word(L, "GLOW_X"), word(L, "GLOW_X_TIP"), "glowX", -20, 20, 1), true, true)
+  add(slider(B, word(L, "GLOW_Y"), word(L, "GLOW_Y_TIP"), "glowY", -20, 20, 1), false, true)
+end
+
 local function lookRows(B, L, out)
   local inst, g = B.inst, word(L, "TAB_LOOK")
   row(out, "look", g, nil, bind(B, "font", { type = "string", label = word(L, "FONT"), tooltip = word(L, "FONT_TIP"),
     dialogControl = "Ka0sMedia_Font", values = fontChoices, startsLine = true }))
   row(out, "look", g, nil, slider(B, word(L, "SIZE"), word(L, "SIZE_TIP"), "size", lib.SIZE_MIN, lib.SIZE_MAX, 1))
   row(out, "look", g, nil, choice(B, word(L, "OUTLINE"), word(L, "OUTLINE_TIP"), "outline", outlineValues(L)))
-  row(out, "look", g, nil, choice(B, word(L, "GLOW"), word(L, "GLOW_TIP"), "glow", glowValues(L)))
   row(out, "look", g, nil, bind(B, "shadow", { type = "bool", label = word(L, "SHADOW"), tooltip = word(L, "SHADOW_TIP"),
     startsLine = true }))
   local noShadow = function() return not inst:Get("shadow") end
@@ -308,6 +383,7 @@ local function lookRows(B, L, out)
   local anim = row(out, "look", g, nil, choice(B, word(L, "ANIM"), word(L, "ANIM_TIP"), "anim", animValues(L)))
   anim.startsLine = true
   row(out, "look", g, nil, slider(B, word(L, "HOLD"), word(L, "HOLD_TIP"), "hold", 0.2, 10, 0.1))
+  glowRows(B, L, out, g)
 end
 
 --- The voice choices: the packs the host ships (`d.packs`), then text to speech and off.
@@ -370,10 +446,12 @@ end
 
 local function trim(v) return type(v) == "string" and v:match("^%s*(.-)%s*$") or "" end
 
-local function colorRows(B, L, out, g)
+--- The six colors under their "Colors" subgroup, on tab `tab` (Texts in the three-tab shape, Look in
+--- the one tab's) with that tab's group label `g`.
+local function colorRows(B, L, out, g, tab)
   local inst, colors = B.inst, word(L, "COLORS")
   for i, kind in ipairs(lib.KINDS) do
-    row(out, "texts", g, colors, bind(B, "colors." .. kind, { type = "color", label = word(L, KIND_WORD[kind]),
+    row(out, tab, g, colors, bind(B, "colors." .. kind, { type = "color", label = word(L, KIND_WORD[kind]),
       tooltip = word(L, "KIND_TIP"), hasAlpha = false, startsLine = i == 1 }, {
         get = function() return bothShapes(inst:GetColor(kind)) end,
         set = function(c)
@@ -385,7 +463,7 @@ end
 
 local function textsRows(B, L, out, withText)
   local inst, g = B.inst, word(L, "TAB_TEXTS")
-  colorRows(B, L, out, g)
+  colorRows(B, L, out, g, "texts")
   local stock = word(L, "STOCK_TEXTS")
   for _, key in ipairs(lib.STOCK_ORDER) do
     local shown, textKey, muteKey = lib.STOCK[key].text, "texts." .. key, "muted." .. key
@@ -403,16 +481,29 @@ local function textsRows(B, L, out, withText)
   end
 end
 
+--- The one tab's Look (minor 4): the face rows, then the six colors under "Colors", all on "look".
+local function lookTab(B, L, out)
+  lookRows(B, L, out)
+  colorRows(B, L, out, word(L, "TAB_LOOK"), "look")
+end
+
+--- Tab `tab`'s rows (nil: every tab), into `out`. `noTexts` is the one tab's shape (minor 4): Look
+--- carries the colors, and there is no Texts tab. `all` and `withText` as soundRows and textsRows.
+local function tabRows(B, L, out, tab, noTexts, all, withText)
+  if tab == nil or tab == "look" then
+    if noTexts then lookTab(B, L, out) else lookRows(B, L, out) end
+  end
+  if tab == nil or tab == "sound" then soundRows(B, L, out, all) end
+  if not noTexts and (tab == nil or tab == "texts") then textsRows(B, L, out, withText) end
+  return out
+end
+
 --- The section's rows: path-less schema rows bound to this instance, Look, Sound then Texts, or
---- one tab's (`opts.tab`). `opts.L` overrides the words; `opts.plain` leaves the text boxes out.
+--- one tab's (`opts.tab`). `opts.L` overrides the words; `opts.plain` leaves the text boxes out;
+--- `opts.texts = false` (minor 4) is the one tab's shape: the colors in Look, no Texts rows.
 function METHODS:SettingsRows(opts)
   opts = type(opts) == "table" and opts or {}
-  local out, B = {}, { inst = self }
-  local tab = opts.tab
-  if tab == nil or tab == "look" then lookRows(B, opts.L, out) end
-  if tab == nil or tab == "sound" then soundRows(B, opts.L, out, false) end
-  if tab == nil or tab == "texts" then textsRows(B, opts.L, out, not opts.plain) end
-  return out
+  return tabRows({ inst = self }, opts.L, {}, opts.tab, opts.texts == false, false, not opts.plain)
 end
 
 -- ── the preview ──────────────────────────────────────────────────────────────────────────────
@@ -421,7 +512,7 @@ local VIEW = setmetatable({}, { __mode = "k" })   -- instance -> its session sta
 
 local function session(inst)
   local v = VIEW[inst]
-  if not v then v = { play = "GO" }; VIEW[inst] = v end
+  if not v then v = { play = "GO", side = "look" }; VIEW[inst] = v end
   return v
 end
 
@@ -462,7 +553,15 @@ function METHODS:TestCountdown(from)
   return self:Countdown{ endsAt = GetTime() + n, from = n }
 end
 
-local function playPicked(inst) return inst:Show(session(inst).play) end
+--- Play: the picked stock text, shown with its voice; or "Countdown 10 to 1" (minor 4), the real
+--- call-out counting down from 10 to 1 with no finish, each number spoken as `speakFrom` allows.
+local function playPicked(inst)
+  local pick = session(inst).play
+  if pick == lib.PLAY_COUNTDOWN then
+    return inst:Countdown{ endsAt = GetTime() + PLAY_COUNTDOWN_FROM, from = PLAY_COUNTDOWN_FROM, finish = false }
+  end
+  return inst:Show(pick)
+end
 
 -- The preview block's own rows: the text Play shows, and the unlock toggle. Session state only:
 -- `sessionOnly`, each storing through its own get / set, never in the host's profile. As schema rows
@@ -471,16 +570,16 @@ local function playPicked(inst) return inst:Show(session(inst).play) end
 local function previewRows(B, L)
   local inst = B.inst
   local v = session(inst)
-  local play = { type = "string", label = word(L, "PLAY_KEY"), tooltip = word(L, "PLAY_KEY_TIP"), values = stockValues(),
+  local play = { type = "string", label = word(L, "PLAY_KEY"), tooltip = word(L, "PLAY_KEY_TIP"), values = playValues(L),
     key = "play", startsLine = true, sessionOnly = true,
-    get = function() return v.play end, set = function(k) if lib.STOCK[k] then v.play = k end end }
+    get = function() return v.play end, set = function(k) if playable(k) then v.play = k end end }
   local unlock = { type = "bool", label = word(L, "UNLOCK"), tooltip = word(L, "UNLOCK_TIP"), key = "unlocked",
     sessionOnly = true,
     get = function() return inst:Locked() == false end, set = function(on) inst:SetLocked(not on) end }
   if B.prefix then
     local g = word(L, "PREVIEW")
     play.path, play.default, play.group, play.preview = B.prefix .. "play", "GO", g, true
-    play.validate = function(k) return lib.STOCK[k] ~= nil end
+    play.validate = playable
     unlock.path, unlock.default, unlock.group, unlock.preview = B.prefix .. "unlocked", false, g, true
     unlock.validate = function(on) return type(on) == "boolean" end
   end
@@ -498,7 +597,9 @@ end
 --- control chooses, each `path = prefix .. key` with its `type`, `default` (what the instance reads
 --- with nothing stored: `DEFAULTS`' value, a color in the host's shape), `validate`, `onChange` (the
 --- instance's Apply), `min` / `max` / `step` or `values`, `label`, `tooltip`, `group` and `tab`; then
---- the two session rows. `opts.L` overrides the words, `opts.page` sets every row's `page`. The
+--- the two session rows. `opts.L` overrides the words, `opts.page` sets every row's `page`.
+--- `opts.texts = false` (minor 4) leaves the stock texts' rows out (`texts.<KEY>` and `muted.<KEY>`,
+--- the words the host sets itself) and puts the colors on `tab = "look"`: the one tab's shape. The
 --- second answer is the named non-setting state the host owns beside them: `{ prefix .. "point" }`,
 --- the drag's saved position, which no control sets (a host lists it in its schema's
 --- `writeThrough`, or writes it in its own `d.set`, and names it either way).
@@ -506,10 +607,8 @@ function METHODS:SchemaRows(prefix, opts)
   opts = type(opts) == "table" and opts or {}
   prefix = asPrefix(prefix) or lib.__prefixOf(self)
   if not prefix then error(lib.MAJOR .. ": SchemaRows(prefix): a prefix (or the descriptor's path) is required", 2) end
-  local B, L, out = { inst = self, prefix = prefix }, opts.L, {}
-  lookRows(B, L, out)
-  soundRows(B, L, out, true)
-  textsRows(B, L, out, true)
+  local B, L = { inst = self, prefix = prefix }, opts.L
+  local out = tabRows(B, L, {}, nil, opts.texts == false, true, true)
   for _, r in ipairs(previewRows(B, L)) do out[#out + 1] = r end
   if opts.page ~= nil then
     for _, r in ipairs(out) do r.page = opts.page end
@@ -538,6 +637,40 @@ local function optionsPreview(B, O, ctx, L, view)
     onClick = function() inst:ResetPosition() end })
 end
 
+--- The side tabs' entries, Look then Sound, in the host's words.
+local function sideEntries(L)
+  local out = {}
+  for i, tab in ipairs(lib.SETTINGS_SIDE_TABS) do
+    out[i] = { key = tab, label = word(L, TAB_WORD[tab]), tooltip = word(L, TAB_WORD[tab] .. "_TIP") }
+  end
+  return out
+end
+
+--- The one tab (minor 4): a "Preview" heading over the preview block, then the Options instance's
+--- side tabs, Look (the colors in it) and Sound, the selected one's rows drawn beside the list. The
+--- selection is session state, never saved. An Options copy with no O.SideTabs (before OptionsNav
+--- minor 7) draws Look and Sound one under the other, each under its heading, instead.
+local function buildSide(B, O, ctx, L, view)
+  local inst = B.inst
+  if type(O.Section) == "function" then O.Section(ctx, word(L, "PREVIEW")) end
+  optionsPreview(B, O, ctx, L, view)
+  view.layout = "side"
+  if type(O.SideTabs) ~= "function" then
+    view.rows = tabRows(B, L, {}, nil, true, false, true)
+    O.RenderRows(ctx, view.rows)
+    return view
+  end
+  local v = session(inst)
+  view.sideTabs = O.SideTabs(ctx, { entries = sideEntries(L), value = v.side,
+    onSelect = function(key) v.side = key end,
+    render = function(c, key)
+      view.side = key
+      view.rows = tabRows(B, L, {}, key, true, false, true)
+      O.RenderRows(c, view.rows, nil, nil, { noHeadings = true })
+    end })
+  return view
+end
+
 -- What the Options build calls on the host's instance, each checked before anything is drawn.
 local OPTIONS_MEMBERS = { "EnsureScroll", "TextRow", "InlineButtonPair", "RenderRows" }
 
@@ -552,13 +685,11 @@ local function buildOptions(inst, ctx, opts)
   -- and the Options instance reads and writes it through its own descriptor: the host's seam, its
   -- reactions and its announce. The rows are the ones SchemaRows answers, which the host registered.
   local B = { inst = inst, prefix = asPrefix(opts.prefix) or lib.__prefixOf(inst) }
-  optionsPreview(B, O, ctx, L, view)
   view.prefix = B.prefix
-  view.rows = {}
+  if opts.layout == "side" then return buildSide(B, O, ctx, L, view) end
+  optionsPreview(B, O, ctx, L, view)
   local tab = opts.tab
-  if tab == nil or tab == "look" then lookRows(B, L, view.rows) end
-  if tab == nil or tab == "sound" then soundRows(B, L, view.rows, false) end
-  if tab == nil or tab == "texts" then textsRows(B, L, view.rows, true) end
+  view.rows = tabRows(B, L, {}, tab, false, false, true)
   O.RenderRows(ctx, view.rows, nil, nil, { noHeadings = tab ~= nil })
   return view
 end
@@ -578,6 +709,20 @@ function METHODS:SettingsTabs(opts)
       end }
   end
   return out
+end
+
+--- The section as ONE host tab (minor 4), for the host's `RenderTabbedSchema` (`opts.tabs`) or a
+--- host-drawn strip: `{ key, label, tooltip, before, render }`, keyed `opts.key` ("callout" by
+--- default), labeled "Callout", drawing `BuildSettings(ctx, { options, layout = "side", L, prefix })`:
+--- the Preview block over the Look and Sound side tabs. `opts.options` is required. The documented
+--- shape for a host on the route, which registers `SchemaRows(prefix, { texts = false })` beside it.
+function METHODS:SettingsTab(opts)
+  opts = type(opts) == "table" and opts or {}
+  return { key = type(opts.key) == "string" and opts.key or "callout", label = word(opts.L, "TAB_CALLOUT"),
+    tooltip = word(opts.L, "TAB_CALLOUT_TIP"), before = opts.before,
+    render = function(ctx)
+      self:BuildSettings(ctx, { options = opts.options, layout = "side", L = opts.L, prefix = opts.prefix })
+    end }
 end
 
 -- ── the plain build ──────────────────────────────────────────────────────────────────────────
@@ -605,6 +750,7 @@ local function valueText(r)
   if type(r.values) == "table" then
     for _, item in ipairs(r.values) do if item.value == v then return item.text end end
   end
+  if r.isPercent then return ("%d%%"):format(math.floor(v * 100 + 0.5)) end
   if r.type == "number" then return (r.step or 1) < 1 and ("%.1f"):format(v) or tostring(v) end
   return tostring(v)
 end
@@ -714,10 +860,14 @@ local function buildPlain(inst, parent, opts)
   view.refresh = refresh
   local y = plainPreview(inst, parent, L, view, -PLAIN_PAD)
   for _, r in ipairs(previewRows({ inst = inst }, L)) do y = plainRow(parent, r, y, view, refresh) end
-  view.rows = inst:SettingsRows({ tab = opts.tab, L = L, plain = true })
+  -- The one tab's layout (minor 4) has no side tabs here: Look (its colors in it) and Sound, each
+  -- under its heading, and no stock texts.
+  local side = opts.layout == "side"
+  local tab = not side and opts.tab or nil
+  view.rows = inst:SettingsRows({ tab = tab, L = L, plain = true, texts = not side })
   local heading
   for _, r in ipairs(view.rows) do
-    if opts.tab == nil and r.group ~= heading then   -- one tab draws no heading of its own
+    if tab == nil and r.group ~= heading then   -- one tab draws no heading of its own
       heading = r.group
       y = y - PLAIN_PAD
       plainHeading(parent, heading, y)
@@ -735,11 +885,16 @@ end
 --- Build the settings section into `parent`. With `opts.options` (the host's LibKa0s Options
 --- instance) `parent` is a page ctx and the rows are that instance's own; without, `parent` is a
 --- frame and the section is plain frames. `opts.tab` ("look", "sound" or "texts") draws one tab;
---- `opts.L` overrides the words. Answers the view (`kind`, `rows`, `preview`, and for the plain
---- build `controls`, `refresh` and `height`), or nil when there is nothing to build into.
+--- `opts.layout = "side"` (minor 4) draws the one tab instead (`SettingsTab`; `opts.tab` is then
+--- not read): a Preview heading and block over the Look and Sound side tabs, or, in the plain
+--- build, Look and Sound under their headings, with no stock texts either way.
+--- `opts.L` overrides the words. Answers the view (`kind`, `rows`, `preview`; with the side
+--- layout `layout`, `side` and `sideTabs`; for the plain build `controls`, `refresh` and
+--- `height`), or nil when there is nothing to build into, or an unknown tab or layout.
 function METHODS:BuildSettings(parent, opts)
   opts = type(opts) == "table" and opts or {}
-  if opts.tab ~= nil and not TAB_WORD[opts.tab] then return nil end
+  if opts.layout ~= nil and not LAYOUTS[opts.layout] then return nil end
+  if opts.layout == nil and opts.tab ~= nil and not TAB_WORD[opts.tab] then return nil end
   if type(opts.options) == "table" then
     if type(parent) ~= "table" then return nil end
     return buildOptions(self, parent, opts)
