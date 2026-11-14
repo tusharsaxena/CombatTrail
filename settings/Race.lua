@@ -35,7 +35,7 @@ local _, NS = ...
 -- tab's key (`callout`), so the tab takes the group's place in the strip. `texts = false` leaves
 -- out the stock texts' words and mutes (owner, 2026-11-14): the words the call-out says are the
 -- addon's, so no row, and the seam refuses `callout.texts.*` and `callout.muted.*`. Their AceDB
--- defaults are seeded from the rows, before AceDB:New (the library's docs/api/Callout version 3.4,
+-- defaults are seeded from the rows, before AceDB:New (the library's docs/api/Callout version 4.5,
 -- Adopting it), and the drag's `callout.point` from the instance's default place; that path is the
 -- schema's writeThrough (settings/Schema.lua).
 --

@@ -12,7 +12,9 @@ dummies (`dummies.custom`, History > Training dummies) and the skin (`defaults/P
 goes through `NS.SetByPath`, so it is per profile like every other setting. Its words are the addon's:
 no profile holds a stock text or a mute (callout plan row C11). Schema 3 migrated every stored
 profile's `callout` table once (`docs/schema.md`, Migrations): a retired Off / Soft / Strong glow became
-the glow's keys, stored texts and mutes were dropped, and a stored voice was kept. AceDB stores
+the glow's keys (its intensity and thickness; it named no color or offset, so a migrated Soft or Strong
+profile reads the defaults for those: since LibKa0s v1.102.0 a black halo with *Glow color* ticked, at
+1, -1, no longer each word's kind color), stored texts and mutes were dropped, and a stored voice was kept. AceDB stores
 no value equal to its default, so a profile on the old default, Female (Kathleen), whether chosen or
 not, has no stored voice and now speaks with the new default, Arena John. A new character starts on the `Default` profile
 shared by every character (`AceDB:New(..., true)`).

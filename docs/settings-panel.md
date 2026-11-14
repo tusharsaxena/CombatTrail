@@ -481,7 +481,7 @@ the call-out's *Speak numbers from* are shown, not said.
 ### Callout
 
 The call-out's own settings: LibKa0s-Callout-1.0's settings section as one tab (the library's
-docs/api/Callout, version 3.4, The one tab), drawn by `NS.Callout:SettingsTab({ options = NS.Helpers,
+docs/api/Callout, version 4.5, The one tab), drawn by `NS.Callout:SettingsTab({ options = NS.Helpers,
 key = "callout", prefix = "callout." })` as one host tab on the host's write route, labeled in the
 library's own word, *Callout*. Its render calls the instance's `BuildSettings(ctx, { options, layout =
 "side", prefix })`, which draws through this addon's Options instance: every control is the panel's
@@ -493,8 +493,8 @@ and `/ct get|set|list|reset` reach every one. Registered, each is skipRender (th
 copy by the same path) and grouped under the one tab's key, `callout`, so the tab takes the group's
 place in the strip.
 
-Top to bottom: a **Preview** heading over the live preview (`5  GO!  STOP` in the chosen face,
-outline and shadow), *Test countdown* (5 to GO! on the real call-out) and *Play*, *Text to play* (the
+Top to bottom: a **Preview** heading (no sample line under it since LibKa0s v1.102.0, CalloutSettings
+minor 5: the real call-out is where the look shows), *Test countdown* (5 to GO! on the real call-out) and *Play*, *Text to play* (the
 stock words, led by *Countdown 10 to 1*, which counts the real call-out down from 10 with no finish),
 *Unlock to move* (the drag strip; the drag writes `callout.point`) and *Reset position*. None of them
 touches a race. Under it, the **side tabs**: a list on the left, *Look* and *Sound*, and the selected
@@ -528,9 +528,12 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 
 **The glow, as AuraMaster's.** Laid out in AuraMaster's two columns under Look's *Glow* heading. The
 color follows AuraMaster's order: *Use class color* wins, then *Use the skin's color*, then the
-*Glow color* swatch, else each word's own kind color. Every Glow row but the toggle and the
+*Glow color* swatch, else each word's own kind color. A fresh profile has *Glow color* ticked on a
+black swatch, at 100%, 1 px and offset 1, -1 (LibKa0s v1.102.0's defaults, the owner's look); *Font*
+reads Oxanium SemiBold, the first of the call-out's faces, then Oxanium Bold, Bebas Neue and Russo One. Every Glow row but the toggle and the
 class-color pair is disabled while the glow is off. A profile from before stored *Off*, *Soft* or
-*Strong*; the 2 -> 3 migration turns it into these keys (`docs/schema.md`, Migrations).
+*Strong*; the 2 -> 3 migration turns it into these keys (`docs/schema.md`, Migrations), and as it
+named no color or offset such a profile reads the black swatch at 1, -1.
 
 ### Late-cast ignore list
 

@@ -194,8 +194,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **The call-out's settings tab is not yet checked in game.** The Race mode page's one Callout tab
   (LibKa0s-Callout-1.0's section on the host's write route: a Preview block over the Look and Sound
   side tabs, the glow's rows as AuraMaster's) passes the headless suites, which draw it through the
-  mock panel; the side tabs, the preview, the drag, the glow and each look wait for SM-CT-RM81 to
-  SM-CT-RM86 and SM-CT-RM91.
+  mock panel; the side tabs, the Preview block (with no sample line since LibKa0s v1.102.0), the drag,
+  the glow and each look, the owner's new defaults among them, wait for SM-CT-RM81 to SM-CT-RM86,
+  SM-CT-RM91 and SM-CT-RM92.
 - **The call-out's words cannot be changed or muted.** The stock words (STOP, FAILED, NEW BEST and
   the numbers) and their voice are the addon's: the Callout tab has no text or mute per word, and
   `/ct set callout.texts.*` or `callout.muted.*` is refused (callout plan row C11). *Voice* off
