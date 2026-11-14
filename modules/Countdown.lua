@@ -35,12 +35,17 @@ local _, NS = ...
 -- RaceClock.EndsAt is the sample's, armed by the sim's own Countdown.Refresh at each step; test mode's
 -- held sample has none and counts nothing.
 --
--- THE SAMPLES' WORDS (callout plan row C6, owner 2026-11-14): test mode's held race and the sim say
--- on the call-out what their scenario earns, through Countdown.SampleSay: NEW_BEST on a new best (the
--- toast's rule, BestToast.Earns), FAILED on a race that ends before its buzzer. Only those stock keys,
--- only with Race mode on, never for a real race. Countdown.EndSample is the samples' cleanup (the
--- preview's stop and switch, modules/Preview.lua): the sample's countdown and anything a sample put up
--- (its buzzer's STOP, its words) come down at once.
+-- THE RACE'S WORDS (callout plan rows C6 and C9, owner 2026-11-14): a race says on the call-out what
+-- it earns, by ONE rule for a real race and a sample alike: FAILED as it ends before its buzzer
+-- (Countdown.EndWord: combat dropped or the player died, the race's plain `endedAt`), NEW_BEST at its
+-- read when it is complete and a new best (Countdown.ResultWord: the toast's rule, BestToast.Earns,
+-- whether or not the toast is on). Only those stock keys (the call-out applies their per-word mute
+-- and custom text), only with Race mode on. A real race's words come off the bus (RACE_STATE_CHANGED
+-- leaving running, RACE_RESULT) through Countdown.RaceSay; test mode's held race and the sim, which
+-- send nothing on the bus, ask the same rule and say it through Countdown.SampleSay.
+-- Countdown.EndSample is the samples' cleanup (the preview's stop and switch, modules/Preview.lua):
+-- the sample's countdown and anything a sample put up (its buzzer's STOP, its words) come down at
+-- once; a real race's words are left alone.
 --
 -- A RESUME mid-window (a /reload, a stand-up, a countdown row changed mid-race) shows the number of
 -- the moment at once and counts on from there. The rows carry no onChange: their SETTINGS_CHANGED
@@ -181,25 +186,61 @@ function Countdown.Buzzer()
     return shown
 end
 
--- ── the samples' words ──────────────────────────────────────────────────────────────────────────
+-- ── the race's words ────────────────────────────────────────────────────────────────────────────
 
---- The stock keys a sample may earn (THE SAMPLES' WORDS, above).
-Countdown.SAMPLE_WORDS = { NEW_BEST = true, FAILED = true }
+--- The stock keys a race may earn (THE RACE'S WORDS, above).
+Countdown.RACE_WORDS = { NEW_BEST = true, FAILED = true }
+Countdown.SAMPLE_WORDS = Countdown.RACE_WORDS
 
---- Test mode's or the sim's stock call-out `key` (one of SAMPLE_WORDS): shown with its voice, with
---- Race mode on and the addon not stood down. A running countdown is taken down first.
---- @param key string
---- @return boolean shown
-function Countdown.SampleSay(key)
-    if not Countdown.SAMPLE_WORDS[key] or NS.IsStoodDown() then return false end
+--- The word a race earns as it leaves running: FAILED when it ended before its buzzer (its plain
+--- `endedAt`; a lost or canceled race earns nothing), else nil.
+--- @param race table|nil  the race part (modules/RaceRecord.lua's shape)
+--- @return string|nil key
+function Countdown.EndWord(race)
+    if type(race) ~= "table" or race.status == "lost" or race.status == "canceled" then return nil end
+    if type(race.endedAt) ~= "number" then return nil end
+    return "FAILED"
+end
+
+--- The word a race's stored record earns at its read: NEW_BEST when it is complete and a new best
+--- (BestToast.Earns, the toast's rule), else nil.
+--- @param record table|nil
+--- @return string|nil key
+function Countdown.ResultWord(record)
+    local race = type(record) == "table" and record.race or nil
+    if type(race) ~= "table" or race.status ~= "complete" then return nil end
+    local BT = NS.BestToast
+    if not (BT and BT.Earns and BT.Earns(record)) then return nil end
+    return "NEW_BEST"
+end
+
+-- Stock `key` (one of RACE_WORDS) on the call-out with its voice, with Race mode on and the addon not
+-- stood down; a running countdown is taken down first.
+local function say(key, sample)
+    if not (key and Countdown.RACE_WORDS[key]) or NS.IsStoodDown() then return false end
     if not (NS.RaceMode and NS.RaceMode.On()) then return false end
     takeDown()
     local shown = CO:Show(key) ~= false
     if shown then
-        sampleUp = true
-        debug("sample: %s", key)
+        if sample then sampleUp = true end
+        debug("%s: %s", sample and "sample" or "race", key)
     end
     return shown
+end
+
+--- A real race's word (`key` from EndWord or ResultWord; nil says nothing). The bus receivers below.
+--- @param key string|nil
+--- @return boolean shown
+function Countdown.RaceSay(key)
+    return say(key, false)
+end
+
+--- Test mode's or the sim's word (`key` from EndWord or ResultWord; nil says nothing): shown as a real
+--- race's is, and taken down by EndSample.
+--- @param key string|nil
+--- @return boolean shown
+function Countdown.SampleSay(key)
+    return say(key, true)
 end
 
 --- The samples' cleanup: the countdown re-decided (a sample's goes with its clock) and anything a
@@ -254,8 +295,15 @@ local ROWS = { ["race.centerCountdown"] = true, ["race.finalCountdown"] = true, 
 do
     local bus = NS.NewBusTarget()
     if bus then
-        bus:RegisterMessage(NS.MSG.RACE_STATE_CHANGED, function(_, _, _, to)
-            if to == NS.Race.STATE.RUNNING then arm() else takeDown() end
+        bus:RegisterMessage(NS.MSG.RACE_STATE_CHANGED, function(_, race, from, to)
+            local ST = NS.Race.STATE
+            if to == ST.RUNNING then return arm() end
+            takeDown()
+            -- Out of running with no buzzer (combat dropped, the player died): FAILED.
+            if from == ST.RUNNING and to ~= ST.IDLE then Countdown.RaceSay(Countdown.EndWord(race)) end
+        end)
+        bus:RegisterMessage(NS.MSG.RACE_RESULT, function(_, record)
+            Countdown.RaceSay(Countdown.ResultWord(record))
         end)
         bus:RegisterMessage(NS.MSG.RACE_BUZZER, function() Countdown.Buzzer() end)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)

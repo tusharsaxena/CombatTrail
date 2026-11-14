@@ -71,11 +71,13 @@ Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-fi
 Both verbs draw one fixed showcase (modules/MockFights.lua, modules/MockRaces.lua), the same on every
 character, and the alerts a scenario earns (callout plan row C6). Bare `/ct test` stays the HUD's,
 the lanes' and the Results window's alone: no toast, no call-out. `/ct test race result` adds the
-new-best toast's preview and the call-out's NEW_BEST; `running` holds its clock still, so it counts
-nothing. In `/ct sim`, `newbest` toasts its save (`toast.fights`) and says NEW_BEST on Retail with
+new-best toast's preview and the call-out's NEW_BEST; `running` is a still frame (owner, 2026-11-14):
+its clock holds at 0:18, so it shows no center countdown and no STOP; only the sim's race scenarios
+count down. In `/ct sim`, `newbest` toasts its save (`toast.fights`) and says NEW_BEST on Retail with
 Race mode on; a race scenario counts down to the sample's own endsAt (`RaceSample.EndsAt`) and shows
 STOP at its buzzer, `race-newbest` then toasts (`toast.races`) and says NEW_BEST, and
-`race-incomplete` and `race-died` say FAILED as they end. Every stop and switch of either takes the
+`race-incomplete` and `race-died` say FAILED as they end, by the rule a real race's words follow
+(callout plan row C9). Every stop and switch of either takes the
 toasts and the call-out down (`Countdown.EndSample`, `BestToast.EndSample`), and nothing writes a
 record or a best.
 

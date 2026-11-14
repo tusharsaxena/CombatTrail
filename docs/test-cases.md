@@ -991,7 +991,7 @@ Total.
 - race clock: the held sample race beats while running, and stops with test mode
 - race clock: the sim's race beats from its first hit through Stop!, and stops at its read
 
-### test_countdown.lua (36)
+### test_countdown.lua (41)
 
 - countdown: absent on WoW Forever, the call-out with it
 - countdown: one call-out, on the addon's folder, skin and two shipped voices
@@ -1016,13 +1016,18 @@ Total.
 - countdown: a refresh mid-countdown never repeats a number
 - countdown: the call-out's voice off keeps the numbers and silences them
 - countdown: a cancel at 5 s left hides it and nothing more shows or is said
-- countdown: combat ending before the buzzer hides it
+- countdown: combat ending before the buzzer takes the number down and says FAILED
 - countdown: the stand-down suspends the call-out, and nothing re-arms it until the stand-up
 - countdown: a /reload with 4 s left resumes at 4 and counts 3, 2, 1
 - countdown: a /reload before the window shows nothing until it opens
 - countdown: a /reload past the buzzer shows nothing
 - countdown: the buzzer shows the call-out's STOP, once, only when enabled
 - countdown: a canceled race and a race ending early raise no buzzer
+- countdown: the player dying before the buzzer says FAILED; after it, nothing more
+- countdown: a real race that is a new best says NEW_BEST at its result; a first or slower one does not
+- countdown: NEW_BEST does not ask the toast's switch; Race mode off keeps every word off
+- countdown: a real race's FAILED keeps the call-out's per-word mute and own text
+- countdown: one rule for a real race and a sample: EndWord and ResultWord
 - countdown: the call-out is handed the race's one endsAt, the value RaceClock and Race read
 - countdown: the stand-up re-arms from the race's endsAt and shows the number of the moment
 - countdown: a stand-down during the lead-in drops the timer; the stand-up waits again
@@ -1786,7 +1791,7 @@ Total.
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
 | test_race_clock.lua | 13 |
-| test_countdown.lua | 36 |
+| test_countdown.lua | 41 |
 | test_callout_settings.lua | 9 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
@@ -1831,4 +1836,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1497** |
+| **Total** | **1502** |

@@ -36,9 +36,10 @@ local _, NS = ...
 --
 -- THE ALERTS (callout plan row C6, owner 2026-11-14). Plain `/ct test` stays the HUD's alone. The
 -- race word's result, a new best over the sample history, also shows the call-out's NEW_BEST
--- (Countdown.SampleSay, the toast's rule). Its running body holds the race clock still, so the
--- sample has no endsAt (RaceSample.EndsAt) and no countdown runs: the countdown and the buzzer's STOP
--- are the sim's, on the sample's running clock (modules/SimRace.lua). Every stop and switch of the
+-- (Countdown.SampleSay of Countdown.ResultWord, a real race's rule). Its running body is a still frame
+-- (owner, 2026-11-14): it holds the race clock still, so the sample has no endsAt (RaceSample.EndsAt)
+-- and no countdown runs: the countdown and the buzzer's STOP are the sim's, on the sample's running
+-- clock (modules/SimRace.lua). Every stop and switch of the
 -- preview takes the samples' alerts down (Countdown.EndSample, BestToast.EndSample): no toast and no
 -- call-out outlives the sample that earned it, and none of them writes a record or a best.
 
@@ -222,7 +223,7 @@ local function startRaceTest(word)
     elseif word == "result" then
         holdResult(sample)
         NS.BestToast.ShowPreview(sample.record)
-        if NS.BestToast.Earns(sample.record) then NS.Countdown.SampleSay("NEW_BEST") end
+        NS.Countdown.SampleSay(NS.Countdown.ResultWord(sample.record))
     else
         holdFight()
     end

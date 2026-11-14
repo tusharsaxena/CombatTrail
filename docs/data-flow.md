@@ -141,7 +141,11 @@ FIGHT_ENDED
   frame clock, so a number flips in the frame the true time left crosses it; each new number calls
   `RaceClock.Kick()`, one race beat at once, so the Race window draws 0:0n.0 in that frame. The last
   `speakFrom` (5) numbers are spoken from the chosen pack. RACE_BUZZER cancels the count and shows STOP
-  (`race.buzzer`); any other way out of running takes the number down silently. Its settings flow
+  (`race.buzzer`). Leaving running with no buzzer (combat dropped or the player died: the race's
+  plain `endedAt`) takes the number down and says FAILED; a cancel or a lost read says nothing.
+  RACE_RESULT of a complete race that is a new best (`BestToast.Earns`, whether or not the toast is
+  on) says NEW_BEST. Both are `Countdown.EndWord` and `Countdown.ResultWord`, the rule the samples
+  ask too (callout plan row C9), with Race mode on; the call-out applies each word's mute and text. Its settings flow
   the other way only through the seam: the Race mode page's call-out tabs, `/ct set` and the drag all
   write `callout.*` through `NS.SetByPath`, whose row reaction (`onChange`, the instance's `Apply`)
   repaints the call-out.
@@ -162,5 +166,7 @@ carries no payload, so it only moves the two windows' clocks.
 The samples' alerts are calls too, never messages (callout plan row C6): a sim fight's save calls
 `BestToast.OnFight`, a sim race's read `BestToast.OnRace`, and `/ct test race result`
 `BestToast.ShowPreview`, each judged on the sample history (`Bests` reads it while the preview is
-on); the call-out's words go through `Countdown.SampleSay`. The preview's stop and switch call
+on); the call-out's words are a real race's rule (`Countdown.EndWord`, `Countdown.ResultWord`)
+said through `Countdown.SampleSay`. `/ct test race running` is a still frame: its clock holds, so it
+counts nothing; only the sim's race scenarios run the countdown. The preview's stop and switch call
 `BestToast.EndSample` and `Countdown.EndSample`, so no toast or call-out outlives its sample.

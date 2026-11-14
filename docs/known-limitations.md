@@ -66,13 +66,14 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   and every stand-up and refreshed by every out-of-combat read, so a respec followed by a pull
   before any out-of-combat read could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.
-- **`/ct test race running` shows no center countdown.** Test mode holds the race clock still at
-  0:18, so the held sample has no endsAt and nothing counts; the countdown and the buzzer's STOP play
-  in the sim's race scenarios, on the sample's running clock (callout plan row C6).
-- **The samples' call-out words are theirs alone.** `/ct test race result` and the sim say NEW BEST on
-  a new best and FAILED on a race that ends before its buzzer; a real race says only STOP at the
-  buzzer. No scenario is canceled or runs out of time past its buzzer, so CANCELED and TIME UP are
-  never said.
+- **`/ct test race running` is a still frame with no center countdown.** By the owner's decision
+  (2026-11-14) test mode holds the race clock still at 0:18, so the held sample has no endsAt and
+  nothing counts; the countdown and the buzzer's STOP play only in the sim's race scenarios, on the
+  sample's running clock (callout plan row C6).
+- **CANCELED and TIME UP are never said.** A race says STOP at its buzzer, FAILED as it ends before
+  it and NEW BEST at a new best's result, real or sample (callout plan row C9); a cancel says nothing,
+  and no race runs out of time past its buzzer. The sim's `newbest` fight also says NEW BEST, which a
+  real fight does not: the call-out speaks for races alone.
 - **Spell and item IDs in the sample rotation are unverified** in game.
 
 ## Design limits of v0.1.0

@@ -427,7 +427,7 @@ test("countdown: a cancel at 5 s left hides it and nothing more shows or is said
     assertEqual(#onUpdates(S), 0)
 end)
 
-test("countdown: combat ending before the buzzer hides it", function()
+test("countdown: combat ending before the buzzer takes the number down and says FAILED", function()
     if forever() then return end
     local S = fresh()
     running(S, 30)
@@ -435,7 +435,8 @@ test("countdown: combat ending before the buzzer hides it", function()
     assertTrue(frameShown(S))
     F.leave(S, 125.1)
     assertEqual(S.NS.Race.State(), "stopping")
-    assertFalse(frameShown(S))
+    assertNil(C(S).Shown(), "the number is down")
+    assertEqual(CO(S):Stats().key, "FAILED", "the call-out says FAILED (callout plan row C9)")
     assertEqual(C(S).Diagnose().scheduled, 0)
 end)
 
@@ -530,12 +531,107 @@ test("countdown: a canceled race and a race ending early raise no buzzer", funct
     assertTrue(S.NS.Race.Cancel())
     to(S, 134)
     assertTrue(CO(S):Stats().key ~= "STOP")
+    assertEqual(spoken(S), "", "a cancel says nothing, not even FAILED")
     local E = fresh()
     running(E, 30)
     F.leave(E, 120)
     to(E, 134)
     assertTrue(CO(E):Stats().key ~= "STOP")
-    assertEqual(spoken(E), "")
+    assertEqual(spoken(E), "failed@120", "the early end says FAILED, once, and no STOP")
+end)
+
+-- ── a real race's words (callout plan row C9, owner 2026-11-14): the samples' rule ──────────────
+
+test("countdown: the player dying before the buzzer says FAILED; after it, nothing more", function()
+    if forever() then return end
+    local S = fresh()
+    running(S, 30)
+    to(S, 110)
+    F.die(S, 110.5)
+    assertEqual(S.NS.Race.State(), "stopping")
+    assertEqual(CO(S):Stats().key, "FAILED")
+    local D = fresh()
+    running(D, 30)
+    to(D, 133)
+    F.die(D, 133.5)
+    to(D, 134)
+    assertEqual(spoken(D), "5@127,4@128,3@129,2@130,1@131,stop@132", "a death past the buzzer: STOP alone")
+end)
+
+-- A second race on the same board with more damage: a new best over the first.
+local BETTER = { damage = 1693682, dps = 43428, duration = 39,
+                 spells = { { id = 29722, dmg = 1100000, dps = 28205 }, { id = 116858, dmg = 593682, dps = 15223 } } }
+
+-- The epoch on the race clock, so the second race is fought after the first (Bests ranks the earlier
+-- by its epoch, and two races in one real second would tie).
+local function clocked()
+    return fresh({ mutate = function(m) m.time = function() return 1700000000 + math.floor(m.__now or 0) end end })
+end
+
+local function secondRace(S, session)
+    assertTrue(F.arm(S, 30, 200))
+    local start = F.pull(S, 201, 26, session)
+    F.damage(S, 26, start + 1, start + 30, 1)
+    F.settle(S, start + 31)
+    return start
+end
+
+test("countdown: a real race that is a new best says NEW_BEST at its result; a first or slower one does not", function()
+    if forever() then return end
+    local S = clocked()
+    F.whole(S, 30)
+    assertEqual(S.NS.Race.State(), "result")
+    assertTrue(CO(S):Stats().key ~= "NEW_BEST", "a board's first race beats nothing")
+    secondRace(S, BETTER)
+    assertEqual(S.NS.Race.State(), "result")
+    local rec = F.last(S, "RACE_RESULT")[2]
+    assertEqual(rec.race.status, "complete")
+    assertTrue(S.NS.BestToast.Earns(rec), "the toast's rule says a new best")
+    assertEqual(C(S).ResultWord(rec), "NEW_BEST")
+    assertEqual(CO(S):Stats().key, "NEW_BEST", "the call-out says it")
+    local W = clocked()
+    F.whole(W, 30)
+    secondRace(W, F.SESSION)
+    assertTrue(CO(W):Stats().key ~= "NEW_BEST", "no faster than the best: no NEW_BEST")
+end)
+
+test("countdown: NEW_BEST does not ask the toast's switch; Race mode off keeps every word off", function()
+    if forever() then return end
+    local S = clocked()
+    assertTrue(S.NS.SetByPath("toast.races", false))
+    F.whole(S, 30)
+    secondRace(S, BETTER)
+    assertEqual(CO(S):Stats().key, "NEW_BEST", "the word is the call-out's, not the toast's")
+    local E = fresh()
+    running(E, 30)
+    assertTrue(E.NS.SetByPath("race.enabled", false))   -- off stops new races; this one runs on
+    F.leave(E, 120)
+    assertEqual(spoken(E), "", "Race mode off: no FAILED")
+end)
+
+test("countdown: a real race's FAILED keeps the call-out's per-word mute and own text", function()
+    if forever() then return end
+    local S = fresh()
+    assertTrue(S.NS.SetByPath("callout.muted.FAILED", true))
+    assertTrue(S.NS.SetByPath("callout.texts.FAILED", "TOO SOON"))
+    running(S, 30)
+    F.leave(S, 120)
+    assertEqual(CO(S):Stats().key, "FAILED")
+    assertEqual(spoken(S), "", "muted: shown, never said")
+    assertEqual(CO(S):Stats().text, "TOO SOON", "the player's own text")
+end)
+
+test("countdown: one rule for a real race and a sample: EndWord and ResultWord", function()
+    if forever() then return end
+    local C_ = fresh().NS.Countdown
+    assertEqual(C_.EndWord({ status = "stopping", endedAt = 9 }), "FAILED")
+    assertNil(C_.EndWord({ status = "stopping" }), "the buzzer came: no word")
+    assertNil(C_.EndWord({ status = "lost", endedAt = 9 }))
+    assertNil(C_.EndWord(nil))
+    assertNil(C_.ResultWord({ race = { status = "incomplete" } }), "incomplete never NEW_BEST")
+    assertNil(C_.ResultWord({}))
+    assertFalse(C_.RaceSay(nil))
+    assertFalse(C_.RaceSay("STOP"), "only the race's words")
 end)
 
 -- ── the one endsAt, the stand-up, a profile change, the retired cue (callout plan row C3) ──────────
