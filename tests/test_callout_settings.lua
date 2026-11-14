@@ -110,8 +110,13 @@ test("callout settings: the defaults are seeded from the rows, and the schema va
     assertNil(D.callout.muted, "no mute defaults")
     assertEqual(D.callout.voice, "male-arena-john", "Arena John, the default voice for a new profile")
     assertEqual(D.callout.glow, true, "the glow on")
-    assertEqual(D.callout.glowIntensity, 0.35)
-    assertEqual(D.callout.glowThickness, 2)
+    assertEqual(D.callout.glowIntensity, 1, "at full intensity (Callout minor 4, LibKa0s v1.102.0)")
+    assertEqual(D.callout.glowThickness, 1, "1 px thick")
+    assertEqual(D.callout.glowX .. "," .. D.callout.glowY, "1,-1", "1 px right and 1 px down")
+    assertEqual(D.callout.glowCustom, true, "Glow color ticked")
+    assertEqual(D.callout.glowColor.r .. "," .. D.callout.glowColor.g .. "," .. D.callout.glowColor.b, "0,0,0", "a black swatch")
+    assertEqual(D.callout.font, "Ka0s Oxanium SemiBold", "the SemiBold face")
+    assertEqual(D.callout.shadowX .. "," .. D.callout.shadowY, "1,1", "the shadow 1 px right and 1 px up")
     assertEqual(NS.Callout:Get("voice"), "male-arena-john", "a fresh profile speaks with Arena John")
     local errors, _, missing = NS.ValidateSchema()
     assertEqual(errors, 0)
@@ -217,7 +222,7 @@ test("callout settings: the glow's rows are reached by /ct set, get and reset", 
     NS.Slash:OnSlash("reset callout.glow")
     NS.Slash:OnSlash("reset callout.glowThickness")
     assertTrue(NS.Callout:Get("glow"), "reset: the glow back on")
-    assertEqual(NS.Callout:Get("glowThickness"), 2, "and its thickness back to 2")
+    assertEqual(NS.Callout:Get("glowThickness"), 1, "and its thickness back to 1")
 end)
 
 test("callout settings: the Race mode page's Defaults and a profile reset put the call-out back", function()
@@ -282,7 +287,10 @@ test("callout settings: the one tab is the library's side layout on the host's r
     assertEqual(last.view.kind, "options")
     assertEqual(last.view.layout, "side")
     assertEqual(last.view.prefix, "callout.", "on the host's route")
-    assertTrue(last.view.preview ~= nil, "the Preview block")
+    -- LibKa0s v1.102.0 (CalloutSettings minor 5): the one tab draws no sample line, so the side
+    -- layout has no preview to repaint; the Preview block's controls stay.
+    assertNil(last.view.preview, "no sample line in the one tab")
+    assertNil(last.view.repaint, "and nothing to repaint")
     assertEqual(last.view.side, "look", "Look is the first side tab")
     local buttons = last.view.sideTabs
     assertEqual(#buttons, 2, "two side tabs")

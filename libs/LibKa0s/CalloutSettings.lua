@@ -48,7 +48,9 @@
 --
 -- Over each tab: a sample line ("5  GO!  STOP", each in its kind's color) drawn in the chosen face,
 -- outline and shadow at the chosen size up to PREVIEW_MAX, repainted on every write (a refresher in
--- the page's `refreshers`, which the Options instance's write runs); "Test countdown" counts the
+-- the page's `refreshers`, which the Options instance's write runs). The one tab's layout draws no
+-- sample line (minor 5, the owner's call of 2026-11-14, plan row L17): its Preview heading, the
+-- buttons and the rows stay, and the real call-out is what shows the look. "Test countdown" counts the
 -- real call-out down from 5 to GO; "Play" shows the stock text picked beside it, with its voice, or
 -- (minor 4) counts down from 10 to 1, numbers only, when "Countdown 10 to 1" is picked.
 -- The picked text is session state, never saved. "Unlock to move" is the instance's SetLocked: the
@@ -85,7 +87,11 @@ if not lib or type(lib.__methods) ~= "table" or type(lib.__validFor) ~= "functio
 -- `opts.texts = false`, and the Play list's "Countdown 10 to 1"; and (plan row L15) the Glow rows in
 -- Look, AuraMaster's text glow (on/off, Glow color, Use class color, Use the skin's color, Intensity,
 -- Thickness, X and Y offset) in place of the Off / Soft / Strong choice. Needs the shell at minor 3.
-local SETTINGS_MINOR = 4
+-- Minor 5 (plan row L17, v1.102.0): the one tab's layout (`layout = "side"`, both builds) draws no
+-- sample line; its Preview heading, Test countdown and Play, Text to play, Unlock to move and Reset
+-- position stay. The three-tab build keeps its line. `FONT_FACES` leads with the new default face,
+-- Oxanium SemiBold (Callout minor 4), then Oxanium Bold. Needs the shell at minor 3, as minor 4 did.
+local SETTINGS_MINOR = 5
 if lib.__settingsMinor and lib.__settingsMinor >= SETTINGS_MINOR
   and lib.__settingsShellMinor == lib.MINOR then return end
 lib.__settingsMinor      = SETTINGS_MINOR
@@ -226,8 +232,9 @@ end
 
 -- The call-out's display faces, in the order the font row offers them after the skin's and the
 -- game's: the owner's choice of 2026-11-13 (Orbitron, also planned, does not ship). Each is a
--- LibKa0s-Media-1.0 key and its LSM name.
-lib.FONT_FACES = { lib.FONT_DEFAULT, "Ka0s Bebas Neue", "Ka0s Russo One" }
+-- LibKa0s-Media-1.0 key and its LSM name. From minor 5 the default is Oxanium SemiBold (Callout
+-- minor 4) and Oxanium Bold, the default to then, follows it.
+lib.FONT_FACES = { lib.FONT_DEFAULT, "Ka0s Oxanium Bold", "Ka0s Bebas Neue", "Ka0s Russo One" }
 
 --- Every face LibSharedMedia lists (or, without it, every LibKa0s-Media-1.0 face), sorted, as a list
 --- and a set.
@@ -618,9 +625,11 @@ end
 
 -- ── the Options build ────────────────────────────────────────────────────────────────────────
 
-local function optionsPreview(B, O, ctx, L, view)
+--- The preview block: the sample line (not in the one tab's layout, minor 5: `noLine`), then the
+--- two button pairs and the block's own rows.
+local function optionsPreview(B, O, ctx, L, view, noLine)
   local inst = B.inst
-  local label = O.TextRow(ctx, sampleText(inst), { justify = "CENTER" })
+  local label = not noLine and O.TextRow(ctx, sampleText(inst), { justify = "CENTER" }) or nil
   view.preview = label
   if label then
     local function repaint() paintPreview(inst, label, label.label) end
@@ -649,11 +658,13 @@ end
 --- The one tab (minor 4): a "Preview" heading over the preview block, then the Options instance's
 --- side tabs, Look (the colors in it) and Sound, the selected one's rows drawn beside the list. The
 --- selection is session state, never saved. An Options copy with no O.SideTabs (before OptionsNav
---- minor 7) draws Look and Sound one under the other, each under its heading, instead.
+--- minor 7) draws Look and Sound one under the other, each under its heading, instead. From minor 5
+--- the block draws no sample line (`view.preview` and `view.repaint` are nil): the heading, the
+--- buttons and the rows under it stay.
 local function buildSide(B, O, ctx, L, view)
   local inst = B.inst
   if type(O.Section) == "function" then O.Section(ctx, word(L, "PREVIEW")) end
-  optionsPreview(B, O, ctx, L, view)
+  optionsPreview(B, O, ctx, L, view, true)
   view.layout = "side"
   if type(O.SideTabs) ~= "function" then
     view.rows = tabRows(B, L, {}, nil, true, false, true)
@@ -825,12 +836,14 @@ local function plainHeading(parent, text, y)
   return fs
 end
 
-local function plainPreview(inst, parent, L, view, y)
-  local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-  fs:SetPoint("TOPLEFT", parent, "TOPLEFT", PLAIN_PAD, y)
-  fs:SetHeight(PREVIEW_MAX + PLAIN_PAD)
-  view.preview = fs
-  y = y - PREVIEW_MAX - PLAIN_PAD * 2
+local function plainPreview(inst, parent, L, view, y, noLine)
+  if not noLine then   -- the one tab's layout draws no sample line (minor 5)
+    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    fs:SetPoint("TOPLEFT", parent, "TOPLEFT", PLAIN_PAD, y)
+    fs:SetHeight(PREVIEW_MAX + PLAIN_PAD)
+    view.preview = fs
+    y = y - PREVIEW_MAX - PLAIN_PAD * 2
+  end
   view.testButton = plainButton(parent, word(L, "TEST_COUNTDOWN"), PLAIN_PAD, y, PLAIN_CONTROL_W,
     function() inst:TestCountdown() end)
   view.playButton = plainButton(parent, word(L, "PLAY"), PLAIN_PAD + PLAIN_CONTROL_W + PLAIN_PAD, y,
@@ -854,15 +867,15 @@ local function buildPlain(inst, parent, opts)
   local L = opts.L
   local view = { kind = "plain", controls = {} }
   local function refresh()
-    paintPreview(inst, view.preview, view.preview)
+    if view.preview then paintPreview(inst, view.preview, view.preview) end
     for _, c in ipairs(view.controls) do c.sync() end
   end
   view.refresh = refresh
-  local y = plainPreview(inst, parent, L, view, -PLAIN_PAD)
-  for _, r in ipairs(previewRows({ inst = inst }, L)) do y = plainRow(parent, r, y, view, refresh) end
   -- The one tab's layout (minor 4) has no side tabs here: Look (its colors in it) and Sound, each
-  -- under its heading, and no stock texts.
+  -- under its heading, and no stock texts; from minor 5, no sample line either.
   local side = opts.layout == "side"
+  local y = plainPreview(inst, parent, L, view, -PLAIN_PAD, side)
+  for _, r in ipairs(previewRows({ inst = inst }, L)) do y = plainRow(parent, r, y, view, refresh) end
   local tab = not side and opts.tab or nil
   view.rows = inst:SettingsRows({ tab = tab, L = L, plain = true, texts = not side })
   local heading
@@ -889,8 +902,9 @@ end
 --- not read): a Preview heading and block over the Look and Sound side tabs, or, in the plain
 --- build, Look and Sound under their headings, with no stock texts either way.
 --- `opts.L` overrides the words. Answers the view (`kind`, `rows`, `preview`; with the side
---- layout `layout`, `side` and `sideTabs`; for the plain build `controls`, `refresh` and
---- `height`), or nil when there is nothing to build into, or an unknown tab or layout.
+--- layout `layout`, `side` and `sideTabs`, and no `preview` from minor 5, since that layout draws
+--- no sample line; for the plain build `controls`, `refresh` and `height`), or nil when there is
+--- nothing to build into, or an unknown tab or layout.
 function METHODS:BuildSettings(parent, opts)
   opts = type(opts) == "table" and opts or {}
   if opts.layout ~= nil and not LAYOUTS[opts.layout] then return nil end

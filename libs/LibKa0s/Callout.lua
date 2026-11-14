@@ -16,7 +16,7 @@
 -- (the frame's global name), `addon` and `vendorPath` (where the payload sits, for the voice packs
 -- and the bundled fonts), `soundsBase` (the folder holding the packs, overriding the one `addon`
 -- implies), `skin` (a registered skin owner, for the "Skin font" choice, the drag strip and,
--- from minor 3, the glow's skin color), `label` (the drag strip's text) and `debug` (`debug(tag, msg)`). docs/api/Callout/version-3.4-docs.md
+-- from minor 3, the glow's skin color), `label` (the drag strip's text) and `debug` (`debug(tag, msg)`). docs/api/Callout/version-4.5-docs.md
 -- is the full contract.
 --
 -- ── WHERE A WRITE GOES (minor 2) ─────────────────────────────────────────────────────────────
@@ -70,7 +70,12 @@ if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary
 -- A stored "off" / "soft" / "strong" reads as the same look (`GLOW_LEGACY`, `MigrateGlow`), and
 -- Set("glow", choice) still takes one, written as those keys. Six more voice packs (plan row L16),
 -- the arena announcer the default `voice`.
-local MAJOR, MINOR = "LibKa0s-Callout-1.0", 3
+-- Minor 4 (plan row L17, v1.102.0): new look defaults, the owner's own in-game settings: the face
+-- Oxanium SemiBold (`FONT_DEFAULT`), a 1 px shadow up and to the right (`shadowX = 1`,
+-- `shadowY = 1`), and a black glow at full intensity, 1 px thick, 1 px right and 1 px down
+-- (`glowCustom`, `glowColor = { 0, 0, 0 }`, `glowIntensity = 1`, `glowThickness = 1`, `glowX = 1`,
+-- `glowY = -1`). A host that stored its own values reads them as before; `GLOW_LEGACY` is unchanged.
+local MAJOR, MINOR = "LibKa0s-Callout-1.0", 4
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -151,7 +156,7 @@ lib.SOUND_EXT = ".ogg"
 -- ── the choices ──────────────────────────────────────────────────────────────────────────────
 
 lib.FONT_SKIN, lib.FONT_GAME = "Skin font", "Game default"   -- the two font values that are no face
-lib.FONT_DEFAULT = "Ka0s Oxanium Bold"    -- a LibKa0s-Media-1.0 face, also its LSM name
+lib.FONT_DEFAULT = "Ka0s Oxanium SemiBold"   -- a LibKa0s-Media-1.0 face, also its LSM name (minor 4; Bold to minor 3)
 lib.OUTLINES = { "NONE", "OUTLINE", "THICKOUTLINE", "MONOCHROME" }
 lib.GLOWS = { "off", "soft", "strong" }    -- the retired glow choice (to minor 2), GLOW_LEGACY's keys
 lib.ANIMS = { "slam", "pulse", "glow", "blink", "shake", "none" }
@@ -167,14 +172,15 @@ lib.WIDTH = 900                           -- the frame's width; its height follo
 --- host copying by hand copies `point` and `colors` too, never shares them).
 lib.DEFAULTS = {
   font = lib.FONT_DEFAULT, size = 96, outline = "THICKOUTLINE",
-  shadow = true, shadowX = 2, shadowY = -2,
+  shadow = true, shadowX = 1, shadowY = 1,
   colors = {
     number = { 1, 1, 1 },        info = { 0.35, 0.75, 1 },  go = { 0.3, 1, 0.45 },
     stop   = { 1, 0.35, 0.3 },   warn = { 1, 0.78, 0.2 },   error = { 1, 0.2, 0.25 },
   },
-  -- The glow behind the text (minor 3): on, at the old "soft" look, in each word's kind color.
-  glow = true, glowIntensity = 0.35, glowThickness = 2, glowX = 0, glowY = 0,
-  glowCustom = false, glowColor = { 1, 1, 1 }, useClassColorGlow = false, glowColorFromSkin = false,
+  -- The glow behind the text (minor 3): on. From minor 4 black at full intensity, 1 px thick, 1 px
+  -- right and 1 px down (to minor 3: the old "soft" look, 0.35 and 2 px, in each word's kind color).
+  glow = true, glowIntensity = 1, glowThickness = 1, glowX = 1, glowY = -1,
+  glowCustom = true, glowColor = { 0, 0, 0 }, useClassColorGlow = false, glowColorFromSkin = false,
   anim = "slam", hold = 1.5,
   point = { "CENTER", "CENTER", 0, 180 },
   voice = "male-arena-john", channel = "Master", speakFrom = 5,
