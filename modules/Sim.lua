@@ -3,7 +3,7 @@ local _, NS = ...
 -- time through the lanes, the HUD's live view and its fight-over card, then the Results window on
 -- the sim's fight beside the sample history, so the best, the pace and the compare have something
 -- to stand on. Adapted from DPS Race @045f479 (modules/Sim.lua) without its race: no arm, no
--- buzzer, no countdown, no late cast; the fight is 45 s against the main sample hunter's board.
+-- buzzer, no countdown, no late cast; the fight is 15 s against the main sample hunter's board.
 --
 -- `/ct sim` is the library's sim grammar (LibKa0s-Sim-1.0 RunVerb): a bare line opens the step
 -- panel idle (the scenario dropdown and Start, the steps previewed, nothing run); Start (or `/ct
@@ -19,6 +19,12 @@ local _, NS = ...
 -- it (modules/Filters.lua, the player's own settings) and the record joins the sample history in
 -- memory (Results_Source.Put); RESULT_HOLD seconds after the card the Results window opens on it.
 -- The stand-down's CancelAllTimers takes the beat.
+--
+-- THE MINIMUM LENGTH (callout plan row C10). The sim's 15 s stands in for a full fight, kept short so
+-- the owner does not wait: it is under Retail's 30 s minimum, so a scenario without its own `length`
+-- is judged as long enough (math.huge to Filters.Passes) and only the rest of the filters apply. A
+-- scenario with its own `length` (`short`, 10 s, under both clients' default minimum) is judged at
+-- that length by the real filter, so its card says "Not saved: shorter than N s" with the player's N.
 --
 -- NOTHING REACHES THE BUS OR THE STORE. The sample fight goes to the HUD's receivers directly, so
 -- the recorder, the casts, the usage and the bests never hear it, and the record is never saved.
@@ -40,7 +46,8 @@ local L = NS.L
 
 -- The scenarios, in the order help lists them. `factor` sets the sample's DPS against the main
 -- hunter's best on its board; `board` names another board ("first" fights one with no history);
--- `length` replaces the 45 s; `lost` has the meter lose the fight.
+-- `length` replaces Sim.LENGTH and is judged by the minimum length (the others are exempt from it);
+-- `lost` has the meter lose the fight.
 Sim.SCENARIOS = {
     { key = "newbest", label = "New best", factor = 1.04, desc = "beats your best on the board" },
     { key = "behind", label = "Behind the best", factor = 0.93, desc = "saved, behind your best" },
@@ -54,8 +61,8 @@ Sim.SCENARIOS = {
 for _, s in ipairs(NS.SimRace and NS.SimRace.SCENARIOS or {}) do Sim.SCENARIOS[#Sim.SCENARIOS + 1] = s end
 Sim.DEFAULT = "newbest"
 Sim.BOARD = "vorasius"
---- The fight's length (spec §8): 45 s in real time.
-Sim.LENGTH = 45
+--- The fight's length in real time (spec §8 said 45 s; the owner cut it to 15 s, callout plan row C10).
+Sim.LENGTH = 15
 -- Seconds from the combat end to the final read (modules/Fight.lua's settle), and how long the card
 -- holds before the Results window opens.
 Sim.SETTLE = 2
@@ -128,7 +135,7 @@ local function endFight(fight, now)
     end
     NS.Slices.Close(fight.id)
     NS.Hud.OnFightEnded(fight, NS.MockFights.FinalOf(sample.plan, length), "final")
-    local ok, why = NS.Filters.Passes(sample.ident, length)
+    local ok, why = NS.Filters.Passes(sample.ident, s.length and length or math.huge)
     if not ok then
         NS.Slices.Forget(fight.id)
         return NS.Hud.OnFightSkipped(fight, why)

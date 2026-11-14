@@ -208,7 +208,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 |---|---|---|---|
 | SM-CT-M1 | Both | `/ct test` | Sample casts loop on the lanes, the HUD holds a sample fight, the Results window shows the sample history, each under its strip |
 | SM-CT-M2 | Both | Enter combat in test mode | Test mode ends; nothing was saved |
-| SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays in real time; the card says New best, then Not saved. The `race-` scenarios are Retail's (SM-CT-RM42) |
+| SM-CT-M3 | Both | `/ct sim newbest`, then `short` and `lost` | The fight plays 15 s in real time (*Fighting (15 s)*); the card says New best and Saved, then Not saved: shorter than 30 s (15 s on Forever, the minimum length's default), then Not saved for the lost fight. The `race-` scenarios are Retail's (SM-CT-RM42) |
 | SM-CT-M4 | Both | `/ct sim` step window | Anchored beside the HUD |
 | SM-CT-M5 | Forever | The WoW Forever mock spell and item IDs | Every sample icon draws |
 | SM-CT-M6 | Both | `/ct test` on two different characters (another class, another realm); read the HUD and the Results window | The same showcase on both: Samplehunter and Mockarrow on Samplerealm, the same fights and figures. The HUD at 0:25: Damage and DPS each with the Pet figure under it, DPS the damage over 0:25 (2.71M at 108.4K on Retail), the spell rows adding up to the damage, the pet's rows marked with the paw and named Grimfang in the right column, cooldown marks on the chart against the best's pace, the pace bar ahead of the best. `/ct test` shows no toast and no call-out |

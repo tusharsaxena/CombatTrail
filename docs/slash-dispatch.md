@@ -67,6 +67,10 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 The sim's scenarios are `Sim.SCENARIOS`: `newbest`, `behind`, `first`, `short` and `lost`, then on Retail
 Race mode's eight (modules/SimRace.lua): `race-newbest`, `race-behind`, `race-first`, `race-incomplete`,
 `race-died`, `race-flagged`, `race-shared` and `race-sticky`, refused in one line with Race mode off.
+A fight scenario plays 15 s in real time (`Sim.LENGTH`; its step window reads *Fighting (15 s)*), under
+Retail's 30 s minimum length, so `newbest`, `behind`, `first` and `lost` are exempt from the minimum
+and judged by the rest of the recording filters; `short` has its own 10 s and is judged by the
+player's own minimum, so its card reads *Not saved: shorter than N s* (callout plan row C10).
 
 Both verbs draw one fixed showcase (modules/MockFights.lua, modules/MockRaces.lua), the same on every
 character, and the alerts a scenario earns (callout plan row C6). Bare `/ct test` stays the HUD's,

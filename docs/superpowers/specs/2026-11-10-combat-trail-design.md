@@ -334,7 +334,7 @@ all from DPS Race"), with real-combat columns and filters (mockup §5):
   library. Every element has its own overrides on top of the skin.
 - **Keybindings:** Toggle DPS HUD, Toggle Results window, Toggle lanes.
 - **Debug and diagnostics:** the standard debug console and `/ct diagnostics` report, as in DpsRace.
-- **Sim mode:** a made-up 45 s fight played in real time through the lanes, the HUD and into Results **(Claude)**.
+- **Sim mode:** a made-up 15 s fight (45 s until the owner cut it on 2026-11-14, callout plan row C10) played in real time through the lanes, the HUD and into Results **(Claude)**.
 
 ## 9. Architecture outline (Claude)
 

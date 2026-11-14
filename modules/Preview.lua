@@ -6,7 +6,7 @@ local _, NS = ...
 --         every view. The HUD holds one moment of a sample fight still (its clock, live figures,
 --         pace bar, chart and spell rows), the lanes play the sample rotation on a loop, and the
 --         Results window opens on a made-up fight history (modules/MockFights.lua).
---   sim   `/ct sim`'s Start: a made-up 45 s fight played in real time through the lanes, the HUD's
+--   sim   `/ct sim`'s Start: a made-up 15 s fight played in real time through the lanes, the HUD's
 --         live view and its fight-over card, then the Results window on the sim's fight beside the
 --         same history (modules/Sim.lua holds the scenarios and the clock; with the library its
 --         step session starts first, and its prepare comes back here).

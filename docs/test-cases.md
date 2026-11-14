@@ -1526,11 +1526,13 @@ Total.
 - preview: a sample fight is the same each time, and its parts agree
 - preview: the first-run skin picker shows the HUD's sample in the skin, and its close puts it back
 
-### test_sim.lua (5)
+### test_sim.lua (7)
 
 - sim newbest ends with New best chip
 - sim short ends Not saved
 - sim: behind saves under the best; first has no pace; lost is not saved
+- sim: the fight is 15 s, under Retail's minimum length, and still saves
+- sim short is judged by the player's own minimum length
 - sim: the verb starts it through the step session, and stop ends it
 - sim: combat ends it; a refused start leaves nothing on
 
@@ -1819,7 +1821,7 @@ Total.
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
-| test_sim.lua | 5 |
+| test_sim.lua | 7 |
 | test_race_preview.lua | 8 |
 | test_sim_race.lua | 9 |
 | test_showcase.lua | 11 |
@@ -1836,4 +1838,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1502** |
+| **Total** | **1504** |

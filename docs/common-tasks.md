@@ -74,7 +74,9 @@ function above CCN 15. Write the failing test first.
 ## Add a sim scenario
 
 - Add a row to `Sim.SCENARIOS` in `modules/Sim.lua` (`key`, `label`, `factor`, `desc`, and `length`,
-  `board` or `lost` where it differs) and its locale strings, then a case in `tests/test_sim.lua`. A
+  `board` or `lost` where it differs) and its locale strings, then a case in `tests/test_sim.lua`.
+  Only a row with its own `length` is judged by the minimum fight length; the others play
+  `Sim.LENGTH` (15 s, under Retail's 30 s minimum) and are exempt from it (callout plan row C10). A
   race scenario (Retail) is a row in `SimRace.SCENARIOS` in `modules/SimRace.lua` instead (`key` under
   the `race-` prefix, `label`, `factor`, `desc`, and `kind`, `status`/`endAt`, `died`, `late`, `shared`
   or `sticky` where it differs), with its case in `tests/test_sim_race.lua`. A scenario that earns an
