@@ -348,6 +348,17 @@ test("callout settings: the migration rewrites a stored glow choice, drops the t
     assertEqual(soft.glow, true, "soft: on, a profile that is not the active one")
     assertEqual(soft.glowThickness, 4, "a stored thickness wins over the choice's")
     assertEqual(sv.profiles.Off.callout.glow, false, "off: off")
+    -- LibKa0s v1.102.0 (Callout minor 4): the retired choice named no color, offset or swatch, so the
+    -- migration stores none and a migrated profile reads the new defaults for them: Glow color ticked,
+    -- the black swatch, drawn 1 px right and 1 px down, where v1.100.0 drew the kind color at 0, 0.
+    -- (The active profile's table holds AceDB's copy of every default, savedvariables-§1, so the
+    -- stored check reads the profile that is not the active one.)
+    for _, key in ipairs({ "glowCustom", "glowColor", "glowX", "glowY" }) do
+        assertNil(rawget(soft, key), "soft: no " .. key .. " stored by the migration")
+    end
+    assertTrue(NS.Callout:Get("glowCustom"), "the active Strong profile reads Glow color ticked")
+    assertEqual(NS.Callout:Get("glowX") .. "," .. NS.Callout:Get("glowY"), "1,-1", "at the new offset")
+    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "0,0,0", "in the black swatch, not GO's color")
     assertNil(sv.profiles.Plain.callout, "a profile with no call-out table gains none")
     local errors = NS.ValidateSchema()
     assertEqual(errors, 0, "the boot check reads the bool rows clean")

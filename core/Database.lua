@@ -48,6 +48,9 @@ local STEPS = {
     -- words are the addon's), and the instance would still read a stored own text or mute, so both
     -- tables are dropped rather than left behind. A stored voice is kept as it is. Idempotent: a
     -- fresh profile has no `callout` table stored, and a migrated one has a boolean glow and no texts.
+    -- The retired choice named no color, offset or swatch, so none is stored: since Callout minor 4
+    -- (LibKa0s v1.102.0) a migrated Soft or Strong reads the defaults for them, Glow color ticked in
+    -- the black swatch at 1, -1 (it was each word's kind color at 0, 0). The owner's defaults; no step.
     { to = 3, perProfile = true, run = function(_, profile)
         local t = type(profile) == "table" and profile.callout
         if type(t) ~= "table" then return end
