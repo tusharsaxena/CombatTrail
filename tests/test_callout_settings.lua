@@ -1,13 +1,14 @@
 -- tests/test_callout_settings.lua — the race call-out's settings on the host's write route (callout
--- plan rows C5 and C11; LibKa0s-Callout-1.0 at 3.4): the instance's SchemaRows("callout.",
--- { texts = false }) registered as Race mode page rows, each declared retail, skipRender and grouped
--- under the one tab's key; no stock-text or mute row (the words are the addon's); the AceDB defaults
--- seeded from the rows (Arena John the default voice); `callout.point` in the schema's writeThrough;
--- every instance write (a setting, a color, the drag's point, Reset position) through NS.SetByPath;
--- `/ct get|set|reset` and the page's Defaults reaching the rows, the glow's among them; the library's
--- settings section drawn as the page's one Callout tab (Preview, then the Look and Sound side tabs);
--- the 2 -> 3 migration (the retired glow choice, the dropped texts and mutes, a stored voice kept);
--- and all of it absent on WoW Forever (clients-§4, §6).
+-- plan rows C5, C11 and C12; LibKa0s-Callout-1.0 at 3.4, re-pinned at 4.5 with LibKa0s v1.102.0):
+-- the instance's SchemaRows("callout.", { texts = false }) registered as Race mode page rows, each
+-- declared retail, skipRender and grouped under the one tab's key; no stock-text or mute row (the
+-- words are the addon's); the AceDB defaults seeded from the rows (Arena John the default voice);
+-- `callout.point` in the schema's writeThrough; every instance write (a setting, a color, the
+-- drag's point, Reset position) through NS.SetByPath; `/ct get|set|reset` and the page's Defaults
+-- reaching the rows, the glow's among them; the library's settings section drawn as the page's one
+-- Callout tab (Preview, then the Look and Sound side tabs); the 2 -> 3 migration (the retired glow
+-- choice, the dropped texts and mutes, a stored voice kept); and all of it absent on WoW Forever
+-- (clients-§4, §6).
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =

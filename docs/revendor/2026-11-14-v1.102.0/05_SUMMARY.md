@@ -4,6 +4,12 @@
 `feat/2026-11-13-callout`, row C12. Tag `v1.102.0`, commit
 `2748549521ea9588fbe9a4c97b48828f21d35a84`. v1.101.0 lies in the range, never vendored here.
 
+This bundle has no `03_DECISIONS.md` or `04_EXECUTION_PLAN.md`: the run was unattended, with no
+interview. The one decision (take the owner's defaults as shipped, keep the black glow for a migrated
+Soft / Strong profile, add no schema step) is recorded in `02_CANDIDATES.md`, and the work landed in
+three commits: `6fdc66b` (the re-vendor and the suites' pins), `3bc0440` (the migrated profile's new
+look, characterized) and `ed47a14` (the docs).
+
 ## Minors that moved
 
 | File | v1.100.0 | v1.102.0 |
