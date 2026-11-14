@@ -282,14 +282,28 @@ local function prepare(_, _, opts, ready)
     ready()
 end
 
--- What the sim window docks beside (callout plan row C12): the Race window while it is on screen
--- (Retail, the race scenarios: it stands beside the DPS HUD, where the panel would cover it), the DPS
--- HUD otherwise. The library docks right of it, left when the right has no room, or floats; a point
--- the player dragged this session wins over both.
+-- What the sim window docks beside (callout plan row C12): whichever of the Race window and the DPS HUD
+-- reaches further right, so the panel covers neither. The Race window while it is on screen and
+-- attached RIGHT (the default: it stands beside the HUD, where the panel would cover it), the HUD while
+-- the Race window is attached LEFT (its right edge is flush with the HUD's left one); attached TOP or
+-- BOTTOM, or on its own, the frame whose right edge is further right (the Race window when the edges
+-- are not known yet and it stands on its own). The HUD with no Race window up. The library docks right
+-- of it, left when the right has no room, or floats; a point the player dragged this session wins.
+local function rightEdge(f)
+    local r = f and f.GetRight and f:GetRight()
+    return type(r) == "number" and r or nil
+end
+
 local function dockFrame()
+    local hud = NS.Hud.Frame()
     local RW = NS.RaceWindow
-    if RW and RW.Visible() then return RW.Frame() end
-    return NS.Hud.Frame()
+    if not (RW and RW.Visible()) then return hud end
+    local rw, s = RW.Frame(), RW.DockSide()
+    if s == "RIGHT" then return rw end
+    if s == "LEFT" then return hud end
+    local a, b = rightEdge(rw), rightEdge(hud)
+    if a and b then return a > b and rw or hud end
+    return s and hud or rw
 end
 
 local function newSession()

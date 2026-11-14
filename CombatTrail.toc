@@ -225,7 +225,7 @@ modules\Hud.lua
 # modules\Hud_States.lua; modules\RaceWindow_States.lua reads NS.HudStates.COLORS, NS.Style and
 # NS.RaceWindowBoard's layout constants at FILE SCOPE, so it follows both; modules\RaceWindow.lua builds
 # its bus receiver at FILE SCOPE through core\Bus.lua and captures NS.Perf and NS.Secrets there. Each
-# reaches NS.Race, NS.Hud, NS.Bests and the Results window's parts at CALL time only.
+# reaches NS.Race, NS.Hud, NS.Bests, NS.Sim and the Results window's parts at CALL time only.
 modules\RaceWindow_Best.lua
 modules\RaceWindow_Board.lua
 modules\RaceWindow_States.lua
@@ -279,7 +279,8 @@ modules\Results.lua
 # (race plan Task E1; Retail only, each returns at once on WoW Forever): the sample races and the sample
 # race the Race window reads (reached at CALL time), and the sim's race scenarios. LOAD-BEARING:
 # modules\SimRace.lua publishes NS.SimRace.SCENARIOS, which modules\Sim.lua appends at FILE SCOPE, so it
-# precedes it.
+# precedes it. modules\Sim.lua reaches NS.RaceWindow and NS.Hud at CALL time only (what its window docks
+# beside).
 modules\MockRotations.lua
 modules\MockFights.lua
 modules\MockRaces.lua

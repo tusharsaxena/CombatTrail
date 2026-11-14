@@ -75,8 +75,9 @@ Retail's 30 s minimum length, so `newbest`, `behind`, `first` and `lost` are exe
 and judged by the rest of the recording filters; `short` has its own 10 s and is judged by the
 player's own minimum, so its card reads *Not saved: shorter than N s* (callout plan row C10).
 The step window docks right of the DPS HUD, or left of it when the right has no room; on Retail,
-while the Race window is on screen (a race scenario's *Armed* step on), it docks beside the Race
-window instead, and the Race window's show and hide dock a shown step window again
+while the Race window is on screen (a race scenario's *Armed* step on), it docks beside whichever of
+the Race window and the HUD reaches further right (the Race window attached RIGHT, the HUD attached
+LEFT, the wider one attached TOP or BOTTOM), so it covers neither, and the Race window's show and hide dock a shown step window again
 (`Sim.Redock`; a hidden one stays hidden, a point dragged this session holds; callout plan row C12).
 
 Both verbs draw one fixed showcase (modules/MockFights.lua, modules/MockRaces.lua), the same on every

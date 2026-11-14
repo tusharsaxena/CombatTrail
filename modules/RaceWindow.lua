@@ -816,6 +816,10 @@ function RW.Visible() return windowShown() end
 --- The window's frame, or nil before its first show builds it (the sim window docks beside it).
 function RW.Frame() return ui and ui.frame or nil end
 
+--- The side of the DPS HUD this window is attached on (RIGHT, LEFT, TOP or BOTTOM), or nil while it
+--- stands on its own (the sim window picks which of the two to dock beside from it).
+function RW.DockSide() return attached() and side() or nil end
+
 --- The DPS HUD's Refresh tells this window it may have hidden or come back (modules/Hud.lua): the
 --- frame re-decides only when it disagrees with the decision, so the HUD's frequent refreshes cost a
 --- comparison. Never calls back into the HUD's Refresh.

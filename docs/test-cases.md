@@ -1552,7 +1552,7 @@ Total.
 - race preview: the sample history holds races beside the fights, every status, kind and length
 - race preview: on WoW Forever there is no sample race, no race word and no race in the history
 
-### test_sim_race.lua (12)
+### test_sim_race.lua (14)
 
 - sim race: race-newbest arms, races on its clock, buzzes, reads after the quiet; nothing on the bus
 - sim race: the running body's Current and Checkpoints come from the sample's plan, never the meter
@@ -1564,6 +1564,8 @@ Total.
 - sim race: the eight follow the fight scenarios; Race mode off refuses them
 - sim race: the sim window docks right of the HUD in a fight scenario (characterization)
 - sim race: with the Race window up the sim window docks beside it, then back beside the HUD
+- sim race: attached LEFT the Race window is left of the HUD, so the sim window docks beside the HUD
+- sim race: attached TOP or BOTTOM the sim window docks beside the frame reaching further right
 - sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one
 - sim race: WoW Forever has no race scenario
 
@@ -1832,7 +1834,7 @@ Total.
 | test_preview.lua | 7 |
 | test_sim.lua | 7 |
 | test_race_preview.lua | 8 |
-| test_sim_race.lua | 12 |
+| test_sim_race.lua | 14 |
 | test_showcase.lua | 12 |
 | test_bindings.lua | 14 |
 | test_diagnostics.lua | 9 |
@@ -1847,4 +1849,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1513** |
+| **Total** | **1515** |

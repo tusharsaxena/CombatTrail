@@ -388,6 +388,40 @@ test("sim race: with the Race window up the sim window docks beside it, then bac
     NS.Preview.Stop()
 end)
 
+-- Attached on another side the panel docks beside whichever frame reaches further right, never on the HUD.
+local function sideCase(side, rwRight, hudRight)
+    local S = named()
+    local NS = S.NS
+    assertTrue(NS.SetByPath("raceWindow.side", side))
+    assertTrue(NS.Sim.Open("race-newbest"), "the session starts, its panel shown")
+    assertTrue(NS.RaceWindow.Visible(), "the race scenario shows the Race window")
+    local rw, hud = NS.RaceWindow.Frame(), NS.Hud.Frame()
+    if rwRight then rawset(rw, "GetRight", function() return rwRight end) end
+    if hudRight then rawset(hud, "GetRight", function() return hudRight end) end
+    NS.Sim.Redock()
+    local point, rel, relPoint = panelDock(S)
+    NS.Preview.Stop()
+    return point, rel, relPoint, rw, hud
+end
+
+test("sim race: attached LEFT the Race window is left of the HUD, so the sim window docks beside the HUD", function()
+    if forever() then return end
+    local point, rel, relPoint, _, hud = sideCase("LEFT")
+    assertEqual(point, "TOPLEFT")
+    assertTrue(rel ~= nil and rel == hud, "right of the DPS HUD, not over it")
+    assertEqual(relPoint, "TOPRIGHT")
+end)
+
+test("sim race: attached TOP or BOTTOM the sim window docks beside the frame reaching further right", function()
+    if forever() then return end
+    local _, rel, _, rw = sideCase("TOP", 900, 700)
+    assertTrue(rel ~= nil and rel == rw, "a Race window wider than the HUD: beside it")
+    local _, rel2, _, _, hud = sideCase("TOP", 600, 700)
+    assertTrue(rel2 ~= nil and rel2 == hud, "a Race window narrower than the HUD: beside the HUD")
+    local _, rel3, _, _, hud3 = sideCase("BOTTOM")
+    assertTrue(rel3 ~= nil and rel3 == hud3, "edges not known yet: beside the HUD it stands on")
+end)
+
 test("sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one", function()
     if forever() then return end
     local S = named()
