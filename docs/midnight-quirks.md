@@ -332,8 +332,9 @@ painted every live row as the pet's). Live, a plain name colors the row; a secre
 and the breakdown hands it to the share column's FontString instead (empty live), where the owner's
 "" draws nothing and the pet's draws its name. A pet source with no rows is dropped live, never a
 confident 0 from it; instead `Meter.ReadLive` splits the pet's live figure out of the player's rows
-by the same rule when every value it reads is plain, else the Pet row reads a dash (`petDash`;
-callout plan row C7). With the names secret in combat, as measured here, a live fight on this build
+by the same rule when every value it reads is plain and no row was skipped as unreadable, else the
+Pet row reads a dash while a pet is out (`petDash`; callout plan row C7). The split runs with no pet
+out too (row C9): a pet that dies mid-fight leaves its rows in its owner's source. With the names secret in combat, as measured here, a live fight on this build
 takes the dash; the probe's *pet rows in player source* line (SM-CT-P8) says so per sample, and a
 later build that answers plain values in combat gets the split with no change. *Source:* this repo,
 `modules/Meter.lua`, `modules/Hud_Breakdown.lua`, `core/Secrets.lua`.

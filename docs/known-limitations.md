@@ -31,9 +31,10 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   folded into the player's, and fights since show it is: the pet's rows sit in the player's source,
   each named by `creatureName` (midnight-quirks.md), and are split out by that name. In combat the
   HUD shows the Pet row whenever a pet is out: when every value the split needs is plain it shows
-  the pet's figure and your own part as the main Damage and DPS, as on Retail; when any is secret
-  the Pet figure reads a dash and the main figures stay merged (yours and the pet's), because summing
-  secret rows is not allowed. Which of the two a WoW Forever fight gets is *unverified*: `/ct probe`'s
+  the pet's figure and your own part as the main Damage and DPS, as on Retail, and keeps them if the
+  pet dies or is dismissed mid-fight; when any is secret, or a row could not be read at all, the Pet
+  figure reads a dash and the main figures stay merged (yours and the pet's), because summing secret
+  rows, or a partial list, is not allowed. Which of the two a WoW Forever fight gets is *unverified*: `/ct probe`'s
   samples report it (debug.md). A live pet row the meter names no creature on is the pet's only by
   the cast set, which does not know whose Auto Attack is whose.
 - **Targets are read after combat, by name.** The fight detail's Targets section (issue #6) comes

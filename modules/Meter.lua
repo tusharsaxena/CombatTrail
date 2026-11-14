@@ -592,13 +592,19 @@ function Meter.NewLiveFight()
 end
 
 -- One source's live part, every value copied untouched; nil when the client answers none.
+-- `sealedRows` (plain) says the list is not the whole of it: the list itself or a row in it could not
+-- be read and was skipped, so a sum over the rows would come out low (liveFolded refuses it).
 local function livePart(guid)
     if guid == nil then return nil end
     local ok, source = liveSource(Meter.STAT_DAMAGE_DONE, guid)
     if not ok or not Secrets.CanAccessTable(source) then return nil end
-    local spells = {}
-    Secrets.SafeIterate(source.combatSpells, function(_, e)
-        if not Secrets.CanAccessTable(e) then return end
+    local spells, rows = {}, source.combatSpells
+    local sealedRows = Secrets.IsPresent(rows) and not Secrets.CanAccessTable(rows)
+    Secrets.SafeIterate(rows, function(_, e)
+        if not Secrets.CanAccessTable(e) then
+            sealedRows = true
+            return
+        end
         -- `creature` is plain: whether the meter PLAINLY names a creature on the row (out of combat;
         -- in combat the name is secret and may be the owner's "", so it says nothing). `creatureName`
         -- is the name itself, copied untouched: the breakdown hands it to a FontString, where the
@@ -607,7 +613,7 @@ local function livePart(guid)
                                 creature = Secrets.NamesCreature(e.creatureName), creatureName = e.creatureName }
     end)
     return { total = source.totalAmount, dps = source.amountPerSecond, maxAmount = source.maxAmount,
-             spells = spells, source = source }
+             spells = spells, source = source, sealedRows = sealedRows }
 end
 
 -- THE LIVE FOLDED SPLIT (callout plan row C7). On a client that folds the pet into its owner
@@ -621,6 +627,11 @@ end
 -- figure is shown. A rate missing anywhere (a row or the player with no amountPerSecond) leaves
 -- both rates nil rather than set a merged rate beside a split damage. The pet's rows stay where the
 -- meter put them in the player's list, marked `isPet` (no array is built per read).
+-- The split does not ask whether a pet is out (callout plan row C9): a pet that dies or is dismissed
+-- mid-fight leaves its rows in the player's source, so the split goes on with no pet out and the
+-- main figures stay the player's part for the whole fight (the slices' player series too). The cast
+-- set it asks is the session's (Casts.IsPetSpell), so it still knows the pet's spells once the pet is
+-- gone. With no pet row at all it reports "none" (the after-combat rule's #theirs == 0).
 local NO_SPELLS = {}   -- the folded pet part's spells: its rows stay in the player's list (never written)
 
 -- Whether a live row is the pet's (nil: it cannot be told, something on it is secret).
@@ -654,18 +665,22 @@ local function addPetRow(sp)
     return true
 end
 
--- The pet's part split out of the player's live part, or nil when anything it needs is secret (the
--- player's part is then left untouched: the merged figure).
+-- The pet's part split out of the player's live part; nil, "sealed" when anything it needs is secret
+-- or a row could not be read (the player's part is then left untouched: the merged figure); nil,
+-- "none" when every row is plain and none is the pet's (the player's part untouched, its own).
 local function liveFolded(player)
+    if player.sealedRows then return nil, "sealed" end
     local total = Secrets.PlainNumber(player.total)
     local okRate, rate = plainOrAbsent(player.dps)
-    if total == nil or not okRate then return nil end
+    if total == nil or not okRate then return nil, "sealed" end
     sums.total, sums.rate, sums.missing = 0, 0, rate == nil
-    local spells = player.spells
+    local spells, found = player.spells, false
     for i = 1, #spells do
         local pets = livePetRow(spells[i])
-        if pets == nil or (pets and not addPetRow(spells[i])) then return nil end
+        if pets == nil or (pets and not addPetRow(spells[i])) then return nil, "sealed" end
+        found = found or pets
     end
+    if not found then return nil, "none" end
     for i = 1, #spells do
         if livePetRow(spells[i]) then spells[i].isPet = true end
     end
@@ -713,12 +728,19 @@ function Meter.ReadLive(id)
     liveID = nil
     -- `petOut`: whether a pet exists (plain), so the breakdown knows to draw the pet's name column.
     local petOut = Meter.ResolvePet() ~= nil
-    -- A folding client: the pet's figure out of the player's rows when they are plain, else a dash
-    -- (`petDash`, plain: the HUD shows the Pet row with no figure and the main figures stay merged).
+    -- A folding client: the pet's figure out of the player's rows when they are plain, pet out or not
+    -- (one that died mid-fight keeps its rows there, liveFolded); a pet out with no row of its own yet
+    -- reads a plain 0; a failed split with a pet out is a dash (`petDash`, plain: the HUD shows the Pet
+    -- row with no figure and the main figures stay merged).
     local petDash = false
-    if pet == nil and petOut and Meter.FOLDS_PET then
-        pet = player and liveFolded(player) or nil
-        petDash = pet == nil
+    if pet == nil and Meter.FOLDS_PET and player then
+        local why
+        pet, why = liveFolded(player)
+        if pet == nil and why == "none" and petOut then
+            -- (liveFolded proved player.dps plain or absent before it said "none")
+            pet = { total = 0, dps = player.dps ~= nil and 0 or nil, spells = NO_SPELLS, folded = true }
+        end
+        petDash = pet == nil and petOut
     end
     if t0 then Perf.Note("meter", debugprofilestop() - t0) end
     -- Shared (Meter.ShareLive) within this frame only.

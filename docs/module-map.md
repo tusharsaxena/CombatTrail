@@ -67,7 +67,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/LaneAnchor.lua` | Where a lane sits (free, docked, unit frame), its strata and level, and the edit overlay |
 | `modules/LaneVisibility.lua` | When a lane shows and how opaque it is |
 | `modules/LaneIgnore.lua` | Each lane's ignore list and the `/ct ignore` verb |
-| `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read (`Meter.ShareLive` lets the HUD's beat and the slices' boundary tick share one read in a frame; on WoW Forever, `Meter.FOLDS_PET`, the live split of the pet's plain rows out of the player's, else `petDash`) and the after-combat read |
+| `modules/Meter.lua` | The only reader of `C_DamageMeter`: sessions, the live read (`Meter.ShareLive` lets the HUD's beat and the slices' boundary tick share one read in a frame; on WoW Forever, `Meter.FOLDS_PET`, the live split of the pet's plain rows out of the player's, pet out or not, else `petDash`) and the after-combat read |
 | `modules/ProbeCurve.lua` | `/ct probe`'s spell color curve trial (issue #7): can the client map a secret spell ID to a color |
 | `modules/Probe.lua` | `/ct probe`, the in-game report of what the client answers (with a pet out, each sample's pet rows in the player's source and the live Pet figure's form) |
 | `modules/Dummies.lua` | The training dummies: the seed with the player's own list, the captures and `/ct dummy` (both clients) |

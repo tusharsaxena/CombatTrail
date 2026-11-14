@@ -310,7 +310,7 @@ Total.
 - probe: forever: a talent read that raises prints one line and the rest of the report
 - probe: retail: no talent-tree section (clients-§4)
 
-### test_meter.lua (45)
+### test_meter.lua (50)
 
 - meter: the stat and session constants come from the client enum
 - meter: without the enum, the documented values stand and the enemy view is unread
@@ -348,7 +348,12 @@ Total.
 - meter: forever: a plain total with no rate splits the damage and leaves both rates nil
 - meter: forever: the cast set names a pet row live; Auto Attack stays the owner's by the set
 - meter: forever: a pet out with no rows of its own yet reads a plain 0
-- meter: no pet out: no Pet part and no dash, on either client
+- meter: no pet out and no pet rows: no Pet part and no dash, on either client
+- meter: forever: the pet gone mid-fight keeps the split, the Pet figure and no dash
+- meter: forever: the cast set still names the pet's rows once the pet is gone
+- meter: forever: the slices' player series stays the player's part when the pet goes
+- meter: forever: an unreadable row refuses the split: a dash, the merged figure
+- meter: forever: an unreadable row list refuses the split rather than a confident Pet 0
 - meter: retail: the folded rows are never split live (the pet's own source is the figure)
 - meter: FOLDS_PET is this client's: WoW Forever folds, Retail does not
 - meter: PET_SEPARATE=false path tags by cast set
@@ -1136,14 +1141,15 @@ Total.
 - chart: hud.chart.columns caps the columns; the layout's chart off hides it
 - chart: the pure layout helpers
 
-### test_hud_breakdown.lua (15)
+### test_hud_breakdown.lua (16)
 
 - breakdown never sorts or computes in combat (mock secret values)
 - breakdown: pet rows carry paw and pet color
 - breakdown: a folded pet row the meter names a creature on draws as the pet's, live
 - hud: forever: plain rows give the Pet figure and the player's part as the main figure
 - hud: forever: secret rows show the Pet row with a dash and keep the merged main figure
-- hud: no pet out: no Pet row live, plain or secret, on either client
+- hud: forever: the pet gone mid-fight keeps the Pet row and the player's part as Damage
+- hud: no pet out and no pet rows: no Pet row live, plain or secret, on either client
 - hud: retail: a folded source shows no live Pet row (the pet answers its own source there)
 - breakdown: the over card's rows are merged, highest first, with their shares
 - breakdown: hud.bars caps the rows and the wheel scrolls past them
@@ -1756,7 +1762,7 @@ Total.
 | test_lane_visibility.lua | 30 |
 | test_lanes_page.lua | 25 |
 | test_probe.lua | 35 |
-| test_meter.lua | 45 |
+| test_meter.lua | 50 |
 | test_format.lua | 25 |
 | test_fight.lua | 36 |
 | test_identity.lua | 47 |
@@ -1787,7 +1793,7 @@ Total.
 | test_hud_states.lua | 25 |
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
-| test_hud_breakdown.lua | 15 |
+| test_hud_breakdown.lua | 16 |
 | test_hud_appearance.lua | 8 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
@@ -1825,4 +1831,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1491** |
+| **Total** | **1497** |

@@ -106,8 +106,12 @@ macro too.
   one live read that does arithmetic, and only on values `NS.Secrets` proved plain first: each row's
   `creatureName` (`IsSealed`, then `NamesCreature`), the spell ID the cast set is asked of
   (`PlainNumber`), every pet row's amount and rate and the player's total and rate. One value that is
-  not plain ends it before any number is touched: the pet part stays nil, the player's part stays
-  the merged opaque figure and the plain flag `petDash` puts the Pet row up with a dash. Split, the
+  not plain, or a row (or the row list) the live part had to skip (its plain `sealedRows` flag), ends
+  it before any number is touched: the pet part stays nil, the player's part stays the merged opaque
+  figure and, with a pet out, the plain flag `petDash` puts the Pet row up with a dash. The split
+  does not ask whether a pet is out (callout row C9): a pet that dies mid-fight leaves its rows in
+  the player's source, so the main figures and the slices' player series stay the player's part for
+  the whole fight. Split, the
   player's part is the total less the pet's, so `live.pet` is set exactly when `live.player` is the
   player's alone, which is what the pace bar's `playerOnly` (`HudBest.LiveView`) and the Race
   window's `Hud.LiveDamage` read.

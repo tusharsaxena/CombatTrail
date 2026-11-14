@@ -41,9 +41,11 @@ PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
      every live part, only while Fight holds the fight in combat (in the settle it redraws from the
      last read); Meter.ShareLive brackets let the beat and the slices' boundary tick share one read
      in a frame
-     (WoW Forever, Meter.FOLDS_PET: with a pet out and no pet source, the read splits the pet's
-     figure out of the player's rows when every value it reads is plain, the main figures then the
-     player's part; else the merged figure and petDash, the Pet row's dash; callout plan row C7)
+     (WoW Forever, Meter.FOLDS_PET: with no pet source, the read splits the pet's figure out of
+     the player's rows when every value it reads is plain and every row was readable, the main
+     figures then the player's part, pet out or not, so a pet that dies mid-fight keeps the split;
+     else the merged figure and, with a pet out, petDash, the Pet row's dash; callout plan rows C7
+     and C9)
   PLAYER_REGEN_ENABLED
   -> COMBAT -> SETTLING; a re-entry within GRACE (4 s) carries the same fight on
   quiet for SETTLE (2 s) after GRACE

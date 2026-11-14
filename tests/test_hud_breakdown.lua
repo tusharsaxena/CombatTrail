@@ -121,9 +121,14 @@ local FOLDED = { damage = 2000, dps = 100, duration = 20, pet = false,
                { id = 17253, dmg = 400, dps = 20, creature = "Wolf" } },
     enemies = { { name = "Angry Boar", creatureID = 1985, damage = 2000 } } }
 
-local function foldedFight(opts, secret)
+-- The player's own rows alone: no pet ever fought.
+local SOLO = { damage = 900, dps = 45, duration = 20, pet = false,
+    spells = { { id = 6603, dmg = 900, dps = 45 } },
+    enemies = { { name = "Angry Boar", creatureID = 1985, damage = 900 } } }
+
+local function foldedFight(opts, secret, data)
     local inst, meter, Hud = H.fresh(opts)
-    meter.SetSession(1, FOLDED)
+    meter.SetSession(1, data or FOLDED)
     H.enter(inst, 10)
     if secret then meter.SetSecret(true) end
     H.run(inst, 10.25)
@@ -175,9 +180,22 @@ test("hud: forever: secret rows show the Pet row with a dash and keep the merged
     meter.SetSecret(false)
 end)
 
-test("hud: no pet out: no Pet row live, plain or secret, on either client", function()
+test("hud: forever: the pet gone mid-fight keeps the Pet row and the player's part as Damage", function()
+    local inst, meter, Hud = foldedFight({ pet = true })
+    local NS = inst.NS
+    if not NS.Meter.FOLDS_PET then return end
+    inst.mocks.__unitExists.pet = false
+    H.tick(inst, 13.25, 14)
+    local w = H.body(Hud, "live").w
+    assertTrue(Hud.View().hasPet, "the pet's rows are still in the player's source")
+    assertEqual(w.damage.petValue:GetText(), NS.Format.Number(1100))
+    assertEqual(w.damage.value:GetText(), NS.Format.Number(900), "not the merged 2000")
+    assertTrue(meter ~= nil)
+end)
+
+test("hud: no pet out and no pet rows: no Pet row live, plain or secret, on either client", function()
     for _, secret in ipairs({ false, true }) do
-        local _, meter, Hud = foldedFight({}, secret)
+        local _, meter, Hud = foldedFight({}, secret, SOLO)
         local w = H.body(Hud, "live").w
         assertFalse(Hud.View().hasPet)
         assertFalse(w.damage.petValue:IsShown())
