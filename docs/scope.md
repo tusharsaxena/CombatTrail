@@ -15,6 +15,9 @@ the spec (`superpowers/specs/2026-11-10-combat-trail-design.md`, §1 and §2).
   spells, casts, gear, stats, talents and usage; the Results window lists, filters, groups and
   compares them, with an ability timeline and a gear view. Fights are purged after a number of days,
   except those that hold a best.
+- **Race mode (Retail).** Arm a timed run on a training dummy (`/ct race arm [length]`): the Race
+  window's clock, best and checkpoints, a center countdown with a spoken voice and STOP at the buzzer,
+  and a race board of its own in the history.
 - **Both clients.** Retail and WoW Forever from one codebase, with the features a client cannot have
   absent there.
 
@@ -30,4 +33,4 @@ the spec (`superpowers/specs/2026-11-10-combat-trail-design.md`, §1 and §2).
 | Other players' damage (group or raid meters) | A personal tool; Details and Blizzard's meter already do this |
 | Import CastTrail's settings | CastTrail was a throwaway; Combat Trail starts from its own defaults |
 | Masque support | The icons use the addon's skins only |
-| Race against a timer or arm a run | That is DPS Race; Combat Trail records real fights with no arming |
+| Race mode on WoW Forever | Races (the arm, the Race window, the race countdown) are Retail's; on WoW Forever the race verb, its settings and its sim scenarios are absent (clients-§4) |

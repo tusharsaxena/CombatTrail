@@ -275,7 +275,7 @@ local function figure(key, v)
     return NS.Format.Number(v)
 end
 
---- A figure pair, the other's then this fight's ("182.9K -> 186.9K"), plain (the tooltips').
+--- A figure pair, the other's then this fight's ("182.9K -> 186.9K"), plain (the suites read it).
 function Compare.PairText(key, a, b)
     return figure(key, b) .. ARROW .. figure(key, a)
 end

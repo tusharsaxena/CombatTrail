@@ -8,8 +8,8 @@ function above CCN 15. Write the failing test first.
 
 - Add the default to `defaults/Profile.lua`, in the block of the page it belongs to. A Retail-only
   key is added only under `NS.Compat.ForClient({ "retail" })`, so it is absent on WoW Forever.
-- Add the schema row to the page file in `settings/` (`General.lua`, `Lanes.lua`, `Hud.lua` or
-  `History.lua`), in its tab's group, with `default` read from `NS.defaults`. A Retail-only row
+- Add the schema row to the page file in `settings/` (`General.lua`, `Lanes.lua`, `Hud.lua`,
+  `History.lua` or, for Race mode on Retail, `Race.lua`), in its tab's group, with `default` read from `NS.defaults`. A Retail-only row
   declares `clients = { "retail" }`. A lane row goes in the Lanes page's row builder, so both lanes
   get it.
 - Read it with `NS.GetSetting(path)`. React to it in the owning module's `SETTINGS_CHANGED` handler.
@@ -35,8 +35,9 @@ function above CCN 15. Write the failing test first.
 - Declare it in `NS.MSG` (`core/Bus.lua`) with its one sender and its payload in the comment.
 - Send it with `NS.SendBus(NS.MSG.NAME, ...)`; receive it on a target from `NS.NewBusTarget`
   registered at file scope.
-- Add its row to ARCHITECTURE's *Message Bus* table (`tests/test_docs.lua` checks every key). At
-  eleven messages the table spills to `docs/message-bus.md`.
+- Add its row to the table in [`message-bus.md`](message-bus.md) (sender, payload, consumers) and its
+  name to ARCHITECTURE's *Message Bus* by-sender list (`tests/test_docs.lua` checks every key appears
+  in ARCHITECTURE.md).
 
 ## Add a game event
 
@@ -78,7 +79,7 @@ function above CCN 15. Write the failing test first.
   Only a row with its own `length` is judged by the minimum fight length; the others play
   `Sim.LENGTH` (15 s, under Retail's 30 s minimum) and are exempt from it (callout plan row C10). A
   race scenario (Retail) is a row in `SimRace.SCENARIOS` in `modules/SimRace.lua` instead (`key` under
-  the `race-` prefix, `label`, `factor`, `desc`, and `kind`, `status`/`endAt`, `died`, `late`, `shared`
+  the `race-` prefix, `label`, `factor`, `desc`, and `kind`, `tail`, `combatEnd`, `status`/`endAt`, `died`, `late`, `shared`
   or `sticky` where it differs), with its case in `tests/test_sim_race.lua`. A scenario that earns an
   alert (a new best, an early end) gets it through the real triggers (`BestToast.OnFight`/`OnRace`,
   `Countdown.SampleSay`); hold it in `tests/test_showcase.lua`, with the cleanup on stop.

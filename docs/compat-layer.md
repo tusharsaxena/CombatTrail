@@ -31,6 +31,9 @@ a library-absent load and are documented by the library, not here.
 | `PixelSize(frame)` | One physical pixel in `frame`'s UI units: `PixelUtil.GetPixelToUIUnitFactor()` over the frame's effective scale (the spell rows' snap, modules/Hud_Breakdown.lua) | 1 where the client has no PixelUtil; a frame with no effective scale reads as scale 1 |
 | `BuildInfo()` | Version, build, interface (the probe, the record) | |
 | `ClientApis()` | Which version-variant APIs exist (the probe) | |
+| `NamespaceFunctions(ns)` | The function names a client namespace (e.g. `"C_StringUtil"`) carries, sorted, for `/ct probe` | Empty where the namespace is absent |
+| `NamespaceFunction(ns, name)` | One function of a client namespace (modules/Format.lua) | nil where the namespace or the function is absent |
+| `ColorCurveApi()` | The color-curve API for the probe (issue #7): `{ util, create, step, color }` from `C_CurveUtil.CreateColorCurve`, `Enum.LuaCurveType.Step` and `CreateColor` | Each nil where the client lacks it |
 | `ChatSender()` | The function that sends one chat message (Share) | `C_ChatInfo.SendChatMessage`, else `SendChatMessage` |
 | `ChatLocked()` | Whether chat sends are refused now (encounters, rated PvP) | False where the client has no lockdown |
 | `NumberFormatterCandidates()` | The client's secret-safe number abbreviator constructors, `CreateAbbreviatedNumberFormatter` then `CreateNumericRuleFormatter`, as `{ name, make }` (modules/Format.lua) | Empty where the client has none; Format checks each and takes the first that passes, else falls back to `AbbreviateNumbers` |

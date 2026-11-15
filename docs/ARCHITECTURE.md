@@ -160,9 +160,12 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 ## Settings Schema
 
 The profile tree is `defaults/Profile.lua` (the only place a default is written): `general`,
-`lanes.player` / `lanes.pet`, `hud`, `history`, `results`, `dummies`, `race`, `raceWindow` (Retail) and `skin`. The global tree holds the fight
-store (`fights`, `fightOrder`), the interned talent loadouts (`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the
-minimap table and `schemaVersion`, migrated by `core/Database.lua`'s runner to `NS.SCHEMA_VERSION`.
+`lanes.player` / `lanes.pet`, `hud`, `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
+`toast` and `skin`, plus `callout` (Retail), seeded by `settings/Race.lua` from the call-out's schema
+rows. The global tree holds the fight store (`fights`, `fightOrder`), the interned talent loadouts
+(`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the dummy captures
+(`dummies.captures`), the race under way (`pendingRaces`), the minimap table and `schemaVersion`,
+migrated by `core/Database.lua`'s runner to `NS.SCHEMA_VERSION`.
 Every row registers into `NS.Schema` through `NS.RegisterSchemaRows`, and every write goes through
 `NS.SetByPath`. The storage keys, the registry writer and its load pass, and every piece of named
 non-setting state with its owner and writers are in [`schema.md`](schema.md).
@@ -175,7 +178,8 @@ order rules are in [`message-bus.md`](message-bus.md). By sender:
 
 - **Settings:** `SETTINGS_CHANGED`. **Lanes:** `LANE_PUSH`.
 - **Fight:** `COMBAT_ENTERED`, `FIGHT_STARTED`, `FIGHT_FIRST_HIT`, `FIGHT_TICK`, `FIGHT_ENDED`.
-- **Recorder and Retention:** `FIGHT_SAVED`, `FIGHT_SKIPPED`, `FIGHTS_CHANGED`.
+- **Recorder, Retention and Usage:** `FIGHT_SAVED`, `FIGHT_SKIPPED`, `FIGHTS_CHANGED` (Usage sends
+  only `FIGHTS_CHANGED`, on the detail's Usage edit).
 - **Race (Retail):** `RACE_STATE_CHANGED`, `RACE_ARMED`, `RACE_STARTED`, `RACE_BUZZER`, `RACE_RESULT`,
   `RACE_CANCELED`; and `RACE_CLOCK`, the race beat (modules/RaceClock.lua), which the Race window hears
   (the HUD is called directly before the send, not through the bus). The HUD hears `RACE_ARMED` too
@@ -225,6 +229,9 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one
   too. `PLAYER_REGEN_ENABLED` asks for one only after a recon ran in combat, where a sealed link is
   left out of the set. The stand-down drops the events and the timer.
+- **The Race window (RaceWindow, Retail only):** while shown on its idle or armed body (not racing,
+  not stood down), `PLAYER_TARGET_CHANGED`, both regen edges and `PLAYER_SPECIALIZATION_CHANGED`, each
+  redrawing the body; hidden, racing or stood down, nothing. Its race redraws come from the bus.
 - **HUD and Results:** no game events; they hear the bus. The HUD hears the fight messages and, on
   Retail, `RACE_ARMED` (a fight still on screen goes and the pre-fight look is drawn; a live fight
   stays), `RACE_STARTED`, `RACE_CANCELED` and `RACE_STATE_CHANGED`; it no longer hears `RACE_CLOCK`.

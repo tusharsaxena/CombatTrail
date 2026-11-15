@@ -2,8 +2,9 @@
 
 How the addon is configured (documentation-§3, Tier 1; options-ui). Everything lives under the game's
 **Settings → AddOns → Ka0s Combat Trail**, built with LibKa0s-Options-1.0. The landing page carries
-the logo, the version and the command list; every page under it is a tab strip with a Defaults button
-that resets that page on the current profile. Every row is a schema row (`settings/*.lua` through
+the logo, the version and the command list; every page under it but Profiles (AceDBOptions' own
+table, untabbed and with no Defaults button) is a tab strip with a Defaults button that resets that
+page on the current profile. Every row is a schema row (`settings/*.lua` through
 `NS.RegisterSchemaRows`), so each is also reachable as `/ct get` and `/ct set` with the key shown.
 
 | Page | Covers |
@@ -12,13 +13,14 @@ that resets that page on the current profile. Every row is a schema row (`settin
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
-| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock and how often it redraws, the countdown and the buzzer, the center call-out's look and voice (its one Callout tab: a preview, then Look and Sound), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
+| Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock (how often it redraws is the DPS HUD page's *HUD refresh rate*), the countdown and the buzzer, the center call-out's look and voice (its one Callout tab: a preview, then Look and Sound), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
 
 The tree below is page, then tab in strip order, then row, as the schema produces it. Rows a client
-cannot have are absent there (clients-§4): the Delves and Arenas rows of the Lanes page's Visibility
-tab, and the Mythic+, Delves and Arenas rows of the History page's Recording filters, exist only on
-Retail. The whole Race mode page is Retail's: on WoW Forever it is not registered, and none of its rows
+cannot have are absent there (clients-§4): the Delves, Arenas, In a vehicle and In a pet battle rows
+of the Lanes page's Visibility tab, the Mythic+, Delves and Arenas rows of the History page's
+Recording filters, and the New-best toast's *Toast a race's new best* row exist only on Retail.
+The whole Race mode page is Retail's: on WoW Forever it is not registered, and none of its rows
 or stored keys exist (`settings/Race.lua`).
 
 ## General

@@ -60,7 +60,8 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   the countdown a second before its window, so its frame clock runs for at most the window plus that
   second (11 s at the default 10) and STOP's hold, and sleeps the moment neither is up. Its animations
   are AnimationGroups the client runs, with no OnUpdate of their own. Each new number costs one race
-  beat off the timer (`RaceClock.Kick`), at most ten in a race.
+  beat off the timer (`RaceClock.Kick`): one per number of `race.finalCountdown`'s window, ten at the
+  default and at most twenty.
 - The equipment recon walks the gear once per burst of `PLAYER_EQUIPMENT_CHANGED` /
   `UNIT_INVENTORY_CHANGED` (one coalesced 0.5 s timer), never per event and never per fight: the pull
   takes the current set's key.

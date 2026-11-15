@@ -16,7 +16,8 @@ such rather than listed as a requirement.
   events.
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libraries for
-  load ordering, not as things to download. The Ace3, LibSharedMedia, LibDataBroker and LibDBIcon
+  load ordering, not as things to download, plus EllesmereUI, an optional separate addon that the
+  skin picker can follow when it is installed (it is never required). The Ace3, LibSharedMedia, LibDataBroker and LibDBIcon
   copies are Panel Master's, the set that loads on both clients.
 
 ## Development: the contributor toolchain
@@ -73,8 +74,8 @@ sudo apt-get install -y python3-pil     # Pillow from apt avoids the PEP 668 pip
 python3 tools/make_logo.py              # from the repo root
 ```
 
-The icons, the fonts, the bar textures and the eight voice packs (`media/sounds/callout/`, Ogg
-Vorbis, each with its own `CREDITS.md` and license files: CC0 1.0 and CC BY 4.0 for kathleen,
+The icons, the fonts, the bar textures and the eight voice packs
+(`libs/LibKa0s/media/sounds/callout/`, Ogg Vorbis, each with its own `CREDITS.md` and license files: CC0 1.0 and CC BY 4.0 for kathleen,
 Apache 2.0 and CC BY 4.0 for bella, CC0 1.0 for joe, and a public-domain status note for the
 LibriVox voices) come inside the vendored LibKa0s payload;
 regenerating them is that repo's job and its toolchain.

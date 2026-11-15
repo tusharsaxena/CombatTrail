@@ -66,14 +66,6 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   and every stand-up and refreshed by every out-of-combat read, so a respec followed by a pull
   before any out-of-combat read could file that fight under the old tree.
 - **The sample history is 21 fights**, because the Retail-only boards are absent.
-- **`/ct test race running` is a still frame with no center countdown.** By the owner's decision
-  (2026-11-14) test mode holds the race clock still at 0:18, so the held sample has no endsAt and
-  nothing counts; the countdown and the buzzer's STOP play only in the sim's race scenarios, on the
-  sample's running clock (callout plan row C6).
-- **CANCELED and TIME UP are never said.** A race says STOP at its buzzer, FAILED as it ends before
-  it and NEW BEST at a new best's result, real or sample (callout plan row C9); a cancel says nothing,
-  and no race runs out of time past its buzzer. The sim's `newbest` fight also says NEW BEST, which a
-  real fight does not: the call-out speaks for races alone.
 - **Spell and item IDs in the sample rotation are partly unverified** in game. On WoW Forever
   (1.60.1 build 70938, 2026-11-14) every spell row drew its name in `/ct test` and `/ct sim` but
   Multi-Shot rank 5 (25294), which that client does not know; the row is now rank 1, 2643, with the
@@ -92,7 +84,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   category, only switched off. A creature whose GUID arrives secret has no creature ID, so it is never
   a dummy (both clients).
 - **The HUD has no Pin control in its title bar** (the icon catalog has none); `/ct hud pin` pins
-  it. The fade hides at once, the pace bar has no ahead or behind color, and the best line is solid.
+  it. The fade hides at once, and the best line is solid. The pace bar's green (ahead) and red
+  (behind) are wherever the client ends the fill. No word, mark or difference figure says which,
+  because the live total is secret.
 - **Results:** the detail ships collapsed, there are no `results.*` look keys for the table (its bars
   are the palette's blue, with no class-color option), and the Delta column measures against the
   group's best, while the board's best (whatever the filters) shows only in that cell's tooltip,
@@ -186,6 +180,14 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   line, and the bars fall back to its whole figure.
 - **A checkpoint passed before a `/reload` shows a dash for your figure.** Its reading was held in
   memory for that race alone, so a resumed race keeps the best's figure there but not yours.
+- **`/ct test race running` is a still frame with no center countdown.** By the owner's decision
+  (2026-11-14) test mode holds the race clock still at 0:18, so the held sample has no endsAt and
+  nothing counts; the countdown and the buzzer's STOP play only in the sim's race scenarios, on the
+  sample's running clock (callout plan row C6).
+- **CANCELED and TIME UP are never said.** A race says STOP at its buzzer, FAILED as it ends before
+  it and NEW BEST at a new best's result, real or sample (callout plan row C9); a cancel says nothing,
+  and no race runs out of time past its buzzer. The sim's `newbest` fight also says NEW BEST, which a
+  real fight does not: the call-out speaks for races alone.
 - **The center call-out's voice packs are not yet listened to in game.** The eight packs (Arena
   announcer (John), the default; Female Kathleen, Kristin, Cori and Bella; Male Joe, John and Norman;
   seven synthesized with Piper, Bella with Kokoro) passed the library's file checks, and the owner

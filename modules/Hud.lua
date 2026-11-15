@@ -1237,7 +1237,7 @@ function Hud.SyncBeat()
     end
 end
 
---- The HUD's own beat's interval while it runs, else nil (the suites and the diagnostics).
+--- The HUD's own beat's interval while it runs, else nil (the suites).
 function Hud.BeatEvery() return beatEvery end
 
 -- `hud.overCard` off: an auto-opened HUD closes with its fight, not while a race holds it (W29 D2).

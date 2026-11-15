@@ -15,11 +15,11 @@ set up in `core/DebugLogSetup.lua`; the library documents the console itself.
 
 | Tag | Written by |
 |---|---|
-| `Lanes` | LaneCasts, LaneRender, LaneAnchor, LaneVisibility: registration rebuilds, refused events, the stand-down's dropped casts, the guards that keep a cast off a lane, a listener that raised |
+| `Lanes` | LaneCasts, LaneRender, LaneAnchor: registration rebuilds, refused events, the stand-down's dropped casts, the guards that keep a cast off a lane, a listener that raised |
 | `Casts`, `Identity`, `Fight`, `Meter` | The fight pipeline: a cast list, an identity read, the state machine's edges, a meter read that failed |
-| `Race` | Race mode's engine (Retail): an arm and its refusals, the clock, the buzzer, an early combat end, a late cast, a restart, a cancel and the read; the race beat on and off (RaceClock) |
+| `Race` | Race mode (Retail): the engine's arm and its refusals, the clock, the buzzer, an early combat end, a late cast, a restart, a cancel and the read; the race beat on and off (RaceClock); the Race window built, its state changes and a result card's race deleted (RaceWindow); a sim race armed, started and read (SimRace) |
 | `AutoArm` | Auto-show and auto-arm (Retail): a dummy session beginning and ending, an auto-arm and its refusal, an auto-arm canceled by a target change |
-| `Countdown` | The race's final seconds (Retail): the call-out handed the race's countdown, the buzzer's STOP |
+| `Countdown` | The race's final seconds (Retail): the call-out handed the race's countdown, the buzzer's STOP, and each word a race or a sample says (NEW_BEST, FAILED) |
 | `Callout` | LibKa0s-Callout-1.0's own lines (Retail): a voice file the copy does not carry, text to speech unavailable, a host callback that raised |
 | `Toast` | The new-best toast: a new best queued with its gain, and the toast shell's own lines |
 | `Recorder`, `Retention`, `Loadouts` | A save or skip with its reason, a purge, a loadout interned |

@@ -185,7 +185,7 @@ function Bests.IsBest(record)
     return best ~= nil and (best == record or best.id == record.id)
 end
 
---- The id of the best fight on a board for a character and a spec (the HUD's pace, plan Task 3.2).
+--- The id of the best fight on a board for a character and a spec (the suites read it).
 --- @param boardKey string
 --- @param character string|table  a Bests.CharKey, or a `who` table
 --- @param specID number|nil
