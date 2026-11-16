@@ -67,8 +67,9 @@ local _, NS = ...
 --
 -- THE TITLE BAR, left to right: Results, Race, Settings, Lock, Close (ruling O6). The Race control
 -- (Retail only, the flag) shows while Race mode is on, the strip closing up without it;
--- its click is `/ct race toggle` (NS.SetRaceWindowShown). Like every title-bar control it turns gold
--- only under the pointer: it carries no light for the Race window being open.
+-- its click is `/ct race toggle` (NS.SetRaceWindowShown). Like every title-bar control it rests in the
+-- skin's `icon.tint` and takes `text.link` only under the pointer (smoke round 1, SR-L3), with its
+-- tooltip above it: it carries no light for the Race window being open.
 --
 -- WHAT RUNS, AND WHEN. Nothing is registered with the client: the HUD hears the bus (FIGHT_STARTED,
 -- FIGHT_TICK, FIGHT_ENDED, FIGHT_SAVED, FIGHT_SKIPPED, RACE_ARMED, RACE_STARTED, RACE_CANCELED,

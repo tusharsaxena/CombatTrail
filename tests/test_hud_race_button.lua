@@ -2,8 +2,8 @@
 -- rulings O6): built on Retail only, shown while Race mode is on and hidden (the strip closed up) with
 -- it off, between Results and Settings (Results, Race, Settings, Lock, Close left to right), its icon
 -- the plain flag (owner, 2026-11-13); a click toggles the Race window as `/ct race toggle` does, and the
--- control turns gold only under the pointer, like every title-bar control, never for the Race window
--- being open. Every title-bar mark of both windows, the close among them, at one art size
+-- control lights (the skin's `text.link`, smoke round 1's SR-L3) only under the pointer, like every
+-- title-bar control, never for the Race window being open. Every title-bar mark of both windows, the close among them, at one art size
 -- (Style.FitControlArt), its measured box held to the vendored art. Then the toggles between the two
 -- windows: the HUD's toggle (the key, the launcher's Show window entry, `/ct hud toggle` and `/ct hud
 -- hide`) closing the Race window with it, each a player's close, and opening the HUD alone, except in
@@ -91,7 +91,7 @@ test("hud race button: a click toggles the Race window as /ct race toggle does",
     assertEqual(RW.Closes(), 1, "the click's close is the player's, as /ct race toggle")
 end)
 
-test("hud race button: gold only under the pointer, never for the Race window being open", function()
+test("hud race button: lit only under the pointer, never for the Race window being open", function()
     if forever() then return end
     local S, ui = fresh()
     assertTrue(painted(S, ui.race, "REST"), "at rest with the Race window shut")
@@ -101,7 +101,7 @@ test("hud race button: gold only under the pointer, never for the Race window be
     assertNil(S.NS.Style.SetControlLit, "no lit state left in the Style API")
     assertNil(S.NS.Hud.OnRaceWindowShown, "the Race window tells the HUD nothing")
     ui.race:__fire("OnEnter")
-    assertTrue(painted(S, ui.race, "GOLD"), "gold under the pointer")
+    assertTrue(painted(S, ui.race, "HOT"), "text.link under the pointer (SR-L3)")
     ui.race:__fire("OnLeave")
     assertTrue(painted(S, ui.race, "REST"), "at rest again once the pointer leaves, the window still open")
     -- A HUD built after the Race window opened (a /reload with the window up) starts at rest too.

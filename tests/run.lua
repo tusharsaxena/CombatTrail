@@ -170,6 +170,7 @@ local SUITES = {
     "test_timeline_marks",
     "test_compare",
     "test_gear",
+    "test_title_bar",
     "test_usage_edit",
     "test_history_page",
     "test_preview",

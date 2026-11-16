@@ -1239,7 +1239,7 @@ Total.
 - hud race button: Results, Race, Settings, Lock, Close left to right; off, the strip closes up
 - hud race button: hidden with the title bar
 - hud race button: a click toggles the Race window as /ct race toggle does
-- hud race button: gold only under the pointer, never for the Race window being open
+- hud race button: lit only under the pointer, never for the Race window being open
 - hud toggle: closing the HUD closes an open Race window with it, each a player's close
 - hud toggle: opening the HUD opens the HUD alone, never the Race window
 - hud toggle: closing the HUD with the Race window shut counts no Race window close
@@ -1493,6 +1493,16 @@ Total.
 - gear: the character panel's layout and its size
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
+
+### test_title_bar.lua (7)
+
+- title bar: a second skin differs from Ka0s Default in every title-bar token
+- title bar: the DPS HUD's controls, the close among them
+- title bar: the Race window's controls (Retail)
+- title bar: the Results window's controls, the view toggle in both views
+- title bar: the compare's close
+- title bar: the gear view's close
+- title bar: the ability timeline's close
 
 ### test_usage_edit.lua (4)
 
@@ -1829,6 +1839,7 @@ Total.
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
+| test_title_bar.lua | 7 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
@@ -1849,4 +1860,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1515** |
+| **Total** | **1522** |
