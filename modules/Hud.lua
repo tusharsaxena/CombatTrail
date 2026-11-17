@@ -65,7 +65,7 @@ local _, NS = ...
 -- fight live on it, not opened or pinned by the player since. A HUD the player closed (Hud.Closes)
 -- keeps both windows shut for the session.
 --
--- THE TITLE BAR, left to right: Results, Race, Settings, Lock, Close (ruling O6). The Race control
+-- THE TITLE BAR, left to right: Results, Race, Lock, Settings, Close (LibKa0s#86 order). The Race control
 -- (Retail only, the flag) shows while Race mode is on, the strip closing up without it;
 -- its click is `/ct race toggle` (NS.SetRaceWindowShown). Like every title-bar control it rests in the
 -- skin's `icon.tint` and takes `text.link` only under the pointer (smoke round 1, SR-L3), with its
