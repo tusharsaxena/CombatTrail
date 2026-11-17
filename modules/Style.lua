@@ -1,8 +1,8 @@
-local _, NS = ...
+local addonName, NS = ...
 -- modules/Style.lua — the look the HUD and the Results window share with the other Ka0s windows
 -- (LootHistory's browser is the reference; BankLedger and MultiMeters agree): Blizzard's font objects
--- for every label, the header gold, the title-bar geometry, and the title-bar controls that turn gold
--- under the pointer. Ported from DPS Race @045f479 (modules/Style.lua); the new-best toast's scaled
+-- for every label, the header gold, the title-bar geometry, and the title-bar controls that take the
+-- skin's `text.link` under the pointer. Ported from DPS Race @045f479 (modules/Style.lua); the new-best toast's scaled
 -- text (Style.ScaledText) came with the toast (race plan Task C2, DPS Race @f8078c7).
 --
 -- ONE ART SIZE ON THE TITLE BAR (owner, 2026-11-13). The catalog's marks fill their 64 px cells
@@ -210,10 +210,14 @@ function Style.Stripe(tex, index)
 end
 
 -- The header gold (Ka0s Default's `text.accent`, NORMAL_FONT_COLOR): the title, the column headers,
--- the active tab, the sort arrows and a hovered title-bar control are all this one color.
+-- the active tab, the sort arrows and a hovered in-content control (the timeline's zoom strip) are
+-- all this one color.
 Style.GOLD = Style.Tok("text.accent")
--- A title-bar control at rest: the close control's own gray (`icon.tint`).
+-- A title-bar control at rest: the close control's own gray (`icon.tint`), every skin.
 Style.REST = Style.Tok("icon.tint")
+-- A title-bar control under the pointer: the skin's `text.link`, as the library's header marks
+-- (smoke round 1's ruling 4, SR-L3; the close X keeps the library's `close.hot`).
+Style.HOT = Style.Tok("text.link")
 
 -- The title bar, the tab strip and a control slot (LootHistory and BankLedger: titleBarH 30,
 -- tabStripH 26, 90px tabs on a 94px pitch; the close control's 18px slot). The bar's height is the
@@ -469,8 +473,9 @@ end
 -- ONE CONTROL AT A TIME (MultiMeters' HeaderControls). A strip remembers which control the pointer
 -- is on; an enter names it and repaints the strip, a leave un-names it ONLY IF IT IS STILL THE ONE
 -- NAMED: frames leave in no guaranteed order, so a leave arriving after the next control's enter
--- must not take the gold off the control the pointer is on now. Full alpha in both states; no
--- control wears the gold at rest.
+-- must not take the hover color off the control the pointer is on now. Full alpha in both states; no
+-- control wears the hover color at rest. A title-bar strip lights in Style.HOT (`text.link`, SR-L3);
+-- the timeline's zoom strip, inside its window, keeps the header gold (Style.NewStrip's `hot`).
 
 local function paintControl(b, c)
     if b.icon then b.icon:SetVertexColor(c[1], c[2], c[3], 1) end
@@ -482,16 +487,17 @@ end
 --- @param strip table  Style.NewStrip's
 function Style.PaintStrip(strip)
     for _, b in ipairs(strip.controls) do
-        paintControl(b, strip.hovered == b and Style.GOLD or Style.REST)
+        paintControl(b, strip.hovered == b and (strip.hot or Style.HOT) or Style.REST)
     end
 end
 
 local strips = setmetatable({}, { __mode = "k" })
 
 --- A strip of title-bar controls sharing one hover state, repainted on a skin change.
---- @return table strip  { controls = {}, hovered = nil }
-function Style.NewStrip()
-    local strip = { controls = {} }
+--- @param hot table|nil  the live color a hovered control takes (default Style.HOT, `text.link`)
+--- @return table strip  { controls = {}, hovered = nil, hot = hot }
+function Style.NewStrip(hot)
+    local strip = { controls = {}, hot = hot }
     strips[strip] = true
     return strip
 end
@@ -499,7 +505,7 @@ end
 Style.OnLooks(function() for strip in pairs(strips) do Style.PaintStrip(strip) end end)
 
 --- Add `b` to `strip`: hooked (never replacing a script the control already has, such as the close
---- control's own tint, which this repaints after) so it turns gold under the pointer.
+--- control's own tint, which this repaints after) so it lights under the pointer.
 --- @param strip table
 --- @param b table  a control with an `icon` texture and/or a `glyph` FontString (and a second
 ---                  texture, `stroke`, tinted with the icon: the timeline's `+`)
@@ -668,6 +674,11 @@ end
 
 --- A title-bar control drawn from the shared catalog, a plain character beneath it when the catalog
 --- cannot answer (standalone-windows), with its tooltip. Its tint is the strip's (AddToStrip).
+--- The tooltip is LibKa0s-Tooltip-1.0's AttachTitleTip (smoke round 1, SR-L1 and SR-L2): `b.tip`,
+--- read on each hover, one line in the owner's `gtip.title`, placed above the control (PlaceAttached,
+--- flipped below only without room), hidden on leave. Hooked, so a caller's own OnEnter set after it
+--- (the timeline's `?`) replaces it outright. With no Tooltip library (a degraded load) the client's
+--- ANCHOR_TOP does the same.
 --- @param parent table
 --- @param name string  the catalog icon
 --- @param glyph string  the plain character drawn when there is no icon
@@ -685,10 +696,15 @@ function Style.ControlButton(parent, name, glyph, tip, onClick)
     b.tip = tip
     Style.SetControlIcon(b, name, glyph)
     b:SetScript("OnClick", function() onClick() end)
+    local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
+    if Tip and Tip.AttachTitleTip then
+        Tip.AttachTitleTip(b, function(self) return self.tip end, addonName)
+        return b
+    end
     b:SetScript("OnEnter", function(self)
-        if not GameTooltip then return end
+        if not (GameTooltip and type(self.tip) == "string" and self.tip ~= "") then return end
         GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:SetText(self.tip, Style.Rgb("gtip.value"))
+        GameTooltip:SetText(self.tip, Style.Rgb("gtip.title"))
         GameTooltip:Show()
     end)
     b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)

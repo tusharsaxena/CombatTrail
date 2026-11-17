@@ -244,10 +244,12 @@ NS.SKIN_TOKENS = {
     ["ct.chart.bar"]    = { default = { 0.40, 0.66, 1.0, 1 }, follow = "chart.bar" },
     ["ct.box.border"]   = { default = { 1, 1, 1, 0.10 }, follow = "list.boxEdge" },
     -- The Results list (and the spell rows that share it): the stripe, the hover and selection
-    -- washes, and the scroll thumb.
-    ["ct.list.stripe"]  = { default = { 1, 1, 1, 0.025 }, follow = "list.stripe" },
-    ["ct.list.hover"]   = { default = { 1, 1, 1, 0.04 }, follow = "list.hover" },
-    ["ct.list.sel"]     = { default = rgba(GOLD, 0.10), follow = "list.sel" },
+    -- washes, and the scroll thumb. The three row washes are Ka0s Default's own as of LibKa0s v1.105.0
+    -- (SkinDefs minor 28, LibKa0s#84: stripe white .08, hover gold .16, selection gold .26), so the
+    -- stripe reads under Ka0s Default where #84 was seen and the selection still outranks the hover.
+    ["ct.list.stripe"]  = { default = { 1, 1, 1, 0.08 }, follow = "list.stripe" },
+    ["ct.list.hover"]   = { default = rgba(GOLD, 0.16), follow = "list.hover" },
+    ["ct.list.sel"]     = { default = rgba(GOLD, 0.26), follow = "list.sel" },
     ["ct.scroll.thumb"] = { default = { 1, 1, 1, 0.25 }, follow = "scroll.thumb" },
     -- A bar's track, the spell rows' and the pace bar's: Ka0s Default keeps the two washes, and every
     -- other skin draws its own bar.bg.

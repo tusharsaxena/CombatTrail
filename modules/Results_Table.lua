@@ -813,8 +813,9 @@ function Tbl.New(parent, columns, opts)
     t.header:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, 0)
     t.header:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, 0)
     t.header:SetHeight(Tbl.HEADER_H)
-    -- The header band LootHistory's takes: the skin's list.header.bg behind the labels (none under
-    -- Ka0s Default), and no rule above or below.
+    -- The header band LootHistory's takes: the skin's list.header.bg behind the labels, told apart
+    -- from a plain row, a stripe and a hover in every skin (LibKa0s v1.105.0, SR-L4: Ka0s Default's
+    -- is black .35), and no rule above or below.
     NS.Skin.SortHeaderBar(t.header)
     for i, col in ipairs(columns) do newHeader(t, i, col) end
     t.body = CreateFrame("Frame", nil, frame)

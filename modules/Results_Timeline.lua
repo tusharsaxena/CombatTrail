@@ -263,7 +263,7 @@ end
 -- right edge, placeControls), scroll right and scroll left, then reset, zoom in, zoom out; the zoom
 -- level left of them (read left to right: "1x - + reset < > ?").
 local function buildZoom()
-    ui.zoomStrip = Style.NewStrip()
+    ui.zoomStrip = Style.NewStrip(Style.GOLD)
     -- Always live; a click does nothing (its tooltip is the point).
     ui.help = control(nil, "?", nil, function() end, helpTip)
     sizeFont(ui.help.glyph, Timeline.HELP_SIZE)
