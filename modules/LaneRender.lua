@@ -301,12 +301,17 @@ end
 
 -- ── one icon ───────────────────────────────────────────────────────────────────────────────────
 
+-- A cast icon is a body element of its lane (a HUD display), so its spell tooltip opens beside the
+-- whole lane, level with the icon (modules/Style.lua's PlaceBody, read at hover: Style loads after
+-- this file; LibKa0s#92).
 local function onEnter(self)
     local id = self.spellID
     if not id then return end
-    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    local Style = NS.Style
+    Style.OwnTip(GameTooltip, self)
     GameTooltip:SetSpellByID(id)
     GameTooltip:Show()
+    Style.PlaceBody(GameTooltip, self)
 end
 
 local function onLeave()

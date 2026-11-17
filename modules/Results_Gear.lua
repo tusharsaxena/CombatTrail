@@ -440,15 +440,17 @@ end
 
 -- ── one slot ────────────────────────────────────────────────────────────────────────────────────
 
--- A slot's hover: the client's own item tooltip from the stored item, then what differs.
+-- A slot's hover: the client's own item tooltip from the stored item, then what differs; beside the
+-- gear window, level with the slot (a body element: Style.PlaceBody, LibKa0s#92).
 local function slotTip(cell)
     local tt = GameTooltip
     if not tt then return end
-    tt:SetOwner(cell, "ANCHOR_RIGHT")
+    Style.OwnTip(tt, cell)
     if not cell.item then
         tt:SetText(L["Empty"], Style.Rgb("gtip.title"))
         tt:AddLine(L["Nothing was equipped in this slot."], Style.Rgb("gtip.muted"))
-        return tt:Show()
+        tt:Show()
+        return Style.PlaceBody(tt, cell)
     end
     local shown = tt.SetHyperlink and pcall(tt.SetHyperlink, tt, clientString(cell.item))
     if not shown then tt:SetText(Gear.ItemName(cell.item) or "?", Style.Rgb("gtip.value")) end
@@ -457,6 +459,7 @@ local function slotTip(cell)
         Style.AddTipLines(tt, cell.notes, 1, Style.Rgb(C.amber))
     end
     tt:Show()
+    Style.PlaceBody(tt, cell)
 end
 
 local function onSlotClick(cell)

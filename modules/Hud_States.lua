@@ -169,9 +169,10 @@ local function newChip(parent)
     f:EnableMouse(true)
     f:SetScript("OnEnter", function(self)
         if not self.tip or not GameTooltip then return end
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(self.tip, Style.Rgb("gtip.value"))
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)   -- a chip is a body element: beside the HUD (LibKa0s#92)
     end)
     f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     return f

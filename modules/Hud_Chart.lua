@@ -265,24 +265,27 @@ end
 local Strip = {}
 Strip.__index = Strip
 
--- A cast icon's hover: the client's spell tooltip for its plain ID.
+-- A cast icon's hover: the client's spell tooltip for its plain ID. A chart mark is a body element,
+-- so both hovers open beside the window group, level with the mark (Style.PlaceBody, LibKa0s#92).
 local function iconEnter(f)
     if not (f.cast and GameTooltip) then return end
-    GameTooltip:SetOwner(f, "ANCHOR_TOP")
+    Style.OwnTip(GameTooltip, f)
     if not pcall(GameTooltip.SetSpellByID, GameTooltip, f.cast.spellID) then return GameTooltip:Hide() end
     GameTooltip:AddLine(L["Cast at %s"]:format(NS.Format.Length(f.cast.t)), Style.Rgb("gtip.muted"))
     GameTooltip:Show()
+    Style.PlaceBody(GameTooltip, f)
 end
 
 local function markEnter(f)
     if not (f.casts and GameTooltip) then return end
-    GameTooltip:SetOwner(f, "ANCHOR_TOP")
+    Style.OwnTip(GameTooltip, f)
     GameTooltip:SetText(L["%d cooldowns"]:format(#f.casts), Style.Rgb("gtip.title"))
     for _, c in ipairs(f.casts) do
         GameTooltip:AddLine(("%s  %s"):format(NS.Format.Length(c.t), tostring(NS.HudBreakdown.SpellName(c.spellID))),
             Style.Rgb("gtip.body"))
     end
     GameTooltip:Show()
+    Style.PlaceBody(GameTooltip, f)
 end
 
 local function hideTip() if GameTooltip then GameTooltip:Hide() end end

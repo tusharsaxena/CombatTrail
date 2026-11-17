@@ -234,8 +234,9 @@ Pane.__index = Pane
 --- @param click table|nil
 --- @return table arrow  its `click` the heading's frame
 function Pane:AddHeading(key, title, click)
+    -- A section heading's arrow is a body element: its tooltip opens beside the window (LibKa0s#92).
     local arrow = Style.ControlButton(self.content, "chevron-down", "-", L["Collapse this section"],
-        function() self:ToggleSection(key) end)
+        function() self:ToggleSection(key) end, "body")
     arrow:SetSize(Detail.ARROW, Detail.ARROW)
     Style.Vertex(arrow.icon, "icon.arrow")
     arrow:SetPoint("RIGHT", title, "LEFT", Detail.ARROW - Detail.INDENT, 0)
@@ -271,7 +272,8 @@ function Pane:ToggleSection(key)
 end
 
 -- A hover frame laid over `region` (a text or a texture takes no mouse of its own), its tooltip the
--- lines `lines()` answers at hover time, under it.
+-- lines `lines()` answers at hover time, beside the window group, level with it (a body element:
+-- Style.PlaceBody, LibKa0s#92).
 local function hoverOver(p, region, lines)
     local f = CreateFrame("Frame", nil, p.content)
     f:SetAllPoints(region)
@@ -279,10 +281,11 @@ local function hoverOver(p, region, lines)
     f:SetScript("OnEnter", function(self)
         local tip = p.record and lines(p.record)
         if not (tip and tip[1] and GameTooltip) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(tip[1], Style.Rgb("gtip.title"))
         Style.AddTipLines(GameTooltip, tip, 2)
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)
     end)
     f:SetScript("OnLeave", function() Tbl().HideTip() end)
     return f
@@ -302,10 +305,11 @@ local function kpi(p, label, color, tip)
     f:SetScript("OnEnter", function(self)
         local lines = p.record and NS.ResultsTips.Detail(tip, p.record, p.deltaCtx)
         if not (lines and GameTooltip) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(lines[1], Style.Rgb("gtip.title"))
         Style.AddTipLines(GameTooltip, lines, 2)
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)   -- a KPI card is a body element (LibKa0s#92)
     end)
     f:SetScript("OnLeave", function() Tbl().HideTip() end)
     return k

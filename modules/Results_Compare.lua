@@ -705,16 +705,18 @@ local function layoutGear(y)
     return #changes == 0 and 1 or line + 1
 end
 
--- A used item's hover: the client's item tooltip (pcall'd), then each side's uses in its hue.
+-- A used item's hover: the client's item tooltip (pcall'd), then each side's uses in its hue; beside
+-- the compare window, level with the line (a body element: Style.PlaceBody, LibKa0s#92).
 local function usageTip(line)
     local tt, d = GameTooltip, line.data
     if not (tt and d) then return end
-    tt:SetOwner(line, "ANCHOR_RIGHT")
+    Style.OwnTip(tt, line)
     local shown = d.itemID and tt.SetItemByID and pcall(tt.SetItemByID, tt, d.itemID)
     if not shown then tt:SetText(NS.ResultsUsage.Name(d.a or d.b), Style.Rgb("gtip.value")) end
     tt:AddLine(L["This fight: %s"]:format(line.this:GetText() or ""), Style.Rgb(PALETTE.THIS_TEXT))
     tt:AddLine(L["The other fight: %s"]:format(line.other:GetText() or ""), Style.Rgb(PALETTE.BEST_TEXT))
     tt:Show()
+    Style.PlaceBody(tt, line)
 end
 
 local function usageLine(i)

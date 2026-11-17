@@ -104,12 +104,14 @@ function Breakdown.LiveCount(live)
     return n
 end
 
--- A row's hover: the client's spell tooltip for its ID (possibly secret, handed on untouched).
+-- A row's hover: the client's spell tooltip for its ID (possibly secret, handed on untouched), beside
+-- the window group, level with the row (a body element: Style.PlaceBody, LibKa0s#92).
 local function rowEnter(row)
     if row.spellID == nil or not GameTooltip then return end
-    GameTooltip:SetOwner(row, "ANCHOR_LEFT")
+    Style.OwnTip(GameTooltip, row)
     if not pcall(GameTooltip.SetSpellByID, GameTooltip, row.spellID) then return GameTooltip:Hide() end
     GameTooltip:Show()
+    Style.PlaceBody(GameTooltip, row)
 end
 
 local function newRow(parent)

@@ -94,7 +94,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Retention.lua` | The purge, its daily timer and `/ct purge`, and the store's size |
 | `modules/Slices.lua` | The damage chart's in-session store |
 | `modules/Format.lua` | Every number the UI draws, secret-safe; `Format.RaceClock`, the one count of tenths the race's elapsed time and time left share |
-| `modules/Style.lua` | The look the HUD and the Results window share; `Style.FitControlArt`, which crops each header control's mark to its measured box (`Style.ART_BOX`) and sizes its long side to `Style.CONTROL_ART` |
+| `modules/Style.lua` | The look the HUD and the Results window share; `Style.FitControlArt`, which crops each header control's mark to its measured box (`Style.ART_BOX`) and sizes its long side to `Style.CONTROL_ART`; the tooltip seam onto LibKa0s-Tooltip-1.0 (`Style.OwnTip`, `Style.PlaceBody`, `Style.PlaceChrome`, `Style.TipGroup`; ARCHITECTURE.md, *Tooltip placement*) |
 | `modules/Hud_Appearance.lua` | The HUD's configured look |
 | `modules/Hud_Tips.lua` | The words of the HUD's tooltips |
 | `modules/Hud_Best.lua` | The pace data: which stored fight the live one is paced against (`Best.PaceRecord`, the HUD's `Hud.PaceRecord`), its target line and curve, and what it had done by each second |

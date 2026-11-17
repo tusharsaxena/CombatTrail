@@ -27,7 +27,8 @@ local Tips = {
 NS.HudTips = Tips
 
 --- Give `frame` the hover for tip `key` (a { title, line, ... } entry above): the frame takes the
---- mouse, and its tooltip sits above it. `frame.tipKey` may be changed later to change its words.
+--- mouse, and its tooltip opens beside the HUD's window group, level with the frame (a body element:
+--- Style.PlaceBody, LibKa0s#92). `frame.tipKey` may be changed later to change its words.
 --- @param frame table
 --- @param key string
 function Tips.Attach(frame, key)
@@ -38,11 +39,12 @@ function Tips.Attach(frame, key)
     frame:SetScript("OnEnter", function(self)
         local tip = Tips[self.tipKey]
         if type(tip) ~= "table" or not GameTooltip then return end
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        NS.Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(tip[1], NS.Style.Rgb("gtip.title"))
         local r, g, b = NS.Style.Rgb("gtip.body")
         for i = 2, #tip do GameTooltip:AddLine(tip[i], r, g, b, true) end
         GameTooltip:Show()
+        NS.Style.PlaceBody(GameTooltip, self)
     end)
     frame:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
 end

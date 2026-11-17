@@ -273,11 +273,12 @@ end
 -- ── the section ─────────────────────────────────────────────────────────────────────────────────
 
 -- A row's hover: the client's own item tooltip with the row's detail after it (and, in the edit, how
--- to hide an item), or the name alone.
+-- to hide an item), or the name alone; beside the Results window, level with the row (a body element:
+-- Style.PlaceBody, LibKa0s#92).
 local function rowTip(p, row)
     local tt, data = GameTooltip, row.data
     if not (tt and data) then return end
-    tt:SetOwner(row, "ANCHOR_RIGHT")
+    Style.OwnTip(tt, row)
     local shown = data.itemID and tt.SetItemByID and pcall(tt.SetItemByID, tt, data.itemID)
     if not shown then tt:SetText(ResultsUsage.Name(data), Style.Rgb("gtip.value")) end
     if row.detailText and row.detailText ~= "" then tt:AddLine(row.detailText, Style.Rgb("gtip.muted")) end
@@ -285,6 +286,7 @@ local function rowTip(p, row)
         tt:AddLine(L["Right-click: never show this item."], Style.Rgb("gtip.muted"))
     end
     tt:Show()
+    Style.PlaceBody(tt, row)
 end
 
 --- An item row's right-click while editing: a menu with *Never show <item>* (Usage.Hide; the window
@@ -349,6 +351,7 @@ function ResultsUsage.Build(p, c)
     x.edit = Style.Button(c, L["Edit"], function() ResultsUsage.ToggleEdit(p) end)
     x.edit:SetSize(ResultsUsage.EDIT_W, ResultsUsage.BUTTON_H)
     x.edit.tip = { L["Edit"], L["Tick what the fight really used: an item the detection missed, or one it got wrong."] }
+    x.save.tipBody, x.edit.tipBody = true, true   -- the section's own buttons: body elements (LibKa0s#92)
     x.none = Style.Text(c, FONT.TEXT, Tbl().COLORS.dim)
     x.titleHover = p:AddHeading("usage", x.title).click
     return x

@@ -1511,6 +1511,21 @@ Total.
 - header strip: the gear view reads Settings, Close; settings hides it, then opens the panel
 - header strip: the ability timeline reads Settings, Close; settings hides it, then opens the panel
 
+### test_tooltip_place.lua (12)
+
+- tooltip seam: a body tooltip opens right of its window, level with the row, 2 px off
+- tooltip seam: a body tooltip with no room on the right opens left of the window
+- tooltip seam: a chrome tooltip is centered 2 px above its control, below only at the top
+- tooltip seam: unreadable geometry attaches the tooltip above the element, never the cursor
+- tooltip seam: the HUD and the attached Race window are one group, the HUD its main frame
+- tooltip seam: an attached Race window on the HUD's left opens its row tooltips on its left
+- tooltip seam: with no Race window (WoW Forever), the HUD is a group of one
+- tooltip sweep: every hover on every window is owned at ANCHOR_NONE and placed, never by the cursor
+- tooltip surfaces: body elements open beside their window, chrome controls above themselves
+- tooltip surfaces: a Race window body button opens beside the HUD and the attached Race window
+- tooltip surfaces: the Insights charts place through the context's PlaceTip, beside the window
+- tooltip guard: the addon's own code names no cursor or corner anchor
+
 ### test_window_chrome.lua (13)
 
 - window chrome: the footer height is the library's FOOTER.HEIGHT, 24
@@ -1863,6 +1878,7 @@ Total.
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_title_bar.lua | 14 |
+| test_tooltip_place.lua | 12 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
@@ -1884,4 +1900,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1542** |
+| **Total** | **1554** |

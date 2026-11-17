@@ -177,6 +177,15 @@ AD-86-CT):
   No window opts out of the settings mark. The addon builds no LibKa0s `DragHandle`, so the drag
   strip's settings mark has nothing to turn on.
 
+### Tooltip placement (standalone-windows, *Tooltip placement*)
+
+Every tooltip the addon places is owned at `ANCHOR_NONE` and placed by `modules/Style.lua`'s seam onto
+`LibKa0s-Tooltip-1.0` (LibKa0s#92, AD-92-CT): a body element beside its window group, right then
+left, level with the element (`Style.PlaceBody`); a chrome control 2 px above it (`Style.PlaceChrome`);
+never the cursor or a corner ([`tooltips.md`](tooltips.md)). Left as they are (*What it does not
+bind*): settings pages (the canvas), the launcher's menu (`MenuUtil`), a broker display's tooltip
+(the display), and the library's windows, widgets, menus, marks and minimap tooltip (the library).
+
 ## Module Map
 
 Load order is the TOC's: libraries, the locale, `core/` in dependency order, `defaults/`,
@@ -360,7 +369,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 
 | Doc | Covers |
 |---|---|
-| (none) | |
+| `tooltips.md` | Where each tooltip opens: the body and chrome elements per window, the window group, the fallback, and the tooltips left to the client and the library |
 
 ## Documented deviations
 

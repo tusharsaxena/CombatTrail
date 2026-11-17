@@ -171,6 +171,7 @@ local SUITES = {
     "test_compare",
     "test_gear",
     "test_title_bar",
+    "test_tooltip_place",
     "test_window_chrome",
     "test_usage_edit",
     "test_history_page",

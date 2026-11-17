@@ -10,15 +10,25 @@ local _, NS = ...
 --- tab keeps its filters and its count and says the charts are unavailable.
 NS.Charts = LibStub and LibStub("LibKa0s-Charts-1.0", true)
 
--- A gold title over the lines, bulleted from two (Style.AddTipLines), by the cursor.
-local function cursorTip(owner, lines, anchor)
+-- A gold title over the lines, bulleted from two (Style.AddTipLines), owned at ANCHOR_NONE and
+-- placed beside the window group, level with the mark (LibKa0s#92, AD-92-CT): through the context's
+-- PlaceTip (LibKa0s-Charts-1.0 Since 2: the library's PlaceBeside on `host.group`), else the addon's
+-- own body placer. The legacy `anchor` (a cursor or ANCHOR_TOP one) is not read: no tooltip here is
+-- placed by the cursor or by a corner.
+local function placedTip(owner, lines, _, ctx)
     local tip = GameTooltip
-    if not tip then return end
-    local r, g, b = NS.Style.Rgb("gtip.title")
-    tip:SetOwner(owner, anchor)
+    if not (tip and type(lines) == "table" and lines[1]) then return end
+    local Style = NS.Style
+    local r, g, b = Style.Rgb("gtip.title")
+    Style.OwnTip(tip, owner)
     tip:SetText(lines[1], r, g, b, 1, true)
-    NS.Style.AddTipLines(tip, lines, 2)
+    Style.AddTipLines(tip, lines, 2)
     tip:Show()
+    if type(ctx) == "table" and type(ctx.PlaceTip) == "function" then
+        ctx:PlaceTip(tip, owner)
+    else
+        Style.PlaceBody(tip, owner)
+    end
 end
 
 -- The window's flat panel for the list panels and the cards: the skin's Panel over the fight
@@ -29,7 +39,8 @@ local function panel(parent)
     return f
 end
 
---- The host table for the Results window: NS.Pool, the window's flat panel, its tooltip, its colors
+--- The host table for the Results window: NS.Pool, the window's flat panel, its tooltip (placedTip;
+--- no `group`, so the library's GroupOf answers the Results window the mark sits in), its colors
 --- (modules/Results_Table.lua's COLORS and the skin's chart tokens, every one a live skin color) and
 --- font objects (modules/Style.lua's FONT), its labels painted through the skin (Style.Paint: the
 --- skin's faces) and its textures through Style.Fill. The ranked palette is the skin's `chart.series`,
@@ -43,7 +54,7 @@ function NS.ChartsHost()
     return {
         pool = NS.Pool,
         panel = panel,
-        tip = cursorTip,
+        tip = placedTip,
         hideTip = Tbl.HideTip,
         text = Style.PlainText,
         paint = function(fs, c) Style.Paint(fs, c, nil, true) end,

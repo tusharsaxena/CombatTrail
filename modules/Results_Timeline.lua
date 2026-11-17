@@ -213,15 +213,18 @@ local function clipLayer(parent)
     return clip, layer
 end
 
--- The `?` control's hover: the mouse controls on bullets, above it as the other controls' tooltips are.
+-- The `?` control's hover: the mouse controls on bullets, placed as the other controls' tooltips are
+-- (a control on the Casts heading line is a body element: beside the window, Style.PlaceBody,
+-- LibKa0s#92).
 local function helpTip(self)
     local tip, lines = GameTooltip, D.HelpLines()
     if not tip then return end
-    tip:SetOwner(self, "ANCHOR_TOP")
+    Style.OwnTip(tip, self)
     local r, g, b = Style.Rgb("gtip.title")
     tip:SetText(lines[1], r, g, b, 1, true)
     Style.AddTipLines(tip, lines, 2)
     tip:Show()
+    Style.PlaceBody(tip, self)
 end
 
 -- The skin's body face at `size` px on `fs` (its color kept): the `?` and the level.
@@ -248,9 +251,11 @@ local function strokes(b, plus)
     return b
 end
 
--- One control on the Casts heading line, over the strips' clip.
+-- One control on the Casts heading line, over the strips' clip. The line is a section heading in the
+-- window's content, so its controls are body elements: their tooltips open beside the window
+-- (Style.ControlButton's "body", LibKa0s#92).
 local function control(name, glyph, tip, onClick, onEnter)
-    local b = Style.ControlButton(ui.content, name, glyph, tip, onClick)
+    local b = Style.ControlButton(ui.content, name, glyph, tip, onClick, "body")
     -- `onEnter` replaces the stock tooltip BEFORE the strip hooks on: a SetScript after AddToStrip
     -- would drop the hook, and the control would never turn gold.
     if onEnter then b:SetScript("OnEnter", onEnter) end
