@@ -105,6 +105,7 @@ local _, NS = ...
 -- (NS.RaceSample.On()), every read and act below goes to it instead of NS.Race (src()), so its bodies
 -- are drawn by the same path; its best, its Against your best and its Top races come from the sample
 -- history (Results_Source, and Bests' sample-aware Before and Ranked). ShowSample and EndSample open and let go a window the preview opened.
+-- While it stands in the window wears its own test or sim strip under its title bar (applyStrip).
 --
 -- RETAIL ONLY (clients-§4): nothing here loads on WoW Forever, so NS.RaceWindow is absent there.
 
@@ -334,8 +335,60 @@ local function ensureWindow()
     return ui
 end
 
-local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD end
+-- The docked strip's BodyOffset (its height while it shows, 0 while hidden or before it is built).
+local function stripHeight()
+    local strip = ui and ui.stripMode and ui[ui.stripMode .. "Strip"]
+    return strip and strip:BodyOffset() or 0
+end
+
+-- The content's insets from the window's top and bottom: the title bar's and the footer's, each only
+-- while shown, and the docked strip's BodyOffset under the title bar.
+local function contentTop()
+    return (setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD) + stripHeight()
+end
 local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
+
+-- ── the sample marker (test mode, the sim) ──────────────────────────────────────────────────────
+-- While the window draws the sample race (RW.ShowSample: `/ct test race`, the sim's race-* scenarios)
+-- it says so with its own strip, as the DPS HUD and the Results window do: the library's, docked by
+-- the library under this window's title band (dock = "title"; on the window's top edge while the band
+-- hides; preview-mode, *Where the strip sits*), and the body moves down by its BodyOffset. A sim wears
+-- the cyan sim strip, test mode the amber test strip. With no Widgets library there is no strip, and
+-- the title carries the word instead; never both.
+local STRIP_TEXT = { test = "Test mode: a sample race. Nothing here is saved.",
+                     sim = "Sim: a made-up race, not your data. /ct sim ends it." }
+local STRIP_MAKER = { test = "MakeTestStrip", sim = "MakeSimStrip" }
+
+local function stripFor(which)
+    local field = which .. "Strip"
+    if not ui[field .. "Tried"] then
+        ui[field .. "Tried"] = true
+        ui[field] = NS[STRIP_MAKER[which]](ui.frame, L[STRIP_TEXT[which]],
+            { titleBar = NS.Style.Band(ui.frame), window = ui.frame })
+    end
+    return ui[field]
+end
+
+-- Which strip the window wears now: nil (the real race), "test" or "sim".
+local function stripMode()
+    if not sampled() then return nil end
+    local P = NS.Preview
+    return (P and P.Mode and P.Mode() == "sim") and "sim" or "test"
+end
+
+-- The strip for the race on screen shown (and the other hidden); a change moves the body, so the
+-- window's look is laid out again (applyWindow places the content at contentTop).
+local function applyStrip()
+    local want = stripMode()
+    if want == ui.stripMode then return end
+    ui.stripMode, ui.stamp = want, nil
+    local shown = want and stripFor(want) or nil
+    for _, which in ipairs({ "test", "sim" }) do
+        local strip = ui[which .. "Strip"]
+        if strip then strip:SetShown(strip == shown) end
+    end
+    ui.frame.title:SetText(want and not shown and L["Race (sample)"] or L["Race"])
+end
 
 -- The window's configured look, once per Appearance stamp: the title bar, the footer, the content's
 -- insets, the background, border, strata and opacity (the DPS HUD's `hud.window.*`).
@@ -714,6 +767,7 @@ local function footer(v)
 end
 
 function render()
+    applyStrip()
     applyWindow()
     applyControls()
     local w, h = RW.Width(), RW.WindowHeight()

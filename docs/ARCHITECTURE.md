@@ -141,9 +141,11 @@ and body, and the footer. Both the strip and the footer are LibKa0s-Widgets-1.0'
 
 - **The strip is docked by the library** (`NS.MakeTestStrip` / `NS.MakeSimStrip` with a
   `{ titleBar, window }` dock, `dock = "title"`): directly under the title band, full width, and on the
-  window's top edge while the HUD's title bar is hidden. The host never anchors it. Everything below
-  the title bar moves down by the strip's `BodyOffset()`: the HUD's content, and the Results window's
-  tabs, tab rule and body. The DPS HUD has a title bar, a background and a footer, so it is a window
+  window's top edge while the title bar is hidden. The host never anchors it. Everything below
+  the title bar moves down by the strip's `BodyOffset()`: the HUD's content, the Race window's body
+  (whose least height grows by it), and the Results window's tabs, tab rule and body. The Race window
+  wears its own strip while it draws the sample race (`RaceWindow.ShowSample`: `/ct test race`, the
+  sim's race-* scenarios), attached or not. The DPS HUD has a title bar, a background and a footer, so it is a window
   in preview-mode's sense, not a HUD display, and its strip docks under its title bar like the
   Results window's. The title carries the mode word only where no strip could be built.
 - **The footer is the library's `W.Footer`** (`NS.MakeFooter`), `NS.FOOTER_HEIGHT` (the library's

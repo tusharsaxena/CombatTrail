@@ -3,10 +3,11 @@
 -- WowAddonStandards v2.113.0, standalone-windows' *Window chrome geometry* and *The footer*,
 -- preview-mode's *Where the strip sits*). The DPS HUD, the Results window and the Race window (Retail)
 -- each draw their footer with LibKa0s-Widgets-1.0's Footer, FOOTER.HEIGHT (24) tall, and their bodies
--- end that far above the window's bottom edge, plus the host's own gap. The HUD's and the Results
--- window's test and sim strips are docked by the library under the title bar (dock = "title"), never
--- anchored by hand: everything below the title bar (the Results window's tabs, its tab rule and its
--- body; the HUD's content) moves down by the strip's BodyOffset while it shows. The DPS HUD has a
+-- end that far above the window's bottom edge, plus the host's own gap. The HUD's, the Results
+-- window's and the Race window's test and sim strips are docked by the library under the title bar
+-- (dock = "title"), never anchored by hand: everything below the title bar (the Results window's tabs,
+-- its tab rule and its body; the HUD's content; the Race window's body) moves down by the strip's
+-- BodyOffset while it shows. With no library there is no strip and the title says the mode word. The DPS HUD has a
 -- title bar, a background and a footer, so preview-mode counts it a window ("a race or tracker
 -- window the addon names its HUD is a window"); with its title bar hidden its strip sits on the
 -- window's top edge.
@@ -184,4 +185,152 @@ test("window chrome: the Results strip sits under the title bar, above the tabs,
     NS.ToggleTestMode()
     assertFalse(ui.testStrip:IsShown(), "the strip goes with test mode")
     assertEqual(point(first, "TOPLEFT")[5], 0, "the tabs back on the title bar's foot")
+end)
+
+-- ── the Race window's strips (Retail; AD-88-CT review fix) ──────────────────────────────────────
+-- The Race window is a standalone window that draws the sample race (`/ct test race`, the sim's
+-- race-* scenarios: RW.ShowSample), so while it does it wears its own strip, docked by the library
+-- under its own title band (dock = "title"), and its body moves down by the strip's BodyOffset.
+
+local F = dofile(T.root .. "/tests/race_fixture.lua")(T)
+local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
+
+local function forever() return T.NS.Compat.IsForever() end
+
+-- A fresh instance with the Race window opened by the case alone (auto-show off).
+local function raceFresh()
+    local S = F.fresh({ mutate = function(m) installPaint(m) end })
+    assert(S.NS.SetByPath("race.autoShow", false))
+    assert(S.NS.SetByPath("race.autoShowHud", false))
+    S.NS.RaceWindow.HideAwayFromDummy()
+    S.NS.Hud.HideAwayFromDummy()
+    S.M.__now = 1000
+    return S
+end
+
+test("window chrome: the Race window's test strip docks under its title bar for the sample race, the body below it", function()
+    if forever() then return end
+    local S = raceFresh()
+    local NS = S.NS
+    local RW = NS.RaceWindow
+    RW.Show()
+    local ui = RW.__ui()
+    assertEqual(ui.testStrip, nil, "the real race wears no strip")
+    local top, plain = NS.Style.TITLE_BAR_H + 10, RW.Height()
+    NS.Slash:OnSlash("test race")
+    dockedUnder(ui.testStrip, NS.Style.Band(ui.frame), "the Race window's test strip")
+    assertTrue(ui.testStrip:IsShown(), "shown for the sample race")
+    assertEqual(ui.frame.title:GetText(), NS.L["Race"], "the strip says it, so the title keeps its name")
+    -- Measured, the body moves down by the strip's own height (its BodyOffset), and the window's least
+    -- height grows by it, so the body keeps its room.
+    ui.testStrip:__setGeom(260, 18)
+    track(ui.content)
+    H.setHud(S.inst, "window.alpha", 0.9)   -- a new Appearance stamp lays the window out again
+    RW.Refresh()
+    assertEqual(point(ui.content, "TOPLEFT")[5], -(top + 18), "the body under the strip")
+    assertEqual(RW.Height(), plain + 18, "the least height takes the strip")
+    -- With the title bar hidden the strip sits on the window's top edge, the body under it.
+    H.setHud(S.inst, "window.titleBar", false)
+    RW.Refresh()
+    ui.testStrip:Place()
+    local tl = point(ui.testStrip, "TOPLEFT")
+    assertTrue(tl[2] == ui.frame and tl[3] == "TOPLEFT", "headerless: on the window's top edge")
+    assertEqual(point(ui.content, "TOPLEFT")[5], -(PAD + 18), "the body under it")
+    H.setHud(S.inst, "window.titleBar", true)
+    NS.Preview.Stop()
+    assertTrue(RW.IsShown(), "the player's window stays up")
+    assertFalse(ui.testStrip:IsShown(), "the strip goes with the sample race")
+    assertEqual(point(ui.content, "TOPLEFT")[5], -top, "the body back under the title bar")
+    assertEqual(RW.Height(), plain, "and the height given back")
+end)
+
+test("window chrome: a sim race-* scenario docks the Race window's sim strip, never the test strip", function()
+    if forever() then return end
+    local S = raceFresh()
+    local NS = S.NS
+    local RW = NS.RaceWindow
+    assertTrue(NS.Preview.Start({ mode = "sim", scenario = "race-newbest" }), "the sim race started")
+    assertTrue(RW.IsShown(), "the sample race opens the window")
+    local ui = RW.__ui()
+    assertTrue(ui.simStrip ~= nil and ui.simStrip:IsShown(), "the Race window wears the sim strip")
+    dockedUnder(ui.simStrip, NS.Style.Band(ui.frame), "the Race window's sim strip")
+    assertTrue(ui.testStrip == nil or not ui.testStrip:IsShown(), "and not the test strip")
+    NS.Preview.Stop()
+    assertFalse(RW.IsShown(), "the window the sim opened is let go")
+    RW.Show()
+    assertFalse(ui.simStrip:IsShown(), "opened again on the real race: the strip went with the sim")
+    assertEqual(ui.frame.title:GetText(), NS.L["Race"])
+end)
+
+-- ── the degraded load (no LibKa0s) ──────────────────────────────────────────────────────────────
+-- With no Widgets library there is no strip, so the title carries the sample word instead (never
+-- both), and the footer is the bare stand-in of the same height, so the layout does not move. The
+-- settings library is absent too, so the cases start and stop the preview directly (NS.Preview).
+
+local function bareFresh()
+    local inst = T.load{ libFiles = {}, mutate = function(m)
+        installPaint(m)
+        T.mockMeter.install(m)
+        m.__unitExists.target = true
+        m.__unitGUIDs.target = F.DUMMY_GUID
+        m.__unitNames.target = "Raider's Training Dummy"
+    end }
+    local NS = inst.NS
+    if NS.RaceWindow then
+        assert(NS.SetByPath("race.autoShow", false))
+        assert(NS.SetByPath("race.autoShowHud", false))
+        NS.RaceWindow.HideAwayFromDummy()
+        NS.Hud.HideAwayFromDummy()
+    end
+    inst.mocks.__now = 1000
+    return inst, NS
+end
+
+test("window chrome: with no library the footers are the bare stand-in, FOOTER_HEIGHT (24) tall", function()
+    local inst, NS = bareFresh()
+    assertEqual(NS.FOOTER_HEIGHT, 24, "the library's figure with no library")
+    NS.Hud.Show()
+    local hud = NS.Hud.__ui()
+    assertTrue(hud.foot ~= nil and hud.foot.line == nil, "the HUD: no hairline, the bare footer")
+    assertTrue(hud.footLeft == hud.foot.left, "the host writes the stand-in's lines")
+    hud.foot:SetRight("x")
+    assertEqual(hud.foot.right:GetText(), "x", "its setters run unchanged")
+    track(hud.content)
+    H.setHud(inst, "window.alpha", 0.9)
+    NS.Hud.Refresh()
+    assertEqual(point(hud.content, "BOTTOMRIGHT")[5], NS.FOOTER_HEIGHT + 8, "the content as far above the bottom")
+    NS.Results.Show()
+    local res = NS.Results.__ui()
+    assertTrue(res.foot ~= nil and res.foot.line == nil, "the Results window: the bare footer")
+    assertEqual(res.foot.__grip, true, "clear of the grip's corner")
+end)
+
+test("window chrome: with no library the HUD and Results titles carry the test word, no strip", function()
+    local _, NS = bareFresh()
+    NS.Results.Show()
+    assertTrue(NS.Preview.Start({ mode = "test" }), "test mode started")
+    local hud, res = NS.Hud.__ui(), NS.Results.__ui()
+    assertEqual(hud.testStrip, nil, "the HUD: no strip")
+    assertEqual(hud.frame.title:GetText(), NS.L["Combat Trail (sample)"], "the HUD's title says it")
+    assertEqual(res.testStrip, nil, "the Results window: no strip")
+    assertEqual(res.frame.title:GetText(), NS.L["Combat Trail \226\128\148 Results \194\183 Test"],
+        "the Results title says it")
+    NS.Preview.Stop()
+    assertEqual(hud.frame.title:GetText(), NS.L["Combat Trail"], "the HUD's title back")
+    assertEqual(res.frame.title:GetText(), NS.L["Combat Trail \226\128\148 Results"], "the Results title back")
+end)
+
+test("window chrome: with no library the Race window's title carries the sample word, no strip", function()
+    if forever() then return end
+    local _, NS = bareFresh()
+    local RW = NS.RaceWindow
+    RW.Show()
+    local ui = RW.__ui()
+    assertTrue(ui.foot ~= nil and ui.foot.line == nil, "the bare footer")
+    assertTrue(NS.Preview.Start({ mode = "test", race = "running" }), "the sample race started")
+    assertTrue(NS.RaceSample.On(), "the sample race stands in")
+    assertEqual(ui.testStrip, nil, "no strip")
+    assertEqual(ui.frame.title:GetText(), NS.L["Race (sample)"], "the title says it")
+    NS.Preview.Stop()
+    assertEqual(ui.frame.title:GetText(), NS.L["Race"], "the title back")
 end)

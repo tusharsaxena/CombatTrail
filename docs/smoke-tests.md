@@ -11,7 +11,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
-| (not run yet) | 0.1.0, branch `feat/2026-11-17-libka0s-adoption` (the library's window chrome, AD-88-CT and AD-89-CT: the docked strips SM-CT-H8 and SM-CT-R26, the footers SM-CT-H16, SM-CT-R26 and SM-CT-RM93) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-17-libka0s-adoption` (the library's window chrome, AD-88-CT and AD-89-CT: the docked strips SM-CT-H8, SM-CT-R26 and SM-CT-RM94, the footers SM-CT-H16, SM-CT-R26 and SM-CT-RM93) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15; the sim window beside the Race window: SM-CT-M4; the Forever Multi-Shot ID: SM-CT-M5; LibKa0s v1.102.0's call-out look and the one tab with no sample line: SM-CT-RM82, RM84, RM85, RM91, RM92) | |
 
 ## How to run it
@@ -316,7 +316,7 @@ macro.
 
 | ID | Client | Check | Expect |
 |---|---|---|---|
-| SM-CT-RM41 | Retail | `/ct test race armed`, `running`, `result`, then bare `/ct test race` | The Race window holds a sample race in each body (running when none is named), under the sample strip, beside the HUD's sample fight; Results shows 40 sample fights and 16 sample races |
+| SM-CT-RM41 | Retail | `/ct test race armed`, `running`, `result`, then bare `/ct test race` | The Race window holds a sample race in each body (running when none is named), under its own amber test strip (SM-CT-RM94), beside the HUD's sample fight under the HUD's strip; Results shows 40 sample fights and 16 sample races |
 | SM-CT-RM42 | Retail | `/ct sim race-newbest`, then `race-incomplete`, `race-flagged`, `race-shared` and `race-sticky` | Each plays in real time: armed, running with the countdown and the STOP warning, then its ending (the new best with its toast; incomplete; the late-cast flag; the shared-session flag; the sticky-combat hint), the chat lines, then the Results window on the sample race. Nothing is saved |
 | SM-CT-RM43 | Retail | Race mode off, then `/ct test race` and `/ct sim race-newbest`; then a real `/ct race arm 30` while test mode is on | Both refuse in one line; the arm ends test mode with *Test mode ended: a race was armed.* |
 | SM-CT-RM87 | Retail | `/ct test race running`, then `result`, then `armed`, then `result` again and `/ct test` off | Running: 0:18 on the clock, 0:08 and 0:15 passed (green), 0:23 next (amber), each checkpoint's best figure on the best's straight line, no center number (the held clock stands still). Result: the new-best toast and the call-out's NEW BEST, said in the chosen voice. Each switch and the stop take both down at once; nothing is saved |
@@ -366,6 +366,7 @@ row says otherwise.
 | SM-CT-RM75 | Retail | A 0:30 race on the Golem with *Fade after the fight* 8: race to the result card and wait half a minute; then press *New Race* and wait | Neither window fades while the race is armed, running, waiting or on its result card; after *New Race* neither fades while you stay near the Golem; walking away closes both together |
 | SM-CT-RM76 | Retail | Open the Race window by hand (`/ct race show`) beside an auto-opened HUD (a fight's first hit), let the card fade, then `/ct disable` and `/ct enable`; then with the HUD shut by its close mark and the Race window still wanted, turn Race mode off and on | The stand-up brings the Race window back with the DPS HUD opened under it; Race mode back on does the same; the Race window never shows without the HUD |
 | SM-CT-RM93 | Retail | `/ct race show`, unlocked then locked; arm a race and stop it at the buzzer; then attach it to the DPS HUD on the right and hide and show the footers (DPS HUD → Window) | The Race window's footer is the library's: no band, a hairline, 24 px; the spec and name on the left and *Result pending* on the right in the muted gray, the right line clear of the grip while it shows; attached, the two windows' tops and bottoms stay level and their footers' hairlines line up |
+| SM-CT-RM94 | Retail | `/ct race show`, then `/ct test race` (and `armed`, `result`); then `/ct sim race-newbest`; on both skins, attached beside the DPS HUD and detached (its attach control); then hide and show the HUD's title bar (DPS HUD → Layout) | While the Race window shows the sample race it wears its own strip (amber *Test mode: a sample race. Nothing here is saved.*, then cyan *Sim: a made-up race, not your data. /ct sim ends it.* for the sim), directly under its own title bar, the window's full width inside its edge, attached as well as detached; the body starts below it with nothing covered or clipped, and the window grows by the strip's height; the title reads *Race* with no mode word; with the title bar hidden the strip moves to the window's top edge; the strip's end control stops the preview; when the sample ends the strip goes and the body moves back up |
 
 ### The center call-out
 

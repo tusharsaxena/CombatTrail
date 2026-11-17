@@ -1504,7 +1504,7 @@ Total.
 - title bar: the gear view's close
 - title bar: the ability timeline's close
 
-### test_window_chrome.lua (8)
+### test_window_chrome.lua (13)
 
 - window chrome: the footer height is the library's FOOTER.HEIGHT, 24
 - window chrome: the DPS HUD's footer is W.Footer, the content FOOTER.HEIGHT + 8 above the bottom
@@ -1514,6 +1514,11 @@ Total.
 - window chrome: the HUD's strip is docked under the title bar, the content below it
 - window chrome: the HUD's sim strip is docked under the title bar too
 - window chrome: the Results strip sits under the title bar, above the tabs, which move down
+- window chrome: the Race window's test strip docks under its title bar for the sample race, the body below it
+- window chrome: a sim race-* scenario docks the Race window's sim strip, never the test strip
+- window chrome: with no library the footers are the bare stand-in, FOOTER_HEIGHT (24) tall
+- window chrome: with no library the HUD and Results titles carry the test word, no strip
+- window chrome: with no library the Race window's title carries the sample word, no strip
 
 ### test_usage_edit.lua (4)
 
@@ -1851,7 +1856,7 @@ Total.
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_title_bar.lua | 7 |
-| test_window_chrome.lua | 8 |
+| test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
@@ -1872,4 +1877,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1530** |
+| **Total** | **1535** |
