@@ -1236,7 +1236,7 @@ Total.
 
 - hud race button: absent on WoW Forever
 - hud race button: built and shown on Retail with Race mode on, the plain flag
-- hud race button: Results, Race, Settings, Lock, Close left to right; off, the strip closes up
+- hud race button: Results, Race, Lock, Settings, Close left to right; off, the strip closes up
 - hud race button: hidden with the title bar
 - hud race button: a click toggles the Race window as /ct race toggle does
 - hud race button: lit only under the pointer, never for the Race window being open
@@ -1494,15 +1494,22 @@ Total.
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
 
-### test_title_bar.lua (7)
+### test_title_bar.lua (14)
 
 - title bar: a second skin differs from Ka0s Default in every title-bar token
 - title bar: the DPS HUD's controls, the close among them
 - title bar: the Race window's controls (Retail)
 - title bar: the Results window's controls, the view toggle in both views
-- title bar: the compare's close
-- title bar: the gear view's close
-- title bar: the ability timeline's close
+- title bar: the compare's settings mark and close
+- title bar: the gear view's settings mark and close
+- title bar: the ability timeline's settings mark and close
+- header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up
+- header strip: the HUD's settings mark opens the settings panel and leaves the HUD up
+- header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)
+- header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel
+- header strip: the compare reads Settings, Close; settings hides it, then opens the panel
+- header strip: the gear view reads Settings, Close; settings hides it, then opens the panel
+- header strip: the ability timeline reads Settings, Close; settings hides it, then opens the panel
 
 ### test_window_chrome.lua (13)
 
@@ -1855,7 +1862,7 @@ Total.
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
-| test_title_bar.lua | 7 |
+| test_title_bar.lua | 14 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
@@ -1877,4 +1884,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1535** |
+| **Total** | **1542** |

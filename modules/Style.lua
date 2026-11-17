@@ -226,10 +226,13 @@ Style.HOT = Style.Tok("text.link")
 Style.TITLE_BAR_H = NS.Skin.Token("title.height") or 30
 Style.TAB_STRIP_H = 26
 Style.TAB_W, Style.TAB_PITCH = 90, 94
-Style.CONTROL = 18
-Style.CONTROL_PITCH = 22
+-- The title-bar strip is W.HeaderButtons' (LibKa0s#86, standalone-windows *Title-bar controls*): an
+-- 18 px slot, HEADER.PAD from the corner and HEADER.GAP apart, read where the library publishes them
+-- (NS.HEADER, core/WidgetsSetup.lua), so the pitch is 24 where the hand-built strip's was 22.
+Style.CONTROL = NS.HEADER.SIZE
+Style.CONTROL_PITCH = NS.HEADER.SIZE + NS.HEADER.GAP
 -- A title-bar mark's longest side (px), the library's close art's own (Core's CLOSE_ART).
-Style.CONTROL_ART = 12
+Style.CONTROL_ART = NS.HEADER.ART
 -- The catalog's cell (px), and each title-bar mark's visible box in it, top-down and end-exclusive:
 -- { left, top, right, bottom }, measured off the vendored art (alpha above 0).
 Style.ART_GRID = 64
@@ -592,7 +595,7 @@ end
 -- With no library (a degraded load: S.Band answers nil, S.Header draws nothing) a host holder
 -- stands where Shell would lay the band, and the same anchors are set once by hand.
 
-local CONTROL_PAD = 6   -- the outermost control's gap to the band's right edge (S.Header's pad)
+local CONTROL_PAD = NS.HEADER.PAD   -- the outermost control's gap to the band's right edge (HEADER.PAD)
 
 --- The window's title band: the library's, else the host's holder. Answers it and whether it is
 --- the library's.
@@ -629,7 +632,8 @@ end
 
 --- The header of `f` on its band. `spec.right` lists the title-bar controls outermost first, `spec.n`
 --- of them (an entry may be nil: a slot kept for a control that could not be made); each is RIGHT on
---- the band, CONTROL_PAD in, one CONTROL_PITCH apart. `spec.title` is anchored by `spec.align`, else
+--- the band, CONTROL_PAD in, one CONTROL_PITCH apart: the offsets W.HeaderButtons records for the
+--- marks NS.MakeHeader built (close, settings, then the extras inward), which this lays. `spec.title` is anchored by `spec.align`, else
 --- the skin's `title.align` (CENTER with no library). `spec.drag` takes the band's rect up to the
 --- controls.
 --- @param f table  the window
@@ -729,18 +733,27 @@ function Style.FitControlArt(tex, name)
 end
 
 --- Draw `name` on a control (the glyph when the catalog has no path), fitted (FitControlArt). The
---- tint is left as it is.
+--- tint is left as it is. A W.HeaderButton mark (NS.MakeHeader) draws its word in `label` where a
+--- Style.ControlButton draws it in `glyph`, and has the one it was built with.
 function Style.SetControlIcon(b, name, glyph)
     local path = NS.Icon(name)
-    b.icon:SetShown(path ~= nil)
-    b.glyph:SetShown(path == nil)
-    if path then
+    local word = b.glyph or b.label
+    local art = path ~= nil and b.icon ~= nil
+    if b.icon then b.icon:SetShown(art) end
+    if word then word:SetShown(not art) end
+    if art then
         b.icon:SetTexture(path)
         Style.FitControlArt(b.icon, name)
-    else
-        b.glyph:SetText(glyph)
+    elseif word then
+        word:SetText(glyph)
     end
     b.iconName = name
+end
+
+--- A control's tooltip, read on each hover: `tip` (Style.ControlButton's) and `__tip` (a W.HeaderButton
+--- mark's) alike.
+function Style.SetControlTip(b, words)
+    b.tip, b.__tip = words, words
 end
 
 -- ── the flat buttons ────────────────────────────────────────────────────────────────────────────

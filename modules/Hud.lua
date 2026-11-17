@@ -483,31 +483,31 @@ end
 local Act = {}
 Hud.Act = Act
 
--- The controls on the band, outermost first: Close, Lock, Settings, the Race control while it shows,
--- Results. Laid again when the Race control comes or goes, so the strip closes up.
+-- The controls on the band, outermost first: Close, Settings, Lock, the Race control while it shows,
+-- Results (W.HeaderButtons' order, extras . settings . close). Laid again when the Race control comes
+-- or goes, so the strip closes up.
 local function layoutHeader(withRace)
-    local right = { ui.close, ui.lock, ui.settings, ui.results }
-    if withRace then right = { ui.close, ui.lock, ui.settings, ui.race, ui.results } end
+    local right = { ui.close, ui.settings, ui.lock, ui.results }
+    if withRace then right = { ui.close, ui.settings, ui.lock, ui.race, ui.results } end
     ui.header = { right = right, withRace = withRace == true }
     NS.Style.Header(ui.frame, { title = ui.frame.title, align = "LEFT", drag = ui.drag, right = right, n = #right })
 end
 
--- The title band: the title LEFT, the controls on the right (close outermost), each the catalog's;
--- the Race control is built on Retail only.
+-- The title band: the title LEFT, the marks on the right through W.HeaderButtons (NS.MakeHeader; LibKa0s#86),
+-- left to right Results, Race (Retail only), Lock, then Settings (the launcher's registered opener) and
+-- the Close in the corner. The HUD sits in the MEDIUM tier, under the settings panel, so it stays up.
 local function buildHeader(f)
     local Style = NS.Style
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Combat Trail"])
-    ui.controls = Style.NewStrip()
-    ui.close = NS.MakeCloseButton(f, function() Act.close() end)
-    ui.lock = Style.ControlButton(f, "unlock", "U", L["Lock or unlock the HUD"], function() Act.lock() end)
-    ui.settings = Style.ControlButton(f, "settings", "S", L["Settings"], function() Act.settings() end)
+    local extras = { { key = "results", icon = "chart", glyph = "R", tip = L["Results"], onClick = function() Act.results() end } }
     if NS.Compat.ForClient({ "retail" }) then
-        ui.race = Style.ControlButton(f, "flag", "F", L["Race window"], function() Act.race() end)
+        extras[#extras + 1] = { key = "race", icon = "flag", glyph = "F", tip = L["Race window"], onClick = function() Act.race() end }
     end
-    ui.results = Style.ControlButton(f, "chart", "R", L["Results"], function() Act.results() end)
-    for _, b in ipairs({ ui.lock, ui.settings, ui.results }) do Style.AddToStrip(ui.controls, b) end
-    if ui.race then Style.AddToStrip(ui.controls, ui.race) end
+    extras[#extras + 1] = { key = "lock", icon = "unlock", glyph = "U", tip = L["Lock or unlock the HUD"], onClick = function() Act.lock() end }
+    local hb = NS.MakeHeader(f, { close = function() Act.close() end, settingsTip = L["Settings"], extras = extras })
+    ui.close, ui.settings = hb.close, hb.settings
+    ui.results, ui.race, ui.lock = hb.extras.results, hb.extras.race, hb.extras.lock
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -1396,9 +1396,9 @@ function Act.close()
 end
 
 function Act.lock() return NS.ToggleLock() end
+
 --- The Race control: `/ct race toggle`, the player's open or close of the Race window.
 function Act.race() return NS.SetRaceWindowShown("toggle") end
-function Act.settings() return NS.OpenSettings() end
 
 --- The chart control: the fight on the card in the Results window, else the window itself.
 function Act.results()

@@ -275,12 +275,17 @@ local function buildHeader(f)
     local Style = NS.Style
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Race"])
-    ui.close = NS.MakeCloseButton(f, function() Act.close() end)
-    ui.attach = Style.ControlButton(f, "move", "A", L["Attach to or detach from the DPS HUD"], function() Act.attach() end)
-    ui.lock = Style.ControlButton(f, "unlock", "U", L["Lock or unlock the Race window"], function() Act.lock() end)
-    ui.settings = Style.ControlButton(f, "settings", "S", L["Race mode settings"], function() Act.settings() end)
-    ui.controls = Style.NewStrip()
-    for _, b in ipairs({ ui.attach, ui.lock, ui.settings }) do Style.AddToStrip(ui.controls, b) end
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Lock, Attach, then Settings, which opens the Race
+    -- mode page (the window's own opener), and the Close in the corner.
+    local hb = NS.MakeHeader(f, {
+        close = function() Act.close() end,
+        settings = function() Act.settings() end, settingsTip = L["Race mode settings"],
+        extras = {
+            { key = "lock", icon = "unlock", glyph = "U", tip = L["Lock or unlock the Race window"], onClick = function() Act.lock() end },
+            { key = "attach", icon = "move", glyph = "A", tip = L["Attach to or detach from the DPS HUD"], onClick = function() Act.attach() end },
+        },
+    })
+    ui.close, ui.settings, ui.lock, ui.attach = hb.close, hb.settings, hb.extras.lock, hb.extras.attach
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -291,7 +296,7 @@ local function buildHeader(f)
     end)
     ui.drag = drag
     Style.Header(f, { title = f.title, align = "LEFT", drag = drag,
-        right = { ui.close, ui.attach, ui.lock, ui.settings }, n = 4 })
+        right = { ui.close, ui.settings, ui.attach, ui.lock }, n = 4 })
 end
 
 -- The library's footer (NS.MakeFooter: W.Footer, its hairline and its two muted lines; applyGrip

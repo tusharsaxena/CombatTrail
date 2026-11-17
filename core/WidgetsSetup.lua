@@ -1,8 +1,9 @@
 local addonName, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.OpenMenu / NS.CloseMenu / NS.MakeTestStrip /
--- NS.MakeSimStrip / NS.MakeFooter / NS.ShowCopy from LibKa0s-Widgets-1.0: the Results window's
--- filter-bar dropdowns and its row menu, the test-mode and sim strips the library docks under a
--- window's title bar over data that is not the player's, the windows' footers, and the copy window
+-- NS.MakeSimStrip / NS.MakeFooter / NS.MakeHeader / NS.ShowCopy from LibKa0s-Widgets-1.0: the Results
+-- window's filter-bar dropdowns and its row menu, the test-mode and sim strips the library docks under a
+-- window's title bar over data that is not the player's, the windows' footers, every window's
+-- title-bar marks (extras, settings, close), and the copy window
 -- the fight detail's talent loadout opens (plan milestone 4).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown draws
@@ -17,7 +18,8 @@ local addonName, NS = ...
 --
 -- DEGRADED (the library absent): NS.MakeDropdown answers nil and the filter bar draws no dropdown at
 -- all rather than a dead control that opens no menu; the filters stay at "all". NS.MakeTestStrip
--- answers nil; NS.MakeFooter answers a bare frame with the same lines and no hairline; NS.CloseMenu
+-- answers nil; NS.MakeFooter answers a bare frame with the same lines and no hairline; NS.MakeHeader
+-- builds the same marks by hand (Style.ControlButton and NS.MakeCloseButton); NS.CloseMenu
 -- is a no-op, because there is no menu that could be open; NS.ShowCopy answers false and its caller
 -- prints the text instead.
 
@@ -183,6 +185,72 @@ function NS.MakeFooter(parent, opts)
     if not (W and type(W.Footer) == "function") then return bareFooter(parent, o) end
     o.owner = addonName
     return W.Footer(parent, o)
+end
+
+-- ── the title-bar marks (LibKa0s-Widgets-1.0 WidgetsHeader 1, LibKa0s#86; standalone-windows,
+-- *Title-bar controls*) ─────────────────────────────────────────────────────────────────────────
+-- Every window this addon owns builds its marks here, through W.HeaderButtons: right-aligned, left to
+-- right the window's extras, then settings, then the close, one 18 px slot, 12 px art, HEADER.PAD in and
+-- HEADER.GAP apart. The close is still NS.MakeCloseButton's (the one wrapper, passed as `makeClose`);
+-- the settings mark opens this addon's settings through the opener the launcher registered for its
+-- folder (Core's OpenSettings(addonName), NS.OpenSettings), unless the window passes its own. The marks
+-- are built unplaced (`place = false`): Style.Header lays them on the title band at the same offsets,
+-- so the HUD's strip closes up when its Race mark hides. Each mark's art is fitted as every title-bar
+-- mark is (Style.FitControlArt), and it keeps `iconName` and `tip` for the window's state changes
+-- (Style.SetControlIcon, Style.SetControlTip).
+
+--- The strip's figures, read where the library publishes them (HEADER); the same with no library.
+NS.HEADER = (W and W.HEADER) or { SIZE = 18, ART = 12, PAD = 6, GAP = 6 }
+
+-- A mark's own record: its icon name and its tooltip (`tip` for this addon, `__tip` the library's).
+local function dress(b, icon, tip)
+    if not b then return nil end
+    b.iconName, b.tip, b.__tip = icon, tip, tip
+    if b.icon and NS.Style then NS.Style.FitControlArt(b.icon, icon) end
+    return b
+end
+
+-- With no library (a degraded install only): the same marks by hand, the same answer's shape.
+local function bareHeader(f, spec)
+    local Style = NS.Style
+    local hb = { extras = {}, order = {}, right = {} }
+    local strip = Style.NewStrip()
+    for _, x in ipairs(spec.extras or {}) do
+        hb.extras[x.key] = Style.AddToStrip(strip, Style.ControlButton(f, x.icon, x.glyph, x.tip, x.onClick))
+        hb.order[#hb.order + 1] = x.key
+    end
+    hb.settings = Style.AddToStrip(strip, Style.ControlButton(f, "settings", "S", spec.settingsTip, function()
+        if spec.hideOnSettings then spec.hideOnSettings:Hide() end
+        if type(spec.settings) == "function" then return spec.settings() end
+        return NS.OpenSettings()
+    end))
+    hb.close = NS.MakeCloseButton(f, spec.close)
+    hb.order[#hb.order + 1], hb.order[#hb.order + 2] = "settings", "close"
+    f.headerButtons = hb
+    return hb
+end
+
+--- A window's title-bar marks: W.HeaderButtons on `f`, unplaced (Style.Header lays them).
+--- @param f table  the window
+--- @param spec table  { close = fn, settings = fn|nil (nil: the registered opener), settingsTip = string,
+---                      hideOnSettings = frame|nil, extras = { { key, icon, glyph, tip, onClick }, ... } }
+---                      (extras left to right)
+--- @return table hb  { close, settings, extras = { [key] = btn }, order = { keys, left to right } }
+function NS.MakeHeader(f, spec)
+    if not (W and type(W.HeaderButtons) == "function") then return bareHeader(f, spec) end
+    local extras = {}
+    for i, x in ipairs(spec.extras or {}) do
+        extras[i] = { key = x.key, icon = x.icon, glyph = x.glyph, tip = x.tip, onClick = function() x.onClick() end }
+    end
+    local hb = W.HeaderButtons(f, {
+        owner = addonName, frame = f, place = false, close = spec.close,
+        makeClose = function(parent, onClick) return NS.MakeCloseButton(parent, onClick) end,
+        settings = spec.settings, settingsTip = spec.settingsTip, hideOnSettings = spec.hideOnSettings,
+        extras = extras,
+    })
+    dress(hb.settings, "settings", spec.settingsTip)
+    for _, x in ipairs(spec.extras or {}) do dress(hb.extras[x.key], x.icon, x.tip) end
+    return hb
 end
 
 -- The one copy window, its frame built on the first ShowCopy (the library's lazy handle), over the

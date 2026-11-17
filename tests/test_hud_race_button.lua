@@ -1,6 +1,7 @@
 -- tests/test_hud_race_button.lua — the DPS HUD's Race control (Race window redesign plan Task W2,
 -- rulings O6): built on Retail only, shown while Race mode is on and hidden (the strip closed up) with
--- it off, between Results and Settings (Results, Race, Settings, Lock, Close left to right), its icon
+-- it off, between Results and Lock (Results, Race, Lock, Settings, Close left to right: W.HeaderButtons'
+-- extras . settings . close, LibKa0s#86, re-pinned from Results, Race, Settings, Lock, Close), its icon
 -- the plain flag (owner, 2026-11-13); a click toggles the Race window as `/ct race toggle` does, and the
 -- control lights (the skin's `text.link`, smoke round 1's SR-L3) only under the pointer, like every
 -- title-bar control, never for the Race window being open. Every title-bar mark of both windows, the close among them, at one art size
@@ -47,12 +48,12 @@ test("hud race button: built and shown on Retail with Race mode on, the plain fl
     assertEqual(ui.race.tip, "Race window")
 end)
 
-test("hud race button: Results, Race, Settings, Lock, Close left to right; off, the strip closes up", function()
+test("hud race button: Results, Race, Lock, Settings, Close left to right; off, the strip closes up", function()
     if forever() then return end
     local S, ui = fresh()
     local right = ui.header.right
     assertEqual(#right, 5)
-    local want = { ui.close, ui.lock, ui.settings, ui.race, ui.results }
+    local want = { ui.close, ui.settings, ui.lock, ui.race, ui.results }
     for i, b in ipairs(want) do assertTrue(right[i] == b, "slot " .. i .. " outermost first") end
     assertTrue(S.NS.SetByPath("race.enabled", false))
     assertFalse(ui.race:IsShown(), "hidden with Race mode off")

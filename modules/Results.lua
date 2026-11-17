@@ -157,9 +157,8 @@ local function paintToggle()
     if not b then return end
     local expanded = Results.View() == "expanded"
     Style.SetControlIcon(b, expanded and "chevron-left" or "chevron-right", expanded and "<" or ">")
-    b.tip = expanded and L["Fold the detail away: the list alone (a click opens a fight in its place)"]
-        or L["Unfold the detail beside the list"]
-    Style.PaintStrip(ui.controls)
+    Style.SetControlTip(b, expanded and L["Fold the detail away: the list alone (a click opens a fight in its place)"]
+        or L["Unfold the detail beside the list"])
 end
 
 -- LootHistory's tab (its Browser tabs, not the skin's Tab primitive, which would lay a backing under
@@ -211,12 +210,11 @@ local function buildChrome(f)
     -- places it and the controls on the band's middle.
     f.title = Style.PlainText(f, Style.FONT.TITLE, "CENTER")
     f.title:SetText(L["Combat Trail \226\128\148 Results"])
-    ui.controls = Style.NewStrip()
-    ui.close = NS.MakeCloseButton(f, function() Results.Hide() end)
-    ui.settings = Style.AddToStrip(ui.controls, Style.ControlButton(f, "settings", "S", L["Settings"],
-        function() NS.OpenSettings() end))
-    ui.viewToggle = Style.AddToStrip(ui.controls, Style.ControlButton(f, "chevron-right", ">", "",
-        function() Results.ToggleView() end))
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): the view toggle, Settings (the launcher's registered
+    -- opener; the window sits in the HIGH tier beside the panel, so it stays up), the Close.
+    local hb = NS.MakeHeader(f, { close = function() Results.Hide() end, settingsTip = L["Settings"],
+        extras = { { key = "view", icon = "chevron-right", glyph = ">", tip = "", onClick = function() Results.ToggleView() end } } })
+    ui.close, ui.settings, ui.viewToggle = hb.close, hb.settings, hb.extras.view
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -226,7 +224,7 @@ local function buildChrome(f)
         savePosition()
     end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.viewToggle, ui.settings }, n = 3 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings, ui.viewToggle }, n = 3 })
     buildTabs(f)
 end
 

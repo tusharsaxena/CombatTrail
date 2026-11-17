@@ -1,6 +1,6 @@
 -- tests/test_title_bar.lua — every title-bar control this addon draws on its own windows (smoke round 1,
 -- rulings 3 and 4: Ka0sAddonsCommonTasks docs/2026-11-16-LIBKA0S_ISSUES_75_PLUS/SR1_SMOKE_ROUND1.md,
--- item SR-CT). One case per window: the DPS HUD, the Race window (Retail), the Results window, the
+-- item SR-CT; the settings marks from LibKa0s#86, item AD-86-CT). One case per window: the DPS HUD, the Race window (Retail), the Results window, the
 -- compare, the gear view and the ability timeline. Each control, the close among them:
 --   * shows a non-empty one-line tooltip on hover, through LibKa0s-Tooltip-1.0's attached placement
 --     (owned at ANCHOR_NONE, never below the control), in the owner's `gtip.title`, hidden on leave;
@@ -219,25 +219,157 @@ test("title bar: the Results window's controls, the view toggle in both views", 
     checkWindow(S, "Results (toggled)", controls)
 end)
 
-test("title bar: the compare's close", function()
+test("title bar: the compare's settings mark and close", function()
     local S, NS = fresh()
     local pane = results(NS)
     pane.w.compare:__fire("OnClick")
     assertTrue(NS.ResultsCompare.IsShown())
-    checkWindow(S, "compare", function() return { { NS.ResultsCompare.__ui().close, "close", true } } end)
+    checkWindow(S, "compare", function() local ui = NS.ResultsCompare.__ui()
+        return { { ui.close, "close", true }, { ui.settings, "settings" } } end)
 end)
 
-test("title bar: the gear view's close", function()
+test("title bar: the gear view's settings mark and close", function()
     local S, NS = fresh()
     local pane = results(NS)
     assertTrue(NS.ResultsGear.Open(pane))
-    checkWindow(S, "gear", function() return { { NS.ResultsGear.__ui().close, "close", true } } end)
+    checkWindow(S, "gear", function() local ui = NS.ResultsGear.__ui()
+        return { { ui.close, "close", true }, { ui.settings, "settings" } } end)
 end)
 
-test("title bar: the ability timeline's close", function()
+test("title bar: the ability timeline's settings mark and close", function()
     local S, NS = fresh()
     local pane = results(NS)
     NS.ResultsTimeline.Open(pane)
     assertTrue(NS.ResultsTimeline.IsShown())
-    checkWindow(S, "timeline", function() return { { NS.ResultsTimeline.__ui().close, "close", true } } end)
+    checkWindow(S, "timeline", function() local ui = NS.ResultsTimeline.__ui()
+        return { { ui.close, "close", true }, { ui.settings, "settings" } } end)
 end)
+
+-- ── the strip (LibKa0s#86, item AD-86-CT; standalone-windows, *Title-bar controls*) ────────────────
+-- Every window's marks are W.HeaderButtons': `frame.headerButtons` is the library's answer, its order
+-- left to right the window's extras, then settings, then the close; each mark laid on the band's right
+-- through the skin's S.Header, HEADER.PAD (6) in and HEADER.SIZE + HEADER.GAP (24) apart, outermost first. The settings mark opens
+-- this addon's settings (the launcher-registered opener, NS.OpenSettings; the Race window its own Race
+-- mode page), and the three DIALOG-tier windows over the Results window hide first (hideOnSettings),
+-- since they would cover the settings panel.
+
+local function W(S) return S.M.LibStub("LibKa0s-Widgets-1.0") end
+
+-- What Style.Header hands the skin's S.Header for each window: its `right` entries, outermost first.
+-- Installed before a window is built (each builds on its first show), so its first layout is seen.
+local function watchHeaders(NS)
+    local seen, header = {}, NS.Skin.Header
+    NS.Skin.Header = function(f, spec, ...)
+        seen[f] = spec and spec.right
+        return header(f, spec, ...)
+    end
+    return seen
+end
+
+-- The marks a window shows, outermost first, each RIGHT on the band at HEADER.PAD + (i - 1) * pitch.
+local function checkStrip(S, seen, f, want, what)
+    local H = W(S).HEADER
+    local hb = f.headerButtons
+    assertTrue(type(hb) == "table", what .. ": the marks are W.HeaderButtons'")
+    assertEqual(table.concat(hb.order, ","), table.concat(want.order, ","), what .. ": extras, settings, close")
+    assertTrue(hb.settings ~= nil and hb.optOut == nil, what .. ": a settings mark, not opted out")
+    local right = seen[f]
+    assertTrue(type(right) == "table", what .. ": laid on the title band by S.Header")
+    assertEqual(#right, #want.right, what .. ": the marks shown")
+    for i, b in ipairs(want.right) do
+        local at = H.PAD + (i - 1) * (H.SIZE + H.GAP)
+        assertTrue(right[i].frame == b, what .. " slot " .. i .. " outermost first")
+        assertEqual(right[i].x, at, what .. " slot " .. i .. ": " .. at .. " in from the band's right")
+    end
+end
+
+-- Count NS.OpenSettings' panel opens (and the Race page's) while `fn` runs; answers the calls.
+local function opens(S, fn)
+    local NS, calls = S.NS, {}
+    local panel, helper = NS.OpenOptionsPanel, NS.Helpers.OpenOptionsPanel
+    NS.OpenOptionsPanel = function(...) calls[#calls + 1] = { "panel", ... } end
+    NS.Helpers.OpenOptionsPanel = function(page) calls[#calls + 1] = { "page", page } end
+    fn()
+    NS.OpenOptionsPanel, NS.Helpers.OpenOptionsPanel = panel, helper
+    return calls
+end
+
+local function click(b) b:GetScript("OnClick")(b, "LeftButton") end
+
+test("header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up", function()
+    local S, NS = fresh()
+    local seen = watchHeaders(NS)
+    NS.Hud.Show()
+    local ui = NS.Hud.__ui()
+    if retail() then
+        checkStrip(S, seen, ui.frame, { order = { "results", "race", "lock", "settings", "close" },
+            right = { ui.close, ui.settings, ui.lock, ui.race, ui.results } }, "HUD")
+        assertTrue(NS.SetByPath("race.enabled", false))
+    else
+        assertTrue(ui.race == nil, "no Race mark on WoW Forever")
+    end
+    checkStrip(S, seen, ui.frame, { order = retail() and { "results", "race", "lock", "settings", "close" }
+            or { "results", "lock", "settings", "close" },
+        right = { ui.close, ui.settings, ui.lock, ui.results } }, "HUD without Race")
+end)
+
+test("header strip: the HUD's settings mark opens the settings panel and leaves the HUD up", function()
+    local S, NS = fresh()
+    NS.Hud.Show()
+    local calls = opens(S, function() click(NS.Hud.__ui().settings) end)
+    assertEqual(#calls, 1, "one open")
+    assertEqual(calls[1][1], "panel", "the settings panel (NS.OpenSettings)")
+    assertTrue(NS.Hud.IsShown(), "the HUD stays: it does not cover the panel")
+end)
+
+test("header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)", function()
+    if not retail() then return end
+    local S, NS = fresh()
+    local seen = watchHeaders(NS)
+    NS.Hud.Show()
+    NS.SetRaceWindowShown("show")
+    local ui = NS.RaceWindow.__ui()
+    checkStrip(S, seen, ui.frame, { order = { "lock", "attach", "settings", "close" },
+        right = { ui.close, ui.settings, ui.attach, ui.lock } }, "Race window")
+    local calls = opens(S, function() click(ui.settings) end)
+    assertEqual(#calls, 1, "one open")
+    assertEqual(calls[1][1] .. ":" .. tostring(calls[1][2]), "page:race", "the Race mode page")
+    assertTrue(NS.RaceWindow.IsShown(), "the Race window stays")
+end)
+
+test("header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel", function()
+    local S, NS = fresh()
+    local seen = watchHeaders(NS)
+    results(NS)
+    local ui = NS.Results.__ui()
+    checkStrip(S, seen, ui.frame, { order = { "view", "settings", "close" },
+        right = { ui.close, ui.settings, ui.viewToggle } }, "Results")
+    local calls = opens(S, function() click(ui.settings) end)
+    assertEqual(#calls, 1, "one open")
+    assertEqual(calls[1][1], "panel", "the settings panel")
+    assertTrue(NS.Results.IsShown(), "the Results window stays (HIGH, beside the panel)")
+end)
+
+-- The three DIALOG-tier windows: settings, close; the settings mark hides the window, then opens.
+local OVER = {
+    { "compare", "ResultsCompare", function(_, pane) pane.w.compare:__fire("OnClick") end },
+    { "gear view", "ResultsGear", function(NS, pane) assertTrue(NS.ResultsGear.Open(pane)) end },
+    { "ability timeline", "ResultsTimeline", function(NS, pane) NS.ResultsTimeline.Open(pane) end },
+}
+
+for _, w in ipairs(OVER) do
+    test("header strip: the " .. w[1] .. " reads Settings, Close; settings hides it, then opens the panel", function()
+        local S, NS = fresh()
+        local seen = watchHeaders(NS)
+        local pane = results(NS)
+        w[3](NS, pane)
+        local mod = NS[w[2]]
+        assertTrue(mod.IsShown(), w[1] .. " open")
+        local ui = mod.__ui()
+        checkStrip(S, seen, ui.frame, { order = { "settings", "close" }, right = { ui.close, ui.settings } }, w[1])
+        local calls = opens(S, function() click(ui.settings) end)
+        assertEqual(#calls, 1, "one open")
+        assertEqual(calls[1][1], "panel", "the settings panel")
+        assertTrue(not mod.IsShown(), w[1] .. " hid first: it would cover the panel")
+    end)
+end

@@ -375,7 +375,10 @@ local draw
 local function buildChrome(f)
     f.title = Style.PlainText(f, FONT.TITLE, "CENTER")
     f.title:SetText(L["Compare"])
-    ui.close = NS.MakeCloseButton(f, function() Compare.Hide() end)
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Settings and the Close. The window is in the DIALOG
+    -- tier and would cover the settings panel, so the settings mark hides it first (hideOnSettings).
+    local hb = NS.MakeHeader(f, { close = function() Compare.Hide() end, settingsTip = L["Settings"], hideOnSettings = f })
+    ui.close, ui.settings = hb.close, hb.settings
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -383,7 +386,7 @@ local function buildChrome(f)
     -- Moved for as long as it is open: nothing stored, the next open centers it again.
     drag:SetScript("OnDragStop", function() f:StopMovingOrSizing() end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close }, n = 1 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings }, n = 2 })
 end
 
 local function buildLegend(f)
