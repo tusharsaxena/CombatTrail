@@ -48,7 +48,8 @@ Results.DETAIL_WIDTH = 440
 Results.MIN_WIDTH = math.max(NS.ResultsFights.BarMinWidth(),
     NS.ResultsTable.MinWidth(NS.ResultsFights.Columns())) + 2
 
-local FOOTER_H = 20
+-- The footer is the library's W.Footer, NS.FOOTER_HEIGHT tall (standalone-windows, *The footer*).
+local FOOTER_H = NS.FOOTER_HEIGHT
 -- The footer's hint; the fight count goes before it.
 local HINT = L["Click a fight for its detail \194\183 right-click for options"]
 
@@ -163,11 +164,11 @@ end
 
 -- LootHistory's tab (its Browser tabs, not the skin's Tab primitive, which would lay a backing under
 -- it): Style.FONT.TAB, the skin's `tab.onText` and its `tab.onLine` underline when active, `tab.text`
--- when not; flush under the title band, a rule under the strip.
-local function tabButton(f, name, i)
+-- when not; on the title band's foot (placeTabs: under the docked strip while one shows), a rule
+-- under them.
+local function tabButton(f, name)
     local b = CreateFrame("Button", nil, f)
     b:SetSize(Style.TAB_W, TAB_H)
-    b:SetPoint("TOPLEFT", Style.Band(f), "BOTTOMLEFT", 6 + (i - 1) * Style.TAB_PITCH, 0)
     b.label = Style.Text(b, Style.FONT.TAB, nil, "CENTER")
     b.label:SetPoint("CENTER", b, "CENTER", 0, 0)
     b.label:SetText(L[TAB_LABELS[name]])
@@ -180,16 +181,29 @@ local function tabButton(f, name, i)
     ui.tabs[name] = b
 end
 
+-- The tabs and their rule on the title band's foot, `drop` lower while a docked strip shows there
+-- (its BodyOffset: preview-mode, *Where the strip sits*).
+local function placeTabs(drop)
+    local band = Style.Band(ui.frame)
+    for i, name in ipairs(Results.TABS) do
+        local b = ui.tabs[name]
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 6 + (i - 1) * Style.TAB_PITCH, -drop)
+    end
+    local line = ui.tabRule
+    line:ClearAllPoints()
+    line:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, -(TAB_H + drop))
+    line:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, -(TAB_H + drop))
+end
+
 function buildTabs(f)
     ui.tabs = {}
-    for i, name in ipairs(Results.TABS) do tabButton(f, name, i) end
+    for _, name in ipairs(Results.TABS) do tabButton(f, name) end
     local line = f:CreateTexture(nil, "ARTWORK")
     line:SetHeight(1)
     NS.Skin.Divider(line)
-    local band = Style.Band(f)
-    line:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, -TAB_H)
-    line:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, -TAB_H)
     ui.tabRule = line
+    placeTabs(0)
 end
 
 local function buildChrome(f)
@@ -216,17 +230,11 @@ local function buildChrome(f)
     buildTabs(f)
 end
 
+-- The library's footer (NS.MakeFooter: W.Footer, its hairline and its two muted lines), its right
+-- line clear of the resize grip's corner; the host writes the lines (footer, below).
 local function buildFooter(f)
-    local line = f:CreateTexture(nil, "ARTWORK")
-    line:SetHeight(1)
-    NS.Skin.Divider(line)
-    line:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1, FOOTER_H)
-    line:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, FOOTER_H)
-    ui.footLeft = Style.Text(f, Style.FONT.CAPTION)
-    ui.footLeft:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 8, 5)
-    ui.footLeft:SetText(HINT)
-    ui.footRight = Style.Text(f, Style.FONT.CAPTION, nil, "RIGHT")
-    ui.footRight:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -20, 5)
+    ui.foot = NS.MakeFooter(f, { left = HINT, grip = true })
+    ui.footLeft, ui.footRight = ui.foot.left, ui.foot.right
 end
 
 local onHide
@@ -533,28 +541,21 @@ local function windowShown()
 end
 
 -- ── the sample marker (test mode, the sim) ──────────────────────────────────────────────────────
--- While the window shows the sample history it says so, as the HUD does: the library's strip under
--- the title band, the body moved down by its height (standalone-windows). A running sim wears the
--- library's cyan sim strip, test mode the amber test strip. With no Widgets library there is no
--- strip, and the title carries the word instead; never both.
-
-local function anchorStrip(strip)
-    if strip then
-        local band = Style.Band(ui.frame)
-        strip:SetPoint("TOPLEFT", band, "BOTTOMLEFT", 0, -(1 + TAB_H))
-        strip:SetPoint("TOPRIGHT", band, "BOTTOMRIGHT", 0, -(1 + TAB_H))
-    end
-    return strip
-end
+-- While the window shows the sample history it says so, as the HUD does: the library's strip, docked
+-- by the library directly under the title band (dock = "title", preview-mode's *Where the strip
+-- sits*), above the tabs; the tabs, their rule and the body move down by its BodyOffset. A running
+-- sim wears the library's cyan sim strip, test mode the amber test strip. With no Widgets library
+-- there is no strip, and the title carries the word instead; never both.
 
 local function ensureStrip(sim)
     local key = sim and "simStrip" or "testStrip"
     if ui[key .. "Tried"] then return ui[key] end
     ui[key .. "Tried"] = true
+    local dock = { titleBar = Style.Band(ui.frame), window = ui.frame }
     if sim then
-        ui[key] = anchorStrip(NS.MakeSimStrip(ui.frame, L["Sim: a made-up fight, not your data. /ct sim ends it."]))
+        ui[key] = NS.MakeSimStrip(ui.frame, L["Sim: a made-up fight, not your data. /ct sim ends it."], dock)
     else
-        ui[key] = anchorStrip(NS.MakeTestStrip(ui.frame, L["Test mode: sample fights. Nothing here is saved."]))
+        ui[key] = NS.MakeTestStrip(ui.frame, L["Test mode: sample fights. Nothing here is saved."], dock)
     end
     return ui[key]
 end
@@ -580,9 +581,10 @@ end
 local function applySampleMarker()
     local mode = sampleMode()
     local strip = showStrip(mode)
-    local drop = strip and NS.TEST_STRIP_HEIGHT or 0
+    local drop = strip and strip:BodyOffset() or 0
     if ui.drop ~= drop then
         ui.drop = drop
+        placeTabs(drop)
         ui.body:SetPoint("TOPLEFT", Style.Band(ui.frame), "BOTTOMLEFT", 0, -(1 + TAB_H + drop))
     end
     local marked = mode ~= nil and not strip

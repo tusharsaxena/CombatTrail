@@ -47,7 +47,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/Secrets.lua` | The only file that inspects a value that may be secret |
 | `core/Bus.lua` | Every message name, declared once, and the record of the bus receivers |
 | `core/PoolSetup.lua` | `NS.Pool`, the widget pool the lanes, the HUD and the Results window use |
-| `core/WidgetsSetup.lua` | Dropdowns, menus, the test and sim strips and the copy box, from LibKa0s-Widgets |
+| `core/WidgetsSetup.lua` | Dropdowns, menus, the docked test and sim strips, the window footer (`NS.MakeFooter`, `NS.FOOTER_HEIGHT`) and the copy box, from LibKa0s-Widgets |
 | `core/ToastSetup.lua` | `NS.NewToast`, the alert-toast shell from LibKa0s-Toast, and its degraded stub |
 | `core/CalloutSetup.lua` | `NS.NewCallout`, the center-screen call-out from LibKa0s-Callout, its degraded stub and the shipped voice packs |
 | `core/ChartsSetup.lua` | `NS.Charts` (LibKa0s-Charts) and `NS.ChartsHost()`, the Results window's look for the Insights charts |

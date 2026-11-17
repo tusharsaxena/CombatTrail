@@ -867,8 +867,9 @@ local function sized()
     return S, geom[S.NS.Hud.FRAME_NAME], geom[W(S).FRAME_NAME]
 end
 
+-- The title bar + 10 over the body, the library's footer (FOOTER.HEIGHT, 24 since AD-89-CT) + 8 under it.
 local function chromeOf(S)
-    return S.NS.Style.TITLE_BAR_H + 10 + 20 + 8
+    return S.NS.Style.TITLE_BAR_H + 10 + S.NS.FOOTER_HEIGHT + 8
 end
 
 test("race window: docked LEFT or RIGHT it takes the DPS HUD's height", function()

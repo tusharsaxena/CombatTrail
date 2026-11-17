@@ -124,7 +124,8 @@ RW.MAX_HEIGHT = 1000  -- the grip's and `raceWindow.height`'s
 RW.DOCK_GAP = 0       -- flush against the DPS HUD while attached (Task W4)
 RW.SIDES = { "RIGHT", "LEFT", "TOP", "BOTTOM" }
 
-local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 12
+-- The footer is the library's W.Footer, NS.FOOTER_HEIGHT tall (standalone-windows, *The footer*).
+local HEADER_H, PAD = NS.Style.TITLE_BAR_H, 12
 
 -- Each side: this window's point, the HUD's point, and the gap's direction.
 local DOCK = {
@@ -292,17 +293,11 @@ local function buildHeader(f)
         right = { ui.close, ui.attach, ui.lock, ui.settings }, n = 4 })
 end
 
+-- The library's footer (NS.MakeFooter: W.Footer, its hairline and its two muted lines; applyGrip
+-- keeps its right line clear of the grip); the host writes the lines (footer, below) and shows it whole.
 local function buildFooter(f)
-    local line = f:CreateTexture(nil, "ARTWORK")
-    ui.footLine = line
-    line:SetHeight(1)
-    NS.Skin.Divider(line)
-    line:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1, FOOTER_H)
-    line:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, FOOTER_H)
-    ui.footLeft = NS.Style.Text(f, NS.Style.FONT.CAPTION)
-    ui.footLeft:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 8, 5)
-    ui.footRight = NS.Style.Text(f, NS.Style.FONT.CAPTION, nil, "RIGHT")
-    ui.footRight:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 5)
+    ui.foot = NS.MakeFooter(f)
+    ui.footLeft, ui.footRight = ui.foot.left, ui.foot.right
 end
 
 local onHide, render, resized, trackSize
@@ -340,7 +335,7 @@ local function ensureWindow()
 end
 
 local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD end
-local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 8 or PAD end
+local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
 
 -- The window's configured look, once per Appearance stamp: the title bar, the footer, the content's
 -- insets, the background, border, strata and opacity (the DPS HUD's `hud.window.*`).
@@ -354,7 +349,7 @@ local function applyWindow()
         if part then part:SetShown(bar) end
     end
     f.title:SetShown(bar and A.On("hud.window.title"))
-    for _, part in ipairs({ ui.footLine, ui.footLeft, ui.footRight }) do part:SetShown(foot) end
+    ui.foot:SetShown(foot)
     ui.content:ClearAllPoints()
     ui.content:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -contentTop())
     ui.content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, contentBottom())
@@ -415,7 +410,13 @@ end
 -- height, the width alone; else both, from the least size.
 local function applyGrip()
     local f = ui.frame
-    if f.resizeGrip then f.resizeGrip:SetShown(canResize()) end
+    local on = canResize()
+    if f.resizeGrip then f.resizeGrip:SetShown(on) end
+    -- The footer's right line clears the grip's corner while the grip shows (a relayout: only on a change).
+    if ui.footGrip ~= on then
+        ui.footGrip = on
+        ui.foot:SetGrip(on)
+    end
     if type(f.SetResizeBounds) ~= "function" then return end
     local own = RW.Height()
     if matched() then

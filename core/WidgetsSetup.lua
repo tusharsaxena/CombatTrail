@@ -1,8 +1,9 @@
 local addonName, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.OpenMenu / NS.CloseMenu / NS.MakeTestStrip /
--- NS.MakeSimStrip / NS.ShowCopy from LibKa0s-Widgets-1.0: the Results window's filter-bar dropdowns
--- and its row menu, the test-mode and sim strips a window lays over data that is not the player's,
--- and the copy window the fight detail's talent loadout opens (plan milestone 4).
+-- NS.MakeSimStrip / NS.MakeFooter / NS.ShowCopy from LibKa0s-Widgets-1.0: the Results window's
+-- filter-bar dropdowns and its row menu, the test-mode and sim strips the library docks under a
+-- window's title bar over data that is not the player's, the windows' footers, and the copy window
+-- the fight detail's talent loadout opens (plan milestone 4).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown draws
 -- is resolved once, here. The library is vendored and cannot know which folder it was copied into,
@@ -16,8 +17,9 @@ local addonName, NS = ...
 --
 -- DEGRADED (the library absent): NS.MakeDropdown answers nil and the filter bar draws no dropdown at
 -- all rather than a dead control that opens no menu; the filters stay at "all". NS.MakeTestStrip
--- answers nil; NS.CloseMenu is a no-op, because there is no menu that could be open; NS.ShowCopy
--- answers false and its caller prints the text instead.
+-- answers nil; NS.MakeFooter answers a bare frame with the same lines and no hairline; NS.CloseMenu
+-- is a no-op, because there is no menu that could be open; NS.ShowCopy answers false and its caller
+-- prints the text instead.
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
@@ -102,32 +104,85 @@ function NS.OpenMenu(owner, fill)
     W.ContextMenu(owner, menuRows(level), { owner = addonName, cursor = true })
 end
 
---- The strip's height, for a window laying its content out below it (the library publishes it).
-NS.TEST_STRIP_HEIGHT = (W and W.TEST_STRIP and W.TEST_STRIP.HEIGHT) or 18
+-- THE DOCK (LibKa0s-Widgets-1.0 minor 27; preview-mode, *Where the strip sits*). `dock` is
+-- { titleBar, window, onOffset }: the library docks the strip directly under that title bar, full
+-- width (dock = "title"), on the window's top edge while the title bar is hidden, and places it again
+-- on every show, hide and resize of either. The host never anchors it; everything below the title bar
+-- moves down by `strip:BodyOffset()` (the strip's height while it shows, 0 while hidden).
+local function docked(opts, dock)
+    if type(dock) == "table" and dock.titleBar then
+        opts.dock, opts.titleBar, opts.window, opts.onOffset = "title", dock.titleBar, dock.window, dock.onOffset
+    end
+    return opts
+end
 
---- The test-mode strip (the library's W.TestStrip, born hidden and unanchored), or nil when the
---- library is absent. The caller anchors it and shows it. Its mark is the catalog's info icon.
+-- Its right-click menu ends the preview (LibKa0s Widgets minor 21, onEnd): the test mode and the sim
+-- alike (Preview.Stop stops the sim's script and its stepper too).
+local function endMode() if NS.Preview and NS.Preview.IsActive() then NS.Preview.Stop() end end
+
+--- The test-mode strip (the library's W.TestStrip, born hidden, docked by `dock`), or nil when the
+--- library is absent. The caller shows it. Its mark is the catalog's info icon.
 --- @param parent table the frame to parent it to
 --- @param text string the localized line it says
+--- @param dock table|nil { titleBar, window, onOffset } (THE DOCK)
 --- @return table|nil
-function NS.MakeTestStrip(parent, text)
+function NS.MakeTestStrip(parent, text, dock)
     if not W then return nil end
-    -- onEnd (LibKa0s Widgets minor 21): the strip's right-click menu ends the preview, the test
-    -- mode and the sim alike (Preview.Stop stops the sim's script and its stepper too).
-    local function endMode() if NS.Preview and NS.Preview.IsActive() then NS.Preview.Stop() end end
-    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), owner = addonName, onEnd = endMode })
+    return W.TestStrip(parent, docked({ text = text, icon = NS.Icon("info"), owner = addonName, onEnd = endMode }, dock))
 end
 
 --- The simulation strip: the same widget in its sim flavor (kind = "sim", the library's cyan wash), born
---- hidden and unanchored, or nil when the library is absent. A running sim shows this one and never the
---- test strip. Its right-click menu ends the preview, the sim's script and stepper with it.
+--- hidden and docked by `dock`, or nil when the library is absent. A running sim shows this one and
+--- never the test strip.
 --- @param parent table the frame to parent it to
 --- @param text string the localized line it says
+--- @param dock table|nil { titleBar, window, onOffset } (THE DOCK)
 --- @return table|nil
-function NS.MakeSimStrip(parent, text)
+function NS.MakeSimStrip(parent, text, dock)
     if not W then return nil end
-    local function endMode() if NS.Preview and NS.Preview.IsActive() then NS.Preview.Stop() end end
-    return W.TestStrip(parent, { kind = "sim", text = text, icon = NS.Icon("info"), owner = addonName, onEnd = endMode })
+    return W.TestStrip(parent, docked({ kind = "sim", text = text, icon = NS.Icon("info"), owner = addonName,
+        onEnd = endMode }, dock))
+end
+
+-- ── the footer (LibKa0s-Widgets-1.0 minor 27; standalone-windows, *The footer*) ─────────────────
+
+--- A window footer's height, read where the library publishes it (FOOTER.HEIGHT, 24 under every
+--- skin); the same figure with no library, so a degraded window lays out the same.
+NS.FOOTER_HEIGHT = (W and W.FOOTER and W.FOOTER.HEIGHT) or 24
+
+-- With no library (a degraded install only): a bare frame of the same height across the bottom edge
+-- with the same two lines and setters, and no hairline, so the host's writes run unchanged.
+local function bareFooter(parent, opts)
+    local foot = CreateFrame("Frame", nil, parent)
+    foot:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(NS.FOOTER_HEIGHT)
+    foot.left = foot:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    foot.left:SetPoint("LEFT", foot, "LEFT", 8, 0)
+    foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+    foot.right:SetPoint("RIGHT", foot, "RIGHT", opts.grip and -22 or -8, 0)
+    foot.left:SetText(opts.left or "")
+    foot.SetLeft = function(self, t) self.left:SetText(t or "") end
+    foot.SetRight = function(self, t) self.right:SetText(t or "") end
+    foot.SetGrip = function(self, on) self.__grip = on and true or nil end
+    foot.__grip = opts.grip and true or nil
+    return foot
+end
+
+--- A window's footer: the library's W.Footer (no fill, a hairline in the skin's `divider` along its
+--- top, the left and right lines in `text.muted`, FOOTER.HEIGHT tall across `parent`'s bottom edge,
+--- born shown, painted for this addon's skin owner), or the bare stand-in with no library. The host
+--- writes its lines (foot.left / foot.right, or SetLeft / SetRight) and shows or hides it whole.
+--- `opts.grip` true keeps the right line clear of the window's resize grip (foot:SetGrip moves it).
+--- @param parent table the window
+--- @param opts table|nil { left = string, grip = boolean }
+--- @return table the footer
+function NS.MakeFooter(parent, opts)
+    local o = {}
+    for k, v in pairs(opts or {}) do o[k] = v end
+    if not (W and type(W.Footer) == "function") then return bareFooter(parent, o) end
+    o.owner = addonName
+    return W.Footer(parent, o)
 end
 
 -- The one copy window, its frame built on the first ShowCopy (the library's lazy handle), over the

@@ -106,7 +106,7 @@ test("hud page: changes apply live via Hud.Apply", function()
     assertTrue(NS.SetByPath("hud.width", 360))
     assertEqual(sized, 360, "the window takes the new width")
     assertTrue(NS.SetByPath("hud.window.footer", false))
-    assertFalse(Hud.__ui().footLeft:IsShown(), "the footer hides")
+    assertFalse(Hud.__ui().foot:IsShown(), "the footer hides")
     Hud.Apply = apply
 end)
 
@@ -119,7 +119,7 @@ test("hud page: a drawn control writes through the seam and the HUD follows", fu
     assertTrue(box ~= nil, "the Show footer box is drawn")
     box:__fire("OnValueChanged", false)
     assertEqual(NS.db.profile.hud.window.footer, false)
-    assertFalse(NS.Hud.__ui().footLeft:IsShown())
+    assertFalse(NS.Hud.__ui().foot:IsShown())
 end)
 
 test("hud page: every tab renders without printing", function()

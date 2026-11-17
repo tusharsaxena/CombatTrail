@@ -177,7 +177,7 @@ test("hud layout: the window is 260 wide on DPS Race's insets, its height the st
     track(ui.content)
     redraw(Hud, body)
     assertEqual(f.__w, 260)
-    local headerH, footerH = NS.Style.TITLE_BAR_H, 20
+    local headerH, footerH = NS.Style.TITLE_BAR_H, NS.FOOTER_HEIGHT   -- the library's footer, 24 (AD-89-CT)
     local tl, br = ui.content.__points[1], ui.content.__points[2]
     assertEqual(tl[1], "TOPLEFT")
     assertEqual(tl[4], 12, "PAD 12")

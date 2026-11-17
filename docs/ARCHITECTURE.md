@@ -132,6 +132,28 @@ macro too.
   mute is stored (callout plan row C11). Its settings are plain schema rows
   (`callout.*`), written through `NS.SetByPath` like every other row.
 
+### Window chrome (standalone-windows, *Window chrome geometry*)
+
+The DPS HUD, the Race window (Retail) and the Results window stack their chrome in the standard's
+order: the title bar, the test or sim strip while one shows, then the window's own tabs (Results)
+and body, and the footer. Both the strip and the footer are LibKa0s-Widgets-1.0's, through the
+`core/WidgetsSetup.lua` seam (LibKa0s#88 and #89, items AD-88-CT and AD-89-CT):
+
+- **The strip is docked by the library** (`NS.MakeTestStrip` / `NS.MakeSimStrip` with a
+  `{ titleBar, window }` dock, `dock = "title"`): directly under the title band, full width, and on the
+  window's top edge while the HUD's title bar is hidden. The host never anchors it. Everything below
+  the title bar moves down by the strip's `BodyOffset()`: the HUD's content, and the Results window's
+  tabs, tab rule and body. The DPS HUD has a title bar, a background and a footer, so it is a window
+  in preview-mode's sense, not a HUD display, and its strip docks under its title bar like the
+  Results window's. The title carries the mode word only where no strip could be built.
+- **The footer is the library's `W.Footer`** (`NS.MakeFooter`), `NS.FOOTER_HEIGHT` (the library's
+  `FOOTER.HEIGHT`, 24) tall under every skin: no fill, a hairline in the skin's `divider`, the left
+  and right lines in `text.muted`. The host writes the lines (the HUD's and the Race window's spec and
+  name, the refresh rate, *Result pending*; the Results window's count, hint and retention) and shows
+  or hides the footer whole (`hud.window.footer`). The right line clears the resize grip's corner
+  while the grip shows (`foot:SetGrip`). The body ends `NS.FOOTER_HEIGHT` + 8 above the window's
+  bottom edge (the Results body `NS.FOOTER_HEIGHT` + 1), and gets it back while the footer is hidden.
+
 ## Module Map
 
 Load order is the TOC's: libraries, the locale, `core/` in dependency order, `defaults/`,
