@@ -481,13 +481,15 @@ end
 --   BODY (Style.PlaceBody): a row, a cell, a card, a chip, a chart mark, a section heading and its
 --   arrow, a cast icon, and any control inside the content. Beside the WINDOW GROUP, outside its
 --   outer edge: right when it fits, else left, its top level with the element's top (PlaceBeside).
---   CHROME (Style.PlaceChrome): a filter bar's, a toolbar's or a button row's control. Centered on
+--   CHROME (Style.PlaceChrome): a filter bar's or a top toolbar's control. Centered on
 --   the control, TIP_GAP above it, below only without room above (PlaceAttached).
 --
 -- THE WINDOW GROUP (Style.TipGroup). The outermost frame under UIParent the element sits in, and,
 -- for the DPS HUD and the Race window while it is attached beside the HUD, the two of them with the
 -- library's sim window while it is docked to either: one group, the HUD its main frame, so a Race
--- window row's tooltip opens on the Race window's side away from the HUD and covers neither.
+-- window row's tooltip opens on the Race window's side away from the HUD and covers neither. The two
+-- cast lanes, while one is docked on the other (LaneAnchor mode "dock", the Pet lane's default), are
+-- one group the same way, the host lane its main frame (modules/LaneAnchor.lua's TipGroup).
 --
 -- NEVER THE CURSOR, NEVER A CORNER. With no library, or a geometry read that is not a plain number
 -- (the library places nothing), the tooltip is attached centered above the element (BOTTOM on its
@@ -530,13 +532,17 @@ local function simAnchor(panel)
     return ok and type(rel) == "table" and rel or nil
 end
 
---- The window group `element`'s tooltip opens beside, as PlaceBeside reads one: the HUD and the
+--- The window group `element`'s tooltip opens beside, as PlaceBeside reads one: the cast lanes while
+--- one is docked on the other (LaneAnchor.TipGroup, the host lane the main frame), the HUD and the
 --- attached Race window (and the sim window docked to either) as `{ main = hud, panels = {...} }`,
 --- else the element's top-level window alone.
 --- @param element table
 --- @return table
 function Style.TipGroup(element)
     local outer = Style.WindowOf(element)
+    local LA = NS.LaneAnchor
+    local lanes = LA and LA.TipGroup and LA.TipGroup(outer)
+    if lanes then return lanes end
     local hud = NS.Hud and NS.Hud.Frame and NS.Hud.Frame()
     local RW = NS.RaceWindow
     local rw = RW and RW.Frame and RW.Frame()
@@ -912,8 +918,9 @@ local function paintButton(b)
 end
 
 -- A button's tooltip (b.tip = { title, line, ... }), disabled or not: a chrome control's (a filter
--- bar's, a toolbar's, a button row's) above it (Style.PlaceChrome); a button in a window's body
--- (`b.tipBody`: a card's, a Race window body's) beside the window group, level with it (Style.PlaceBody).
+-- bar's, a top toolbar's) above it (Style.PlaceChrome); a button in a window's body (`b.tipBody`: a
+-- card's, a Race window body's, the fight detail's bottom action row) beside the window group, level
+-- with it (Style.PlaceBody).
 local function buttonTip(b)
     local tip = b.tip
     if not (tip and GameTooltip) then return end

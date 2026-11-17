@@ -415,6 +415,11 @@ local function compareTip(kind)
     return { L["Compare"], L[line] }
 end
 
+-- The action row at the pane's bottom (Timeline, Compare, Share, Add Note, Delete) is neither a
+-- toolbar between the title bar and the body nor the window's footer (the library's W.Footer, under
+-- the pane), so its buttons are body elements: their tooltips open beside the Results window, level
+-- with the button (Style.Button's `tipBody`, LibKa0s#92). Back, on the toolbar above the scrolled
+-- detail, is chrome: attached above it.
 local function buildButtons(p)
     local w, f, hooks = p.w, p.frame, p.hooks
     local act = {
@@ -432,7 +437,7 @@ local function buildButtons(p)
         local b = Style.Button(f, L[spec.label], function(self) if p.record then act[spec.key](self) end end, spec.style)
         b:SetSize(spec.width, Detail.BUTTON_H)
         b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", x, 8)
-        b.tip = tipOf(spec.key)
+        b.tip, b.tipBody = tipOf(spec.key), true
         w[spec.key] = b
         x = x + spec.width + Detail.BUTTON_GAP
     end
@@ -441,7 +446,7 @@ local function buildButtons(p)
     end, "danger")
     w.delete:SetSize(Detail.DELETE_W, Detail.BUTTON_H)
     w.delete:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -Detail.PADX, 8)
-    w.delete.tip = tipOf("delete")
+    w.delete.tip, w.delete.tipBody = tipOf("delete"), true
     w.back = Style.Button(f, L["Back"], function() if hooks.back then hooks.back() end end)
     w.back:SetSize(70, Detail.BUTTON_H)
     w.back:SetPoint("TOPLEFT", f, "TOPLEFT", Detail.PADX, -8)

@@ -602,6 +602,14 @@ function LaneRender.Get(laneKey)
     return st.frame
 end
 
+--- The lane's frame when it is built, else nil: never builds one (Style.TipGroup reads it at hover).
+--- @param laneKey string "player" | "pet"
+--- @return table|nil frame
+function LaneRender.Find(laneKey)
+    local st = lanes[laneKey]
+    return st and st.frame
+end
+
 --- Release every icon of a lane and stop its OnUpdate.
 function LaneRender.Clear(laneKey)
     local st = lanes[laneKey]

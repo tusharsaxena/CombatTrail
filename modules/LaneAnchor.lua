@@ -173,6 +173,33 @@ function LaneAnchor.ResolveHost(laneKey)
     return nil, "free"
 end
 
+local function shown(f)
+    return type(f) == "table" and (f.IsShown == nil or f:IsShown() and true or false)
+end
+
+--- The window group a lane belongs to for its icons' tooltips (LibKa0s#92): a lane docked on the
+--- other moves with it, so while both show the two are one group, `{ main = host lane, panels =
+--- { docked lane } }` (standalone-windows, *Window group*: a HUD display's group is the whole
+--- display). Nil when `frame` is neither lane of such a dock (a free or unit-frame lane is alone;
+--- the unit frame is the client's, never in the group). Builds no lane.
+--- @param frame table  a top-level frame
+--- @return table|nil group
+function LaneAnchor.TipGroup(frame)
+    local LR = NS.LaneRender
+    if not (LR and LR.Find) then return nil end
+    for _, key in ipairs({ "player", "pet" }) do
+        local docked = LR.Find(key)
+        if docked then
+            local host, reason = LaneAnchor.ResolveHost(key)
+            if reason == "dock" and host and (frame == docked or frame == host) then
+                if shown(docked) and shown(host) then return { main = host, panels = { docked } } end
+                return nil
+            end
+        end
+    end
+    return nil
+end
+
 -- ── the one-line notices ───────────────────────────────────────────────────────────────────────
 
 local function cycleNow()

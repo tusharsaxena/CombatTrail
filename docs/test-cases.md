@@ -1511,7 +1511,7 @@ Total.
 - header strip: the gear view reads Settings, Close; settings hides it, then opens the panel
 - header strip: the ability timeline reads Settings, Close; settings hides it, then opens the panel
 
-### test_tooltip_place.lua (12)
+### test_tooltip_place.lua (14)
 
 - tooltip seam: a body tooltip opens right of its window, level with the row, 2 px off
 - tooltip seam: a body tooltip with no room on the right opens left of the window
@@ -1520,6 +1520,8 @@ Total.
 - tooltip seam: the HUD and the attached Race window are one group, the HUD its main frame
 - tooltip seam: an attached Race window on the HUD's left opens its row tooltips on its left
 - tooltip seam: with no Race window (WoW Forever), the HUD is a group of one
+- tooltip seam: a lane docked beside the other lane joins its group, so a lane icon's tooltip covers neither
+- tooltip seam: the default dock (Pet under Player) is one group; a free Pet lane is its own
 - tooltip sweep: every hover on every window is owned at ANCHOR_NONE and placed, never by the cursor
 - tooltip surfaces: body elements open beside their window, chrome controls above themselves
 - tooltip surfaces: a Race window body button opens beside the HUD and the attached Race window
@@ -1878,7 +1880,7 @@ Total.
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
 | test_title_bar.lua | 14 |
-| test_tooltip_place.lua | 12 |
+| test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
@@ -1900,4 +1902,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1554** |
+| **Total** | **1556** |

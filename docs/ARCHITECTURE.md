@@ -182,9 +182,9 @@ AD-86-CT):
 Every tooltip the addon places is owned at `ANCHOR_NONE` and placed by `modules/Style.lua`'s seam onto
 `LibKa0s-Tooltip-1.0` (LibKa0s#92, AD-92-CT): a body element beside its window group, right then
 left, level with the element (`Style.PlaceBody`); a chrome control 2 px above it (`Style.PlaceChrome`);
-never the cursor or a corner ([`tooltips.md`](tooltips.md)). Left as they are (*What it does not
-bind*): settings pages (the canvas), the launcher's menu (`MenuUtil`), a broker display's tooltip
-(the display), and the library's windows, widgets, menus, marks and minimap tooltip (the library).
+never the cursor or a corner ([`tooltips.md`](tooltips.md), with the groups: HUD and attached Race
+window, docked lanes). Left as they are (*What it does not bind*): settings pages (the canvas), the
+launcher's menu (`MenuUtil`), a broker display's tooltip (the display), and the library's windows, widgets, menus, marks and minimap tooltip (the library).
 
 ## Module Map
 

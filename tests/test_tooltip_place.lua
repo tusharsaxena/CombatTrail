@@ -172,6 +172,67 @@ test("tooltip seam: with no Race window (WoW Forever), the HUD is a group of one
     scr.restore()
 end)
 
+-- The cast lanes, docked one on the other (LaneAnchor mode "dock"): the docked lane moves with its
+-- host, so the two are one window group, the host lane its main frame (standalone-windows, *Window
+-- group*: a HUD display's group is the whole display). Each lane a fake-screen frame.
+local function dockedLanes(NS, scr, hostLeft, dockedLeft)
+    local player = scr.frame{ left = hostLeft, bottom = 400, width = 300, height = 40 }
+    local pet = scr.frame{ left = dockedLeft, bottom = 400, width = 300, height = 40 }
+    local LR, LA = NS.LaneRender, NS.LaneAnchor
+    local get, find, resolve = LR.Get, LR.Find, LA.ResolveHost
+    local frames = { player = player, pet = pet }
+    LR.Get = function(key) return frames[key] end
+    LR.Find = function(key) return frames[key] end
+    LA.ResolveHost = function(key)
+        if key == "pet" then return player, "dock" end
+        return nil, "free"
+    end
+    return player, pet, function()
+        LR.Get, LR.Find, LA.ResolveHost = get, find, resolve
+        scr.restore()
+    end
+end
+
+test("tooltip seam: a lane docked beside the other lane joins its group, so a lane icon's tooltip covers neither", function()
+    local NS, M = fresh()
+    local scr = installScreen(M, { width = 1920, height = 1080 })
+    -- The Pet lane docked LEFT on the Player lane's RIGHT, side by side.
+    local player, pet, restore = dockedLanes(NS, scr, 400, 700)
+    local icon = scr.frame{ left = 410, bottom = 405, width = 30, height = 30, parent = player }
+    local petIcon = scr.frame{ left = 710, bottom = 405, width = 24, height = 24, parent = pet }
+    local g = NS.Style.TipGroup(icon)
+    assertTrue(type(g) == "table" and g.main == player and g.panels[1] == pet,
+        "{ main = the host lane, panels = { the docked lane } }")
+    local gp = NS.Style.TipGroup(petIcon)
+    assertTrue(type(gp) == "table" and gp.main == player and gp.panels[1] == pet, "the docked lane's icons read the same group")
+    local tip = scr.tooltip{ width = 250, height = 90 }
+    NS.Style.OwnTip(tip, icon)
+    assertEqual(NS.Style.PlaceBody(tip, icon), "right")
+    local l, _, _, t = scr.rectOf(tip)
+    assertTrue(near(l, 1000 + GAP), "a Player lane icon's tooltip opens past the docked Pet lane: " .. tostring(l))
+    assertTrue(near(t, 435), "level with the icon: " .. tostring(t))
+    -- The docked lane hidden (its visibility off): the host lane is a group of one again.
+    pet:Hide()
+    assertTrue(NS.Style.TipGroup(icon) == player, "a hidden docked lane is not in the group")
+    restore()
+end)
+
+test("tooltip seam: the default dock (Pet under Player) is one group; a free Pet lane is its own", function()
+    local NS, M = fresh()
+    local scr = installScreen(M, { width = 1920, height = 1080 })
+    local player, pet, restore = dockedLanes(NS, scr, 400, 400)
+    pet:__place(400, 356, 360, 40)   -- under the Player lane and wider than it
+    local icon = scr.frame{ left = 410, bottom = 405, width = 30, height = 30, parent = player }
+    local tip = scr.tooltip{ width = 250, height = 90 }
+    NS.Style.OwnTip(tip, icon)
+    assertEqual(NS.Style.PlaceBody(tip, icon), "right")
+    local l = scr.rectOf(tip)
+    assertTrue(near(l, 760 + GAP), "outside the wider docked Pet lane too: " .. tostring(l))
+    NS.LaneAnchor.ResolveHost = function() return nil, "free" end
+    assertTrue(NS.Style.TipGroup(icon) == player, "undocked: the Player lane alone")
+    restore()
+end)
+
 -- ── the sweep ───────────────────────────────────────────────────────────────────────────────────
 
 -- Record every frame the build makes, in creation order.
@@ -293,13 +354,22 @@ test("tooltip surfaces: body elements open beside their window, chrome controls 
     local pane = openAll(NS)
     local log = spy(M)
     local R = NS.Results.__ui()
-    -- Chrome: the fight list's filter bar, the detail's Back and its action row.
+    -- Chrome: the fight list's filter bar and the detail's Back, its toolbar between the title bar
+    -- and the scrolled detail.
     NS.Results.Show()
     local list = R.list
-    for _, b in ipairs({ pane.w.back, pane.w.timeline, pane.w.delete }) do
+    local pb = placedBy(M, log, pane.w.back)
+    assertEqual(pb[1], "attached", "the detail's Back, on its top toolbar, is chrome")
+    assertTrue(pb[2] == pane.w.back, "attached to the button")
+    -- Body: the detail's action row at the pane's bottom (Timeline, Compare, Share, Add Note, Delete)
+    -- is neither a toolbar between the title bar and the body nor the window's footer (the library's
+    -- W.Footer, under it), so it is a body element: beside the Results window, level with the button.
+    for _, key in ipairs({ "timeline", "compare", "share", "addNote", "delete" }) do
+        local b = pane.w[key]
+        assertTrue(b ~= nil, "the action row's " .. key)
         local p = placedBy(M, log, b)
-        assertEqual(p[1], "attached", "a detail toolbar button is chrome")
-        assertTrue(p[2] == b, "attached to the button")
+        assertEqual(p[1], "beside", "the action row's " .. key .. " is a body element")
+        assertTrue(p[2] == b and p[3] == R.frame, "beside the Results window, level with " .. key)
     end
     assertTrue(list ~= nil and list.save ~= nil, "the fight list's Save")
     assertEqual(placedBy(M, log, list.save)[1], "attached", "the filter bar's Save is chrome")
