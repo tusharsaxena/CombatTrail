@@ -4,14 +4,14 @@
 -- instance up per case. Not a suite: no test of its own.
 --
 -- THE HISTORY (`F.history(NS)`), oldest first:
---   f1  Tush (Fire), a raid boss board, 1000 DPS, three days ago
---   r1  Tush (Fire), a 3:00 race on a Cleave dummy, 1500 race DPS (its fight's 1400 aside), tail 9.2 s
---   f2  Tush (Fire), the same raid boss board, 1200 DPS (a new best, +20%), two days ago
---   r2  Tush (Fire), the same Cleave 3:00 board, 1600 race DPS (a new best, +6.7%), tail 4 s
---   f3  Lanfear (Destruction), a dungeon boss board, 800 DPS, yesterday
---   r3  Lanfear (Destruction), a 1:00 race on a Boss dummy, 1200 race DPS, a late Incinerate (29722,
+--   f1  Mockflame (Fire), a raid boss board, 1000 DPS, three days ago
+--   r1  Mockflame (Fire), a 3:00 race on a Cleave dummy, 1500 race DPS (its fight's 1400 aside), tail 9.2 s
+--   f2  Mockflame (Fire), the same raid boss board, 1200 DPS (a new best, +20%), two days ago
+--   r2  Mockflame (Fire), the same Cleave 3:00 board, 1600 race DPS (a new best, +6.7%), tail 4 s
+--   f3  Mockember (Destruction), a dungeon boss board, 800 DPS, yesterday
+--   r3  Mockember (Destruction), a 1:00 race on a Boss dummy, 1200 race DPS, a late Incinerate (29722,
 --       flags it) and a late Feign Death (5384, on the stock ignore list), tail 25 s
---   r4  Tush (Fire), an incomplete 1:00 Cleave race, 41 s in combat, two hours ago
+--   r4  Mockflame (Fire), an incomplete 1:00 Cleave race, 41 s in combat, two hours ago
 
 return function(T)
     local F = {}
@@ -25,13 +25,13 @@ return function(T)
     F.OTHER = 999001     -- no dummy on either client: a race on it reads its stored kind
 
     local CHARS = {
-        tush = { name = "Tush", realm = "Area 52", class = "MAGE", specID = 63, specName = "Fire", ilvl = 640 },
-        lan = { name = "Lanfear", realm = "Area 52", class = "WARLOCK", specID = 267, specName = "Destruction", ilvl = 638 },
+        flame = { name = "Mockflame", realm = "Mockrealm", class = "MAGE", specID = 63, specName = "Fire", ilvl = 640 },
+        ember = { name = "Mockember", realm = "Mockrealm", class = "WARLOCK", specID = 267, specName = "Destruction", ilvl = 638 },
     }
 
     local function whoOf(NS, key)
         local w = {}
-        for k, v in pairs(CHARS[key or "tush"]) do w[k] = v end
+        for k, v in pairs(CHARS[key or "flame"]) do w[k] = v end
         w.client = NS.Identity.Who().client
         return w
     end
@@ -42,7 +42,7 @@ return function(T)
     end
 
     local n = 0
-    --- A plain fight. `o`: id, dps, t, char ("tush" | "lan"), board ("e:<id>:<difficulty>"), content,
+    --- A plain fight. `o`: id, dps, t, char ("flame" | "ember"), board ("e:<id>:<difficulty>"), content,
     --- name, duration.
     function F.fight(NS, o)
         o = o or {}
@@ -88,9 +88,9 @@ return function(T)
             F.race(NS, { id = "r1", raceDps = 1500, t = now - 3 * DAY + HOUR, tail = 9.2 }),
             F.fight(NS, { id = "f2", dps = 1200, t = now - 2 * DAY }),
             F.race(NS, { id = "r2", raceDps = 1600, t = now - 2 * DAY + HOUR, tail = 4.0 }),
-            F.fight(NS, { id = "f3", dps = 800, t = now - DAY, char = "lan", content = "dungeon", board = "e:2222:8",
+            F.fight(NS, { id = "f3", dps = 800, t = now - DAY, char = "ember", content = "dungeon", board = "e:2222:8",
                           name = "Vexamus" }),
-            F.race(NS, { id = "r3", char = "lan", kind = "boss", length = 60, raceDps = 1200, t = now - DAY + HOUR,
+            F.race(NS, { id = "r3", char = "ember", kind = "boss", length = 60, raceDps = 1200, t = now - DAY + HOUR,
                          tail = 25, flags = { lateCasts = { { t = 1.6, spellID = 29722 }, { t = 3.0, spellID = 5384 } } } }),
             F.race(NS, { id = "r4", status = "incomplete", length = 60, endedAt = 41, raceDps = 500, t = now - 2 * HOUR }),
         }

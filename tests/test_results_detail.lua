@@ -66,10 +66,10 @@ end
 test("detail: the header meta is three lines: where and who, what, the stamp (plan A2)", function()
     local NS = fresh()
     local r = rec(NS, { id = "a", petName = "Mockfang" })
-    r.who.realm = "Area 52"
+    r.who.realm = "Samplerealm"
     local lines = NS.ResultsDetail.Meta(r)
     assertEqual(#lines, 3, "where/who, what, stamp")
-    local want = { { "Area 52", "ilvl 721.4", "The Voidspire" },
+    local want = { { "Samplerealm", "ilvl 721.4", "The Voidspire" },
                    { "Vorasius", "Heroic", "1:00", "pet Mockfang" },
                    { NS.ResultsTable.Date(r.t, "%d %b %Y %H:%M"), "build 120105", "v0.1.0" } }
     for k, parts in ipairs(want) do
@@ -77,7 +77,7 @@ test("detail: the header meta is three lines: where and who, what, the stamp (pl
             assertTrue(lines[k]:find(part, 1, true) ~= nil, ("line %d has %s: %s"):format(k, part, lines[k]))
         end
     end
-    assertTrue(lines[2]:find("Area 52", 1, true) == nil, "the realm is line 1's alone")
+    assertTrue(lines[2]:find("Samplerealm", 1, true) == nil, "the realm is line 1's alone")
     save(NS, r)
     local pane = detailOn(NS, "a")
     for k = 1, 3 do assertEqual(pane.w.meta[k]:GetText(), lines[k], "meta line " .. k) end

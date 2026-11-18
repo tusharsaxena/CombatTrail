@@ -72,7 +72,7 @@ local function fakeFight(NS, o)
         id = o.id or "fake-1", startT = 100, combatEndT = 100 + (o.len or 60), sessions = { 1 }, sessionID = 1,
         sessionSet = { [1] = true }, encounter = o.encounter,
         snapshot = o.snapshot or {
-            who = { name = "Tush", realm = "Area 52", class = "MAGE", specID = 63, specName = "Fire",
+            who = { name = "Mockflame", realm = "Mockrealm", class = "MAGE", specID = 63, specName = "Fire",
                     ilvl = 650.5, client = NS.Compat.ClientKey() },
             target = { name = "Angry Boar", creatureID = 1985 },
             where = { instanceType = "none", difficultyID = 0 },
@@ -378,7 +378,7 @@ test("no secret reaches the record", function()
     assertTrue(r ~= nil, "stored")
     assertNil(r.who.specName, "a sealed field is absent")
     assertNil(r.who.ilvl)
-    assertEqual(r.who.name, "Tush", "the plain fields stay")
+    assertEqual(r.who.name, "Mockflame", "the plain fields stay")
     assertEqual(r.identity.targetCreatureID, 1985, "the target is still known by its creature")
     assertNil(r.gearSet, "a sealed gear set key is absent")
     assertNil(r.gear)

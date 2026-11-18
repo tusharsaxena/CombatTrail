@@ -41,7 +41,7 @@ local function rec(NS, o)
     n = n + 1
     local r = {
         schema = 4, id = o.id or ("rec-" .. n), t = o.t or (1000 + n), duration = o.duration or 60, status = "final",
-        who = { name = "Lanfear", realm = "Area 52", client = NS.Compat.ClientKey(), class = "WARLOCK",
+        who = { name = "Mockember", realm = "Mockrealm", client = NS.Compat.ClientKey(), class = "WARLOCK",
                 specID = 267, specName = "Destruction" },
         identity = { content = "world", targetName = "Angry Boar" }, boardKey = "c:1985:0",
         dps = o.dps or 1000, damage = { merged = (o.dps or 1000) * 60 },

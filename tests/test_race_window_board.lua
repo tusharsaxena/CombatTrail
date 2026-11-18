@@ -35,7 +35,7 @@ local function body(S)
     return ui and ui.body[ui.current] or nil
 end
 
-local WHO = { name = "Aella", realm = "Realm", client = "retail", specID = 71, specName = "Arms", ilvl = 316.8 }
+local WHO = { name = "Mockcleaver", realm = "Samplerealm", client = "retail", specID = 71, specName = "Arms", ilvl = 316.8 }
 
 -- A stored race in the record's shape (plain numbers), on the single-target 1:00 board.
 local function race(id, t, score, opts)

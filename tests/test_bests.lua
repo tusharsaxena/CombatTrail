@@ -16,7 +16,7 @@ local n = 0
 -- A stored-shape record: `o` overrides the fields (who, specID, boardKey, dps, t).
 local function rec(o)
     n = n + 1
-    local who = { name = o.name or "Tush", realm = o.realm or "Area 52", client = o.client or "retail",
+    local who = { name = o.name or "Mockflame", realm = o.realm or "Mockrealm", client = o.client or "retail",
                   class = "MAGE", specID = o.specID or 63, specName = "Fire" }
     local key = o.boardKey
     if key == nil and not o.unknown then key = "c:1985:0" end

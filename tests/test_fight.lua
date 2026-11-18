@@ -670,7 +670,7 @@ test("fight: Adopt rebuilds a resumed race's fight in combat, with no FIGHT_STAR
     assertNil(NS.Fight.Adopt({ sessions = {} }), "no session, no fight")
     at(inst, 50)
     inst.mocks.__inCombat = true
-    local f = NS.Fight.Adopt({ sessions = { 1 }, startT = 10, firstHitT = 11, snapshot = { who = { name = "Tush" } },
+    local f = NS.Fight.Adopt({ sessions = { 1 }, startT = 10, firstHitT = 11, snapshot = { who = { name = "Mockflame" } },
                                stats = { crit = 20 }, talents = { "t" }, gearSet = "g1", boundBy = "entry",
                                inCombat = true })
     assertTrue(f ~= nil)
@@ -679,7 +679,7 @@ test("fight: Adopt rebuilds a resumed race's fight in combat, with no FIGHT_STAR
     assertEqual(f.sessionID, 1, "bound to the kept session, though primed as older")
     assertEqual(f.startT, 10)
     assertEqual(f.firstHitT, 11)
-    assertEqual(f.snapshot.who.name, "Tush")
+    assertEqual(f.snapshot.who.name, "Mockflame")
     assertEqual(f.loadout.talents[1], "t")
     assertEqual(f.gearSet, "g1")
     assertEqual(f.boundBy, "entry")

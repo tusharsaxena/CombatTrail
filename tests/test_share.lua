@@ -33,7 +33,7 @@ local function rec(NS, o)
     local merged = 186900 * 252
     return {
         schema = 1, id = o.id or "s1", t = os.time(), duration = 252, status = "final",
-        who = { name = "Ka0shunter", realm = "Silvermoon", class = "HUNTER", specID = 253,
+        who = { name = "Samplehunter", realm = "Samplerealm", class = "HUNTER", specID = 253,
                 specName = o.specName or "Beast Mastery", ilvl = 721.4 },
         identity = ident, boardKey = NS.Identity.BoardKey(ident),
         damage = { merged = merged, player = merged }, dps = 186900,

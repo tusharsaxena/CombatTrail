@@ -54,7 +54,7 @@ test("insights: Filter opens wide; on Retail Include incomplete and Clean only j
     assertEqual(F.ids(D.Filter(all, { kind = "races", dummyKind = "cleave" }, F.NOW)), "r1,r2")
     -- The race length and the dummy kind apply under Races only.
     assertEqual(F.ids(D.Filter(all, { length = 60 }, F.NOW)), "f1,f2,f3,r1,r2,r3")
-    assertEqual(F.ids(D.Filter(all, { character = F.charKey(NS, "lan") }, F.NOW)), "f3,r3")
+    assertEqual(F.ids(D.Filter(all, { character = F.charKey(NS, "ember") }, F.NOW)), "f3,r3")
     assertEqual(F.ids(D.Filter(all, { spec = 63, content = "raid" }, F.NOW)), "f1,f2")
     assertEqual(F.ids(D.Filter(all, { days = 1 }, F.NOW)), "", "today: only the incomplete race")
 end)
@@ -66,8 +66,8 @@ test("insights: Options lists each facet's values among the fights every other f
     local o = D.Options(all, nil, F.NOW)
     local n = forever() and 7 or 6
     assertEqual(o.character[1].label, ("All characters (%d)"):format(n), "led by All, no Current head")
-    assertEqual(values(o.character), "all," .. F.charKey(NS, "lan") .. "," .. F.charKey(NS, "tush"))
-    assertEqual(o.character[3].label, ("Tush (%d)"):format(forever() and 5 or 4))
+    assertEqual(values(o.character), "all," .. F.charKey(NS, "ember") .. "," .. F.charKey(NS, "flame"))
+    assertEqual(o.character[3].label, ("Mockflame (%d)"):format(forever() and 5 or 4))
     assertEqual(values(o.spec), "all,267,63")
     assertEqual(values(o.days), "1,7,30,0", "the date ranges always number four")
     assertEqual(o.days[4].label, ("All time (%d)"):format(n))
@@ -94,7 +94,7 @@ test("insights: a closed dropdown names its choices on the All head, and a pick 
     local D = NS.InsightsData
     local o = D.Options(F.history(NS), nil, F.NOW)
     assertEqual(D.ClosedLabel(o.character, "all"), "All characters (2)")
-    assertEqual(D.ClosedLabel(o.character, F.charKey(NS, "lan")), "Lanfear")
+    assertEqual(D.ClosedLabel(o.character, F.charKey(NS, "ember")), "Mockember")
     assertEqual(D.ClosedLabel(o.days, 0), "All time", "the date head is its name alone")
     assertNil(D.ClosedLabel(o.character, "nobody"))
 end)
@@ -103,13 +103,13 @@ test("insights: Normalize sets a selection with no fights back, never the one ju
     local NS = fresh()
     local D = NS.InsightsData
     local all = F.history(NS)
-    local view = { character = F.charKey(NS, "lan"), spec = 63 }
+    local view = { character = F.charKey(NS, "ember"), spec = 63 }
     local f = D.Normalize(all, view, F.NOW, "spec")
     assertEqual(f.spec, 63, "kept: the dropdown just changed")
-    assertEqual(f.character, "all", "Lanfear fought no Fire")
-    assertEqual(view.character, F.charKey(NS, "lan"), "the view handed in is never written")
+    assertEqual(f.character, "all", "Mockember fought no Fire")
+    assertEqual(view.character, F.charKey(NS, "ember"), "the view handed in is never written")
     f = D.Normalize(all, view, F.NOW, "character")
-    assertEqual(f.character, F.charKey(NS, "lan"))
+    assertEqual(f.character, F.charKey(NS, "ember"))
     assertEqual(f.spec, "all")
     if forever() then return end
     f = D.Normalize(all, { kind = "races", length = 300 }, F.NOW)
@@ -153,7 +153,7 @@ test("insights: the general sections run on all fights", function()
     assertEqual(#s.progression, 6, "every fight with a DPS figure; an incomplete race holds none")
     assertEqual(s.progression[1].record.id, "f1", "in date order")
     assertEqual(#s.byChar, 2)
-    assertEqual(s.byChar[1].name, "Tush", "most fights first")
+    assertEqual(s.byChar[1].name, "Mockflame", "most fights first")
     assertEqual(s.byChar[1].n, forever() and 5 or 4)
     assertEqual(s.byCharContent.keys[1], "raid", "Identity's content order")
     assertEqual(table.concat(s.byCharContent.keys, ","), "raid,dungeon,dummy")
@@ -199,7 +199,7 @@ test("insights: board tabs, the races' kind x length first in the catalog's orde
     assertEqual(cleave.n, 2)
     assertEqual(#cleave.specs, 1)
     assertEqual(cleave.specs[1].best, 1600)
-    assertEqual(cleave.specs[1].name, "Tush")
+    assertEqual(cleave.specs[1].name, "Mockflame")
     assertEqual(#cleave.consistency, 0, "two fights: under the three Consistency needs")
     assertEqual(s.boardTabs[3].label, "Grobbulus \194\183 Heroic")
     -- Scope keeps a tab's fights, or all of them.
@@ -233,11 +233,11 @@ test("insights: counts by character, dummy kind, race length and day, gap days i
     assertEqual(s.byDay[1].n, 1)
     assertEqual(s.byDay[2].n, 0, "a gap day")
     assertEqual(s.byDay[7].n, 1, "today: the incomplete race")
-    local tush = s.byChar[1]
-    assertEqual(tush.name, "Tush")
-    assertEqual(tush.byCategory.cleave, 3)
-    assertEqual(tush.byLength[180], 2)
-    assertEqual(tush.byLength[60], 1)
+    local flame = s.byChar[1]
+    assertEqual(flame.name, "Mockflame")
+    assertEqual(flame.byCategory.cleave, 3)
+    assertEqual(flame.byLength[180], 2)
+    assertEqual(flame.byLength[60], 1)
     assertEqual(table.concat(s.byCharTarget.keys, ","), "cleave,boss", "the catalog's order")
     assertEqual(table.concat(s.byCharLength.keys, ","), "60,180", "shortest first")
 end)

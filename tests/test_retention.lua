@@ -32,7 +32,7 @@ local function rec(o)
     n = n + 1
     return {
         schema = 1, id = o.id or ("f-" .. n), t = o.t, duration = 60, status = "final",
-        who = { name = "Tush", realm = "Area 52", client = "retail", specID = 63 },
+        who = { name = "Mockflame", realm = "Mockrealm", client = "retail", specID = 63 },
         identity = { content = "world", targetName = "Boar" },
         boardKey = o.boardKey, dps = o.dps or 100, loadout = o.loadout,
     }
