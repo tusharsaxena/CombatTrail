@@ -141,6 +141,7 @@ local SUITES = {
     "test_race",
     "test_race_resume",
     "test_race_settings",
+    "test_report_verbs",
     "test_autoarm",
     "test_race_window",
     "test_race_window_board",

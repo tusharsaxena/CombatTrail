@@ -11,7 +11,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
-| (not run yet) | 0.1.0, branch `feat/2026-11-17-libka0s-adoption` (the library's window chrome, AD-88-CT and AD-89-CT: the docked strips SM-CT-H8, SM-CT-R26 and SM-CT-RM94, the footers SM-CT-H16, SM-CT-R26 and SM-CT-RM93; the title-bar marks, AD-86-CT: SM-CT-H17, SM-CT-R27, SM-CT-T12 to SM-CT-T14, SM-CT-RM95, SM-CT-RM49 and SM-CT-RM67; the tooltip placement, AD-92-CT: SM-CT-H3, SM-CT-H18, SM-CT-N20, SM-CT-R28, SM-CT-R29, SM-CT-T15 and SM-CT-RM96) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-17-libka0s-adoption` (the library's window chrome, AD-88-CT and AD-89-CT: the docked strips SM-CT-H8, SM-CT-R26 and SM-CT-RM94, the footers SM-CT-H16, SM-CT-R26 and SM-CT-RM93; the title-bar marks, AD-86-CT: SM-CT-H17, SM-CT-R27, SM-CT-T12 to SM-CT-T14, SM-CT-RM95, SM-CT-RM49 and SM-CT-RM67; the tooltip placement, AD-92-CT: SM-CT-H3, SM-CT-H18, SM-CT-N20, SM-CT-R28, SM-CT-R29, SM-CT-T15 and SM-CT-RM96; the report verbs, AD-79-CT: SM-CT-N21, SM-CT-D2, SM-CT-D13 and SM-CT-S12) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15; the sim window beside the Race window: SM-CT-M4; the Forever Multi-Shot ID: SM-CT-M5; LibKa0s v1.102.0's call-out look and the one tab with no sample line: SM-CT-RM82, RM84, RM85, RM91, RM92) | |
 
 ## How to run it
@@ -96,6 +96,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-N18 | Both | `/ct ignore add` a spell by name, by shift-clicked link, then `/ct ignore reset` | The spell stops showing; reset brings the seed back |
 | SM-CT-N19 | Both | Dismiss the pet mid-fight, then summon another | The Pet lane label dims, then reads the new pet's name; no error |
 | SM-CT-N20 | Both | With a lane showing casts, hover a cast icon; move the lane near the screen's right edge and hover again | The spell tooltip opens beside the whole lane, its top level with the icon, 2 px off the lane's right edge; near the right edge it opens on the lane's left. Then dock the Pet lane beside the Player lane (Lanes > Pet > anchor: dock, LEFT on the Player lane's RIGHT) and hover a Player lane icon, then a Pet lane icon; and with the default dock (Pet under Player, the Pet lane made wider) hover a Player lane icon: each tooltip opens outside both lanes and covers neither. It never follows the pointer and never sits on the icon's corner (LibKa0s#92, AD-92-CT) |
+| SM-CT-N21 | Both | Debug logging off and the console closed: `/ct ignore add` two spells, then `/ct ignore list`; then `/ct ignore list pet` with the Pet lane's list emptied (remove each seed); then `/ct ignore frob` | The console opens with a `/ct ignore list player` header and each spell on its own line under the Report tag, and chat shows one line, *ignore list player: N lines written to the debug console. Use Copy to share it.*; logging stays off. The empty Pet lane answers one chat line (*The Pet lane ignores no spells.*) and writes nothing; `frob` prints the usage in chat and writes nothing |
 
 ## 3. Fights and the meter
 
@@ -214,6 +215,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-S9 | Retail | The Race mode page: its four tabs; `/ct race arm 1:30`, then `/ct race cancel`; `/ct race ignore add` a spell, then `/ct race ignore defaults`; Race mode off, then `/ct race arm` | The tabs are Race, Callout, Late-cast ignore list and Race window; the race arms at 1:30 and the cancel says so; the list follows each verb and the page redraws; off, the arm says Race mode is off |
 | SM-CT-S10 | Retail | Auto-arm on, target a training dummy out of combat, then a boar; target the dummy and pull | Armed on the dummy, canceled on the boar; the pull starts the race |
 | SM-CT-S11 | Forever | The settings panel, `/ct help` and `/ct race` | No Race mode page, `race` is not in the help, and `/ct race` is an unknown command |
+| SM-CT-S12 | Retail | Debug logging off and the console closed: `/ct race ignore`; then remove every spell from the late-cast list and `/ct race ignore show`; then `/ct race ignore defaults` | The console opens with a `/ct race ignore show` header and the list under it, and chat shows one line, *race ignore show: N lines written to the debug console. Use Copy to share it.*; the empty list is one chat line (*The late-cast ignore list is empty.*) and writes nothing; `defaults` says so in chat, then writes the list |
 
 ## 8. Test mode and the sim
 
@@ -235,7 +237,7 @@ any built-in dummy. On WoW Forever no dummy is built in, so add one first (SM-CT
 | ID | Client | Check | Expect |
 |---|---|---|---|
 | SM-CT-D1 | Retail | Target a built-in dummy (the Reinforced Golem), fight it for 35 s, then `/ct results` | The fight is saved with Training dummies as its content and the dummy's name as its target |
-| SM-CT-D2 | Both | Target a creature that is not a built-in dummy, `/ct dummy add`, then `/ct dummy` (WoW Forever: any target dummy in a capital) | One line says it is a training dummy now, as Single target; `/ct dummy` lists it under *Your training dummies* and counts the built-ins (0 on WoW Forever) |
+| SM-CT-D2 | Both | Target a creature that is not a built-in dummy, `/ct dummy add`, then `/ct dummy` (WoW Forever: any target dummy in a capital) | One line says it is a training dummy now, as Single target; `/ct dummy` writes the list to the debug console (one chat line points at it), with it under *Your training dummies* and the built-ins counted (0 on WoW Forever) |
 | SM-CT-D3 | Both | `/ct dummy add cleave` on the same target, then a 35 s fight on it | The line names Cleave; the fight is saved as a Training dummies fight |
 | SM-CT-D4 | Both | History → Training dummies: *Add your target*, the list's X, a built-in's checkbox cleared (Retail), *Reset list*; then `/ct dummy remove` on a built-in and `/ct dummy defaults` | Each change shows at once on the tab and in `/ct dummy`; a built-in switched off is listed as off and `/ct dummy add` on it brings it back; Reset list and `defaults` leave only the built-ins |
 | SM-CT-D5 | Both | `/ct dummy capture` on a target, then `/ct dummy` | One *Saved:* line with its level, health, zone and place; the target is not marked a dummy and `/ct dummy` does not list it |
@@ -246,6 +248,7 @@ any built-in dummy. On WoW Forever no dummy is built in, so add one first (SM-CT
 | SM-CT-D10 | Retail | A 20 s fight on a fresh profile | Not saved, the card says too short (the minimum is 30 s here) |
 | SM-CT-D11 | Both | A fight inside a scenario (Retail: a Delve's lead-in or a world scenario; WoW Forever: any scenario the client has) on a fresh profile | Saved, its content Scenarios; untick Scenarios and the next one is not saved |
 | SM-CT-D12 | Both | A profile made before this version that never changed Scenarios or the minimum length, then a scenario fight (WoW Forever: and a 20 s fight) | The new defaults apply to it: Scenarios ticked, the minimum 30 s on Retail and 15 s on WoW Forever; a value the profile set itself is kept |
+| SM-CT-D13 | Both | Debug logging off and the console closed: `/ct dummy`, then `/ct dummy show`, then `/ct dummy defaults`; then `/ct dummy frobnicate` | Each writes the list to the console under a `/ct dummy show` header (yours, the built-in count and the switched-off ones) and opens it, with one chat line *dummy show: N lines written to the debug console. Use Copy to share it.*; `defaults` first says in chat that your dummies are cleared. Logging stays off. `frobnicate` prints the usage in chat and writes nothing |
 
 ## 10. Race mode
 

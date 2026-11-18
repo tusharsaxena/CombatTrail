@@ -352,7 +352,9 @@ test("race verb: ignore shows, adds, removes and resets the late-cast list", fun
     local NS, M = S.NS, S.M
     M.__resetPrinted()
     NS.Slash:OnSlash("race ignore")
-    assertTrue(said(M, "Late-cast ignore list:"), text(M))
+    -- `show` is a report (LibKa0s#79): re-pinned from chat to the console, chat the one pointer.
+    assertTrue(NS.DebugLog:FindLine("Late-cast ignore list:") ~= nil, "the list is in the console")
+    assertTrue(said(M, "race ignore show: "), text(M))
     M.__resetPrinted()
     NS.Slash:OnSlash("race ignore add 29722")
     assertTrue(said(M, "no longer flag a race"), text(M))
@@ -407,7 +409,8 @@ test("race verb: under the perf hold alone, race arm answers the capture line", 
     assertFalse(said(M, "is disabled"), "never the disabled line")
     M.__resetPrinted()
     NS.Slash:OnSlash("race ignore")
-    assertTrue(said(M, "Late-cast ignore list:"), "race ignore answers under the perf hold")
+    -- A report (LibKa0s#79): re-pinned from chat to the pointer.
+    assertTrue(said(M, "race ignore show: "), "race ignore answers under the perf hold")
     NS.lifecycle:Release(NS.HOLD_PERF)
 end)
 
@@ -443,7 +446,8 @@ test("race mode off: arming refuses and the Race window stays hidden", function(
     assertNil(NS.Fight.Current().race)
     M.__resetPrinted()
     NS.Slash:OnSlash("race ignore")
-    assertTrue(said(M, "Late-cast ignore list:"), text(M))
+    -- A report (LibKa0s#79): re-pinned from chat to the pointer.
+    assertTrue(said(M, "race ignore show: "), text(M))
     assertTrue(NS.SetByPath("race.enabled", true))
     assertTrue(NS.RaceMode.On())
 end)

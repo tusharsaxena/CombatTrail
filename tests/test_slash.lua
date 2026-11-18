@@ -123,10 +123,13 @@ test("slash: disabled, each feature verb answers one refusal line; lane, ignore 
         assertEqual(#M.__printed(), 1, verb .. ": " .. text(M))
         assertTrue(M.__printed()[1]:find(refusal, 1, true) == nil, verb .. " is live while disabled")
     end
-    -- `dummy` alone shows the list: two lines or more, none of them the refusal.
+    -- `dummy` alone shows the list, a report (LibKa0s#79): re-pinned from "two chat lines or more" to
+    -- the console holding the list and chat the one pointer, none of it the refusal.
     M.__resetPrinted()
     NS.Slash:OnSlash("dummy")
-    assertTrue(#M.__printed() >= 2, "dummy: " .. text(M))
+    assertEqual(#M.__printed(), 1, "dummy: " .. text(M))
+    assertTrue(text(M):find("dummy show: ", 1, true) ~= nil, "the report's pointer: " .. text(M))
+    assertTrue(NS.DebugLog:FindLine("Built-in training dummies:") ~= nil, "the list is in the console")
     assertFalse(text(M):find(refusal, 1, true) ~= nil, "dummy is live while disabled")
 end)
 

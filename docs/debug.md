@@ -52,6 +52,25 @@ identity header (brand, version, client build, locale, the running LibKa0s minor
 While stood down, the runtime sections print "stood down: runtime state released"; the settings and
 store still print. The README's *Reporting a bug* tells players how to send it.
 
+## Reports
+
+A report is a multi-line read-out a player asks for by name, to inspect or to share (the owner's
+report-routing ruling of 2026-11-08, LibKa0s#79). Each one goes through the library's `D:Report`: it is
+written to the console whether or not logging is on, under the `Report` tag after a `/ct <verb>`
+header, the console opens if it is hidden, and chat gets exactly one line, `<title>: N lines written
+to the debug console. Use Copy to share it.` The report verbs:
+
+| Verb | Writes | Stays in chat instead |
+|---|---|---|
+| `/ct ignore list [player\|pet]` (`LaneIgnore`) | The lane's ignored spells, one a line | An empty list: "The Pet lane ignores no spells." |
+| `/ct dummy` and `/ct dummy show` (`Dummies`) | Your training dummies, the built-in count and the switched-off built-ins; `defaults` acknowledges in chat, then writes it | — |
+| `/ct race ignore [show]` (`RaceVerb`, Retail) | The late-cast ignore list | An empty list: "The late-cast ignore list is empty." |
+
+A usage line or a refusal inside a report verb is said in chat and writes nothing, and the add,
+remove and reset confirmations stay in chat. With the library absent, the stub's `Report` streams
+the lines to chat with no pointer. `/ct diagnostics` and `/ct probe` write their own reports (above
+and below); `/ct perf`'s is the library's.
+
 ## The probe
 
 `/ct probe` is a debug surface too: it writes its report to the console. Its steps are in

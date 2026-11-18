@@ -547,7 +547,7 @@ L["How opaque the whole HUD is."] = "How opaque the whole HUD is."
 L["Usage: /ct ignore add|remove <spell> [player|pet], /ct ignore list [player|pet] or /ct ignore reset [player|pet]"] =
     "Usage: /ct ignore add|remove <spell> [player|pet], /ct ignore list [player|pet] or /ct ignore reset [player|pet]"
 L["The %s ignores no spells."] = "The %s ignores no spells."
-L["The %s ignores %s."] = "The %s ignores %s."
+L["The %s ignores %d spell(s):"] = "The %s ignores %d spell(s):"
 L["No spell named '%s'."] = "No spell named '%s'."
 L["The %s now ignores %s."] = "The %s now ignores %s."
 L["The %s already ignores %s."] = "The %s already ignores %s."
