@@ -1,6 +1,6 @@
 -- tests/test_report_verbs.lua — the report verbs on LibKa0s-DebugLog-1.0's D:Report (LibKa0s#79, the
 -- owner's report-routing ruling of 2026-11-08): `/ct ignore list [lane]`, `/ct dummy [show]` and
--- `/ct race ignore [show]` (Retail) write their lists to the debug console, ungated, open it, and
+-- `/ct race ignore [show]` (Retail) write their lists, and `/ct probe` its report, to the debug console, ungated, open it, and
 -- print exactly one pointer line in chat. An empty list is a short answer: one chat line, nothing
 -- written. A usage line inside a report verb stays in chat. With the library absent the report is
 -- streamed to chat with no pointer.
@@ -134,6 +134,44 @@ test("report verbs: an empty late-cast list is one chat line and writes nothing 
     for _, id in ipairs(NS.LateIgnore.List()) do NS.LateIgnore.Unignore(id) end
     local wrote, chat = run(NS, M, "race ignore show")
     assertChatOnly(NS, wrote, chat, "The late-cast ignore list is empty.")
+end)
+
+-- ── /ct probe ───────────────────────────────────────────────────────────────────────────────────
+
+test("report verbs: /ct probe writes its report through D:Report, the armed hint inside it", function()
+    local NS, M = fresh()
+    local wrote, chat = run(NS, M, "probe")
+    assertReport(NS, wrote, chat, "/ct probe", "combat log: protected, not used")
+    assertTrue(chat[1]:find("probe: %d+ lines written") ~= nil, "the pointer names the report: " .. chat[1])
+    assertTrue(NS.Probe.IsArmed(), "the first report arms the next fight")
+    assertTrue(tostring(wrote[#wrote]):find("It also watches your next fight", 1, true) ~= nil,
+        "the armed hint is the report's last line: " .. tostring(wrote[#wrote]))
+end)
+
+test("report verbs: /ct probe after the sampled fight carries no armed hint", function()
+    local NS, M = fresh()
+    NS.Slash:OnSlash("probe")
+    M.InCombatLockdown = function() return true end
+    M.__inCombat = true
+    M.__fire("PLAYER_REGEN_DISABLED")
+    M.__fireTimers()
+    M.InCombatLockdown = function() return false end
+    M.__inCombat = false
+    M.__fire("PLAYER_REGEN_ENABLED")
+    M.__fireTimers()
+    assertFalse(NS.Probe.IsArmed(), "the fight was sampled and the probe disarmed")
+    local wrote, chat = run(NS, M, "probe")
+    assertEqual(#chat, 1, table.concat(chat, " | "))
+    assertTrue(holds(wrote, "/ct probe"), table.concat(wrote, " | "))
+    assertFalse(holds(wrote, "It also watches your next fight"), table.concat(wrote, " | "))
+end)
+
+test("report verbs: /ct probe start and stop are acknowledgments: chat only, nothing written", function()
+    local NS, M = fresh()
+    local wrote, chat = run(NS, M, "probe start")
+    assertChatOnly(NS, wrote, chat, "The probe watches your next fight.")
+    wrote, chat = run(NS, M, "probe stop")
+    assertChatOnly(NS, wrote, chat, "The probe stopped watching.")
 end)
 
 -- ── the library absent ──────────────────────────────────────────────────────────────────────────

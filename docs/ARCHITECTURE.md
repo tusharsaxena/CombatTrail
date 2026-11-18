@@ -250,7 +250,7 @@ first hit, so `Race.Resume` (OnEnable and the stand-up) carries it on after a `/
 `settings/Slash.lua`: the thirteen reserved verbs plus `skin`, then the feature verbs `results`,
 `hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `ignore` and `dummy`, and `race` on
 Retail only (declared `clients = { "retail" }`). Feature verbs refuse while stood down; `lane`,
-`ignore` and `dummy` stay live, and `race` stays live for its `ignore` word alone (ruling X10). The list read-outs (`ignore list`, `dummy show`, `race ignore show`) are reports on the library's `D:Report` (LibKa0s#79): the debug console, ungated, with one chat pointer ([`debug.md`](debug.md), *Reports*). The full table and the dispatch rules are in
+`ignore` and `dummy` stay live, and `race` stays live for its `ignore` word alone (ruling X10). The list read-outs (`ignore list`, `dummy show`, `race ignore show`) and the `probe` report are reports on the library's `D:Report` (LibKa0s#79): the debug console, ungated, with one chat pointer ([`debug.md`](debug.md), *Reports*). The full table and the dispatch rules are in
 [`slash-dispatch.md`](slash-dispatch.md).
 
 ## Event Subscriptions

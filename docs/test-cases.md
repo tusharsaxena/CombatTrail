@@ -848,7 +848,7 @@ Total.
 - race window grip: matched to the HUD's height it drags the width alone
 - race window grip: detached, TOP or BOTTOM, or match-height off, it drags both, never under the least
 
-### test_report_verbs.lua (9)
+### test_report_verbs.lua (12)
 
 - report verbs: /ct ignore list writes the lane's list to the console, one spell a line
 - report verbs: /ct ignore list with an empty lane is one chat line and writes nothing
@@ -858,6 +858,9 @@ Total.
 - report verbs: a refusal inside /ct dummy stays in chat and writes nothing
 - report verbs: /ct race ignore writes the late-cast list to the console (Retail)
 - report verbs: an empty late-cast list is one chat line and writes nothing (Retail)
+- report verbs: /ct probe writes its report through D:Report, the armed hint inside it
+- report verbs: /ct probe after the sampled fight carries no armed hint
+- report verbs: /ct probe start and stop are acknowledgments: chat only, nothing written
 - report verbs: library absent, the report streams to chat with no pointer
 
 ### test_autoarm.lua (41)
@@ -1865,7 +1868,7 @@ Total.
 | test_race.lua | 60 |
 | test_race_resume.lua | 26 |
 | test_race_settings.lua | 25 |
-| test_report_verbs.lua | 9 |
+| test_report_verbs.lua | 12 |
 | test_autoarm.lua | 41 |
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
@@ -1918,4 +1921,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1568** |
+| **Total** | **1571** |

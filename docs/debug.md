@@ -65,15 +65,16 @@ to the debug console. Use Copy to share it.` The report verbs:
 | `/ct ignore list [player\|pet]` (`LaneIgnore`) | The lane's ignored spells, one a line | An empty list: "The Pet lane ignores no spells." |
 | `/ct dummy` and `/ct dummy show` (`Dummies`) | Your training dummies, the built-in count and the switched-off built-ins; `defaults` acknowledges in chat, then writes it | — |
 | `/ct race ignore [show]` (`RaceVerb`, Retail) | The late-cast ignore list | An empty list: "The late-cast ignore list is empty." |
+| `/ct probe` (`Probe`) | The probe report, under the `Probe` tag; while the probe still watches the next fight, its last line says so | `start` and `stop` acknowledge in chat and write nothing; an unknown word is the usage line |
 
 A usage line or a refusal inside a report verb is said in chat and writes nothing, and the add,
 remove and reset confirmations stay in chat. With the library absent, the stub's `Report` streams
-the lines to chat with no pointer. `/ct diagnostics` and `/ct probe` write their own reports (above
-and below); `/ct perf`'s is the library's.
+the lines to chat with no pointer. `/ct diagnostics` writes its own report (above); `/ct perf`'s is
+the library's.
 
 ## The probe
 
-`/ct probe` is a debug surface too: it writes its report to the console. Its steps are in
+`/ct probe` is a debug surface too: it is one of the reports above. Its steps are in
 [`smoke-tests.md`](smoke-tests.md), *The probe*.
 
 With a pet out, each meter sample (5 s into combat and 2 s after it) adds one line on the pet's rows

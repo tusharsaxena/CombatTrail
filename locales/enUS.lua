@@ -584,9 +584,8 @@ L["Avoidance"] = "Avoidance"
 L["Speed"] = "Speed"
 
 -- `/ct probe` (modules/Probe.lua)
-L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
-    "The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."
-L["The probe report is in the debug console (%d lines)."] = "The probe report is in the debug console (%d lines)."
+L["It also watches your next fight: fight for 20 seconds or more, then type %s again."] =
+    "It also watches your next fight: fight for 20 seconds or more, then type %s again."
 L["The probe watches your next fight. Fight for 20 seconds or more, then type %s."] =
     "The probe watches your next fight. Fight for 20 seconds or more, then type %s."
 L["The probe stopped watching."] = "The probe stopped watching."

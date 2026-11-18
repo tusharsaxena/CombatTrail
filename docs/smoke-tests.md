@@ -11,7 +11,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 |---|---|---|
 | (not run yet) | 0.1.0, branch `feat/2026-11-10-combat-trail-v0.1.0` | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-11-race-mode` (Race mode, sections 9 and 10) | |
-| (not run yet) | 0.1.0, branch `feat/2026-11-17-libka0s-adoption` (the library's window chrome, AD-88-CT and AD-89-CT: the docked strips SM-CT-H8, SM-CT-R26 and SM-CT-RM94, the footers SM-CT-H16, SM-CT-R26 and SM-CT-RM93; the title-bar marks, AD-86-CT: SM-CT-H17, SM-CT-R27, SM-CT-T12 to SM-CT-T14, SM-CT-RM95, SM-CT-RM49 and SM-CT-RM67; the tooltip placement, AD-92-CT: SM-CT-H3, SM-CT-H18, SM-CT-N20, SM-CT-R28, SM-CT-R29, SM-CT-T15 and SM-CT-RM96; the report verbs, AD-79-CT: SM-CT-N21, SM-CT-D2, SM-CT-D13 and SM-CT-S12; the shared sample hunter, AD-87-CT: SM-CT-M6) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-17-libka0s-adoption` (the library's window chrome, AD-88-CT and AD-89-CT: the docked strips SM-CT-H8, SM-CT-R26 and SM-CT-RM94, the footers SM-CT-H16, SM-CT-R26 and SM-CT-RM93; the title-bar marks, AD-86-CT: SM-CT-H17, SM-CT-R27, SM-CT-T12 to SM-CT-T14, SM-CT-RM95, SM-CT-RM49 and SM-CT-RM67; the tooltip placement, AD-92-CT: SM-CT-H3, SM-CT-H18, SM-CT-N20, SM-CT-R28, SM-CT-R29, SM-CT-T15 and SM-CT-RM96; the report verbs, AD-79-CT: SM-CT-N21, SM-CT-D2, SM-CT-D13, SM-CT-S12 and SM-CT-P9; the shared sample hunter, AD-87-CT: SM-CT-M6) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15; the sim window beside the Race window: SM-CT-M4; the Forever Multi-Shot ID: SM-CT-M5; LibKa0s v1.102.0's call-out look and the one tab with no sample line: SM-CT-RM82, RM84, RM85, RM91, RM92) | |
 
 ## How to run it
@@ -29,7 +29,8 @@ owner runs them; an agent never marks a row passed. Every check names its client
 
 ## The probe
 
-`/ct probe` writes a plain-text report to the debug console; **Copy** lifts it out. Run these steps
+`/ct probe` writes a plain-text report to the debug console under a `/ct probe` header, with one chat
+pointer line; **Copy** lifts it out. Run these steps
 on **each** client, on a Hunter with a pet out, then again on a Warlock with a demon out:
 
 - Out of combat, type `/ct probe`. Copy the report. It names the client, version, build and
@@ -57,6 +58,7 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-P6 | Forever | The cast secrecy counts in combat | Recorded either way: whether cast spell IDs and castGUIDs are secret in combat on WoW Forever |
 | SM-CT-P7 | Forever | The talent-tree lines of `/ct probe` (talent tabs, talent spec, talent config, trait tree and groups, talent tree pick), on a character with points spent | Recorded either way: which API answers, each group's fields (which one holds the icon), and a pick that names the tree with the most points. First run 2026-11-10 (build 70862, out of combat): the talent tabs absent, C_Traits' three groups answered, the pick read Beast Mastery (10/3/0) (midnight-quirks.md). Still owed: the same lines read right after a pull, while combat is fresh |
 | SM-CT-P8 | Forever | `/ct probe start` with the pet out, ten seconds of combat with the pet attacking, then `/ct probe` | Each sample has a line "pet rows in player source: N row(s), A with a secret name, B named a creature (C with a secret amount); player total plain|secret; live Pet figure: split|dash|own source|none". Record the combat+5s line: "split" with no secret name, amount or total means the meter's values are plain in combat on WoW Forever and the HUD shows the live Pet figure (SM-CT-H15); "dash" means they are secret there. The afterCombat+2s line should read "split" |
+| SM-CT-P9 | Both | Debug logging off and the console closed: `/ct probe`; then `/ct probe start`, ten seconds of combat, and `/ct probe` again; then `/ct probe stop` | The console opens with a `/ct probe` header and the report under the Probe tag, logging stays off, and chat shows one line, *probe: N lines written to the debug console. Use Copy to share it.* The first report's last console line says the probe also watches your next fight; the report after the sampled fight has no such line. `start` and `stop` each answer one chat line and write nothing |
 
 ## 1. Load and identity
 
