@@ -108,7 +108,7 @@ test("report verbs: /ct dummy defaults acknowledges in chat, then writes the lis
     NS.Dummies.Add(BOAR, "single")
     local wrote, chat = run(NS, M, "dummy defaults")
     assertTrue(holds(wrote, "No training dummies of your own."), table.concat(wrote, " | "))
-    assertEqual(#chat, 2, "the acknowledgement and the pointer: " .. table.concat(chat, " | "))
+    assertEqual(#chat, 2, "the confirmation and the pointer: " .. table.concat(chat, " | "))
     assertTrue(chat[1]:find("Your training dummies are cleared", 1, true) ~= nil, chat[1])
     assertTrue(chat[2]:find("lines written to the debug console", 1, true) ~= nil, chat[2])
 end)
