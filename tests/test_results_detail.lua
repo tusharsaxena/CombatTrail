@@ -65,12 +65,12 @@ end
 
 test("detail: the header meta is three lines: where and who, what, the stamp (plan A2)", function()
     local NS = fresh()
-    local r = rec(NS, { id = "a", petName = "Grimfang" })
+    local r = rec(NS, { id = "a", petName = "Mockfang" })
     r.who.realm = "Area 52"
     local lines = NS.ResultsDetail.Meta(r)
     assertEqual(#lines, 3, "where/who, what, stamp")
     local want = { { "Area 52", "ilvl 721.4", "The Voidspire" },
-                   { "Vorasius", "Heroic", "1:00", "pet Grimfang" },
+                   { "Vorasius", "Heroic", "1:00", "pet Mockfang" },
                    { NS.ResultsTable.Date(r.t, "%d %b %Y %H:%M"), "build 120105", "v0.1.0" } }
     for k, parts in ipairs(want) do
         for _, part in ipairs(parts) do

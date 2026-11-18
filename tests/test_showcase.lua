@@ -154,6 +154,50 @@ test("showcase: one fixed set, the same for every character (the sample realm, n
     end
 end)
 
+-- The sample characters (LibKa0s#87, preview-mode *Sample characters*): the main hunter is the
+-- library's protagonist for the running client, Sim.Sample()[1], and every name the showcase ships
+-- follows the convention: one capitalized word starting Sample or Mock, on a fixed sample realm.
+local function conventional(name)
+    return type(name) == "string" and #name >= 2 and #name <= 12 and name:match("^%u%l+$") ~= nil
+        and (name:find("^Sample") ~= nil or name:find("^Mock") ~= nil)
+end
+
+test("showcase: the main hunter is the library's sample protagonist, Sim.Sample()[1]", function()
+    local S = fresh()
+    local NS = S.NS
+    local row = NS.SimLib.Sample()[1]
+    assertEqual(row.classFile, "HUNTER", "the shared protagonist is a hunter")
+    local me = NS.MockFights.Character("me")
+    assertEqual(me.name, row.name, "the name is the shared set's")
+    assertEqual(me.realm, row.realm, "the realm is the shared set's")
+    assertEqual(me.petName, row.pet, "the pet is the shared set's")
+    assertEqual(me.petName, "Mockfang")
+    assertEqual(NS.MockFights.REALM, row.realm)
+end)
+
+test("showcase: every sample name follows the convention (Sample or Mock, a fixed sample realm)", function()
+    local S = fresh()
+    local NS = S.NS
+    for _, key in ipairs({ "me", "alt" }) do
+        local who = NS.MockFights.Character(key)
+        assertTrue(conventional(who.name), key .. "'s name: " .. tostring(who.name))
+        assertTrue(conventional(who.petName), key .. "'s pet: " .. tostring(who.petName))
+        assertTrue(who.realm == "Samplerealm" or who.realm == "Mockrealm", key .. "'s realm: " .. tostring(who.realm))
+    end
+    for _, r in ipairs(NS.MockFights.Dataset().fights) do
+        assertTrue(conventional(r.who.name), r.id .. ": " .. tostring(r.who.name))
+        assertTrue(conventional(r.who.petName), r.id .. "'s pet: " .. tostring(r.who.petName))
+    end
+end)
+
+test("showcase: library absent, the main hunter is the copy of the shared row", function()
+    local inst = T.load({ libFiles = {} })
+    local me = inst.NS.MockFights.Character("me")
+    assertEqual(me.name, "Samplehunter")
+    assertEqual(me.realm, "Samplerealm")
+    assertEqual(me.petName, "Mockfang")
+end)
+
 test("showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace", function()
     local S = fresh()
     local NS = S.NS

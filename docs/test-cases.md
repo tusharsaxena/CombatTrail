@@ -1631,11 +1631,14 @@ Total.
 - sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one
 - sim race: WoW Forever has no race scenario
 
-### test_showcase.lua (12)
+### test_showcase.lua (15)
 
 - showcase: every sample record adds up: rows to the damage, player plus pet, DPS over its length
 - showcase: every WoW Forever sample spell row is one the client names; Multi-Shot is rank 1
 - showcase: one fixed set, the same for every character (the sample realm, not the player's)
+- showcase: the main hunter is the library's sample protagonist, Sim.Sample()[1]
+- showcase: every sample name follows the convention (Sample or Mock, a fixed sample realm)
+- showcase: library absent, the main hunter is the copy of the shared row
 - showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace
 - showcase: /ct test stays the HUD's alone: no toast, no call-out
 - showcase: test race running: two checkpoints passed, the third next, on the best's line
@@ -1901,7 +1904,7 @@ Total.
 | test_sim.lua | 7 |
 | test_race_preview.lua | 8 |
 | test_sim_race.lua | 14 |
-| test_showcase.lua | 12 |
+| test_showcase.lua | 15 |
 | test_bindings.lua | 14 |
 | test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
@@ -1915,4 +1918,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1565** |
+| **Total** | **1568** |

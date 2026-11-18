@@ -171,3 +171,9 @@ on); the call-out's words are a real race's rule (`Countdown.EndWord`, `Countdow
 said through `Countdown.SampleSay`. `/ct test race running` is a still frame: its clock holds, so it
 counts nothing; only the sim's race scenarios run the countdown. The preview's stop and switch call
 `BestToast.EndSample` and `Countdown.EndSample`, so no toast or call-out outlives its sample.
+
+The samples are fought by two made-up hunters on one sample realm, the same for every character
+(preview-mode, *Sample characters*; LibKa0s#87). The main one is the collection's sample protagonist,
+LibKa0s-Sim-1.0's `Sim.Sample()[1]` for the running client (Samplehunter on Samplerealm, the pet
+Mockfang), read once at file scope with a copy of that row when the library is absent. The alt,
+Mockarrow with the pet Mockclaw, is this addon's own and follows the same convention.
