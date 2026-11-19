@@ -636,14 +636,18 @@ function Probe.Report()
     return out
 end
 
---- Write the report to the debug console and show it. Answers how many lines it wrote.
+--- Write the report to the debug console through LibKa0s-DebugLog-1.0's D:Report (LibKa0s#79, the
+--- owner's report-routing ruling of 2026-11-08): a `/ct probe` header, the lines ungated under the
+--- Probe tag, the console shown, and the library's one chat pointer. `hint`, when given, is the
+--- report's last line. Answers how many lines it wrote, the header included.
+--- @param hint string|nil
 --- @return number
-function Probe.Show()
+function Probe.Show(hint)
     local lines = Probe.Report()
-    local D = NS.DebugLog
-    for _, line in ipairs(lines) do D:Add("Probe", line) end
-    D:Show()
-    return #lines
+    return NS.DebugLog:Report("Probe", "probe", function(out)
+        for _, line in ipairs(lines) do out(line) end
+        if hint then out(hint) end
+    end)
 end
 
 -- ── arming ─────────────────────────────────────────────────────────────────────────────────────
@@ -770,15 +774,12 @@ end
 
 -- ── the verb ───────────────────────────────────────────────────────────────────────────────────
 
+-- A REPORT: the library's pointer is its one chat line, and while the probe still watches the next
+-- fight the hint that says so is the report's last line.
 local function reportVerb()
     if not armed and #samples == 0 then Probe.Arm(false) end
-    local n = Probe.Show()
-    if armed then
-        NS.Print(L["The probe report is in the debug console (%d lines). It also watches your next fight: fight for 20 seconds or more, then type %s again."]
-            :format(n, NS.SLASH_CMD .. " probe"))
-    else
-        NS.Print(L["The probe report is in the debug console (%d lines)."]:format(n))
-    end
+    Probe.Show(armed and L["It also watches your next fight: fight for 20 seconds or more, then type %s again."]
+        :format(NS.SLASH_CMD .. " probe") or nil)
 end
 
 local VERBS = {

@@ -375,7 +375,10 @@ local draw
 local function buildChrome(f)
     f.title = Style.PlainText(f, FONT.TITLE, "CENTER")
     f.title:SetText(L["Compare"])
-    ui.close = NS.MakeCloseButton(f, function() Compare.Hide() end)
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Settings and the Close. The window is in the DIALOG
+    -- tier and would cover the settings panel, so the settings mark hides it first (hideOnSettings).
+    local hb = NS.MakeHeader(f, { close = function() Compare.Hide() end, settingsTip = L["Settings"], hideOnSettings = f })
+    ui.close, ui.settings = hb.close, hb.settings
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -383,7 +386,7 @@ local function buildChrome(f)
     -- Moved for as long as it is open: nothing stored, the next open centers it again.
     drag:SetScript("OnDragStop", function() f:StopMovingOrSizing() end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close }, n = 1 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings }, n = 2 })
 end
 
 local function buildLegend(f)
@@ -702,16 +705,18 @@ local function layoutGear(y)
     return #changes == 0 and 1 or line + 1
 end
 
--- A used item's hover: the client's item tooltip (pcall'd), then each side's uses in its hue.
+-- A used item's hover: the client's item tooltip (pcall'd), then each side's uses in its hue; beside
+-- the compare window, level with the line (a body element: Style.PlaceBody, LibKa0s#92).
 local function usageTip(line)
     local tt, d = GameTooltip, line.data
     if not (tt and d) then return end
-    tt:SetOwner(line, "ANCHOR_RIGHT")
+    Style.OwnTip(tt, line)
     local shown = d.itemID and tt.SetItemByID and pcall(tt.SetItemByID, tt, d.itemID)
     if not shown then tt:SetText(NS.ResultsUsage.Name(d.a or d.b), Style.Rgb("gtip.value")) end
     tt:AddLine(L["This fight: %s"]:format(line.this:GetText() or ""), Style.Rgb(PALETTE.THIS_TEXT))
     tt:AddLine(L["The other fight: %s"]:format(line.other:GetText() or ""), Style.Rgb(PALETTE.BEST_TEXT))
     tt:Show()
+    Style.PlaceBody(tt, line)
 end
 
 local function usageLine(i)

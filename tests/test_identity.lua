@@ -496,7 +496,7 @@ end)
 test("identity: two-word Forever names handled", function()
     local _, NS, m = fresh("forever")
     m.RegionalUniqueNamesEnabled = function() return true end
-    local names = { player = { "Traxex", "Silentshot" }, target = { "Doom", "Dock" } }
+    local names = { player = { "Samplehunter", "Mockstride" }, target = { "Doom", "Dock" } }
     m.UnitName = function(unit)
         local n = names[unit or "player"]
         if n then return n[1], n[2] end
@@ -510,7 +510,7 @@ test("identity: two-word Forever names handled", function()
     m.__unitExists.target = true
     m.__unitGUIDs.target = "Player-1-00000002"
     local snap = NS.Identity.Snapshot()
-    assertEqual(snap.who.name, "Traxex Silentshot", "the whole name, never the first word")
+    assertEqual(snap.who.name, "Samplehunter Mockstride", "the whole name, never the first word")
     assertEqual(snap.who.realm, "PvP", "the realm is the ruleset, never the surname or the long label")
     assertEqual(snap.target.name, "Doom Dock")
     local id = NS.Identity.Resolve({ snapshot = snap }, nil, {})

@@ -67,11 +67,25 @@ local CLIENT = FOREVER and {
 MockFights.SCALE = CLIENT.scale
 
 -- The two made-up hunters: the main one every sample fight of the HUD and the sim is fought by,
--- both on one made-up realm.
-MockFights.REALM = "Samplerealm"
+-- both on one made-up realm. The main one is the collection's sample protagonist (LibKa0s#87,
+-- preview-mode *Sample characters*): LibKa0s-Sim-1.0's Sim.Sample()[1] for the running client, read
+-- once at FILE SCOPE (core/SimSetup.lua resolved NS.SimLib earlier), with a copy of that row's
+-- fields when the library is absent. The alt is this addon's own and follows the same convention.
+local SAMPLE_HUNTER = { name = "Samplehunter", realm = "Samplerealm", pet = "Mockfang" }
+local function protagonist()
+    local Sim = NS.SimLib
+    local rows = Sim and type(Sim.Sample) == "function" and Sim.Sample()
+    local row = type(rows) == "table" and rows[1]
+    if type(row) == "table" and row.classFile == "HUNTER" and row.name and row.realm and row.pet then
+        return row
+    end
+    return SAMPLE_HUNTER
+end
+local HUNTER = protagonist()
+MockFights.REALM = HUNTER.realm
 local CHARS = {
-    me = { name = "Samplehunter", ilvl = FOREVER and 66.2 or 721.4, pet = "Grimfang" },
-    alt = { name = "Mockarrow", ilvl = FOREVER and 63.0 or 716.0, pet = "Ashpaw" },
+    me = { name = HUNTER.name, ilvl = FOREVER and 66.2 or 721.4, pet = HUNTER.pet },
+    alt = { name = "Mockarrow", ilvl = FOREVER and 63.0 or 716.0, pet = "Mockclaw" },
 }
 
 -- ── the boards ──────────────────────────────────────────────────────────────────────────────────

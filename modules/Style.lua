@@ -23,8 +23,9 @@ local addonName, NS = ...
 -- WORDS. Tabs, column headers, buttons and captions are Title Case, as LootHistory's are; prose is
 -- Sentence case. Nothing is upper-cased in code: what a label says is its locale string.
 --
--- STYLING ONLY. Nothing here reads a meter value or a frame's geometry; a label made here is handed
--- what its caller hands it, and the secret-value rules of the caller still hold.
+-- STYLING ONLY. Nothing here reads a meter value, and no frame's geometry but through the tooltip
+-- placers (Style.PlaceBody, Style.PlaceChrome: LibKa0s-Tooltip-1.0 reads it, guarded); a label made
+-- here is handed what its caller hands it, and the secret-value rules of the caller still hold.
 --
 -- THE SKIN (skinning-§3). Every color this addon draws is a token of the owner's skin
 -- (core/SkinSetup.lua's NS.Skin): a library token, or one of this addon's own `ct.*` owner tokens
@@ -226,10 +227,13 @@ Style.HOT = Style.Tok("text.link")
 Style.TITLE_BAR_H = NS.Skin.Token("title.height") or 30
 Style.TAB_STRIP_H = 26
 Style.TAB_W, Style.TAB_PITCH = 90, 94
-Style.CONTROL = 18
-Style.CONTROL_PITCH = 22
+-- The title-bar strip is W.HeaderButtons' (LibKa0s#86, standalone-windows *Title-bar controls*): an
+-- 18 px slot, HEADER.PAD from the corner and HEADER.GAP apart, read where the library publishes them
+-- (NS.HEADER, core/WidgetsSetup.lua), so the pitch is 24 where the hand-built strip's was 22.
+Style.CONTROL = NS.HEADER.SIZE
+Style.CONTROL_PITCH = NS.HEADER.SIZE + NS.HEADER.GAP
 -- A title-bar mark's longest side (px), the library's close art's own (Core's CLOSE_ART).
-Style.CONTROL_ART = 12
+Style.CONTROL_ART = NS.HEADER.ART
 -- The catalog's cell (px), and each title-bar mark's visible box in it, top-down and end-exclusive:
 -- { left, top, right, bottom }, measured off the vendored art (alpha above 0).
 Style.ART_GRID = 64
@@ -469,6 +473,133 @@ function Style.AddTipLines(tip, lines, first, r, g, b)
     end
 end
 
+-- ── where a tooltip opens (LibKa0s#92, AD-92-CT) ────────────────────────────────────────────────
+-- The addon's one seam onto LibKa0s-Tooltip-1.0 (WowAddonStandards standalone-windows, *Tooltip
+-- placement*). Every tooltip this addon places itself is owned at ANCHOR_NONE (Style.OwnTip), filled,
+-- shown, then placed by its element's kind:
+--
+--   BODY (Style.PlaceBody): a row, a cell, a card, a chip, a chart mark, a section heading and its
+--   arrow, a cast icon, and any control inside the content. Beside the WINDOW GROUP, outside its
+--   outer edge: right when it fits, else left, its top level with the element's top (PlaceBeside).
+--   CHROME (Style.PlaceChrome): a filter bar's or a top toolbar's control. Centered on
+--   the control, TIP_GAP above it, below only without room above (PlaceAttached).
+--
+-- THE WINDOW GROUP (Style.TipGroup). The outermost frame under UIParent the element sits in, and,
+-- for the DPS HUD and the Race window while it is attached beside the HUD, the two of them with the
+-- library's sim window while it is docked to either: one group, the HUD its main frame, so a Race
+-- window row's tooltip opens on the Race window's side away from the HUD and covers neither. The two
+-- cast lanes, while one is docked on the other (LaneAnchor mode "dock", the Pet lane's default), are
+-- one group the same way, the host lane its main frame (modules/LaneAnchor.lua's TipGroup).
+--
+-- NEVER THE CURSOR, NEVER A CORNER. With no library, or a geometry read that is not a plain number
+-- (the library places nothing), the tooltip is attached centered above the element (BOTTOM on its
+-- TOP, TIP_GAP up), as the library's own sites fall back. Only frame geometry is read, never a meter
+-- value, and the library guards every read against a secret.
+
+Style.TIP_GAP = 2   -- the library's TIP_GAP, for the fallback (read off the library when it is there)
+
+-- The placement major, read at call time (a suite's spy and a newer copy both reach it), or nil.
+local function tipLib()
+    local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
+    if type(Tip) == "table" and type(Tip.PlaceBeside) == "function" and type(Tip.PlaceAttached) == "function" then
+        return Tip
+    end
+    return nil
+end
+
+--- The top-level window `frame` sits in: its outermost ancestor under UIParent (itself when it is one).
+--- @param frame table
+--- @return table
+function Style.WindowOf(frame)
+    local w = frame
+    for _ = 1, 64 do
+        local p = w and w.GetParent and w:GetParent()
+        if p == nil or p == UIParent or type(p) ~= "table" then return w end
+        w = p
+    end
+    return w
+end
+
+local function shown(f)
+    return type(f) == "table" and (f.IsShown == nil or f:IsShown() and true or false)
+end
+
+-- The frame the library's sim window is anchored to, or nil (the panel modules/Sim.lua finds by its
+-- global name).
+local function simAnchor(panel)
+    if not (shown(panel) and type(panel.GetPoint) == "function") then return nil end
+    local ok, _, rel = pcall(panel.GetPoint, panel, 1)
+    return ok and type(rel) == "table" and rel or nil
+end
+
+--- The window group `element`'s tooltip opens beside, as PlaceBeside reads one: the cast lanes while
+--- one is docked on the other (LaneAnchor.TipGroup, the host lane the main frame), the HUD and the
+--- attached Race window (and the sim window docked to either) as `{ main = hud, panels = {...} }`,
+--- else the element's top-level window alone.
+--- @param element table
+--- @return table
+function Style.TipGroup(element)
+    local outer = Style.WindowOf(element)
+    local LA = NS.LaneAnchor
+    local lanes = LA and LA.TipGroup and LA.TipGroup(outer)
+    if lanes then return lanes end
+    local hud = NS.Hud and NS.Hud.Frame and NS.Hud.Frame()
+    local RW = NS.RaceWindow
+    local rw = RW and RW.Frame and RW.Frame()
+    if not (hud and rw and (outer == hud or outer == rw)) then return outer end
+    if not (RW.IsAttached and RW.IsAttached() and shown(rw) and shown(hud)) then return outer end
+    local panels = { rw }
+    local sim = _G[addonName .. "SimPanel"]
+    local at = simAnchor(sim)
+    if at == hud or at == rw then panels[2] = sim end
+    return { main = hud, panels = panels }
+end
+
+--- Own `tip` for a placement: `SetOwner(element, "ANCHOR_NONE")` (the library's Own when it is there).
+--- @param tip table  a GameTooltip
+--- @param element table  the hovered frame
+--- @return table tip
+function Style.OwnTip(tip, element)
+    local Tip = tipLib()
+    if Tip and Tip.Own then return Tip.Own(tip, element) end
+    tip:SetOwner(element, "ANCHOR_NONE")
+    return tip
+end
+
+-- The fallback of both rules: centered above `element`, TIP_GAP up, by a relative point.
+local function attachAbove(tip, element)
+    local Tip = tipLib()
+    tip:ClearAllPoints()
+    tip:SetPoint("BOTTOM", element, "TOP", 0, Tip and tonumber(Tip.TIP_GAP) or Style.TIP_GAP)
+    return "attached"
+end
+
+--- The body rule on a shown tooltip: beside `group` (default Style.TipGroup(element)), its top level
+--- with `element`'s, through the library's PlaceBeside; else attached above `element`. Answers
+--- `right`, `left`, the library's fallback `above` / `below`, or `attached`.
+--- @param tip table  a GameTooltip, shown
+--- @param element table  the hovered frame (its top is the tooltip's)
+--- @param group table|nil  the window group (a frame, or `{ main, panels }`)
+--- @return string
+function Style.PlaceBody(tip, element, group)
+    local Tip = tipLib()
+    local side = Tip and Tip.PlaceBeside(tip, element, group or Style.TipGroup(element))
+    if side then return side end
+    return attachAbove(tip, element)
+end
+
+--- The chrome rule on a shown tooltip: centered on `element`, above it, below only without room
+--- above (the library's PlaceAttached); else attached above it. Answers `above`, `below` or `attached`.
+--- @param tip table  a GameTooltip, shown
+--- @param element table  the hovered control
+--- @return string
+function Style.PlaceChrome(tip, element)
+    local Tip = tipLib()
+    local side = Tip and Tip.PlaceAttached(tip, element)
+    if side then return side end
+    return attachAbove(tip, element)
+end
+
 -- ── the title-bar controls ──────────────────────────────────────────────────────────────────────
 -- ONE CONTROL AT A TIME (MultiMeters' HeaderControls). A strip remembers which control the pointer
 -- is on; an enter names it and repaints the strip, a leave un-names it ONLY IF IT IS STILL THE ONE
@@ -592,7 +723,7 @@ end
 -- With no library (a degraded load: S.Band answers nil, S.Header draws nothing) a host holder
 -- stands where Shell would lay the band, and the same anchors are set once by hand.
 
-local CONTROL_PAD = 6   -- the outermost control's gap to the band's right edge (S.Header's pad)
+local CONTROL_PAD = NS.HEADER.PAD   -- the outermost control's gap to the band's right edge (HEADER.PAD)
 
 --- The window's title band: the library's, else the host's holder. Answers it and whether it is
 --- the library's.
@@ -629,7 +760,8 @@ end
 
 --- The header of `f` on its band. `spec.right` lists the title-bar controls outermost first, `spec.n`
 --- of them (an entry may be nil: a slot kept for a control that could not be made); each is RIGHT on
---- the band, CONTROL_PAD in, one CONTROL_PITCH apart. `spec.title` is anchored by `spec.align`, else
+--- the band, CONTROL_PAD in, one CONTROL_PITCH apart: the offsets W.HeaderButtons records for the
+--- marks NS.MakeHeader built (close, settings, then the extras inward), which this lays. `spec.title` is anchored by `spec.align`, else
 --- the skin's `title.align` (CENTER with no library). `spec.drag` takes the band's rect up to the
 --- controls.
 --- @param f table  the window
@@ -677,15 +809,18 @@ end
 --- The tooltip is LibKa0s-Tooltip-1.0's AttachTitleTip (smoke round 1, SR-L1 and SR-L2): `b.tip`,
 --- read on each hover, one line in the owner's `gtip.title`, placed above the control (PlaceAttached,
 --- flipped below only without room), hidden on leave. Hooked, so a caller's own OnEnter set after it
---- (the timeline's `?`) replaces it outright. With no Tooltip library (a degraded load) the client's
---- ANCHOR_TOP does the same.
+--- (the timeline's `?`) replaces it outright. With no Tooltip library (a degraded load) it is owned at
+--- ANCHOR_NONE and attached above the control (Style.PlaceChrome's fallback). A control in a window's
+--- body (`place` "body": a section heading's fold arrow) places its tooltip by the body rule instead,
+--- beside the window group, level with the control (Style.PlaceBody).
 --- @param parent table
 --- @param name string  the catalog icon
 --- @param glyph string  the plain character drawn when there is no icon
 --- @param tip string  the tooltip
 --- @param onClick function
+--- @param place string|nil  "body" for a control in the content; nil for chrome
 --- @return table
-function Style.ControlButton(parent, name, glyph, tip, onClick)
+function Style.ControlButton(parent, name, glyph, tip, onClick, place)
     local b = CreateFrame("Button", nil, parent)
     b:SetSize(Style.CONTROL, Style.CONTROL)
     b.icon = b:CreateTexture(nil, "OVERLAY")
@@ -697,15 +832,17 @@ function Style.ControlButton(parent, name, glyph, tip, onClick)
     Style.SetControlIcon(b, name, glyph)
     b:SetScript("OnClick", function() onClick() end)
     local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
-    if Tip and Tip.AttachTitleTip then
+    if place ~= "body" and Tip and Tip.AttachTitleTip then
         Tip.AttachTitleTip(b, function(self) return self.tip end, addonName)
         return b
     end
+    local placeTip = place == "body" and Style.PlaceBody or Style.PlaceChrome
     b:SetScript("OnEnter", function(self)
         if not (GameTooltip and type(self.tip) == "string" and self.tip ~= "") then return end
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(self.tip, Style.Rgb("gtip.title"))
         GameTooltip:Show()
+        placeTip(GameTooltip, self)
     end)
     b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     return b
@@ -729,18 +866,27 @@ function Style.FitControlArt(tex, name)
 end
 
 --- Draw `name` on a control (the glyph when the catalog has no path), fitted (FitControlArt). The
---- tint is left as it is.
+--- tint is left as it is. A W.HeaderButton mark (NS.MakeHeader) draws its word in `label` where a
+--- Style.ControlButton draws it in `glyph`, and has the one it was built with.
 function Style.SetControlIcon(b, name, glyph)
     local path = NS.Icon(name)
-    b.icon:SetShown(path ~= nil)
-    b.glyph:SetShown(path == nil)
-    if path then
+    local word = b.glyph or b.label
+    local art = path ~= nil and b.icon ~= nil
+    if b.icon then b.icon:SetShown(art) end
+    if word then word:SetShown(not art) end
+    if art then
         b.icon:SetTexture(path)
         Style.FitControlArt(b.icon, name)
-    else
-        b.glyph:SetText(glyph)
+    elseif word then
+        word:SetText(glyph)
     end
     b.iconName = name
+end
+
+--- A control's tooltip, read on each hover: `tip` (Style.ControlButton's) and `__tip` (a W.HeaderButton
+--- mark's) alike.
+function Style.SetControlTip(b, words)
+    b.tip, b.__tip = words, words
 end
 
 -- ── the flat buttons ────────────────────────────────────────────────────────────────────────────
@@ -771,15 +917,19 @@ local function paintButton(b)
     NS.Skin.Button(b, { primary = b.style.primary, tokens = on and b.style.on or b.style.off })
 end
 
--- A button's tooltip (b.tip = { title, line, ... }), shown above it, disabled or not.
+-- A button's tooltip (b.tip = { title, line, ... }), disabled or not: a chrome control's (a filter
+-- bar's, a top toolbar's) above it (Style.PlaceChrome); a button in a window's body (`b.tipBody`: a
+-- card's, a Race window body's, the fight detail's bottom action row) beside the window group, level
+-- with it (Style.PlaceBody).
 local function buttonTip(b)
     local tip = b.tip
     if not (tip and GameTooltip) then return end
     if type(tip) ~= "table" then tip = { tostring(tip) } end
-    GameTooltip:SetOwner(b, "ANCHOR_TOP")
+    Style.OwnTip(GameTooltip, b)
     GameTooltip:SetText(tip[1], Style.Rgb("gtip.value"))
     Style.AddTipLines(GameTooltip, tip, 2, Style.Rgb("gtip.title"))
     GameTooltip:Show()
+    if b.tipBody then Style.PlaceBody(GameTooltip, b) else Style.PlaceChrome(GameTooltip, b) end
 end
 
 --- A flat button: a label, a style ("normal" | "primary" | "danger"), and a click that a disabled

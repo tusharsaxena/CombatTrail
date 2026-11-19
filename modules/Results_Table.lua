@@ -186,21 +186,14 @@ function Tbl.Ilvl(v)
 end
 
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────────
--- ONE HOVER PER ROW, NOT A SPOT PER CELL: the row follows the cursor across its cells (its OnUpdate,
--- only while hovered) and shows the tooltip of the cell under it (NS.ResultsTips). The tooltip sits
--- beside the WINDOW at the row's height, on its right (LootHistory's), or on its left when the
--- screen has no room for it there. Nothing here holds a meter value, so the geometry read is free.
+-- ONE HOVER PER ROW, NOT A SPOT PER CELL: the row reads which of its cells the cursor is over (its
+-- OnUpdate, only while hovered) and shows that cell's words (NS.ResultsTips). The cursor picks the
+-- WORDS only, never the place: the tooltip opens beside the WINDOW GROUP, its top level with the row,
+-- on its right, or on its left when the screen has no room there (LibKa0s-Tooltip-1.0's PlaceBeside
+-- through Style.PlaceBody, LibKa0s#92). Nothing here holds a meter value.
 
 -- The top-level window a table sits in (the frame whose parent is UIParent).
-local function windowOf(frame)
-    local w = frame
-    while w and w.GetParent do
-        local p = w:GetParent()
-        if p == nil or p == UIParent then return w end
-        w = p
-    end
-    return frame
-end
+local windowOf = Style.WindowOf
 
 Tbl.WindowOf = windowOf
 
@@ -208,28 +201,16 @@ Tbl.WindowOf = windowOf
 -- on (modules/Style.lua).
 local addLines = Style.AddTipLines
 
--- A geometry answer as a plain number, or nil (core/Secrets.lua): every read here goes through it.
+-- A geometry answer as a plain number, or nil (core/Secrets.lua).
 local function plainGeom(frame, method)
     local fn = frame and frame[method]
     if type(fn) ~= "function" then return nil end
     return NS.Secrets.PlainNumber(fn(frame))
 end
 
--- The shown tooltip beside `window`, level with `row`: its right, or its left without the room.
+-- The shown tooltip beside `window`'s group, level with `row` (Style.PlaceBody).
 local function placeSide(tip, window, row)
-    local dy = 0
-    local rowTop, winTop = plainGeom(row, "GetTop"), plainGeom(window, "GetTop")
-    if rowTop and winTop then dy = rowTop - winTop end
-    local scale = plainGeom(window, "GetEffectiveScale") or 1
-    local right = (plainGeom(window, "GetRight") or 0) * scale
-    local room = (plainGeom(UIParent, "GetRight") or 0) * (plainGeom(UIParent, "GetEffectiveScale") or 1)
-    local width = (plainGeom(tip, "GetWidth") or 0) * (plainGeom(tip, "GetEffectiveScale") or 1)
-    tip:ClearAllPoints()
-    if right + width + 4 <= room then
-        tip:SetPoint("TOPLEFT", window, "TOPRIGHT", 4, dy)
-    else
-        tip:SetPoint("TOPRIGHT", window, "TOPLEFT", -4, dy)
-    end
+    return Style.PlaceBody(tip, row, Style.TipGroup(window))
 end
 
 --- Show `lines` ({ title, line, ... }; a line is a string or { text, r, g, b }) beside `window`,
@@ -237,7 +218,7 @@ end
 function Tbl.SideTip(window, row, lines)
     local tip = GameTooltip
     if not tip or type(lines) ~= "table" or not lines[1] then return end
-    tip:SetOwner(window, "ANCHOR_NONE")
+    Style.OwnTip(tip, row)
     local r, g, b = Style.Rgb("gtip.title")
     tip:SetText(lines[1], r, g, b, 1, true)
     addLines(tip, lines, 2)
@@ -251,7 +232,7 @@ end
 function Tbl.SpellTip(window, row, id, lines)
     local tip = GameTooltip
     if not tip then return end
-    tip:SetOwner(window, "ANCHOR_NONE")
+    Style.OwnTip(tip, row)
     local shown = id ~= nil and tip.SetSpellByID ~= nil and pcall(tip.SetSpellByID, tip, id)
     if shown and tip.NumLines then shown = (plainGeom(tip, "NumLines") or 0) > 0 end
     if not shown then
@@ -689,15 +670,17 @@ local function newHeader(t, i, col)
     if col.sort then
         b:SetScript("OnClick", function() t:SetSort(col.key) end)
     end
-    -- The header's tooltip (LootHistory's): the column's name in gold, then what it shows.
+    -- The header's tooltip (LootHistory's): the column's name in gold, then what it shows. A list's
+    -- column-header row is a body element: beside the window, level with the header (LibKa0s#92).
     b:SetScript("OnEnter", function(self)
         local about = NS.ResultsTips and NS.ResultsTips.About(col)
         if not (GameTooltip and about) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:AddLine(col.label ~= "" and col.label or about.title or "", Style.Rgb("gtip.title"))
         local r, g, bl = Style.Rgb("gtip.body")
         GameTooltip:AddLine(about.text, r, g, bl, true)
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)
     end)
     b:SetScript("OnLeave", hideTip)
     if col.resize then b.grip = newGrip(t, b, col) end

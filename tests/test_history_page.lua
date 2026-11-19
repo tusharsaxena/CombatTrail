@@ -70,7 +70,7 @@ local function rec(t, o)
     o = o or {}
     return {
         schema = 1, id = "h-" .. n, t = t, duration = 60, status = "final",
-        who = { name = "Tush", realm = "Area 52", client = "retail", specID = 63 },
+        who = { name = "Mockflame", realm = "Mockrealm", client = "retail", specID = 63 },
         identity = { content = "world", targetName = "Boar" }, boardKey = o.boardKey, dps = o.dps or 100,
     }
 end

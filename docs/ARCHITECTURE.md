@@ -58,7 +58,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | The `/ct race` verb (`settings/Slash.lua`: the triple declared `clients = { "retail" }`, gated by the library and, degraded, by the stub and `NS.RunVerb`) | present | absent: not in the help, typing it is an unknown verb |
 | Auto-show and auto-arm (`modules/AutoArm.lua`: its bus receivers under `ForClient`, its events only while `NS.RaceMode.On()`): near a training dummy the Race window opens, and the DPS HUD with it (either `race.autoShow` or `race.autoShowHud` on: the Race window never stands without the HUD); a Race window the player opens while that dummy session is live is tied to it (`AutoArm.InSession`), so walking away closes it and the next session opens it again | present | absent: nothing registers, the HUD never opens for a dummy |
 | The Race window (`modules/RaceWindow.lua`, `RaceWindow_States.lua`, `RaceWindow_Best.lua`, `RaceWindow_Board.lua`: each returns at once off Retail, so `NS.RaceWindow` is nil): an extension of the DPS HUD, never on screen while the HUD is hidden (`RaceWindow.IsShown` asks `Hud.IsShown`, and every `Hud.Refresh` ends in `RaceWindow.FollowHud`), hiding with the HUD still wanted and back with it, its every open opening the HUD first, and the HUD never fading while a race holds it (race window redesign plan W29); docked flush beside the DPS HUD, at its height on the left or right (`raceWindow.matchHud`), and sized by its grip while unlocked (`raceWindow.width`, `raceWindow.height`); its screens carry no full pace bar (the HUD's is the race's) and draw stored records and the race clock, plus one live figure, the player's damage (*Current*) beside the best's on the running screen and in the Stop! and waiting screens' Checkpoints (the DPS HUD's last read, `Hud.LiveDamage`), as text and on two thin mini pace bars | present | absent: nothing loads, the toggle refuses |
-| The DPS HUD's Race button (the flag on its title bar, Open Iconic's `flag`, each header icon cropped and scaled to one size by `Style.FitControlArt`, between Results and Settings, gold only under the pointer like every title-bar control; `modules/Hud.lua` builds it under `ForClient`) | present while Race mode is on | absent: not built, the title bar keeps Results, Settings, Lock and Close |
+| The DPS HUD's Race button (the flag on its title bar, Open Iconic's `flag`, each header icon cropped and scaled to one size by `Style.FitControlArt`, between Results and Lock (Results, Race, Lock, Settings, Close), in the skin's link color only under the pointer like every title-bar control; `modules/Hud.lua` builds it under `ForClient`) | present while Race mode is on | absent: not built, the title bar keeps Results, Lock, Settings and Close |
 | The *Toggle Race window* key binding (`Bindings_Mainline.xml`, Retail's bindings file; the button `CombatTrailToggleRace`, its `NS.BINDINGS` row and its label built under `ForClient` in `core/LauncherSetup.lua`) | present, after *Toggle Results window* | absent: `Bindings.xml` keeps the three shared keys, no button, no row |
 | The race beat (`modules/RaceClock.lua`, returns at once off Retail): one AceTimer at `Hud.RefreshInterval()` (1 / `hud.refreshRate`, default 0.1 s) while a race runs or stops; each fire calls `Hud.OnRaceClock()` (one meter read and the HUD's whole redraw), then sends `RACE_CLOCK`, on which the Race window redraws from that same read; outside a race the HUD's own beat (`Hud.SyncBeat`) at the same rate | present | absent: the HUD is always on its own beat (`hud.refreshRate`, both clients) |
 | The race's countdown and buzzer (`modules/Countdown.lua`, returns at once off Retail) on the addon's one center call-out, `NS.Callout` (LibKa0s-Callout-1.0 through the `core/CalloutSetup.lua` seam, which loads on both clients and answers `NS.CalloutStub` without the library): the last `race.finalCountdown` seconds as big numbers counted to `RaceClock.EndsAt()`, the same endsAt the Race window's countdown reads, each new number running one race beat at once (`RaceClock.Kick`), the last five spoken in a shipped voice pack (eight, Arena John the default), STOP at the buzzer, FAILED as a race ends before its buzzer and NEW_BEST at a new best's result (callout plan row C9: `Countdown.EndWord` and `Countdown.ResultWord`, the one rule the samples ask too); every write the call-out makes (its settings, colors, the drag's point, Reset position) goes through `NS.SetByPath` under `callout.` (the library's host write route, Callout 4.5 since LibKa0s v1.102.0); and its chat lines on the arm and at the result (`modules/Share.lua`'s receivers under `ForClient`) | present | absent: nothing loads or registers, no `NS.Callout`; the seam's file loads and builds nothing; a saved race still shares |
@@ -68,7 +68,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | The DPS HUD opening for a race whatever `hud.show`, `hud.instancesOnly` and `general.hudInCombat` say (ruling X7) | present | absent: there is no race |
 | Race mode's samples (`modules/MockRaces.lua`, `RaceSample.lua`, `SimRace.lua`: each returns at once off Retail): `/ct test race [armed\|running\|result]`, the sim's eight `race-` scenarios, and the `race` section of `/ct diagnostics` | present | absent: `test race` is plain `test`, the sim lists no race scenario, the report has no race section |
 | The samples' alerts (callout plan row C6): the new-best toast for a sim fight's new best (`toast.fights`), and on Retail the toast's preview on `/ct test race result` and a sim race's new best (`toast.races`), with the call-out's words a sample earns by a real race's rule (`Countdown.SampleSay` of `Countdown.EndWord` / `ResultWord`: NEW_BEST, FAILED; Race mode on), all taken down by the preview's stop and switch (`Countdown.EndSample`, `BestToast.EndSample`) | present | the sim fight's toast only: no call-out, no race |
-| Sample history (test mode and the sim) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
+| Sample history (test mode and the sim; the main hunter is `Sim.Sample()[1]` for the client, LibKa0s#87, data-flow.md §5) | 40 fights and 16 races | 21 fights (no Mythic+, delve, arena, dummy or Mythic raid boards) |
 | The DPS HUD's live Pet figure (`Meter.ReadLive`; `Meter.FOLDS_PET` is `NS.Compat.IsForever()`) | the pet's own meter source; no Pet row until that source has rows | the meter folds the pet into the player's source, so the figure is split out of the player's rows by the after-combat rule (a creature name, else the cast set) when every value it reads is plain, and the main Damage and DPS are then the player's part, as on Retail; with any of them secret the Pet row shows a dash and the main figures stay merged; the row is up whenever a pet is out (callout plan row C7) |
 | Everything else (lanes, HUD, Results, probe, sim) | present | present |
 
@@ -131,6 +131,60 @@ macro too.
   history's for a sample). It says the library's stock words in its own voice: no per-word text or
   mute is stored (callout plan row C11). Its settings are plain schema rows
   (`callout.*`), written through `NS.SetByPath` like every other row.
+
+### Window chrome (standalone-windows, *Window chrome geometry*)
+
+The DPS HUD, the Race window (Retail) and the Results window stack their chrome in the standard's
+order: the title bar, the test or sim strip while one shows, then the window's own tabs (Results)
+and body, and the footer. The strip, the footer and the title-bar marks are LibKa0s-Widgets-1.0's,
+through the `core/WidgetsSetup.lua` seam (LibKa0s#88, #89 and #86, items AD-88-CT, AD-89-CT and
+AD-86-CT):
+
+- **The strip is docked by the library** (`NS.MakeTestStrip` / `NS.MakeSimStrip` with a
+  `{ titleBar, window }` dock, `dock = "title"`): directly under the title band, full width, and on the
+  window's top edge while the title bar is hidden. The host never anchors it. Everything below
+  the title bar moves down by the strip's `BodyOffset()`: the HUD's content, the Race window's body
+  (whose least height grows by it), and the Results window's tabs, tab rule and body. The Race window
+  wears its own strip while it draws the sample race (`RaceWindow.ShowSample`: `/ct test race`, the
+  sim's race-* scenarios), attached or not. The DPS HUD has a title bar, a background and a footer, so it is a window
+  in preview-mode's sense, not a HUD display, and its strip docks under its title bar like the
+  Results window's. The title carries the mode word only where no strip could be built.
+- **The footer is the library's `W.Footer`** (`NS.MakeFooter`), `NS.FOOTER_HEIGHT` (the library's
+  `FOOTER.HEIGHT`, 24) tall under every skin: no fill, a hairline in the skin's `divider`, the left
+  and right lines in `text.muted`. The host writes the lines (the HUD's and the Race window's spec and
+  name, the refresh rate, *Result pending*; the Results window's count, hint and retention) and shows
+  or hides the footer whole (`hud.window.footer`). The right line clears the resize grip's corner
+  while the grip shows (`foot:SetGrip`). The body ends `NS.FOOTER_HEIGHT` + 8 above the window's
+  bottom edge (the Results body `NS.FOOTER_HEIGHT` + 1), and gets it back while the footer is hidden.
+- **The title-bar marks are the library's `W.HeaderButtons`** (`NS.MakeHeader`, LibKa0s#86, item
+  AD-86-CT; standalone-windows, *Title-bar controls*): on every window this addon owns, right-aligned,
+  left to right the window's extras, then a settings mark, then the close, one 18 px slot with 12 px
+  art, `HEADER.PAD` (6) from the corner and `HEADER.GAP` (6) apart (`Style.CONTROL_PITCH`, 24, was 22
+  by hand). The close is still built through `NS.MakeCloseButton` (passed as `makeClose`). The marks
+  are built unplaced and `Style.Header` lays them through the skin's `S.Header` at those offsets, so
+  the HUD's strip closes up when its Race mark hides. Each mark's art is fitted by
+  `Style.FitControlArt`, and a state mark swaps its art with `Style.SetControlIcon` (the lock, the Race
+  window's attach mark, the Results view toggle). Every mark rests in `icon.tint`, lights `text.link`
+  under the pointer (the close `close.hot`) and shows its tooltip above it, painted by the library.
+
+  | Window | Marks, left to right | Settings opens |
+  |---|---|---|
+  | DPS HUD | Results, Race (Retail), Lock, Settings, Close | the launcher's registered opener (`NS.OpenSettings`); the HUD (MEDIUM) stays up |
+  | Race window (Retail) | Lock, Attach, Settings, Close | its own opener, the Race mode page (`Act.settings`); it stays up |
+  | Results | the view toggle, Settings, Close | the registered opener; the window (HIGH) stays beside the panel |
+  | Compare, gear view, timeline | Settings, Close | the registered opener, after the window hides (`hideOnSettings`: DIALOG tier, it would cover the panel) |
+
+  No window opts out of the settings mark. The addon builds no LibKa0s `DragHandle`, so the drag
+  strip's settings mark has nothing to turn on.
+
+### Tooltip placement (standalone-windows, *Tooltip placement*)
+
+Every tooltip the addon places is owned at `ANCHOR_NONE` and placed by `modules/Style.lua`'s seam onto
+`LibKa0s-Tooltip-1.0` (LibKa0s#92, AD-92-CT): a body element beside its window group, right then
+left, level with the element (`Style.PlaceBody`); a chrome control 2 px above it (`Style.PlaceChrome`);
+never the cursor or a corner ([`tooltips.md`](tooltips.md), with the groups: HUD and attached Race
+window, docked lanes). Left as they are (*What it does not bind*): settings pages (the canvas), the
+launcher's menu (`MenuUtil`), a broker display's tooltip (the display), and the library's windows, widgets, menus, marks and minimap tooltip (the library).
 
 ## Module Map
 
@@ -196,7 +250,7 @@ first hit, so `Race.Resume` (OnEnable and the stand-up) carries it on after a `/
 `settings/Slash.lua`: the thirteen reserved verbs plus `skin`, then the feature verbs `results`,
 `hud`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `ignore` and `dummy`, and `race` on
 Retail only (declared `clients = { "retail" }`). Feature verbs refuse while stood down; `lane`,
-`ignore` and `dummy` stay live, and `race` stays live for its `ignore` word alone (ruling X10). The full table and the dispatch rules are in
+`ignore` and `dummy` stay live, and `race` stays live for its `ignore` word alone (ruling X10). The list read-outs (`ignore list`, `dummy show`, `race ignore show`) and the `probe` report are reports on the library's `D:Report` (LibKa0s#79): the debug console, ungated, with one chat pointer ([`debug.md`](debug.md), *Reports*). The full table and the dispatch rules are in
 [`slash-dispatch.md`](slash-dispatch.md).
 
 ## Event Subscriptions
@@ -315,7 +369,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 
 | Doc | Covers |
 |---|---|
-| (none) | |
+| `tooltips.md` | Where each tooltip opens: the body and chrome elements per window, the window group, the fallback, and the tooltips left to the client and the library |
 
 ## Documented deviations
 

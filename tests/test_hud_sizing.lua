@@ -26,8 +26,9 @@ local function fightOf(n, pet)
     return f
 end
 
--- The chrome over and under the content (DPS Race's insets) and the stack's pitches (v0.2 Task B2).
-local function chrome(inst) return inst.NS.Style.TITLE_BAR_H + 10 + 20 + 8 end
+-- The chrome over and under the content (DPS Race's insets, the footer the library's FOOTER.HEIGHT,
+-- 24 since AD-89-CT) and the stack's pitches (v0.2 Task B2).
+local function chrome(inst) return inst.NS.Style.TITLE_BAR_H + 10 + inst.NS.FOOTER_HEIGHT + 8 end
 local TOP = 52 + 18 + (46 + 14) + 8          -- clock, target, the boxes with the pet's row, GAP
 local PROFILE = 6 + 22 + 16 + 80 + 13 + 2 + 12 + 8   -- HEAD_GAP, heading, pace line, plot, labels, GAP
 local function spellsBlock(n) return 6 + 22 + (n > 0 and n * 20 - 2 or 0) + 8 end

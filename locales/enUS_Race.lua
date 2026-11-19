@@ -433,3 +433,9 @@ L["Sample note: five dummies in reach"] = "Sample note: five dummies in reach"
 L["Sample note: another character's best"] = "Sample note: another character's best"
 L["Move the lanes, the DPS HUD, the Race window, the Results window and the new-best toast back to where they started."] =
     "Move the lanes, the DPS HUD, the Race window, the Results window and the new-best toast back to where they started."
+
+-- The Race window's sample marker (modules/RaceWindow.lua: its test and sim strips, and the title
+-- word with no Widgets library)
+L["Test mode: a sample race. Nothing here is saved."] = "Test mode: a sample race. Nothing here is saved."
+L["Sim: a made-up race, not your data. /ct sim ends it."] = "Sim: a made-up race, not your data. /ct sim ends it."
+L["Race (sample)"] = "Race (sample)"

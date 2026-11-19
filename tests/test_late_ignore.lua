@@ -51,7 +51,7 @@ end
 local function savedRace(NS, id, t, dps, casts)
     local r = {
         schema = 4, id = id, t = t, duration = 30, status = "final", dps = dps,
-        who = { name = "Traxex", realm = "Area 52", client = NS.Compat.ClientKey(), class = "HUNTER", specID = 253 },
+        who = { name = "Samplehunter", realm = "Samplerealm", client = NS.Compat.ClientKey(), class = "HUNTER", specID = 253 },
         identity = { content = "dummy", targetName = "Training Dummy", targetCreatureID = 31146, targetLevel = 80,
                      difficultyID = 0 },
         damage = { merged = dps * 30 },

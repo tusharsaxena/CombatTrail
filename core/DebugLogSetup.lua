@@ -43,6 +43,16 @@ if not lib then
             NS.Print(L["%s is unavailable: the LibKa0s library did not load."]:format(NS.SLASH_CMD .. " diagnostics"))
             return 0
         end,
+        -- A report (LibKa0s#79): with no console it is streamed to chat, line by line, with no
+        -- pointer, the ruling's library-absent arm (DebugLog version 23.11.1.5, D9).
+        Report          = function(_, _, _, fn)
+            local n = 0
+            if type(fn) == "function" then
+                fn(function(line) n = n + 1; NS.Print(NS.SafeToString(line)) end)
+            end
+            return n
+        end,
+        Serialize       = function(_, v) return { NS.SafeToString(type(v) == "table" and "<table>" or v) } end,
         DebugVerb       = function() return false end,
         DebugOnce       = function() return false end,
         DebugChanged    = function() return false end,

@@ -198,12 +198,14 @@ end
 
 -- ── the mode's two words ────────────────────────────────────────────────────────────────────────
 
+-- A word on the By ability heading line is a body element: beside the window (LibKa0s#92).
 local function toggleTip(self)
     local tip = GameTooltip
     if not tip then return end
-    tip:SetOwner(self, "ANCHOR_TOP")
+    Style.OwnTip(tip, self)
     tip:SetText(self.tip, Style.Rgb("gtip.value"))
     tip:Show()
+    Style.PlaceBody(tip, self)
 end
 
 local function newToggle(u, mode, text, tip)

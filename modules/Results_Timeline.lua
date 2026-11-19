@@ -143,7 +143,10 @@ end
 local function buildChrome(f)
     f.title = Style.PlainText(f, FONT.TITLE, "CENTER")
     f.title:SetText(L["Ability timeline"])
-    ui.close = NS.MakeCloseButton(f, function() Timeline.Hide() end)
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Settings and the Close. The window is in the DIALOG
+    -- tier and would cover the settings panel, so the settings mark hides it first (hideOnSettings).
+    local hb = NS.MakeHeader(f, { close = function() Timeline.Hide() end, settingsTip = L["Settings"], hideOnSettings = f })
+    ui.close, ui.settings = hb.close, hb.settings
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -151,7 +154,7 @@ local function buildChrome(f)
     -- Moved for as long as it is open: nothing stored, the next open goes over the Results window.
     drag:SetScript("OnDragStop", function() f:StopMovingOrSizing() end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close }, n = 1 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings }, n = 2 })
 end
 
 -- The pet toggle: a session's view state, never stored (the zoom is kept across a flip).
@@ -210,15 +213,18 @@ local function clipLayer(parent)
     return clip, layer
 end
 
--- The `?` control's hover: the mouse controls on bullets, above it as the other controls' tooltips are.
+-- The `?` control's hover: the mouse controls on bullets, placed as the other controls' tooltips are
+-- (a control on the Casts heading line is a body element: beside the window, Style.PlaceBody,
+-- LibKa0s#92).
 local function helpTip(self)
     local tip, lines = GameTooltip, D.HelpLines()
     if not tip then return end
-    tip:SetOwner(self, "ANCHOR_TOP")
+    Style.OwnTip(tip, self)
     local r, g, b = Style.Rgb("gtip.title")
     tip:SetText(lines[1], r, g, b, 1, true)
     Style.AddTipLines(tip, lines, 2)
     tip:Show()
+    Style.PlaceBody(tip, self)
 end
 
 -- The skin's body face at `size` px on `fs` (its color kept): the `?` and the level.
@@ -245,9 +251,11 @@ local function strokes(b, plus)
     return b
 end
 
--- One control on the Casts heading line, over the strips' clip.
+-- One control on the Casts heading line, over the strips' clip. The line is a section heading in the
+-- window's content, so its controls are body elements: their tooltips open beside the window
+-- (Style.ControlButton's "body", LibKa0s#92).
 local function control(name, glyph, tip, onClick, onEnter)
-    local b = Style.ControlButton(ui.content, name, glyph, tip, onClick)
+    local b = Style.ControlButton(ui.content, name, glyph, tip, onClick, "body")
     -- `onEnter` replaces the stock tooltip BEFORE the strip hooks on: a SetScript after AddToStrip
     -- would drop the hook, and the control would never turn gold.
     if onEnter then b:SetScript("OnEnter", onEnter) end

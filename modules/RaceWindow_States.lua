@@ -181,16 +181,18 @@ end
 
 -- ── widgets ─────────────────────────────────────────────────────────────────────────────────────
 
--- A tooltip ({ title, line, ... } or one string) shown above any frame, hooked so a hover the frame
--- already has stays.
+-- A tooltip ({ title, line, ... } or one string) on any frame of a body, hooked so a hover the frame
+-- already has stays. Every one is a body element's: it opens beside the window group (the Race
+-- window, with the DPS HUD while it is attached), level with the frame (Style.PlaceBody, LibKa0s#92).
 local function showTip(f)
     local tip = f.tip
     if not (tip and GameTooltip) then return end
     if type(tip) ~= "table" then tip = { tostring(tip) } end
-    GameTooltip:SetOwner(f, "ANCHOR_TOP")
+    Style.OwnTip(GameTooltip, f)
     GameTooltip:SetText(tip[1], Style.Rgb("gtip.value"))
     Style.AddTipLines(GameTooltip, tip, 2, Style.Rgb("gtip.title"))
     GameTooltip:Show()
+    Style.PlaceBody(GameTooltip, f)
 end
 
 local function addTip(frame, tip)
@@ -233,9 +235,11 @@ local function bestSection(body, f, y, label)
     return b
 end
 
+-- A body's button (a length, Custom, Arm Race, the result's actions): a body element, so its tooltip
+-- opens beside the window group (Style.Button's `tipBody`).
 local function button(parent, label, onClick, style, tip)
     local b = Style.Button(parent, label, onClick, style)
-    b.tip = tip
+    b.tip, b.tipBody = tip, true
     return b
 end
 
@@ -314,11 +318,12 @@ local function newChip(parent)
     f:EnableMouse(true)
     f:SetScript("OnEnter", function(self)
         if not self.tip or not GameTooltip then return end
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        Style.OwnTip(GameTooltip, self)
         local r, g, b = Style.Rgb("gtip.value")
         GameTooltip:SetText(self.tip, r, g, b, 1, true)
         for _, line in ipairs(self.tipLines or {}) do GameTooltip:AddLine(line[1], line[2], line[3], line[4], true) end
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)
     end)
     f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     -- A chip with a menu (the late casts') opens it on a right-click.

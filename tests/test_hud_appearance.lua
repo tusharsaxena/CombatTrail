@@ -213,7 +213,7 @@ local LIVE_CASES = join(
             assertFalse(Hud.__ui().close:IsShown())
             assertFalse(Hud.__ui().drag:IsShown())
         end },
-        { "window.footer", false, function(_, Hud) assertFalse(Hud.__ui().footLeft:IsShown()) end },
+        { "window.footer", false, function(_, Hud) assertFalse(Hud.__ui().foot:IsShown()) end },
         { "window.strata", "HIGH", function(_, Hud) assertEqual(Hud.Frame():GetFrameStrata(), "HIGH") end },
         { "window.alpha", 0.5, function(_, Hud) near(Hud.Frame():GetAlpha(), 0.5) end },
     },

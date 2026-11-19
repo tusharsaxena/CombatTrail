@@ -111,8 +111,8 @@ local function levelText(i)
 end
 
 --- The header's meta (spec §7, v0.2 plan Task A2), three lines in DPS Race's shape:
----   1. where and who: "Area 52 · ilvl 721.4 · The Voidspire" (the zone and subzone in the open world);
----   2. what: "Vorasius · level 72 · Heroic · Mythic+ 12 · 4:12 · pet Grimfang";
+---   1. where and who: "Samplerealm · ilvl 721.4 · The Voidspire" (the zone and subzone in the open world);
+---   2. what: "Vorasius · level 72 · Heroic · Mythic+ 12 · 4:12 · pet Mockfang";
 ---   3. the stamp: "10 Nov 2026 21:14 · build 120105 · v0.1.0".
 --- Every part the record has; a line with none is "".
 --- @param record table
@@ -234,8 +234,9 @@ Pane.__index = Pane
 --- @param click table|nil
 --- @return table arrow  its `click` the heading's frame
 function Pane:AddHeading(key, title, click)
+    -- A section heading's arrow is a body element: its tooltip opens beside the window (LibKa0s#92).
     local arrow = Style.ControlButton(self.content, "chevron-down", "-", L["Collapse this section"],
-        function() self:ToggleSection(key) end)
+        function() self:ToggleSection(key) end, "body")
     arrow:SetSize(Detail.ARROW, Detail.ARROW)
     Style.Vertex(arrow.icon, "icon.arrow")
     arrow:SetPoint("RIGHT", title, "LEFT", Detail.ARROW - Detail.INDENT, 0)
@@ -271,7 +272,8 @@ function Pane:ToggleSection(key)
 end
 
 -- A hover frame laid over `region` (a text or a texture takes no mouse of its own), its tooltip the
--- lines `lines()` answers at hover time, under it.
+-- lines `lines()` answers at hover time, beside the window group, level with it (a body element:
+-- Style.PlaceBody, LibKa0s#92).
 local function hoverOver(p, region, lines)
     local f = CreateFrame("Frame", nil, p.content)
     f:SetAllPoints(region)
@@ -279,10 +281,11 @@ local function hoverOver(p, region, lines)
     f:SetScript("OnEnter", function(self)
         local tip = p.record and lines(p.record)
         if not (tip and tip[1] and GameTooltip) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(tip[1], Style.Rgb("gtip.title"))
         Style.AddTipLines(GameTooltip, tip, 2)
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)
     end)
     f:SetScript("OnLeave", function() Tbl().HideTip() end)
     return f
@@ -302,10 +305,11 @@ local function kpi(p, label, color, tip)
     f:SetScript("OnEnter", function(self)
         local lines = p.record and NS.ResultsTips.Detail(tip, p.record, p.deltaCtx)
         if not (lines and GameTooltip) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        Style.OwnTip(GameTooltip, self)
         GameTooltip:SetText(lines[1], Style.Rgb("gtip.title"))
         Style.AddTipLines(GameTooltip, lines, 2)
         GameTooltip:Show()
+        Style.PlaceBody(GameTooltip, self)   -- a KPI card is a body element (LibKa0s#92)
     end)
     f:SetScript("OnLeave", function() Tbl().HideTip() end)
     return k
@@ -411,6 +415,11 @@ local function compareTip(kind)
     return { L["Compare"], L[line] }
 end
 
+-- The action row at the pane's bottom (Timeline, Compare, Share, Add Note, Delete) is neither a
+-- toolbar between the title bar and the body nor the window's footer (the library's W.Footer, under
+-- the pane), so its buttons are body elements: their tooltips open beside the Results window, level
+-- with the button (Style.Button's `tipBody`, LibKa0s#92). Back, on the toolbar above the scrolled
+-- detail, is chrome: attached above it.
 local function buildButtons(p)
     local w, f, hooks = p.w, p.frame, p.hooks
     local act = {
@@ -428,7 +437,7 @@ local function buildButtons(p)
         local b = Style.Button(f, L[spec.label], function(self) if p.record then act[spec.key](self) end end, spec.style)
         b:SetSize(spec.width, Detail.BUTTON_H)
         b:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", x, 8)
-        b.tip = tipOf(spec.key)
+        b.tip, b.tipBody = tipOf(spec.key), true
         w[spec.key] = b
         x = x + spec.width + Detail.BUTTON_GAP
     end
@@ -437,7 +446,7 @@ local function buildButtons(p)
     end, "danger")
     w.delete:SetSize(Detail.DELETE_W, Detail.BUTTON_H)
     w.delete:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -Detail.PADX, 8)
-    w.delete.tip = tipOf("delete")
+    w.delete.tip, w.delete.tipBody = tipOf("delete"), true
     w.back = Style.Button(f, L["Back"], function() if hooks.back then hooks.back() end end)
     w.back:SetSize(70, Detail.BUTTON_H)
     w.back:SetPoint("TOPLEFT", f, "TOPLEFT", Detail.PADX, -8)

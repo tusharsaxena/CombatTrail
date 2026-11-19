@@ -76,7 +76,7 @@ test("insights tab: the dropdowns list the stored fights with their counts, led 
     local NS, _, ui, pane = tab()
     local n = forever() and 7 or 6
     local dd = pane.dropdowns
-    assertEqual(F.labels(dd.character._options), ("All characters (%d)|Lanfear (2)|Tush (%d)"):format(n, n - 2))
+    assertEqual(F.labels(dd.character._options), ("All characters (%d)|Mockember (2)|Mockflame (%d)"):format(n, n - 2))
     assertEqual(dd.character.text:GetText(), "All characters (2)", "closed, it names its choices")
     assertEqual(dd.days.text:GetText(), "All time")
     assertEqual(dd.character._value, "all", "no Current head: the cross-character view")
@@ -96,7 +96,7 @@ test("insights tab: a filter redraws the cards and narrows the other dropdowns",
     assertEqual(pane.cards.count.value:GetText(), "2", "the card redrawn")
     assertEqual(ui.footLeft:GetText():match("^(.-) \194\183"), "2 fights", "the footer follows the filter")
     assertEqual(pane.dropdowns.spec.text:GetText(), "Destruction", "a pick by its name alone")
-    assertEqual(F.labels(pane.dropdowns.character._options), "All characters (2)|Lanfear (2)",
+    assertEqual(F.labels(pane.dropdowns.character._options), "All characters (2)|Mockember (2)",
         "the other dropdowns list what this filter leaves")
     assertFalse(pane:SetFilter("group", "none"), "not an Insights filter")
 end)
@@ -279,7 +279,7 @@ test("insights tab: a tab per board, Overall first, the sections under it read t
     again:Layout(900, 500)
     assertEqual(again.boardKey, "race:cleave|180")
     -- Back to Overall once the filters leave it out.
-    pane:SetFilter("character", F.charKey(NS, "lan"))
+    pane:SetFilter("character", F.charKey(NS, "ember"))
     assertEqual(pane.boardKey, NS.InsightsData.OVERALL)
 end)
 
@@ -355,7 +355,7 @@ test("insights tab: Save, Clear and Reset keep the view at results.insights", fu
     assertNil(p.results.insights, "the saved view gone")
     assertEqual(NS.ResultsInsights.SavedView().spec, "all", "the shipped one answers")
     -- A fallback never writes the saved view.
-    pane:SetFilter("character", F.charKey(NS, "lan"))
+    pane:SetFilter("character", F.charKey(NS, "ember"))
     pane:SetFilter("spec", 63)
     assertNil(p.results.insights)
 end)

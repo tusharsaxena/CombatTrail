@@ -65,7 +65,7 @@ local _, NS = ...
 -- fight live on it, not opened or pinned by the player since. A HUD the player closed (Hud.Closes)
 -- keeps both windows shut for the session.
 --
--- THE TITLE BAR, left to right: Results, Race, Settings, Lock, Close (ruling O6). The Race control
+-- THE TITLE BAR, left to right: Results, Race, Lock, Settings, Close (LibKa0s#86 order). The Race control
 -- (Retail only, the flag) shows while Race mode is on, the strip closing up without it;
 -- its click is `/ct race toggle` (NS.SetRaceWindowShown). Like every title-bar control it rests in the
 -- skin's `icon.tint` and takes `text.link` only under the pointer (smoke round 1, SR-L3), with its
@@ -114,7 +114,8 @@ local _, NS = ...
 -- THE WINDOW is a plain, non-secure frame (standalone-windows): skinned through NS.ApplySkin, closed
 -- through NS.MakeCloseButton, in UISpecialFrames, clamped, toplevel in the MEDIUM tier
 -- (LAYERS.STRATA.HUD, or `hud.window.strata`). Its width is `hud.width`; its scale is `hud.scale`, its
--- opacity `hud.window.alpha`; its title bar and footer follow `hud.window.titleBar` and `footer`; its
+-- opacity `hud.window.alpha`; its title bar and footer (the library's W.Footer, NS.FOOTER_HEIGHT
+-- tall) follow `hud.window.titleBar` and `footer`; its
 -- place is `hud.position`, written by the title bar's drag (not while `general.locked`) and put back
 -- by Master controls' Reset position. Built on first show, or by Hud.Dock for an attached Race window
 -- (placed and sized where it would stand, still hidden).
@@ -164,8 +165,9 @@ Hud.MIN_BARS, Hud.MAX_BARS = 1, 15   -- the spell rows `hud.bars` holds (v0.2 Ta
 Hud.LEAVE_DELAY = 2
 
 local STATE = Hud.STATE
--- DPS Race's insets: PAD at the sides, the content 10 under the title bar and 8 over the footer.
-local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 12
+-- DPS Race's insets: PAD at the sides, the content 10 under the title bar and 8 over the footer (the
+-- library's W.Footer, NS.FOOTER_HEIGHT tall: standalone-windows, *Window chrome geometry*).
+local HEADER_H, PAD = NS.Style.TITLE_BAR_H, 12
 
 local ui                         -- the built window
 local wanted = false             -- the window should be up
@@ -356,10 +358,14 @@ local function width()
 end
 
 -- The content's insets from the window's top and bottom: the title bar's and the footer's, each
--- only while shown (`hud.window.titleBar`, `hud.window.footer`).
-local function stripHeight() return ui and ui.stripMode and ui.stripShown and NS.TEST_STRIP_HEIGHT or 0 end
+-- only while shown (`hud.window.titleBar`, `hud.window.footer`), and the docked strip's BodyOffset (its
+-- height while it shows, 0 while hidden).
+local function stripHeight()
+    local strip = ui and ui.stripMode and ui[ui.stripMode .. "Strip"]
+    return strip and strip:BodyOffset() or 0
+end
 local function contentTop() return (setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD) + stripHeight() end
-local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 8 or PAD end
+local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
 
 -- ── the size (v0.2 Task B3) ──────────────────────────────────────────────────────────────────
 
@@ -403,8 +409,13 @@ local function canResize() return not locked and fixedMode() end
 -- The grip shown while it may size the window (fixed mode, not locked), and its bounds: MIN_BARS to
 -- MAX_BARS rows of the stack configured now.
 local function applyGrip()
-    local f = ui.frame
-    if f.resizeGrip then f.resizeGrip:SetShown(canResize()) end
+    local f, on = ui.frame, canResize()
+    if f.resizeGrip then f.resizeGrip:SetShown(on) end
+    -- The footer's right line clears the grip's corner while the grip shows (a relayout: only on a change).
+    if ui.footGrip ~= on then
+        ui.footGrip = on
+        ui.foot:SetGrip(on)
+    end
     if type(f.SetResizeBounds) == "function" then
         f:SetResizeBounds(Hud.MIN_WIDTH, fixedHeightFor(Hud.MIN_BARS), Hud.MAX_WIDTH, fixedHeightFor(Hud.MAX_BARS))
     end
@@ -472,31 +483,31 @@ end
 local Act = {}
 Hud.Act = Act
 
--- The controls on the band, outermost first: Close, Lock, Settings, the Race control while it shows,
--- Results. Laid again when the Race control comes or goes, so the strip closes up.
+-- The controls on the band, outermost first: Close, Settings, Lock, the Race control while it shows,
+-- Results (W.HeaderButtons' order, extras . settings . close). Laid again when the Race control comes
+-- or goes, so the strip closes up.
 local function layoutHeader(withRace)
-    local right = { ui.close, ui.lock, ui.settings, ui.results }
-    if withRace then right = { ui.close, ui.lock, ui.settings, ui.race, ui.results } end
+    local right = { ui.close, ui.settings, ui.lock, ui.results }
+    if withRace then right = { ui.close, ui.settings, ui.lock, ui.race, ui.results } end
     ui.header = { right = right, withRace = withRace == true }
     NS.Style.Header(ui.frame, { title = ui.frame.title, align = "LEFT", drag = ui.drag, right = right, n = #right })
 end
 
--- The title band: the title LEFT, the controls on the right (close outermost), each the catalog's;
--- the Race control is built on Retail only.
+-- The title band: the title LEFT, the marks on the right through W.HeaderButtons (NS.MakeHeader; LibKa0s#86),
+-- left to right Results, Race (Retail only), Lock, then Settings (the launcher's registered opener) and
+-- the Close in the corner. The HUD sits in the MEDIUM tier, under the settings panel, so it stays up.
 local function buildHeader(f)
     local Style = NS.Style
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Combat Trail"])
-    ui.controls = Style.NewStrip()
-    ui.close = NS.MakeCloseButton(f, function() Act.close() end)
-    ui.lock = Style.ControlButton(f, "unlock", "U", L["Lock or unlock the HUD"], function() Act.lock() end)
-    ui.settings = Style.ControlButton(f, "settings", "S", L["Settings"], function() Act.settings() end)
+    local extras = { { key = "results", icon = "chart", glyph = "R", tip = L["Results"], onClick = function() Act.results() end } }
     if NS.Compat.ForClient({ "retail" }) then
-        ui.race = Style.ControlButton(f, "flag", "F", L["Race window"], function() Act.race() end)
+        extras[#extras + 1] = { key = "race", icon = "flag", glyph = "F", tip = L["Race window"], onClick = function() Act.race() end }
     end
-    ui.results = Style.ControlButton(f, "chart", "R", L["Results"], function() Act.results() end)
-    for _, b in ipairs({ ui.lock, ui.settings, ui.results }) do Style.AddToStrip(ui.controls, b) end
-    if ui.race then Style.AddToStrip(ui.controls, ui.race) end
+    extras[#extras + 1] = { key = "lock", icon = "unlock", glyph = "U", tip = L["Lock or unlock the HUD"], onClick = function() Act.lock() end }
+    local hb = NS.MakeHeader(f, { close = function() Act.close() end, settingsTip = L["Settings"], extras = extras })
+    ui.close, ui.settings = hb.close, hb.settings
+    ui.results, ui.race, ui.lock = hb.extras.results, hb.extras.race, hb.extras.lock
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -509,17 +520,11 @@ local function buildHeader(f)
     layoutHeader(false)
 end
 
+-- The footer is the library's (NS.MakeFooter: W.Footer, its hairline and its two muted lines); the
+-- host writes the lines (footer, below) and shows or hides it whole.
 local function buildFooter(f)
-    local line = f:CreateTexture(nil, "ARTWORK")
-    ui.footLine = line
-    line:SetHeight(1)
-    NS.Skin.Divider(line)
-    line:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1, FOOTER_H)
-    line:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, FOOTER_H)
-    ui.footLeft = NS.Style.Text(f, NS.Style.FONT.CAPTION)
-    ui.footLeft:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 8, 5)
-    ui.footRight = NS.Style.Text(f, NS.Style.FONT.CAPTION, nil, "RIGHT")
-    ui.footRight:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 5)
+    ui.foot = NS.MakeFooter(f)
+    ui.footLeft, ui.footRight = ui.foot.left, ui.foot.right
 end
 
 local onHide, render, resized
@@ -600,7 +605,9 @@ local function applyLock()
 end
 
 -- The strip a sample fight wears: the sim's while a sim runs, else test mode's; nil before it is
--- built or with no Widgets library (the title then says it). Born hidden.
+-- built or with no Widgets library (the title then says it). Born hidden, and docked by the library
+-- under the title bar (on the window's top edge while it is hidden): the HUD is a window
+-- (preview-mode, *Where the strip sits*), and the content moves down by the strip's BodyOffset.
 local STRIP_TEXT = { test = "Test mode: sample data. Nothing here is saved.",
                      sim = "Sim: a made-up fight, not your data. /ct sim ends it." }
 local STRIP_MAKER = { test = "MakeTestStrip", sim = "MakeSimStrip" }
@@ -609,23 +616,14 @@ local function stripFor(which)
     local field = which .. "Strip"
     if not ui[field .. "Tried"] then
         ui[field .. "Tried"] = true
-        ui[field] = NS[STRIP_MAKER[which]](ui.frame, L[STRIP_TEXT[which]])
+        ui[field] = NS[STRIP_MAKER[which]](ui.frame, L[STRIP_TEXT[which]],
+            { titleBar = NS.Style.Band(ui.frame), window = ui.frame })
     end
     return ui[field]
 end
 
--- The strip on screen, under the title bar (at the window's top with the title bar hidden).
-local function placeStrip()
-    local strip = ui.stripMode and ui[ui.stripMode .. "Strip"]
-    if not strip then return end
-    local top = setting("hud.window.titleBar") ~= false and HEADER_H or 0
-    strip:ClearAllPoints()
-    strip:SetPoint("TOPLEFT", ui.frame, "TOPLEFT", 1, -top)
-    strip:SetPoint("TOPRIGHT", ui.frame, "TOPRIGHT", -1, -top)
-end
-
 -- The strip for the fight on screen shown (and the other hidden); a change moves the content, so the
--- window's look is laid out again (applyWindow places the strip).
+-- window's look is laid out again (applyWindow moves the content by the strip's BodyOffset).
 local function applyStrip()
     local P = NS.Preview
     local want = cur and cur.sample and P and P.Mode() or nil
@@ -636,7 +634,6 @@ local function applyStrip()
         local strip = ui[which .. "Strip"]
         if strip then strip:SetShown(strip == shown) end
     end
-    ui.stripShown = shown ~= nil
     ui.frame.title:SetText(want and not shown and L["Combat Trail (sample)"] or L["Combat Trail"])
 end
 
@@ -653,11 +650,10 @@ local function applyWindow()
     end
     applyRace()
     f.title:SetShown(bar and A.On("hud.window.title"))
-    for _, part in ipairs({ ui.footLine, ui.footLeft, ui.footRight }) do part:SetShown(foot) end
+    ui.foot:SetShown(foot)
     ui.content:ClearAllPoints()
     ui.content:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -contentTop())
     ui.content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, contentBottom())
-    placeStrip()
     A.ApplyWindow(f)
 end
 
@@ -1400,9 +1396,9 @@ function Act.close()
 end
 
 function Act.lock() return NS.ToggleLock() end
+
 --- The Race control: `/ct race toggle`, the player's open or close of the Race window.
 function Act.race() return NS.SetRaceWindowShown("toggle") end
-function Act.settings() return NS.OpenSettings() end
 
 --- The chart control: the fight on the card in the Results window, else the window itself.
 function Act.results()

@@ -42,7 +42,7 @@ local function fakeFight(NS, o)
         id = o.id or "race-fight-1", startT = 100, combatEndT = 100 + (o.len or 10), sessions = { 1 },
         sessionID = 1, sessionSet = { [1] = true }, race = o.race,
         snapshot = {
-            who = { name = "Tush", realm = "Area 52", class = "MAGE", specID = 63, specName = "Fire",
+            who = { name = "Mockflame", realm = "Mockrealm", class = "MAGE", specID = 63, specName = "Fire",
                     ilvl = 650.5, client = NS.Compat.ClientKey() },
             target = { name = "Training Dummy", creatureID = DUMMY },
             where = { instanceType = "none", difficultyID = 0 },

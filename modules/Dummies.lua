@@ -477,6 +477,9 @@ local function capturedTarget()
     return r
 end
 
+-- A REPORT (LibKa0s#79, the owner's report-routing ruling of 2026-11-08): the list goes to the debug
+-- console through D:Report, ungated, and chat gets the library's one pointer line. `report` is the
+-- report's own writer, never the chat printer above.
 local function showDummies()
     local own, off = {}, {}
     for _, e in ipairs(Dummies.Entries()) do
@@ -484,14 +487,18 @@ local function showDummies()
     end
     local seeded = 0
     for _ in pairs(seed()) do seeded = seeded + 1 end
-    if #own == 0 then
-        out(L["No training dummies of your own. Target one and type %s dummy add."]:format(NS.SLASH_CMD))
-    else
-        out(L["Your training dummies:"])
-        for _, e in ipairs(own) do out(L["  %s \194\183 %s"]:format(dummyName(e.id), Dummies.Label(e.category))) end
-    end
-    out(L["Built-in training dummies: %d, %d switched off."]:format(seeded, #off))
-    for _, e in ipairs(off) do out(L["  %s (off)"]:format(dummyName(e.id))) end
+    NS.DebugLog:Report("Report", "dummy show", function(report)
+        if #own == 0 then
+            report(L["No training dummies of your own. Target one and type %s dummy add."]:format(NS.SLASH_CMD))
+        else
+            report(L["Your training dummies:"])
+            for _, e in ipairs(own) do
+                report(L["  %s \194\183 %s"]:format(dummyName(e.id), Dummies.Label(e.category)))
+            end
+        end
+        report(L["Built-in training dummies: %d, %d switched off."]:format(seeded, #off))
+        for _, e in ipairs(off) do report(L["  %s (off)"]:format(dummyName(e.id))) end
+    end)
 end
 
 -- What `add` says, by its outcome.

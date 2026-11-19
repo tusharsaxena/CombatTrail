@@ -123,11 +123,16 @@ local function ignoreUsage()
     out(L["Usage: %s race ignore [show|add|remove|defaults] <spell ID, link or name>"]:format(NS.SLASH_CMD))
 end
 
+-- A REPORT (LibKa0s#79, the owner's report-routing ruling of 2026-11-08): the list goes to the debug
+-- console through D:Report, ungated, and chat gets the library's one pointer line. An empty list is a
+-- short answer and stays in chat, writing nothing.
 local function showIgnored()
     local ids = NS.LateIgnore.List()
     if #ids == 0 then return out(L["The late-cast ignore list is empty."]) end
-    out(L["Late-cast ignore list:"])
-    for _, id in ipairs(ids) do out("  " .. NS.LateIgnore.Label(id)) end
+    NS.DebugLog:Report("Report", "race ignore show", function(report)
+        report(L["Late-cast ignore list:"])
+        for _, id in ipairs(ids) do report("  " .. NS.LateIgnore.Label(id)) end
+    end)
 end
 
 -- What a typed spell is, or nil after the one line that says why (none typed: the usage).

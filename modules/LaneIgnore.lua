@@ -121,15 +121,19 @@ local function usage()
     NS.Print(L["Usage: /ct ignore add|remove <spell> [player|pet], /ct ignore list [player|pet] or /ct ignore reset [player|pet]"])
 end
 
+-- A REPORT (LibKa0s#79, the owner's report-routing ruling of 2026-11-08): the list goes to the debug
+-- console through D:Report, ungated, one spell a line, and chat gets the library's one pointer line.
+-- An empty list is a short answer and stays in chat, writing nothing.
 local function listVerb(lane)
     local ids = LaneIgnore.Entries(lane)
     if #ids == 0 then return NS.Print(L["The %s ignores no spells."]:format(LANE_NAME[lane])) end
-    local parts = {}
-    for i, id in ipairs(ids) do
-        local ok, name = pcall(NS.Compat.SpellName, id)
-        parts[i] = spellLabel(id, ok and NS.Secrets.PlainString(name) or nil)
-    end
-    NS.Print(L["The %s ignores %s."]:format(LANE_NAME[lane], table.concat(parts, ", ")))
+    NS.DebugLog:Report("Report", "ignore list " .. lane, function(out)
+        out(L["The %s ignores %d spell(s):"]:format(LANE_NAME[lane], #ids))
+        for _, id in ipairs(ids) do
+            local ok, name = pcall(NS.Compat.SpellName, id)
+            out("  " .. spellLabel(id, ok and NS.Secrets.PlainString(name) or nil))
+        end
+    end)
 end
 
 local function changeVerb(act, text, lane)

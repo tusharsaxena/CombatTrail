@@ -56,7 +56,7 @@ re-vendored back, because the next re-vendor silently reverts a local edit. The 
 LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's (the set that loads on both
 clients).
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.105.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.106.0 (MIT).
 LibKa0s icons: arrow-left, chart, chat, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
 LibKa0s sounds: callout/male-arena-john, callout/female-kathleen, callout/female-kristin, callout/female-cori, callout/female-bella, callout/male-joe, callout/male-john, callout/male-norman.
 

@@ -200,14 +200,17 @@ end
 
 -- ── the parts ───────────────────────────────────────────────────────────────────────────────────
 
+-- An item cell's hover: the client's item tooltip, beside the Results window, level with the cell (a
+-- body element: Style.PlaceBody, LibKa0s#92; its comparisons open further out on the same side).
 local function itemTip(cell)
     local tt = GameTooltip
     if not (tt and cell.item) then return end
-    tt:SetOwner(cell, "ANCHOR_RIGHT")
+    Style.OwnTip(tt, cell)
     if not pcall(tt.SetHyperlink, tt, NS.Loadouts.ItemString(cell.item)) then
         tt:SetText(L["Item %d"]:format(Loadout.ItemID(cell.item) or 0), Style.Rgb("gtip.value"))
     end
     tt:Show()
+    Style.PlaceBody(tt, cell)
 end
 
 local function onItemClick(cell)
@@ -257,6 +260,7 @@ function Loadout.Build(p, c)
     x.view:SetSize(Loadout.TALENT_W, Loadout.BUTTON_H)
     x.gearView.tip = { L["View gear"], L["The fight's gear and stats, laid out as the character panel does."] }
     x.view.tip = { L["View Talents"], L["Posts the loadout's link to your chat and opens the talent tree, read-only."] }
+    x.gearView.tipBody, x.view.tipBody = true, true   -- the section's own buttons: body elements (LibKa0s#92)
     x.titleHover = p:AddHeading("loadout", x.title).click
     return x
 end

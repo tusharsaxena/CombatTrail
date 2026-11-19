@@ -848,6 +848,21 @@ Total.
 - race window grip: matched to the HUD's height it drags the width alone
 - race window grip: detached, TOP or BOTTOM, or match-height off, it drags both, never under the least
 
+### test_report_verbs.lua (12)
+
+- report verbs: /ct ignore list writes the lane's list to the console, one spell a line
+- report verbs: /ct ignore list with an empty lane is one chat line and writes nothing
+- report verbs: a usage line inside /ct ignore stays in chat and writes nothing
+- report verbs: /ct dummy (show) writes the training-dummy list to the console
+- report verbs: /ct dummy defaults acknowledges in chat, then writes the list as a report
+- report verbs: a refusal inside /ct dummy stays in chat and writes nothing
+- report verbs: /ct race ignore writes the late-cast list to the console (Retail)
+- report verbs: an empty late-cast list is one chat line and writes nothing (Retail)
+- report verbs: /ct probe writes its report through D:Report, the armed hint inside it
+- report verbs: /ct probe after the sampled fight carries no armed hint
+- report verbs: /ct probe start and stop are acknowledgments: chat only, nothing written
+- report verbs: library absent, the report streams to chat with no pointer
+
 ### test_autoarm.lua (41)
 
 - autoarm: on WoW Forever nothing registers and a dummy target arms and shows nothing
@@ -1236,7 +1251,7 @@ Total.
 
 - hud race button: absent on WoW Forever
 - hud race button: built and shown on Retail with Race mode on, the plain flag
-- hud race button: Results, Race, Settings, Lock, Close left to right; off, the strip closes up
+- hud race button: Results, Race, Lock, Settings, Close left to right; off, the strip closes up
 - hud race button: hidden with the title bar
 - hud race button: a click toggles the Race window as /ct race toggle does
 - hud race button: lit only under the pointer, never for the Race window being open
@@ -1494,15 +1509,55 @@ Total.
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
 
-### test_title_bar.lua (7)
+### test_title_bar.lua (14)
 
 - title bar: a second skin differs from Ka0s Default in every title-bar token
 - title bar: the DPS HUD's controls, the close among them
 - title bar: the Race window's controls (Retail)
 - title bar: the Results window's controls, the view toggle in both views
-- title bar: the compare's close
-- title bar: the gear view's close
-- title bar: the ability timeline's close
+- title bar: the compare's settings mark and close
+- title bar: the gear view's settings mark and close
+- title bar: the ability timeline's settings mark and close
+- header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up
+- header strip: the HUD's settings mark opens the settings panel and leaves the HUD up
+- header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)
+- header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel
+- header strip: the compare reads Settings, Close; settings hides it, then opens the panel
+- header strip: the gear view reads Settings, Close; settings hides it, then opens the panel
+- header strip: the ability timeline reads Settings, Close; settings hides it, then opens the panel
+
+### test_tooltip_place.lua (14)
+
+- tooltip seam: a body tooltip opens right of its window, level with the row, 2 px off
+- tooltip seam: a body tooltip with no room on the right opens left of the window
+- tooltip seam: a chrome tooltip is centered 2 px above its control, below only at the top
+- tooltip seam: unreadable geometry attaches the tooltip above the element, never the cursor
+- tooltip seam: the HUD and the attached Race window are one group, the HUD its main frame
+- tooltip seam: an attached Race window on the HUD's left opens its row tooltips on its left
+- tooltip seam: with no Race window (WoW Forever), the HUD is a group of one
+- tooltip seam: a lane docked beside the other lane joins its group, so a lane icon's tooltip covers neither
+- tooltip seam: the default dock (Pet under Player) is one group; a free Pet lane is its own
+- tooltip sweep: every hover on every window is owned at ANCHOR_NONE and placed, never by the cursor
+- tooltip surfaces: body elements open beside their window, chrome controls above themselves
+- tooltip surfaces: a Race window body button opens beside the HUD and the attached Race window
+- tooltip surfaces: the Insights charts place through the context's PlaceTip, beside the window
+- tooltip guard: the addon's own code names no cursor or corner anchor
+
+### test_window_chrome.lua (13)
+
+- window chrome: the footer height is the library's FOOTER.HEIGHT, 24
+- window chrome: the DPS HUD's footer is W.Footer, the content FOOTER.HEIGHT + 8 above the bottom
+- window chrome: the HUD footer's right line clears the grip while the grip shows
+- window chrome: the Results footer is W.Footer with the grip's corner, the body over it
+- window chrome: the Race window's footer is W.Footer, the content FOOTER.HEIGHT + 8 above the bottom
+- window chrome: the HUD's strip is docked under the title bar, the content below it
+- window chrome: the HUD's sim strip is docked under the title bar too
+- window chrome: the Results strip sits under the title bar, above the tabs, which move down
+- window chrome: the Race window's test strip docks under its title bar for the sample race, the body below it
+- window chrome: a sim race-* scenario docks the Race window's sim strip, never the test strip
+- window chrome: with no library the footers are the bare stand-in, FOOTER_HEIGHT (24) tall
+- window chrome: with no library the HUD and Results titles carry the test word, no strip
+- window chrome: with no library the Race window's title carries the sample word, no strip
 
 ### test_usage_edit.lua (4)
 
@@ -1579,11 +1634,14 @@ Total.
 - sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one
 - sim race: WoW Forever has no race scenario
 
-### test_showcase.lua (12)
+### test_showcase.lua (15)
 
 - showcase: every sample record adds up: rows to the damage, player plus pet, DPS over its length
 - showcase: every WoW Forever sample spell row is one the client names; Multi-Shot is rank 1
 - showcase: one fixed set, the same for every character (the sample realm, not the player's)
+- showcase: the main hunter is the library's sample protagonist, Sim.Sample()[1]
+- showcase: every sample name follows the convention (Sample or Mock, a fixed sample realm)
+- showcase: library absent, the main hunter is the copy of the shared row
 - showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace
 - showcase: /ct test stays the HUD's alone: no toast, no call-out
 - showcase: test race running: two checkpoints passed, the third next, on the best's line
@@ -1810,6 +1868,7 @@ Total.
 | test_race.lua | 60 |
 | test_race_resume.lua | 26 |
 | test_race_settings.lua | 25 |
+| test_report_verbs.lua | 12 |
 | test_autoarm.lua | 41 |
 | test_race_window.lua | 51 |
 | test_race_window_board.lua | 26 |
@@ -1839,14 +1898,16 @@ Total.
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
-| test_title_bar.lua | 7 |
+| test_title_bar.lua | 14 |
+| test_tooltip_place.lua | 14 |
+| test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 7 |
 | test_race_preview.lua | 8 |
 | test_sim_race.lua | 14 |
-| test_showcase.lua | 12 |
+| test_showcase.lua | 15 |
 | test_bindings.lua | 14 |
 | test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
@@ -1860,4 +1921,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1522** |
+| **Total** | **1571** |

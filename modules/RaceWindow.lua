@@ -105,6 +105,7 @@ local _, NS = ...
 -- (NS.RaceSample.On()), every read and act below goes to it instead of NS.Race (src()), so its bodies
 -- are drawn by the same path; its best, its Against your best and its Top races come from the sample
 -- history (Results_Source, and Bests' sample-aware Before and Ranked). ShowSample and EndSample open and let go a window the preview opened.
+-- While it stands in the window wears its own test or sim strip under its title bar (applyStrip).
 --
 -- RETAIL ONLY (clients-§4): nothing here loads on WoW Forever, so NS.RaceWindow is absent there.
 
@@ -124,7 +125,8 @@ RW.MAX_HEIGHT = 1000  -- the grip's and `raceWindow.height`'s
 RW.DOCK_GAP = 0       -- flush against the DPS HUD while attached (Task W4)
 RW.SIDES = { "RIGHT", "LEFT", "TOP", "BOTTOM" }
 
-local HEADER_H, FOOTER_H, PAD = NS.Style.TITLE_BAR_H, 20, 12
+-- The footer is the library's W.Footer, NS.FOOTER_HEIGHT tall (standalone-windows, *The footer*).
+local HEADER_H, PAD = NS.Style.TITLE_BAR_H, 12
 
 -- Each side: this window's point, the HUD's point, and the gap's direction.
 local DOCK = {
@@ -273,12 +275,17 @@ local function buildHeader(f)
     local Style = NS.Style
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Race"])
-    ui.close = NS.MakeCloseButton(f, function() Act.close() end)
-    ui.attach = Style.ControlButton(f, "move", "A", L["Attach to or detach from the DPS HUD"], function() Act.attach() end)
-    ui.lock = Style.ControlButton(f, "unlock", "U", L["Lock or unlock the Race window"], function() Act.lock() end)
-    ui.settings = Style.ControlButton(f, "settings", "S", L["Race mode settings"], function() Act.settings() end)
-    ui.controls = Style.NewStrip()
-    for _, b in ipairs({ ui.attach, ui.lock, ui.settings }) do Style.AddToStrip(ui.controls, b) end
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Lock, Attach, then Settings, which opens the Race
+    -- mode page (the window's own opener), and the Close in the corner.
+    local hb = NS.MakeHeader(f, {
+        close = function() Act.close() end,
+        settings = function() Act.settings() end, settingsTip = L["Race mode settings"],
+        extras = {
+            { key = "lock", icon = "unlock", glyph = "U", tip = L["Lock or unlock the Race window"], onClick = function() Act.lock() end },
+            { key = "attach", icon = "move", glyph = "A", tip = L["Attach to or detach from the DPS HUD"], onClick = function() Act.attach() end },
+        },
+    })
+    ui.close, ui.settings, ui.lock, ui.attach = hb.close, hb.settings, hb.extras.lock, hb.extras.attach
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -289,20 +296,14 @@ local function buildHeader(f)
     end)
     ui.drag = drag
     Style.Header(f, { title = f.title, align = "LEFT", drag = drag,
-        right = { ui.close, ui.attach, ui.lock, ui.settings }, n = 4 })
+        right = { ui.close, ui.settings, ui.attach, ui.lock }, n = 4 })
 end
 
+-- The library's footer (NS.MakeFooter: W.Footer, its hairline and its two muted lines; applyGrip
+-- keeps its right line clear of the grip); the host writes the lines (footer, below) and shows it whole.
 local function buildFooter(f)
-    local line = f:CreateTexture(nil, "ARTWORK")
-    ui.footLine = line
-    line:SetHeight(1)
-    NS.Skin.Divider(line)
-    line:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 1, FOOTER_H)
-    line:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, FOOTER_H)
-    ui.footLeft = NS.Style.Text(f, NS.Style.FONT.CAPTION)
-    ui.footLeft:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 8, 5)
-    ui.footRight = NS.Style.Text(f, NS.Style.FONT.CAPTION, nil, "RIGHT")
-    ui.footRight:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -8, 5)
+    ui.foot = NS.MakeFooter(f)
+    ui.footLeft, ui.footRight = ui.foot.left, ui.foot.right
 end
 
 local onHide, render, resized, trackSize
@@ -339,8 +340,60 @@ local function ensureWindow()
     return ui
 end
 
-local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD end
-local function contentBottom() return setting("hud.window.footer") ~= false and FOOTER_H + 8 or PAD end
+-- The docked strip's BodyOffset (its height while it shows, 0 while hidden or before it is built).
+local function stripHeight()
+    local strip = ui and ui.stripMode and ui[ui.stripMode .. "Strip"]
+    return strip and strip:BodyOffset() or 0
+end
+
+-- The content's insets from the window's top and bottom: the title bar's and the footer's, each only
+-- while shown, and the docked strip's BodyOffset under the title bar.
+local function contentTop()
+    return (setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD) + stripHeight()
+end
+local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
+
+-- ── the sample marker (test mode, the sim) ──────────────────────────────────────────────────────
+-- While the window draws the sample race (RW.ShowSample: `/ct test race`, the sim's race-* scenarios)
+-- it says so with its own strip, as the DPS HUD and the Results window do: the library's, docked by
+-- the library under this window's title band (dock = "title"; on the window's top edge while the band
+-- hides; preview-mode, *Where the strip sits*), and the body moves down by its BodyOffset. A sim wears
+-- the cyan sim strip, test mode the amber test strip. With no Widgets library there is no strip, and
+-- the title carries the word instead; never both.
+local STRIP_TEXT = { test = "Test mode: a sample race. Nothing here is saved.",
+                     sim = "Sim: a made-up race, not your data. /ct sim ends it." }
+local STRIP_MAKER = { test = "MakeTestStrip", sim = "MakeSimStrip" }
+
+local function stripFor(which)
+    local field = which .. "Strip"
+    if not ui[field .. "Tried"] then
+        ui[field .. "Tried"] = true
+        ui[field] = NS[STRIP_MAKER[which]](ui.frame, L[STRIP_TEXT[which]],
+            { titleBar = NS.Style.Band(ui.frame), window = ui.frame })
+    end
+    return ui[field]
+end
+
+-- Which strip the window wears now: nil (the real race), "test" or "sim".
+local function stripMode()
+    if not sampled() then return nil end
+    local P = NS.Preview
+    return (P and P.Mode and P.Mode() == "sim") and "sim" or "test"
+end
+
+-- The strip for the race on screen shown (and the other hidden); a change moves the body, so the
+-- window's look is laid out again (applyWindow places the content at contentTop).
+local function applyStrip()
+    local want = stripMode()
+    if want == ui.stripMode then return end
+    ui.stripMode, ui.stamp = want, nil
+    local shown = want and stripFor(want) or nil
+    for _, which in ipairs({ "test", "sim" }) do
+        local strip = ui[which .. "Strip"]
+        if strip then strip:SetShown(strip == shown) end
+    end
+    ui.frame.title:SetText(want and not shown and L["Race (sample)"] or L["Race"])
+end
 
 -- The window's configured look, once per Appearance stamp: the title bar, the footer, the content's
 -- insets, the background, border, strata and opacity (the DPS HUD's `hud.window.*`).
@@ -354,7 +407,7 @@ local function applyWindow()
         if part then part:SetShown(bar) end
     end
     f.title:SetShown(bar and A.On("hud.window.title"))
-    for _, part in ipairs({ ui.footLine, ui.footLeft, ui.footRight }) do part:SetShown(foot) end
+    ui.foot:SetShown(foot)
     ui.content:ClearAllPoints()
     ui.content:SetPoint("TOPLEFT", f, "TOPLEFT", PAD, -contentTop())
     ui.content:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -PAD, contentBottom())
@@ -415,7 +468,13 @@ end
 -- height, the width alone; else both, from the least size.
 local function applyGrip()
     local f = ui.frame
-    if f.resizeGrip then f.resizeGrip:SetShown(canResize()) end
+    local on = canResize()
+    if f.resizeGrip then f.resizeGrip:SetShown(on) end
+    -- The footer's right line clears the grip's corner while the grip shows (a relayout: only on a change).
+    if ui.footGrip ~= on then
+        ui.footGrip = on
+        ui.foot:SetGrip(on)
+    end
     if type(f.SetResizeBounds) ~= "function" then return end
     local own = RW.Height()
     if matched() then
@@ -713,6 +772,7 @@ local function footer(v)
 end
 
 function render()
+    applyStrip()
     applyWindow()
     applyControls()
     local w, h = RW.Width(), RW.WindowHeight()

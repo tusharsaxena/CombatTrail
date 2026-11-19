@@ -336,7 +336,10 @@ end
 local function buildChrome(f)
     f.title = Style.PlainText(f, FONT.TITLE, "CENTER")
     f.title:SetText(L["Gear view"])
-    ui.close = NS.MakeCloseButton(f, function() Gear.Hide() end)
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Settings and the Close. The window is in the DIALOG
+    -- tier and would cover the settings panel, so the settings mark hides it first (hideOnSettings).
+    local hb = NS.MakeHeader(f, { close = function() Gear.Hide() end, settingsTip = L["Settings"], hideOnSettings = f })
+    ui.close, ui.settings = hb.close, hb.settings
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -344,7 +347,7 @@ local function buildChrome(f)
     -- Moved for as long as it is open: nothing stored, the next open centers it again.
     drag:SetScript("OnDragStop", function() f:StopMovingOrSizing() end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close }, n = 1 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings }, n = 2 })
 end
 
 local function buildLegend(f)
@@ -437,15 +440,17 @@ end
 
 -- ── one slot ────────────────────────────────────────────────────────────────────────────────────
 
--- A slot's hover: the client's own item tooltip from the stored item, then what differs.
+-- A slot's hover: the client's own item tooltip from the stored item, then what differs; beside the
+-- gear window, level with the slot (a body element: Style.PlaceBody, LibKa0s#92).
 local function slotTip(cell)
     local tt = GameTooltip
     if not tt then return end
-    tt:SetOwner(cell, "ANCHOR_RIGHT")
+    Style.OwnTip(tt, cell)
     if not cell.item then
         tt:SetText(L["Empty"], Style.Rgb("gtip.title"))
         tt:AddLine(L["Nothing was equipped in this slot."], Style.Rgb("gtip.muted"))
-        return tt:Show()
+        tt:Show()
+        return Style.PlaceBody(tt, cell)
     end
     local shown = tt.SetHyperlink and pcall(tt.SetHyperlink, tt, clientString(cell.item))
     if not shown then tt:SetText(Gear.ItemName(cell.item) or "?", Style.Rgb("gtip.value")) end
@@ -454,6 +459,7 @@ local function slotTip(cell)
         Style.AddTipLines(tt, cell.notes, 1, Style.Rgb(C.amber))
     end
     tt:Show()
+    Style.PlaceBody(tt, cell)
 end
 
 local function onSlotClick(cell)
