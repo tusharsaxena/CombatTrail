@@ -606,7 +606,7 @@ test("race window: the running body sets the race against the race board's best,
     local r, g, b = S.NS.RaceWindowBoard.ClockColor(v.timeLeft, 30)
     local cr, cg, cb = w.single:GetTextColor()
     assertTrue(cr == r and cg == g and cb == b, "the countdown in the race's color")
-    local tc = w.bar.fill.__color
+    local tc = w.bar.fill.__texture and w.bar.fill.__vertex or w.bar.fill.__color   -- on the skin's texture
     assertTrue(tc[1] == r and tc[2] == g and tc[3] == b, "the bar in the countdown's color")
     local G = S.NS.HudStates.COLORS.green
     assertTrue(r == G[1] and g == G[2] and b == G[3], "0:19.8 left of 0:30: green, in the first half")

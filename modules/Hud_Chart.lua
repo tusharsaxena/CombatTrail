@@ -587,8 +587,8 @@ function Pace:anchorShortfall()
 end
 
 -- The bar's look, once per Appearance stamp: the behind half in the spell rows' bar look (unpainted,
--- alpha 0, on a bare bar), the ahead half in its texture and the green, the shortfall in the red,
--- both at the look's opacity.
+-- alpha 0, on a bare bar), the ahead half in its texture and the green, the shortfall in its texture
+-- and the red (AF-CT-TEX: it drew flat), both at the look's opacity.
 function Pace:restyle()
     local A = NS.HudAppearance
     if self.stamp == A.stamp then return end
@@ -597,7 +597,8 @@ function Pace:restyle()
     A.PaintBar(self.behind, look, self.bare and { r = 0, g = 0, b = 0, a = 0 } or nil)
     local r, g, b = Style.Rgb(AHEAD)
     A.PaintBar(self.ahead, look, { r = r, g = g, b = b, a = look.a })
-    Style.Fill(self.shortfall, BEHIND, look.a)
+    self.shortfall:SetTexture(look.texture)
+    Style.Vertex(self.shortfall, BEHIND, look.a)
     self:anchorShortfall()
 end
 

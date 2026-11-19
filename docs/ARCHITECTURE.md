@@ -377,10 +377,10 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 |---|---|---|---|---|
 | slash-commands-§2 | The primary slash is `/ct`, which CTMod has long used (it opens CTMod's settings panel), against the MUST NOT on colliding with a well-known addon's slash. `/combattrail` is the long alias. If both addons load, whichever registers `/ct` last owns it. | Owner's choice: "No one uses ctmod nowadays". | 2026-11-10, owner | CTMod (or another addon using `/ct`) is reported in use alongside Combat Trail |
 | toc-file-§3, layout-§1, launcher-§6 | The Race window key ships in a Retail-only `Bindings_Mainline.xml`, a file the client loads per flavor, holding all four bindings (Toggle DPS HUD, Toggle Results window, Toggle Race window, Toggle lanes); `Bindings.xml` keeps the three shared ones for WoW Forever. The client prefers the flavor-suffixed file and reads only one, so on Retail the bindings do not come from `Bindings.xml`. The pair is held in step by `tests/test_bindings.lua`. | The owner wants a Race window key, and Race mode is Retail only: clients-§4 forbids an inert binding on WoW Forever, which one static `Bindings.xml` cannot avoid. | 2026-11-13, owner | The WoW Forever in-game check that its key list shows no Race key (if Forever reads `Bindings_Mainline.xml`, a Forever-specific file name is the fallback), or the standard gaining a per-flavor bindings rule |
+| standalone-windows (*The drag strip's marks*) | The race countdown's call-out strip (LibKa0s-Callout-1.0, `core/CalloutSetup.lua`) shows no close mark, and its settings mark has no host page to open. The library's `Callout.lua` builds the strip itself and passes no `onClose` or `onSettings` through. | The call-out owns its strip; the addon cannot reach it without editing `libs/`. LibKa0s#100 asks the library to pass both through. | 2026-11-19, run lead (adoption-feedback run, pending the owner's review) | LibKa0s#100 ships and is re-vendored: wire close to the countdown's enable toggle and settings to the Race page, then drop this row |
 
-Two ratified deviations, above. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
-addon, so the history is the README's `## Version History` alone (a plan correction, not a
-deviation).
+Three deviations, above: the owner ratified the first two, and the third waits on LibKa0s#100. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
+addon, so the history is the README's `## Version History` alone (a plan correction, not a deviation).
 
 ### Files over the 1500-line cap
 

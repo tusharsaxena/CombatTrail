@@ -153,7 +153,7 @@ function ResultsTargets.Layout(p, y, cw)
     for i = 1, n do
         local row, data, ry = x.rows[i], x.list[i], y - (i - 1) * T.ROW_H
         place(row.bar, p.content, 0, ry)
-        Style.Fill(row.bar, Tbl().BAR_COLOR, Tbl().BAR_ALPHA)
+        Style.Bar(row.bar, Tbl().BAR_COLOR, Tbl().BAR_ALPHA)   -- the skin's bar texture (AF-CT-TEX)
         row.bar:SetSize(math.max(1, math.floor(cw * data.fill + 0.5)), T.ROW_H - 2)
         place(row.name, p.content, tx, ry - ty)
         row.name:SetWidth(math.max(20, amountR - T.AMOUNT_W - T.COL_GAP - tx))

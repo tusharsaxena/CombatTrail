@@ -774,10 +774,11 @@ local function timeBar(f)
     bar.bg = bar.track:CreateTexture(nil, "BACKGROUND")
     bar.bg:SetAllPoints(bar.track)
     Style.Fill(bar.bg, "ct.pace.track")
-    -- Colored on every beat (RaceWindowBoard.ClockColor), never through Style.Fill: a skin switch
-    -- has nothing of its own to put back.
+    -- The skin's bar texture (AF-CT-TEX), colored on every beat (RaceWindowBoard.ClockColor) through
+    -- the facade's S.BarTexture, which the library records: a skin switch puts its texture on and keeps
+    -- the color the bar wears.
     bar.fill = bar.track:CreateTexture(nil, "ARTWORK")
-    bar.fill:SetColorTexture(Style.Rgba(C.green))
+    NS.Skin.BarTexture(bar.fill, Style.Rgba(C.green))
     bar.fill:SetPoint("TOPLEFT", bar.track, "TOPLEFT", 0, 0)
     bar.fill:SetPoint("BOTTOMLEFT", bar.track, "BOTTOMLEFT", 0, 0)
     for i = 1, 3 do
@@ -804,7 +805,10 @@ local function setTimeBar(bar, f, y, width, share, r, g, b)
     local w = math.floor(width * (1 - share))
     bar.fill:SetShown(w > 0)
     bar.fill:SetWidth(math.max(1, w))
-    bar.fill:SetColorTexture(r, g, b, 1)
+    if r ~= bar.r or g ~= bar.g or b ~= bar.b then   -- only a new color is painted again
+        bar.r, bar.g, bar.b = r, g, b
+        NS.Skin.BarTexture(bar.fill, r, g, b, 1)
+    end
     bar.share, bar.fillW = share, w
 end
 

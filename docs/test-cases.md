@@ -961,7 +961,7 @@ Total.
 - race window pet: with the pet on its own source the pace bars take the best's player-only line
 - race window pet: no pet source, or a best with no player-only figure, gives no paceRef
 
-### test_race_window_board.lua (26)
+### test_race_window_board.lua (27)
 
 - race window board: Best by now and the Checkpoints read the best's straight line
 - race window board: Against your best sets this race beside the best before it
@@ -986,6 +986,7 @@ Total.
 - race window board: the result and Stop! bodies' buttons and chips follow the width
 - race window board: the Stop! and waiting bodies add the Checkpoints, all four by the buzzer, when they fit
 - race window board: the time bar is the DPS HUD's pace bar's look: no border, its track, height and tick
+- race window board: the time bar draws the skin's bar texture under every skin, in the countdown's color
 - race window board: Best to beat labels its Damage and DPS in gold, a matched pair, the line kept
 - race window board: Best by now's figures never run under their labels, at any width
 - race window board: a checkpoint's time is a size above its figures, set apart over the best, the bar 90% wide
@@ -1509,6 +1510,26 @@ Total.
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
 
+### test_bar_textures.lua (17)
+
+- bar textures: the two skins under test name different bar textures
+- bar textures: the HUD's spell row draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the HUD's chart column draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the HUD's pace bar, ahead draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the HUD's pace bar, behind draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the HUD's pace bar, the red shortfall draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the Results table's Damage bar draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the Results table's DPS bar draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the detail's spell breakdown row draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the detail's damage profile column draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the detail's Targets bar draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the compare's this-fight bar draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: the compare's other-fight bar draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: a texture the player picked for the HUD's spell rows wins over the skin's
+- bar textures: the Results bars keep the palette's blue in the skin's texture
+- bar textures: three HUD look changes in one frame redraw the Results detail once
+- bar textures: a skin switch runs HudAppearance.Changed once
+
 ### test_title_bar.lua (14)
 
 - title bar: a second skin differs from Ka0s Default in every title-bar token
@@ -1871,7 +1892,7 @@ Total.
 | test_report_verbs.lua | 12 |
 | test_autoarm.lua | 41 |
 | test_race_window.lua | 51 |
-| test_race_window_board.lua | 26 |
+| test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
 | test_callout_settings.lua | 12 |
@@ -1898,6 +1919,7 @@ Total.
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
+| test_bar_textures.lua | 17 |
 | test_title_bar.lua | 14 |
 | test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
@@ -1921,4 +1943,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1571** |
+| **Total** | **1589** |

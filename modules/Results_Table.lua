@@ -258,7 +258,7 @@ local Cells = {}
 
 -- A text cell; a column with `bar` also draws a fill under its text, as long as its value's place
 -- between the smallest and the largest in its group (Table:measure, Tbl.BarShare), over the row's own
--- stripe, in the palette's bar blue (Tbl.BAR_COLOR).
+-- stripe, in the palette's bar blue (Tbl.BAR_COLOR) on the skin's bar texture (Style.Bar).
 -- A column with `chips(record)` also draws up to CHIP_MAX boxed chips before its text (a race row's
 -- length and flag chips, modules/Results_Races.lua), each its own part (cell.chip1, ...).
 function Cells.text(row, col)
@@ -351,7 +351,7 @@ local function bindBar(cell, col, record)
     local on = share > 0
     cell.bar:SetShown(on)
     if not on then return end
-    Style.Fill(cell.bar, Tbl.BAR_COLOR, Tbl.BAR_ALPHA)
+    Style.Bar(cell.bar, Tbl.BAR_COLOR, Tbl.BAR_ALPHA)   -- the skin's bar texture (AF-CT-TEX)
     cell.bar:SetWidth(math.max(1, math.floor((cell.barW or 0) * share + 0.5)))
 end
 

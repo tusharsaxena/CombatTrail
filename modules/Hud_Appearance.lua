@@ -32,8 +32,9 @@ local addonName, NS = ...
 -- `bar.texture` for a bar), leaving the stored pick for when it goes off.
 --
 -- RESTYLING IS STAMPED. Changed() bumps Appearance.stamp; a part compares its own stamp and restyles
--- once, not on every 4 Hz redraw. A skin switch reaches every block through Style.OnLooks. Nothing
--- here reads a meter value or a frame's geometry.
+-- once, not on every 4 Hz redraw. A skin switch reaches every block through Style's one OnLooksChanged
+-- listener, which calls Changed once its OnLooks repaints have run. Nothing here reads a meter value
+-- or a frame's geometry.
 
 local Appearance = {}
 NS.HudAppearance = Appearance
@@ -308,13 +309,16 @@ function Appearance.ApplyWindow(f)
 end
 
 --- A HUD look changed: every part restyles on its next draw, and the HUD redraws now, with the Race
---- window, which wears the same blocks (race plan Task C1; absent on WoW Forever).
+--- window, which wears the same blocks (race plan Task C1; absent on WoW Forever), and the Results
+--- detail, whose chart and spell rows are the HUD's parts (AF-CT-TEX).
 function Appearance.Changed()
     Appearance.stamp = Appearance.stamp + 1
     if NS.Hud and NS.Hud.Refresh then NS.Hud.Refresh() end
     if NS.RaceWindow and NS.RaceWindow.IsShown() then NS.RaceWindow.Refresh() end
+    if NS.Results and NS.Results.Restyle then NS.Results.Restyle() end
 end
 
 -- A skin switch: the skin's own tokens (a FromSkin companion, a Card's paint) changed under the
--- blocks, so each part restyles over them, and the HUD redraws now (an over card has no tick).
-NS.Style.OnLooks(function() Appearance.Changed() end)
+-- blocks, so each part restyles over them, and the HUD redraws now (an over card has no tick). The
+-- one listener in modules/Style.lua calls Changed after its OnLooks repaints, once per switch; an
+-- OnLooks registration here as well ran it twice.

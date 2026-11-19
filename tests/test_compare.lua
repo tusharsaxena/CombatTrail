@@ -329,6 +329,10 @@ test("compare: the Compare button's tooltip names the fight it compares with", f
     assertEqual(pane.w.compare.label:GetText(), "Compare", "the label stays Compare")
 end)
 
+-- A bar's tint: its vertex color on the skin's bar texture (Style.Bar, AF-CT-TEX), its color texture
+-- where it draws flat.
+local function barTint(paint) return paint.texture and paint.vertex or paint.color end
+
 -- Whether paint color `c` is palette entry `p` at alpha `a`.
 local function sameHue(c, p, a, what)
     assertTrue(c ~= nil, what .. ": painted")
@@ -355,8 +359,8 @@ test("compare: this fight is yellow and the other blue, in the best and the runn
     local ui = NS.ResultsCompare.__ui()
     local function check(case)
         local row = NS.ResultsCompare.Rows()[1]
-        sameHue(M.__paint(row.barA).color, P.THIS_BAR, P.BAR_A, case .. " this fight's bar")
-        sameHue(M.__paint(row.barB).color, P.BEST_BAR, P.BAR_A, case .. " the other's bar")
+        sameHue(barTint(M.__paint(row.barA)), P.THIS_BAR, P.BAR_A, case .. " this fight's bar")
+        sameHue(barTint(M.__paint(row.barB)), P.BEST_BAR, P.BAR_A, case .. " the other's bar")
         sameHue(M.__paint(ui.legendA).textColor, P.THIS_TEXT, nil, case .. " this fight's legend")
         sameHue(M.__paint(ui.legendB).textColor, P.BEST_TEXT, nil, case .. " the other's legend")
         for i = 1, 3 do sidesTinted(NS, ui.kpis[i].value:GetText(), case .. " box " .. i) end
@@ -376,8 +380,8 @@ test("compare: this fight is yellow and the other blue, in the best and the runn
     Skin:RegisterSkin({ key = W.PROBE_KEY, label = "Probe", tokens = W.probeTokens(Skin) })
     Skin:SetChoice("CombatTrail", "ka0s", W.PROBE_KEY)
     local row = NS.ResultsCompare.Rows()[1]
-    sameHue(M.__paint(row.barA).color, P.THIS_BAR, P.BAR_A, "under the probe skin, this fight's bar")
-    sameHue(M.__paint(row.barB).color, P.BEST_BAR, P.BAR_A, "under the probe skin, the other's bar")
+    sameHue(barTint(M.__paint(row.barA)), P.THIS_BAR, P.BAR_A, "under the probe skin, this fight's bar")
+    sameHue(barTint(M.__paint(row.barB)), P.BEST_BAR, P.BAR_A, "under the probe skin, the other's bar")
 end)
 
 local TRINKET, POTION, FLASK, HIDDEN = 212456, 211001, 212283, 5512
