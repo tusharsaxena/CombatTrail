@@ -1074,6 +1074,13 @@ end
 --- The built window, for the suites (nil until first shown).
 function Results.__ui() return ui end
 
+--- The detail's damage profile and spell breakdown wear the DPS HUD's bar blocks (NS.HudAppearance):
+--- a skin switch or a bar-block setting redraws a shown detail on its fight, scroll kept, so its bars
+--- take the new texture at once rather than on the next fight clicked (AF-CT-TEX).
+function Results.Restyle()
+    if windowShown() and ui.detail.record then ui.detail:Show(ui.detail.record) end
+end
+
 -- ── the store, heard on the bus ─────────────────────────────────────────────────────────────────
 
 -- A hidden window draws nothing: its next show redraws in full.

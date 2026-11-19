@@ -159,9 +159,34 @@ function Style.Vertex(tex, c, a)
     tex:SetVertexColor(Style.Rgba(c, a))
 end
 
+-- ── bars of data in the skin's texture ──────────────────────────────────────────────────────────
+-- A bar that shows a value (a Results cell's Damage or DPS fill, a target's share, the compare's two
+-- bars, the Race window's time bar) draws the active skin's statusbar texture (`bar.texture`, the
+-- owner's texture override over it) through the facade's S.BarTexture, tinted the bar's own color
+-- (AF-CT-TEX, the owner's feedback of 2026-11-19: every bar takes the skin's texture unless the
+-- player picked one). The library records the call, so a skin switch or an override change puts the
+-- new texture on; the color is redrawn from the latest call's here, so a token's follows the skin.
+-- With no texture resolved (no library, or a key nothing registered) the bar draws flat, as before.
+-- A bar the player styles through a bar block (the DPS HUD's chart, spell rows and pace bar, and the
+-- Results detail's, which reuse them) is NS.HudAppearance's, not this.
+
+local barred = setmetatable({}, { __mode = "k" })  -- texture or StatusBar -> { c, a }
+
+--- `bar` (a Texture or a StatusBar) in the skin's bar texture, tinted `c` at alpha `a` (default the
+--- color's own).
+--- @param bar table
+--- @param c table|string  a live table, a token name or a data hue
+--- @param a number|nil
+function Style.Bar(bar, c, a)
+    filled[bar] = nil
+    remember(barred, bar, c, a)
+    NS.Skin.BarTexture(bar, Style.Rgba(c, a))
+end
+
 Style.OnLooks(function()
     for tex, v in pairs(filled) do tex:SetColorTexture(Style.Rgba(v[1], v[2])) end
     for tex, v in pairs(vertexed) do tex:SetVertexColor(Style.Rgba(v[1], v[2])) end
+    for bar, v in pairs(barred) do NS.Skin.BarTexture(bar, Style.Rgba(v[1], v[2])) end
 end)
 
 --- A "|cffrrggbb" escape for a DATA hue `c` (no token: the same under every skin), each channel

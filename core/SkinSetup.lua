@@ -626,6 +626,17 @@ if not Skin then
         return (n and n > 0) and n or 12
     end
 
+    -- AF-CT-TEX: with no skin there is no bar texture, so a bar of data (Style.Bar) draws flat in its
+    -- own color, as the library's S.BarTexture does when no texture resolves.
+    S.BarTexture = function(target, r, g, b, a)
+        if type(target) ~= "table" or type(target.GetObjectType) ~= "function" then return end
+        if target:GetObjectType() == "StatusBar" then
+            target:SetStatusBarTexture("Interface\\Buttons\\WHITE8x8")
+            return target:SetStatusBarColor(r, g, b, a)
+        end
+        target:SetColorTexture(r, g, b, a)
+    end
+
     -- LibKa0s v1.85.0 (SkinPaintExtras minor 16): with no skin, a bar border is the stored three.
     S.BarBorder = function(style, show, size) return style, show, size end
 

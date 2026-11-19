@@ -171,6 +171,7 @@ local SUITES = {
     "test_timeline_marks",
     "test_compare",
     "test_gear",
+    "test_bar_textures",
     "test_title_bar",
     "test_tooltip_place",
     "test_window_chrome",

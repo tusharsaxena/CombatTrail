@@ -97,7 +97,9 @@ test("pace: split at the tick, red short of it, green past it; a separate pet pa
     assertTrue(pace.fillAnchor ~= nil and pace.fillAnchor == pace.behind:GetStatusBarTexture(),
         "the red shortfall hangs off the behind half's fill texture")
     local Style = inst.NS.Style
-    local sr, sg, sb = unpack(pace.shortfall.__color or {})   -- its SetColorTexture, as recorded
+    -- Its vertex color on the bar look's texture (AF-CT-TEX: it drew flat before).
+    assertEqual(pace.shortfall:GetTexture(), inst.NS.HudAppearance.Bar("spells").texture, "the shortfall's texture")
+    local sr, sg, sb = pace.shortfall:GetVertexColor()
     local red = Style.Tok("ct.pace.behind")
     near(sr, red[1], "the shortfall red")
     near(sg, red[2])

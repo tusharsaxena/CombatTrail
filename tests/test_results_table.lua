@@ -881,7 +881,8 @@ test("results: the Damage and DPS bars are the palette's blue, not the class col
     save(NS, rec(NS, { id = "slow", dps = 1000 }), rec(NS, { id = "fast", dps = 1500 }))
     local _, view = open(NS)
     local function barColor(id, key)
-        local c = M.__paint(drawn(view)[id].cells[key].bar).color
+        local p = M.__paint(drawn(view)[id].cells[key].bar)
+        local c = p.texture and p.vertex or p.color   -- tinted on the skin's bar texture (AF-CT-TEX)
         return c
     end
     local function isPalette(c, what)

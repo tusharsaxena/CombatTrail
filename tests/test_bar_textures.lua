@@ -1,0 +1,158 @@
+-- tests/test_bar_textures.lua — every bar of data draws the active skin's statusbar texture unless
+-- the player picked one (AF-CT-TEX of Ka0sAddonsCommonTasks docs/2026-11-19-ADOPTION_FEEDBACK/, the
+-- owner's images 3, 4 and 5: the Results table's and the compare's bars drew flat while the HUD's
+-- drew the skin's). One instance in test mode (modules/Preview.lua) fills every window from the
+-- sample history; each surface is read under two skins whose `bar.texture` differ, Ka0s Default
+-- ("Ka0s Default") and Obsidian ("Ka0s Matte"). The Race window's time bar is held in
+-- tests/test_race_window_board.lua, where its running body is built.
+
+local T = _G.CT_TEST
+local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+
+local OWNER = "CombatTrail"
+local OTHER = "obsidian"
+
+local inst
+local function live()
+    if inst then return inst end
+    local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
+    inst = T.load{ mutate = function(m)
+        installPaint(m)
+        m.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF"
+    end }
+    inst.mocks.__now = 1000
+    assert(inst.NS.Preview.Start({ mode = "test" }), "test mode did not start")
+    return inst
+end
+
+local function skinLib() return live().mocks.LibStub("LibKa0s-Skin-1.0") end
+
+-- The file the skin now in force names for its bars.
+local function skinTexture()
+    local S = live().NS.Skin
+    local key = S.Token("bar.texture")
+    return live().mocks.LibStub("LibKa0s-Media-1.0").Texture(OWNER, key)
+end
+
+-- What a bar region or StatusBar draws: its fill's file, nil when it draws a flat color.
+local function drawnTexture(obj)
+    local p = live().mocks.__paint(obj)
+    if p.frameType == "StatusBar" then return p.statusBarTexture end
+    return p.texture
+end
+
+-- ── the surfaces ────────────────────────────────────────────────────────────────────────────────
+
+local function hudBody()
+    local NS = live().NS
+    local u = assert(NS.Hud.__ui(), "the HUD window was never built")
+    return u.body[u.current]
+end
+
+local function results()
+    local NS = live().NS
+    local first = NS.ResultsSource.All()[1]
+    assert(first, "no sample fight")
+    if NS.Results.Selected() ~= first.id then assert(NS.Results.ShowFight(first.id), "the detail did not open") end
+    return assert(NS.Results.__ui(), "the Results window was never built")
+end
+
+local function resultsCell(key)
+    for _, row in ipairs(results().list.list:Visible()) do
+        local cell = row.record and row.cells and row.cells[key]
+        if cell and cell.bar and cell.bar:IsShown() then return cell.bar end
+    end
+    error("no fight row draws a " .. key .. " bar")
+end
+
+local function compareUi()
+    local NS = live().NS
+    assert(NS.ResultsCompare.Open(results().detail), "the compare did not open")
+    return NS.ResultsCompare.__ui()
+end
+
+local SURFACES = {
+    { "the HUD's spell row", function() return hudBody().parts.spells.list:Rows()[1].bar end },
+    { "the HUD's chart column", function() return hudBody().parts.chart:Columns()[1] end },
+    { "the HUD's pace bar, ahead", function() return hudBody().parts.pace.ahead end },
+    { "the HUD's pace bar, behind", function() return hudBody().parts.pace.behind end },
+    { "the HUD's pace bar, the red shortfall", function() return hudBody().parts.pace.shortfall end },
+    { "the Results table's Damage bar", function() return resultsCell("damage") end },
+    { "the Results table's DPS bar", function() return resultsCell("dps") end },
+    { "the detail's spell breakdown row", function() return results().detail.w.list:Rows()[1].bar end },
+    { "the detail's damage profile column", function() return results().detail.w.chart:Columns()[1] end },
+    { "the detail's Targets bar", function() return results().detail.targets.rows[1].bar end },
+    { "the compare's this-fight bar", function() return compareUi().rows[1].barA end },
+    { "the compare's other-fight bar", function() return compareUi().rows[1].barB end },
+}
+
+-- Every window drawn again, as the player would see it after the switch.
+local function redraw()
+    local NS = live().NS
+    NS.Hud.Refresh()
+    results().list:Refresh()
+    if results().detail.Refresh then results().detail:Refresh() end
+    compareUi()
+end
+
+local function withSkin(key, fn)
+    local Skin = skinLib()
+    local source, skin = Skin:GetChoice(OWNER)
+    Skin:SetChoice(OWNER, "ka0s", key)
+    local ok, err = pcall(fn)
+    Skin:SetChoice(OWNER, source, skin)
+    if not ok then error(err, 0) end
+end
+
+test("bar textures: the two skins under test name different bar textures", function()
+    local Skin = skinLib()
+    local seen = {}
+    for _, key in ipairs({ Skin.DEFAULT, OTHER }) do
+        withSkin(key, function() seen[#seen + 1] = skinTexture() end)
+    end
+    assertTrue(seen[1] ~= nil and seen[2] ~= nil, "both skins resolve a texture")
+    assertTrue(seen[1] ~= seen[2], "Ka0s Default and Obsidian draw different bars")
+end)
+
+for _, s in ipairs(SURFACES) do
+    test("bar textures: " .. s[1] .. " draws the skin's texture under Ka0s Default and Obsidian", function()
+        local Skin = skinLib()
+        for _, key in ipairs({ Skin.DEFAULT, OTHER }) do
+            withSkin(key, function()
+                redraw()
+                assertEqual(drawnTexture(s[2]()), skinTexture(), s[1] .. " under " .. key)
+            end)
+        end
+    end)
+end
+
+test("bar textures: a texture the player picked for the HUD's spell rows wins over the skin's", function()
+    local NS = live().NS
+    local Media = live().mocks.LibStub("LibKa0s-Media-1.0")
+    NS.SetByPath("hud.spells.barTextureFromSkin", false)
+    NS.SetByPath("hud.spells.barTexture", "Ka0s Forge")
+    local ok, err = pcall(function()
+        withSkin(OTHER, function()
+            redraw()
+            local want = Media.Texture(OWNER, "Ka0s Forge")
+            assertEqual(drawnTexture(hudBody().parts.spells.list:Rows()[1].bar), want, "the spell row: the pick")
+            assertEqual(drawnTexture(hudBody().parts.pace.shortfall), want, "the pace bar's shortfall: the pick")
+            -- A surface with no texture setting keeps following the skin.
+            assertEqual(drawnTexture(resultsCell("dps")), skinTexture(), "the Results bar: still the skin's")
+        end)
+    end)
+    NS.SetByPath("hud.spells.barTextureFromSkin", true)
+    NS.SetByPath("hud.spells.barTexture", "Ka0s Default")
+    if not ok then error(err, 0) end
+end)
+
+test("bar textures: the Results bars keep the palette's blue in the skin's texture", function()
+    local P = live().NS.Constants.PALETTE
+    withSkin(OTHER, function()
+        redraw()
+        local r, g, b, a = resultsCell("damage"):GetVertexColor()
+        assertTrue(math.abs(r - P.BAR[1]) < 1e-6 and math.abs(g - P.BAR[2]) < 1e-6 and math.abs(b - P.BAR[3]) < 1e-6,
+            "the palette's blue")
+        assertTrue(math.abs(a - P.BAR_A) < 1e-6, "at the bars' opacity")
+    end)
+end)

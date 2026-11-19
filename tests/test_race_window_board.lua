@@ -797,6 +797,30 @@ test("race window board: the time bar is the DPS HUD's pace bar's look: no borde
     assertEqual(bar.fillW, math.floor(b.width * (1 - bar.share)), "still emptying")
 end)
 
+-- AF-CT-TEX (the owner's feedback of 2026-11-19): the time bar draws the skin's bar texture, under
+-- Ka0s Default and Obsidian alike, and keeps the countdown's color through the switch.
+test("race window board: the time bar draws the skin's bar texture under every skin, in the countdown's color", function()
+    if forever() then return end
+    local S = fresh()
+    local b = running(S)
+    local Skin = S.M.LibStub("LibKa0s-Skin-1.0")
+    local Media = S.M.LibStub("LibKa0s-Media-1.0")
+    local source, skin = Skin:GetChoice("CombatTrail")
+    local seen = {}
+    for _, key in ipairs({ Skin.DEFAULT, "obsidian" }) do
+        Skin:SetChoice("CombatTrail", "ka0s", key)
+        S.NS.RaceWindow.Refresh()
+        local fill = b.w.bar.fill
+        local want = Media.Texture("CombatTrail", S.NS.Skin.Token("bar.texture"))
+        assertEqual(S.M.__paint(fill).texture, want, "the time bar under " .. key)
+        local r, g, bl = fill:GetVertexColor()
+        assertTrue(r == b.w.bar.r and g == b.w.bar.g and bl == b.w.bar.b, "the countdown's color under " .. key)
+        seen[#seen + 1] = want
+    end
+    Skin:SetChoice("CombatTrail", source, skin)
+    assertTrue(seen[1] ~= seen[2], "the two skins draw different textures")
+end)
+
 test("race window board: Best to beat labels its Damage and DPS in gold, a matched pair, the line kept", function()
     if forever() then return end
     local S = sized()

@@ -331,6 +331,12 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Use the skin's color | `hud.spells.fontColorFromSkin` |
 | Use the skin's shadow | `hud.spells.fontShadowFromSkin` |
 
+*Use the skin's texture* is on by default in both blocks, so the chart columns, the spell rows and the
+pace bar (its red shortfall included) draw the skin's bar texture; the *Bar texture* pick draws only
+once it is off. The Results detail's damage profile and spell breakdown follow these two blocks. The
+Results table's bars, the detail's Targets bars, the compare's bars and the Race window's time bar
+have no texture row and always draw the skin's (AF-CT-TEX).
+
 ### Window
 
 | Row | Key |
