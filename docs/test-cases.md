@@ -1510,7 +1510,7 @@ Total.
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
 
-### test_bar_textures.lua (15)
+### test_bar_textures.lua (17)
 
 - bar textures: the two skins under test name different bar textures
 - bar textures: the HUD's spell row draws the skin's texture under Ka0s Default and Obsidian
@@ -1527,6 +1527,8 @@ Total.
 - bar textures: the compare's other-fight bar draws the skin's texture under Ka0s Default and Obsidian
 - bar textures: a texture the player picked for the HUD's spell rows wins over the skin's
 - bar textures: the Results bars keep the palette's blue in the skin's texture
+- bar textures: three HUD look changes in one frame redraw the Results detail once
+- bar textures: a skin switch runs HudAppearance.Changed once
 
 ### test_title_bar.lua (14)
 
@@ -1917,7 +1919,7 @@ Total.
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
-| test_bar_textures.lua | 15 |
+| test_bar_textures.lua | 17 |
 | test_title_bar.lua | 14 |
 | test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
@@ -1941,4 +1943,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1587** |
+| **Total** | **1589** |

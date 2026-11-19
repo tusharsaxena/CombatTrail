@@ -32,8 +32,9 @@ local addonName, NS = ...
 -- `bar.texture` for a bar), leaving the stored pick for when it goes off.
 --
 -- RESTYLING IS STAMPED. Changed() bumps Appearance.stamp; a part compares its own stamp and restyles
--- once, not on every 4 Hz redraw. A skin switch reaches every block through Style.OnLooks. Nothing
--- here reads a meter value or a frame's geometry.
+-- once, not on every 4 Hz redraw. A skin switch reaches every block through Style's one OnLooksChanged
+-- listener, which calls Changed once its OnLooks repaints have run. Nothing here reads a meter value
+-- or a frame's geometry.
 
 local Appearance = {}
 NS.HudAppearance = Appearance
@@ -318,5 +319,6 @@ function Appearance.Changed()
 end
 
 -- A skin switch: the skin's own tokens (a FromSkin companion, a Card's paint) changed under the
--- blocks, so each part restyles over them, and the HUD redraws now (an over card has no tick).
-NS.Style.OnLooks(function() Appearance.Changed() end)
+-- blocks, so each part restyles over them, and the HUD redraws now (an over card has no tick). The
+-- one listener in modules/Style.lua calls Changed after its OnLooks repaints, once per switch; an
+-- OnLooks registration here as well ran it twice.

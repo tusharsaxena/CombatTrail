@@ -86,9 +86,11 @@ local SURFACES = {
     { "the compare's other-fight bar", function() return compareUi().rows[1].barB end },
 }
 
--- Every window drawn again, as the player would see it after the switch.
+-- Every window drawn again, as the player would see it after the switch: on the next frame, when the
+-- Results detail's coalesced restyle has run (Results.Restyle).
 local function redraw()
     local NS = live().NS
+    live().mocks.__fireTimers()
     NS.Hud.Refresh()
     results().list:Refresh()
     if results().detail.Refresh then results().detail:Refresh() end
@@ -155,4 +157,35 @@ test("bar textures: the Results bars keep the palette's blue in the skin's textu
             "the palette's blue")
         assertTrue(math.abs(a - P.BAR_A) < 1e-6, "at the bars' opacity")
     end)
+end)
+
+-- The detail's restyle is the whole pane: a HUD slider dragged with the window open fires
+-- HudAppearance.Changed on every tick, so the redraws coalesce to one a frame, and a skin switch runs
+-- Changed once, not twice (the review of 2026-11-19, AF-CT-TEX).
+local function countDetailShows(fn)
+    local NS, M = live().NS, live().mocks
+    local detail = results().detail
+    M.__fireTimers()
+    local shows, show = 0, detail.Show
+    detail.Show = function(self, ...) shows = shows + 1; return show(self, ...) end
+    local stamp = NS.HudAppearance.stamp
+    local ok, err = pcall(fn, NS)
+    M.__fireTimers()
+    detail.Show = nil   -- the pane's own method again, from its metatable
+    if not ok then error(err, 0) end
+    return shows, NS.HudAppearance.stamp - stamp
+end
+
+test("bar textures: three HUD look changes in one frame redraw the Results detail once", function()
+    local shows, changes = countDetailShows(function(NS)
+        for _ = 1, 3 do NS.HudAppearance.Changed() end
+    end)
+    assertEqual(changes, 3, "every change still stamps the HUD's parts")
+    assertEqual(shows, 1, "one detail redraw, on the next frame")
+end)
+
+test("bar textures: a skin switch runs HudAppearance.Changed once", function()
+    local _, changes = countDetailShows(function() withSkin(OTHER, function() end) end)
+    -- withSkin switches twice: to Obsidian and back.
+    assertEqual(changes, 2, "one Changed per switch")
 end)
