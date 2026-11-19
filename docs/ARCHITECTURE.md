@@ -380,8 +380,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 | standalone-windows (*The drag strip's marks*) | The race countdown's call-out strip (LibKa0s-Callout-1.0, `core/CalloutSetup.lua`) shows no close mark, and its settings mark has no host page to open. The library's `Callout.lua` builds the strip itself and passes no `onClose` or `onSettings` through. | The call-out owns its strip; the addon cannot reach it without editing `libs/`. LibKa0s#100 asks the library to pass both through. | 2026-11-19, run lead (adoption-feedback run, pending the owner's review) | LibKa0s#100 ships and is re-vendored: wire close to the countdown's enable toggle and settings to the Race page, then drop this row |
 
 Three deviations, above: the owner ratified the first two, and the third waits on LibKa0s#100. The plan's Task 5.3 listed a root `CHANGELOG.md`; documentation-§1 forbids one in an
-addon, so the history is the README's `## Version History` alone (a plan correction, not a
-deviation).
+addon, so the history is the README's `## Version History` alone (a plan correction, not a deviation).
 
 ### Files over the 1500-line cap
 
