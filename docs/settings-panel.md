@@ -140,6 +140,7 @@ why. Copy from Player lane unlinks it.
 |---|---|
 | Show background | `lanes.<k>.background` |
 | Background texture | `lanes.<k>.bgTexture` |
+| Use the skin's texture (on by default: the skin's bar texture) | `lanes.<k>.bgTextureFromSkin` |
 | Background color | `lanes.<k>.bgColor` |
 | Use class color | `lanes.<k>.bgClassColor` |
 | Use the skin's color | `lanes.<k>.bgColorFromSkin` |
@@ -161,9 +162,11 @@ why. Copy from Player lane unlinks it.
 | Tick width (px) | `lanes.<k>.tickWidth` |
 | Tick color | `lanes.<k>.tickColor` |
 | Use class color | `lanes.<k>.tickClassColor` |
+| Use the skin's color (on by default: the skin's chart grid) | `lanes.<k>.tickColorFromSkin` |
 | Show now line | `lanes.<k>.now` |
 | Now line color | `lanes.<k>.nowColor` |
 | Use class color | `lanes.<k>.nowClassColor` |
+| Use the skin's color (on by default: the skin's chart marker) | `lanes.<k>.nowColorFromSkin` |
 | Show label | `lanes.<k>.label` |
 | Label position | `lanes.<k>.labelPosition` |
 | Label text | `lanes.<k>.labelText` |
@@ -296,6 +299,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Use the skin's texture | `hud.chart.barTextureFromSkin` |
 | Pace line color | `hud.chart.bestColor` |
 | Use class color | `hud.chart.useClassColorBestColor` |
+| Use the skin's color (on by default: the skin's pace-line color) | `hud.chart.bestColorFromSkin` |
 | Show zero line | `hud.chart.zeroLine` |
 | Show cooldown icons | `hud.chart.cooldowns` |
 | Shortest cooldown (seconds) | `hud.chart.cooldownMin` |
@@ -504,7 +508,7 @@ place in the strip.
 Top to bottom: a **Preview** heading (no sample line under it since LibKa0s v1.102.0, CalloutSettings
 minor 5: the real call-out is where the look shows), *Test countdown* (5 to GO! on the real call-out) and *Play*, *Text to play* (the
 stock words, led by *Countdown 10 to 1*, which counts the real call-out down from 10 with no finish),
-*Unlock to move* (the drag strip; the drag writes `callout.point`) and *Reset position*. None of them
+*Unlock to move* (the drag strip, `?` · settings · close: its close locks the call-out and turns *Center-screen countdown* off with one chat line saying where to turn it back on, and its gear opens this tab, core/CalloutSetup.lua; the drag writes `callout.point`) and *Reset position*. None of them
 touches a race. Under it, the **side tabs**: a list on the left, *Look* and *Sound*, and the selected
 one's rows on the right. Look is selected first; the pick is session state, never saved.
 
@@ -516,7 +520,8 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 |---|---|---|
 | Look | Font | `callout.font` |
 | Look | Size | `callout.size` |
-| Look | Outline | `callout.outline` |
+| Look | Outline (led by From skin, the default) | `callout.outline` |
+| Look | Use the skin's shadow (on: Shadow and its offsets are not read) | `callout.fontShadowFromSkin` |
 | Look | Shadow | `callout.shadow` |
 | Look | Shadow X offset, Shadow Y offset (disabled with no shadow) | `callout.shadowX`, `callout.shadowY` |
 | Look | Animation | `callout.anim` |
@@ -528,6 +533,7 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 | Look (Glow) | Intensity (percent), Thickness (px) | `callout.glowIntensity`, `callout.glowThickness` |
 | Look (Glow) | X offset, Y offset | `callout.glowX`, `callout.glowY` |
 | Look (Colors) | one swatch per kind | `callout.colors.<kind>` (`number`, `info`, `go`, `stop`, `warn`, `error`) |
+| Look (Colors) | Use the skin's color, beside Numbers (on: the skin's HUD text color; the swatch stays live) | `callout.numberColorFromSkin` |
 | Sound | Voice (the eight packs, Game TTS, off; Arena announcer (John) first and the default) | `callout.voice` |
 | Sound | Sound channel | `callout.channel` |
 | Sound | Speak numbers from | `callout.speakFrom` |
@@ -537,8 +543,15 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 **The glow, as AuraMaster's.** Laid out in AuraMaster's two columns under Look's *Glow* heading. The
 color follows AuraMaster's order: *Use class color* wins, then *Use the skin's color*, then the
 *Glow color* swatch, else each word's own kind color. A fresh profile has *Glow color* ticked on a
-black swatch, at 100%, 1 px and offset 1, -1 (LibKa0s v1.102.0's defaults, the owner's look); *Font*
-reads Oxanium SemiBold, the first of the call-out's faces, then Oxanium Bold, Bebas Neue and Russo One. Every Glow row but the toggle and the
+black swatch, at 100%, 2 px and offset 1, 1, with *Use the skin's color* unticked: Combat Trail's own
+glow defaults over the library's (the owner's settings of 2026-11-20, SD-CT-DEF; the unticked companion
+is a documented deviation, `docs/ARCHITECTURE.md`). The rest of the look follows the skin (LibKa0s
+v1.108.0, the owner's U-1 of 2026-11-20); *Font* reads
+the skin's font, ahead of the call-out's own faces, Oxanium SemiBold, Oxanium Bold, Bebas Neue and Russo
+One, and *Outline* *From skin*. The meaning kinds (info, GO, STOP, warn, error) draw the skin's `sem.*`
+colors until one is picked (U-2). A profile that still stored the old look (Oxanium SemiBold, Thick
+outline) moves once, its glow's *Use the skin's color* left as it was (SD-CT-DEF) (`docs/schema.md`, the step onto the skin's defaults).
+Every Glow row but the toggle and the
 class-color pair is disabled while the glow is off. A profile from before stored *Off*, *Soft* or
 *Strong*; the 2 -> 3 migration turns it into these keys (`docs/schema.md`, Migrations), and as it
 named no color or offset such a profile reads the black swatch at 1, -1.

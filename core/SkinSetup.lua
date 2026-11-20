@@ -212,6 +212,11 @@ NS.SKIN_TOKENS = {
     ["ct.danger.hover"]  = { default = GOLD, follow = "btn.hover" },
     -- The ✕ a lane draws over an interrupted or canceled cast (modules/LaneRender.lua).
     ["ct.lane.cross"] = { default = rgba(RED, 1), follow = "sem.statusBad" },
+    -- A lane's GCD ticks and its now line (modules/LaneRender.lua), while their `<key>FromSkin`
+    -- companions are on (R-2, SD-SK-CT.6): Ka0s Default keeps the lanes' stored defaults, and every
+    -- other skin draws its chart grid and its chart marker. The lines stay flat (skinning-§9, A7).
+    ["ct.lane.tick"] = { default = { 1, 1, 1, 0.25 }, follow = "chart.grid" },
+    ["ct.lane.now"]  = { default = { 1, 1, 1, 0.6 }, follow = "chart.marker" },
     -- A lane's edit overlay in Edit Mode and after /ct unlock (modules/LaneAnchor.lua): an info-blue
     -- wash with its edge, and its label.
     ["ct.lane.edit.bg"]     = { default = { 0.25, 0.5, 1, 0.3 }, follow = "list.hover", skins = wash("sem.info", 0.3) },

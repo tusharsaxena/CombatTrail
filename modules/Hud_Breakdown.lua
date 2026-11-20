@@ -134,6 +134,9 @@ local function newRow(parent)
     row.bar = bar
     row.paw = bar:CreateTexture(nil, "OVERLAY")
     row.paw:SetSize(Breakdown.PAW, Breakdown.PAW)
+    -- The paw is a white catalog mark: only its tint follows the skin, `icon.tint`, recorded so a
+    -- switch tints it again (skinning-§9's icon-shape Leave keeps the shape; SD-SK-CT.9).
+    Style.Vertex(row.paw, "icon.tint")
     row.name = Style.PlainText(bar, Style.FONT.TEXT, "LEFT")
     row.amount = Style.PlainText(bar, Style.FONT.TEXT, "RIGHT")
     row.pct = Style.PlainText(bar, Style.FONT.TEXT, "RIGHT")

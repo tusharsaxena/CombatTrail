@@ -385,7 +385,8 @@ function Strip:restyle()
     if self.stamp == A.stamp then return end
     self.stamp = A.stamp
     self.look = A.Bar("chart")
-    self.line:SetColorTexture(A.Swatch("chart", "bestColor"))
+    -- The pace line: the skin's ct.chart.diag while hud.chart.bestColorFromSkin (SD-SK-CT.4).
+    self.line:SetColorTexture(A.SkinSwatch("chart", "bestColor", "ct.chart.diag"))
     self.zero:SetShown(A.On("hud.chart.zeroLine"))
     for _, col in ipairs(self.cols) do col.stamp = nil end
 end

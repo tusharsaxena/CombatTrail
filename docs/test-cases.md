@@ -134,7 +134,7 @@ Total.
 - lane layout: TickStep reads the spacing setting and the haste
 - lane layout: LaneSize is length by icon, plus the padding, turned for up and down
 
-### test_lane_render.lua (38)
+### test_lane_render.lua (41)
 
 - lane render: a push shows one icon with the cast's texture
 - lane render: the pool reuses frames after expiry
@@ -169,13 +169,16 @@ Total.
 - lane render: the label's From skin flags resolve through the skin's outline
 - lane render: the label draws the skin's label color while its companion is on
 - lane render: a skin switch repaints a live lane
+- lane render: the background draws the skin's bar texture while its companion is on (SD-SK-CT.5)
+- lane render: the tick and now line colors follow the skin while their companions are on (SD-SK-CT.6)
+- lane render: an icon's count and name are HUD text: the skin's outline and text color (SD-SK-CT.7)
 - lane render: a skin's border styles draw the edges while their companions are on
 - lane render: a skin switch repaints the interrupt mark on a live icon
 - lane render: haste ticks keep the last plain haste in combat and never read it there
 - lane render: the spell names under the icons use the label's face, the skin's while it is on
 - lane render: Count answers a lane's live icons without building it
 
-### test_lane_anchor.lua (33)
+### test_lane_anchor.lua (34)
 
 - lane anchor: free mode uses saved point
 - lane anchor: dock pet under player follows player
@@ -199,6 +202,7 @@ Total.
 - lane anchor: level offset adds to the relative base
 - lane anchor: a secret host strata or level is never used
 - lane anchor: Edit Mode shows each lane's overlay and closing it hides them
+- lane anchor: the overlay's label takes the skin's Font outline (SD-SK-CT.8)
 - lane anchor: the Locked row keeps Edit Mode from showing the overlay
 - lane anchor: /ct unlock shows the overlay and /ct lock hides it
 - lane anchor: an unlocked lane shows even when its visibility says never
@@ -1053,7 +1057,7 @@ Total.
 - countdown: a profile that still stores the retired race.countdownCue counts as any other
 - countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
 
-### test_callout_settings.lua (12)
+### test_callout_settings.lua (18)
 
 - callout settings: every SchemaRows row is a Race mode row, declared retail, drawn by the section
 - callout settings: absent on WoW Forever, no row, default or writeThrough path
@@ -1067,6 +1071,12 @@ Total.
 - callout settings: the one tab is the library's side layout on the host's route: Preview, Look and Sound
 - callout settings: the migration rewrites a stored glow choice, drops the texts and mutes, keeps a voice
 - callout settings: a fresh profile is untouched by the migration and speaks with Arena John
+- skin defaults step: a value stored at its old default moves once; a pick and the next run stay
+- skin defaults step: a new or reset profile takes the step, which moves nothing a player sees
+- skin defaults step: with no LibKa0s the same writes are made by hand, and the record
+- skin defaults step: a pick stored before the new companions keeps drawing (R-2)
+- callout strip: unlocked, the strip carries ? · settings · close; the X locks it and turns the countdown off
+- callout strip: the settings mark opens the Race mode page on its Callout tab
 
 ### test_toast.lua (21)
 
@@ -1415,7 +1425,7 @@ Total.
 - insights: Compute lists late casts by spell, ignored apart, a sealed one as Unknown
 - insights: on WoW Forever there is no Races filter and no race-only section
 
-### test_insights.lua (21)
+### test_insights.lua (23)
 
 - insights tab: built on its first show, its label lit while it shows; /ct results insights opens it
 - insights tab: the dropdowns list the stored fights with their counts, led by All
@@ -1438,6 +1448,8 @@ Total.
 - insights tab: the bar fits the window's least width, and takes one row in the expanded view
 - insights tab: a load with no library keeps the tab and says why there are no charts
 - insights charts: the host pools through NS.Pool and draws in the window's look
+- insights charts: every bar of data draws the skin's bar texture, under this addon's skin
+- insights charts: the damage tail after the buzzer draws in the chart's bar color, not a best's blue
 
 ### test_share.lua (13)
 
@@ -1510,7 +1522,7 @@ Total.
 - gear: the window opens from the detail, marks the changes and closes with the Results window
 - gear: a stand-down refuses the open, a deleted fight closes it
 
-### test_bar_textures.lua (17)
+### test_bar_textures.lua (18)
 
 - bar textures: the two skins under test name different bar textures
 - bar textures: the HUD's spell row draws the skin's texture under Ka0s Default and Obsidian
@@ -1525,6 +1537,7 @@ Total.
 - bar textures: the detail's Targets bar draws the skin's texture under Ka0s Default and Obsidian
 - bar textures: the compare's this-fight bar draws the skin's texture under Ka0s Default and Obsidian
 - bar textures: the compare's other-fight bar draws the skin's texture under Ka0s Default and Obsidian
+- bar textures: an Insights bar draws the skin's texture under Ka0s Default and Obsidian
 - bar textures: a texture the player picked for the HUD's spell rows wins over the skin's
 - bar textures: the Results bars keep the palette's blue in the skin's texture
 - bar textures: three HUD look changes in one frame redraw the Results detail once
@@ -1796,9 +1809,10 @@ Total.
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
 
-### test_skin_switch.lua (48)
+### test_skin_switch.lua (71)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the check is falsifiable, a bar whose texture never moves is reported
 - skin switch: the HUD's window shell changes
 - skin switch: the HUD's window shell changes with the Scope ignored
 - skin switch: the HUD's footer changes
@@ -1808,6 +1822,16 @@ Total.
 - skin switch: the live figures' text changes
 - skin switch: the target line changes
 - skin switch: the target line changes with the Scope ignored
+- skin switch: the fight clock changes
+- skin switch: a damage chart column changes
+- skin switch: a damage chart column changes with the Scope ignored
+- skin switch: a spell row's bar changes
+- skin switch: a spell row's bar changes with the Scope ignored
+- skin switch: the pace bar's ahead half changes
+- skin switch: the pace bar's ahead half changes with the Scope ignored
+- skin switch: the damage chart's pace line changes
+- skin switch: a spell row's paw changes
+- skin switch: a spell row's paw changes with the Scope ignored
 - skin switch: the Results window's shell changes
 - skin switch: the Results window's shell changes with the Scope ignored
 - skin switch: the Results footer changes
@@ -1818,6 +1842,10 @@ Total.
 - skin switch: the fight detail's name changes with the Scope ignored
 - skin switch: the fight detail's Delete button changes
 - skin switch: the fight detail's Delete button changes with the Scope ignored
+- skin switch: a Results row's Damage bar changes
+- skin switch: a Results row's Damage bar changes with the Scope ignored
+- skin switch: an Insights bar changes
+- skin switch: an Insights bar changes with the Scope ignored
 - skin switch: the ability timeline's shell changes
 - skin switch: the ability timeline's shell changes with the Scope ignored
 - skin switch: the dim cover changes
@@ -1828,6 +1856,8 @@ Total.
 - skin switch: the compare's spell header changes with the Scope ignored
 - skin switch: the compare's usage heading changes
 - skin switch: the compare's usage heading changes with the Scope ignored
+- skin switch: a compare row's bar changes
+- skin switch: a compare row's bar changes with the Scope ignored
 - skin switch: the gear view's shell changes
 - skin switch: the gear view's shell changes with the Scope ignored
 - skin switch: the gear view's legend changes
@@ -1838,6 +1868,10 @@ Total.
 - skin switch: an interrupted cast's mark changes with the Scope ignored
 - skin switch: a lane's edit overlay changes
 - skin switch: a lane's edit overlay changes with the Scope ignored
+- skin switch: a lane icon's count changes
+- skin switch: a lane icon's count changes with the Scope ignored
+- skin switch: a lane's GCD tick changes
+- skin switch: a lane's now line changes
 - skin switch: the Race window's shell changes
 - skin switch: the Race window's shell changes with the Scope ignored
 - skin switch: the Race window's footer changes
@@ -1846,10 +1880,12 @@ Total.
 - skin switch: the Race window's target card changes with the Scope ignored
 - skin switch: the Race window's Arm Race button changes
 - skin switch: the Race window's Arm Race button changes with the Scope ignored
+- skin switch: the Race window's time bar changes
+- skin switch: the Race window's time bar changes with the Scope ignored
 
 ### test_skin_values.lua (3)
 
-- skin values: every host row carries its file, substring, why and cause id
+- skin values: every host row carries its file, substring, why and a cause id or kit row category
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
@@ -1864,8 +1900,8 @@ Total.
 | test_slash.lua | 19 |
 | test_lane_casts.lua | 33 |
 | test_lane_layout.lua | 13 |
-| test_lane_render.lua | 38 |
-| test_lane_anchor.lua | 33 |
+| test_lane_render.lua | 41 |
+| test_lane_anchor.lua | 34 |
 | test_lane_visibility.lua | 30 |
 | test_lanes_page.lua | 25 |
 | test_probe.lua | 35 |
@@ -1895,7 +1931,7 @@ Total.
 | test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
-| test_callout_settings.lua | 12 |
+| test_callout_settings.lua | 18 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1913,13 +1949,13 @@ Total.
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 27 |
 | test_insights_data.lua | 14 |
-| test_insights.lua | 21 |
+| test_insights.lua | 23 |
 | test_share.lua | 13 |
 | test_timeline.lua | 14 |
 | test_timeline_marks.lua | 11 |
 | test_compare.lua | 12 |
 | test_gear.lua | 6 |
-| test_bar_textures.lua | 17 |
+| test_bar_textures.lua | 18 |
 | test_title_bar.lua | 14 |
 | test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
@@ -1940,7 +1976,7 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_client_globals.lua | 3 |
 | test_diagnostics_contract.lua | 8 |
-| test_skin_switch.lua | 48 |
+| test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1589** |
+| **Total** | **1625** |

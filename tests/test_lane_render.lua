@@ -41,6 +41,14 @@ end
 
 local function lvl(inst, f) return inst.mocks.__layers(f).level end
 
+-- The color a lane's background draws: its tint over a texture (the skin's bar texture, or a pick),
+-- else its flat color.
+local function bgColor(inst, bg)
+    local p = inst.mocks.__paint(bg)
+    if p.texture then return p.vertex end
+    return p.color
+end
+
 -- ── the pool and OnUpdate ──────────────────────────────────────────────────────────────────────
 
 test("lane render: a push shows one icon with the cast's texture", function()
@@ -323,7 +331,7 @@ test("lane render: background and now line follow their switches", function()
     set(inst, "player", "bgColorFromSkin", false)
     local bg = R.__bg("player")
     assertTrue(bg:IsShown())
-    assertEqual(inst.mocks.__paint(bg).color[4], 0.35)
+    assertEqual(bgColor(inst, bg)[4], 0.35)
     set(inst, "player", "background", false)
     assertFalse(bg:IsShown())
     assertTrue(R.__now("player"):IsShown())
@@ -419,18 +427,18 @@ test("lane render: the skin draws each color while its companion is on, the swat
     R.Push("player", item(133, 0))
     local icon = R.__icons("player")[1]
     near(inst.mocks.__paint(icon.border[1]).color, skinColor(inst, "icon.border"), "icon border")
-    near(inst.mocks.__paint(R.__bg("player")).color, skinColor(inst, "bar.bg"), "background")
+    near(bgColor(inst, R.__bg("player")), skinColor(inst, "bar.bg"), "background")
     set(inst, "player", "borderColorFromSkin", false)
     set(inst, "player", "bgColorFromSkin", false)
     near(inst.mocks.__paint(icon.border[1]).color, { 1, 0.82, 0, 0.9 }, "the stored border")
-    near(inst.mocks.__paint(R.__bg("player")).color, { 0, 0, 0, 0.35 }, "the stored background")
+    near(bgColor(inst, R.__bg("player")), { 0, 0, 0, 0.35 }, "the stored background")
 end)
 
 test("lane render: a class color comes before the skin's", function()
     local inst, R = setup()
     inst.NS.ClassColor = function() return 0.1, 0.2, 0.3 end
     set(inst, "player", "bgClassColor", true)
-    near(inst.mocks.__paint(R.__bg("player")).color, { 0.1, 0.2, 0.3, 0.35 }, "the class color, the swatch's alpha")
+    near(bgColor(inst, R.__bg("player")), { 0.1, 0.2, 0.3, 0.35 }, "the class color, the swatch's alpha")
 end)
 
 test("lane render: the label's From skin flags resolve through the skin's outline", function()
@@ -457,13 +465,75 @@ test("lane render: a skin switch repaints a live lane", function()
     R.Push("player", item(133, 0))
     local bg = R.__bg("player")
     local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
-    local before = inst.mocks.__paint(bg).color
+    local before = bgColor(inst, bg)
     local source, skin = Skin:GetChoice("CombatTrail")
     Skin:RegisterSkin({ key = "__laneProbe", label = "Probe", tokens = { ["bar.bg"] = { 0.9, 0.1, 0.1, 0.7 } } })
     Skin:SetChoice("CombatTrail", "ka0s", "__laneProbe")
-    near(inst.mocks.__paint(bg).color, { 0.9, 0.1, 0.1, 0.7 }, "the background follows the new skin")
+    near(bgColor(inst, bg), { 0.9, 0.1, 0.1, 0.7 }, "the background follows the new skin")
     Skin:SetChoice("CombatTrail", source, skin)
-    near(inst.mocks.__paint(bg).color, before, "and comes back")
+    near(bgColor(inst, bg), before, "and comes back")
+end)
+
+-- ── the skin-defaults audit (LibKa0s#97, R-2 of 2026-11-20) ───────────────────────────────────────
+
+-- Run `fn` under a probe skin of `tokens`, the owner's choice put back after.
+local function underProbe(inst, tokens, fn)
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    local source, skin = Skin:GetChoice("CombatTrail")
+    Skin:RegisterSkin({ key = "__auditProbe", label = "Probe", tokens = tokens })
+    Skin:SetChoice("CombatTrail", "ka0s", "__auditProbe")
+    local ok, err = pcall(fn)
+    Skin:SetChoice("CombatTrail", source, skin)
+    if not ok then error(err, 0) end
+end
+
+test("lane render: the background draws the skin's bar texture while its companion is on (SD-SK-CT.5)", function()
+    local inst, R = setup()
+    assertEqual(cfgOf(inst, "player").bgTextureFromSkin, true, "on by default")
+    R.Apply("player")
+    local LSM = inst.mocks.LibStub("LibSharedMedia-3.0")
+    local want = LSM:Fetch("statusbar", inst.NS.Skin.Token("bar.texture"), true)
+    assertTrue(want ~= nil, "the skin's bar texture resolves")
+    assertEqual(inst.mocks.__paint(R.__bg("player")).texture, want, "the skin's bar texture, tinted")
+    set(inst, "player", "bgTextureFromSkin", false)
+    local p = inst.mocks.__paint(R.__bg("player"))
+    assertTrue(p.texture == nil and p.color ~= nil, "off, the stored pick: \"\" fills it flat")
+end)
+
+test("lane render: the tick and now line colors follow the skin while their companions are on (SD-SK-CT.6)", function()
+    local inst, R = setup()
+    local function tickColor() return inst.mocks.__paint(R.__ticks("player")[1]).color end
+    local function nowColor() return inst.mocks.__paint(R.__now("player")).color end
+    R.Apply("player")
+    near(tickColor(), skinColor(inst, "ct.lane.tick"), "the owner token (on Ka0s Default, the lanes' own default)")
+    near(nowColor(), skinColor(inst, "ct.lane.now"), "the now line's owner token")
+    underProbe(inst, { ["chart.grid"] = { 0.2, 0.3, 0.4, 0.5 }, ["chart.marker"] = { 0.6, 0.5, 0.4, 0.9 } }, function()
+        near(tickColor(), { 0.2, 0.3, 0.4, 0.5 }, "another skin: its chart grid")
+        near(nowColor(), { 0.6, 0.5, 0.4, 0.9 }, "and its chart marker")
+        set(inst, "player", "tickColorFromSkin", false)
+        set(inst, "player", "nowColorFromSkin", false)
+        set(inst, "player", "tickColor", { r = 1, g = 0, b = 0, a = 1 })
+        near(tickColor(), { 1, 0, 0, 1 }, "off: the stored tick color")
+        near(nowColor(), { 1, 1, 1, 0.6 }, "off: the stored now line color")
+    end)
+end)
+
+test("lane render: an icon's count and name are HUD text: the skin's outline and text color (SD-SK-CT.7)", function()
+    local inst, R = setup()
+    R.Push("player", item(133, 0))
+    local icon = R.__icons("player")[1]
+    local S = inst.NS.Skin
+    local hr, hg, hb, ha = S.HudTextColor()
+    for _, fs in ipairs({ icon.count, icon.name }) do
+        local _, _, flags = fs:GetFont()
+        assertEqual(flags, S.FontFlags("@skin"), "the skin's Font outline, not a literal")
+        near({ fs:GetTextColor() }, { hr, hg, hb, ha or 1 }, "the skin's HUD text color")
+    end
+    underProbe(inst, { ["hud.text"] = { 0.3, 0.6, 0.9, 1 }, ["hud.outline"] = "THICKOUTLINE" }, function()
+        near({ icon.count:GetTextColor() }, { 0.3, 0.6, 0.9, 1 }, "a switch recolors a live icon's count")
+        local _, _, flags = icon.name:GetFont()
+        assertEqual(flags, "THICKOUTLINE", "and redraws its name in the new skin's outline")
+    end)
 end)
 
 test("lane render: a skin's border styles draw the edges while their companions are on", function()

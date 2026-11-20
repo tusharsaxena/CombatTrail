@@ -401,7 +401,10 @@ local function paintOverlay(laneKey)
     for _, t in ipairs(ov.edges) do t:SetColorTexture(tint("ct.lane.edit.border")) end
     local face = NS.Skin and NS.Skin.GetFont and NS.Skin.GetFont()
     if type(face) ~= "string" or face == "" then face = STANDARD_TEXT_FONT end
-    ov.text:SetFont(face, 11, "OUTLINE")
+    -- The skin's Font outline (SD-SK-CT.8): S.FontFlags with From skin; the size is a layout's.
+    local S = NS.Skin
+    local flags = S and type(S.FontFlags) == "function" and S.FontFlags(S.FROM_SKIN) or "OUTLINE"
+    ov.text:SetFont(face, 11, type(flags) == "string" and flags or "OUTLINE")
     ov.text:SetTextColor(tint("ct.lane.edit.text"))
     ov.text:SetText(overlayText(laneKey))
 end

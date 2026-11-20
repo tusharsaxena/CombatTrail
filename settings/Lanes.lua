@@ -157,9 +157,12 @@ local function laneRows(lane)
         return skinRow(key .. "FromSkin", L["Use the skin's color"],
             L["Draw this in the skin's own color. The swatch is not read while this is on, and Use class color comes first."])
     end
+    -- `followsSkin`: the swatch's `<key>FromSkin` row is this addon's own (`extra`), in its words;
+    -- otherwise the composer's own companion follows the pair (compose minor 20, LibKa0s v1.108.0:
+    -- the tick and now line colors, SD-SK-CT.6).
     local function colorPair(key, companion, label, followsSkin)
         return block(H.ColorPair(spec({ key = key, companionKey = companion, label = label,
-            defaults = { [key] = D[key], [companion] = D[companion] },
+            defaults = { [key] = D[key], [companion] = D[companion], [key .. "FromSkin"] = D[key .. "FromSkin"] },
             extra = followsSkin and { colorSkin(key) } or nil })))
     end
     -- A border style row picks a statusbar texture: the edges are strips (modules/LaneRender.lua).
@@ -274,7 +277,10 @@ local function laneRows(lane)
         tooltip = L["Fill the lane behind its icons."] })
     row("bgTexture", { type = "string", label = L["Background texture"], dialogControl = "Ka0sMedia_Statusbar",
         values = flatTextures(),
-        tooltip = L["The texture the background is drawn with, tinted by its color. Empty fills it flat."] })
+        disabledIf = function() return NS.GetSetting(P .. "bgTextureFromSkin") == true end,
+        tooltip = L["The texture the background is drawn with, tinted by its color. Empty fills it flat. Not read while Use the skin's texture is on."] })
+    row("bgTextureFromSkin", { type = "bool", label = L["Use the skin's texture"],
+        tooltip = L["Draw the background in the skin's bar texture. Background texture is not read while this is on."] })
     colorPair("bgColor", "bgClassColor", L["Background color"], true)
     row("padding", { type = "number", label = L["Padding (px)"], min = 0, max = 20, step = 1, startsLine = true,
         tooltip = L["Space between the lane's edge and its icons, in pixels."] })

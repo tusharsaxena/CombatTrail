@@ -375,6 +375,23 @@ test("lane anchor: Edit Mode shows each lane's overlay and closing it hides them
     assertFalse(A.__overlay("player"):IsShown())
 end)
 
+test("lane anchor: the overlay's label takes the skin's Font outline (SD-SK-CT.8)", function()
+    local inst, A = setup()
+    inst.mocks.EventRegistry:TriggerEvent("EditMode.Enter")
+    local S = inst.NS.Skin
+    local _, size, flags = A.__overlay("player").text:GetFont()
+    assertEqual(flags, S.FontFlags(S.FROM_SKIN), "From skin through S.FontFlags, not a literal")
+    assertEqual(size, 11, "its size is the overlay's own (skinning-9's text-size Leave)")
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    local source, skin = Skin:GetChoice("CombatTrail")
+    Skin:RegisterSkin({ key = "__overlayProbe", label = "Probe", tokens = { ["hud.outline"] = "THICKOUTLINE" } })
+    Skin:SetChoice("CombatTrail", "ka0s", "__overlayProbe")
+    _, _, flags = A.__overlay("player").text:GetFont()
+    Skin:SetChoice("CombatTrail", source, skin)
+    inst.mocks.EventRegistry:TriggerEvent("EditMode.Exit")
+    assertEqual(flags, "THICKOUTLINE", "a switch redraws it in the new skin's outline")
+end)
+
 test("lane anchor: the Locked row keeps Edit Mode from showing the overlay", function()
     local inst, A = setup()
     inst.NS.SetByPath("general.locked", true)

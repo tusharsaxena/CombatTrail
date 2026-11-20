@@ -638,12 +638,13 @@ local function layoutPerDay(self, stats, y, w, pad)
     return self.ctx:renderStrip(self.ctx:Pool("perDay"), self.headers.perDay, self.strips.perDay, buckets, y, w, pad)
 end
 
--- Under Races: the damage tail after the buzzer in 5 s buckets, the last open-ended.
+-- Under Races: the damage tail after the buzzer in 5 s buckets, the last open-ended. No color of its
+-- own: the rows are no best, so they draw the context's bar color, ct.chart.bar (SD-SK-CT.2).
 local function layoutTail(self, stats, y, w, pad)
     local rows = {}
     for i, b in ipairs(stats.tail) do
         local label = b.hi and L["%d-%d s"]:format(b.lo, b.hi) or L["%d+ s"]:format(b.lo)
-        rows[i] = { label = label, color = C.blue, frac = b.n, value = tostring(b.n),
+        rows[i] = { label = label, frac = b.n, value = tostring(b.n),
                     tip = { label, racesWord(b.n), L["Damage still landing after the buzzer, and counted."] } }
     end
     return self.ctx:renderBarSection(self.ctx:Pool("tail"), self.headers.tail, rows, y, w, pad)

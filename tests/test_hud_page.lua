@@ -136,9 +136,10 @@ end)
 test("hud page: the composed blocks follow the skin with the profile's defaults", function()
     local NS = T.load().NS
     local function row(p) return assert(NS.FindSchemaRow(p), "no row " .. p) end
-    -- The clock is the mono role: no outline, and its flags never follow the skin's outline.
-    assertEqual(row("hud.clock.fontFlags").default, "")
-    assertTrue(row("hud.clock.fontFlags").values["@skin"] == nil, "no From skin on the clock's flags")
+    -- The HUD fight clock is no race clock (the owner's U-14 of 2026-11-20, skinning-§9): its Font
+    -- flags lead with From skin and default to the skin's outline, as every HUD text's.
+    assertEqual(row("hud.clock.fontFlags").default, "@skin")
+    assertTrue(row("hud.clock.fontFlags").values["@skin"] ~= nil, "From skin on the clock's flags")
     assertEqual(row("hud.clock.fontFromSkin").default, true, "the skin's HUD face, as DPS Race's clock (v0.2 B2)")
     -- The figures and the rows draw the skin's outline by default.
     assertEqual(row("hud.figures.fontFlags").default, "@skin")
@@ -156,6 +157,12 @@ test("hud page: the composed blocks follow the skin with the profile's defaults"
     -- The backdrop swatches' skin companions are the host's own rows, beside their pair.
     for _, p in ipairs({ "hud.figures.boxBgFromSkin", "hud.figures.boxBorderFromSkin",
                          "hud.window.bgFromSkin", "hud.window.borderFromSkin" }) do
+        assertEqual(row(p).type, "bool")
+        assertEqual(row(p).default, true)
+    end
+    -- R-2 (LibKa0s v1.108.0): the Pace line color and the spell rows' border follow the skin by default.
+    for _, p in ipairs({ "hud.chart.bestColorFromSkin", "hud.spells.borderStyleFromSkin",
+                         "hud.spells.borderColorFromSkin" }) do
         assertEqual(row(p).type, "bool")
         assertEqual(row(p).default, true)
     end

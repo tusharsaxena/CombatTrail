@@ -99,6 +99,9 @@ L["What the Race window's clock shows while a race runs: the time elapsed and th
     "What the Race window's clock shows while a race runs: the time elapsed and the time left side by side, or one of them alone, drawn larger."
 L["Countdown"] = "Countdown"
 L["Center-screen countdown"] = "Center-screen countdown"
+-- The call-out strip's close (core/CalloutSetup.lua, SD-CT-100).
+L["Center-screen countdown off. Turn it back on in Race mode > Race > Countdown."] =
+    "Center-screen countdown off. Turn it back on in Race mode > Race > Countdown."
 L["Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."] =
     "Large numbers in the middle of the screen for the last seconds of the race, one a second down to 1, like a pull timer. Only you see them."
 L["Center countdown from (seconds)"] = "Center countdown from (seconds)"
