@@ -462,6 +462,39 @@ test("skin defaults step: with no LibKa0s the same writes are made by hand, and 
     assertFalse(NS.FollowSkinDefaults(p), "and once only")
 end)
 
+test("skin defaults step: a pick stored before the new companions keeps drawing (R-2)", function()
+    boot({
+        global = { schemaVersion = 3 },
+        profileKeys = { ["Hunter - Realm"] = "Default" },
+        profiles = {
+            Default = {},
+            Plain = { general = { locked = true } },
+            Picked = { lanes = { player = { bgTexture = "Ka0s Smooth", tickColor = { r = 0.5 },
+                                            nowColor = { r = 1, g = 0, b = 0, a = 1 } },
+                                 pet = { tickColor = { a = 0.9 } } },
+                       hud = { chart = { bestColor = { g = 0.2 } } } },
+            AtDefault = { lanes = { player = { bgTexture = "", tickColor = { r = 1, g = 1, b = 1, a = 0.25 },
+                                               nowColor = { r = 1, g = 1, b = 1, a = 0.6 } } },
+                          hud = { chart = { bestColor = { r = 0.9, g = 0.9, b = 0.92, a = 0.4 } } } },
+        },
+    })
+    local sv = _G.CombatTrailDB
+    local lp, pp = sv.profiles.Picked.lanes.player, sv.profiles.Picked.lanes.pet
+    assertEqual(lp.bgTextureFromSkin, false, "a picked background texture keeps drawing")
+    assertEqual(lp.tickColorFromSkin, false, "a picked tick color keeps drawing")
+    assertEqual(lp.nowColorFromSkin, false, "a picked now-line color keeps drawing")
+    assertEqual(pp.tickColorFromSkin, false, "the Pet lane's own pick too")
+    assertNil(rawget(pp, "nowColorFromSkin"), "an unpicked key's companion is not written")
+    assertNil(rawget(pp, "bgTextureFromSkin"))
+    assertEqual(sv.profiles.Picked.hud.chart.bestColorFromSkin, false, "a picked pace-line color keeps drawing")
+    local at = sv.profiles.AtDefault
+    assertNil(rawget(at.lanes.player, "bgTextureFromSkin"), "a value at its old default follows the skin")
+    assertNil(rawget(at.lanes.player, "tickColorFromSkin"))
+    assertNil(rawget(at.lanes.player, "nowColorFromSkin"))
+    assertNil(rawget(at.hud.chart, "bestColorFromSkin"))
+    assertNil(rawget(sv.profiles.Plain, "lanes"), "a profile with no lanes table gains none")
+end)
+
 -- ── the drag strip's marks (LibKa0s#100, Callout minor 5, SD-CT-100) ─────────────────────────────
 
 -- The call-out's drag strip, as LibKa0s-Widgets-1.0's DragHandle built it for the call-out's frame on

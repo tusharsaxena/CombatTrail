@@ -29,6 +29,24 @@ NS.SKIN_DEFAULTS_FROM = {
     { "hud.spells.borderColorFromSkin", false },
 }
 
+-- The picks the same step keeps drawing. Four companions are new with this build and default on
+-- (lanes.<k>.bgTextureFromSkin, tickColorFromSkin, nowColorFromSkin and hud.chart.bestColorFromSkin), and
+-- while one is on its reader draws the skin's value, so a pick stored before it would stop showing. R-2:
+-- a stored pick stays. Where the profile stores a value that differs from its default, the step writes
+-- the companion false, so the pick keeps drawing. The pick's default is unchanged by this build, so it
+-- is read from NS.defaults (defaults/Profile.lua) at the step, never copied here. A color is compared
+-- per component: AceDB strips a component equal to its default, so a missing one is the default.
+--   { the pick, the companion written false }
+NS.SKIN_PICKS_KEPT = {
+    { "lanes.player.bgTexture", "lanes.player.bgTextureFromSkin" },
+    { "lanes.pet.bgTexture", "lanes.pet.bgTextureFromSkin" },
+    { "lanes.player.tickColor", "lanes.player.tickColorFromSkin" },
+    { "lanes.pet.tickColor", "lanes.pet.tickColorFromSkin" },
+    { "lanes.player.nowColor", "lanes.player.nowColorFromSkin" },
+    { "lanes.pet.nowColor", "lanes.pet.nowColorFromSkin" },
+    { "hud.chart.bestColor", "hud.chart.bestColorFromSkin" },
+}
+
 -- The table holding `path`'s last segment in `t`, and that segment; nil where a table is missing.
 local function walk(t, path)
     local parent, leaf = t, nil
@@ -40,6 +58,17 @@ local function walk(t, path)
         leaf = seg
     end
     return parent, leaf
+end
+
+-- Whether a stored value differs from its old default: a string by value, a color by any component
+-- it stores (one it does not store is the default's).
+local function differs(v, default)
+    if type(default) ~= "table" then return v ~= nil and v ~= default end
+    if type(v) ~= "table" then return false end
+    for _, c in ipairs({ "r", "g", "b", "a" }) do
+        if type(v[c]) == "number" and math.abs(v[c] - default[c]) > 1e-6 then return true end
+    end
+    return false
 end
 
 --- The one-time step onto the skin's defaults, on one profile. Answers true when it ran (the record
@@ -61,6 +90,15 @@ function NS.FollowSkinDefaults(profile)
         for _, path in ipairs(keys) do
             local parent, leaf = walk(profile, path)
             if type(parent[leaf]) == "boolean" then parent[leaf] = true else parent[leaf] = "@skin" end
+        end
+    end
+    local defaults = NS.defaults and NS.defaults.profile
+    for _, entry in ipairs(defaults and NS.SKIN_PICKS_KEPT or {}) do
+        local parent, leaf = walk(profile, entry[1])
+        local dParent, dLeaf = walk(defaults, entry[1])
+        if parent ~= nil and dParent ~= nil and differs(parent[leaf], dParent[dLeaf]) then
+            local cParent, cLeaf = walk(profile, entry[2])
+            cParent[cLeaf] = false
         end
     end
     if Callout and type(Callout.MoveToSkin) == "function" and type(profile.callout) == "table" then

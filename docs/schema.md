@@ -162,7 +162,11 @@ record, `skin.defaultsMoved` (`NS.FollowSkinDefaults`, LibKa0s v1.108.0, the own
 face, outline and glow color, each only while still at its v1.107.0 value). A picked value stays, and so
 does one set back to an old default after the step ran. AceDB stores no value equal to its default, so a
 profile that never picked follows with no step. Without the Skin major the same writes are made by hand;
-without the Callout major the call-out's move is skipped.
+without the Callout major the call-out's move is skipped. The same step keeps a pick stored before four
+new companions drawing (R-2: a stored pick stays): where `lanes.<k>.bgTexture`, `tickColor`, `nowColor`
+or `hud.chart.bestColor` stores a value that differs from its default (a color by any component it
+stores), the matching `bgTextureFromSkin`, `tickColorFromSkin`, `nowColorFromSkin` or
+`bestColorFromSkin` is written `false` (`NS.SKIN_PICKS_KEPT`).
 
 A change to the fight record bumps `Recorder.CT_SCHEMA` and reads the older shape where it is read,
 never by rewriting stored fights: CT_SCHEMA 3 → 4 (the optional `race`) has no step, and an older record
