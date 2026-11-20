@@ -128,6 +128,28 @@ for _, s in ipairs(SURFACES) do
     end)
 end
 
+-- The Insights tab's bars of data (SD-SK-CT.1 of Ka0sAddonsCommonTasks docs/2026-11-20-SKIN_DEFAULTS_AUDIT,
+-- LibKa0s#97): By Character's first bar, read on the Insights tab, and the Fights tab back after.
+local function insightsBar()
+    local NS = live().NS
+    assert(NS.Results.ShowTab("insights"), "the Insights tab did not open")
+    local rows = NS.Results.__ui().insights.ctx:Pool("chars").active
+    return assert(rows[1] and rows[1].fill, "By Character draws no bar")
+end
+
+test("bar textures: an Insights bar draws the skin's texture under Ka0s Default and Obsidian", function()
+    local Skin = skinLib()
+    local ok, err = pcall(function()
+        for _, key in ipairs({ Skin.DEFAULT, OTHER }) do
+            withSkin(key, function()
+                assertEqual(drawnTexture(insightsBar()), skinTexture(), "the Insights bar under " .. key)
+            end)
+        end
+    end)
+    live().NS.Results.ShowTab("fights")
+    if not ok then error(err, 0) end
+end)
+
 test("bar textures: a texture the player picked for the HUD's spell rows wins over the skin's", function()
     local NS = live().NS
     local Media = live().mocks.LibStub("LibKa0s-Media-1.0")

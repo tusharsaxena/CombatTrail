@@ -37,8 +37,12 @@ local _, NS = ...
 -- S.HudLabelColor, S.HudShadow through S.HudFont). A class color comes first; a companion off, or a
 -- skin that states nothing, draws the stored value. The edges are strips, so a skin's border style
 -- draws flat (a texture picked on the Lanes page draws only while its companion is off, or under a
--- skin whose bar border is None). The ticks and the now line are thin flat lines and keep their
--- stored colors (skinning-§9's Leave class). A skin switch re-applies every lane (OnLooksChanged).
+-- skin whose bar border is None). From the skin-defaults audit (LibKa0s#97, R-2 of 2026-11-20) the
+-- background's texture follows `bar.texture` (`bgTextureFromSkin`), the ticks and the now line take
+-- the owner tokens ct.lane.tick and ct.lane.now (`tickColorFromSkin`, `nowColorFromSkin`; the lines
+-- stay flat, skinning-§9's A7), and an icon's stack count and spell name are HUD text: the skin's
+-- Font outline and shadow through S.HudFont, its HUD text color. A skin switch re-applies every lane
+-- (OnLooksChanged).
 --
 -- Stand-down (core/LifecycleSetup.lua) calls Suspend: every icon released, every lane hidden, no
 -- OnUpdate. Resume rebuilds from the CURRENT settings.
@@ -141,6 +145,8 @@ local SKIN_COLOR_OF = {
     bgColor         = function(S) return S.Color("bar.bg") end,
     laneBorderColor = function(S) return S.Color("bar.border") end,
     labelColor      = function(S) return S.HudLabelColor() end,
+    tickColor       = function(S) return S.Color("ct.lane.tick") end,
+    nowColor        = function(S) return S.Color("ct.lane.now") end,
 }
 
 -- The skin's color for `key`, or nil (companion off, no skin token, or a facade that answers none).
@@ -356,6 +362,23 @@ local function refreshName(f, cfg)
     f.name:SetShown(text ~= nil)
 end
 
+local iconFont = {}   -- refilled per call: S.HudFont keeps nothing of it
+
+-- An icon's stack count or spell name: HUD text (SD-SK-CT.7), drawn through S.HudFont with the skin's
+-- Font outline and shadow, then in the skin's HUD text color (white with no skin to answer). The
+-- size is the icon's (skinning-§9's text-size Leave).
+local function iconText(fs, face, size)
+    local S = NS.Skin
+    iconFont.face, iconFont.size = face, size
+    iconFont.flags = S and S.FROM_SKIN or "OUTLINE"
+    iconFont.shadow, iconFont.shadowFromSkin = false, true
+    S.HudFont(fs, iconFont)
+    local r, g, b, a
+    if type(S.HudTextColor) == "function" then r, g, b, a = S.HudTextColor() end
+    if type(r) ~= "number" then r, g, b, a = 1, 1, 1, 1 end
+    fs:SetTextColor(r, g, b, a or 1)
+end
+
 --- Every look a lane setting decides, on one icon (a push, and every Apply on the live ones).
 local function styleIcon(f, cfg, face)
     local size = math.max(1, num(cfg.iconSize, 28))
@@ -370,8 +393,8 @@ local function styleIcon(f, cfg, face)
     paintEdges(f.glow, cfg, "glowColor")
     showEdges(f.glow, wantsGlow(f.spellID, cfg))
     paintMark(f)
-    f.count:SetFont(face, math.max(8, math.floor(size * 0.4)), "OUTLINE")
-    f.name:SetFont(face, math.max(8, math.floor(size * 0.35)), "OUTLINE")
+    iconText(f.count, face, math.max(8, math.floor(size * 0.4)))
+    iconText(f.name, face, math.max(8, math.floor(size * 0.35)))
     setTooltip(f, cfg.tooltip ~= false)
     refreshName(f, cfg)
 end
@@ -509,8 +532,20 @@ local function applyTicks(st, cfg)
     st.tickCount = #offsets
 end
 
+-- The background's texture: the skin's `bar.texture` while `bgTextureFromSkin` is on (S.Resolve
+-- answers the stored pick while the skin has none), else the stored pick ("" = flat).
+local function bgTexture(cfg)
+    local S = NS.Skin
+    if cfg.bgTextureFromSkin == true and S and S.Resolve then
+        local ok, key = pcall(S.Resolve, "bar.texture", cfg.bgTexture, true)
+        local tex = ok and media("statusbar", key) or nil
+        if tex then return tex end
+    end
+    return media("statusbar", cfg.bgTexture)
+end
+
 local function applyBackground(st, cfg)
-    local tex = media("statusbar", cfg.bgTexture)
+    local tex = bgTexture(cfg)
     if tex then
         st.bg:SetTexture(tex)
         st.bg:SetVertexColor(tint(cfg, "bgColor"))

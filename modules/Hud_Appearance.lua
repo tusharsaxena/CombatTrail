@@ -13,12 +13,14 @@ local addonName, NS = ...
 -- HUD string, `fontColorFromSkin` and `fontShadowFromSkin` (on: the skin's S.HudTextColor and
 -- S.HudShadow draw, a class color still first); a bar block `barTexture`, `barAlpha`, `barColor`,
 -- `useClassColorBar` and `barTextureFromSkin`; a swatch `<key>` with its `useClassColor<Key>`.
---   hud.clock    the fight clock's font block (the mono role: its flags never follow the outline)
+--   hud.clock    the fight clock's font block (its flags "@skin", the skin's outline: the HUD fight
+--                clock is no race clock, the owner's U-14 of 2026-11-20)
 --   hud.figures  the Damage and DPS figures' font block, the over card's DPS color (`overColor`),
 --                and the boxes' background and border (`boxBg`, `boxBorder`, each with a
 --                `<key>FromSkin` companion: on, the skin's Card draws it)
 --   hud.chart    the plot's height and its most columns, the columns' bar block, the
---                pace-line color, the cooldown icons and their threshold, the zero line
+--                pace-line color (with `bestColorFromSkin`: on, the skin's ct.chart.diag), the
+--                cooldown icons and their threshold, the zero line
 --   hud.spells   the rows shown (0: every one, the wheel scrolls), the row height, the icons, the
 --                pet's paw, the player rows' bar block, the pet rows' color, the rows' font block
 --   hud.window   the title bar and its title, the background and border (each with its
@@ -109,6 +111,24 @@ end
 function Appearance.Swatch(block, key)
     local p = "hud." .. block .. "."
     return Appearance.Color(p .. key, p .. companionOf(key))
+end
+
+--- A swatch with a `<key>FromSkin` companion (R-2, LibKa0s v1.108.0's composer): Use class color
+--- first, then the owner token `token` while the companion is on and the skin is live, else the stored
+--- swatch. A degraded facade answers no follow read (IsEnabled false), so the stored color draws.
+--- @param block string
+--- @param key string
+--- @param token string  an owner token ("ct.chart.diag")
+--- @return number r, number g, number b, number a
+function Appearance.SkinSwatch(block, key, token)
+    local p = "hud." .. block .. "."
+    local S = NS.Skin
+    if setting(p .. companionOf(key)) ~= true and setting(p .. key .. "FromSkin") == true
+        and S and type(S.IsEnabled) == "function" and S.IsEnabled() then
+        local r, g, b, a = S.Color(token)
+        if r ~= nil then return r, g, b, a or 1 end
+    end
+    return Appearance.Swatch(block, key)
 end
 
 -- The LSM name a media leaf draws: the skin's while its companion is on and the skin answers.

@@ -394,3 +394,70 @@ test("callout settings: a fresh profile is untouched by the migration and speaks
     NS:RunMigrations()
     assertTrue(NS.Callout:Get("glow"))
 end)
+
+-- ── the one-time step onto the skin's defaults (LibKa0s v1.108.0, R-2, U-1, U-14) ────────────────
+
+test("skin defaults step: a value stored at its old default moves once; a pick and the next run stay", function()
+    local NS = boot({
+        global = { schemaVersion = 3 },
+        profileKeys = { ["Hunter - Realm"] = "Default" },
+        profiles = {
+            Default = { hud = { clock = { fontFlags = "" }, spells = { borderStyleFromSkin = false } } },
+            Old = { hud = { clock = { fontFlags = "" }, spells = { borderStyleFromSkin = false,
+                    borderColorFromSkin = false } },
+                    callout = { font = "Ka0s Oxanium SemiBold", outline = "THICKOUTLINE", glowColorFromSkin = false } },
+            Picked = { hud = { clock = { fontFlags = "THICKOUTLINE" }, spells = { borderStyleFromSkin = true } },
+                       callout = { font = "Ka0s Inter", outline = "OUTLINE" } },
+            Plain = { general = { locked = true } },
+        },
+    })
+    local sv = _G.CombatTrailDB
+    local old = sv.profiles.Old
+    assertEqual(old.hud.clock.fontFlags, "@skin", "the clock's old \"\" moves to From skin (U-14)")
+    assertEqual(old.hud.spells.borderStyleFromSkin, true, "the border's companions move (SD-SK-CT.3)")
+    assertEqual(old.hud.spells.borderColorFromSkin, true)
+    assertEqual(old.skin.defaultsMoved, true, "the record written")
+    if not forever() then
+        assertEqual(old.callout.font, "Skin font", "the call-out's L17 face moves to the Skin font (U-1)")
+        assertEqual(old.callout.outline, "@skin", "and its outline to From skin")
+        assertEqual(old.callout.glowColorFromSkin, true, "and its glow to the skin's color")
+    end
+    local picked = sv.profiles.Picked
+    assertEqual(picked.hud.clock.fontFlags, "THICKOUTLINE", "a picked flag stays")
+    assertEqual(picked.callout.font, "Ka0s Inter", "a picked face stays")
+    assertEqual(picked.callout.outline, "OUTLINE", "a picked outline stays")
+    assertEqual(picked.skin.defaultsMoved, true)
+    assertNil(rawget(sv.profiles.Plain, "hud"), "a profile with no hud table gains none")
+    assertEqual(sv.profiles.Plain.skin.defaultsMoved, true, "only the record")
+    assertEqual(NS.GetSetting("hud.clock.fontFlags"), "@skin", "the active profile moved too")
+    -- Once per profile: a value set back to the old default afterwards is the player's, and stays.
+    old.hud.clock.fontFlags = ""
+    NS:RunMigrations()
+    assertEqual(old.hud.clock.fontFlags, "", "the record holds: no second move")
+    assertFalse(NS.FollowSkinDefaults(old), "the step answers false on a profile it ran on")
+end)
+
+test("skin defaults step: a new or reset profile takes the step, which moves nothing a player sees", function()
+    local NS = boot(nil)
+    local p = NS.db.profile
+    assertEqual(p.skin.defaultsMoved, true, "a fresh profile's record is written at the boot")
+    assertEqual(p.hud.clock.fontFlags, "@skin", "its defaults already follow")
+    NS.db:SetProfile("Second")
+    assertEqual(NS.db.profile.skin.defaultsMoved, true, "a new profile runs it from the profile event")
+    NS.db:ResetProfile()
+    assertEqual(NS.db.profile.skin.defaultsMoved, true, "a reset profile runs it again")
+    assertEqual(NS.db.profile.hud.spells.borderStyleFromSkin, true)
+end)
+
+test("skin defaults step: with no LibKa0s the same writes are made by hand, and the record", function()
+    local NS = T.load{ libFiles = {} }.NS
+    local p = { hud = { clock = { fontFlags = "" }, spells = { borderColorFromSkin = false } },
+                callout = { font = "Ka0s Oxanium SemiBold" } }
+    assertTrue(NS.FollowSkinDefaults(p), "it ran")
+    assertEqual(p.hud.clock.fontFlags, "@skin")
+    assertEqual(p.hud.spells.borderColorFromSkin, true)
+    assertNil(p.hud.spells.borderStyleFromSkin, "a key never stored is not created")
+    assertEqual(p.callout.font, "Ka0s Oxanium SemiBold", "no call-out library, no call-out move")
+    assertEqual(p.skin.defaultsMoved, true, "the record, written by the step itself")
+    assertFalse(NS.FollowSkinDefaults(p), "and once only")
+end)

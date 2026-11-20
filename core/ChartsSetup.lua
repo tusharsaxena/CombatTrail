@@ -1,4 +1,4 @@
-local _, NS = ...
+local addonName, NS = ...
 -- core/ChartsSetup.lua — NS.Charts from LibKa0s-Charts-1.0, and NS.ChartsHost(), the Results window's
 -- look as that major's host table (Race mode plan Task D2, from DPS Race @f8078c7's own).
 -- modules/Results_Insights.lua draws through both.
@@ -45,13 +45,17 @@ end
 --- font objects (modules/Style.lua's FONT), its labels painted through the skin (Style.Paint: the
 --- skin's faces) and its textures through Style.Fill. The ranked palette is the skin's `chart.series`,
 --- read at every draw. The meaning colors (class, content, dummy kind, length) are the rows' own,
---- chosen by the caller. No `owner`: every look here is named, so the window's own seams keep drawing
---- it, and Style's paint already follows a skin switch.
+--- chosen by the caller. Every bar of data (a bar, a stacked segment, a range bar, a strip column) is
+--- drawn through `barFill`, Style.Bar: the skin's statusbar texture, tinted, recorded so a skin switch
+--- repaints it (SD-SK-CT.1 of the skin-defaults audit, LibKa0s#97); `fill` keeps the flat textures (a
+--- track, a rule, a legend swatch). `owner` is this addon, so the context is a skin owner's: what the
+--- host leaves out comes from Combat Trail's skin, and the context repaints its chrome on a switch.
 --- @return table
 function NS.ChartsHost()
     local Style, Tbl = NS.Style, NS.ResultsTable
     local C, F = Tbl.COLORS, Style.FONT
     return {
+        owner = addonName,
         pool = NS.Pool,
         panel = panel,
         tip = placedTip,
@@ -59,6 +63,7 @@ function NS.ChartsHost()
         text = Style.PlainText,
         paint = function(fs, c) Style.Paint(fs, c, nil, true) end,
         fill = Style.Fill,
+        barFill = function(tex, c, a) Style.Bar(tex, c, a) end,
         palette = function() return NS.Skin.Token("chart.series") end,
         colors = {
             body = C.text, value = C.text, muted = C.dim, heading = C.gold, caption = C.dim,

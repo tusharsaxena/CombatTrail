@@ -1,5 +1,5 @@
 -- tests/skin_surfaces.lua — this addon's painted surfaces, declared for the kit's skin-switch test
--- (tests/_kit/test_skin_switch.lua, kit revision 50, skinning-§1 and §9; plan Task 5.2). tests/run.lua
+-- (tests/_kit/test_skin_switch.lua, kit revision 58, skinning-§1 and §9; plan Task 5.2). tests/run.lua
 -- sets Kit.skinSwitch from it, and tests/test_skin_surfaces.lua holds it to every window: the DPS
 -- HUD, the Results window, the ability timeline, the compare, the gear view and the lanes. Ported in
 -- shape from DPS Race @045f479 (tests/skin_surfaces.lua). Loaded with dofile (no case of its own).
@@ -22,9 +22,17 @@
 -- which tests/test_skin_surfaces.lua reads to hold the coverage to all six, and on Retail a seventh:
 -- the Race window (race plan Task C1), which wears the HUD's skin and is absent on WoW Forever.
 --
--- Not declared: meaning colors (the content chips' data hues, the class color, the over card's gain),
--- game art (spell and item icons), the ticks and the now line (thin flat lines, skinning-§9's Leave
--- class) and the clock, whose mono face never follows (debug-logging-§2's monospace role).
+-- EVERY FAMILY ON ITS OWN (kit revision 58, LibKa0s v1.108.0). Each family a surface draws (texture,
+-- color, font, shadow) must move under the probe skin by itself, and every StatusBar under a surface
+-- must draw its fill and move it. So each bar family of data is declared as its own surface
+-- (`expect = "texture"` where the fill is a Texture), and a surface whose color a ruling keeps holds
+-- that family (`hold`), the ruling cited beside it: the bars' fills are skinning-§9's Leave "Combat
+-- Trail's bar colors" (A9, the audit's OVERRIDE row), the compare's sides and a class color are
+-- meaning colors (skinning-§9).
+--
+-- Not declared: meaning colors on their own (the content chips' data hues, the class color, the over
+-- card's gain), game art (spell and item icons) and the Race window's clocks (skinning-§9's race
+-- clocks). The HUD fight clock is declared: it is no race clock (the owner's U-14 of 2026-11-20).
 
 return function(T)
     local fixture
@@ -54,6 +62,10 @@ return function(T)
     local function redrawHud() NSof().Hud.Refresh() end
     -- The next frame: the timers a switch armed (the Results detail's coalesced restyle) run.
     local function nextFrame() live().mocks.__fireTimers() end
+    local function hudParts() return hudBody().parts end
+    -- A spell row's paw: every row carries one, shown on a pet row only, and each is tinted the same
+    -- (the sample fight has no pet row).
+    local function rowPaw() return hudParts().spells.list:Rows()[1].paw end
 
     -- The Results window on the first sample fight, its detail open.
     local function results()
@@ -79,6 +91,25 @@ return function(T)
         local NS = NSof()
         assert(NS.ResultsGear.Open(detail()), "the gear view did not open")
         return NS.ResultsGear.__ui()
+    end
+
+    -- A Results table row's bar (its Damage cell), a compare row's this-fight bar, and an Insights bar
+    -- (By Character's first; `reset` puts the Fights tab back).
+    local function resultsCell()
+        for _, row in ipairs(results().list.list:Visible()) do
+            local cell = row.record and row.cells and row.cells.damage
+            if cell and cell.bar and cell.bar:IsShown() then return cell.bar end
+        end
+        error("no fight row draws a Damage bar")
+    end
+    local function compareBar()
+        return compare().rows[1].barA
+    end
+    local function insightsBar()
+        local NS = NSof()
+        assert(NS.Results.ShowTab("insights"), "the Insights tab did not open")
+        local rows = NS.Results.__ui().insights.ctx:Pool("chars").active
+        return assert(rows[1] and rows[1].fill, "By Character draws no bar")
     end
 
     -- The lanes: built and fed by test mode; one icon is the newest the rotation pushed.
@@ -121,6 +152,7 @@ return function(T)
         NS.ResultsCompare.Hide()
         NS.ResultsGear.Hide()
         NS.LaneAnchor.SetUnlocked(false)
+        if NS.Results.Tab() == "insights" then NS.Results.ShowTab("fights") end
     end
 
     local declared = {
@@ -136,6 +168,22 @@ return function(T)
               companion = writeSetting("hud.figures.fontColorFromSkin"),
               build = function() return hudBody().w.damage.value end },
             { window = "hud", name = "the target line", build = function() return hudBody().w.target end },
+            -- The HUD fight clock (U-14: no race clock, so its face, outline, color and shadow follow).
+            { window = "hud", name = "the fight clock", paint = redrawHud,
+              companion = writeSetting("hud.clock.fontColorFromSkin"), build = function() return hudBody().w.clock end },
+            -- The damage chart's columns and the spell rows' bars: the skin's texture; their color is
+            -- held (A9: Combat Trail's bar colors, the owner's call of 2026-10-31).
+            { window = "hud", name = "a damage chart column", paint = redrawHud, hold = "color",
+              build = function() return hudParts().chart:Columns()[1] end },
+            { window = "hud", name = "a spell row's bar", paint = redrawHud, hold = "color",
+              build = function() return hudParts().spells.list:Rows()[1].bar end },
+            -- The pace bar's ahead half: the skin's texture in the ahead meaning token (ct.ahead).
+            { window = "hud", name = "the pace bar's ahead half", paint = redrawHud,
+              build = function() return hudParts().pace.ahead end },
+            -- The pace line over the chart (SD-SK-CT.4) and the pet row's paw tint (SD-SK-CT.9).
+            { window = "hud", name = "the damage chart's pace line", paint = redrawHud,
+              companion = writeSetting("hud.chart.bestColorFromSkin"), build = function() return hudParts().chart.line end },
+            { window = "hud", name = "a spell row's paw", paint = redrawHud, build = rowPaw },
             -- The Results window
             -- The shell holds the detail's chart columns and spell bars, which a switch redraws on the
             -- next frame (Results.Restyle): `paint` runs that frame, so each bar's fill is read.
@@ -145,6 +193,11 @@ return function(T)
             { window = "results", name = "the Results test strip", build = function() return results().testStrip end },
             { window = "results", name = "the fight detail's name", build = function() return detail().w.name end },
             { window = "results", name = "the fight detail's Delete button", build = function() return detail().w.delete end },
+            -- Bars of data on a Texture (Style.Bar): the skin's texture (expect), the color held (A9).
+            { window = "results", name = "a Results row's Damage bar", expect = "texture", hold = "color",
+              build = resultsCell },
+            -- An Insights bar (SD-SK-CT.1): a class color's bar, so the color is held (a meaning color).
+            { window = "results", name = "an Insights bar", expect = "texture", hold = "color", build = insightsBar },
             -- The ability timeline
             { window = "timeline", name = "the ability timeline's shell", build = function() return timeline().frame end },
             { window = "timeline", name = "the dim cover", build = function() return timeline() and results().cover.dim end },
@@ -152,6 +205,9 @@ return function(T)
             { window = "compare", name = "the compare's shell", build = function() return compare().frame end },
             { window = "compare", name = "the compare's spell header", build = function() return compare().headName end },
             { window = "compare", name = "the compare's usage heading", build = function() return compare().usageTitle end },
+            -- This fight's bar: the skin's texture in this fight's gold (a meaning color, the owner's
+            -- v0.2 feedback), so the color is held.
+            { window = "compare", name = "a compare row's bar", expect = "texture", hold = "color", build = compareBar },
             -- The gear view
             { window = "gear", name = "the gear view's shell", build = function() return gear().frame end },
             -- The legend's color is the compared fight's data hue: only its face follows, which Ignore fonts
@@ -168,6 +224,12 @@ return function(T)
               build = function() return laneIcon().border[1] end },
             { window = "lanes", name = "an interrupted cast's mark", build = interruptedIcon },
             { window = "lanes", name = "a lane's edit overlay", build = overlay },
+            -- An icon's stack count (SD-SK-CT.7: HUD text), the GCD tick and the now line (SD-SK-CT.6).
+            { window = "lanes", name = "a lane icon's count", build = function() return laneIcon().count end },
+            { window = "lanes", name = "a lane's GCD tick", companion = writeSetting("lanes.player.tickColorFromSkin"),
+              build = function() return assert(NSof().LaneRender.__ticks("player")[1], "no tick") end },
+            { window = "lanes", name = "a lane's now line", companion = writeSetting("lanes.player.nowColorFromSkin"),
+              build = function() return NSof().LaneRender.__now("player") end },
         },
     }
     if T.NS.Compat.ForClient({ "retail" }) then

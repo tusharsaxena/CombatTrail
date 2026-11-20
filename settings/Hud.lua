@@ -7,8 +7,9 @@ local _, NS = ...
 --
 -- COMPOSED BLOCKS (options-ui-§16/§17): every font is the library's FontGroup, every status bar its
 -- BarGroup and every color a ColorPair with its Use class color companion, all over this addon's
--- leaves and the profile's own defaults (`defaults`), so the clock keeps its plain "" flags (the
--- mono role: no flagsFromSkin) while the figures and the rows draw the skin's outline ("@skin"). The
+-- leaves and the profile's own defaults (`defaults`), so every block's Font flags lead with From skin
+-- and default to the skin's outline ("@skin"), the clock's too: the HUD fight clock is no race clock
+-- (the owner's U-14 of 2026-11-20, skinning-§9). The
 -- clock draws the skin's HUD face by default, as DPS Race's does (v0.2 Task B2), and its stored size
 -- scaled to DPS Race's single clock (Hud_States' ClockSize: 26 draws 40), which its size row says.
 -- The skin companions the composer has no row for (a font block's text color and shadow, a backdrop
@@ -87,6 +88,8 @@ local PLAYER_CLASS = { source = "player" }   -- every HUD surface describes the 
 -- (the chart's columns, the player's and the pet's spell rows) are skinning-§9's Leave "Combat Trail's
 -- bar colors" (the audit's OVERRIDE row, owner's call 2026-10-31); the over card's DPS color already
 -- follows the skin through `overColorMatchDamage` (on: the Damage figure's color, the skin's HUD text).
+-- The Pace line color is no Leave: it takes the composer's `bestColorFromSkin`, the skin's
+-- ct.chart.diag while on (R-2, SD-SK-CT.4).
 local out = {}
 local group, subgroup
 local function at(g, s) group, subgroup = g, s end
@@ -126,10 +129,11 @@ end
 -- `<key>FromSkin` companion for it (compose minor 20's `colorFromSkin = false`).
 local function colorPair(name, key, label, tooltip, extra, held)
     local cc = "useClassColor" .. key:sub(1, 1):upper() .. key:sub(2)
-    return block(H.ColorPair(spec(name, { key = key, companionKey = cc, label = label,
+    local t = { key = key, companionKey = cc, label = label,
         defaults = { [key] = D[name][key], [cc] = D[name][cc] },
-        tooltips = tooltip and { [key] = tooltip } or nil, extra = extra,
-        colorFromSkin = not held and nil or false })))
+        tooltips = tooltip and { [key] = tooltip } or nil, extra = extra }
+    if held then t.colorFromSkin = false end
+    return block(H.ColorPair(spec(name, t)))
 end
 
 -- A font block with the skin's text color and shadow companions after it (skinning-§6).
@@ -205,7 +209,7 @@ row("scale", { type = "number", label = L["HUD scale"], min = 0.5, max = 2, step
 
 -- Clock and figures
 at(TAB.clock, L["Clock font"])
-fontBlock("clock", false, { font = L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."],
+fontBlock("clock", true, { font = L["The face the clock is drawn in. A face with even-width digits keeps the clock from jumping as it counts."],
     fontSize = L["The clock's size. It draws about half again as tall as this, as DPS Race's clock does: 26 draws it 40 points high."] })
 at(TAB.clock, L["Figures font"])
 fontBlock("figures", true, { font = L["The face the Damage and DPS figures are drawn in."] })
@@ -232,7 +236,7 @@ row("chart.columns", { type = "number", label = L["Maximum columns"], min = 8, m
 at(TAB.chart, L["Columns"])
 block(H.BarGroup(spec("chart", { fromSkin = true, colorFromSkin = false })))
 at(TAB.chart, L["Lines"])
-colorPair("chart", "bestColor", L["Pace line color"], L["The color of the line that marks the pace."], nil, true)
+colorPair("chart", "bestColor", L["Pace line color"], L["The color of the line that marks the pace."])
 row("chart.zeroLine", { type = "bool", label = L["Show zero line"], startsLine = true,
     tooltip = L["Draw a thin line along the chart's bottom edge."] })
 at(TAB.chart, L["Cooldowns"])

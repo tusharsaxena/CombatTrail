@@ -434,3 +434,31 @@ test("insights charts: the host pools through NS.Pool and draws in the window's 
     assertEqual(host.fill, Style.Fill)
     assertTrue(host.panel(M.UIParent) ~= nil, "the window's flat panel")
 end)
+
+-- SD-SK-CT.1 (the skin-defaults audit, LibKa0s#97): the Insights bars of data drew flat through `fill`.
+test("insights charts: every bar of data draws the skin's bar texture, under this addon's skin", function()
+    local NS, M = tab(nil, { closed = true })
+    local host = NS.ChartsHost()
+    assertEqual(host.owner, "CombatTrail", "the context is this addon's skin owner's")
+    assertTrue(type(host.barFill) == "function", "the bar seam is the host's")
+    local seen = {}
+    local barTexture = NS.Skin.BarTexture
+    NS.Skin.BarTexture = function(tex, ...) seen[#seen + 1] = tex; return barTexture(tex, ...) end
+    local tex = M.UIParent:CreateTexture()
+    local ok, err = pcall(host.barFill, tex, NS.Style.Tok("ct.chart.bar"), 0.95)
+    NS.Skin.BarTexture = barTexture
+    if not ok then error(err, 0) end
+    assertEqual(seen[1], tex, "a bar of data is drawn through the skin's bar texture (Style.Bar)")
+end)
+
+test("insights charts: the damage tail after the buzzer draws in the chart's bar color, not a best's blue", function()
+    if forever() then return end
+    local NS, _, _, pane = tab()
+    pane:SetFilter("kind", "races")
+    local rows = active(pane, "tail")
+    assertTrue(#rows > 0, "the tail has rows under Races")
+    local want = NS.Style.Tok("ct.chart.bar")
+    local got = { rows[1].fill:GetVertexColor() }
+    assertTrue(math.abs((got[1] or -1) - want[1]) < 1e-6 and math.abs((got[2] or -1) - want[2]) < 1e-6
+        and math.abs((got[3] or -1) - want[3]) < 1e-6, "ct.chart.bar, the context's bar color")
+end)

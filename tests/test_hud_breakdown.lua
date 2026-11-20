@@ -77,6 +77,12 @@ test("breakdown: pet rows carry paw and pet color", function()
         near(a, pet and want.a or NS.db.profile.hud.spells.barAlpha, "row " .. i .. " alpha")
     end
     assertEqual(list[3].paw:GetTexture(), paw)
+    -- The paw is a white mark tinted `icon.tint` (SD-SK-CT.9): only its tint follows the skin.
+    local tr, tg, tb = NS.Style.Rgb("icon.tint")
+    local pr, pg, pb = list[3].paw:GetVertexColor()
+    near(pr, tr, "paw r")
+    near(pg, tg, "paw g")
+    near(pb, tb, "paw b")
     H.setHud(inst, "spells.paw", false)
     H.tick(inst, 13.25, 13.5)
     list = rows(Hud, "live")

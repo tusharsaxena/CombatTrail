@@ -272,8 +272,11 @@ L["Glow color"] = "Glow color"
 L["Show background"] = "Show background"
 L["Fill the lane behind its icons."] = "Fill the lane behind its icons."
 L["Background texture"] = "Background texture"
-L["The texture the background is drawn with, tinted by its color. Empty fills it flat."] =
-    "The texture the background is drawn with, tinted by its color. Empty fills it flat."
+L["The texture the background is drawn with, tinted by its color. Empty fills it flat. Not read while Use the skin's texture is on."] =
+    "The texture the background is drawn with, tinted by its color. Empty fills it flat. Not read while Use the skin's texture is on."
+L["Use the skin's texture"] = "Use the skin's texture"
+L["Draw the background in the skin's bar texture. Background texture is not read while this is on."] =
+    "Draw the background in the skin's bar texture. Background texture is not read while this is on."
 L["Background color"] = "Background color"
 L["Padding (px)"] = "Padding (px)"
 L["Space between the lane's edge and its icons, in pixels."] =

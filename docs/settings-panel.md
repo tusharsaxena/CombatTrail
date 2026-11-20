@@ -140,6 +140,7 @@ why. Copy from Player lane unlinks it.
 |---|---|
 | Show background | `lanes.<k>.background` |
 | Background texture | `lanes.<k>.bgTexture` |
+| Use the skin's texture (on by default: the skin's bar texture) | `lanes.<k>.bgTextureFromSkin` |
 | Background color | `lanes.<k>.bgColor` |
 | Use class color | `lanes.<k>.bgClassColor` |
 | Use the skin's color | `lanes.<k>.bgColorFromSkin` |
@@ -161,9 +162,11 @@ why. Copy from Player lane unlinks it.
 | Tick width (px) | `lanes.<k>.tickWidth` |
 | Tick color | `lanes.<k>.tickColor` |
 | Use class color | `lanes.<k>.tickClassColor` |
+| Use the skin's color (on by default: the skin's chart grid) | `lanes.<k>.tickColorFromSkin` |
 | Show now line | `lanes.<k>.now` |
 | Now line color | `lanes.<k>.nowColor` |
 | Use class color | `lanes.<k>.nowClassColor` |
+| Use the skin's color (on by default: the skin's chart marker) | `lanes.<k>.nowColorFromSkin` |
 | Show label | `lanes.<k>.label` |
 | Label position | `lanes.<k>.labelPosition` |
 | Label text | `lanes.<k>.labelText` |
@@ -296,6 +299,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Use the skin's texture | `hud.chart.barTextureFromSkin` |
 | Pace line color | `hud.chart.bestColor` |
 | Use class color | `hud.chart.useClassColorBestColor` |
+| Use the skin's color (on by default: the skin's pace-line color) | `hud.chart.bestColorFromSkin` |
 | Show zero line | `hud.chart.zeroLine` |
 | Show cooldown icons | `hud.chart.cooldowns` |
 | Shortest cooldown (seconds) | `hud.chart.cooldownMin` |
