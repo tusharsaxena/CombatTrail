@@ -52,6 +52,8 @@ return function(T)
         return u.body[u.current]
     end
     local function redrawHud() NSof().Hud.Refresh() end
+    -- The next frame: the timers a switch armed (the Results detail's coalesced restyle) run.
+    local function nextFrame() live().mocks.__fireTimers() end
 
     -- The Results window on the first sample fight, its detail open.
     local function results()
@@ -135,7 +137,10 @@ return function(T)
               build = function() return hudBody().w.damage.value end },
             { window = "hud", name = "the target line", build = function() return hudBody().w.target end },
             -- The Results window
-            { window = "results", name = "the Results window's shell", build = function() return results().frame end },
+            -- The shell holds the detail's chart columns and spell bars, which a switch redraws on the
+            -- next frame (Results.Restyle): `paint` runs that frame, so each bar's fill is read.
+            { window = "results", name = "the Results window's shell", paint = nextFrame,
+              build = function() return results().frame end },
             { window = "results", name = "the Results footer", build = function() return results().footLeft end },
             { window = "results", name = "the Results test strip", build = function() return results().testStrip end },
             { window = "results", name = "the fight detail's name", build = function() return detail().w.name end },
@@ -149,8 +154,11 @@ return function(T)
             { window = "compare", name = "the compare's usage heading", build = function() return compare().usageTitle end },
             -- The gear view
             { window = "gear", name = "the gear view's shell", build = function() return gear().frame end },
-            -- The legend's color is the compared fight's data hue: only its face follows, which Ignore fonts keeps.
-            { window = "gear", name = "the gear view's legend", scope = "fonts", build = function() return gear().legendA end },
+            -- The legend's color is the compared fight's data hue: only its face follows, which Ignore fonts
+            -- keeps. `hold`: the color is a meaning color (skinning-§9, the owner's THIS gold / runner-up
+            -- blue, the audit's Compare and Timeline side colors row).
+            { window = "gear", name = "the gear view's legend", scope = "fonts", hold = "color",
+              build = function() return gear().legendA end },
             -- The lanes
             { window = "lanes", name = "a lane's background", companion = writeSetting("lanes.player.bgColorFromSkin"),
               build = function() return NSof().LaneRender.__bg("player") end },

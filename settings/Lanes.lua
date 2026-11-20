@@ -157,10 +157,12 @@ local function laneRows(lane)
         return skinRow(key .. "FromSkin", L["Use the skin's color"],
             L["Draw this in the skin's own color. The swatch is not read while this is on, and Use class color comes first."])
     end
+    -- `followsSkin`: the swatch's `<key>FromSkin` row is this addon's own (`extra`); otherwise the
+    -- composer emits none (compose minor 20's `colorFromSkin = false`, LibKa0s v1.108.0).
     local function colorPair(key, companion, label, followsSkin)
         return block(H.ColorPair(spec({ key = key, companionKey = companion, label = label,
             defaults = { [key] = D[key], [companion] = D[companion] },
-            extra = followsSkin and { colorSkin(key) } or nil })))
+            extra = followsSkin and { colorSkin(key) } or nil, colorFromSkin = followsSkin and nil or false })))
     end
     -- A border style row picks a statusbar texture: the edges are strips (modules/LaneRender.lua).
     -- Its tooltip comes in through the composer's `tooltips` (options-ui-§16, anti-pattern #106).

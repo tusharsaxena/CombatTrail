@@ -81,6 +81,12 @@ local function read(t, key)
 end
 
 local PLAYER_CLASS = { source = "player" }   -- every HUD surface describes the player
+
+-- OWNS_ITS_COLOR (LibKa0s v1.108.0, whose composers emit a `<key>FromSkin` companion for every swatch
+-- unless the host opts out): the swatches no skin reaches, so they carry no companion. The bars' fills
+-- (the chart's columns, the player's and the pet's spell rows) are skinning-§9's Leave "Combat Trail's
+-- bar colors" (the audit's OVERRIDE row, owner's call 2026-10-31); the over card's DPS color already
+-- follows the skin through `overColorMatchDamage` (on: the Damage figure's color, the skin's HUD text).
 local out = {}
 local group, subgroup
 local function at(g, s) group, subgroup = g, s end
@@ -116,11 +122,14 @@ local function companion(name, key, label, tooltip)
              label = label, tooltip = tooltip, default = D[name][key] }
 end
 
-local function colorPair(name, key, label, tooltip, extra)
+-- `held`: a swatch the skin never reaches (OWNS_ITS_COLOR, above), so the composer emits no
+-- `<key>FromSkin` companion for it (compose minor 20's `colorFromSkin = false`).
+local function colorPair(name, key, label, tooltip, extra, held)
     local cc = "useClassColor" .. key:sub(1, 1):upper() .. key:sub(2)
     return block(H.ColorPair(spec(name, { key = key, companionKey = cc, label = label,
         defaults = { [key] = D[name][key], [cc] = D[name][cc] },
-        tooltips = tooltip and { [key] = tooltip } or nil, extra = extra })))
+        tooltips = tooltip and { [key] = tooltip } or nil, extra = extra,
+        colorFromSkin = not held and nil or false })))
 end
 
 -- A font block with the skin's text color and shadow companions after it (skinning-§6).
@@ -203,7 +212,8 @@ fontBlock("figures", true, { font = L["The face the Damage and DPS figures are d
 at(TAB.clock, L["Fight-over card"])
 colorPair("figures", "overColor", L["Final DPS color"], L["The color of the DPS figure on the fight-over card."], {
     companion("figures", "overColorMatchDamage", L["Same color as Damage"],
-        L["Draw your DPS, live and after the fight, in the same color as your Damage. The swatch is not read while this is on."]) })
+        L["Draw your DPS, live and after the fight, in the same color as your Damage. The swatch is not read while this is on."]) },
+    true)
 at(TAB.clock, L["Box background"])
 colorPair("figures", "boxBg", L["Background color"], L["The fill behind the Damage and DPS boxes."], {
     companion("figures", "boxBgFromSkin", L["Use the skin's background"],
@@ -220,9 +230,9 @@ row("chart.height", { type = "number", label = L["Chart height (px)"], min = 40,
 row("chart.columns", { type = "number", label = L["Maximum columns"], min = 8, max = NS.Slices.MAX, step = 1,
     tooltip = L["The most columns the chart draws. A long fight folds more seconds into each column."] })
 at(TAB.chart, L["Columns"])
-block(H.BarGroup(spec("chart", { fromSkin = true })))
+block(H.BarGroup(spec("chart", { fromSkin = true, colorFromSkin = false })))
 at(TAB.chart, L["Lines"])
-colorPair("chart", "bestColor", L["Pace line color"], L["The color of the line that marks the pace."])
+colorPair("chart", "bestColor", L["Pace line color"], L["The color of the line that marks the pace."], nil, true)
 row("chart.zeroLine", { type = "bool", label = L["Show zero line"], startsLine = true,
     tooltip = L["Draw a thin line along the chart's bottom edge."] })
 at(TAB.chart, L["Cooldowns"])
@@ -241,11 +251,11 @@ row("spells.icons", { type = "bool", label = L["Show spell icons"], startsLine =
 row("spells.paw", { type = "bool", label = L["Show pet paw"],
     tooltip = L["Mark your pet's spells with a paw."] })
 at(TAB.spells, L["Player bars"])
-block(H.BarGroup(spec("spells", { fromSkin = true,
+block(H.BarGroup(spec("spells", { fromSkin = true, colorFromSkin = false,
     tooltips = { barTexture = L["The texture your spell rows' bars and the pace bar's fills are drawn with."] } })))
 at(TAB.spells, L["Pet bars"])
 colorPair("spells", "petColor", L["Pet bar color"],
-    L["The color of your pet's spell rows."])
+    L["The color of your pet's spell rows."], nil, true)
 at(TAB.spells, L["Bar border"])
 block(H.BorderGroup(spec("spells", { show = true, fromSkin = "bar",
     tooltips = { borderShow = L["Draw a border round each spell row's bar, on the HUD and in the fight detail."] },

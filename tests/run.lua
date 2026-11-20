@@ -228,14 +228,57 @@ Kit.diagnostics = {
 }
 
 -- The typed-value gate (skinning-§1): every color, face and texture in the tracked source is one a
--- kit category takes, but for the rows below (each its reason and cause id).
-Kit.skinValues = {
-    root = root,
-    rows = {
-        { file = "modules/Results_Timeline.lua", substring = "local DISC =",
-          why = "a white disc shape tinted through Style.Vertex, the legend's swatch: a shape, not skin data", cause = "L10" },
-    },
+-- kit category takes, but for the rows below (each its reason and cause id, or a kit row category).
+-- Test kit revision 58 (LibKa0s v1.108.0) reads three- and four-number tables too, which is where this
+-- addon keeps its data hues: each named table below is a meaning color (cause MC, skinning-§9's
+-- Meaning colors, the owner's ruling of 2026-11-01; the audit's OVERRIDE rows in Ka0sAddonsCommonTasks
+-- docs/2026-11-20-SKIN_DEFAULTS_AUDIT/tables/CombatTrail.md), or the bars' Leave (A9).
+local DATA_HUE = "a data hue in a named table: the color is the information, the same under every skin"
+local VALUE_ROWS = {
+    { file = "modules/Results_Timeline.lua", substring = "local DISC =",
+      why = "a white disc shape tinted through Style.Vertex, the legend's swatch: a shape, not skin data", cause = "L10" },
+    { file = "core/CalloutSetup.lua", substring = "return 1, 1, 1 end", category = "unreachable default",
+      why = "the degradation stub's answer: with no Callout library there is no call-out to draw" },
+    { file = "core/Constants.lua", substring = "BAR = { 0.36", cause = "A9",
+      why = "the spell rows' and the chart's bar fill: skinning-§9 leaves Combat Trail's bar colors" },
+    { file = "core/Constants.lua", substring = "PET = { 0.24", cause = "A9",
+      why = "the pet's rows' bar fill: Combat Trail's bar colors, and pet spells in green (spec §6)" },
+    { file = "core/Constants.lua", substring = "PLAYER_LINE = {", cause = "MC",
+      why = "the caster colors, player and pet, on icon edges and timeline ticks (the owner's v0.2 feedback)" },
+    { file = "core/Constants.lua", substring = "THIS_BAR = {", cause = "MC",
+      why = "this fight gold and the other side blue on the compare's bars (the owner's v0.2 feedback)" },
+    { file = "core/Constants.lua", substring = "THIS_TEXT = {", cause = "MC",
+      why = "this fight gold and the best blue as text (the owner's v0.2 feedback)" },
+    { file = "core/Constants.lua", substring = "PACE = {", cause = "SD-SK-CT",
+      why = "the Pace line swatch's default, drawn only while hud.chart.bestColorFromSkin is off (R-2)" },
+    { file = "modules/Hud_Appearance.lua", substring = "local NONE =", category = "unreachable default",
+      why = "a swatch with no shipped default, which every schema row has (defaults/Profile.lua)" },
+    { file = "modules/Hud_Chart.lua", substring = "Chart.BUZZER =", cause = "MC", why = DATA_HUE },
+    { file = "modules/ProbeCurve.lua", substring = "local PLAYER = {", cause = "SD-AUDIT",
+      why = "/ct probe's trial colors, handed to a hidden StatusBar no player sees" },
+    { file = "modules/ProbeCurve.lua", substring = "local PET = {", cause = "SD-AUDIT",
+      why = "/ct probe's trial colors, handed to a hidden StatusBar no player sees" },
+    { file = "modules/Results_Loadout.lua", substring = "Loadout.LINK_COLOR =", cause = "MC",
+      why = "the client's talent link color, what another player's chat draws the link in" },
+    { file = "modules/Results_Timeline.lua", substring = "Timeline.CORRIDOR =", cause = "MC", why = DATA_HUE },
+    { file = "modules/Style.lua", substring = "Style.TINT_FILL_A, Style.CHIP_EDGE_A", category = "not a color",
+      why = "three alphas a chip's tint is drawn at, not a color" },
 }
+for _, sub in ipairs({ "RD.CYAN =", "RD.VIOLET =", "RD.IGNORED =" }) do
+    VALUE_ROWS[#VALUE_ROWS + 1] = { file = "modules/Results_RaceDetail.lua", substring = sub, cause = "MC", why = DATA_HUE }
+end
+for _, sub in ipairs({ "[30]  =", "[60]  =", "[120] =", "[180] =", "[300] =", "Races.LENGTH_NEUTRAL =",
+    "single     =", "cleave     =", "dungeoneer =", "boss       =", "pvp        =", "other      =",
+    "incomplete = {", "died       = {" }) do
+    VALUE_ROWS[#VALUE_ROWS + 1] = { file = "modules/Results_Races.lua", substring = sub, cause = "MC", why = DATA_HUE }
+end
+for _, kind in ipairs({ "raid", "dungeon", "mplus", "delve", "bg", "arena", "world", "dummy", "scenario" }) do
+    VALUE_ROWS[#VALUE_ROWS + 1] = { file = "modules/Results_Table.lua", substring = ("    %-8s = {"):format(kind),
+                                    cause = "MC", why = DATA_HUE }
+end
+VALUE_ROWS[#VALUE_ROWS + 1] = { file = "modules/Results_Table.lua", substring = "Tbl.CONTENT_NEUTRAL =", cause = "MC",
+                                why = DATA_HUE }
+Kit.skinValues = { root = root, rows = VALUE_ROWS }
 
 -- The skin-switch test's painted surfaces (skinning-§1): one per window, tests/test_skin_surfaces.lua
 -- holds the coverage.

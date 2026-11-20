@@ -287,6 +287,7 @@ local TOKEN_ROLE = { ["text.body"] = "body", ["text.muted"] = "muted", ["text.di
 local painted = setmetatable({}, { __mode = "k" })   -- fs -> the role or token last painted
 local fontOf = setmetatable({}, { __mode = "k" })    -- fs -> the font object it was made in
 local tinted = setmetatable({}, { __mode = "k" })    -- fs -> the token its color is
+local hued = setmetatable({}, { __mode = "k" })      -- fs -> the data hue Style.Hue gave it
 
 -- The token each library role draws, for the host's own tint (below).
 local ROLE_TOKEN = { body = "text.body", muted = "text.muted", heading = "text.heading",
@@ -299,7 +300,13 @@ end
 
 -- Every painted label's color again, after a switch (the library's replay has already put the role's
 -- color and face back on each; this is the same color, for a label the library cannot see).
-Style.OnLooks(function() for fs, token in pairs(tinted) do tint(fs, token) end end)
+-- A data hue is the same under every skin, but the library's replay puts the skin's face back on the
+-- label, so the hue goes on again with it: the face and its color on the same repaint (test kit
+-- revision 58's colorless-face check, LibKa0s v1.108.0).
+Style.OnLooks(function()
+    for fs, token in pairs(tinted) do tint(fs, token) end
+    for fs, c in pairs(hued) do fs:SetTextColor(c[1], c[2], c[3]) end
+end)
 
 --- The S.Text role for a label in font object `font` colored `color` (a live table, a token name or
 --- nil for the object's own role).
@@ -324,7 +331,7 @@ function Style.Paint(fs, color, font, force)
     if type(color) == "table" and not color.token then return Style.Hue(fs, color, force) end
     local role = Style.Role(font or fontOf[fs], color)
     if painted[fs] == role and not force then return end
-    painted[fs] = role
+    painted[fs], hued[fs] = role, nil
     NS.Skin.Text(fs, role)
     -- The same color by the host's hand too, kept in `tinted` so a switch tints it again: the
     -- degraded facade's Text is a no-op, and the color must not wait on the library's replay.
@@ -361,6 +368,7 @@ function Style.Hue(fs, c, force)
         painted[fs], tinted[fs] = "hue", nil
         NS.Skin.Font(fs)
     end
+    hued[fs] = c
     fs:SetTextColor(c[1], c[2], c[3])
 end
 

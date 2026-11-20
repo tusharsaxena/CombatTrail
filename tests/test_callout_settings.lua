@@ -50,7 +50,9 @@ test("callout settings: every SchemaRows row is a Race mode row, declared retail
     local want, named = NS.Callout:SchemaRows("callout.", { texts = false })
     local got, n = calloutRows(NS)
     assertEqual(n, #want, "one registered row per SchemaRows row")
-    assertEqual(#want, 23 + #Callout.KINDS + 2, "the scalars (the glow's eight among them), colors and the two session rows")
+    -- 25 scalars: the glow's eight among them, and from LibKa0s v1.108.0 (Callout minor 5) the shadow's
+    -- and the numbers' skin companions, fontShadowFromSkin and numberColorFromSkin.
+    assertEqual(#want, 25 + #Callout.KINDS + 2, "the scalars (the glow's eight among them), colors and the two session rows")
     for _, w in ipairs(want) do
         local row = got[w.path]
         assertTrue(row ~= nil, w.path .. " is registered")
@@ -65,7 +67,7 @@ test("callout settings: every SchemaRows row is a Race mode row, declared retail
         assertFalse(path:find("^callout%.muted%.") ~= nil, path .. ": no mute row")
     end
     for _, key in ipairs({ "glow", "glowIntensity", "glowThickness", "glowX", "glowY", "glowCustom", "glowColor",
-        "useClassColorGlow", "glowColorFromSkin" }) do
+        "useClassColorGlow", "glowColorFromSkin", "fontShadowFromSkin", "numberColorFromSkin" }) do
         assertTrue(got["callout." .. key] ~= nil, "callout." .. key .. " is a row")
     end
     assertEqual(got["callout.glow"].type, "bool", "the glow is a toggle, as AuraMaster's")
@@ -106,7 +108,9 @@ test("callout settings: the defaults are seeded from the rows, and the schema va
         end
     end
     assertEqual(table.concat(D.callout.point, ","), "CENTER,CENTER,0,180", "the default place")
-    assertEqual(D.callout.colors.go.r, 0.3, "a color in the panel's named shape")
+    -- GO's default is Ka0s Default's sem.good (LibKa0s v1.108.0, U-2: a meaning kind draws its token
+    -- until a color is picked), in the panel's named shape.
+    assertEqual(D.callout.colors.go.r, 0.35, "a color in the panel's named shape")
     assertNil(D.callout.texts, "no stock-text defaults")
     assertNil(D.callout.muted, "no mute defaults")
     assertEqual(D.callout.voice, "male-arena-john", "Arena John, the default voice for a new profile")
@@ -116,7 +120,13 @@ test("callout settings: the defaults are seeded from the rows, and the schema va
     assertEqual(D.callout.glowX .. "," .. D.callout.glowY, "1,-1", "1 px right and 1 px down")
     assertEqual(D.callout.glowCustom, true, "Glow color ticked")
     assertEqual(D.callout.glowColor.r .. "," .. D.callout.glowColor.g .. "," .. D.callout.glowColor.b, "0,0,0", "a black swatch")
-    assertEqual(D.callout.font, "Ka0s Oxanium SemiBold", "the SemiBold face")
+    -- The look follows the skin (LibKa0s v1.108.0, the owner's U-1 of 2026-11-20): the Skin font, the
+    -- skin's outline, its glow color, its shadow and its HUD text color for the numbers.
+    assertEqual(D.callout.font, "Skin font", "the skin's face")
+    assertEqual(D.callout.outline, "@skin", "the skin's outline")
+    assertEqual(D.callout.glowColorFromSkin, true, "the skin's glow color")
+    assertEqual(D.callout.fontShadowFromSkin, true, "the skin's shadow")
+    assertEqual(D.callout.numberColorFromSkin, true, "the skin's HUD text color for the numbers")
     assertEqual(D.callout.shadowX .. "," .. D.callout.shadowY, "1,1", "the shadow 1 px right and 1 px up")
     assertEqual(NS.Callout:Get("voice"), "male-arena-john", "a fresh profile speaks with Arena John")
     local errors, _, missing = NS.ValidateSchema()
@@ -237,7 +247,7 @@ test("callout settings: the Race mode page's Defaults and a profile reset put th
     inst.mocks.__subcategories["Race mode"]:__fire("OnShow")
     NS.Helpers.RestoreDefaults("race", NS.pageCtx.race)
     assertEqual(NS.GetSetting("callout.size"), 96)
-    assertEqual(NS.GetSetting("callout.colors.go").r, 0.3)
+    assertEqual(NS.GetSetting("callout.colors.go").r, 0.35)
     assertTrue(NS.GetSetting("callout.glow"), "the glow back on")
     assertEqual(NS.GetSetting("callout.voice"), "male-arena-john", "and Arena John")
     assertTrue(NS.SetByPath("callout.size", 140))
@@ -359,7 +369,11 @@ test("callout settings: the migration rewrites a stored glow choice, drops the t
     end
     assertTrue(NS.Callout:Get("glowCustom"), "the active Strong profile reads Glow color ticked")
     assertEqual(NS.Callout:Get("glowX") .. "," .. NS.Callout:Get("glowY"), "1,-1", "at the new offset")
-    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "0,0,0", "in the black swatch, not GO's color")
+    -- From LibKa0s v1.108.0 (U-1) the glow draws the skin's glow color by default (Ka0s Default's
+    -- gold); the black swatch is what it draws with the companion off.
+    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "1,0.82,0", "in the skin's glow color, not GO's")
+    assertTrue(NS.SetByPath("callout.glowColorFromSkin", false))
+    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "0,0,0", "off: in the black swatch")
     assertNil(sv.profiles.Plain.callout, "a profile with no call-out table gains none")
     local errors = NS.ValidateSchema()
     assertEqual(errors, 0, "the boot check reads the bool rows clean")
