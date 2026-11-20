@@ -1057,7 +1057,7 @@ Total.
 - countdown: a profile that still stores the retired race.countdownCue counts as any other
 - countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
 
-### test_callout_settings.lua (17)
+### test_callout_settings.lua (18)
 
 - callout settings: every SchemaRows row is a Race mode row, declared retail, drawn by the section
 - callout settings: absent on WoW Forever, no row, default or writeThrough path
@@ -1074,6 +1074,7 @@ Total.
 - skin defaults step: a value stored at its old default moves once; a pick and the next run stay
 - skin defaults step: a new or reset profile takes the step, which moves nothing a player sees
 - skin defaults step: with no LibKa0s the same writes are made by hand, and the record
+- skin defaults step: a pick stored before the new companions keeps drawing (R-2)
 - callout strip: unlocked, the strip carries ? · settings · close; the X locks it and turns the countdown off
 - callout strip: the settings mark opens the Race mode page on its Callout tab
 
@@ -1808,7 +1809,7 @@ Total.
 - diagnostics contract: both forms run while the addon is disabled
 - diagnostics contract: no other name runs the report
 
-### test_skin_switch.lua (69)
+### test_skin_switch.lua (71)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the check is falsifiable, a bar whose texture never moves is reported
@@ -1879,6 +1880,8 @@ Total.
 - skin switch: the Race window's target card changes with the Scope ignored
 - skin switch: the Race window's Arm Race button changes
 - skin switch: the Race window's Arm Race button changes with the Scope ignored
+- skin switch: the Race window's time bar changes
+- skin switch: the Race window's time bar changes with the Scope ignored
 
 ### test_skin_values.lua (3)
 
@@ -1928,7 +1931,7 @@ Total.
 | test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
-| test_callout_settings.lua | 17 |
+| test_callout_settings.lua | 18 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1973,7 +1976,7 @@ Total.
 | test_lizard_sighted.lua | 8 |
 | test_client_globals.lua | 3 |
 | test_diagnostics_contract.lua | 8 |
-| test_skin_switch.lua | 69 |
+| test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1622** |
+| **Total** | **1625** |

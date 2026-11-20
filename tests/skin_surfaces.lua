@@ -238,6 +238,15 @@ return function(T)
         list[#list + 1] = { window = "race", name = "the Race window's footer", build = function() return race().footLeft end }
         list[#list + 1] = { window = "race", name = "the Race window's target card", build = function() return raceBody().w.card.name end }
         list[#list + 1] = { window = "race", name = "the Race window's Arm Race button", build = function() return raceBody().w.arm end }
+        -- The running body's time bar (the audit's bar families, SD-SK-CT): the skin's bar texture
+        -- (S.BarTexture), its color held: green, yellow and red are the countdown's meaning colors
+        -- (RaceWindowBoard.ClockColor). The body is built as showBody builds it, on the window's content.
+        list[#list + 1] = { window = "race", name = "the Race window's time bar", expect = "texture", hold = "color",
+            build = function()
+                local u = race()
+                local body = u.body.running or NSof().RaceWindowStates.Build("running", u.content)
+                return body.w.bar.fill
+            end }
     end
     return declared
 end
