@@ -104,9 +104,11 @@ function NS.FollowSkinDefaults(profile)
     if Callout and type(Callout.MoveToSkin) == "function" and type(profile.callout) == "table" then
         -- The glow color stays where it is: Combat Trail's default is the swatch (SD-CT-DEF), so a
         -- stored `glowColorFromSkin = false` is this addon's default, not an old one to move.
-        local glowFromSkin = profile.callout.glowColorFromSkin
+        -- rawget/rawset: on the live AceDB profile a read falls through to the default, and writing
+        -- that back would store a key where none was.
+        local stored = rawget(profile.callout, "glowColorFromSkin")
         Callout:MoveToSkin(profile.callout)
-        profile.callout.glowColorFromSkin = glowFromSkin
+        rawset(profile.callout, "glowColorFromSkin", stored)
     end
     if type(profile.skin) ~= "table" then profile.skin = {} end
     profile.skin.defaultsMoved = true
@@ -157,7 +159,7 @@ local STEPS = {
     -- fresh profile has no `callout` table stored, and a migrated one has a boolean glow and no texts.
     -- The retired choice named no color, offset or swatch, so none is stored: since Callout minor 4
     -- (LibKa0s v1.102.0) a migrated Soft or Strong reads the defaults for them, Glow color ticked in
-    -- the black swatch at 1, -1 (it was each word's kind color at 0, 0). The owner's defaults; no step.
+    -- the black swatch at Combat Trail's 1, 1 (SD-CT-DEF; it was each word's kind color at 0, 0). The owner's defaults; no step.
     { to = 3, perProfile = true, run = function(_, profile)
         local t = type(profile) == "table" and profile.callout
         if type(t) ~= "table" then return end

@@ -188,7 +188,9 @@ end
 -- Race mode > Callout settings; SD-CT-DEF): the glow 2 px thick, 1 px right and 1 px up, in the black
 -- swatch rather than the skin's glow color. The face, outline and shadow still follow the skin. The
 -- glow color's companion off is a documented deviation from skinning-§9 (docs/ARCHITECTURE.md).
--- A row's default is what the page's Defaults, `/ct reset` and a fresh profile read.
+-- A row's default is what the page's Defaults, `/ct reset` and a fresh profile read. Reset a key
+-- through those (or the schema's ApplyDefault), never `NS.Callout:Set(key, nil)`: the instance writes
+-- the library's own default back.
 NS.CALLOUT_DEFAULTS = { glowThickness = 2, glowY = 1, glowColorFromSkin = false }
 
 do

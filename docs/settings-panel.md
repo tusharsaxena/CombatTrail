@@ -550,7 +550,7 @@ v1.108.0, the owner's U-1 of 2026-11-20); *Font* reads
 the skin's font, ahead of the call-out's own faces, Oxanium SemiBold, Oxanium Bold, Bebas Neue and Russo
 One, and *Outline* *From skin*. The meaning kinds (info, GO, STOP, warn, error) draw the skin's `sem.*`
 colors until one is picked (U-2). A profile that still stored the old look (Oxanium SemiBold, Thick
-outline, the glow's skin color off) moves once (`docs/schema.md`, the step onto the skin's defaults).
+outline) moves once, its glow's *Use the skin's color* left as it was (SD-CT-DEF) (`docs/schema.md`, the step onto the skin's defaults).
 Every Glow row but the toggle and the
 class-color pair is disabled while the glow is off. A profile from before stored *Off*, *Soft* or
 *Strong*; the 2 -> 3 migration turns it into these keys (`docs/schema.md`, Migrations), and as it

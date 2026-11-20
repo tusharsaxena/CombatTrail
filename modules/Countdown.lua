@@ -84,7 +84,7 @@ Countdown.PREFIX = "callout."
 --- The addon's one call-out (core/CalloutSetup.lua; the stub without the library). Its settings are
 --- the profile's `callout` table, read at every call, so a profile switch is followed (before the
 --- profile store exists the getter answers nil and the call-out reads the library's DEFAULTS, which
---- are the rows' defaults). Every write goes through the seam (THE WRITE ROUTE, above).
+--- are the rows' defaults apart from NS.CALLOUT_DEFAULTS, settings/Race.lua). Every write goes through the seam (THE WRITE ROUTE, above).
 NS.Callout = NS.NewCallout({
     name = Countdown.FRAME_NAME,
     db = function()

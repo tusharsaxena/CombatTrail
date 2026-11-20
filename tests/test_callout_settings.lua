@@ -412,6 +412,8 @@ test("skin defaults step: a value stored at its old default moves once; a pick a
             Picked = { hud = { clock = { fontFlags = "THICKOUTLINE" }, spells = { borderStyleFromSkin = true } },
                        callout = { font = "Ka0s Inter", outline = "OUTLINE" } },
             Plain = { general = { locked = true } },
+            SkinGlow = { callout = { font = "Ka0s Oxanium SemiBold", glowColorFromSkin = true } },
+            NoGlowKey = { callout = { outline = "THICKOUTLINE" } },
         },
     })
     local sv = _G.CombatTrailDB
@@ -429,6 +431,13 @@ test("skin defaults step: a value stored at its old default moves once; a pick a
     assertEqual(picked.hud.clock.fontFlags, "THICKOUTLINE", "a picked flag stays")
     assertEqual(picked.callout.font, "Ka0s Inter", "a picked face stays")
     assertEqual(picked.callout.outline, "OUTLINE", "a picked outline stays")
+    if not forever() then
+        -- SD-CT-DEF: the step leaves the glow color companion exactly as stored, true or absent.
+        assertEqual(sv.profiles.SkinGlow.callout.glowColorFromSkin, true, "a stored true stays true")
+        assertEqual(sv.profiles.SkinGlow.callout.font, "Skin font", "beside it the old face still moves")
+        assertNil(rawget(sv.profiles.NoGlowKey.callout, "glowColorFromSkin"), "no key is stored where none was")
+        assertEqual(sv.profiles.NoGlowKey.callout.outline, "@skin", "and the old outline moves")
+    end
     assertEqual(picked.skin.defaultsMoved, true)
     assertNil(rawget(sv.profiles.Plain, "hud"), "a profile with no hud table gains none")
     assertEqual(sv.profiles.Plain.skin.defaultsMoved, true, "only the record")
