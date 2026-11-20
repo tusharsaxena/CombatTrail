@@ -520,7 +520,8 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 |---|---|---|
 | Look | Font | `callout.font` |
 | Look | Size | `callout.size` |
-| Look | Outline | `callout.outline` |
+| Look | Outline (led by From skin, the default) | `callout.outline` |
+| Look | Use the skin's shadow (on: Shadow and its offsets are not read) | `callout.fontShadowFromSkin` |
 | Look | Shadow | `callout.shadow` |
 | Look | Shadow X offset, Shadow Y offset (disabled with no shadow) | `callout.shadowX`, `callout.shadowY` |
 | Look | Animation | `callout.anim` |
@@ -532,6 +533,7 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 | Look (Glow) | Intensity (percent), Thickness (px) | `callout.glowIntensity`, `callout.glowThickness` |
 | Look (Glow) | X offset, Y offset | `callout.glowX`, `callout.glowY` |
 | Look (Colors) | one swatch per kind | `callout.colors.<kind>` (`number`, `info`, `go`, `stop`, `warn`, `error`) |
+| Look (Colors) | Use the skin's color, beside Numbers (on: the skin's HUD text color; the swatch stays live) | `callout.numberColorFromSkin` |
 | Sound | Voice (the eight packs, Game TTS, off; Arena announcer (John) first and the default) | `callout.voice` |
 | Sound | Sound channel | `callout.channel` |
 | Sound | Speak numbers from | `callout.speakFrom` |
@@ -541,8 +543,13 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 **The glow, as AuraMaster's.** Laid out in AuraMaster's two columns under Look's *Glow* heading. The
 color follows AuraMaster's order: *Use class color* wins, then *Use the skin's color*, then the
 *Glow color* swatch, else each word's own kind color. A fresh profile has *Glow color* ticked on a
-black swatch, at 100%, 1 px and offset 1, -1 (LibKa0s v1.102.0's defaults, the owner's look); *Font*
-reads Oxanium SemiBold, the first of the call-out's faces, then Oxanium Bold, Bebas Neue and Russo One. Every Glow row but the toggle and the
+black swatch, at 100%, 1 px and offset 1, -1 (LibKa0s v1.102.0's defaults), under *Use the skin's color*,
+ticked (LibKa0s v1.108.0, the owner's U-1 of 2026-11-20: the call-out follows the skin); *Font* reads
+the skin's font, ahead of the call-out's own faces, Oxanium SemiBold, Oxanium Bold, Bebas Neue and Russo
+One, and *Outline* *From skin*. The meaning kinds (info, GO, STOP, warn, error) draw the skin's `sem.*`
+colors until one is picked (U-2). A profile that still stored the old look (Oxanium SemiBold, Thick
+outline, the glow's skin color off) moves once (`docs/schema.md`, the step onto the skin's defaults).
+Every Glow row but the toggle and the
 class-color pair is disabled while the glow is off. A profile from before stored *Off*, *Soft* or
 *Strong*; the 2 -> 3 migration turns it into these keys (`docs/schema.md`, Migrations), and as it
 named no color or offset such a profile reads the black swatch at 1, -1.
