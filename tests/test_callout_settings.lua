@@ -461,3 +461,69 @@ test("skin defaults step: with no LibKa0s the same writes are made by hand, and 
     assertEqual(p.skin.defaultsMoved, true, "the record, written by the step itself")
     assertFalse(NS.FollowSkinDefaults(p), "and once only")
 end)
+
+-- ── the drag strip's marks (LibKa0s#100, Callout minor 5, SD-CT-100) ─────────────────────────────
+
+-- The call-out's drag strip, as LibKa0s-Widgets-1.0's DragHandle built it for the call-out's frame on
+-- its first unlock (the instance builds its frame, and the strip with it, lazily), and the spec the
+-- call-out handed it.
+local function unlockedStrip(inst)
+    local W = inst.mocks.LibStub("LibKa0s-Widgets-1.0")
+    local real, built, spec = W.DragHandle, nil, nil
+    W.DragHandle = function(parent, s)
+        local h = real(parent, s)
+        if s and s.moveFrame ~= nil then built, spec = h, s end
+        return h
+    end
+    local ok, err = pcall(function() inst.NS.Callout:SetLocked(false) end)
+    W.DragHandle = real
+    if not ok then error(err, 0) end
+    return built, spec
+end
+
+test("callout strip: unlocked, the strip carries ? · settings · close; the X locks it and turns the countdown off", function()
+    if forever() then return end
+    local inst = T.load()
+    local NS, M = inst.NS, inst.mocks
+    local h, spec = unlockedStrip(inst)
+    assertTrue(h ~= nil, "the call-out's drag strip is built")
+    assertTrue(type(spec.onClose) == "function" and type(spec.onSettings) == "function",
+        "the call-out hands the strip this addon's close and settings")
+    assertTrue(h.close ~= nil, "the close mark is drawn (onClose passed)")
+    assertTrue(h.settings ~= nil, "the settings mark is drawn")
+    assertTrue(NS.GetSetting("race.centerCountdown"), "the countdown on by default")
+    local printed = #M.__printed()
+    h.close:GetScript("OnClick")(h.close, "LeftButton")
+    assertTrue(NS.Callout:Locked(), "the X locks the call-out: its sample and strip go")
+    assertFalse(h:IsShown(), "the strip is hidden")
+    assertEqual(NS.GetSetting("race.centerCountdown"), false, "the center countdown is off, through the seam")
+    assertEqual(#M.__printed(), printed + 1, "one chat line")
+    assertTrue(M.__printed()[#M.__printed()]:find("Race mode > Race > Countdown", 1, true) ~= nil,
+        "it says where to turn it back on")
+    -- Restorable: the row turns it back on, and the call-out's other settings were kept.
+    assertTrue(NS.SetByPath("race.centerCountdown", true))
+    assertTrue(NS.GetSetting("race.centerCountdown"))
+    -- A second close with the countdown already off says nothing more.
+    NS.SetByPath("race.centerCountdown", false)
+    printed = #M.__printed()
+    NS.CalloutClose()
+    assertEqual(#M.__printed(), printed, "no chat line when it was already off")
+end)
+
+test("callout strip: the settings mark opens the Race mode page on its Callout tab", function()
+    if forever() then return end
+    local inst = T.load()
+    local NS = inst.NS
+    local H = NS.Helpers
+    local opened, selected = {}, {}
+    local open, select_ = H.OpenOptionsPanel, H.SelectTab
+    H.OpenOptionsPanel = function(page) opened[#opened + 1] = page end
+    H.SelectTab = function(page, tab) selected[#selected + 1] = page .. "/" .. tostring(tab) end
+    local h = unlockedStrip(inst)
+    local ok, err = pcall(function() h.settings:GetScript("OnClick")(h.settings, "LeftButton") end)
+    H.OpenOptionsPanel, H.SelectTab = open, select_
+    NS.Callout:SetLocked(true)
+    if not ok then error(err, 0) end
+    assertEqual(opened[1], "race", "the Race mode page")
+    assertEqual(selected[1], "race/callout", "on its Callout tab")
+end)

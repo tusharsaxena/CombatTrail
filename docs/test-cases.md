@@ -1057,7 +1057,7 @@ Total.
 - countdown: a profile that still stores the retired race.countdownCue counts as any other
 - countdown: never broadcasts a pull timer, drives Blizzard's TimerTracker or keeps a clock of its own
 
-### test_callout_settings.lua (15)
+### test_callout_settings.lua (17)
 
 - callout settings: every SchemaRows row is a Race mode row, declared retail, drawn by the section
 - callout settings: absent on WoW Forever, no row, default or writeThrough path
@@ -1074,6 +1074,8 @@ Total.
 - skin defaults step: a value stored at its old default moves once; a pick and the next run stay
 - skin defaults step: a new or reset profile takes the step, which moves nothing a player sees
 - skin defaults step: with no LibKa0s the same writes are made by hand, and the record
+- callout strip: unlocked, the strip carries ? · settings · close; the X locks it and turns the countdown off
+- callout strip: the settings mark opens the Race mode page on its Callout tab
 
 ### test_toast.lua (21)
 
@@ -1926,7 +1928,7 @@ Total.
 | test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
-| test_callout_settings.lua | 15 |
+| test_callout_settings.lua | 17 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
 | test_hud_states.lua | 25 |
@@ -1974,4 +1976,4 @@ Total.
 | test_skin_switch.lua | 69 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1620** |
+| **Total** | **1622** |

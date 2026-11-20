@@ -20,6 +20,14 @@ local addonName, NS = ...
 -- file that loads before the one calling New (modules/Countdown.lua), as the library's stub rule
 -- asks. tests/test_countdown.lua holds the stub to a live instance.
 --
+-- THE DRAG STRIP'S MARKS (LibKa0s#100, Callout minor 5, SD-CT-100): while the call-out is unlocked
+-- (its settings tab's *Unlock to move*), its drag strip reads `?` · settings · close
+-- (standalone-windows, *The drag strip's marks*). The close (`onClose`, NS.CalloutClose) locks the
+-- call-out, so its sample and strip go, and turns the race's center countdown off
+-- (`race.centerCountdown`, through the seam), and a chat line says where to turn it back on; the
+-- call-out's other settings are kept. The settings mark (`onSettings`, NS.CalloutSettings) opens the
+-- Race mode page on its Callout tab. A descriptor that names its own keeps it.
+--
 -- Nothing here reads a meter value: a call-out says a number of seconds or a stock word.
 
 local Callout = LibStub and LibStub("LibKa0s-Callout-1.0", true)
@@ -50,8 +58,31 @@ NS.CalloutStub = {
         suspended = false, locked = true, logged = 0 } end,
 }
 
---- A call-out for descriptor `d` (the library's Callout:New; `d.addon`, `d.skin`, `d.packs` and
---- `d.debug` default to this addon's), or the stub when the library is absent.
+-- The Race mode page and its call-out tab (settings/Race.lua: the page key, and the tab's group key).
+local RACE_PAGE, CALLOUT_TAB = "race", "callout"
+
+--- The drag strip's close: the call-out locked (its sample and strip go) and the race's center
+--- countdown turned off through the seam, with one chat line saying how to turn it back on.
+function NS.CalloutClose()
+    if NS.Callout and NS.Callout.SetLocked then NS.Callout:SetLocked(true) end
+    if NS.GetSetting and NS.GetSetting("race.centerCountdown") == false then return end
+    if NS.SetByPath and NS.SetByPath("race.centerCountdown", false) and NS.Print then
+        local L = NS.L or {}
+        NS.Print(L["Center-screen countdown off. Turn it back on in Race mode > Race > Countdown."])
+    end
+end
+
+--- The drag strip's settings mark: the Race mode page, on its Callout tab.
+function NS.CalloutSettings()
+    local H = NS.Helpers
+    if not (H and type(H.OpenOptionsPanel) == "function") then return NS.OpenSettings and NS.OpenSettings() end
+    H.OpenOptionsPanel(RACE_PAGE)
+    if type(H.SelectTab) == "function" then H.SelectTab(RACE_PAGE, CALLOUT_TAB) end
+end
+
+--- A call-out for descriptor `d` (the library's Callout:New; `d.addon`, `d.skin`, `d.packs`,
+--- `d.debug`, `d.onClose` and `d.onSettings` default to this addon's), or the stub when the library
+--- is absent.
 --- @param d table  the descriptor: d.db is required
 --- @return table instance
 function NS.NewCallout(d)
@@ -60,5 +91,7 @@ function NS.NewCallout(d)
     d.skin = d.skin or addonName
     d.packs = d.packs or NS.CALLOUT_PACKS
     d.debug = d.debug or function(_, msg) if NS.Debug then NS.Debug("Callout", "%s", tostring(msg)) end end
+    d.onClose = d.onClose or function() NS.CalloutClose() end
+    d.onSettings = d.onSettings or function() NS.CalloutSettings() end
     return Callout:New(d)
 end

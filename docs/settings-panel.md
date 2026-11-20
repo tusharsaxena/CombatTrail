@@ -508,7 +508,7 @@ place in the strip.
 Top to bottom: a **Preview** heading (no sample line under it since LibKa0s v1.102.0, CalloutSettings
 minor 5: the real call-out is where the look shows), *Test countdown* (5 to GO! on the real call-out) and *Play*, *Text to play* (the
 stock words, led by *Countdown 10 to 1*, which counts the real call-out down from 10 with no finish),
-*Unlock to move* (the drag strip; the drag writes `callout.point`) and *Reset position*. None of them
+*Unlock to move* (the drag strip, `?` · settings · close: its close locks the call-out and turns *Center-screen countdown* off with one chat line saying where to turn it back on, and its gear opens this tab, core/CalloutSetup.lua; the drag writes `callout.point`) and *Reset position*. None of them
 touches a race. Under it, the **side tabs**: a list on the left, *Look* and *Sound*, and the selected
 one's rows on the right. Look is selected first; the pick is session state, never saved.
 
