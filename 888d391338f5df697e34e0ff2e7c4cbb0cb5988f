@@ -1,0 +1,1 @@
+Lead re-check of SD-CT-DEF review fixes: all four low findings of the 93ef4fa review addressed (rawget/rawset restore, two step tests with a confirmed mutation, the Set(nil) note, six doc drifts). Gate 1625/0 Retail, 1615/0 Forever, luacheck 0/0.
