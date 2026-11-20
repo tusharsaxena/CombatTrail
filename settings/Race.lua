@@ -184,6 +184,13 @@ local function copyOf(v)
     return t
 end
 
+-- Combat Trail's own call-out defaults over the library's (owner, 2026-11-20, from the owner's
+-- Race mode > Callout settings; SD-CT-DEF): the glow 2 px thick, 1 px right and 1 px up, in the black
+-- swatch rather than the skin's glow color. The face, outline and shadow still follow the skin. The
+-- glow color's companion off is a documented deviation from skinning-§9 (docs/ARCHITECTURE.md).
+-- A row's default is what the page's Defaults, `/ct reset` and a fresh profile read.
+NS.CALLOUT_DEFAULTS = { glowThickness = 2, glowY = 1, glowColorFromSkin = false }
+
 do
     local prefix = NS.Countdown.PREFIX
     local rows, named = NS.Callout:SchemaRows(prefix, { page = PAGE, texts = false })
@@ -191,6 +198,8 @@ do
     for _, r in ipairs(rows) do
         r.clients, r.skipRender = RETAIL, true
         r.group = CALLOUT_TAB
+        local own = NS.CALLOUT_DEFAULTS[r.path:sub(#prefix + 1)]
+        if own ~= nil then r.default = own end
         if not r.sessionOnly then Write(D, r.path, copyOf(r.default)) end
         out[#out + 1] = r
     end

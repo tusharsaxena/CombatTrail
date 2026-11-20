@@ -543,8 +543,10 @@ one's rows on the right. Look is selected first; the pick is session state, neve
 **The glow, as AuraMaster's.** Laid out in AuraMaster's two columns under Look's *Glow* heading. The
 color follows AuraMaster's order: *Use class color* wins, then *Use the skin's color*, then the
 *Glow color* swatch, else each word's own kind color. A fresh profile has *Glow color* ticked on a
-black swatch, at 100%, 1 px and offset 1, -1 (LibKa0s v1.102.0's defaults), under *Use the skin's color*,
-ticked (LibKa0s v1.108.0, the owner's U-1 of 2026-11-20: the call-out follows the skin); *Font* reads
+black swatch, at 100%, 2 px and offset 1, 1, with *Use the skin's color* unticked: Combat Trail's own
+glow defaults over the library's (the owner's settings of 2026-11-20, SD-CT-DEF; the unticked companion
+is a documented deviation, `docs/ARCHITECTURE.md`). The rest of the look follows the skin (LibKa0s
+v1.108.0, the owner's U-1 of 2026-11-20); *Font* reads
 the skin's font, ahead of the call-out's own faces, Oxanium SemiBold, Oxanium Bold, Bebas Neue and Russo
 One, and *Outline* *From skin*. The meaning kinds (info, GO, STOP, warn, error) draw the skin's `sem.*`
 colors until one is picked (U-2). A profile that still stored the old look (Oxanium SemiBold, Thick

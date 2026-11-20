@@ -116,15 +116,18 @@ test("callout settings: the defaults are seeded from the rows, and the schema va
     assertEqual(D.callout.voice, "male-arena-john", "Arena John, the default voice for a new profile")
     assertEqual(D.callout.glow, true, "the glow on")
     assertEqual(D.callout.glowIntensity, 1, "at full intensity (Callout minor 4, LibKa0s v1.102.0)")
-    assertEqual(D.callout.glowThickness, 1, "1 px thick")
-    assertEqual(D.callout.glowX .. "," .. D.callout.glowY, "1,-1", "1 px right and 1 px down")
+    -- Combat Trail's own glow defaults over the library's (owner, 2026-11-20, SD-CT-DEF): 2 px thick,
+    -- 1 px right and 1 px up, in the black swatch.
+    assertEqual(D.callout.glowThickness, 2, "2 px thick")
+    assertEqual(D.callout.glowX .. "," .. D.callout.glowY, "1,1", "1 px right and 1 px up")
     assertEqual(D.callout.glowCustom, true, "Glow color ticked")
     assertEqual(D.callout.glowColor.r .. "," .. D.callout.glowColor.g .. "," .. D.callout.glowColor.b, "0,0,0", "a black swatch")
     -- The look follows the skin (LibKa0s v1.108.0, the owner's U-1 of 2026-11-20): the Skin font, the
-    -- skin's outline, its glow color, its shadow and its HUD text color for the numbers.
+    -- skin's outline, its shadow and its HUD text color for the numbers. The glow color does not: the
+    -- owner's SD-CT-DEF keeps the black swatch (a documented deviation, docs/ARCHITECTURE.md).
     assertEqual(D.callout.font, "Skin font", "the skin's face")
     assertEqual(D.callout.outline, "@skin", "the skin's outline")
-    assertEqual(D.callout.glowColorFromSkin, true, "the skin's glow color")
+    assertEqual(D.callout.glowColorFromSkin, false, "the swatch, not the skin's glow color (SD-CT-DEF)")
     assertEqual(D.callout.fontShadowFromSkin, true, "the skin's shadow")
     assertEqual(D.callout.numberColorFromSkin, true, "the skin's HUD text color for the numbers")
     assertEqual(D.callout.shadowX .. "," .. D.callout.shadowY, "1,1", "the shadow 1 px right and 1 px up")
@@ -233,7 +236,7 @@ test("callout settings: the glow's rows are reached by /ct set, get and reset", 
     NS.Slash:OnSlash("reset callout.glow")
     NS.Slash:OnSlash("reset callout.glowThickness")
     assertTrue(NS.Callout:Get("glow"), "reset: the glow back on")
-    assertEqual(NS.Callout:Get("glowThickness"), 1, "and its thickness back to 1")
+    assertEqual(NS.Callout:Get("glowThickness"), 2, "and its thickness back to Combat Trail's 2")
 end)
 
 test("callout settings: the Race mode page's Defaults and a profile reset put the call-out back", function()
@@ -368,12 +371,12 @@ test("callout settings: the migration rewrites a stored glow choice, drops the t
         assertNil(rawget(soft, key), "soft: no " .. key .. " stored by the migration")
     end
     assertTrue(NS.Callout:Get("glowCustom"), "the active Strong profile reads Glow color ticked")
-    assertEqual(NS.Callout:Get("glowX") .. "," .. NS.Callout:Get("glowY"), "1,-1", "at the new offset")
-    -- From LibKa0s v1.108.0 (U-1) the glow draws the skin's glow color by default (Ka0s Default's
-    -- gold); the black swatch is what it draws with the companion off.
-    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "1,0.82,0", "in the skin's glow color, not GO's")
-    assertTrue(NS.SetByPath("callout.glowColorFromSkin", false))
-    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "0,0,0", "off: in the black swatch")
+    assertEqual(NS.Callout:Get("glowX") .. "," .. NS.Callout:Get("glowY"), "1,1", "at Combat Trail's offset")
+    -- Combat Trail's default glow is the black swatch (SD-CT-DEF); Use the skin's color draws the
+    -- skin's glow color (Ka0s Default's gold) instead.
+    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "0,0,0", "in the black swatch, not GO's")
+    assertTrue(NS.SetByPath("callout.glowColorFromSkin", true))
+    assertEqual(table.concat({ NS.Callout:GetGlowColor("go") }, ","), "1,0.82,0", "on: in the skin's glow color")
     assertNil(sv.profiles.Plain.callout, "a profile with no call-out table gains none")
     local errors = NS.ValidateSchema()
     assertEqual(errors, 0, "the boot check reads the bool rows clean")
@@ -420,7 +423,7 @@ test("skin defaults step: a value stored at its old default moves once; a pick a
     if not forever() then
         assertEqual(old.callout.font, "Skin font", "the call-out's L17 face moves to the Skin font (U-1)")
         assertEqual(old.callout.outline, "@skin", "and its outline to From skin")
-        assertEqual(old.callout.glowColorFromSkin, true, "and its glow to the skin's color")
+        assertEqual(old.callout.glowColorFromSkin, false, "its glow stays on the swatch, Combat Trail's default (SD-CT-DEF)")
     end
     local picked = sv.profiles.Picked
     assertEqual(picked.hud.clock.fontFlags, "THICKOUTLINE", "a picked flag stays")

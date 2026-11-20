@@ -19,8 +19,8 @@ local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
 --   hud.clock.fontFlags            ""    -> "@skin": the HUD fight clock is no race clock (U-14)
 --   hud.spells.borderStyleFromSkin false -> true: the spell rows' border follows the skin (SD-SK-CT.3)
 --   hud.spells.borderColorFromSkin false -> true
--- and the call-out's own list, Callout:FollowKeys / MoveToSkin over `profile.callout` (U-1: the face,
--- the outline and the glow color, each only while still at its v1.107.0 value), with the library
+-- and the call-out's own list, Callout:FollowKeys / MoveToSkin over `profile.callout` (U-1: the face
+-- and the outline, each only while still at its v1.107.0 value), with the library
 -- present (it is absent in the degraded mode, core/CalloutSetup.lua, and on WoW Forever there is no
 -- `callout` table).
 NS.SKIN_DEFAULTS_FROM = {
@@ -102,7 +102,11 @@ function NS.FollowSkinDefaults(profile)
         end
     end
     if Callout and type(Callout.MoveToSkin) == "function" and type(profile.callout) == "table" then
+        -- The glow color stays where it is: Combat Trail's default is the swatch (SD-CT-DEF), so a
+        -- stored `glowColorFromSkin = false` is this addon's default, not an old one to move.
+        local glowFromSkin = profile.callout.glowColorFromSkin
         Callout:MoveToSkin(profile.callout)
+        profile.callout.glowColorFromSkin = glowFromSkin
     end
     if type(profile.skin) ~= "table" then profile.skin = {} end
     profile.skin.defaultsMoved = true
