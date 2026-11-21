@@ -27,9 +27,9 @@ owner's open decisions are listed in the plan's *Owner decisions*.
 - **The pet is its own source.** `Meter.PET_SEPARATE = true` assumes the meter reports the pet beside
   the player and that the player's total does not already hold the pet's damage. The probe cannot see
   double counting. *Unverified* in combat. On WoW Forever, out of combat, the pet's source came back
-  empty and the player's list held no pet spells (midnight-quirks.md): the pet's damage is most likely
+  empty and the player's list held no pet spells (forever-quirks.md): the pet's damage is most likely
   folded into the player's, and fights since show it is: the pet's rows sit in the player's source,
-  each named by `creatureName` (midnight-quirks.md), and are split out by that name. In combat the
+  each named by `creatureName` (forever-quirks.md), and are split out by that name. In combat the
   HUD shows the Pet row whenever a pet is out: when every value the split needs is plain it shows
   the pet's figure and your own part as the main Damage and DPS, as on Retail, and keeps them if the
   pet dies or is dismissed mid-fight; when any is secret, or a row could not be read at all, the Pet
@@ -60,7 +60,7 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   `/ct dummy add` on the target).
 - **The talent tree stands in for a spec.** WoW Forever answers one class-wide spec, so the tree
   with the most points is the fight's spec (v0.2 plan A4). The probe (build 70862, out of combat)
-  found the trees in C_Traits' trait groups, with the talent-tab API absent (midnight-quirks.md);
+  found the trees in C_Traits' trait groups, with the talent-tab API absent (forever-quirks.md);
   whether the config, tree or group IDs or a group's points read secret in combat is not measured.
   A tree read sealed in combat (any of those) keeps the session's last plain read, primed at login
   and every stand-up and refreshed by every out-of-combat read, so a respec followed by a pull

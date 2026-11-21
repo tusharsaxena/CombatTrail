@@ -217,7 +217,7 @@ local function sessionsLine(out)
 end
 
 -- A row's creatureName: quoted when plain (so an empty one shows as ""), else show()'s word. It
--- settles whether the owner's own rows carry nil or "" (docs/midnight-quirks.md, the folded pet).
+-- settles whether the owner's own rows carry nil or "" (docs/forever-quirks.md, the folded pet).
 local function creature(v)
     if not Secrets.IsSealed(v) and type(v) == "string" then return ("%q"):format(v) end
     return show(v)

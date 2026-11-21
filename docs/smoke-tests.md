@@ -47,7 +47,7 @@ on **each** client, on a Hunter with a pet out, then again on a Warlock with a d
   player source* line: SM-CT-P8). On WoW Forever, also the talent-tree lines (SM-CT-P7).
 - `/ct probe stop` disarms it early.
 
-Hand the reports back for `midnight-quirks.md`. A "no" on the pet line, or a raise on the pet-fill
+Hand the reports back for `midnight-quirks.md` (Retail) and `forever-quirks.md` (WoW Forever). A "no" on the pet line, or a raise on the pet-fill
 line, is a fix on the branch before the merge (spec §12's fallbacks).
 
 | ID | Client | Check | Expect |
@@ -55,10 +55,10 @@ line, is a fix on the branch before the merge (spec §12's fallbacks).
 | SM-CT-P1 | Both | `/ct probe` out of combat on a Hunter with a pet | The report prints in the console; every one of the eight functions is present; "combat log: protected, not used" |
 | SM-CT-P2 | Both | `/ct probe start`, then ten seconds of combat | One +5 s sample and one sample 2 s after combat, then the probe disarms |
 | SM-CT-P3 | Both | `/ct probe` typed while already in combat | It schedules the +5 s sample; a combat takes one in-combat sample however often it is armed |
-| SM-CT-P4 | Both | The "pet is separate source" verdict, Hunter and Warlock | "yes" on both classes, with the note that it cannot detect double counting. On WoW Forever the out-of-combat probe (2026-11-10) found the pet's source empty (midnight-quirks.md): record the in-combat verdict there |
+| SM-CT-P4 | Both | The "pet is separate source" verdict, Hunter and Warlock | "yes" on both classes, with the note that it cannot detect double counting. On WoW Forever the out-of-combat probe (2026-11-10) found the pet's source empty (forever-quirks.md): record the in-combat verdict there |
 | SM-CT-P5 | Both | The "pace pet-fill anchor" line | The SetPoint did not raise |
 | SM-CT-P6 | Forever | The cast secrecy counts in combat | Recorded either way: whether cast spell IDs and castGUIDs are secret in combat on WoW Forever |
-| SM-CT-P7 | Forever | The talent-tree lines of `/ct probe` (talent tabs, talent spec, talent config, trait tree and groups, talent tree pick), on a character with points spent | Recorded either way: which API answers, each group's fields (which one holds the icon), and a pick that names the tree with the most points. First run 2026-11-10 (build 70862, out of combat): the talent tabs absent, C_Traits' three groups answered, the pick read Beast Mastery (10/3/0) (midnight-quirks.md). Still owed: the same lines read right after a pull, while combat is fresh |
+| SM-CT-P7 | Forever | The talent-tree lines of `/ct probe` (talent tabs, talent spec, talent config, trait tree and groups, talent tree pick), on a character with points spent | Recorded either way: which API answers, each group's fields (which one holds the icon), and a pick that names the tree with the most points. First run 2026-11-10 (build 70862, out of combat): the talent tabs absent, C_Traits' three groups answered, the pick read Beast Mastery (10/3/0) (forever-quirks.md). Still owed: the same lines read right after a pull, while combat is fresh |
 | SM-CT-P8 | Forever | `/ct probe start` with the pet out, ten seconds of combat with the pet attacking, then `/ct probe` | Each sample has a line "pet rows in player source: N row(s), A with a secret name, B named a creature (C with a secret amount); player total plain|secret; live Pet figure: split|dash|own source|none". Record the combat+5s line: "split" with no secret name, amount or total means the meter's values are plain in combat on WoW Forever and the HUD shows the live Pet figure (SM-CT-H15); "dash" means they are secret there. The afterCombat+2s line should read "split" |
 | SM-CT-P9 | Both | Debug logging off and the console closed: `/ct probe`; then `/ct probe start`, ten seconds of combat, and `/ct probe` again; then `/ct probe stop` | The console opens with a `/ct probe` header and the report under the Probe tag, logging stays off, and chat shows one line, *probe: N lines written to the debug console. Use Copy to share it.* The first report's last console line says the probe also watches your next fight; the report after the sampled fight has no such line. `start` and `stop` each answer one chat line and write nothing |
 
