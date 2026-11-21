@@ -229,7 +229,7 @@ Share.AcceptWhisper = acceptWhisper
 
 -- The whisper's recipient: a name typed into the popup, the targeted player's offered first.
 -- Who a whisper goes to, as the client addresses them: on Retail "Name-Realm" when the target is from
--- another realm, on WoW Forever the full regional name ("First Surname", client-quirks §5). Plain or nil.
+-- another realm, on WoW Forever the full regional name ("First Surname", forever-quirks §4). Plain or nil.
 local function whisperName(unit)
     if not NS.Compat.ForClient({ "retail" }) then
         return NS.Secrets.PlainString((NS.Compat.UnitCharacterName(unit)))

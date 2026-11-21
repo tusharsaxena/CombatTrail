@@ -47,7 +47,7 @@ local _, NS = ...
 -- is never parsed, compared or used as a key. Every client call is read BARE at CALL time and
 -- pcall'd, so a client without one yields an absent field, never a Lua error.
 --
--- NAMES (client-quirks §5). A character is read through NS.Compat.UnitCharacterName: on WoW Forever
+-- NAMES (forever-quirks §4). A character is read through NS.Compat.UnitCharacterName: on WoW Forever
 -- it is the whole "First Surname", and the realm is the ruleset (NS.Compat.RealmKey). A name is never
 -- split, and UnitName's second value is never read as a realm.
 
