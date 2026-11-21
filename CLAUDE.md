@@ -34,7 +34,7 @@ Start here, then read the docs:
 - Then the topic docs the hub's Documentation map lists: `docs/scope.md`, `docs/schema.md`,
   `docs/settings-panel.md`, `docs/data-flow.md`, `docs/common-tasks.md`, `docs/slash-dispatch.md`,
   `docs/compat-layer.md`, `docs/profiles.md`, `docs/debug.md`, `docs/known-limitations.md`,
-  `docs/midnight-quirks.md` and `docs/performance.md`.
+  `docs/midnight-quirks.md`, `docs/forever-quirks.md` and `docs/performance.md`.
 - **`docs/superpowers/specs/2026-11-10-combat-trail-design.md`** — the v0.1.0 design: Player and Pet
   cast lanes, the live DPS HUD and the fight history. Damage comes only from `C_DamageMeter`, and a
   secret value is only ever copied into a C-side widget, never inspected (spec §3).
@@ -49,14 +49,14 @@ auto-stage/commit/push and never bump the version without an explicit instructio
 
 This addon vendors **[LibKa0s](https://github.com/tusharsaxena/LibKa0s)** into `libs/LibKa0s/` and
 its test kit into `tests/_kit/`, both copied whole from the tag below (`git -C ../LibKa0s archive
-v1.108.0`, commit 56c20b7686c9dbb858552f23c61003aff02fe601), with `libs/LibKa0s/media/icons/` and
+v1.109.0`, commit 1a330ffbc5369cddfe62ea65d85fd636aab64ac0), with `libs/LibKa0s/media/icons/` and
 `libs/LibKa0s/media/sounds/` pruned to their declarations by the tag's own `tools/prune-icons.lua`.
 **Never edit anything under `libs/` or `tests/_kit/`**: a library problem is filed on LibKa0s and
 re-vendored back, because the next re-vendor silently reverts a local edit. The Ace3,
 LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's (the set that loads on both
 clients).
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.108.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.109.0 (MIT).
 LibKa0s icons: arrow-left, chart, chat, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
 LibKa0s sounds: callout/male-arena-john, callout/female-kathleen, callout/female-kristin, callout/female-cori, callout/female-bella, callout/male-joe, callout/male-john, callout/male-norman.
 

@@ -24,18 +24,20 @@ do
         "Pool.lua", "Media.lua", "Widgets.lua", "WidgetsDropdown.lua", "DebugLog.lua",
         "DebugLogDiagnostics.lua", "DebugLogGates.lua", "Slash.lua", "SlashParse.lua", "Launcher.lua",
         "Options.lua", "OptionsRegistry.lua", "OptionsWidgets.lua", "OptionsFlow.lua", "OptionsTabs.lua",
-        "OptionsTabbed.lua", "OptionsCombat.lua", "OptionsCompose.lua", "OptionsScroll.lua",
+        "OptionsTabbed.lua", "OptionsCombat.lua", "OptionsCompose.lua", "OptionsComposeMaster.lua",
+        "OptionsScroll.lua",
         "OptionsKeybinds.lua", "Perf.lua", "PerfSampler.lua", "PerfCommands.lua", "PerfPanel.lua",
         "Sim.lua", "OptionsAppearance.lua", "OptionsSkinPicker.lua", "OptionsSkinPickerRows.lua",
         "OptionsSwitch.lua", "OptionsMedia.lua",
         -- The skin engine core/SkinSetup.lua registers the owner with (skinning-§1).
         "Skin.lua", "SkinOwnerTokens.lua", "SkinDefs.lua", "SkinDefsOthers.lua", "SkinPaint.lua",
         "SkinPaintExtras.lua", "SkinPaintHud.lua", "SkinAceConfirm.lua", "SkinPaintControls.lua",
+        "SkinPaintNav.lua",
         "SkinEUI.lua", "SkinAce.lua",
         -- The Insights charts (core/ChartsSetup.lua, Race mode plan Task D2).
         "Charts.lua", "ChartsRender.lua",
         -- The race call-out (core/CalloutSetup.lua, callout plan row C2).
-        "Callout.lua", "CalloutSettings.lua",
+        "Callout.lua", "CalloutRoute.lua", "CalloutSound.lua", "CalloutSettings.lua",
     }
     local present = {}
     for _, path in ipairs(LIB_FILES) do present[path:match("([^/]+)$")] = true end

@@ -13,8 +13,8 @@ local _, NS = ...
 --                                C_SpecializationInfo first, then the deprecated globals (both are
 --                                gone on WoW Forever, where the stubs answer nil)
 --   Compat.UnitCharacterName(unit)  Compat.RealmKey()
---                                a character's whole name and the player's realm key (client-quirks
---                                §5: "First Surname" and the ruleset on WoW Forever)
+--                                a character's whole name and the player's realm key (forever-quirks
+--                                §4: "First Surname" and the ruleset on WoW Forever)
 -- Hand-written ladders across clients and patches:
 --   Compat.SpellTexture(id)      C_Spell.GetSpellTexture, then the bare global; the id is passed through
 --                                untouched, so the caller runs it in pcall (it may be secret)
@@ -562,7 +562,7 @@ end
 -- Who and where a fight was (modules/Identity.lua)
 -- ---------------------------------------------------------------------------
 --
--- A character's name and realm: LibKa0s-Compat-1.0's identity readers (minor 4, client-quirks §5),
+-- A character's name and realm: LibKa0s-Compat-1.0's identity readers (minor 4, forever-quirks §4),
 -- each with its library-absent stub. On WoW Forever names are unique per region, a character is its
 -- first name and surname together, and UnitName's second value is the SURNAME, never a realm; the
 -- realm is its ruleset. The stubs re-implement the two rules this addon depends on (the whole name,

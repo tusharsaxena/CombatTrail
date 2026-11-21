@@ -346,7 +346,8 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (core/PerfSetup.lua) |
 | `slash-dispatch.md` | Present | `NS.COMMANDS` carries eight or more commands |
-| `midnight-quirks.md` | Present | Always, from v2.102.0 of the standard |
+| `midnight-quirks.md` | Present | Always, from v2.102.0 of the standard; from v2.117.0, Clients includes Retail (client-quirks-§1) |
+| `forever-quirks.md` | Present | Clients includes Forever (`Retail · Forever`, forever-quirks-§1), from v2.117.0 of the standard |
 | `compat-layer.md` | Present | `core/Compat.lua` publishes three or more addon-specific shims |
 | `message-bus.md` | Present | Seventeen messages, more than ten |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
@@ -388,8 +389,7 @@ addon, so the history is the README's `## Version History` alone (a plan correct
 included, with vendored code (`libs/`, `tests/_kit/`) the only carve-out that reaches anything here.
 Nothing here is generated non-shipping data, so `tests/run.lua` sets no `Kit.layoutCap`. A file over
 the cap has three terminal states and no others: peeled, an open issue naming the seam a peel would
-follow, or a ratified row in the register above carrying a re-check trigger. The kit's gate,
-`tests/_kit/test_layout_cap.lua`, reads this census from here.
+follow, or a ratified row in the register above carrying a re-check trigger. The kit's gate, `tests/_kit/test_layout_cap.lua`, reads this census from here.
 
 **Nothing is over the cap today.** Measure it with
 

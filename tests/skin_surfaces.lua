@@ -1,5 +1,5 @@
 -- tests/skin_surfaces.lua — this addon's painted surfaces, declared for the kit's skin-switch test
--- (tests/_kit/test_skin_switch.lua, kit revision 58, skinning-§1 and §9; plan Task 5.2). tests/run.lua
+-- (tests/_kit/test_skin_switch.lua, kit revision 59, skinning-§1 and §9; plan Task 5.2). tests/run.lua
 -- sets Kit.skinSwitch from it, and tests/test_skin_surfaces.lua holds it to every window: the DPS
 -- HUD, the Results window, the ability timeline, the compare, the gear view and the lanes. Ported in
 -- shape from DPS Race @045f479 (tests/skin_surfaces.lua). Loaded with dofile (no case of its own).

@@ -13,7 +13,7 @@ local _, NS = ...
 -- has no section at all: no heading, arrow or note, as the Damage profile does for a fight this
 -- session holds no chart of.
 --
--- MEASURED (docs/midnight-quirks.md, WoW Forever 2026-11-11): solo, the rows sum to your own total.
+-- MEASURED (docs/forever-quirks.md, WoW Forever 2026-11-11): solo, the rows sum to your own total.
 -- Whether a row counts only your damage or the group's is not measured yet.
 --
 -- PLAIN DATA ONLY: the stored list. Rows are laid out from the constants here, never from a size read
