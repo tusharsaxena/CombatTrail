@@ -89,9 +89,9 @@ local DEFAULT = "ka0s"
 NS.DEFAULT_SKIN = (Skin and type(Skin.DefaultSkin) == "function") and Skin:DefaultSkin() or DEFAULT
 
 -- The Ka0s Default tokens the DEGRADED facade answers, copied from the library and limited to the
--- ones this addon reads. Both arms publish the table, so tests/test_skin.lua can hold each entry to
--- the live library's Ka0s Default value: a copy that drifts goes red there. A surface converted to a
--- token adds the token here in the same change.
+-- ones this addon reads. Both arms publish the table, so a suite could hold each entry to the live
+-- library's Ka0s Default value, but none does yet: a copy that drifts from the library is not caught
+-- headlessly. A surface converted to a token adds the token here in the same change.
 NS.SKIN_FALLBACK = {
     ["win.bg"]     = { 0.06, 0.06, 0.08, 0.92 },
     ["win.border"] = { 0, 0, 0, 1 },
@@ -587,8 +587,8 @@ if not Skin then
     local function noop() end
     local S = { owner = addonName, apiVersion = 3, FROM_SKIN = "@skin" }
     -- Every vocabulary name answers, and a primitive with no host meaning is a no-op that never
-    -- raises. The list is LibKa0s-Skin-1.0's VOCAB; tests/test_skin.lua holds this table to the live
-    -- facade key for key.
+    -- raises. The list is LibKa0s-Skin-1.0's VOCAB, copied by hand. No suite holds it to the live
+    -- facade yet, so a name the library adds is missing here until it is added by hand.
     for _, name in ipairs({
         "Shell", "Panel", "Inset", "FadeRegions", "FadeNineSlice", "Button", "WhiteButtonLabel",
         "StateButtonLabel", "EditBox", "Checkbox", "Dropdown", "ScrollBar", "Tab", "SetTabSelection",

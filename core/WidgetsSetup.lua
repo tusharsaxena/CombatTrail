@@ -1,10 +1,9 @@
 local addonName, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.OpenMenu / NS.CloseMenu / NS.MakeTestStrip /
--- NS.MakeSimStrip / NS.MakeFooter / NS.MakeHeader / NS.ShowCopy from LibKa0s-Widgets-1.0: the Results
--- window's filter-bar dropdowns and its row menu, the test-mode and sim strips the library docks under a
--- window's title bar over data that is not the player's, the windows' footers, every window's
--- title-bar marks (extras, settings, close), and the copy window
--- the fight detail's talent loadout opens (plan milestone 4).
+-- NS.MakeSimStrip / NS.MakeFooter / NS.MakeHeader from LibKa0s-Widgets-1.0: the Results window's
+-- filter-bar dropdowns and its row menu, the test-mode and sim strips the library docks under a
+-- window's title bar over data that is not the player's, the windows' footers, and every window's
+-- title-bar marks (extras, settings, close).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown draws
 -- is resolved once, here. The library is vendored and cannot know which folder it was copied into,
@@ -20,8 +19,7 @@ local addonName, NS = ...
 -- all rather than a dead control that opens no menu; the filters stay at "all". NS.MakeTestStrip
 -- answers nil; NS.MakeFooter answers a bare frame with the same lines and no hairline; NS.MakeHeader
 -- builds the same marks by hand (Style.ControlButton and NS.MakeCloseButton); NS.CloseMenu
--- is a no-op, because there is no menu that could be open; NS.ShowCopy answers false and its caller
--- prints the text instead.
+-- is a no-op, because there is no menu that could be open.
 
 local W = LibStub and LibStub("LibKa0s-Widgets-1.0", true)
 
@@ -251,29 +249,6 @@ function NS.MakeHeader(f, spec)
     dress(hb.settings, "settings", spec.settingsTip)
     for _, x in ipairs(spec.extras or {}) do dress(hb.extras[x.key], x.icon, x.tip) end
     return hb
-end
-
--- The one copy window, its frame built on the first ShowCopy (the library's lazy handle), over the
--- window that asked for it.
-local copyWindow, copyAnchor
-
---- Show `text` selected in the copy window (Ctrl+C copies it, Escape closes it), titled `title`, over
---- `anchor` when it is shown.
---- @param text string
---- @param title string
---- @param anchor table|nil  the window to center it over
---- @return boolean shown  false on a degraded install
-function NS.ShowCopy(text, title, anchor)
-    if not (W and W.CopyWindow) then return false end
-    copyAnchor = anchor
-    copyWindow = copyWindow or W.CopyWindow({
-        addonName = addonName, name = addonName .. "CopyWindow", width = 520, height = 150, title = title,
-        anchorTo = function() return copyAnchor end,
-    })
-    if not copyWindow then return false end
-    local f = copyWindow:Show(text)
-    if f and f.title then f.title:SetText(title) end
-    return true
 end
 
 --- Close the shared popup menu behind every dropdown in the process, if one is open. Safe when none
