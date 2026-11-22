@@ -94,21 +94,21 @@ local function lane(key, over)
         markInterrupted = true, glowLongCD = true, glowMinCD = 29, glowColor = rgba(1, 0.82, 0, 1),
         glowClassColor = false, glowColorFromSkin = true,
         tooltip = true, showName = false, fade = 0.2, stack = false,
-        -- Background and border ("" texture = flat); the background's texture (the skin's bar
-        -- texture, R-2, SD-SK-CT.5) and color, the lane border's style and thickness (the composer's
-        -- bar family) and its color follow the skin while on.
-        background = true, bgTexture = "", bgTextureFromSkin = true, bgColor = rgba(0, 0, 0, 0.35),
+        -- Background and border ("" texture = flat); the background's texture stays the player's, flat,
+        -- until its companion is ticked (owner, 2026-11-23). Its color, the lane border's style and
+        -- thickness (the composer's bar family) and its color follow the skin while on.
+        background = true, bgTexture = "", bgTextureFromSkin = false, bgColor = rgba(0, 0, 0, 0.35),
         bgClassColor = false, bgColorFromSkin = true,
         laneBorder = false, laneBorderTexture = "", laneBorderColor = rgba(0, 0, 0, 1),
         laneBorderClassColor = false, laneBorderSize = 1, laneBorderTextureFromSkin = true,
         laneBorderColorFromSkin = true,
         padding = 0,
         -- Ticks and labels. tickSpacing "gcd15" (1.5 s) | "haste" (haste-adjusted GCD) | "1s". The
-        -- tick and now line colors follow the skin while on (R-2, SD-SK-CT.6: ct.lane.tick and
-        -- ct.lane.now, following chart.grid and chart.marker); the lines stay flat.
+        -- tick and now line colors are their own until a companion is ticked (owner, 2026-11-23: a
+        -- skin's chart.grid all but hid the ticks); the lines stay flat.
         ticks = true, tickSpacing = "gcd15", tickColor = rgba(1, 1, 1, 0.25), tickClassColor = false,
-        tickColorFromSkin = true, tickWidth = 1, now = true, nowColor = rgba(1, 1, 1, 0.6),
-        nowClassColor = false, nowColorFromSkin = true,
+        tickColorFromSkin = false, tickWidth = 1, now = true, nowColor = rgba(1, 1, 1, 0.6),
+        nowClassColor = false, nowColorFromSkin = false,
         -- labelText "" = the lane's own name (the pet's name on the Pet lane, modules/LaneCasts.lua).
         -- The label's font is the Lanes page's composed Font block (labelFont "" = the skin's font):
         -- its face, flags ("@skin" = From skin, S.FontFlags), color and shadow follow the skin by
@@ -167,11 +167,11 @@ NS.defaults = {
         -- composer's shapes (options-ui-§16 and §17: a font block, a bar block, a swatch with its
         -- `useClassColor<Key>`; a `<key>FromSkin` companion on draws the skin's own, and every font block's
         -- text color and shadow follow the skin by default, skinning-§6). Clock and figures: the clock's font
-        -- (the skin's HUD face, its Font outline from the skin, "@skin": the HUD fight clock is no race
-        -- clock, the owner's U-14 of 2026-11-20; 26 points, which the HUD draws at DPS Race's single-clock
+        -- (the skin's HUD face, no outline (owner, 2026-11-23, over
+        -- U-14 of 2026-11-20); 26 points, which the HUD draws at DPS Race's single-clock
         -- 40, v0.2 Task B2), the figures' font, the over card's DPS color and the boxes' background and
         -- border. Damage chart: the plot's height and most columns, the columns' bar, the pace-line color
-        -- (the skin's ct.chart.diag while `bestColorFromSkin`, R-2), the cooldown icons (and their minimum
+        -- (the skin's ct.chart.diag while `bestColorFromSkin`, off by default), the cooldown icons (and their minimum
         -- base cooldown, seconds)
         -- and the zero line. Spell rows: their height (how many is the Layout's `bars`), the icons and the
         -- pet's paw, the player's bar, the pet's color and the rows' font. Window: the title bar and its
@@ -186,7 +186,7 @@ NS.defaults = {
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
             position = { point = "TOPRIGHT", relPoint = "TOPRIGHT", x = -60, y = -160 },
             clock = { font = "JetBrains Mono", fontSize = 26, fontColor = rgba(0.92, 0.91, 0.88, 1),
-                      useClassColorFont = false, fontFlags = "@skin", fontShadow = false, fontFromSkin = true,
+                      useClassColorFont = false, fontFlags = "", fontShadow = false, fontFromSkin = true,
                       fontColorFromSkin = true, fontShadowFromSkin = true },
             figures = { font = "Ka0s Prototype", fontSize = 20, fontColor = rgba(0.93, 0.93, 0.95, 1),
                         useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
@@ -199,18 +199,17 @@ NS.defaults = {
             chart = { height = 80, columns = 48,
                       barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                       useClassColorBar = false, barTextureFromSkin = true,
-                      bestColor = swatch(PALETTE.PACE), useClassColorBestColor = false, bestColorFromSkin = true,
+                      bestColor = swatch(PALETTE.PACE), useClassColorBestColor = false, bestColorFromSkin = false,
                       cooldowns = true, cooldownMin = 29, zeroLine = true },
             spells = { rowHeight = 18, icons = true, paw = true,
                        barTexture = "Ka0s Default", barAlpha = PALETTE.BAR_A, barColor = swatch(PALETTE.BAR),
                        useClassColorBar = false, barTextureFromSkin = true,
                        petColor = swatch(PALETTE.PET, PALETTE.BAR_A), useClassColorPetColor = false,
                        -- The bars' border (owner, 2026-11-11): off; a flat 1 px edge in black when
-                       -- shown. Its companions follow the skin (R-2, SD-SK-CT.3 of 2026-11-20): a skin
-                       -- whose bar border is a real style draws it, and under a None one Show border
-                       -- (off) stands (S.BarBorder).
+                       -- shown. Its companions are off (owner, 2026-11-23, over SD-SK-CT.3): off means
+                       -- off under every skin, and a picked style, size and color draw as picked.
                        borderShow = false, borderStyle = "Solid", borderSize = 1, borderColor = rgba(0, 0, 0, 1),
-                       useClassColorBorder = false, borderStyleFromSkin = true, borderColorFromSkin = true,
+                       useClassColorBorder = false, borderStyleFromSkin = false, borderColorFromSkin = false,
                        font = "Ka0s Prototype", fontSize = 10, fontColor = rgba(1, 1, 1, 1),
                        useClassColorFont = false, fontFlags = "@skin", fontShadow = true, fontFromSkin = true,
                        fontColorFromSkin = true, fontShadowFromSkin = true },
@@ -306,12 +305,9 @@ NS.defaults = {
         -- Retail, spec §8); the Scope's two exceptions (the settings panel left the client's, the
         -- fonts skinned); the font and texture overrides, an LSM key each, "" for the skin's own; the
         -- Font outline, "hud" text only, "all" text or "off"; `pickerSeen`, false on every profile
-        -- so the first-run skin picker shows once; and `defaultsMoved`, the record of the one-time step
-        -- onto the skin's defaults (core/Database.lua's NS.FollowSkinDefaults, LibKa0s v1.108.0): false
-        -- until the step runs on this profile. No schema row: nothing draws or sets it but the step, so
-        -- no Defaults path puts it back (the Options document's Moving to, section 4.2).
+        -- so the first-run skin picker shows once.
         skin = { source = "ka0s", skin = NS.DEFAULT_SKIN, ignorePanel = true, ignoreFonts = false,
-                 font = "", texture = "", outline = "hud", pickerSeen = false, defaultsMoved = false },
+                 font = "", texture = "", outline = "hud", pickerSeen = false },
     },
     global = {
         -- 0, never the current version: AceDB strips a value equal to its default at logout and

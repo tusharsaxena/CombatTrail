@@ -163,12 +163,12 @@ local LIVE_CASES = join(
     barCases("chart", plainColumn),
     {
         -- The pace line follows the skin's ct.chart.diag while its companion is on (R-2, SD-SK-CT.4).
-        { "chart.bestColor", RED, function(inst, Hud)
+        { "chart.bestColor", RED, function(_, Hud) rgb(RED, unpack(chart(Hud).line.__color)) end },
+        { "chart.bestColorFromSkin", true, function(inst, Hud)
             local r, g, b = inst.NS.Skin.Color("ct.chart.diag")
             assertFalse(r == 1 and g == 0 and b == 0, "the skin's pace line color is not the stored red")
             rgb({ r = r, g = g, b = b }, unpack(chart(Hud).line.__color))
         end },
-        { "chart.bestColorFromSkin", false, function(_, Hud) rgb(RED, unpack(chart(Hud).line.__color)) end },
         { "chart.useClassColorBestColor", true, function(_, Hud) rgb(MAGE, unpack(chart(Hud).line.__color)) end },
         { "chart.cooldownMin", 200, function(_, Hud) assertEqual(#chart(Hud):Icons(), 0, "Wrath is 120 s") end },
         { "chart.cooldowns", false, function(_, Hud) assertEqual(#chart(Hud):Icons(), 0) end },
@@ -182,13 +182,12 @@ local LIVE_CASES = join(
     -- companions follow the skin by default (R-2, SD-SK-CT.3): the color is the skin's bar.border
     -- until its companion goes off.
     {
-        { "spells.borderShow", true, function(inst, Hud)
+        { "spells.borderShow", true, function(_, Hud)
             local edge = rows(Hud)[1].edge
             assertTrue(edge ~= nil and edge:IsShown(), "a border round the bar")
             assertEqual(edge:GetParent(), rows(Hud)[1].bar, "round the bar, not the icon")
             assertEqual(edge:GetBackdrop().edgeSize, 1, "a 1 px edge")
-            local r, g, b = inst.NS.Skin.Color("bar.border")
-            rgb({ r = r, g = g, b = b }, edge:GetBackdropBorderColor())
+            rgb({ r = 0, g = 0, b = 0 }, edge:GetBackdropBorderColor())
         end },
         { "spells.borderSize", 3, function(_, Hud) assertEqual(rows(Hud)[1].edge:GetBackdrop().edgeSize, 3) end },
         { "spells.borderColorFromSkin", false, function(_, Hud)
@@ -360,15 +359,15 @@ test("palette: the live HUD draws the palette with no setting touched", function
     swatchIs(drawn(playerRowBar(Hud):GetStatusBarColor()), P.BAR, P.BAR_A, "a player row")
     swatchIs(drawn(rows(Hud)[3].bar:GetStatusBarColor()), P.PET, P.BAR_A, "a pet row")
     swatchIs(drawn(plainColumn(Hud):GetStatusBarColor()), P.BAR, P.BAR_A, "a chart column")
-    -- The pace line follows the skin (R-2, SD-SK-CT.4): ct.chart.diag, whose Ka0s Default value is
-    -- the palette's PACE (another skin, WoW Forever's on that client, draws its chart marker).
+    -- The pace line is the palette's PACE under every skin (owner, 2026-11-23), which ct.chart.diag
+    -- equals on Ka0s Default: the skin's, for a player who ticks Use the skin's color.
     local diag = { inst.NS.Skin.Color("ct.chart.diag") }
     local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
     local _, skin = Skin:GetChoice("CombatTrail")
     if skin == Skin.DEFAULT then
         swatchIs(drawn(unpack(diag)), P.PACE, nil, "Ka0s Default's ct.chart.diag is the palette's PACE")
     end
-    swatchIs(drawn(unpack(chart(Hud).line.__color)), diag, nil, "the pace line")
+    swatchIs(drawn(unpack(chart(Hud).line.__color)), P.PACE, nil, "the pace line")
     local pace = live(Hud).parts.pace
     swatchIs(drawn(pace.behind:GetStatusBarColor()), P.BAR, P.BAR_A, "the pace bar's behind half")
     swatchIs(drawn(pace.ahead:GetStatusBarColor()), inst.NS.Style.Tok("ct.ahead"), P.BAR_A, "the pace bar's green ahead half")

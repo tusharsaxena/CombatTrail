@@ -108,9 +108,9 @@ test("callout settings: the defaults are seeded from the rows, and the schema va
         end
     end
     assertEqual(table.concat(D.callout.point, ","), "CENTER,CENTER,0,180", "the default place")
-    -- GO's default is Ka0s Default's sem.good (LibKa0s v1.108.0, U-2: a meaning kind draws its token
-    -- until a color is picked), in the panel's named shape.
-    assertEqual(D.callout.colors.go.r, 0.35, "a color in the panel's named shape")
+    -- GO's default is Combat Trail's own green, one step off the v1.107.0 one (settings/Race.lua), in
+    -- the panel's named shape.
+    assertEqual(D.callout.colors.go.r, 0.304, "a color in the panel's named shape")
     assertNil(D.callout.texts, "no stock-text defaults")
     assertNil(D.callout.muted, "no mute defaults")
     assertEqual(D.callout.voice, "male-arena-john", "Arena John, the default voice for a new profile")
@@ -122,14 +122,14 @@ test("callout settings: the defaults are seeded from the rows, and the schema va
     assertEqual(D.callout.glowX .. "," .. D.callout.glowY, "1,1", "1 px right and 1 px up")
     assertEqual(D.callout.glowCustom, true, "Glow color ticked")
     assertEqual(D.callout.glowColor.r .. "," .. D.callout.glowColor.g .. "," .. D.callout.glowColor.b, "0,0,0", "a black swatch")
-    -- The look follows the skin (LibKa0s v1.108.0, the owner's U-1 of 2026-11-20): the Skin font, the
-    -- skin's outline, its shadow and its HUD text color for the numbers. The glow color does not: the
-    -- owner's SD-CT-DEF keeps the black swatch (a documented deviation, docs/ARCHITECTURE.md).
-    assertEqual(D.callout.font, "Skin font", "the skin's face")
-    assertEqual(D.callout.outline, "@skin", "the skin's outline")
+    -- The look is the owner's own (2026-11-23, over U-1 and U-2; a documented deviation,
+    -- docs/ARCHITECTURE.md): Oxanium, a thick outline, its own shadow and number color, and SD-CT-DEF's
+    -- black glow swatch.
+    assertEqual(D.callout.font, "Ka0s Oxanium SemiBold", "the owner's face")
+    assertEqual(D.callout.outline, "THICKOUTLINE", "the owner's outline")
     assertEqual(D.callout.glowColorFromSkin, false, "the swatch, not the skin's glow color (SD-CT-DEF)")
-    assertEqual(D.callout.fontShadowFromSkin, true, "the skin's shadow")
-    assertEqual(D.callout.numberColorFromSkin, true, "the skin's HUD text color for the numbers")
+    assertEqual(D.callout.fontShadowFromSkin, false, "its own shadow")
+    assertEqual(D.callout.numberColorFromSkin, false, "its own number color")
     assertEqual(D.callout.shadowX .. "," .. D.callout.shadowY, "1,1", "the shadow 1 px right and 1 px up")
     assertEqual(NS.Callout:Get("voice"), "male-arena-john", "a fresh profile speaks with Arena John")
     local errors, _, missing = NS.ValidateSchema()
@@ -250,7 +250,7 @@ test("callout settings: the Race mode page's Defaults and a profile reset put th
     inst.mocks.__subcategories["Race mode"]:__fire("OnShow")
     NS.Helpers.RestoreDefaults("race", NS.pageCtx.race)
     assertEqual(NS.GetSetting("callout.size"), 96)
-    assertEqual(NS.GetSetting("callout.colors.go").r, 0.35)
+    assertEqual(NS.GetSetting("callout.colors.go").r, 0.304)
     assertTrue(NS.GetSetting("callout.glow"), "the glow back on")
     assertEqual(NS.GetSetting("callout.voice"), "male-arena-john", "and Arena John")
     assertTrue(NS.SetByPath("callout.size", 140))
@@ -349,7 +349,7 @@ test("callout settings: the migration rewrites a stored glow choice, drops the t
         },
     })
     local sv = _G.CombatTrailDB
-    assertEqual(NS.db.global.schemaVersion, 3, "stamped")
+    assertEqual(NS.db.global.schemaVersion, 4, "stamped")
     local t = sv.profiles.Default.callout
     assertEqual(t.glow, true, "strong: on")
     assertEqual(t.glowIntensity, 0.7, "at 70%")
@@ -385,7 +385,7 @@ end)
 test("callout settings: a fresh profile is untouched by the migration and speaks with Arena John", function()
     if forever() then return end
     local NS = boot(nil)
-    assertEqual(NS.db.global.schemaVersion, 3)
+    assertEqual(NS.db.global.schemaVersion, 4)
     assertEqual(NS.Callout:Get("voice"), "male-arena-john")
     assertTrue(NS.Callout:Get("glow"))
     local sv = _G.CombatTrailDB
@@ -398,113 +398,107 @@ test("callout settings: a fresh profile is untouched by the migration and speaks
     assertTrue(NS.Callout:Get("glow"))
 end)
 
--- ── the one-time step onto the skin's defaults (LibKa0s v1.108.0, R-2, U-1, U-14) ────────────────
+-- ── the owner's own looks (2026-11-23, over R-2, U-1, U-2 and U-14) ──────────────────────────────
 
-test("skin defaults step: a value stored at its old default moves once; a pick and the next run stay", function()
+local OWN_FALSE = {
+    "hud.spells.borderStyleFromSkin", "hud.spells.borderColorFromSkin", "hud.chart.bestColorFromSkin",
+    "lanes.player.bgTextureFromSkin", "lanes.player.tickColorFromSkin", "lanes.player.nowColorFromSkin",
+    "lanes.pet.bgTextureFromSkin", "lanes.pet.tickColorFromSkin", "lanes.pet.nowColorFromSkin",
+}
+
+test("own looks: the options v1.108.0 put on the skin default to the owner's own, row and profile alike", function()
+    local NS = boot(nil)
+    for _, path in ipairs(OWN_FALSE) do
+        -- red under: a follow-the-skin sweep flipping one (SD-SK-CT, 2026-11-20)
+        assertEqual(NS.GetSetting(path), false, path)
+        assertEqual(NS.FindSchemaRow(path).default, false, path .. " row default agrees")
+    end
+    assertEqual(NS.GetSetting("hud.clock.fontFlags"), "", "the clock has no outline")
+    assertEqual(NS.FindSchemaRow("hud.clock.fontFlags").default, "", "and its row agrees")
+    if forever() then return end
+    assertEqual(NS.Callout:Get("font"), "Ka0s Oxanium SemiBold")
+    assertEqual(NS.Callout:Get("outline"), "THICKOUTLINE")
+    assertEqual(NS.Callout:Get("fontShadowFromSkin"), false)
+    assertEqual(NS.Callout:Get("numberColorFromSkin"), false)
+    assertEqual(NS.Callout:Get("glowThickness"), 2, "SD-CT-DEF stands")
+    assertEqual(NS.Callout:Get("glowColorFromSkin"), false, "SD-CT-DEF stands")
+end)
+
+test("own looks: the call-out's five meaning colors draw their own hue under every skin", function()
+    if forever() then return end
+    local inst = T.load{}
+    local NS = inst.NS
+    local want = { info = { 0.35, 0.75, 1 }, go = { 0.3, 1, 0.45 }, stop = { 1, 0.35, 0.3 },
+                   warn = { 1, 0.78, 0.2 }, error = { 1, 0.2, 0.25 } }
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    for _, skin in ipairs({ "ka0s", "azeroth" }) do
+        Skin:SetChoice("CombatTrail", "ka0s", skin)
+        for kind, c in pairs(want) do
+            local kit = inst.mocks.LibStub("LibKa0s-Callout-1.0").__calloutKit
+            local got = { kit.colorOf(kit.state(NS.Callout), kind) }
+            -- red under: the library reading the old default as "follow sem.*"
+            for i = 1, 3 do
+                assertTrue(math.abs(got[i] - c[i]) < 0.006,
+                    ("%s %s channel %d: %s, want %s"):format(skin, kind, i, tostring(got[i]), c[i]))
+            end
+        end
+    end
+end)
+
+test("own looks: picks stored before v1.108.0 draw as picked", function()
     local NS = boot({
         global = { schemaVersion = 3 },
-        profileKeys = { ["Hunter - Realm"] = "Default" },
-        profiles = {
-            Default = { hud = { clock = { fontFlags = "" }, spells = { borderStyleFromSkin = false } } },
-            Old = { hud = { clock = { fontFlags = "" }, spells = { borderStyleFromSkin = false,
-                    borderColorFromSkin = false } },
-                    callout = { font = "Ka0s Oxanium SemiBold", outline = "THICKOUTLINE", glowColorFromSkin = false } },
-            Picked = { hud = { clock = { fontFlags = "THICKOUTLINE" }, spells = { borderStyleFromSkin = true } },
-                       callout = { font = "Ka0s Inter", outline = "OUTLINE" } },
-            Plain = { general = { locked = true } },
-            SkinGlow = { callout = { font = "Ka0s Oxanium SemiBold", glowColorFromSkin = true } },
-            NoGlowKey = { callout = { outline = "THICKOUTLINE" } },
-        },
+        profiles = { Default = {
+            hud = { spells = { borderShow = true, borderSize = 3, borderColor = { r = 1 } } },
+            callout = { shadowX = 4, colors = { number = { g = 0.2 }, warn = { r = 0.4 } } },
+        } },
     })
-    local sv = _G.CombatTrailDB
-    local old = sv.profiles.Old
-    assertEqual(old.hud.clock.fontFlags, "@skin", "the clock's old \"\" moves to From skin (U-14)")
-    assertEqual(old.hud.spells.borderStyleFromSkin, true, "the border's companions move (SD-SK-CT.3)")
-    assertEqual(old.hud.spells.borderColorFromSkin, true)
-    assertEqual(old.skin.defaultsMoved, true, "the record written")
-    if not forever() then
-        assertEqual(old.callout.font, "Skin font", "the call-out's L17 face moves to the Skin font (U-1)")
-        assertEqual(old.callout.outline, "@skin", "and its outline to From skin")
-        assertEqual(old.callout.glowColorFromSkin, false, "its glow stays on the swatch, Combat Trail's default (SD-CT-DEF)")
+    -- red under: a companion defaulting on over a stored pick (the audit of 2026-11-23)
+    assertEqual(NS.GetSetting("hud.spells.borderStyleFromSkin"), false, "the picked thickness draws")
+    assertEqual(NS.GetSetting("hud.spells.borderColorFromSkin"), false, "the picked color draws")
+    if forever() then return end
+    assertEqual(NS.Callout:Get("numberColorFromSkin"), false, "the picked number color draws")
+    assertEqual(NS.Callout:Get("fontShadowFromSkin"), false, "the picked shadow draws")
+    local warn = NS.db.profile.callout.colors.warn
+    -- red under: AceDB refilling a picked color's untouched channel from a changed default
+    assertTrue(math.abs(warn.g - 0.78) < 0.006, "warn's untouched green: " .. tostring(warn.g))
+end)
+
+test("own looks: v4 takes back what the retired skin step wrote, in every profile, once", function()
+    local function moved()
+        return {
+            skin = { defaultsMoved = true },
+            hud = { clock = { fontFlags = "@skin" }, chart = { bestColorFromSkin = true },
+                    spells = { borderStyleFromSkin = true, borderColorFromSkin = true } },
+            lanes = { player = { tickColorFromSkin = true }, pet = { bgTextureFromSkin = true } },
+            callout = { font = "Skin font", outline = "@skin", numberColorFromSkin = true },
+        }
     end
-    local picked = sv.profiles.Picked
-    assertEqual(picked.hud.clock.fontFlags, "THICKOUTLINE", "a picked flag stays")
-    assertEqual(picked.callout.font, "Ka0s Inter", "a picked face stays")
-    assertEqual(picked.callout.outline, "OUTLINE", "a picked outline stays")
-    if not forever() then
-        -- SD-CT-DEF: the step leaves the glow color companion exactly as stored, true or absent.
-        assertEqual(sv.profiles.SkinGlow.callout.glowColorFromSkin, true, "a stored true stays true")
-        assertEqual(sv.profiles.SkinGlow.callout.font, "Skin font", "beside it the old face still moves")
-        assertNil(rawget(sv.profiles.NoGlowKey.callout, "glowColorFromSkin"), "no key is stored where none was")
-        assertEqual(sv.profiles.NoGlowKey.callout.outline, "@skin", "and the old outline moves")
-    end
-    assertEqual(picked.skin.defaultsMoved, true)
-    assertNil(rawget(sv.profiles.Plain, "hud"), "a profile with no hud table gains none")
-    assertEqual(sv.profiles.Plain.skin.defaultsMoved, true, "only the record")
-    assertEqual(NS.GetSetting("hud.clock.fontFlags"), "@skin", "the active profile moved too")
-    -- Once per profile: a value set back to the old default afterwards is the player's, and stays.
-    old.hud.clock.fontFlags = ""
-    NS:RunMigrations()
-    assertEqual(old.hud.clock.fontFlags, "", "the record holds: no second move")
-    assertFalse(NS.FollowSkinDefaults(old), "the step answers false on a profile it ran on")
-end)
-
-test("skin defaults step: a new or reset profile takes the step, which moves nothing a player sees", function()
-    local NS = boot(nil)
-    local p = NS.db.profile
-    assertEqual(p.skin.defaultsMoved, true, "a fresh profile's record is written at the boot")
-    assertEqual(p.hud.clock.fontFlags, "@skin", "its defaults already follow")
-    NS.db:SetProfile("Second")
-    assertEqual(NS.db.profile.skin.defaultsMoved, true, "a new profile runs it from the profile event")
-    NS.db:ResetProfile()
-    assertEqual(NS.db.profile.skin.defaultsMoved, true, "a reset profile runs it again")
-    assertEqual(NS.db.profile.hud.spells.borderStyleFromSkin, true)
-end)
-
-test("skin defaults step: with no LibKa0s the same writes are made by hand, and the record", function()
-    local NS = T.load{ libFiles = {} }.NS
-    local p = { hud = { clock = { fontFlags = "" }, spells = { borderColorFromSkin = false } },
-                callout = { font = "Ka0s Oxanium SemiBold" } }
-    assertTrue(NS.FollowSkinDefaults(p), "it ran")
-    assertEqual(p.hud.clock.fontFlags, "@skin")
-    assertEqual(p.hud.spells.borderColorFromSkin, true)
-    assertNil(p.hud.spells.borderStyleFromSkin, "a key never stored is not created")
-    assertEqual(p.callout.font, "Ka0s Oxanium SemiBold", "no call-out library, no call-out move")
-    assertEqual(p.skin.defaultsMoved, true, "the record, written by the step itself")
-    assertFalse(NS.FollowSkinDefaults(p), "and once only")
-end)
-
-test("skin defaults step: a pick stored before the new companions keeps drawing (R-2)", function()
-    boot({
+    local NS = boot({
         global = { schemaVersion = 3 },
-        profileKeys = { ["Hunter - Realm"] = "Default" },
-        profiles = {
-            Default = {},
-            Plain = { general = { locked = true } },
-            Picked = { lanes = { player = { bgTexture = "Ka0s Smooth", tickColor = { r = 0.5 },
-                                            nowColor = { r = 1, g = 0, b = 0, a = 1 } },
-                                 pet = { tickColor = { a = 0.9 } } },
-                       hud = { chart = { bestColor = { g = 0.2 } } } },
-            AtDefault = { lanes = { player = { bgTexture = "", tickColor = { r = 1, g = 1, b = 1, a = 0.25 },
-                                               nowColor = { r = 1, g = 1, b = 1, a = 0.6 } } },
-                          hud = { chart = { bestColor = { r = 0.9, g = 0.9, b = 0.92, a = 0.4 } } } },
-        },
+        profiles = { Default = moved(), Parked = moved(),
+            Kept = { hud = { clock = { fontFlags = "@skin" }, spells = { borderColorFromSkin = true } } } },
     })
-    local sv = _G.CombatTrailDB
-    local lp, pp = sv.profiles.Picked.lanes.player, sv.profiles.Picked.lanes.pet
-    assertEqual(lp.bgTextureFromSkin, false, "a picked background texture keeps drawing")
-    assertEqual(lp.tickColorFromSkin, false, "a picked tick color keeps drawing")
-    assertEqual(lp.nowColorFromSkin, false, "a picked now-line color keeps drawing")
-    assertEqual(pp.tickColorFromSkin, false, "the Pet lane's own pick too")
-    assertNil(rawget(pp, "nowColorFromSkin"), "an unpicked key's companion is not written")
-    assertNil(rawget(pp, "bgTextureFromSkin"))
-    assertEqual(sv.profiles.Picked.hud.chart.bestColorFromSkin, false, "a picked pace-line color keeps drawing")
-    local at = sv.profiles.AtDefault
-    assertNil(rawget(at.lanes.player, "bgTextureFromSkin"), "a value at its old default follows the skin")
-    assertNil(rawget(at.lanes.player, "tickColorFromSkin"))
-    assertNil(rawget(at.lanes.player, "nowColorFromSkin"))
-    assertNil(rawget(at.hud.chart, "bestColorFromSkin"))
-    assertNil(rawget(sv.profiles.Plain, "lanes"), "a profile with no lanes table gains none")
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Parked" }) do
+        local p = sv[name]
+        -- red under: no restore, or one over the active profile alone
+        assertEqual(p.hud.clock.fontFlags, "", name)
+        assertEqual(p.hud.spells.borderStyleFromSkin, false, name)
+        assertEqual(p.hud.chart.bestColorFromSkin, false, name)
+        assertEqual(p.lanes.player.tickColorFromSkin, false, name)
+        assertEqual(p.lanes.pet.bgTextureFromSkin, false, name)
+        assertEqual(p.callout.font, "Ka0s Oxanium SemiBold", name)
+        assertEqual(p.callout.outline, "THICKOUTLINE", name)
+        assertEqual(p.callout.numberColorFromSkin, false, name)
+        assertNil(p.skin and rawget(p.skin, "defaultsMoved"), name .. ": the record cleared")
+    end
+    assertEqual(sv.Kept.hud.clock.fontFlags, "@skin", "a profile the step never reached keeps its pick")
+    assertEqual(sv.Kept.hud.spells.borderColorFromSkin, true, "and its tick")
+    assertEqual(NS.db.global.schemaVersion, 4)
+    NS.db:SetProfile("Kept")
+    -- red under: the skin step still running from the profile events
+    assertEqual(NS.GetSetting("hud.spells.borderStyleFromSkin"), false, "a switch moves nothing")
 end)
 
 -- ── the drag strip's marks (LibKa0s#100, Callout minor 5, SD-CT-100) ─────────────────────────────

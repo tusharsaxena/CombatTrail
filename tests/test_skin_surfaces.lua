@@ -64,7 +64,7 @@ test("skin surfaces: the lane label's Font flags lead with From skin, its defaul
     assertEqual(row.sorting and row.sorting[1], "@skin", "From skin is offered first")
 end)
 
-test("skin surfaces: each declared companion is a schema row that defaults on", function()
+test("skin surfaces: each declared companion is a bool schema row", function()
     local NS = T.NS
     local src = assert(io.open(T.root .. "/tests/skin_surfaces.lua", "rb")):read("*a")
     local n = 0
@@ -72,7 +72,7 @@ test("skin surfaces: each declared companion is a schema row that defaults on", 
         n = n + 1
         local row = NS.FindSchemaRow(path)
         assertTrue(row ~= nil, path .. " has no row")
-        assertEqual(row.default, true, path)
+        assertEqual(row.type, "bool", path)
     end
     assertTrue(n > 0, "no companion declared")
 end)

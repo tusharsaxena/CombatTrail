@@ -130,7 +130,7 @@ end
 local function colorPair(name, key, label, tooltip, extra, held)
     local cc = "useClassColor" .. key:sub(1, 1):upper() .. key:sub(2)
     local t = { key = key, companionKey = cc, label = label,
-        defaults = { [key] = D[name][key], [cc] = D[name][cc] },
+        defaults = { [key] = D[name][key], [cc] = D[name][cc], [key .. "FromSkin"] = D[name][key .. "FromSkin"] },
         tooltips = tooltip and { [key] = tooltip } or nil, extra = extra }
     if held then t.colorFromSkin = false end
     return block(H.ColorPair(spec(name, t)))

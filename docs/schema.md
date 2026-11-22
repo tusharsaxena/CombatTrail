@@ -63,7 +63,7 @@ default; the file's comments say what each value means.
 | `toast.fights`, `toast.races` | `false`, `true`: the new-best toast for a stored fight's new best on its board (both clients) and for a race's (modules/BestToast.lua, race plan Task C2): a new profile toasts a race's new best and not a fight's. `toast.races` is Retail only: ABSENT on WoW Forever | History → New-best toast |
 | `toast.sound`, `toast.soundKey`, `toast.duration`, `toast.scale` | `true`, `"Default"` (the toast shell's alert; any other value a LibSharedMedia sound key, one it does not know plays Default), `10` (s, 3-30), `1.0` (0.5-2.0), DPS Race's | History → New-best toast |
 | `toast.point` | none: where *Test toast*'s sample was dragged to, `{ point, relativePoint, x, y }` in UIParent's units; cleared by Master controls' Reset position | none (the sample's drag) |
-| `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false`, `defaultsMoved = false` (the one-time step onto the skin's defaults, `NS.FollowSkinDefaults`: no row) | General → Look and skin |
+| `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
 
@@ -116,7 +116,6 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | A race under way, per character | `global.pendingRaces` (`{ [Bests.CharKey] = slot }`) | modules/Race.lua | written at a race's first hit (and when it follows a split), its `lastDamage` and sessions at each damage update; cleared at its result, a cancel, or a `Race.Resume` that finds it stale. The slot is plain: the race part itself, `startedAt`, `date`, `lastDamage`, `sessions`, `boundBy`, `sharedSession`, `startT`, `snapshot`, `stats`, `talents`, `gearSet`, `baseline` |
 | The training-dummy captures | `global.dummies.captures` | modules/Dummies.lua | `Dummies.Capture` (`/ct dummy add` and `capture`, the Training dummies tab's Add your target) |
 | The skin picker seen | `skin.pickerSeen`, `global.skinNotice` | core/SkinSetup.lua (LibKa0s-Options writes the notice) | the picker's close |
-| The step onto the skin's defaults | `skin.defaultsMoved` | core/Database.lua | `NS.FollowSkinDefaults`, once per profile: at the boot over every stored profile (after the ladder) and on every profile event |
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
 | The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |
 
@@ -154,20 +153,12 @@ a step that returned; a step marked `perProfile` runs once for every stored prof
 | 2 | 1 → 2 | Empties the fight store, its order, the loadouts and the gear sets (`global.fights`, `fightOrder`, `loadouts`, `gearSets`): the v0.2 record shape, CT_SCHEMA 2. Every other account-wide key is kept |
 | 3 | 2 → 3 | Per profile (`perProfile`, every stored profile, the active one and the rest): the race call-out at LibKa0s-Callout-1.0 3.4 (callout plan row C11). A stored `callout.glow` choice is rewritten by the library's own `Callout:MigrateGlow` (`"off"` → `glow = false`; `"soft"` → on at 35% and 2 px; `"strong"` → on at 70% and 5 px, each intensity or thickness only where no valid one is stored; the old choice named no color, offset or swatch, so none is stored and a migrated profile reads the current defaults for them: since LibKa0s v1.102.0, *Glow color* ticked in the black swatch, now at Combat Trail's 1, 1 (SD-CT-DEF), where v1.100.0 drew each word's kind color at 0, 0; the owner's defaults, so no further step), after an intensity or thickness equal to its default beside the old string is cleared as AceDB's copy (savedvariables-§1: compare to the default, never test for the key; those keys are new with the boolean, so no player set one under the old choice). `callout.texts` and `callout.muted` are dropped: their rows are gone, and the instance would still read a stored own word or mute, so leaving them would keep a preference with no row (architecture-§5). A stored `callout.voice` is kept; an unset one reads the new default, Arena John. AceDB stores no value equal to its default, so a profile on the old default `female` (Kathleen), whether chosen or not, has no stored voice and moves to Arena John (savedvariables-§1: the step cannot tell that choice from no choice). Idempotent: a profile with no `callout` table, or a migrated one, passes unchanged. Without the library the glow string stays and only the two tables are dropped |
 
-After the ladder, and on every profile event, one step outside it runs once per profile under its own
-record, `skin.defaultsMoved` (`NS.FollowSkinDefaults`, LibKa0s v1.108.0, the owner's R-2, U-1 and U-14 of
-2026-11-20): a value still stored at its old default moves onto the skin (`hud.clock.fontFlags` `""` →
-`"@skin"`, `hud.spells.borderStyleFromSkin` and `borderColorFromSkin` `false` → `true`, through
-`Skin.ResetToSkin`), and the call-out's own list moves through `Callout:MoveToSkin(profile.callout)` (its
-face and outline, each only while still at its v1.107.0 value; Combat Trail keeps the stored glow color
-companion, SD-CT-DEF). A picked value stays, and so
-does one set back to an old default after the step ran. AceDB stores no value equal to its default, so a
-profile that never picked follows with no step. Without the Skin major the same writes are made by hand;
-without the Callout major the call-out's move is skipped. The same step keeps a pick stored before four
-new companions drawing (R-2: a stored pick stays): where `lanes.<k>.bgTexture`, `tickColor`, `nowColor`
-or `hud.chart.bestColor` stores a value that differs from its default (a color by any component it
-stores), the matching `bgTextureFromSkin`, `tickColorFromSkin`, `nowColorFromSkin` or
-`bestColorFromSkin` is written `false` (`NS.SKIN_PICKS_KEPT`).
+Step 4 (3 → 4, per profile, `NS.RestoreOwnLooks`, the owner, 2026-11-23) undoes a retired step. From
+2026-11-20 until then, never released, a step outside the ladder moved options onto the skin and recorded
+`skin.defaultsMoved` on each profile. In a profile carrying that record, a value of `NS.OWN_LOOKS` still
+holding what that step left there takes the owner's own back, and the record is cleared. Any other profile
+is untouched. AceDB stores no value equal to its default, so a profile that stores none reads the owner's
+own from the defaults.
 
 A change to the fight record bumps `Recorder.CT_SCHEMA` and reads the older shape where it is read,
 never by rewriting stored fights: CT_SCHEMA 3 → 4 (the optional `race`) has no step, and an older record

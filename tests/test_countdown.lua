@@ -178,7 +178,7 @@ test("countdown: Text to play offers Countdown 10 to 1 first", function()
     assertTrue(play.validate(lib.PLAY_COUNTDOWN), "and the row takes it")
 end)
 
-test("countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS", function()
+test("countdown: the profile's call-out table is seeded from its rows: the library's DEFAULTS under Combat Trail's own", function()
     if forever() then return end
     local S = fresh()
     local inst = CO(S)
@@ -186,7 +186,7 @@ test("countdown: the profile's call-out table is seeded from its rows, at the li
     assertEqual(S.NS.defaults.profile.callout.size, lib.DEFAULTS.size, "seeded from the rows (architecture-§5)")
     assertTrue(S.NS.db.profile.callout ~= nil, "the call-out reads the profile's table")
     assertEqual(inst:Get("size"), lib.DEFAULTS.size, "the library's default size")
-    assertEqual(inst:Get("font"), lib.DEFAULTS.font, "the library's default font")
+    assertEqual(inst:Get("font"), S.NS.CALLOUT_DEFAULTS.font, "Combat Trail's own font (owner 2026-11-23)")
 end)
 
 test("countdown: the stub answers every member a live call-out has, as an idle call-out does", function()
