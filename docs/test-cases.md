@@ -1197,7 +1197,7 @@ Total.
 - breakdown: the snapped rows are whole pixels, never taller than the layout's room (2026-11-11)
 - breakdown: at a UI scale that is not round, every row and its border sit on whole pixels (2026-11-11)
 
-### test_hud_appearance.lua (8)
+### test_hud_appearance.lua (9)
 
 - every hud appearance key applies (one assertion per key via Apply)
 - appearance: every look key in the defaults has a case
@@ -1207,6 +1207,7 @@ Total.
 - palette: the HUD's bar defaults equal the palette entries
 - palette: each block's swatch is its own table, never the palette's
 - palette: the live HUD draws the palette with no setting touched
+- appearance: a backdrop's class color wins over its skin companion (box and window)
 
 ### test_hud_page.lua (14)
 
@@ -1939,7 +1940,7 @@ Total.
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 16 |
-| test_hud_appearance.lua | 8 |
+| test_hud_appearance.lua | 9 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
@@ -1980,4 +1981,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1626** |
+| **Total** | **1627** |

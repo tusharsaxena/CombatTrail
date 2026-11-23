@@ -61,6 +61,7 @@ States.COLORS = C
 
 -- The flat box a figure stands in: a faint wash under a faint edge (the skin's Card, D-3).
 local BOX = { bg = "list.boxDim", border = "ct.box.border" }
+States.BOX = BOX   -- for modules/Hud_Appearance.lua's re-skin of a box its own paint has left
 
 -- The stack's pitches. The clock's and the figures' heights follow their configured sizes.
 local CLOCK_PAD = 12

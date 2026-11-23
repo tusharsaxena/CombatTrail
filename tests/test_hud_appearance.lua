@@ -372,3 +372,30 @@ test("palette: the live HUD draws the palette with no setting touched", function
     swatchIs(drawn(pace.behind:GetStatusBarColor()), P.BAR, P.BAR_A, "the pace bar's behind half")
     swatchIs(drawn(pace.ahead:GetStatusBarColor()), inst.NS.Style.Tok("ct.ahead"), P.BAR_A, "the pace bar's green ahead half")
 end)
+
+-- FB-CTR-01 (the owner, 2026-11-24: "Do the same validation for any element (text, bar, etc) where
+-- class color/skin color can be applied"; options-ui-§17 v2.119.0, class -> skin -> swatch). The four
+-- backdrop swatches drew the skin's Card paint whenever their *Use the skin's color* companion was on,
+-- so *Use class color* was ignored under the default companions. With both on, the class color draws.
+test("appearance: a backdrop's class color wins over its skin companion (box and window)", function()
+    local inst, _, Hud = stage()
+    local cases = {
+        { "figures", "boxBg", box, "GetBackdropColor" },
+        { "figures", "boxBorder", box, "GetBackdropBorderColor" },
+        { "window", "bg", window, "GetBackdropColor" },
+        { "window", "border", window, "GetBackdropBorderColor" },
+    }
+    for _, c in ipairs(cases) do
+        local p = c[1] .. "."
+        local companion = "useClassColor" .. c[2]:sub(1, 1):upper() .. c[2]:sub(2)
+        H.setHud(inst, p .. c[2] .. "FromSkin", true)
+        H.setHud(inst, p .. companion, true)
+        local f = c[3](Hud)
+        local r, g, b = f[c[4]](f)
+        rgb(MAGE, r, g, b, p .. c[2] .. " with both companions on")
+        H.setHud(inst, p .. companion, false)
+        r, g, b = f[c[4]](f)
+        assertFalse(math.abs(r - MAGE.r) < 1e-3 and math.abs(g - MAGE.g) < 1e-3 and math.abs(b - MAGE.b) < 1e-3,
+            p .. c[2] .. ": the class color stays after Use class color goes off")
+    end
+end)
