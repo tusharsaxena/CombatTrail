@@ -489,7 +489,8 @@ end
 
 test("lane render: the background draws the skin's bar texture while its companion is on (SD-SK-CT.5)", function()
     local inst, R = setup()
-    assertEqual(cfgOf(inst, "player").bgTextureFromSkin, true, "on by default")
+    assertEqual(cfgOf(inst, "player").bgTextureFromSkin, false, "off by default (owner 2026-11-23)")
+    set(inst, "player", "bgTextureFromSkin", true)
     R.Apply("player")
     local LSM = inst.mocks.LibStub("LibSharedMedia-3.0")
     local want = LSM:Fetch("statusbar", inst.NS.Skin.Token("bar.texture"), true)
@@ -504,6 +505,8 @@ test("lane render: the tick and now line colors follow the skin while their comp
     local inst, R = setup()
     local function tickColor() return inst.mocks.__paint(R.__ticks("player")[1]).color end
     local function nowColor() return inst.mocks.__paint(R.__now("player")).color end
+    set(inst, "player", "tickColorFromSkin", true)
+    set(inst, "player", "nowColorFromSkin", true)
     R.Apply("player")
     near(tickColor(), skinColor(inst, "ct.lane.tick"), "the owner token (on Ka0s Default, the lanes' own default)")
     near(nowColor(), skinColor(inst, "ct.lane.now"), "the now line's owner token")

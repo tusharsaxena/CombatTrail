@@ -184,14 +184,30 @@ local function copyOf(v)
     return t
 end
 
--- Combat Trail's own call-out defaults over the library's (owner, 2026-11-20, from the owner's
--- Race mode > Callout settings; SD-CT-DEF): the glow 2 px thick, 1 px right and 1 px up, in the black
--- swatch rather than the skin's glow color. The face, outline and shadow still follow the skin. The
--- glow color's companion off is a documented deviation from skinning-§9 (docs/ARCHITECTURE.md).
+-- Combat Trail's own call-out defaults over the library's: the owner's glow (2026-11-20, SD-CT-DEF:
+-- 2 px thick, 1 px right and 1 px up, in the black swatch) and, from 2026-11-23 over U-1 and U-2, the
+-- owner's face, outline, shadow and colors. Every companion off is a documented deviation from
+-- skinning-§9 (docs/ARCHITECTURE.md); a follow-the-skin sweep does not flip them.
+--
+-- THE FIVE HUES SIT ONE 8-BIT STEP (0.004) OFF THE v1.107.0 ONES. The library reads a swatch within
+-- 0.002 of its own default, or of that older one, as "no pick" and draws the skin's sem.* instead
+-- (Callout minor 5's colorOf), and it offers a host no switch for that. One step is not visible, and
+-- it makes each default a color of Combat Trail's own.
+--
 -- A row's default is what the page's Defaults, `/ct reset` and a fresh profile read. Reset a key
 -- through those (or the schema's ApplyDefault), never `NS.Callout:Set(key, nil)`: the instance writes
 -- the library's own default back.
-NS.CALLOUT_DEFAULTS = { glowThickness = 2, glowY = 1, glowColorFromSkin = false }
+local function hue(r, g, b) return { r = r, g = g, b = b, a = 1 } end
+NS.CALLOUT_DEFAULTS = {
+    glowThickness = 2, glowY = 1, glowColorFromSkin = false,
+    font = "Ka0s Oxanium SemiBold", outline = "THICKOUTLINE",
+    fontShadowFromSkin = false, numberColorFromSkin = false,
+    ["colors.info"]  = hue(0.354, 0.75, 1),
+    ["colors.go"]    = hue(0.304, 1, 0.45),
+    ["colors.stop"]  = hue(1, 0.354, 0.3),
+    ["colors.warn"]  = hue(1, 0.784, 0.2),
+    ["colors.error"] = hue(1, 0.204, 0.25),
+}
 
 do
     local prefix = NS.Countdown.PREFIX
@@ -201,7 +217,7 @@ do
         r.clients, r.skipRender = RETAIL, true
         r.group = CALLOUT_TAB
         local own = NS.CALLOUT_DEFAULTS[r.path:sub(#prefix + 1)]
-        if own ~= nil then r.default = own end
+        if own ~= nil then r.default = copyOf(own) end
         if not r.sessionOnly then Write(D, r.path, copyOf(r.default)) end
         out[#out + 1] = r
     end

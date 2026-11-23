@@ -19,8 +19,8 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 3 and the fight record's format is 4
-- load: a schema 1 store loads empty at version 3, keeping the account's other state
+- load: the settings stamp is 4 and the fight record's format is 4
+- load: a schema 1 store loads empty at version 4, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
 
@@ -1018,7 +1018,7 @@ Total.
 - countdown: the packs the seam offers are the CLAUDE.md sounds line, in order
 - countdown: all eight packs ship, each on disk with every line the call-out speaks
 - countdown: Text to play offers Countdown 10 to 1 first
-- countdown: the profile's call-out table is seeded from its rows, at the library's DEFAULTS
+- countdown: the profile's call-out table is seeded from its rows: the library's DEFAULTS under Combat Trail's own
 - countdown: the stub answers every member a live call-out has, as an idle call-out does
 - countdown: the library absent, the seam answers the stub and the countdown counts nothing
 - countdown: a countdown the call-out refuses is not reported armed
@@ -1071,10 +1071,10 @@ Total.
 - callout settings: the one tab is the library's side layout on the host's route: Preview, Look and Sound
 - callout settings: the migration rewrites a stored glow choice, drops the texts and mutes, keeps a voice
 - callout settings: a fresh profile is untouched by the migration and speaks with Arena John
-- skin defaults step: a value stored at its old default moves once; a pick and the next run stay
-- skin defaults step: a new or reset profile takes the step, which moves nothing a player sees
-- skin defaults step: with no LibKa0s the same writes are made by hand, and the record
-- skin defaults step: a pick stored before the new companions keeps drawing (R-2)
+- own looks: the options v1.108.0 put on the skin default to the owner's own, row and profile alike
+- own looks: the call-out's five meaning colors draw their own hue under every skin
+- own looks: picks stored before v1.108.0 draw as picked
+- own looks: v4 takes back what the retired skin step wrote, in every profile, once
 - callout strip: unlocked, the strip carries ? · settings · close; the X locks it and turns the countdown off
 - callout strip: the settings mark opens the Race mode page on its Callout tab
 
@@ -1721,7 +1721,7 @@ Total.
 - skin surfaces: the runner hands the kit this declaration
 - skin surfaces: every lane companion is a row on the Lanes page, on by default
 - skin surfaces: the lane label's Font flags lead with From skin, its default
-- skin surfaces: each declared companion is a schema row that defaults on
+- skin surfaces: each declared companion is a bool schema row
 
 ### test_docs.lua (15)
 
