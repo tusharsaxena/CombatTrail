@@ -217,13 +217,19 @@ local function bareHeader(f, spec)
         hb.extras[x.key] = Style.AddToStrip(strip, Style.ControlButton(f, x.icon, x.glyph, x.tip, x.onClick))
         hb.order[#hb.order + 1] = x.key
     end
-    hb.settings = Style.AddToStrip(strip, Style.ControlButton(f, "settings", "S", spec.settingsTip, function()
-        if spec.hideOnSettings then spec.hideOnSettings:Hide() end
-        if type(spec.settings) == "function" then return spec.settings() end
-        return NS.OpenSettings()
-    end))
+    -- A companion window carries the close alone (FB-CTR-02, standard v2.119.0).
+    if spec.companion then
+        hb.companion = true
+    else
+        hb.settings = Style.AddToStrip(strip, Style.ControlButton(f, "settings", "S", spec.settingsTip, function()
+            if spec.hideOnSettings then spec.hideOnSettings:Hide() end
+            if type(spec.settings) == "function" then return spec.settings() end
+            return NS.OpenSettings()
+        end))
+        hb.order[#hb.order + 1] = "settings"
+    end
     hb.close = NS.MakeCloseButton(f, spec.close)
-    hb.order[#hb.order + 1], hb.order[#hb.order + 2] = "settings", "close"
+    hb.order[#hb.order + 1] = "close"
     f.headerButtons = hb
     return hb
 end
@@ -231,9 +237,13 @@ end
 --- A window's title-bar marks: W.HeaderButtons on `f`, unplaced (Style.Header lays them).
 --- @param f table  the window
 --- @param spec table  { close = fn, settings = fn|nil (nil: the registered opener), settingsTip = string,
----                      hideOnSettings = frame|nil, extras = { { key, icon, glyph, tip, onClick }, ... } }
----                      (extras left to right)
---- @return table hb  { close, settings, extras = { [key] = btn }, order = { keys, left to right } }
+---                      hideOnSettings = frame|nil, companion = true|nil,
+---                      extras = { { key, icon, glyph, tip, onClick }, ... } } (extras left to right)
+---                      `companion` (FB-CTR-02; WidgetsHeader minor 2; standalone-windows, *Settings is on
+---                      every window but a companion*, v2.119.0): a window that belongs to one other and
+---                      exists only for it draws the close alone, no settings mark and no waiver.
+--- @return table hb  { close, settings (nil on a companion), companion, extras = { [key] = btn },
+---                     order = { keys, left to right } }
 function NS.MakeHeader(f, spec)
     if not (W and type(W.HeaderButtons) == "function") then return bareHeader(f, spec) end
     local extras = {}
@@ -244,7 +254,7 @@ function NS.MakeHeader(f, spec)
         owner = addonName, frame = f, place = false, close = spec.close,
         makeClose = function(parent, onClick) return NS.MakeCloseButton(parent, onClick) end,
         settings = spec.settings, settingsTip = spec.settingsTip, hideOnSettings = spec.hideOnSettings,
-        extras = extras,
+        companion = spec.companion, extras = extras,
     })
     dress(hb.settings, "settings", spec.settingsTip)
     for _, x in ipairs(spec.extras or {}) do dress(hb.extras[x.key], x.icon, x.tip) end

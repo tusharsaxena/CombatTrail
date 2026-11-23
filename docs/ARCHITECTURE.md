@@ -172,9 +172,9 @@ AD-86-CT):
   | DPS HUD | Results, Race (Retail), Lock, Settings, Close | the launcher's registered opener (`NS.OpenSettings`); the HUD (MEDIUM) stays up |
   | Race window (Retail) | Lock, Attach, Settings, Close | its own opener, the Race mode page (`Act.settings`); it stays up |
   | Results | the view toggle, Settings, Close | the registered opener; the window (HIGH) stays beside the panel |
-  | Compare, gear view, timeline | Settings, Close | the registered opener, after the window hides (`hideOnSettings`: DIALOG tier, it would cover the panel) |
+  | Compare, gear view, timeline | Close | none: each is a companion of the Results window (`companion = true`, FB-CTR-02, standalone-windows v2.119.0): it opens only from the Results detail, shows its fight and keeps no position |
 
-  No window opts out of the settings mark. The addon builds no LibKa0s `DragHandle`, so the drag
+  No other window goes without the settings mark. The addon builds no LibKa0s `DragHandle`, so the drag
   strip's settings mark has nothing to turn on.
 
 ### Tooltip placement (standalone-windows, *Tooltip placement*)

@@ -1551,16 +1551,16 @@ Total.
 - title bar: the DPS HUD's controls, the close among them
 - title bar: the Race window's controls (Retail)
 - title bar: the Results window's controls, the view toggle in both views
-- title bar: the compare's settings mark and close
-- title bar: the gear view's settings mark and close
-- title bar: the ability timeline's settings mark and close
+- title bar: the compare's close, its one control
+- title bar: the gear view's close, its one control
+- title bar: the ability timeline's close, its one control
 - header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up
 - header strip: the HUD's settings mark opens the settings panel and leaves the HUD up
 - header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)
 - header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel
-- header strip: the compare reads Settings, Close; settings hides it, then opens the panel
-- header strip: the gear view reads Settings, Close; settings hides it, then opens the panel
-- header strip: the ability timeline reads Settings, Close; settings hides it, then opens the panel
+- header strip: the compare is a companion: the close alone, no settings mark
+- header strip: the gear view is a companion: the close alone, no settings mark
+- header strip: the ability timeline is a companion: the close alone, no settings mark
 
 ### test_tooltip_place.lua (14)
 
