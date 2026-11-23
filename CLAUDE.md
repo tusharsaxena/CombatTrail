@@ -49,14 +49,14 @@ auto-stage/commit/push and never bump the version without an explicit instructio
 
 This addon vendors **[LibKa0s](https://github.com/tusharsaxena/LibKa0s)** into `libs/LibKa0s/` and
 its test kit into `tests/_kit/`, both copied whole from the tag below (`git -C ../LibKa0s archive
-v1.111.0`, commit ee9b4c9796300eb3f9d95ccebcafdc949c28030c), with `libs/LibKa0s/media/icons/` and
+v1.112.0`, commit 1f1904eea65d66a6868dab4e1c9793ea88437369), with `libs/LibKa0s/media/icons/` and
 `libs/LibKa0s/media/sounds/` pruned to their declarations by the tag's own `tools/prune-icons.lua`.
 **Never edit anything under `libs/` or `tests/_kit/`**: a library problem is filed on LibKa0s and
 re-vendored back, because the next re-vendor silently reverts a local edit. The Ace3,
 LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's (the set that loads on both
 clients).
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.111.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.112.0 (MIT).
 LibKa0s icons: arrow-left, chart, chat, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
 LibKa0s sounds: callout/male-arena-john, callout/female-kathleen, callout/female-kristin, callout/female-cori, callout/female-bella, callout/male-joe, callout/male-john, callout/male-norman.
 
