@@ -566,3 +566,34 @@ test("callout strip: the settings mark opens the Race mode page on its Callout t
     assertEqual(opened[1], "race", "the Race mode page")
     assertEqual(selected[1], "race/callout", "on its Callout tab")
 end)
+
+test("callout strip: a right-click on the strip or any mark opens what the gear opens (SRC-CTR-01)", function()
+    -- standalone-windows *A right-click opens what the gear opens* (standard v2.118.0): the call-out
+    -- passes the strip no onRightClick, so WidgetsDragHandle minor 17 runs the gear's onSettings.
+    -- red under: LibKa0s v1.109.0's DragHandle, which registered no click without onRightClick
+    if forever() then return end
+    local inst = T.load()
+    local NS = inst.NS
+    local H = NS.Helpers
+    local opened, selected = {}, {}
+    local open, select_ = H.OpenOptionsPanel, H.SelectTab
+    H.OpenOptionsPanel = function(page) opened[#opened + 1] = page end
+    H.SelectTab = function(page, tab) selected[#selected + 1] = page .. "/" .. tostring(tab) end
+    local h, spec = unlockedStrip(inst)
+    local closed = NS.GetSetting("race.centerCountdown")
+    local ok, err = pcall(function()
+        for _, f in ipairs({ h, h.help, h.settings, h.close }) do
+            f:GetScript("OnClick")(f, "RightButton")
+        end
+    end)
+    H.OpenOptionsPanel, H.SelectTab = open, select_
+    NS.Callout:SetLocked(true)
+    if not ok then error(err, 0) end
+    assertEqual(spec.onRightClick, nil, "the call-out passes no right-click handler of its own")
+    assertEqual(#opened, 4, "the strip, the ?, the gear and the X each open once")
+    for i = 1, 4 do
+        assertEqual(opened[i], "race", "the Race mode page")
+        assertEqual(selected[i], "race/callout", "on its Callout tab")
+    end
+    assertEqual(NS.GetSetting("race.centerCountdown"), closed, "the X's right-click turns nothing off")
+end)
