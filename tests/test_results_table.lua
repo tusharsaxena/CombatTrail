@@ -995,6 +995,9 @@ test("results: the Character menu's selected row stands off the plain rows and t
         assertEqual(menu.buttons[1].fs:GetText(), "Current character")
         local sel, plain = rowColor(menu, 1), rowColor(menu, 2)
         assertEqual(sel, rgb(W.SelectedColor("CombatTrail")), key .. ": the library's selected color")
+        -- The owner's ruling (2026-11-24): Ka0s Default's gold in every shipped skin, the default
+        -- WoW Forever skin included.
+        assertEqual(sel, rgb(1, 0.82, 0), key .. ": the selected row is Ka0s Default's gold")
         assertTrue(sel ~= plain, key .. ": Current character's text differs from All characters' (" .. sel .. ")")
         W.CloseMenu()
         -- A character selected: its class color gives way to the selection.
@@ -1007,6 +1010,7 @@ test("results: the Character menu's selected row stands off the plain rows and t
         assertTrue(altRow ~= nil, key .. ": the alt's row")
         sel = rowColor(menu, altRow)
         assertEqual(sel, rgb(W.SelectedColor("CombatTrail")), key .. ": the selected character wears the selection")
+        assertEqual(sel, rgb(1, 0.82, 0), key .. ": the selected character is gold")
         assertTrue(sel ~= rgb(altColor[1], altColor[2], altColor[3]), key .. ": not its class color")
         assertTrue(sel ~= rowColor(menu, 2), key .. ": nor a plain row's")
         W.CloseMenu()

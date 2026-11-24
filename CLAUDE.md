@@ -49,7 +49,7 @@ auto-stage/commit/push and never bump the version without an explicit instructio
 
 This addon vendors **[LibKa0s](https://github.com/tusharsaxena/LibKa0s)** into `libs/LibKa0s/` and
 its test kit into `tests/_kit/`, both copied whole from the tag below (`git -C ../LibKa0s archive
-v1.113.0`, commit cded10bbcd98d659dfcdcb0a38b36a4aac22be89), with `libs/LibKa0s/media/icons/` and
+v1.113.0`, commit 557d7da508526ad942acbc95cac9681b00d00a26), with `libs/LibKa0s/media/icons/` and
 `libs/LibKa0s/media/sounds/` pruned to their declarations by the tag's own `tools/prune-icons.lua`.
 **Never edit anything under `libs/` or `tests/_kit/`**: a library problem is filed on LibKa0s and
 re-vendored back, because the next re-vendor silently reverts a local edit. The Ace3,
