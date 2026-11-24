@@ -1197,7 +1197,7 @@ Total.
 - breakdown: the snapped rows are whole pixels, never taller than the layout's room (2026-11-11)
 - breakdown: at a UI scale that is not round, every row and its border sit on whole pixels (2026-11-11)
 
-### test_hud_appearance.lua (8)
+### test_hud_appearance.lua (9)
 
 - every hud appearance key applies (one assertion per key via Apply)
 - appearance: every look key in the defaults has a case
@@ -1207,6 +1207,7 @@ Total.
 - palette: the HUD's bar defaults equal the palette entries
 - palette: each block's swatch is its own table, never the palette's
 - palette: the live HUD draws the palette with no setting touched
+- appearance: a backdrop's class color wins over its skin companion (box and window)
 
 ### test_hud_page.lua (14)
 
@@ -1303,7 +1304,7 @@ Total.
 - results sizing: a 30-frame drag rebinds no row until the release, then stores the size
 - results sizing: a drag keeps the minimum and shrinks the list without a rebind
 
-### test_results_table.lua (42)
+### test_results_table.lua (43)
 
 - results: default view: current character, last 7 days, grouped by date and character
 - results: the date range and the character filter
@@ -1347,6 +1348,7 @@ Total.
 - results: the list's rows are striped on a white background, every other one tinted
 - results: under the date groupings Delta still measures each fight against its encounter
 - results: the bar holds Save, Reset and Clear, right to left Clear last
+- results: the Character menu's selected row stands off the plain rows and the class color, every skin
 
 ### test_results_detail.lua (20)
 
@@ -1550,16 +1552,16 @@ Total.
 - title bar: the DPS HUD's controls, the close among them
 - title bar: the Race window's controls (Retail)
 - title bar: the Results window's controls, the view toggle in both views
-- title bar: the compare's settings mark and close
-- title bar: the gear view's settings mark and close
-- title bar: the ability timeline's settings mark and close
+- title bar: the compare's close, its one control
+- title bar: the gear view's close, its one control
+- title bar: the ability timeline's close, its one control
 - header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up
 - header strip: the HUD's settings mark opens the settings panel and leaves the HUD up
 - header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)
 - header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel
-- header strip: the compare reads Settings, Close; settings hides it, then opens the panel
-- header strip: the gear view reads Settings, Close; settings hides it, then opens the panel
-- header strip: the ability timeline reads Settings, Close; settings hides it, then opens the panel
+- header strip: the compare is a companion: the close alone, no settings mark
+- header strip: the gear view is a companion: the close alone, no settings mark
+- header strip: the ability timeline is a companion: the close alone, no settings mark
 
 ### test_tooltip_place.lua (14)
 
@@ -1631,7 +1633,7 @@ Total.
 - preview: a sample fight is the same each time, and its parts agree
 - preview: the first-run skin picker shows the HUD's sample in the skin, and its close puts it back
 
-### test_sim.lua (7)
+### test_sim.lua (14)
 
 - sim newbest ends with New best chip
 - sim short ends Not saved
@@ -1640,6 +1642,13 @@ Total.
 - sim short is judged by the player's own minimum length
 - sim: the verb starts it through the step session, and stop ends it
 - sim: combat ends it; a refused start leaves nothing on
+- sim: the bare /ct sim (idle, nothing started) shows the step window
+- sim: /ct sim start <scenario> shows the step window
+- sim: the bare scenario word, /ct sim <scenario> shows the step window
+- sim: the Master controls Sim mode box and the launcher's entry (NS.ToggleSim) shows the step window
+- sim: the preview's sim start (Preview.Start, mode sim) shows the step window
+- sim: the session's own start (Sim.Open without arm) shows the step window
+- sim: the window's own Start, a typed start after a close and a restart show the step window
 
 ### test_race_preview.lua (8)
 
@@ -1669,14 +1678,15 @@ Total.
 - sim race: the Race window's show and hide never show a hidden sim window, nor move a dragged one
 - sim race: WoW Forever has no race scenario
 
-### test_showcase.lua (15)
+### test_showcase.lua (16)
 
 - showcase: every sample record adds up: rows to the damage, player plus pet, DPS over its length
 - showcase: every WoW Forever sample spell row is one the client names; Multi-Shot is rank 1
 - showcase: one fixed set, the same for every character (the sample realm, not the player's)
 - showcase: the main hunter is the library's sample protagonist, Sim.Sample()[1]
 - showcase: every sample name follows the convention (Sample or Mock, a fixed sample realm)
-- showcase: library absent, the main hunter is the copy of the shared row
+- showcase: the alt hunter and the player targets are the library's seeded crowd
+- showcase: library absent, no sample person is named, and nothing raises
 - showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace
 - showcase: /ct test stays the HUD's alone: no toast, no call-out
 - showcase: test race running: two checkpoints passed, the third next, on the best's line
@@ -1686,6 +1696,11 @@ Total.
 - showcase: Race mode off keeps the samples' words off
 - showcase: sim newbest toasts the fight (toast.fights) and says NEW_BEST on Retail; stop clears both
 - showcase: a real toast outlives the samples' cleanup
+
+### test_sample_names.lua (2)
+
+- sample names: the matcher sees the convention's names and nothing else
+- sample names: no Sample*/Mock* name lives outside tests/ (LibKa0s#104)
 
 ### test_bindings.lua (14)
 
@@ -1939,13 +1954,13 @@ Total.
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 16 |
-| test_hud_appearance.lua | 8 |
+| test_hud_appearance.lua | 9 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_hud_race_button.lua | 31 |
 | test_sizing.lua | 7 |
-| test_results_table.lua | 42 |
+| test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 27 |
@@ -1963,10 +1978,11 @@ Total.
 | test_usage_edit.lua | 4 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
-| test_sim.lua | 7 |
+| test_sim.lua | 14 |
 | test_race_preview.lua | 8 |
 | test_sim_race.lua | 14 |
-| test_showcase.lua | 15 |
+| test_showcase.lua | 16 |
+| test_sample_names.lua | 2 |
 | test_bindings.lua | 14 |
 | test_diagnostics.lua | 9 |
 | test_skin_surfaces.lua | 5 |
@@ -1980,4 +1996,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1626** |
+| **Total** | **1638** |

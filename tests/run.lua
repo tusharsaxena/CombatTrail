@@ -184,6 +184,8 @@ local SUITES = {
     "test_race_preview",
     "test_sim_race",
     "test_showcase",
+    -- One source of sample names: no Sample*/Mock* name outside tests/ (FB2-CTR-01, LibKa0s#104).
+    "test_sample_names",
     "test_bindings",
     "test_diagnostics",
     "test_skin_surfaces",

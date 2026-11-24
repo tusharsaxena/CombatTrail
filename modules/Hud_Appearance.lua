@@ -301,13 +301,28 @@ function Appearance.On(path)
     return setting(path) ~= false
 end
 
--- A backdrop frame's color and edge from swatches at `p .. bg` / `p .. border`, each drawn while its
--- `<key>FromSkin` companion is off (on, the skin's own paint stands).
-local function paintBackdrop(f, p, bg, border)
-    if setting(p .. bg .. "FromSkin") ~= true and f.SetBackdropColor then
+-- Whether swatch `p .. key` draws itself rather than leave the skin's paint: its `<key>FromSkin`
+-- companion is off, or its Use class color is on and the class resolves (FB-CTR-01, options-ui-§17
+-- v2.119.0: class, then the skin's color, then the swatch). Until FB-CTR-01 the skin's companion won.
+local function drawsOwn(p, key)
+    if setting(p .. key .. "FromSkin") ~= true then return true end
+    if setting(p .. companionOf(key)) ~= true or not NS.ClassColor then return false end
+    return NS.ClassColor("player") ~= nil
+end
+
+-- A backdrop frame's color and edge from swatches at `p .. bg` / `p .. border` (drawsOwn above); else
+-- the skin's own paint stands. A swatch that drew itself last time and now leaves the skin (Use class
+-- color or the skin's companion just moved) runs `reskin(f)` once, so the skin's paint is back rather
+-- than the last own color left on screen.
+local function paintBackdrop(f, p, bg, border, reskin)
+    local ownBg, ownBorder = drawsOwn(p, bg), drawsOwn(p, border)
+    local was = f.ctOwnPaint
+    if was and ((was.bg and not ownBg) or (was.border and not ownBorder)) then reskin(f) end
+    f.ctOwnPaint = { bg = ownBg, border = ownBorder }
+    if ownBg and f.SetBackdropColor then
         f:SetBackdropColor(Appearance.Color(p .. bg, p .. companionOf(bg)))
     end
-    if setting(p .. border .. "FromSkin") ~= true and f.SetBackdropBorderColor then
+    if ownBorder and f.SetBackdropBorderColor then
         f:SetBackdropBorderColor(Appearance.Color(p .. border, p .. companionOf(border)))
     end
 end
@@ -315,13 +330,17 @@ end
 --- A figure box's background and border (`hud.figures.boxBg`, `boxBorder`).
 --- @param f table  a box frame (a BackdropTemplate frame the skin's Card painted)
 function Appearance.ApplyBox(f)
-    paintBackdrop(f, "hud.figures.", "boxBg", "boxBorder")
+    paintBackdrop(f, "hud.figures.", "boxBg", "boxBorder", function(fr)
+        if NS.Skin and NS.Skin.Card then NS.Skin.Card(fr, { tokens = NS.HudStates and NS.HudStates.BOX }) end
+    end)
 end
 
 --- The window's own look: its background and border, its strata and its opacity.
 --- @param f table  the HUD's frame
 function Appearance.ApplyWindow(f)
-    paintBackdrop(f, "hud.window.", "bg", "border")
+    paintBackdrop(f, "hud.window.", "bg", "border", function(fr)
+        if NS.ApplySkin then NS.ApplySkin(fr) end
+    end)
     local strata = setting("hud.window.strata")
     if type(strata) ~= "string" or strata == "" then strata = NS.Constants.LAYERS.STRATA.HUD end
     f:SetFrameStrata(strata)

@@ -111,8 +111,8 @@ local function levelText(i)
 end
 
 --- The header's meta (spec §7, v0.2 plan Task A2), three lines in DPS Race's shape:
----   1. where and who: "Samplerealm · ilvl 721.4 · The Voidspire" (the zone and subzone in the open world);
----   2. what: "Vorasius · level 72 · Heroic · Mythic+ 12 · 4:12 · pet Mockfang";
+---   1. where and who: "<realm> · ilvl 721.4 · The Voidspire" (the zone and subzone in the open world);
+---   2. what: "Vorasius · level 72 · Heroic · Mythic+ 12 · 4:12 · pet <pet name>";
 ---   3. the stamp: "10 Nov 2026 21:14 · build 120105 · v0.1.0".
 --- Every part the record has; a line with none is "".
 --- @param record table

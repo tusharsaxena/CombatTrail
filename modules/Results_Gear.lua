@@ -336,10 +336,11 @@ end
 local function buildChrome(f)
     f.title = Style.PlainText(f, FONT.TITLE, "CENTER")
     f.title:SetText(L["Gear view"])
-    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): Settings and the Close. The window is in the DIALOG
-    -- tier and would cover the settings panel, so the settings mark hides it first (hideOnSettings).
-    local hb = NS.MakeHeader(f, { close = function() Gear.Hide() end, settingsTip = L["Settings"], hideOnSettings = f })
-    ui.close, ui.settings = hb.close, hb.settings
+    -- W.HeaderButtons (NS.MakeHeader; LibKa0s#86): the Close alone. The window is a companion of the
+    -- Results window (FB-CTR-02; standalone-windows, *Settings is on every window but a companion*,
+    -- v2.119.0): it opens only from a button in the Results detail, shows that fight, keeps no position.
+    local hb = NS.MakeHeader(f, { close = function() Gear.Hide() end, companion = true })
+    ui.close = hb.close
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -347,7 +348,7 @@ local function buildChrome(f)
     -- Moved for as long as it is open: nothing stored, the next open centers it again.
     drag:SetScript("OnDragStop", function() f:StopMovingOrSizing() end)
     ui.drag = drag
-    Style.Header(f, { title = f.title, drag = drag, right = { ui.close, ui.settings }, n = 2 })
+    Style.Header(f, { title = f.title, drag = drag, right = { ui.close }, n = 1 })
 end
 
 local function buildLegend(f)

@@ -219,30 +219,32 @@ test("title bar: the Results window's controls, the view toggle in both views", 
     checkWindow(S, "Results (toggled)", controls)
 end)
 
-test("title bar: the compare's settings mark and close", function()
+-- The compare, the gear view and the timeline are companions of the Results window (FB-CTR-02;
+-- standalone-windows, *Settings is on every window but a companion*, v2.119.0): the close alone.
+test("title bar: the compare's close, its one control", function()
     local S, NS = fresh()
     local pane = results(NS)
     pane.w.compare:__fire("OnClick")
     assertTrue(NS.ResultsCompare.IsShown())
     checkWindow(S, "compare", function() local ui = NS.ResultsCompare.__ui()
-        return { { ui.close, "close", true }, { ui.settings, "settings" } } end)
+        return { { ui.close, "close", true } } end)
 end)
 
-test("title bar: the gear view's settings mark and close", function()
+test("title bar: the gear view's close, its one control", function()
     local S, NS = fresh()
     local pane = results(NS)
     assertTrue(NS.ResultsGear.Open(pane))
     checkWindow(S, "gear", function() local ui = NS.ResultsGear.__ui()
-        return { { ui.close, "close", true }, { ui.settings, "settings" } } end)
+        return { { ui.close, "close", true } } end)
 end)
 
-test("title bar: the ability timeline's settings mark and close", function()
+test("title bar: the ability timeline's close, its one control", function()
     local S, NS = fresh()
     local pane = results(NS)
     NS.ResultsTimeline.Open(pane)
     assertTrue(NS.ResultsTimeline.IsShown())
     checkWindow(S, "timeline", function() local ui = NS.ResultsTimeline.__ui()
-        return { { ui.close, "close", true }, { ui.settings, "settings" } } end)
+        return { { ui.close, "close", true } } end)
 end)
 
 -- ── the strip (LibKa0s#86, item AD-86-CT; standalone-windows, *Title-bar controls*) ────────────────
@@ -350,7 +352,10 @@ test("header strip: the Results window reads the view toggle, Settings, Close; s
     assertTrue(NS.Results.IsShown(), "the Results window stays (HIGH, beside the panel)")
 end)
 
--- The three DIALOG-tier windows: settings, close; the settings mark hides the window, then opens.
+-- The three DIALOG-tier windows over the Results window are its companions (FB-CTR-02; standalone-
+-- windows, *Settings is on every window but a companion*, v2.119.0): each opens only from a button in
+-- the Results detail, shows that detail's fight and keeps no position. The close alone, built with
+-- `companion = true` (WidgetsHeader minor 2): no settings mark and no waiver.
 local OVER = {
     { "compare", "ResultsCompare", function(_, pane) pane.w.compare:__fire("OnClick") end },
     { "gear view", "ResultsGear", function(NS, pane) assertTrue(NS.ResultsGear.Open(pane)) end },
@@ -358,7 +363,7 @@ local OVER = {
 }
 
 for _, w in ipairs(OVER) do
-    test("header strip: the " .. w[1] .. " reads Settings, Close; settings hides it, then opens the panel", function()
+    test("header strip: the " .. w[1] .. " is a companion: the close alone, no settings mark", function()
         local S, NS = fresh()
         local seen = watchHeaders(NS)
         local pane = results(NS)
@@ -366,10 +371,15 @@ for _, w in ipairs(OVER) do
         local mod = NS[w[2]]
         assertTrue(mod.IsShown(), w[1] .. " open")
         local ui = mod.__ui()
-        checkStrip(S, seen, ui.frame, { order = { "settings", "close" }, right = { ui.close, ui.settings } }, w[1])
-        local calls = opens(S, function() click(ui.settings) end)
-        assertEqual(#calls, 1, "one open")
-        assertEqual(calls[1][1], "panel", "the settings panel")
-        assertTrue(not mod.IsShown(), w[1] .. " hid first: it would cover the panel")
+        local hb = ui.frame.headerButtons
+        assertTrue(type(hb) == "table", w[1] .. ": the marks are W.HeaderButtons'")
+        assertEqual(table.concat(hb.order, ","), "close", w[1] .. ": the close alone")
+        assertTrue(hb.companion == true, w[1] .. ": recorded as a companion")
+        assertTrue(hb.settings == nil and ui.settings == nil, w[1] .. ": a companion drew the settings mark")
+        assertTrue(hb.optOut == nil, w[1] .. ": a companion needs no settingsOptOut waiver")
+        local right = seen[ui.frame]
+        assertTrue(type(right) == "table" and #right == 1, w[1] .. ": one mark laid on the band")
+        assertTrue(right[1].frame == ui.close, w[1] .. ": the one mark is the close")
+        assertEqual(right[1].x, W(S).HEADER.PAD, w[1] .. ": the close HEADER.PAD in from the band's right")
     end)
 end
