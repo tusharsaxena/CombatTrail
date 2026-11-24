@@ -1,0 +1,4 @@
+FB2 independent review (workflow wf_0f1c645f-6fa, 2026-11-24): ok
+Fixes: none
+Gate: Re-run by the reviewer on HEAD 1e015e4 (clean tree). Retail: 1638 passed, 0 failed, 1 skipped (1639 total), exit 0. Forever (KA0S_KIT_CLIENT=forever; the TOC's Interface is 120105, 16001): 1628 passed, 0 failed, 1 skipped (1629 total), exit 0. ka0s-bounded luacheck: 0 warnings / 0 errors in 200 files, exit 0. 1500-line cap: no code file is over it outside libs/ and tests/_kit/ (the largest is modules/Hud.lua at 1467).
+Open:
