@@ -173,7 +173,11 @@ counts nothing; only the sim's race scenarios run the countdown. The preview's s
 `BestToast.EndSample` and `Countdown.EndSample`, so no toast or call-out outlives its sample.
 
 The samples are fought by two made-up hunters on one sample realm, the same for every character
-(preview-mode, *Sample characters*; LibKa0s#87). The main one is the collection's sample protagonist,
-LibKa0s-Sim-1.0's `Sim.Sample()[1]` for the running client (Samplehunter on Samplerealm, the pet
-Mockfang), read once at file scope with a copy of that row when the library is absent. The alt,
-Mockarrow with the pet Mockclaw, is this addon's own and follows the same convention.
+(preview-mode, *Sample characters*, *Every name comes from the library*; LibKa0s#87, #104). Every
+sample person is read from LibKa0s-Sim-1.0 once at file scope, and none is typed in this addon: the
+main hunter is the collection's sample protagonist, `Sim.Sample()[1]` for the running client, with its
+pet and its realm; the alt hunter and its pet, the battleground's shaman and the arena's rogue are the
+first of their class in the library's shared crowd, `Sim.SampleCrowd(client, MockFights.CROWD_SIZE,
+MockFights.CROWD_SEED)`, seeded so the showcase names the same people on every load and on both
+clients. With the library absent there is no list to fall back on: each carries the unknown name
+`?`. `tests/test_sample_names.lua` fails on any sample name typed outside `tests/`.

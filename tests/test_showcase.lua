@@ -190,12 +190,48 @@ test("showcase: every sample name follows the convention (Sample or Mock, a fixe
     end
 end)
 
-test("showcase: library absent, the main hunter is the copy of the shared row", function()
+-- Everyone beyond the protagonist is the library's shared crowd (FB2-CTR-01, LibKa0s#104; standard
+-- v2.120.0 preview-mode, *Every name comes from the library*): the alt hunter and its pet, the
+-- battleground's shaman and the arena's rogue are the first of their class in Sim.SampleCrowd(client,
+-- CROWD_SIZE, CROWD_SEED), seeded so the showcase is the same on every load and on both clients.
+local function firstOf(rows, classFile)
+    for _, row in ipairs(rows) do
+        if row.classFile == classFile then return row end
+    end
+    return nil
+end
+
+test("showcase: the alt hunter and the player targets are the library's seeded crowd", function()
+    local S = fresh()
+    local NS, MF = S.NS, S.NS.MockFights
+    assertEqual(type(MF.CROWD_SEED), "number", "the crowd's seed")
+    local crowd = NS.SimLib.SampleCrowd(NS.Compat.ClientKey(), MF.CROWD_SIZE, MF.CROWD_SEED)
+    local hunter = firstOf(crowd, "HUNTER")
+    local alt = MF.Character("alt")
+    assertEqual(alt.name, hunter.name, "the alt is the crowd's first hunter")
+    assertEqual(alt.petName, hunter.pet, "with its pet")
+    assertTrue(alt.name ~= MF.Character("me").name, "two characters")
+    assertEqual(MF.Board("bg").target.name, firstOf(crowd, "SHAMAN").name, "the battleground's shaman")
+    if NS.Compat.IsForever() then
+        assertEqual(MF.Board("arena"), nil, "no arena on WoW Forever")
+    else
+        assertEqual(MF.Board("arena").target.name, firstOf(crowd, "ROGUE").name, "the arena's rogue")
+    end
+    local again = NS.SimLib.SampleCrowd(NS.Compat.ClientKey(), MF.CROWD_SIZE, MF.CROWD_SEED)
+    assertEqual(firstOf(again, "HUNTER").name, hunter.name, "seeded: the same crowd every time")
+end)
+
+test("showcase: library absent, no sample person is named, and nothing raises", function()
+    -- No name list of the addon's own, not even as a fallback (anti-pattern #128): with no
+    -- LibKa0s-Sim-1.0 the hunters and the targets carry the unknown name the Results window shows.
     local inst = T.load({ libFiles = {} })
-    local me = inst.NS.MockFights.Character("me")
-    assertEqual(me.name, "Samplehunter")
-    assertEqual(me.realm, "Samplerealm")
-    assertEqual(me.petName, "Mockfang")
+    local MF = inst.NS.MockFights
+    local me, alt = MF.Character("me"), MF.Character("alt")
+    assertEqual(me.name, "?")
+    assertEqual(alt.name, "?")
+    assertEqual(me.petName, nil, "no pet name")
+    assertEqual(MF.Board("bg").target.name, "?")
+    assertTrue(#MF.Dataset().fights > 0, "the sample history still builds")
 end)
 
 test("showcase: test mode's HUD agrees with itself: live DPS over the clock, the pet named, cooldown marks, the pace", function()

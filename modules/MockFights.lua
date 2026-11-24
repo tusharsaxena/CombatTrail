@@ -67,25 +67,47 @@ local CLIENT = FOREVER and {
 MockFights.SCALE = CLIENT.scale
 
 -- The two made-up hunters: the main one every sample fight of the HUD and the sim is fought by,
--- both on one made-up realm. The main one is the collection's sample protagonist (LibKa0s#87,
--- preview-mode *Sample characters*): LibKa0s-Sim-1.0's Sim.Sample()[1] for the running client, read
--- once at FILE SCOPE (core/SimSetup.lua resolved NS.SimLib earlier), with a copy of that row's
--- fields when the library is absent. The alt is this addon's own and follows the same convention.
-local SAMPLE_HUNTER = { name = "Samplehunter", realm = "Samplerealm", pet = "Mockfang" }
-local function protagonist()
-    local Sim = NS.SimLib
-    local rows = Sim and type(Sim.Sample) == "function" and Sim.Sample()
+-- both on one made-up realm, and the player targets of the battleground and the arena. Every one is
+-- read from LibKa0s-Sim-1.0, never typed here (preview-mode *Sample characters*, *Every name comes
+-- from the library*, standard v2.120.0; LibKa0s#87, #104): the main hunter is the collection's
+-- protagonist, Sim.Sample()[1] for the running client; the alt, its pet and the targets are the
+-- first of their class in the library's shared crowd, Sim.SampleCrowd(client, CROWD_SIZE,
+-- CROWD_SEED). The seed keeps the showcase the same on every load, and this one names the same
+-- people on both clients. CROWD_SIZE is the Retail class count, which the library guarantees holds
+-- every class. Read once at FILE SCOPE (core/SimSetup.lua resolved NS.SimLib earlier). With no
+-- library there is no list to fall back on, so each is the unknown name the Results window shows.
+MockFights.CROWD_SIZE, MockFights.CROWD_SEED = 13, 13307
+local NAMELESS = { name = "?", realm = "?" }
+
+local function protagonist(Sim)
+    local rows = type(Sim.Sample) == "function" and Sim.Sample()
     local row = type(rows) == "table" and rows[1]
     if type(row) == "table" and row.classFile == "HUNTER" and row.name and row.realm and row.pet then
         return row
     end
-    return SAMPLE_HUNTER
+    return NAMELESS
 end
-local HUNTER = protagonist()
+
+--- The library's people: the protagonist and the first crowd row of each class, by class.
+local function samplePeople()
+    local Sim = NS.SimLib
+    if type(Sim) ~= "table" then return NAMELESS, {} end
+    local byClass = {}
+    if type(Sim.SampleCrowd) == "function" then
+        for _, row in ipairs(Sim.SampleCrowd(NS.Compat.ClientKey(), MockFights.CROWD_SIZE, MockFights.CROWD_SEED)) do
+            byClass[row.classFile] = byClass[row.classFile] or row
+        end
+    end
+    return protagonist(Sim), byClass
+end
+local HUNTER, CROWD = samplePeople()
+local ALT = CROWD.HUNTER or NAMELESS
+--- The crowd's first `classFile`'s name, or the unknown name.
+local function crowdName(classFile) return (CROWD[classFile] or NAMELESS).name end
 MockFights.REALM = HUNTER.realm
 local CHARS = {
     me = { name = HUNTER.name, ilvl = FOREVER and 66.2 or 721.4, pet = HUNTER.pet },
-    alt = { name = "Mockarrow", ilvl = FOREVER and 63.0 or 716.0, pet = "Mockclaw" },
+    alt = { name = ALT.name, ilvl = FOREVER and 63.0 or 716.0, pet = ALT.pet },
 }
 
 -- ── the boards ──────────────────────────────────────────────────────────────────────────────────
@@ -120,7 +142,7 @@ local function boards()
         },
         bg = { where = { instanceType = "pvp", instanceName = "Warsong Gulch", instanceID = 489, difficultyID = 0,
                          maxPlayers = 10, pvpBracket = "10" },
-               target = { name = "Sampleshaman" } },
+               target = { name = crowdName("SHAMAN") } },
         world = { where = { instanceType = "none", instanceName = "Eversong Woods", difficultyID = 0 },
                   target = { name = "Gorehide Alpha", creatureID = 247010 } },
     }
@@ -134,7 +156,7 @@ local function boards()
                   target = { name = "Nerubian Overseer", creatureID = 244001 } }
     out.arena = { where = { instanceType = "arena", instanceName = "Nagrand Arena", instanceID = 1505,
                             difficultyID = 0, maxPlayers = 3, pvpBracket = "r3" },
-                  target = { name = "Samplerogue" } }
+                  target = { name = crowdName("ROGUE") } }
     out.dummy = { where = { instanceType = "none", instanceName = "Silvermoon City", difficultyID = 0 },
                   -- The seed's name, not the player's list's: a switched-off built-in keeps its name here.
                   target = { name = (NS.Dummies.BuiltIn(31146) or {}).name, creatureID = 31146 } }
