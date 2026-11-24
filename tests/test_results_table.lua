@@ -945,3 +945,71 @@ test("results: the bar holds Save, Reset and Clear, right to left Clear last", f
     assertEqual(view.reset.label:GetText(), "Reset")
     assertEqual(view.clear.label:GetText(), "Clear")
 end)
+
+-- ── the filter menus' selected row (FB2-CTR-01, D3 of Ka0sAddonsCommonTasks
+-- docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md; LibKa0s v1.113.0 WidgetsDropdown minor 4) ───
+-- The owner's 2026-11-24 screenshot: the Character dropdown marked "Current character" with a bar
+-- while its text stayed white. Every filter menu here is the library's W.Dropdown (NS.MakeDropdown),
+-- so the selected row paints the library's selected color: never a plain row's color, never the
+-- class color the row would otherwise wear, under every shipped skin.
+
+-- Open `dd`'s menu and answer its frame: the shared menu the library builds on its first open (the
+-- one recorded frame with rows), or the one it built before.
+local function openMenu(M, dd, state)
+    local saved = M.CreateFrame
+    M.CreateFrame = function(...)
+        local f = saved(...)
+        state.made = state.made or {}
+        state.made[#state.made + 1] = f
+        return f
+    end
+    dd:__fire("OnClick")
+    M.CreateFrame = saved
+    for _, f in ipairs(state.made or {}) do
+        if type(f.buttons) == "table" and f.buttons[1] then state.menu = f end
+    end
+    return state.menu
+end
+
+local function rgb(r, g, b) return ("%.3f,%.3f,%.3f"):format(r, g, b) end
+local function rowColor(menu, i) return rgb(menu.buttons[i].fs:GetTextColor()) end
+
+test("results: the Character menu's selected row stands off the plain rows and the class color, every skin", function()
+    local NS, M = fresh()
+    local alt = rec(NS, { id = "alt", mine = false })
+    save(NS, rec(NS, { id = "mine" }), alt)
+    local _, view = open(NS)
+    local dd = view.dropdowns.character
+    assertTrue(dd ~= nil, "the Character dropdown")
+    local Skin, W = M.LibStub("LibKa0s-Skin-1.0"), M.LibStub("LibKa0s-Widgets-1.0")
+    local keys, state = {}, {}
+    for _, def in ipairs(Skin:Skins()) do keys[#keys + 1] = def.key end
+    assertTrue(#keys >= 9, "every shipped skin walked, got " .. #keys)
+    local altColor = NS.ResultsTable.ClassColor("WARLOCK")
+    for _, key in ipairs(keys) do
+        Skin:SetChoice("CombatTrail", "ka0s", key)
+        -- "Current character" selected: rows are Current, All, then each character.
+        view:SetFilter("character", "current")
+        local menu = openMenu(M, dd, state)
+        assertTrue(menu ~= nil, key .. ": the menu opened")
+        assertEqual(menu.buttons[1].fs:GetText(), "Current character")
+        local sel, plain = rowColor(menu, 1), rowColor(menu, 2)
+        assertEqual(sel, rgb(W.SelectedColor("CombatTrail")), key .. ": the library's selected color")
+        assertTrue(sel ~= plain, key .. ": Current character's text differs from All characters' (" .. sel .. ")")
+        W.CloseMenu()
+        -- A character selected: its class color gives way to the selection.
+        view:SetFilter("character", NS.ResultsFights.CharKey(alt))
+        menu = openMenu(M, dd, state)
+        local altRow
+        for i, b in ipairs(menu.buttons) do
+            if b:IsShown() and tostring(b.fs:GetText()):find("Altchar", 1, true) then altRow = i end
+        end
+        assertTrue(altRow ~= nil, key .. ": the alt's row")
+        sel = rowColor(menu, altRow)
+        assertEqual(sel, rgb(W.SelectedColor("CombatTrail")), key .. ": the selected character wears the selection")
+        assertTrue(sel ~= rgb(altColor[1], altColor[2], altColor[3]), key .. ": not its class color")
+        assertTrue(sel ~= rowColor(menu, 2), key .. ": nor a plain row's")
+        W.CloseMenu()
+    end
+    Skin:SetChoice("CombatTrail", "ka0s", "ka0s")
+end)
