@@ -177,3 +177,60 @@ test("sim: combat ends it; a refused start leaves nothing on", function()
     assertFalse(NS.Preview.Start({ mode = "sim", scenario = "behind" }), "refused in combat")
     assertFalse(NS.Preview.IsActive())
 end)
+
+-- ── every start shows the step window (FB2-CTR-01, D2 of Ka0sAddonsCommonTasks
+-- docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md; LibKa0s v1.113.0 Sim minor 5) ─────────────
+-- The owner's words, 2026-11-24: "sim mode whether started from a command like /xx sim start
+-- <scenario> or from just plain /xx sim should always show the sim stepper window". One case per
+-- start path this addon has; each begins with the window closed.
+
+local PANEL = "CombatTrailSimPanel"
+
+local function closed(NS)
+    local session = NS.Sim.session
+    assertTrue(session ~= nil, "the library's step session")
+    assertFalse(session:IsPanelShown(), "the step window is closed before the start")
+    return session
+end
+
+local START_PATHS = {
+    { "the bare /ct sim (idle, nothing started)", function(NS) NS.RunSimVerb("") end, false },
+    { "/ct sim start <scenario>", function(NS) NS.RunSimVerb("start behind") end, true },
+    { "the bare scenario word, /ct sim <scenario>", function(NS) NS.RunSimVerb("behind") end, true },
+    { "the Master controls Sim mode box and the launcher's entry (NS.ToggleSim)",
+      function(NS) NS.ToggleSim() end, false },
+    { "the preview's sim start (Preview.Start, mode sim)",
+      function(NS) NS.Preview.Start({ mode = "sim", scenario = "behind" }) end, true },
+    { "the session's own start (Sim.Open without arm)", function(NS) NS.Sim.Open("behind") end, true },
+}
+
+for _, path in ipairs(START_PATHS) do
+    local name, start, runs = path[1], path[2], path[3]
+    test("sim: " .. name .. " shows the step window", function()
+        local NS = fresh()
+        local session = closed(NS)
+        start(NS)
+        assertTrue(session:IsPanelShown(), name .. " opened the step window")
+        assertEqual(session:IsActive() == true, runs, "a session runs only where the path starts one")
+        NS.Preview.Stop()
+    end)
+end
+
+test("sim: the window's own Start, a typed start after a close and a restart show the step window", function()
+    local NS, M = fresh()
+    local session = closed(NS)
+    NS.RunSimVerb("")
+    local f = M[PANEL]
+    assertTrue(type(f) == "table" and f.picker ~= nil and f.picker.start ~= nil, "the window's Start")
+    f.picker.start:__fire("OnClick")
+    assertTrue(session:IsActive(), "the window's Start started the session")
+    assertTrue(session:IsPanelShown(), "with the window up")
+    NS.RunSimVerb("stop")
+    session:HidePanel()
+    NS.RunSimVerb("start newbest")
+    assertTrue(session:IsPanelShown(), "a start after the player closed the window shows it again")
+    session:HidePanel()
+    assertTrue(session:Restart())
+    assertTrue(session:IsPanelShown(), "a restart shows it again")
+    NS.Preview.Stop()
+end)
