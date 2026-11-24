@@ -26,7 +26,7 @@ such rather than listed as a requirement.
 |---|---|---|---|
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua` | `tests/_kit/loader.lua` sandboxes each file with `setfenv` |
 | `luacheck` | any recent (verified with 1.2.0) | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`, the other half of the commit gate | `.luacheckrc` at the repo root |
-| `git` | any recent | the suite itself, and vendoring | `tests/_kit/test_eol.lua`, `test_layout_cap.lua`, `test_prose.lua` and `test_client_globals.lua` read the tracked tree through `git ls-files`; `tests/_kit/vendor_sync.lua` compares the payloads; library-stack-§7 |
+| `git` | any recent | the suite itself, and vendoring | `tests/_kit/test_eol.lua`, `test_layout_cap.lua`, `test_prose.lua` and `test_client_globals.lua`, and `tests/test_sample_names.lua`, read the tracked tree through `git ls-files`; `tests/_kit/vendor_sync.lua` compares the payloads; library-stack-§7 |
 | `ka0s-bounded` | from the dev-copilot plugin | every lint and long Lua run, `~/.claude/dev-copilot/bin/ka0s-bounded` | `luacheck` loads no kit, so the commit gate runs it through this runner (`CLAUDE.md`, testing-§15) |
 | POSIX shell | any | the suite's `-j` workers and the kit's bounds | `tests/_kit/framework.lua` shells out through `os.execute` and `io.popen` |
 | `lizard` | any recent (verified with 1.24.0) | the `complexity` suite of `tests/_kit/run-automated-tests.sh` | the runner calls `lizard` over the sighted shadow `tests/_kit/lizard_sighted.lua` builds, because `lizard` alone is blind in places in Lua (automated-tests-§3) |
