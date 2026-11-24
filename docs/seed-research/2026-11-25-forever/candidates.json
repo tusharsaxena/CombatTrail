@@ -1,0 +1,912 @@
+{
+ "build": "1.60.1.71091",
+ "candidates": [
+  {
+   "id": 1921,
+   "key": "dummies:1921",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 2673,
+   "key": "dummies:2673",
+   "list": "dummies",
+   "name": "Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 2674,
+   "key": "dummies:2674",
+   "list": "dummies",
+   "name": "Advanced Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 4952,
+   "key": "dummies:4952",
+   "list": "dummies",
+   "name": "Theramore Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 4957,
+   "key": "dummies:4957",
+   "list": "dummies",
+   "name": "Theramore Combat Dummy 4",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 5652,
+   "key": "dummies:5652",
+   "list": "dummies",
+   "name": "Practice Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 5723,
+   "key": "dummies:5723",
+   "list": "dummies",
+   "name": "Warug's Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 9659,
+   "key": "dummies:9659",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 10156,
+   "key": "dummies:10156",
+   "list": "dummies",
+   "name": "Scott's Test Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 10736,
+   "key": "dummies:10736",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Mage",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 11875,
+   "key": "dummies:11875",
+   "list": "dummies",
+   "name": "Mortar Team Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12317,
+   "key": "dummies:12317",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Low AC",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12385,
+   "key": "dummies:12385",
+   "list": "dummies",
+   "name": "Mortar Team Advanced Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12426,
+   "key": "dummies:12426",
+   "list": "dummies",
+   "name": "Masterwork Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12916,
+   "key": "dummies:12916",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Low Magic Resistances",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12917,
+   "key": "dummies:12917",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 High Magic Resistances",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 13619,
+   "key": "dummies:13619",
+   "list": "dummies",
+   "name": "Gizlock's Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 14830,
+   "key": "dummies:14830",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Warrior",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 14831,
+   "key": "dummies:14831",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 63 Warrior",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15133,
+   "key": "dummies:15133",
+   "list": "dummies",
+   "name": "Killable Test Dummy 60 Warrior",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15134,
+   "key": "dummies:15134",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 70",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15142,
+   "key": "dummies:15142",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 60",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15143,
+   "key": "dummies:15143",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 63",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15144,
+   "key": "dummies:15144",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 65",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15145,
+   "key": "dummies:15145",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 67",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15151,
+   "key": "dummies:15151",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 55",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15152,
+   "key": "dummies:15152",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 56",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15153,
+   "key": "dummies:15153",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 57",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15154,
+   "key": "dummies:15154",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 58",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15155,
+   "key": "dummies:15155",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 59",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15156,
+   "key": "dummies:15156",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 61",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15157,
+   "key": "dummies:15157",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 62",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15158,
+   "key": "dummies:15158",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 64",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15159,
+   "key": "dummies:15159",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 66",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15160,
+   "key": "dummies:15160",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 68",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15161,
+   "key": "dummies:15161",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 69",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15173,
+   "key": "dummies:15173",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 54",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15992,
+   "key": "dummies:15992",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 1",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15993,
+   "key": "dummies:15993",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 2",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15996,
+   "key": "dummies:15996",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 1 (1)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15997,
+   "key": "dummies:15997",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 2 (1)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15998,
+   "key": "dummies:15998",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 1 (2)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15999,
+   "key": "dummies:15999",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 2 (2)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 16078,
+   "key": "dummies:16078",
+   "list": "dummies",
+   "name": "Unkillable Fixed Damage Test Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 16211,
+   "key": "dummies:16211",
+   "list": "dummies",
+   "name": "Naxxramas Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 17313,
+   "key": "dummies:17313",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy Spammer",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 17685,
+   "key": "dummies:17685",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 No Armor",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 167875,
+   "key": "dummies:167875",
+   "list": "dummies",
+   "name": "RTC Player Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 176721,
+   "key": "dummies:176721",
+   "list": "dummies",
+   "name": "Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 177063,
+   "key": "dummies:177063",
+   "list": "dummies",
+   "name": "Spellcaster Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206152,
+   "key": "dummies:206152",
+   "list": "dummies",
+   "name": "SoD Test Dummy 25",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206153,
+   "key": "dummies:206153",
+   "list": "dummies",
+   "name": "SoD Test Dummy 26",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206154,
+   "key": "dummies:206154",
+   "list": "dummies",
+   "name": "SoD Test Dummy 27",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206155,
+   "key": "dummies:206155",
+   "list": "dummies",
+   "name": "SoD Test Dummy 28",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 214528,
+   "key": "dummies:214528",
+   "list": "dummies",
+   "name": "Boss Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 217987,
+   "key": "dummies:217987",
+   "list": "dummies",
+   "name": "Giga Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 218019,
+   "key": "dummies:218019",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "spawn recorded on 1 map(s)"
+   ]
+  },
+  {
+   "id": 218020,
+   "key": "dummies:218020",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "spawn recorded on 1 map(s)"
+   ]
+  },
+  {
+   "id": 218021,
+   "key": "dummies:218021",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "spawn recorded on 1 map(s)"
+   ]
+  },
+  {
+   "id": 219762,
+   "key": "dummies:219762",
+   "list": "dummies",
+   "name": "SoD Test Dummy 40 DNT",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 236987,
+   "key": "dummies:236987",
+   "list": "dummies",
+   "name": "Satyrweed Quest Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 239817,
+   "key": "dummies:239817",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 239820,
+   "key": "dummies:239820",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 239855,
+   "key": "dummies:239855",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 250192,
+   "key": "dummies:250192",
+   "list": "dummies",
+   "name": "[DNT] Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 259957,
+   "key": "dummies:259957",
+   "list": "dummies",
+   "name": "Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 263911,
+   "key": "dummies:263911",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 265987,
+   "key": "dummies:265987",
+   "list": "dummies",
+   "name": "Spell Resistant Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268079,
+   "key": "dummies:268079",
+   "list": "dummies",
+   "name": "Dummy Beast",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268080,
+   "key": "dummies:268080",
+   "list": "dummies",
+   "name": "Dummy Demon",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268081,
+   "key": "dummies:268081",
+   "list": "dummies",
+   "name": "Dummy Dragonkin",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268082,
+   "key": "dummies:268082",
+   "list": "dummies",
+   "name": "Dummy Elemental",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268083,
+   "key": "dummies:268083",
+   "list": "dummies",
+   "name": "Dummy Giant",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268084,
+   "key": "dummies:268084",
+   "list": "dummies",
+   "name": "Dummy Humanoid",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268085,
+   "key": "dummies:268085",
+   "list": "dummies",
+   "name": "Dummy Undead",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268257,
+   "key": "dummies:268257",
+   "list": "dummies",
+   "name": "Dummy Mechanical",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 271897,
+   "key": "dummies:271897",
+   "list": "dummies",
+   "name": "[DNT] Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 273690,
+   "key": "dummies:273690",
+   "list": "dummies",
+   "name": "Armor Debuffed Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 273946,
+   "key": "dummies:273946",
+   "list": "dummies",
+   "name": "Armor Debuffed Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 274574,
+   "key": "dummies:274574",
+   "list": "dummies",
+   "name": "Dummy Healing",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277132,
+   "key": "dummies:277132",
+   "list": "dummies",
+   "name": "Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277205,
+   "key": "dummies:277205",
+   "list": "dummies",
+   "name": "Dummy Healing",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277601,
+   "key": "dummies:277601",
+   "list": "dummies",
+   "name": "Armor Debuffed Dummy Boss",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277685,
+   "key": "dummies:277685",
+   "list": "dummies",
+   "name": "Interruptable Spellcaster Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  }
+ ],
+ "client": "forever",
+ "date": "2026-11-25",
+ "derived": {},
+ "flags": [
+  {
+   "comment": "Auto Attack",
+   "id": 6603,
+   "key": "shipped:renamed:ignore:6603",
+   "kind": "renamed",
+   "list": "ignore",
+   "name": "Attack"
+  }
+ ],
+ "foreverdb": {
+  "commit": "6e0a34b4bd017483aff616f5766348e1cea519ae",
+  "json_sha256": "156924e2e077ce87b7e0ee88d98bb3c4a42c2f1641584540dce2cdd722fffbdc",
+  "meta": {
+   "build": "2026-11-24",
+   "hash": "34e1dda1e0baf54c"
+  },
+  "tag": "v2026.11.24.46"
+ },
+ "ignore": {
+  "checked": [
+   {
+    "build": "Attack",
+    "file": "Auto Attack",
+    "id": 6603,
+    "lanes": [
+     "player",
+     "pet"
+    ]
+   },
+   {
+    "build": "Auto Shot",
+    "file": "Auto Shot",
+    "id": 75,
+    "lanes": [
+     "player"
+    ]
+   },
+   {
+    "build": "Shoot",
+    "file": "Shoot",
+    "id": 5019,
+    "lanes": [
+     "player"
+    ]
+   }
+  ],
+  "lanes": {
+   "pet": [
+    6603
+   ],
+   "player": [
+    6603,
+    75,
+    5019
+   ]
+  }
+ },
+ "product": "wowf",
+ "shipped": {
+  "dummies": 0,
+  "ignore": 3
+ },
+ "tool": "tools/seeds/seeds.py derive"
+}

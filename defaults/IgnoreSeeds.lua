@@ -11,6 +11,8 @@ local _, NS = ...
 -- pet     Auto Attack 6603, on both clients. The pet's own melee swings do not fire SUCCEEDED on
 --         Retail; any further pet auto-attack ID a client turns out to send is added to that client's
 --         list when `/ct probe` reports it (spec §10's in-game check list).
+-- WoW Forever's own name for 6603 is "Attack" (Retail's is "Auto Attack"): the same swing, so the
+-- same ID on both clients (docs/seed-research/2026-11-25-forever/, build 1.60.1.71091).
 --
 -- LOAD-BEARING: reads NS.Compat (core/Compat.lua) at FILE SCOPE, and defaults/Profile.lua reads
 -- NS.IGNORE_SEEDS at FILE SCOPE, so this file sits between them.

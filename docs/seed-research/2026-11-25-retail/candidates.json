@@ -1,0 +1,514 @@
+{
+ "build": "12.1.5.70961",
+ "candidates": [],
+ "client": "retail",
+ "date": "2026-11-25",
+ "derived": {
+  "hearthstones": [
+   {
+    "id": 8690,
+    "name": "Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 39937,
+    "name": "There's No Place Like Home",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 48129,
+    "name": "Scroll of Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 54403,
+    "name": "Scourgestone",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 60320,
+    "name": "Scroll of Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 60321,
+    "name": "Scroll of Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 75136,
+    "name": "Ethereal Portal",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 94719,
+    "name": "The Innkeeper's Daughter",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 136508,
+    "name": "Dark Portal",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 171253,
+    "name": "Garrison Hearthstone",
+    "rules": [
+     "rule 3: by id"
+    ]
+   },
+   {
+    "id": 191329,
+    "name": "Hearthstone",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 222695,
+    "name": "Dalaran Hearthstone",
+    "rules": [
+     "rule 3: by id"
+    ]
+   },
+   {
+    "id": 231504,
+    "name": "Town Portal",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 231505,
+    "name": "Town Portal",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 278244,
+    "name": "Greatfather Winter's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 278559,
+    "name": "Headless Horseman's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 279066,
+    "name": "Weary Spirit Binding Return",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 279741,
+    "name": "Scroll of Luxurious Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 285362,
+    "name": "Lunar Elder's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 285424,
+    "name": "Peddlefeet's Lovely Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 286031,
+    "name": "Noble Gardener's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 286331,
+    "name": "Fire Eater's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 286353,
+    "name": "Brewfest Reveler's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 298068,
+    "name": "Holographic Digitalization Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 300047,
+    "name": "Mountebank's Colorful Cloak",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 308742,
+    "name": "Eternal Traveler's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 326064,
+    "name": "Ardenweald Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 340200,
+    "name": "Necrolord Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 342122,
+    "name": "Venthyr Sinstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 345393,
+    "name": "Kyrian Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 350944,
+    "name": "Town Portal",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 363799,
+    "name": "Dominated Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 366945,
+    "name": "Enlightened Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 367013,
+    "name": "Broker Translocation Matrix",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 375357,
+    "name": "Timewalker's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 391042,
+    "name": "Ohn'ir Windsage's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 401802,
+    "name": "Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 412555,
+    "name": "Path of the Naaru",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 420418,
+    "name": "Deepdweller's Earthen Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 422284,
+    "name": "Hearthstone of the Flame",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 431644,
+    "name": "Stone of the Hearth",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 438606,
+    "name": "Draenic Hologem",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 463481,
+    "name": "Notorious Thread's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1217281,
+    "name": "Redeployment Module",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1220729,
+    "name": "Explosive Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1240219,
+    "name": "P.O.S.T. Master's Express Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1242509,
+    "name": "Cosmic Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1250878,
+    "name": "Timerunner's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1254117,
+    "name": "Lightforged Phase Beacon",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1261979,
+    "name": "Lightcalled Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1270583,
+    "name": "Naaru's Enfold",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1270814,
+    "name": "Preyseeker's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1273401,
+    "name": "Corewarden's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1286909,
+    "name": "Mycomancer's Hearthspore",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1299014,
+    "name": "Mycomancer's Hearthspore",
+    "rules": [
+     "rule 1: ChargeCategory 2309"
+    ]
+   },
+   {
+    "id": 1299513,
+    "name": "Lightveil Hearth Beacon",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1310234,
+    "name": "Hiveborne Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1311934,
+    "name": "Shadeweaver's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   }
+  ]
+ },
+ "flags": [
+  {
+   "comment": "Wood-Cursed Hearthstone",
+   "id": 1310840,
+   "key": "shipped:unnamed:hearthstones:1310840",
+   "kind": "unnamed",
+   "list": "hearthstones",
+   "name": ""
+  }
+ ],
+ "ignore": {
+  "checked": [
+   {
+    "build": "Auto Attack",
+    "file": "Auto Attack",
+    "id": 6603,
+    "lanes": [
+     "player",
+     "pet"
+    ]
+   },
+   {
+    "build": "Auto Shot",
+    "file": "Auto Shot",
+    "id": 75,
+    "lanes": [
+     "player"
+    ]
+   },
+   {
+    "build": "Shoot",
+    "file": "Shoot",
+    "id": 5019,
+    "lanes": [
+     "player"
+    ]
+   }
+  ],
+  "lanes": {
+   "pet": [
+    6603
+   ],
+   "player": [
+    6603,
+    75,
+    5019
+   ]
+  }
+ },
+ "product": "wow",
+ "shipped": {
+  "hearthstones": 59,
+  "ignore": 3
+ },
+ "tool": "tools/seeds/seeds.py derive"
+}
