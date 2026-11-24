@@ -44,7 +44,9 @@ Start here, then read the docs:
 Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua` (the
 addon serves Retail and WoW Forever, so the suite runs under both kit profiles, clients-§6) and
 `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
-`luacheck` loads no kit, so it runs through the bounded runner, testing-§15). Never
+`luacheck` loads no kit, so it runs through the bounded runner, testing-§15), plus the seed tool's
+tests, `python3 -m pytest -q -p no:cacheprovider tools/seeds` (the seed contract,
+`docs/validate-seeds.md`, which supersedes DPS Race's). Never
 auto-stage/commit/push and never bump the version without an explicit instruction.
 
 This addon vendors **[LibKa0s](https://github.com/tusharsaxena/LibKa0s)** into `libs/LibKa0s/` and

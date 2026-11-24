@@ -21,13 +21,16 @@ Every suite run is bounded by the vendored kit as it loads (memory, time, proces
 
 ## The commit gate
 
-Before **every** commit, all four must hold:
+Before **every** commit, all five must hold:
 
 - `lua tests/run.lua` green;
 - `KA0S_KIT_CLIENT=forever lua tests/run.lua` green (the addon serves both clients, so the suite runs
   under both kit profiles);
 - bounded `luacheck .` at 0/0;
-- `lizard -C 15` over the authored tree with no warning.
+- `lizard -C 15` over the authored tree with no warning;
+- `python3 -m pytest -q -p no:cacheprovider tools/seeds` green (the seed tool's tests; without pytest,
+  `python3 -m unittest discover -s tools/seeds`). The seed contract is
+  [`validate-seeds.md`](validate-seeds.md).
 
 Work is test-first: a failing case that pins the behavior, then the code. The working tree is CRLF
 (line-endings-§2); a file written with LF fails `test_eol` until it is converted.

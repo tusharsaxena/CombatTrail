@@ -1,3 +1,5 @@
 .playwright-mcp/
 _dev/
 *.bak
+tools/seeds/.cache/
+__pycache__/
