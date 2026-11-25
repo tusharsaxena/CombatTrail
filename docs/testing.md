@@ -55,7 +55,9 @@ Work is test-first: a failing case that pins the behavior, then the code. The wo
   (`tests/mock_meter.lua`). `tests/mock_formatter.lua` scripts the client's number formatters (a
   truncating one, and one that passes a fraction through raw) and `AbbreviateNumbers`.
 - The suites start from a player who has seen the skin picker; `T.load({ loginPicker = true })`
-  keeps it unseen.
+  keeps it unseen. They also start with the Combat Log closed and its auto-open off (the shipped
+  defaults are open and on, owner feedback item 1), so the HUD suites keep their pinned heights;
+  `T.load({ logDrawer = true })` keeps the shipped log (the drawer's suites).
 - `KA0S_KIT_CLIENT=forever` loads the kit's WoW Forever client globals, so `NS.Compat.IsForever()`
   answers true and every Retail-only feature must be absent. Each per-client feature has a present
   test and an absent test.

@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_load.lua (13)
+### test_load.lua (16)
 
 - load: NS is the AceAddon object named CombatTrail
 - load: the identity constants
@@ -19,10 +19,13 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 4 and the fight record's format is 6
-- load: a schema 1 store loads empty at version 4, keeping the account's other state
+- load: the settings stamp is 7 and the fight record's format is 6
+- load: a schema 1 store loads empty at the current version, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
+- load: step 5 drops the Combat Log's retired keys in every profile, and keeps the rest
+- load: step 6 drops the HUD's auto-grow and the log window's attached state in every profile
+- load: step 7 carries each profile's lock to the lanes' own, so no lanes unlock by surprise
 
 ### test_loadorder.lua (5)
 
@@ -60,7 +63,7 @@ Total.
 - settings: Reset all settings puts every general row back
 - settings: library absent, the pages register nothing and the switch still writes
 
-### test_slash.lua (19)
+### test_slash.lua (21)
 
 - slash: help lists every verb spec §8 names
 - slash: help lists every COMMANDS verb this client has, in order
@@ -72,6 +75,8 @@ Total.
 - slash: disabled, each feature verb answers one refusal line; lane, ignore and dummy still act
 - slash: under the perf hold alone a feature verb answers the capture line
 - slash: lock and unlock write general.locked
+- slash: lock and unlock leave the lanes alone; lanes lock|unlock|toggle move them alone
+- slash: the help says lock is the HUD's and the windows' and lanes is the lanes'
 - slash: test turns test mode on and off
 - slash: `debug on`/`off` flip the session flag; bare `debug` toggles only the window
 - slash: `resetall` asks first, through the one popup
@@ -203,8 +208,8 @@ Total.
 - lane anchor: a secret host strata or level is never used
 - lane anchor: Edit Mode shows each lane's overlay and closing it hides them
 - lane anchor: the overlay's label takes the skin's Font outline (SD-SK-CT.8)
-- lane anchor: the Locked row keeps Edit Mode from showing the overlay
-- lane anchor: /ct unlock shows the overlay and /ct lock hides it
+- lane anchor: the lanes' own lock keeps Edit Mode from showing the overlay, the HUD's does not
+- lane anchor: /ct lanes unlock shows the overlay and /ct lanes lock hides it
 - lane anchor: an unlocked lane shows even when its visibility says never
 - lane anchor: the overlay is chrome over the icon band, mouse-live at MEDIUM or above
 - lane anchor: dragging a free lane saves its place
@@ -547,14 +552,15 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (20)
+### test_combat_log.lua (22)
 
-- combat log: a fight's casts, auras, hits, heals and boundaries are saved with its record
+- combat log: a fight's casts, auras, hits, heals and death are saved with its record, no boundary lines
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
 - combat log: the target's debuffs are only the player's, and a target change logs nothing
 - combat log: an aura on at the start is known when it falls off
 - combat log: a sealed aura and a sealed cast are no line; a sealed amount is saved as "s"
 - combat log: past `log.store.lines` only the newest are kept and the record counts the rest
+- combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)
 - combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is held to its range
 - combat log: a category not saved is no line and not counted as dropped
 - combat log: saving off keeps no log on the record; the log off registers nothing
@@ -568,6 +574,7 @@ Total.
 - combat log: a CT_SCHEMA 5 record reads with no log and still opens in the Results
 - combat log: a fight's log goes with it when retention purges the fight
 - combat log: a fight lost or skipped keeps no log waiting
+- combat log: a target swap mid-fight keeps the earlier rows' target, live and saved
 - combat log: a log at the cap stays under its stored-size ceiling
 
 ### test_usage.lua (11)
@@ -660,8 +667,9 @@ Total.
 - bests: Before is the best on the board fought before; Delta the verdict against it
 - bests: Delta works for fights too, and defaults its list to the store
 
-### test_retention.lua (14)
+### test_retention.lua (15)
 
+- retention: only the newest log.store.fights fights keep their log, bests included
 - retention: purge removes >7 days except bests
 - retention: a race holding a best survives the purge
 - retention: keepBests off lets an old best go
@@ -980,9 +988,9 @@ Total.
 - race window: attached with the HUD hidden it stands where the HUD would
 - race window: a HUD that drew once, hidden, is placed again for the window beside it
 - race window: docked LEFT or RIGHT it takes the DPS HUD's height
-- race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing
+- race window: the matched height takes the Combat Log drawer, open, chips hidden and closed, armed and racing
 - race window: the log detached, the HUD drops the drawer and the Race window follows it, armed and racing
-- race window: the detached log on the Race window's side stands beyond it, and back beside the HUD when it goes
+- race window: the detached log stands at its own place whatever the Race window does
 - race window: the matched height follows the HUD's resizes, its parts, the grip and the scale
 - race window: a HUD shorter than the window's minimum leaves the minimum
 - race window: TOP, BOTTOM, detached or the row off keep the window's own height
@@ -1153,7 +1161,7 @@ Total.
 - slices: a closed store takes no more reads, and only KEEP closed stores are held
 - slices: Drawable answers only a final record with plain damage and steps this session
 - slices: a secret fight is captured once a step, opaque, and its record finds the chart
-- slices: a fight the recording filters skip lets its store go, so it never holds a KEEP slot
+- slices: a skipped fight's store is held apart for its card, never in a KEEP slot, until the next skip
 - slices: no read before a session is bound, and those boundaries become holes
 - slices: a lost fight forgets its store, and the stand-down drops an open one
 - slices: Seed fills in the step, count and filled a store leaves out
@@ -1263,36 +1271,49 @@ Total.
 ### test_hud_layout.lua (9)
 
 - hud layout: the live body stacks the top, Damage profile, the pace bar, the plot, Spell breakdown
-- hud layout: the fight-over card stacks the same under its chips
+- hud layout: the fight-over card stacks the same, its chips in the reserved status line
 - hud layout: with the plot off the heading stays over the pace bar
 - hud layout: with nothing to pace against the plot sits right under its heading
-- hud layout: the defaults are DPS Race's sizes
-- hud layout: the window is 260 wide on DPS Race's insets, its height the stack's
+- hud layout: the defaults are DPS Race's sizes, 390 wide (the owner's)
+- hud layout: the window is 390 wide on DPS Race's insets, its height the stack's
 - hud layout: a spell row is 18 high in a 10 point face, its icon 16
 - hud layout: the clock draws DPS Race's 40 in the skin's face
 - hud layout: the settings' width floor is the HUD's
 
-### test_hud_sizing.lua (19)
+### test_hud_sizing.lua (17)
 
-- hud sizing: the defaults are fixed, 5 bars, grow down; spells.rows is retired
+- hud sizing: the defaults are 5 bars and 390 wide; spells.rows, sizeMode and grow are retired
 - hud sizing: the fixed height is derived from the bars, the same with 0, 3 or 20 spells
 - hud sizing: every part shown with a pet fills the fixed window exactly
 - hud sizing: a layout part switched off shrinks the fixed height, the bars stay
 - hud sizing: a pet appearing mid-fight keeps the fixed height and the bars
-- hud sizing: the fight-over card fits the fixed window, fewer rows and the wheel past them
+- hud sizing: the fight-over card fits the same window, its chips in the status line, the wheel past the rows
 - hud sizing: a grip release stores the width and the rounded bars, and the height snaps
 - hud sizing: while the grip is held the rows follow the drag and nothing is stored
 - hud sizing: the grip's bounds follow the parts shown
-- hud sizing: the grip is hidden while locked and in auto mode, and refuses a drag
+- hud sizing: the grip is hidden while locked, and refuses a drag
 - hud sizing: the wheel scrolls the live rows, clamped, and the note counts them
 - hud sizing: with every spell in view there is no scroll and no count
 - hud sizing: zero spells draws no row and keeps the HUD drawable
 - hud sizing: a new fight starts its rows at the top
-- hud sizing: auto mode grows with the rows up to the bars, then scrolls
-- hud sizing: grow down keeps the top in place, grow up the bottom
-- hud sizing: a stored point that already suits the grow edge is kept
-- hud sizing: switching the mode mid-fight redraws without error
-- hud sizing: grow up chosen before the window is built takes the bottom edge at its first show
+- hud sizing: a drag stores the top left, so a height change keeps the top in place
+- hud sizing: a stored point already on the top edge is kept
+- hud sizing: a stored point off the top edge (an older profile) takes the top left at the first show
+
+### test_hud_static.lua (12)
+
+- hud static: the chart stays on the card after a saved fight, the log closed
+- hud static: the chart stays on the card after a not saved fight, the log closed
+- hud static: the chart stays on the card after a saved fight, the log docked
+- hud static: the chart stays on the card after a not saved fight, the log docked
+- hud static: the chart stays on the card after a saved fight, the log detached
+- hud static: the chart stays on the card after a not saved fight, the log detached
+- hud static: a skipped fight's slices are held for its card, and the next skip lets them go
+- hud static: the default window is 390 wide and exactly tall enough for 5 bars and 10 log rows
+- hud static: the status line is reserved, so the card's chips never move Damage profile
+- hud static: only the log's open and close, a rows setting or the grip move the height
+- hud static: with the log docked open the grip's extra height goes to the log's rows, the bars kept
+- hud static: a whole fight with the log open, saved, then skipped, never moves the window
 
 ### test_hud_race_button.lua (31)
 
@@ -1328,47 +1349,56 @@ Total.
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
 
-### test_log_table.lua (22)
+### test_log_table.lua (29)
 
-- log table: a cast is yours in your class color, a pet's in the HUD's pet color
+- log table: a cast is a plain row with its spell, and no cell names a source or a target
 - log table: a long-cooldown cast wears the gold wash; washes off takes it away
 - log table: buffs green (off dimmed), a debuff you put on orange with its wash, on the target
-- log table: a hit on you is red with its school and Info; a heal green with a plus
+- log table: a hit on you is red with its school and Info; a heal green with a plus, reading Healing
 - log table: a sealed amount goes to the label as given, a saved one reads sealed
 - log table: the time column from the pull, past a minute and before it, or the clock
-- log table: the boundaries are muted rows with their words
+- log table: a heal reads Healing, never Physical (item 4)
+- log table: an old boundary line draws no tag and never shows (item 10)
 - log table: a multi-school mask takes its lowest school's color
 - log table: the categories, the auto attacks and the least amount decide what shows
 - log table feed: instant reveals every line, newest first; a scroll pauses and Resume follows
+- log table feed: the view's count moves on with the ring and always equals a full walk
 - log table feed: every N ms shows at most one line each N ms; batch shows them together
 - log table feed: the display throttle never drops a line from the saved log
-- log table columns: a narrow home drops Source first; a wide one with Info shows them all
+- log table feed: each pull clears the live view to the new fight, keeping its pre-pull floor
+- log table columns: Time, Event, Spell/School, Amount and Info where there is room; no Source or Target
+- log table columns: every column is centered, its header and its cells, in every home (item 8)
 - hud log: the title bar's Log control opens the drawer and the HUD grows by its height
 - hud log: the rows setting, 3 to 20, sizes the drawer
 - hud log: the drawer paints the newest fight's lines, newest at the top, and the Time header flips it
+- hud log: the chips show by default; the filter mark hides them, the HUD shrinking; a chip filters the drawer alone
 - hud log: the wheel pauses it, Resume follows again
-- hud log: folded it is one line with the newest event, and the HUD shrinks to it
+- hud log: the rows carry Spell breakdown's scroll indicator; the wheel moves it a line a notch
+- hud log: no fold: no chevron, no folded line, no key, no verb (item 14)
+- hud log: the drawer is a section like Spell breakdown: its heading, its count and marks, no seam (items 17, 18)
 - hud log: it hides and stops with the HUD, and comes back with it
 - hud log: a fight's start opens it when auto-open is on (the shipped default)
 - hud log: /ct log toggles it and opens the HUD with it
 - hud log: with the Combat Log off there is no control and no drawer
 
-### test_log_window.lua (14)
+### test_log_window.lua (16)
 
 - log window: the drawer's detach mark moves the log into its own window, and the HUD gives the drawer's height back
 - log window: the dock mark sends it back to the HUD, still open
 - log window: wider than the drawer, with the Info column
-- log window: it follows the HUD, hidden and back with it, unless pinned
+- log window: a standalone window, up whether or not the HUD is; no pin verb
 - log window: Escape and its close mark close the log; the HUD's hide does not
-- log window: attached LEFT beside the HUD by default, at the HUD's scale and height
+- log window: at its own place, scale and height by default, never beside the HUD
 - log window: its rows fill the height it has
 - log window: with fill off its rows are the rows setting, and the window is as tall as they are
-- log window: standing on its own it takes its saved place and scale; the attach mark lets it go
 - log window: a grip drag lays out cheaply and repaints nothing until its release, then stores the size
 - log window: it paints the newest fight's lines with their Info; the wheel pauses it, Resume follows
+- log window: its rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)
+- log window: its chips filter what it shows, for the session, seeded from What to show
+- log window: the chips take their room above the table, wrapping when narrow
 - log window: /ct log detach and dock move it; the HUD's Log control opens and closes it
 - log window: with the Combat Log off it never shows
-- log window: on WoW Forever there is no Race window, and it stands beside the HUD the same way
+- log window: on WoW Forever there is no Race window, and it stands at its own place the same way
 
 ### test_log_page.lua (15)
 
@@ -1382,7 +1412,7 @@ Total.
 - log page: the row height sizes the drawer, the HUD grows with it, and each row takes it
 - log page: the text size sets the rows' face, widens the fixed columns and the icon
 - log page: the detached window's rows follow the row height
-- log page: You takes its own swatch once Use class color is off; the targets theirs off the skin
+- log page: the who colors are still read into a view's context, and no cell draws them now
 - log page: You is a ColorPair with its class companion on; the targets are a palette, no class
 - log page: the detached window's gear opens the settings on this page
 - log page: /ct set reaches a log path
@@ -1469,24 +1499,24 @@ Total.
 
 ### test_results_log.lua (18)
 
-- results log: the detail has Overview, Timeline and Log tabs, Overview by default
-- results log: the Log tab replaces the Overview, and the tab shown stays from fight to fight
-- results log: the Timeline tab opens the timeline window and keeps the tab shown
-- results log: the Timeline tab is grayed and does nothing for a fight with no casts
+- results log: the detail has no tab strip, only the one scrolling page
+- results log: Log is a folding section under Targets, open by default
+- results log: the footer's Timeline button opens the timeline, grayed with no casts
+- results log: no Damage by spell, Overview's Spell breakdown the one spell list (owner feedback item 20)
 - results log: the saved log in the table, newest first, with the Info column
 - results log: the caption counts the lines the cap dropped
 - results log: the chips carry their counts and filter what is shown
 - results log: each fight opens on log.results.chips, the same fight drawn again keeps them
 - results log: the pure halves: counts, the order, the page, the least amount
-- results log: the Time header flips the sort, oldest first starting at the pull
+- results log: the Time header flips the sort, oldest first starting at the first event
 - results log: the wheel scrolls the list and stays on it
-- results log: Damage by spell draws the record's breakdown in the HUD's rows and order
-- results log: the panel stands beside the table on a wide tab and under it on a narrow one
+- results log: the rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)
+- results log: the table takes the section's width less the scroll's gutter, a page of the view
 - results log: a click on a CAST row opens the timeline at that cast
 - results log: log.results.jumpToCast off, a cast row's click does nothing
 - results log: the timeline's focus math keeps the view on the axis
 - results log: a fight saved before the log says No log was saved for this fight
-- results log: a Combat Log setting redraws a shown Log tab
+- results log: a Combat Log setting redraws an open Log section
 
 ### test_target_level.lua (12)
 
@@ -1867,9 +1897,10 @@ Total.
 - bindings: stood down, each key answers the refusal line and changes nothing
 - bindings: the General Defaults tooltip says it leaves key bindings alone
 
-### test_diagnostics.lua (9)
+### test_diagnostics.lua (10)
 
 - diagnostics: the report carries every section of this addon's own
+- diagnostics: the fight section names the Combat Log's capture and the events the client refused
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
 - diagnostics: Retail's race section names the race, the pending races, the boards and its windows
@@ -2057,11 +2088,11 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_load.lua | 13 |
+| test_load.lua | 16 |
 | test_loadorder.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
-| test_slash.lua | 19 |
+| test_slash.lua | 21 |
 | test_lane_casts.lua | 33 |
 | test_lane_layout.lua | 13 |
 | test_lane_render.lua | 41 |
@@ -2076,13 +2107,13 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 20 |
+| test_combat_log.lua | 22 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
 | test_filters.lua | 12 |
 | test_bests.lua | 21 |
-| test_retention.lua | 14 |
+| test_retention.lua | 15 |
 | test_record.lua | 18 |
 | test_race_record.lua | 16 |
 | test_race_scoring.lua | 20 |
@@ -2107,10 +2138,11 @@ Total.
 | test_hud_appearance.lua | 9 |
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
-| test_hud_sizing.lua | 19 |
+| test_hud_sizing.lua | 17 |
+| test_hud_static.lua | 12 |
 | test_hud_race_button.lua | 31 |
-| test_log_table.lua | 22 |
-| test_log_window.lua | 14 |
+| test_log_table.lua | 29 |
+| test_log_window.lua | 16 |
 | test_log_page.lua | 15 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
@@ -2140,7 +2172,7 @@ Total.
 | test_showcase.lua | 16 |
 | test_sample_names.lua | 2 |
 | test_bindings.lua | 14 |
-| test_diagnostics.lua | 9 |
+| test_diagnostics.lua | 10 |
 | test_skin_surfaces.lua | 5 |
 | test_docs.lua | 15 |
 | test_eol.lua | 2 |
@@ -2152,4 +2184,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1762** |
+| **Total** | **1790** |

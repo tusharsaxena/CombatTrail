@@ -29,12 +29,16 @@ events listed in ARCHITECTURE's *Event Subscriptions*.
 PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
   -> modules/Fight.lua  IDLE -> COMBAT; snapshots who and the target (modules/Identity.lua),
        sends FIGHT_STARTED(fight): Stats, Loadouts and Usage take their snapshots, Casts opens the
-       fight's cast list, the Combat Log opens the fight's capture and registers its events,
-       Slices opens the chart store, the HUD opens
-  UNIT_AURA (player, target) / UNIT_COMBAT (player) / PLAYER_DEAD / PLAYER_REGEN_ENABLED
+       fight's cast list, the Combat Log opens the fight's capture and registers its events and
+       moves its live window to the new fight (CombatLog.Window: from max(start - Casts.PREPULL,
+       the last fight's end) on, so the docked drawer and the detached window clear at each pull,
+       owner feedback item 5), Slices opens the chart store, the HUD opens
+  UNIT_AURA (player, target) / UNIT_COMBAT (player) / PLAYER_DEAD
   -> modules/CombatLog.lua  one line each into its ring (NS.Constants.LOG.RING, slots reused): an
        aura gained (added) or lost (its instance, mapped to its spell), a hit or heal with its school
-       and mark, a death, a combat end; a sealed aura or cast ID is no line, a sealed amount "s"
+       and mark, a death; no PULL or END line (owner feedback item 10: the pull is time 0.0, and an
+       old saved log's boundary lines are dropped at read time, CombatLog.IsBoundary); a sealed aura
+       or cast ID is no line, a sealed amount "s"
   DAMAGE_METER_COMBAT_SESSION_UPDATED / _CURRENT_SESSION_UPDATED (combat set)
   -> Fight binds the fight to the meter session that appeared after combat entry
        (Meter.SessionAfter), and merges a second session of the same encounter
@@ -98,6 +102,9 @@ FIGHT_ENDED
   -> db.global.fights[id], fightOrder; FIGHT_SAVED(record)
   -> Bests recomputes the board; Slices adopts the record id for the chart; the HUD's card shows
        Saved and New best; the Results window redraws
+  FIGHT_SKIPPED
+  -> Slices holds the skipped fight's chart outside its kept set until the next skip
+       (Slices.HoldSkipped), so a *Not saved* card keeps its chart (owner feedback item 7)
 ```
 
 `modules/Retention.lua` purges at login, every stand-up, once a day and on `/ct purge`: older than

@@ -217,14 +217,18 @@ window's clock, Best by now and checkpoints from that same read. The footer says
 Hz"). Its tooltip names the Race window on Retail only. The Clock and figures tab holds two font blocks, the clock's
 (`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
 and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
-tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600).
+tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600), default
+390 (owner feedback item 2). At 260 the docked log's four columns still fit: Time, Event and Amount
+take 134 px and three 4 px gaps, Spell / School at least 70, 216 in all against the 236 the narrowest
+HUD gives its content, so the log sets no width floor of its own (item 3).
 
-Layout's size rows (v0.2 Task B3): Window size picks Fixed (the default: the height holds Spell bars rows
-under every part the layout shows, and the HUD's bottom-right grip sets the width and the bars) or
-Auto-grow (the height follows the rows, up to Spell bars). Spell bars runs 1 to 15, default 5. Grow
-(Down, the default, or Up) is read by Auto-grow only, so it is drawn disabled in Fixed (`disabledIf`).
-Spells past the rows scroll with the mouse wheel in both. The Spell rows tab's old "Spell rows shown"
-row (`hud.spells.rows`) is retired into Spell bars.
+Layout's size rows: the window has one static height (owner feedback item 12), the sum of the parts the
+layout shows, Spell bars rows, and the docked log's rows while it is open; nothing a fight does moves
+it. The Window size row (Fixed or Auto-grow, `hud.sizeMode`) and Grow (`hud.grow`) are retired with
+schema step 6. Spell bars runs 1 to 15, default 5. The HUD's bottom-right grip sets the width and the
+rows: the log's (`log.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
+scroll with the mouse wheel. The Spell rows tab's old "Spell rows shown" row (`hud.spells.rows`) is
+retired into Spell bars.
 
 ### Behavior
 
@@ -366,11 +370,12 @@ have no texture row and always draw the skin's (AF-CT-TEX).
 Tabs: *Combat Log*, *Docked drawer*, *Detached window*, *Order and display*, *What to show*, *Colors*,
 *Storage*, *Results* (settings/Log.lua, `NS.LOG_TAB_ORDER`; CombatTrail #11, CL-11c2). Every row writes
 through `NS.SetByPath`, and its SETTINGS_CHANGED redraws whichever home is up: the DPS HUD's drawer (the
-HUD grows or shrinks with it), the detached window, and the Results fight detail's Log section. The log's
-own controls write the same rows: the HUD's Log control and `/ct log` (*Show the Combat Log*), the
-drawer's chevron (*Folded to one line*), its detach mark and the window's dock mark (*Where the log
-lives*), the window's attach mark (*Attach beside the DPS HUD*), `/ct log pin|unpin` (*Stay up while the
-HUD is hidden*) and a click on the Time header (*Sort order*). The detached window's place and size are
+HUD's one height changes with its rows and chips, owner feedback item 12), the detached window, and the
+Results fight detail's Log section. The log's own controls write the same rows: the HUD's Log control
+(the list mark) and `/ct log` (*Show the Combat Log*), the drawer's eye (*Show the filter chips*), its
+detach mark and the window's dock mark (*Where the log lives*), and a click on the Time header (*Sort
+order*). The drawer has no fold (item 14) and the window no attach or pin (item 11): their rows and
+keys went with schema steps 5 and 6. The detached window's place and size are
 its drag's and its grip's (`log.window.position`, `width`, `height`), with no row, so the page's
 Defaults leaves them where they are. The window's gear opens this page.
 
@@ -425,8 +430,8 @@ the drawer, the window and the Results Log section all take their heights from i
 ### What to show
 
 The live views' filter: the drawer and the window. These rows are the defaults of each view's chips
-(Casts, Pet, Buffs, Debuffs, Taken, Heals: the window's under its status line, the drawer's behind its
-header's filter mark). Each view seeds its chips from them when it is built, when the log is opened or
+(Casts, Pet, Buffs, Debuffs, Taken, Heals: the window's under its status line, the drawer's under its
+heading while *Show the filter chips* is on, the default). Each view seeds its chips from them when it is built, when the log is opened or
 moved, at each fight's start and at a write here; a click on a chip turns it in that view alone, for the
 session, and is never stored. What is saved is the Storage tab's, apart from it.
 A hit or a heal whose amount the client keeps secret is never compared, so *Least amount shown* never
@@ -452,7 +457,9 @@ The *Color-blind safety* group turns school colors and row washes off; every eve
 its tag. *Your color* is a ColorPair whose *Use class color* is on by default (the log has drawn "You" in
 the class color since it shipped). The two target colors are a palette, one per reaction, so they carry
 no class companion (options-ui-§17's exemption); each has *Use the skin's color* on by default, which
-draws the skin's `ct.log.hostile` or `ct.log.friendly`.
+draws the skin's `ct.log.hostile` or `ct.log.friendly`. Since the Source and Target columns went
+(owner feedback item 3), no cell draws these three colors: the rows and keys are kept until the owner
+rules whether they go (with a schema step) or come back on another cell.
 
 | Row | Key |
 |---|---|
@@ -714,7 +721,7 @@ X takes one off; 8690 says it stands for every hearthstone), then *Reset list* (
 Attached (on), the Race window stands flush against the DPS HUD on the side picked (right by default),
 its top or left edge level with the HUD's, and moves with it; off, it stands where its title bar was
 dragged to, and General's *Lock frame* holds it. *Match the DPS HUD's height* (on) applies on the left
-or right: the Race window takes the HUD's height and follows each HUD resize (the grip, auto-grow, a
+or right: the Race window takes the HUD's height and follows each HUD resize (the grip, the docked Combat Log opened or closed, a
 part or the title bar or footer shown or hidden), never shorter than the height its tallest screen
 needs. Above or below the HUD, detached, or with the row off, it keeps its own height. Both windows
 take the DPS HUD's scale, so equal heights line up.
