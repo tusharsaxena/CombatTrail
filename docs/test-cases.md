@@ -558,7 +558,7 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (31)
+### test_combat_log.lua (34)
 
 - combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
@@ -571,6 +571,9 @@ Total.
 - combat log: the diff's order is fixed: gains in walk order, then losses by instance
 - combat log: a refresh (updatedAuraInstanceIDs) is no line
 - combat log: an incomplete walk writes no line and leaves no false loss or gain after it
+- combat log: a sealed aura at the pull leaves the auras after it mapped (a fade logged, no false gain)
+- combat log: a full update for a new target before PLAYER_TARGET_CHANGED is silent
+- combat log: a target whose GUID cannot be read plain is never diffed
 - combat log: a target change is silent, and a new target is no burst of gains
 - combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key
 - combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown
@@ -1514,7 +1517,7 @@ Total.
 - detail: a fight with no targets (an older record) has no Targets section
 - detail: Targets rows skip a malformed entry and share out of what is listed
 
-### test_results_log.lua (18)
+### test_results_log.lua (19)
 
 - results log: the detail has no tab strip, only the one scrolling page
 - results log: Combat Sequence is a folding section under Targets, open by default
@@ -1533,6 +1536,7 @@ Total.
 - results log: log.results.jumpToCast off, a cast row's click does nothing
 - results log: the timeline's focus math keeps the view on the axis
 - results log: a fight saved before the log says No combat sequence was saved for this fight
+- results log: a fight whose saved log holds only retired lines says No combat sequence too
 - results log: a Combat Log setting redraws an open Log section
 
 ### test_target_level.lua (12)
@@ -2124,7 +2128,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 31 |
+| test_combat_log.lua | 34 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2164,7 +2168,7 @@ Total.
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
-| test_results_log.lua | 18 |
+| test_results_log.lua | 19 |
 | test_target_level.lua | 12 |
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 27 |
@@ -2201,4 +2205,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1807** |
+| **Total** | **1811** |

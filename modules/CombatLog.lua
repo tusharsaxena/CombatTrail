@@ -22,8 +22,10 @@ local _, NS = ...
 --     the current one (an instance only in the scratch map is a gain, one only in the current map a
 --     loss), gains first in walk order, then losses by ascending instance; then the two maps swap.
 --     AN INCOMPLETE WALK LOGS NOTHING (a sealed or unreadable aura, a raising read, AURA_LIMIT reached):
---     its entries are added to the current map with no line, so neither a false loss nor, on the next
---     complete diff, a false gain is drawn. A target change walks the new target silently.
+--     what it cannot read is skipped and the walk goes on, its entries are added to the current map
+--     with no line, so neither a false loss nor, on the next complete diff, a false gain is drawn. A
+--     target change walks the new target silently, and the target is diffed only while its plain GUID
+--     is the one its map was walked for (a full update for a new target can come before the change).
 --   * DEATHS: the player's (PLAYER_DEAD). The addon knows no target's death, so none is logged.
 -- RETIRED LINES. A log saved before this file's present shape may hold kinds nothing captures now: the
 -- fight's START and END (owner feedback item 10), HIT and HEAL (the Combat Sequence), and a BUFF± on the
@@ -112,6 +114,7 @@ local auras = { player = {}, target = {} }   -- the current maps: [auraInstanceI
 local spare = { player = {}, target = {} }   -- the diff's scratch maps, swapped with the current ones
 local order, orderN = {}, 0                  -- the last walk's new instances, in walk order (reused)
 local fades = {}                             -- a diff's lost instances, sorted (reused)
+local targetOf          -- the target's plain GUID when its map was last walked, or nil
 local frame             -- the event frame (nil until a fight first opens one)
 local registered = false
 local refused = {}      -- [event] = true: the client refused it this session
@@ -314,30 +317,45 @@ local function clear(map)
 end
 
 -- Whether a walked aura can be read whole: its table, its instance and its spell ID all plain. One
--- that cannot ends the walk as incomplete (its absence from the map would read as a loss).
-local function readable(aura)
+-- that cannot is skipped and makes the walk incomplete (its absence from the map would read as a
+-- loss). A target's aura the player and the pet plainly did not put on is never mapped, so it cannot
+-- make the walk incomplete either.
+local function readable(unit, aura)
     if Secrets.IsSealed(aura) or not Secrets.CanAccessTable(aura) then return false end
+    if unit == "target" and not fromMe(aura) then return true end
     return not Secrets.IsSealed(aura.auraInstanceID) and not Secrets.IsSealed(aura.spellId)
 end
 
 -- One filter of the unit walked into `map`, each new instance noted in walk order. Answers whether the
--- walk ran to the list's end (GetAuraDataByIndex answering nil) before AURA_LIMIT; a raise (WoW
--- Forever's sealed read, docs/forever-quirks.md) or an unreadable aura stops it incomplete.
+-- walk ran to the list's end (GetAuraDataByIndex answering nil) before AURA_LIMIT with every aura read.
+-- A raise (WoW Forever's sealed read, docs/forever-quirks.md) or an unreadable aura is skipped and the
+-- walk goes on, incomplete: every aura it can read is still mapped (a silent walk's map is whole but
+-- for the skipped ones).
 local function walkFilter(unit, map, get, filter)
-    local harmful = filter == "HARMFUL"
+    local harmful, complete = filter == "HARMFUL", true
     for i = 1, CombatLog.AURA_LIMIT do
         local ok, aura = pcall(get, unit, i, filter)
-        if not ok then return false end
-        if aura == nil then return true end
-        if not readable(aura) then return false end
-        local inst, v = mapped(unit, aura, harmful)
-        if inst and map[inst] == nil then
-            map[inst] = v
-            orderN = orderN + 1
-            order[orderN] = inst
+        if not ok or (aura ~= nil and not readable(unit, aura)) then
+            complete = false
+        elseif aura == nil then
+            return complete
+        else
+            local inst, v = mapped(unit, aura, harmful)
+            if inst and map[inst] == nil then
+                map[inst] = v
+                orderN = orderN + 1
+                order[orderN] = inst
+            end
         end
     end
     return false
+end
+
+-- The target's GUID now, plain, or nil (no target, or a sealed GUID: never compared).
+local function targetGUID()
+    if type(UnitGUID) ~= "function" then return nil end
+    local ok, g = pcall(UnitGUID, "target")
+    return ok and Secrets.PlainString(g) or nil
 end
 
 -- The unit's auras now into `map` (emptied first), every filter walked. Answers whether every filter's
@@ -345,6 +363,7 @@ end
 local function walkInto(unit, map)
     clear(map)
     orderN = 0
+    if unit == "target" then targetOf = targetGUID() end
     local get = api("GetAuraDataByIndex")
     if type(get) ~= "function" then return false end
     local complete = true
@@ -393,8 +412,14 @@ end
 
 -- A full update, or UNIT_AURA with no usable update info: the unit walked into its scratch map and
 -- compared with the current one, then the two swapped (never reallocated). An incomplete walk draws
--- no line: its entries join the current map, which keeps the rest.
+-- no line: its entries join the current map, which keeps the rest. The target is diffed only when its
+-- plain GUID is the one its map was walked for; else (a new target whose PLAYER_TARGET_CHANGED has not
+-- come yet, or a GUID that cannot be read plain) it is walked silently.
 local function diff(unit, at)
+    if unit == "target" then
+        local g = targetGUID()
+        if g == nil or g ~= targetOf then return walk(unit) end
+    end
     local cur, new = auras[unit], spare[unit]
     if not walkInto(unit, new) then
         for inst, v in pairs(new) do cur[inst] = v end
@@ -521,6 +546,7 @@ local function clearMaps()
         clear(auras[unit])
         clear(spare[unit])
     end
+    targetOf = nil
 end
 
 --- Make the registrations match: the events while a fight's capture is open, else none.

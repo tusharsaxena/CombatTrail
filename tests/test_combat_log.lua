@@ -19,10 +19,11 @@ local FIGHT = { damage = 40000, dps = 1000, duration = 40,
 local FIREBALL, PYROBLAST, BITE = 133, 11366, 17253
 local INTELLECT, POLY, IGNITE, MARK = 1459, 118, 12654, 1126
 local HASTE, CURSE = 2825, 980
+local TARGET_A, TARGET_B = "Creature-0-1-1-1-100-0000000A", "Creature-0-1-1-1-200-0000000B"
 
 -- A fresh instance on the scripted meter, the auras on each unit scripted by `m.__unitAuras`
--- ([unit][filter] = { aura, ... }; `m.__auraRaise` [unit .. filter] = an index whose read raises), and
--- a receiver for the saved fights.
+-- ([unit][filter] = { aura, ... }; `m.__auraRaise` [unit .. filter] = an index whose read raises), a
+-- target (TARGET_A, its GUID in `m.__unitGUIDs.target`), and a receiver for the saved fights.
 local function fresh(o)
     o = o or {}
     local meter
@@ -31,6 +32,7 @@ local function fresh(o)
         m.__unitAuras = { player = { HELPFUL = {}, HARMFUL = {} }, target = { HELPFUL = {}, HARMFUL = {} } }
         m.__auraReads = {}
         m.__auraRaise = {}
+        m.__unitGUIDs.target = TARGET_A
         m.C_UnitAuras.GetAuraDataByIndex = function(unit, i, filter)
             m.__auraReads[#m.__auraReads + 1] = unit .. ":" .. filter
             if m.__auraRaise[unit .. filter] == i then error("sealed read", 0) end
@@ -367,7 +369,7 @@ end
 test("combat log: an incomplete walk writes no line and leaves no false loss or gain after it", function()
     local restore = T.installSecretValue()
     local ok, err = pcall(function()
-        -- A sealed aura mid-list: HASTE after it is unread.
+        -- A sealed aura mid-list: skipped, HASTE after it still read; the walk is incomplete.
         local NS, r = incomplete(function(i)
             onUnit(i, "player", "HELPFUL", { buff(1, INTELLECT), T.secret({}), buff(2, HASTE) })
         end)
@@ -399,6 +401,81 @@ test("combat log: an incomplete walk writes no line and leaves no false loss or 
         onUnit(i, "player", "HELPFUL", many)
     end, true)
     assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "AURA_LIMIT reached: no gain and no loss logged")
+end)
+
+test("combat log: a sealed aura at the pull leaves the auras after it mapped (a fade logged, no false gain)", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local function pulled()
+            return fresh{ mutate = function(m)
+                m.__unitAuras.player.HELPFUL = { T.secret({}), { auraInstanceID = 2, spellId = HASTE, isHelpful = true } }
+                m.__unitAuras.target.HARMFUL = {
+                    { auraInstanceID = T.secret(80), spellId = 589, isHarmful = true, isFromPlayerOrPlayerPet = false },
+                    { auraInstanceID = 81, spellId = IGNITE, isHarmful = true, isFromPlayerOrPlayerPet = true } }
+            end }
+        end
+        -- (a) the buff after the sealed aura fades through removedAuraInstanceIDs: logged.
+        local inst, meter, saved = pulled()
+        local NS = inst.NS
+        local r = fightThrough(inst, meter, saved, 40, function(i)
+            aura(i, 12, "player", { removedAuraInstanceIDs = { 2 } })
+        end)
+        -- red under: "" (the walk stopped at the sealed aura, HASTE unmapped)
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "BUFF_OFF:" .. HASTE, "the fade of a buff after a sealed one")
+        -- (b) the sealed aura gone, a complete diff finds nothing new; someone else's sealed debuff on
+        -- the target never made the target walk incomplete, so the DoT's fade there is a diff's loss.
+        inst, meter, saved = pulled()
+        NS = inst.NS
+        r = fightThrough(inst, meter, saved, 40, function(i)
+            onUnit(i, "player", "HELPFUL", { buff(2, HASTE) })
+            aura(i, 12, "player", nil)
+            onUnit(i, "target", "HARMFUL", {})
+            aura(i, 13, "target", { isFullUpdate = true })
+        end)
+        -- red under: BUFF_ON HASTE (a false gain mid-fight)
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. IGNITE, "no false gain; the DoT's fade logged")
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
+test("combat log: a full update for a new target before PLAYER_TARGET_CHANGED is silent", function()
+    local inst, meter, saved = fresh{ mutate = function(m)
+        m.__unitAuras.target.HARMFUL = { { auraInstanceID = 70, spellId = IGNITE, isHarmful = true, isFromPlayerOrPlayerPet = true } }
+    end }
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        i.mocks.__unitGUIDs.target = TARGET_B
+        onUnit(i, "target", "HARMFUL", { debuff(71, CURSE, true) })
+        aura(i, 12, "target", { isFullUpdate = true })
+        at(i, 13)
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        -- The map is the new target's now: its DoT's fade is a diff's loss.
+        onUnit(i, "target", "HARMFUL", {})
+        aura(i, 14, "target", { isFullUpdate = true })
+    end)
+    -- red under: DEBUFF_ON CURSE, DEBUFF_OFF IGNITE (a burst across the change), then DEBUFF_OFF CURSE
+    assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE, "no burst across the change")
+end)
+
+test("combat log: a target whose GUID cannot be read plain is never diffed", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst, meter, saved = fresh{ mutate = function(m)
+            m.__unitGUIDs.target = T.secret(TARGET_A)
+            m.__unitAuras.target.HARMFUL = { { auraInstanceID = 70, spellId = IGNITE, isHarmful = true, isFromPlayerOrPlayerPet = true } }
+        end }
+        local NS = inst.NS
+        local r = fightThrough(inst, meter, saved, 40, function(i)
+            onUnit(i, "target", "HARMFUL", { debuff(71, CURSE, true) })
+            aura(i, 12, "target", { isFullUpdate = true })
+            aura(i, 13, "target", { removedAuraInstanceIDs = { 71 } })
+        end)
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE,
+            "the full update walked silently; the update info's loss still logged")
+    end)
+    restore()
+    if not ok then error(err, 0) end
 end)
 
 test("combat log: a target change is silent, and a new target is no burst of gains", function()

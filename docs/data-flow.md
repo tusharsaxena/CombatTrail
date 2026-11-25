@@ -40,8 +40,9 @@ PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
        on a full update, with no update info, or with sealed or unreadable info, the unit is walked
        into a scratch map and diffed against its map: gains in walk order, then fades by ascending
        instance ID, the maps swapped (Forever-safe); an incomplete walk (a sealed aura or ID, a
-       raising read, AURA_LIMIT) writes no line and merges what it read; a target change and the
-       pull's walk stay silent; a death; no PULL or END line (owner feedback item 10: the pull is
+       raising read, AURA_LIMIT) skips what it cannot read, writes no line and merges what it read;
+       the target is diffed only while its plain GUID is the one its map was walked for (else it is
+       walked silently); a target change and the pull's walk stay silent; a death; no PULL or END line (owner feedback item 10: the pull is
        time 0.0, and an old saved log's retired kinds and target-buff lines are dropped at read
        time, CombatLog.IsRetired); a sealed aura or cast ID is no line
   DAMAGE_METER_COMBAT_SESSION_UPDATED / _CURRENT_SESSION_UPDATED (combat set)

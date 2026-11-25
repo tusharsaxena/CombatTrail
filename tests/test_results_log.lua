@@ -402,6 +402,18 @@ test("results log: a fight saved before the log says No combat sequence was save
     assertFalse(g.hint:IsShown())
 end)
 
+test("results log: a fight whose saved log holds only retired lines says No combat sequence too", function()
+    local NS = fresh()
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    save(NS, rec(NS, { id = "retired", log = { { t = 0, k = K.START }, { t = 1, k = K.HIT, u = U.player, a = 9 },
+        { t = 2, k = K.HEAL, u = U.player, a = 9 }, { t = 3, k = K.BUFF_ON, id = MARK, u = U.target },
+        { t = 4, k = K.END } } }))
+    local _, g = logTab(NS, "retired")
+    assertTrue(g.none:IsShown(), "the empty state, not an empty table")
+    assertFalse(g.table.frame:IsShown(), "no table")
+    for _, b in pairs(g.chips) do assertFalse(b:IsShown(), "no chips") end
+end)
+
 test("results log: a Combat Log setting redraws an open Log section", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
