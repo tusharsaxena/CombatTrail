@@ -1,12 +1,12 @@
 local _, NS = ...
 -- settings/Log.lua — the Combat Log page (CombatTrail #11, plan item CL-11c2; the spec's addendum,
 -- *Settings*): eight tabs over every `log.*` key a player chooses, in strip order Combat Log (the
--- master switch, the log open now, opened at each fight's start, where it lives), Docked drawer (the
--- fold, its rows, the folded line), Detached window (its rows, where it stands, pinned, lock, scale,
--- opacity), Order and display (the sort, the display throttle, the rows' text size and height, the
+-- master switch, the log open now, opened at each fight's start, where it lives), Docked drawer (its
+-- filter chips, its rows), Detached window (its rows, its lock, scale and opacity; a standalone
+-- window, owner feedback item 11, so no attach, side, HUD-height match or pin), Order and display (the sort, the display throttle, the rows' text size and height, the
 -- time, the columns), What to show (the live views' categories, the auto attacks, the least amount),
 -- Colors (school colors, row washes, the who colors), Storage (a log with each fight, the lines kept,
--- the categories saved) and Results (the Log tab's chips, the jump to the Timeline). The keys are
+-- the categories saved) and Results (the Log section's chips, the jump to the Timeline). The keys are
 -- modules/CombatLog.lua's, modules/LogTable.lua's, modules/LogTable_View.lua's, modules/Hud_Log.lua's,
 -- modules/LogWindow.lua's and modules/Results_Log.lua's (defaults/Profile.lua).
 --
@@ -14,7 +14,7 @@ local _, NS = ...
 -- geometry, which only its drag and its grip choose (written raw, as the Race window's own place is).
 --
 -- WRITES: every row writes through the seam (NS.SetByPath), whose SETTINGS_CHANGED on a `log.` path
--- the drawer (a HUD refresh), the detached window (a relayout) and the Results Log tab (a redraw)
+-- the drawer (a HUD refresh), the detached window (a relayout) and the Results Log section (a redraw)
 -- answer, so no row carries an onChange. A fight freezes its Storage settings at its start, so a
 -- change there takes hold from the next fight (CombatLog's capture).
 
@@ -46,7 +46,6 @@ local function choices(...)
 end
 
 local HOMES, HOME_OK = choices("docked", L["Docked in the DPS HUD"], "detached", L["In its own window"])
-local SIDES, SIDE_OK = choices("LEFT", L["Left"], "RIGHT", L["Right"], "TOP", L["Top"], "BOTTOM", L["Bottom"])
 local SORTS, SORT_OK = choices("newest", L["Newest first"], "oldest", L["Oldest first"])
 local THROTTLES, THROTTLE_OK = choices(
     "instant", L["Instant"], "every", L["At most one row every N ms"], "batch", L["In batches every N ms"])
@@ -90,13 +89,11 @@ row("home", { type = "string", label = L["Where the log lives"], values = HOMES,
 
 -- Docked drawer
 at(TAB.drawer, L["Docked drawer"])
-row("drawer.collapsed", { type = "bool", label = L["Folded to one line"], startsLine = true,
-    tooltip = L["Fold the drawer to its header and one line. The chevron in the drawer's header folds and unfolds it too."] })
-row("drawer.strip", { type = "bool", label = L["The folded line shows the newest event"],
-    tooltip = L["While the drawer is folded, show the newest event under its header. Off, the folded drawer is its header alone."] })
+row("drawer.chips", { type = "bool", label = L["Show the filter chips"], startsLine = true,
+    tooltip = L["Show the Casts, Pet, Buffs, Debuffs, Taken and Heals chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] })
 row("drawer.rows", { type = "number", label = L["Rows shown"], min = NS.HudLog.MIN_ROWS, max = NS.HudLog.MAX_ROWS,
     step = 1, startsLine = true,
-    tooltip = L["How many events the unfolded drawer shows at a time. The DPS HUD grows by the drawer's height."] })
+    tooltip = L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] })
 
 -- Detached window
 at(TAB.window, L["Rows"])
@@ -106,22 +103,12 @@ row("window.rows", { type = "number", label = L["Rows shown"], min = NS.LogWindo
     step = 1, disabledIf = function() return on("log.window.fill") end,
     tooltip = L["How many events the window shows at a time. Needs Fill the window with rows off."] })
 at(TAB.window, L["Place"])
-row("window.attached", { type = "bool", label = L["Attach beside the DPS HUD"], startsLine = true,
-    tooltip = L["Stand the window flush beside the DPS HUD, moving with it. Off, it stands where you drag it. Its title bar's attach mark switches it too."] })
-row("window.side", { type = "string", label = L["Side of the DPS HUD"], values = SIDES, validate = SIDE_OK,
-    disabledIf = function() return not on("log.window.attached") end,
-    tooltip = L["Which side of the DPS HUD the attached window stands on. On the same side as the Race window, it stands beyond the Race window, so the two never overlap. Needs Attach beside the DPS HUD."] })
-row("window.matchHud", { type = "bool", label = L["Match the DPS HUD's height"], startsLine = true,
-    disabledIf = function() return not on("log.window.attached") end,
-    tooltip = L["Attached on the left or the right, take the DPS HUD's height, its drawer and its fold included. Off, the window keeps its own height."] })
-row("window.pinned", { type = "bool", label = L["Stay up while the HUD is hidden"],
-    tooltip = L["Keep the window up when the DPS HUD hides or fades. Off, it shows and hides with the HUD, as the Race window does."] })
 row("window.locked", { type = "bool", label = L["Lock the window"], startsLine = true,
     tooltip = L["Stop the window from being dragged or resized. General > Master controls' Lock frame locks it too."] })
 at(TAB.window, L["Look"])
 row("window.scale", { type = "number", label = L["Window scale"], min = 0.5, max = 2, step = 0.05, isPercent = true,
     startsLine = true,
-    tooltip = L["The size of the window standing on its own. Attached, it takes the DPS HUD's scale."] })
+    tooltip = L["The size of the window, its text included."] })
 row("window.alpha", { type = "number", label = L["Window opacity"], min = 0.1, max = 1, step = 0.05, isPercent = true,
     tooltip = L["How opaque the window is, its background and its text together, over the DPS HUD's own opacity."] })
 
@@ -148,12 +135,8 @@ row("view.timeFormat", { type = "string", label = L["Time"], values = TIMES, val
 at(TAB.display, L["Columns"])
 row("view.columns.info", { type = "bool", label = L["Show the Info column"], startsLine = true,
     tooltip = L["Show Critical, Glancing, Crushing and Interrupted in their own column, where there is room: the detached window and the Results fight detail."] })
-row("view.columns.source", { type = "bool", label = L["Show the Source column"], startsLine = true,
-    tooltip = L["Show who did it. Time and Event always show. A narrow log drops Source first."] })
-row("view.columns.target", { type = "bool", label = L["Show the Target column"],
-    tooltip = L["Show who it landed on. A narrow log drops Target after Source."] })
 row("view.columns.spell", { type = "bool", label = L["Show the Spell/School column"], startsLine = true,
-    tooltip = L["Show the spell and its icon, or the school of a hit or a heal."] })
+    tooltip = L["Show the spell and its icon, the school of a hit, or Healing for a heal. Time and Event always show."] })
 row("view.columns.amount", { type = "bool", label = L["Show the Amount column"],
     tooltip = L["Show the amount of each hit and heal."] })
 
@@ -195,25 +178,25 @@ for _, r in ipairs(H.ColorPair({
     prefix = "log.colors.", page = PAGE, group = group, subgroup = subgroup, classColor = { source = "player" },
     key = "you", companionKey = "useClassColorYou", label = L["Your color"], colorFromSkin = false,
     defaults = { you = D.colors.you, useClassColorYou = D.colors.useClassColorYou },
-    tooltips = { you = L["The color \"You\" is drawn in, in Source and Target."] },
+    tooltips = { you = L["The color kept for \"You\". No part of the log draws it now."] },
 })) do
     r.composed = true
     out[#out + 1] = r
 end
 at(TAB.colors, L["Targets"])
 row("colors.hostile", { type = "color", hasAlpha = false, label = L["Hostile target color"], startsLine = true,
-    tooltip = L["The color of a target you can attack. Not read while Use the skin's color is on."] })
+    tooltip = L["The color kept for a target you can attack. No part of the log draws it now."] })
 row("colors.hostileFromSkin", { type = "bool", label = L["Use the skin's color"],
-    tooltip = L["Draw a hostile target in the skin's own color. The swatch is not read while this is on."] })
+    tooltip = L["Take the hostile target color from the skin. The swatch is not read while this is on."] })
 row("colors.friendly", { type = "color", hasAlpha = false, label = L["Friendly target color"], startsLine = true,
-    tooltip = L["The color of a target you cannot attack. Not read while Use the skin's color is on."] })
+    tooltip = L["The color kept for a target you cannot attack. No part of the log draws it now."] })
 row("colors.friendlyFromSkin", { type = "bool", label = L["Use the skin's color"],
-    tooltip = L["Draw a friendly target in the skin's own color. The swatch is not read while this is on."] })
+    tooltip = L["Take the friendly target color from the skin. The swatch is not read while this is on."] })
 
 -- Storage
 at(TAB.store, L["Storage"])
 row("store.enabled", { type = "bool", label = L["Save a log with each fight"], startsLine = true,
-    tooltip = L["Keep each stored fight's Combat Log, for the Log tab of its Results detail. Takes hold from the next fight."] })
+    tooltip = L["Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."] })
 row("store.lines", { type = "number", label = L["Lines kept per fight"], min = LOG.MIN_PER_FIGHT, max = LOG.MAX_LINES,
     step = 50, startsLine = true,
     tooltip = L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] })
@@ -233,13 +216,13 @@ for i, c in ipairs(SAVED) do
 end
 
 -- Results
-at(TAB.results, L["Log tab"])
+at(TAB.results, L["Log section"])
 row("results.jumpToCast", { type = "bool", label = L["Jump to the Timeline on clicking a cast"], startsLine = true,
-    tooltip = L["A click on a CAST row on a fight's Log tab opens the ability timeline at that cast."] })
+    tooltip = L["A click on a CAST row on a fight's Log section opens the ability timeline at that cast."] })
 at(TAB.results, L["Chips each fight opens on"])
 for i, chip in ipairs(NS.ResultsLog.CHIPS) do
     row("results.chips." .. chip.key, { type = "bool", label = L[chip.label], startsLine = i % 2 == 1 or nil,
-        tooltip = L["Turn this chip on when a fight's Log tab opens. A click on the chip still turns it on or off for the fight shown."] })
+        tooltip = L["Turn this chip on when a fight's Log section opens. A click on the chip still turns it on or off for the fight shown."] })
 end
 
 -- One running order, so a composed block (which numbers its own rows) sorts where it is declared.

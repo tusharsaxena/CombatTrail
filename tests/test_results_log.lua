@@ -1,11 +1,11 @@
--- tests/test_results_log.lua — the Results fight detail's tabs and its Log tab (CombatTrail #11, plan
--- item CL-11c; the spec's addendum, home C): Overview, Timeline and Log along the pane's top, the
--- session's tab kept from fight to fight; Timeline a way into its own window, grayed with no casts;
--- the Log tab's saved log in the shared table with the Info column, the chips and their counts, a chip
--- turning its lines off, the sort and the wheel; Damage by spell in the HUD's spell rows, beside the
--- table on a wide tab and under it on a narrow one; a click on a CAST row opening the timeline at that
--- cast (zoomed, the moment in the middle, the focus line), and its switch; and a fight saved before
--- the log saying "No log was saved for this fight". Runs under both kit profiles.
+-- tests/test_results_log.lua — the Results fight detail's Log section (CombatTrail #11, plan item
+-- CL-11c; the spec's addendum, home C; owner feedback items 19 and 20): no tab strip, one scrolling
+-- page with Log as a folding section under Targets, open by default; the Timeline reached by the
+-- footer's button, grayed with no casts; the section's saved log in the shared table with the Info
+-- column, the chips and their counts, a chip turning its lines off, the sort and the wheel; no Damage
+-- by spell (Overview's Spell breakdown is the one spell list); a click on a CAST row opening the
+-- timeline at that cast (zoomed, the moment in the middle, the focus line), and its switch; and a fight
+-- saved before the log saying "No log was saved for this fight". Runs under both kit profiles.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -33,8 +33,9 @@ local function pack(NS, list)
     return NS.CastCodec.Encode(casts)
 end
 
--- A saved log (oldest first): the pull, two casts of yours, the pet's, a buff, a debuff on the target,
--- two hits taken (one small, one sealed), a heal, a death, the end.
+-- A saved log (oldest first) as one saved before owner feedback item 10: the pull's line, two casts of
+-- yours, the pet's, a buff, a debuff on the target, two hits taken (one small, one sealed), a heal, a
+-- death, the end's line. The two boundary lines stay on disk and are dropped at read time.
 local function savedLog(NS)
     local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
     return {
@@ -70,6 +71,7 @@ local function rec(NS, o)
             { spellID = BITE, total = 10000, isPet = true } }),
         casts = not o.noCasts and pack(NS, { { 0.5, FIREBALL }, { 2, BITE, true }, { 30.5, FROSTBOLT } }) or nil,
         log = not o.noLog and (o.log or savedLog(NS)) or nil, logDropped = o.logDropped,
+        targets = { { name = "Bluegill Raider", total = 60000 } },
     }
 end
 
@@ -79,13 +81,14 @@ end
 
 local function click(b) b:GetScript("OnClick")(b, "LeftButton") end
 
--- The Results window on fight `id` (collapsed: the detail in the list's place), its Log tab shown.
+-- The Results window on fight `id` (collapsed: the detail in the list's place), and its Log section.
 local function logTab(NS, id)
     assertTrue(NS.Results.ShowFight(id))
     local pane = NS.Results.__ui().detail
-    click(pane.tabs.log)
     return pane, pane.log
 end
+
+local function top(region) return select(5, region:GetPoint(1)) end
 
 -- The Event column's text of every row on screen, top down.
 local function events(g)
@@ -96,73 +99,84 @@ local function events(g)
     return table.concat(out, ",")
 end
 
--- ── the tabs ────────────────────────────────────────────────────────────────────────────────────
+-- ── one page, no tabs (owner feedback item 19) ─────────────────────────────────────────────────
 
-test("results log: the detail has Overview, Timeline and Log tabs, Overview by default", function()
-    local NS = fresh()
-    save(NS, rec(NS, { id = "a" }))
-    assertTrue(NS.Results.ShowFight("a"))
-    local pane = NS.Results.__ui().detail
-    assertEqual(#NS.ResultsDetail.TABS, 3)
-    for _, name in ipairs({ "overview", "timeline", "log" }) do
-        assertTrue(pane.tabs[name]:IsShown(), name .. " tab shown")
-    end
-    assertEqual(pane.tabs.overview.label:GetText(), "Overview")
-    assertEqual(pane.tabs.timeline.label:GetText(), "Timeline")
-    assertEqual(pane.tabs.log.label:GetText(), "Log")
-    assertEqual(NS.ResultsDetail.Tab(), "overview")
-    assertTrue(pane.scrollFrame:IsShown(), "Overview: today's detail")
-    assertFalse(pane.log.frame:IsShown(), "the Log tab hidden")
-    assertTrue(pane.tabs.overview.underline:IsShown())
-    assertFalse(pane.tabs.log.underline:IsShown())
-end)
-
-test("results log: the Log tab replaces the Overview, and the tab shown stays from fight to fight", function()
-    local NS = fresh()
-    save(NS, rec(NS, { id = "a" }), rec(NS, { id = "b" }))
-    local pane, g = logTab(NS, "a")
-    assertEqual(NS.ResultsDetail.Tab(), "log")
-    assertTrue(g.frame:IsShown())
-    assertFalse(pane.scrollFrame:IsShown(), "the Overview is hidden on the Log tab")
-    assertTrue(pane.tabs.log.underline:IsShown())
-    assertTrue(NS.Results.ShowFight("b"))
-    assertEqual(NS.ResultsDetail.Tab(), "log", "kept on another fight")
-    assertTrue(g.frame:IsShown())
-    click(pane.tabs.overview)
-    assertTrue(pane.scrollFrame:IsShown())
-    assertFalse(g.frame:IsShown())
-end)
-
-test("results log: the Timeline tab opens the timeline window and keeps the tab shown", function()
+test("results log: the detail has no tab strip, only the one scrolling page", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local pane = logTab(NS, "a")
-    assertFalse(NS.ResultsTimeline.IsShown())
-    click(pane.tabs.timeline)
-    assertTrue(NS.ResultsTimeline.IsShown(), "the tab is the window's way in")
-    assertEqual(NS.ResultsDetail.Tab(), "log", "the tab shown is kept")
-    NS.ResultsTimeline.Hide()
+    assertNil(NS.ResultsDetail.TABS, "no tab list")
+    assertNil(NS.ResultsDetail.Tab, "no tab shown")
+    assertNil(pane.tabs, "no tab buttons")
+    assertNil(pane.tabRule, "no tab rule")
+    assertNil(pane.ShowTab, "no tab switch")
+    assertTrue(pane.scrollFrame:IsShown(), "the page")
 end)
 
-test("results log: the Timeline tab is grayed and does nothing for a fight with no casts", function()
+test("results log: Log is a folding section under Targets, open by default", function()
     local NS = fresh()
-    save(NS, rec(NS, { id = "none", noCasts = true }))
-    assertTrue(NS.Results.ShowFight("none"))
-    local pane = NS.Results.__ui().detail
-    assertFalse(pane:ShowTab("timeline"))
-    click(pane.tabs.timeline)
-    assertFalse(NS.ResultsTimeline.IsShown())
-    assertEqual(pane.tabs.timeline.tipLine, "This fight has no casts to draw.")
-    assertEqual(NS.ResultsDetail.Tab(), "overview")
+    save(NS, rec(NS, { id = "a" }))
+    local pane, g = logTab(NS, "a")
+    local D = NS.ResultsDetail
+    local order = table.concat(D.SECTIONS, ",")
+    assertTrue(order:find("targets,log", 1, true) ~= nil, "after Targets: " .. order)
+    assertEqual(g.title:GetText(), "Log")
+    assertEqual(g.title:GetParent(), pane.content, "in the scrolling page")
+    assertEqual(g.title:GetFont(), pane.targets.title:GetFont(), "the sections' gold heading")
+    assertTrue(top(g.title) < top(pane.targets.title), "under Targets")
+    assertEqual(top(g.title), top(pane.targets.title) - NS.Style.SECTION_H - NS.ResultsTargets.ROW_H - 8
+        - NS.Style.SECTION_GAP, "the section after Targets' one row")
+    local arrow = pane.heads.log
+    assertTrue(arrow:IsShown())
+    assertEqual(arrow.iconName, "chevron-down", "open")
+    assertFalse(D.IsCollapsed("log"), "open by default")
+    assertTrue(g.frame:IsShown(), "its body")
+    assertTrue(g.table.frame:IsShown(), "the table")
+    for _, b in pairs(g.chips) do assertTrue(b:IsShown(), "the chips") end
+    click(arrow)
+    assertTrue(D.IsCollapsed("log"), "the fold is stored")
+    assertFalse(g.frame:IsShown(), "folded: the heading alone")
+    assertEqual(arrow.iconName, "chevron-right")
+    click(arrow)
+    assertTrue(g.frame:IsShown())
 end)
 
--- ── the Log tab ─────────────────────────────────────────────────────────────────────────────────
+test("results log: the footer's Timeline button opens the timeline, grayed with no casts", function()
+    local NS = fresh()
+    save(NS, rec(NS, { id = "a" }), rec(NS, { id = "none", noCasts = true }))
+    local pane = logTab(NS, "a")
+    assertFalse(NS.ResultsTimeline.IsShown())
+    click(pane.w.timeline)
+    assertTrue(NS.ResultsTimeline.IsShown(), "the button is the window's way in")
+    NS.ResultsTimeline.Hide()
+    logTab(NS, "none")
+    assertFalse(pane.canTimeline, "no casts: grayed")
+    click(pane.w.timeline)
+    assertFalse(NS.ResultsTimeline.IsShown())
+end)
+
+test("results log: no Damage by spell, Overview's Spell breakdown the one spell list (owner feedback item 20)", function()
+    local NS = fresh()
+    save(NS, rec(NS, { id = "a" }))
+    local pane, g = logTab(NS, "a")
+    assertNil(g.spells, "no spell rows in the Log section")
+    assertNil(g.spellsTitle, "no Damage by spell heading")
+    assertNil(g.spellsHost)
+    assertNil(NS.ResultsLog.Beside, "the side panel's layout is gone")
+    assertNil(NS.ResultsLog.SIDE_W)
+    assertNil(NS.L and rawget(NS.L, "Damage by spell"), "its words are gone")
+    assertEqual(pane.w.spellsTitle:GetText(), "Spell breakdown")
+    assertEqual(#pane.w.list:Rows(), 3, "the Overview's breakdown is drawn")
+end)
+
+-- ── the Log section ─────────────────────────────────────────────────────────────────────────────────
 
 test("results log: the saved log in the table, newest first, with the Info column", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
-    assertEqual(events(g), "END,DIES,CAST,HEAL,HIT,HIT,DEBUFF+,CAST,BUFF+,CAST,PULL", "every line, newest at the top")
+    -- red under: the old PULL and END lines drawn (owner feedback item 10)
+    assertEqual(events(g), "DIES,CAST,HEAL,HIT,HIT,DEBUFF+,CAST,BUFF+,CAST", "every event, newest at the top")
     local keys = {}
     for _, col in ipairs(g.table.cols) do keys[#keys + 1] = col.key end
     assertTrue(table.concat(keys, ","):find("info", 1, true) ~= nil, "the Info column: " .. table.concat(keys, ","))
@@ -171,15 +185,14 @@ test("results log: the saved log in the table, newest first, with the Info colum
         if r:IsShown() and r.text.amount:GetText() == "sealed" then sealed = true end
     end
     assertTrue(sealed, "a sealed amount reads sealed")
-    assertEqual(g.title:GetText(), "Bluegill Raider \194\183 level 29 \194\183 1:00")
-    assertEqual(g.caption:GetText(), "11 lines")
+    assertEqual(g.caption:GetText(), "9 lines", "the boundaries are not counted")
 end)
 
 test("results log: the caption counts the lines the cap dropped", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a", logDropped = 40 }))
     local _, g = logTab(NS, "a")
-    assertEqual(g.caption:GetText(), "11 lines \194\183 40 not kept")
+    assertEqual(g.caption:GetText(), "9 lines \194\183 40 not kept")
 end)
 
 test("results log: the chips carry their counts and filter what is shown", function()
@@ -192,13 +205,13 @@ test("results log: the chips carry their counts and filter what is shown", funct
     for key in pairs(want) do assertEqual(g.chips[key].styleName, "primary", key .. " on") end
     click(g.chips.taken)
     assertEqual(g.chips.taken.styleName, "normal", "off")
-    assertEqual(events(g), "END,DIES,CAST,HEAL,DEBUFF+,CAST,BUFF+,CAST,PULL", "the hits are hidden")
+    assertEqual(events(g), "DIES,CAST,HEAL,DEBUFF+,CAST,BUFF+,CAST", "the hits are hidden")
     click(g.chips.casts)
     click(g.chips.pet)
-    assertEqual(events(g), "END,DIES,HEAL,DEBUFF+,BUFF+,PULL")
-    assertEqual(#NS.CombatLog.Of(NS.Recorder.Get("a")), 11, "a chip never changes what is saved")
+    assertEqual(events(g), "DIES,HEAL,DEBUFF+,BUFF+")
+    assertEqual(#NS.CombatLog.Of(NS.Recorder.Get("a")), 11, "a chip, or the read-time filter, never changes what is saved")
     click(g.chips.taken)
-    assertEqual(events(g), "END,DIES,HEAL,HIT,HIT,DEBUFF+,BUFF+,PULL")
+    assertEqual(events(g), "DIES,HEAL,HIT,HIT,DEBUFF+,BUFF+")
 end)
 
 test("results log: each fight opens on log.results.chips, the same fight drawn again keeps them", function()
@@ -226,32 +239,33 @@ test("results log: the pure halves: counts, the order, the page, the least amoun
     assertEqual(c.taken, 2)
     local chips = RL.DefaultChips({})
     local order = {}
-    assertEqual(RL.Order(log, chips, {}, "oldest", order), 11)
-    assertEqual(order[1], 1, "oldest first: the pull on top")
+    assertEqual(RL.Order(log, chips, {}, "oldest", order), 9, "the two old boundary lines left out")
+    assertEqual(order[1], 2, "oldest first: the first event on top, not the pull's line")
     local nNew = RL.Order(log, chips, {}, "newest", order)
-    assertEqual(order[1], 11)
+    assertEqual(order[1], 10)
     local page = {}
     assertEqual(RL.Page(order, nNew, 2, 3, "newest", page), 3)
-    assertEqual(table.concat(page, ","), "9,8,7")
+    assertEqual(table.concat(page, ","), "8,7,6")
     RL.Order(log, chips, {}, "oldest", order)
-    RL.Page(order, 11, 0, 3, "oldest", page)
-    assertEqual(table.concat(page, ","), "3,2,1", "handed over newest first, as View:Draw takes them")
-    assertEqual(RL.Order(log, chips, { minAmount = 50 }, "newest", order), 10, "the 42 hit is under the least")
+    RL.Page(order, 9, 0, 3, "oldest", page)
+    assertEqual(table.concat(page, ","), "4,3,2", "handed over newest first, as View:Draw takes them")
+    assertEqual(RL.Order(log, chips, { minAmount = 50 }, "newest", order), 8, "the 42 hit is under the least")
     local sealedShown
-    for i = 1, 10 do if log[order[i]].a == "s" then sealedShown = true end end
+    for i = 1, 8 do if log[order[i]].a == "s" then sealedShown = true end end
     assertTrue(sealedShown, "a sealed amount is never compared: it shows")
-    assertEqual(RL.Order(log, chips, { deaths = false }, "newest", order), 10, "deaths follow log.show.deaths")
+    assertEqual(RL.Order(log, chips, { deaths = false }, "newest", order), 8, "deaths follow log.show.deaths")
+    assertEqual(RL.Lines(log), 9, "the events, never the boundaries")
     assertEqual(RL.MaxOffset(11, 4), 7)
     assertEqual(RL.MaxOffset(2, 4), 0)
 end)
 
-test("results log: the Time header flips the sort, oldest first starting at the pull", function()
+test("results log: the Time header flips the sort, oldest first starting at the first event", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     g.table.sorter:GetScript("OnClick")(g.table.sorter)
     assertEqual(NS.GetSetting("log.view.sort"), "oldest")
-    assertEqual(events(g), "PULL,CAST,BUFF+,CAST,DEBUFF+,HIT,HIT,HEAL,CAST,DIES,END")
+    assertEqual(events(g), "CAST,BUFF+,CAST,DEBUFF+,HIT,HIT,HEAL,CAST,DIES")
 end)
 
 test("results log: the wheel scrolls the list and stays on it", function()
@@ -275,33 +289,41 @@ test("results log: the wheel scrolls the list and stays on it", function()
     assertEqual(shown, g.rows, "the last page is full")
 end)
 
-test("results log: Damage by spell draws the record's breakdown in the HUD's rows and order", function()
+test("results log: the rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)", function()
     local NS = fresh()
-    save(NS, rec(NS, { id = "a" }))
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    local long = {}
+    for i = 1, 60 do long[#long + 1] = { t = i * 0.5, k = K.CAST, id = FIREBALL, u = U.player } end
+    save(NS, rec(NS, { id = "a", log = long }))
     local _, g = logTab(NS, "a")
-    assertEqual(g.spellsTitle:GetText(), "Damage by spell")
-    local rows = g.spells:Rows()
-    assertEqual(#rows, 3)
-    assertEqual(rows[1].spellID, FIREBALL, "highest first")
-    assertEqual(rows[3].spellID, BITE)
-    assertTrue(rows[3].isPet, "the pet's row in the HUD's pet color")
-    assertFalse(rows[1].isPet)
+    local view, S = g.table, NS.HudStates
+    assertEqual(NS.ResultsLog.SCROLL, 1, "one line a notch")
+    assertTrue(view.scroll.on and view.thumb:IsShown(), "60 lines past the page: shown")
+    local h = g.rows * NS.LogTable.RowH()
+    assertEqual(view.scroll.thumbH, math.max(S.THUMB_MIN, math.floor(h * g.rows / 60 + 0.5)))
+    assertEqual(view.scroll.dy, 0, "the top page")
+    assertEqual(view.scroll.x, g.tableW + S.THUMB_GAP, "in the gutter the table leaves")
+    assertTrue(view.scroll.x + S.THUMB_W <= g.tableW + NS.ResultsLog.GUTTER, "inside the section's width")
+    for _ = 1, 100 do view:Wheel(-1) end
+    assertEqual(view.scroll.dy, h - view.scroll.thumbH, "the last page: at the bottom")
+    save(NS, rec(NS, { id = "b" }))
+    local _, g2 = logTab(NS, "b")
+    assertFalse(g2.table.scroll.on, "a log that fits: no indicator")
 end)
 
-test("results log: the panel stands beside the table on a wide tab and under it on a narrow one", function()
+test("results log: the table takes the section's width less the scroll's gutter, a page of the view", function()
     local NS = fresh()
     local RL = NS.ResultsLog
-    assertFalse(RL.Beside(416), "the expanded view's 440 px detail")
-    assertTrue(RL.Beside(RL.SIDE_MIN))
     save(NS, rec(NS, { id = "a" }))
     local pane, g = logTab(NS, "a")
     pane:Layout(800, 500, true)
-    assertTrue(g.beside, "beside")
-    assertEqual(g.tableW, 800 - 2 * NS.ResultsDetail.PADX - RL.SIDE_W - RL.GAP)
+    assertEqual(g.tableW, 800 - 2 * NS.ResultsDetail.PADX - RL.GUTTER)
     pane:Layout(440, 500, false)
-    assertFalse(g.beside, "under")
-    assertEqual(g.tableW, 440 - 2 * NS.ResultsDetail.PADX, "the table takes the width")
-    assertTrue(#g.spells:Rows() <= RL.UNDER_ROWS)
+    assertEqual(g.tableW, 440 - 2 * NS.ResultsDetail.PADX - RL.GUTTER)
+    assertTrue(g.rows <= RL.RowsFor(pane.viewH, NS.Style.SECTION_H), "a page of the view, less the chips")
+    assertEqual(RL.RowsFor(10, 0), RL.ROWS_MIN, "a short view keeps the fewest rows")
+    pane:Layout(440, 2000, false)
+    assertTrue(g.rows > RL.ROWS_MIN, "a tall view: more rows")
 end)
 
 test("results log: a click on a CAST row opens the timeline at that cast", function()
@@ -366,10 +388,10 @@ test("results log: a fight saved before the log says No log was saved for this f
     assertFalse(g.hint:IsShown())
 end)
 
-test("results log: a Combat Log setting redraws a shown Log tab", function()
+test("results log: a Combat Log setting redraws an open Log section", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     NS.SetByPath("log.view.sort", "oldest")
-    assertEqual(events(g):sub(1, 4), "PULL", "the write-through sort redrew it")
+    assertEqual(events(g):sub(1, 4), "CAST", "the write-through sort redrew it")
 end)

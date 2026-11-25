@@ -18,7 +18,8 @@
 --   logCast    one cast handed in by the lanes' listener (inside laneCast, so no bracket of its own)
 --   busyFight  a busy fight's beat: two casts, two hits, a heal and an aura gained and lost
 --   logPaint      (CL-11b) the DPS HUD's docked Combat Log drawer open: a busy beat, then one repaint
---                 tick (modules/Hud_Log.lua's HudLog.Paint), eight rows painted
+--                 tick (modules/Hud_Log.lua's HudLog.Paint), ten rows painted (the default since
+--                 owner feedback item 16) and the scroll indicator's count moved on by the new lines
 --   logPaintIdle  one repaint tick with nothing new: no paint at all
 --   logPlaceIdle  (CL-REV) the drawer's place at a HUD beat that moved nothing (HudLog.Place, which
 --                 the HUD's render calls on every live beat): compared field by field, no allocation
@@ -32,6 +33,9 @@
 -- logPaint, measured 2026-11-25 (CL-11b): 9,520 bytes per iteration, all of it the kit's widget
 -- recorder (48 bytes for each SetText and SetVertexColor a row's paint makes, measured on its own);
 -- the cells, the time and amount strings and the labels' paint allocate 0 once warm. logPaintIdle: 0.
+-- Re-measured 2026-11-25 (CLF-2): 6,992 bytes with ten rows (5,696 with eight, at adbef0d): the two
+-- rows' recorder bytes; the scroll indicator's count (LogTable.Count) allocates nothing once its slots
+-- are reused, and an indicator that did not move places nothing. The ceiling holds.
 
 local root = (arg and arg[0] and arg[0]:match("^(.*)/tests/perf%.lua$")) or "."
 package.path = root .. "/tests/?.lua;" .. package.path
@@ -208,7 +212,7 @@ NS.Perf.on = false
 measure("logCast", N, logCast)
 measure("busyFight", N, busyFight)
 -- The DPS HUD's docked drawer open (CL-11b, modules/Hud_Log.lua): one repaint tick after a busy beat
--- (seven new lines, eight rows painted), and one with nothing new, which repaints nothing at all.
+-- (seven new lines, ten rows painted), and one with nothing new, which repaints nothing at all.
 NS.Hud.Show()
 NS.HudLog.SetShown(true)
 local drawer = NS.HudLog.__ui()

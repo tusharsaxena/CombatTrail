@@ -119,7 +119,7 @@ end
 
 -- ── the capture, end to end ─────────────────────────────────────────────────────────────────────
 
-test("combat log: a fight's casts, auras, hits, heals and boundaries are saved with its record", function()
+test("combat log: a fight's casts, auras, hits, heals and death are saved with its record, no boundary lines", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
     local K, U, F = NS.CombatLog.KIND, NS.CombatLog.UNIT, NS.CombatLog.FLAG
@@ -140,27 +140,29 @@ test("combat log: a fight's casts, auras, hits, heals and boundaries are saved w
     assertTrue(r ~= nil, "the fight was saved")
     assertEqual(r.schema, 6)
     local log, dropped = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "START,CAST,CAST,BUFF_ON,DEBUFF_ON,HIT,HEAL,DEBUFF_OFF,BUFF_OFF,DIES,END")
+    -- red under: the PULL and END boundary lines captured (owner feedback item 10)
+    assertEqual(kinds(NS, log), "CAST,CAST,BUFF_ON,DEBUFF_ON,HIT,HEAL,DEBUFF_OFF,BUFF_OFF,DIES")
     assertEqual(dropped, 0)
     assertNil(r.logDropped, "nothing dropped: no field")
-    assertEqual(log[1].t, 0)
-    assertEqual(log[2].t, 2)
-    assertEqual(log[2].id, FIREBALL)
-    assertEqual(log[2].u, U.player)
-    assertEqual(log[3].t, 3, "to the tenth")
-    assertEqual(log[3].u, U.pet)
-    assertEqual(log[4].id, INTELLECT)
-    assertEqual(log[4].u, U.player)
-    assertEqual(log[5].id, IGNITE)
-    assertEqual(log[5].u, U.target)
-    assertEqual(log[6].a, 1200)
-    assertEqual(log[6].s, 4, "the school")
-    assertEqual(log[6].f, F.CRIT)
-    assertEqual(log[7].k, K.HEAL)
-    assertEqual(log[7].a, 800)
-    assertNil(log[7].f)
-    assertEqual(log[8].id, IGNITE, "a loss names the spell its instance was given for")
-    assertEqual(log[11].t, 40, "the combat end")
+    assertEqual(log[1].t, 2, "timed from the pull, still 0.0")
+    assertEqual(log[1].id, FIREBALL)
+    assertEqual(log[1].u, U.player)
+    assertEqual(log[2].t, 3, "to the tenth")
+    assertEqual(log[2].u, U.pet)
+    assertEqual(log[3].id, INTELLECT)
+    assertEqual(log[3].u, U.player)
+    assertEqual(log[4].id, IGNITE)
+    assertEqual(log[4].u, U.target)
+    assertEqual(log[5].a, 1200)
+    assertEqual(log[5].s, 4, "the school")
+    assertEqual(log[5].f, F.CRIT)
+    assertEqual(log[6].k, K.HEAL)
+    assertEqual(log[6].a, 800)
+    assertNil(log[6].f)
+    assertEqual(log[7].id, IGNITE, "a loss names the spell its instance was given for")
+    for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
+        assertTrue(not NS.CombatLog.IsBoundary(NS.CombatLog.Line(n)), "no boundary line in the ring either")
+    end
     for _, e in ipairs(log) do
         for key, v in pairs(e) do
             assertTrue(type(v) == "number" or v == NS.CombatLog.SEALED, key .. " is a number (or the sealed mark)")
@@ -177,7 +179,7 @@ test("combat log: a pre-pull cast is kept at a negative time; an auto attack rea
         cast(i, 13, "player", FIREBALL)
     end)
     local log = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "CAST,START,CAST,END")
+    assertEqual(kinds(NS, log), "CAST,CAST")
     assertEqual(log[1].t, -5)
     assertEqual(log[1].id, PYROBLAST)
     local autos = 0
@@ -204,11 +206,11 @@ test("combat log: the target's debuffs are only the player's, and a target chang
         aura(i, 16, "focus", { addedAuras = { { auraInstanceID = 40, spellId = 1, isHelpful = true } } })
     end)
     local log = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "START,BUFF_ON,DEBUFF_ON,BUFF_OFF,END",
+    assertEqual(kinds(NS, log), "BUFF_ON,DEBUFF_ON,BUFF_OFF",
         "someone else's debuff and the focus are no line; the new target's buff ends with a loss")
-    assertEqual(log[2].id, MARK)
-    assertEqual(log[3].id, POLY, "the pet's debuff counts as the player's")
-    assertEqual(log[4].id, 21562, "the new target's aura, walked at the change, is known when it goes")
+    assertEqual(log[1].id, MARK)
+    assertEqual(log[2].id, POLY, "the pet's debuff counts as the player's")
+    assertEqual(log[3].id, 21562, "the new target's aura, walked at the change, is known when it goes")
 end)
 
 test("combat log: an aura on at the start is known when it falls off", function()
@@ -220,8 +222,8 @@ test("combat log: an aura on at the start is known when it falls off", function(
         aura(i, 20, "player", { removedAuraInstanceIDs = { 3, 99 } })
     end)
     local log = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "START,BUFF_OFF,END", "an unknown instance is no line")
-    assertEqual(log[2].id, INTELLECT)
+    assertEqual(kinds(NS, log), "BUFF_OFF", "an unknown instance is no line")
+    assertEqual(log[1].id, INTELLECT)
 end)
 
 -- ── secrets ─────────────────────────────────────────────────────────────────────────────────────
@@ -240,16 +242,16 @@ test("combat log: a sealed aura and a sealed cast are no line; a sealed amount i
             hit(i, 16, T.secret("WOUND"), 900)
         end)
         local log = NS.CombatLog.Of(r)
-        assertEqual(kinds(NS, log), "START,HIT,END", "only the hit, its amount sealed")
-        assertEqual(log[2].a, NS.CombatLog.SEALED)
-        assertEqual(log[2].f, NS.CombatLog.FLAG.GLANCING)
+        assertEqual(kinds(NS, log), "HIT", "only the hit, its amount sealed")
+        assertEqual(log[1].a, NS.CombatLog.SEALED)
+        assertEqual(log[1].f, NS.CombatLog.FLAG.GLANCING)
         local live
         for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
             local e = NS.CombatLog.Line(n)
             if e and e.k == NS.CombatLog.KIND.HIT then live = e end
         end
         assertTrue(T.isSecret(live.x), "the ring keeps the client's value for display")
-        assertNil(log[2].x, "never saved")
+        assertNil(log[1].x, "never saved")
     end)
     restore()
     if not ok then error(err, 0) end
@@ -265,11 +267,12 @@ test("combat log: past `log.store.lines` only the newest are kept and the record
         for n = 1, 250 do hit(i, 11 + n * 0.1, "WOUND", n) end
     end)
     local log, dropped = NS.CombatLog.Of(r)
+    -- red under: a boundary line taking one of the cap's slots (item 10: the cap counts events alone)
     assertEqual(#log, 100)
-    assertEqual(log[#log].k, NS.CombatLog.KIND.END, "the newest kept")
-    assertEqual(log[1].a, 152, "hits 152 to 250, then the end")
-    assertEqual(dropped, 151)
-    assertEqual(r.logDropped, 151)
+    assertEqual(log[#log].a, 250, "the newest kept")
+    assertEqual(log[1].a, 151, "hits 151 to 250")
+    assertEqual(dropped, 150)
+    assertEqual(r.logDropped, 150)
 end)
 
 test("combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)", function()
@@ -292,13 +295,13 @@ test("combat log: heavy unsaved traffic never costs the saved log its lines (eac
     assertTrue(NS.CombatLog.Seq() > 3 * C.RING, "the ring wrapped several times over")
     local log, dropped = NS.CombatLog.Of(r)
     assertEqual(#log, C.MAX_LINES, "the log reaches `lines` however much else the ring held")
-    assertEqual(log[#log].k, NS.CombatLog.KIND.END, "the newest kept")
-    for i = 1, #log - 1 do
+    assertEqual(log[#log].k, NS.CombatLog.KIND.CAST, "the newest kept")
+    for i = 1, #log do
         if log[i].k ~= NS.CombatLog.KIND.CAST or log[i].id ~= FIREBALL then
             error("line " .. i .. " is not a saved cast", 0)
         end
     end
-    assertEqual(dropped, 1500 - (C.MAX_LINES - 1), "only the casts the cap left out are counted")
+    assertEqual(dropped, 1500 - C.MAX_LINES, "only the casts the cap left out are counted")
 end)
 
 test("combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is held to its range", function()
@@ -326,7 +329,7 @@ test("combat log: a category not saved is no line and not counted as dropped", f
         cast(i, 15, "player", FIREBALL)
     end)
     local log, dropped = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "START,HEAL,CAST,END")
+    assertEqual(kinds(NS, log), "HEAL,CAST")
     assertEqual(dropped, 0)
 end)
 
@@ -355,7 +358,7 @@ test("combat log: the settings are frozen at the fight's start", function()
         NS.db.profile.log.store.categories.hits = false
         hit(i, 12, "WOUND", 10)
     end)
-    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "START,HIT,END")
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "HIT")
 end)
 
 test("combat log: the storage keys have their shipped defaults", function()
@@ -381,6 +384,7 @@ test("combat log: its events are registered only while a fight is open, for play
     assertTrue(inFight.UNIT_AURA ~= nil and inFight.UNIT_COMBAT ~= nil and inFight.PLAYER_DEAD ~= nil)
     assertTrue(inFight.units.UNIT_AURA.player and inFight.units.UNIT_AURA.target, "UNIT_AURA for player and target")
     assertTrue(inFight.units.UNIT_COMBAT.player and not inFight.units.UNIT_COMBAT.target, "UNIT_COMBAT for player only")
+    assertNil(inFight.PLAYER_REGEN_ENABLED, "no combat end is heard: it was only the END line (item 10)")
     assertEqual(next(unitRegs(inst)), nil, "the fight ended: nothing registered")
     for _, r in ipairs(inst.mocks.__registrations()) do
         assertTrue(r.event ~= "COMBAT_LOG_EVENT_UNFILTERED", "never the combat log")
@@ -414,7 +418,7 @@ test("combat log: a client that refuses UNIT_COMBAT costs only it, and the diagn
     assertNil(regs.UNIT_COMBAT)
     assertTrue(regs.UNIT_AURA ~= nil)
     assertEqual(table.concat(NS.CombatLog.Diagnose().refused, ","), "UNIT_COMBAT")
-    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "START,BUFF_ON,END")
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "BUFF_ON")
 end)
 
 test("combat log: the combatLog perf bucket is reached by its events", function()
@@ -507,7 +511,7 @@ test("combat log: a fight lost or skipped keeps no log waiting", function()
     assertEqual(#saved, 0, "too short to store")
     assertNil(NS.CombatLog.LiveStart(), "no capture left open")
     local r = fightThrough(inst, meter, saved, 40, function(i) hit(i, 102, "WOUND", 10) end, nil, 100, 2)
-    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "START,HIT,END", "the short fight's lines are not this one's")
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "HIT", "the short fight's lines are not this one's")
 end)
 
 -- ── which target ────────────────────────────────────────────────────────────────────────────────
@@ -537,44 +541,32 @@ test("combat log: a target swap mid-fight keeps the earlier rows' target, live a
         aura(i, 17, "target", { addedAuras = { { auraInstanceID = 10, spellId = POLY, isHarmful = true,
                                                  isFromPlayerOrPlayerPet = true } } })
     end)
-    -- Live: the target now is gone, and the ring's lines still name theirs.
-    inst.mocks.__unitExists.target = false
-    local ctx, c = LT.LiveContext({}, 10), {}
+    -- The data keeps each line's own target (its `g`), though no column draws it now (item 3).
+    local function who(list, g)
+        local t = list[g]
+        return t.name .. (t.friendly and "/friendly" or "/hostile")
+    end
     local live = {}
     for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
         local e = NS.CombatLog.Line(n)
         if e and (e.k == K.DEBUFF_ON or e.k == K.BUFF_ON) and e.u == NS.CombatLog.UNIT.target then
-            LT.Cells(e, ctx, c)
-            live[#live + 1] = c.target .. "/" .. c.targetColor
+            live[#live + 1] = who(NS.CombatLog.Targets(), e.g)
         end
     end
-    assertEqual(table.concat(live, ","),
-        "Angry Boar/ct.log.hostile,Stormwind Guard/ct.log.friendly,Angry Boar/ct.log.hostile")
+    assertEqual(table.concat(live, ","), "Angry Boar/hostile,Stormwind Guard/friendly,Angry Boar/hostile")
     -- Saved: the record's own target list, each name once per reaction.
     local log, _, targets = NS.CombatLog.Of(r)
     assertEqual(#targets, 2, "Angry Boar once, Stormwind Guard once")
     assertEqual(r.logTargets, targets)
-    local rctx = NS.ResultsLog.Context(r, {})
     local got = {}
     for _, e in ipairs(log) do
-        if e.u == NS.CombatLog.UNIT.target then
-            LT.Cells(e, rctx, c)
-            got[#got + 1] = c.target .. "/" .. c.targetColor
-        end
+        if e.u == NS.CombatLog.UNIT.target then got[#got + 1] = who(targets, e.g) end
     end
-    assertEqual(table.concat(got, ","),
-        "Angry Boar/ct.log.hostile,Stormwind Guard/ct.log.friendly,Angry Boar/ct.log.hostile")
-end)
-
-test("combat log: a saved line with no target of its own reads as the record's target, hostile", function()
-    local NS = T.load().NS
-    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
-    local record = { t = 0, identity = { targetName = "Training Dummy" },
-                     log = { { t = 1, k = K.DEBUFF_ON, id = IGNITE, u = U.target } } }
-    local c = NS.LogTable.Cells(record.log[1], NS.ResultsLog.Context(record, {}), {})
-    assertEqual(c.target, "Training Dummy")
-    assertEqual(c.targetColor, "ct.log.hostile")
-    assertNil(select(3, NS.CombatLog.Of(record)), "no target list")
+    assertEqual(table.concat(got, ","), "Angry Boar/hostile,Stormwind Guard/friendly,Angry Boar/hostile")
+    -- And no cell names a source or a target.
+    local c = LT.Cells(log[1], NS.ResultsLog.Context(r, {}), {})
+    assertNil(c.source)
+    assertNil(c.target)
 end)
 
 -- ── the stored size ─────────────────────────────────────────────────────────────────────────────

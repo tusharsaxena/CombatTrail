@@ -225,10 +225,11 @@ modules\Hud_Chart.lua
 # The HUD's bodies: capture NS.Style and NS.Secrets at FILE SCOPE.
 modules\Hud_States.lua
 # The Combat Log's table (CombatTrail #11): its cells, filter and feed, then its frames. LOAD-BEARING:
-# modules\LogTable.lua captures NS.CombatLog's KIND, UNIT and FLAG and NS.L at FILE SCOPE, so it follows
+# modules\LogTable.lua captures NS.CombatLog's KIND and FLAG and NS.L at FILE SCOPE, so it follows
 # modules\CombatLog.lua; modules\LogTable_View.lua extends NS.LogTable and captures NS.Style there.
-# The HUD's docked drawer: captures NS.LogTable, NS.CombatLog and NS.Style and builds its bus receiver
-# at FILE SCOPE; reaches NS.Hud at CALL time only.
+# The HUD's docked drawer: captures NS.LogTable, NS.CombatLog, NS.Style and NS.HudStates (its section
+# heading's line and gap, so it follows modules\Hud_States.lua) and builds its bus receiver at FILE
+# SCOPE; reaches NS.Hud at CALL time only.
 modules\LogTable.lua
 modules\LogTable_View.lua
 modules\Hud_Log.lua
@@ -282,8 +283,9 @@ modules\Results_Loadout.lua
 modules\Results_Usage.lua
 modules\Results_Targets.lua
 modules\Results_RaceDetail.lua
-# The detail's Log tab (CL-11c): captures NS.Style, NS.LogTable and NS.CombatLog at FILE SCOPE;
-# reaches NS.ResultsFights, NS.Recorder, NS.HudBreakdown and NS.ResultsTimelineData at CALL time only.
+# The detail's Log section (CL-11c, owner feedback item 19): captures NS.Style, NS.LogTable, NS.CombatLog
+# and NS.HudStates (the scroll indicator's sizes, owner feedback item 6) at FILE SCOPE;
+# reaches NS.ResultsTimelineData at CALL time only.
 modules\Results_Log.lua
 modules\Results_Detail.lua
 modules\Share.lua

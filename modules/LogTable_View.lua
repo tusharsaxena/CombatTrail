@@ -1,18 +1,24 @@
 local _, NS = ...
 -- modules/LogTable_View.lua — the Combat Log table's frames (CombatTrail #11, plan item CL-11b): one
 -- component every home builds (the DPS HUD's docked drawer, modules/Hud_Log.lua; the detached
--- companion, modules/LogWindow.lua; the Results fight detail's Log tab, modules/Results_Log.lua),
+-- companion, modules/LogWindow.lua; the Results fight detail's Log section, modules/Results_Log.lua),
 -- drawing the cells modules/LogTable.lua works out.
 --
 -- THE SHAPE. A column header (its own row, LogTable.HEAD_H, in the list header's gold; `opts.noHeader`
 -- leaves it out), then `rows` pooled rows LogTable.ROW_H apart. Each row is a stripe, a wash, one label
 -- per column and the spell's icon. The columns are laid by LogTable.Columns from the width the home
--- gives: fixed widths, Spell/School taking the rest, the optional columns dropped while it would be
--- narrower than SPELL_MIN. Laid only when the width or the columns change, never on a paint.
+-- gives: fixed widths, Spell/School taking the rest, Info dropped while it would be narrower than
+-- SPELL_MIN. Laid only when the width or the columns change, never on a paint. EVERY COLUMN IS
+-- CENTERED, its header and its cells (owner feedback item 8); Spell/School's icon stands at the
+-- column's start and its name is centered in the rest.
 --
 -- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `log.view.sort`), and
 -- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
--- home's `opts.onScroll(away)`: lines away from the newest, by the sort's direction.
+-- home's `opts.onScroll(away)`: lines away from the newest, by the sort's direction, one line a notch.
+-- THE SCROLL INDICATOR (owner feedback item 6) is Spell breakdown's (modules/Hud_States.lua): a thin
+-- track (`ct.scroll.track`) and thumb (`ct.scroll.thumb`) in the gutter right of the rows, shown while
+-- lines lie past them, the thumb as long as the share in view and as far down as the page
+-- (View:SetScroll; DrawFeed sets it for a live home, the Results Log section from its own page).
 --
 -- A PAINT (View:Draw) is handed the rows' lines, newest first, and the view puts them in the sort's
 -- order: newest first top down, or oldest first with the newest at the bottom. A label is painted only
@@ -44,13 +50,15 @@ LogTable.ICON = 12
 LogTable.COL_GAP = 4
 LogTable.SPELL_MIN = 70
 -- Each fixed column's width; Spell/School takes the rest.
-LogTable.WIDTH = { time = 38, event = 46, source = 46, target = 64, amount = 50, info = 86 }
-LogTable.ORDER = { "time", "event", "source", "target", "spell", "amount", "info" }
+LogTable.WIDTH = { time = 38, event = 46, amount = 50, info = 86 }
+LogTable.ORDER = { "time", "event", "spell", "amount", "info" }
 -- The optional columns a narrow home drops first.
-LogTable.DROP = { "source", "target", "info" }
-LogTable.HEADS = { time = L["Time"], event = L["Event"], source = L["Source"], target = L["Target"],
-                   spell = L["Spell/School"], amount = L["Amount"], info = L["Info"] }
-local JUSTIFY = { amount = "RIGHT" }
+LogTable.DROP = { "info" }
+LogTable.HEADS = { time = L["Time"], event = L["Event"], spell = L["Spell/School"], amount = L["Amount"],
+                   info = L["Info"] }
+-- Every column's justification: centered, header and cells (item 8).
+LogTable.JUSTIFY = "CENTER"
+local JUSTIFY = LogTable.JUSTIFY
 
 local function setting(path)
     return NS.GetSetting and NS.GetSetting(path)
@@ -78,7 +86,7 @@ function LogTable.IconSize(rowH, scale)
 end
 
 --- The columns for `width`: which show and where, as { { key, x, w }, ... } in ORDER. `want` is
---- `log.view.columns` (source, target, spell, amount on unless false); `info` whether the home has an
+--- `log.view.columns` (spell, amount on unless false); `info` whether the home has an
 --- Info column at all; `scale` the text size's factor (default 1), which widens the fixed columns.
 --- Time and Event always show.
 --- @return table
@@ -87,7 +95,7 @@ function LogTable.Columns(width, want, info, scale)
     scale = scale or 1
     local function wide(key) return math.floor(LogTable.WIDTH[key] * scale + 0.5) end
     local on = { time = true, event = true, info = info == true and want.info ~= false }
-    for _, key in ipairs({ "source", "target", "spell", "amount" }) do on[key] = want[key] ~= false end
+    for _, key in ipairs({ "spell", "amount" }) do on[key] = want[key] ~= false end
     local function fixed()
         local sum, n = 0, 0
         for _, key in ipairs(LogTable.ORDER) do
@@ -141,7 +149,7 @@ local function rowEnter(row)
     Style.PlaceBody(GameTooltip, row)
 end
 
--- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Log tab's
+-- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Log section's
 -- jump to the Timeline). A live home passes none and its clicks do nothing.
 local function rowUp(row, button)
     local view = row.view
@@ -164,7 +172,7 @@ local function newRow(self)
     Style.CropIcon(r.icon)
     r.text = {}
     r.scale = self.scale or 1
-    for _, key in ipairs(LogTable.ORDER) do r.text[key] = rowText(r, r.scale, JUSTIFY[key]) end
+    for _, key in ipairs(LogTable.ORDER) do r.text[key] = rowText(r, r.scale, JUSTIFY) end
     r:EnableMouse(true)
     r:SetScript("OnEnter", rowEnter)
     r:SetScript("OnLeave", hideTip)
@@ -188,7 +196,7 @@ function LogTable.New(parent, opts)
     head:SetHeight(LogTable.HEAD_H)
     self.head, self.heads = head, {}
     for _, key in ipairs(LogTable.ORDER) do
-        self.heads[key] = Style.Text(head, Style.FONT.HEADER, "list.header.text", JUSTIFY[key])
+        self.heads[key] = Style.Text(head, Style.FONT.HEADER, "list.header.text", JUSTIFY)
         self.heads[key]:SetText(LogTable.HEADS[key])
     end
     local sorter = CreateFrame("Button", nil, head)
@@ -241,7 +249,7 @@ end
 local function layoutKey(width, rows, want, rowH, scale)
     want = want or {}
     local parts = { width, rows, rowH, scale }
-    for _, key in ipairs({ "source", "target", "spell", "amount", "info" }) do parts[#parts + 1] = tostring(want[key]) end
+    for _, key in ipairs({ "spell", "amount", "info" }) do parts[#parts + 1] = tostring(want[key]) end
     return table.concat(parts, ":")
 end
 
@@ -297,7 +305,7 @@ function View:Layout(width, rows, want)
     local rowH, scale = LogTable.RowH(), LogTable.FontScale()
     local key = layoutKey(width, rows, want, rowH, scale)
     if self.laid == key then return end
-    self.laid, self.nRows, self.rowH = key, rows, rowH
+    self.laid, self.nRows, self.rowH, self.width = key, rows, rowH, width
     self:refont(scale)
     self.cols = LogTable.Columns(width, want, self.opts.info, scale)
     self:layHead()
@@ -325,10 +333,6 @@ local function fill(r, c, index, line)
     Style.Paint(t.time, "ct.dim")
     t.event:SetText(c.tag)
     Style.Paint(t.event, c.tagColor)
-    t.source:SetText(c.source)
-    Style.Paint(t.source, c.sourceColor)
-    t.target:SetText(c.target)
-    Style.Paint(t.target, c.targetColor)
     t.spell:SetText(c.spell)
     Style.Paint(t.spell, c.spellColor)
     r.amountColor = c.amountColor or "ct.text"
@@ -372,20 +376,66 @@ end
 
 --- A live home's page: up to the laid rows' lines of `feed` (LogTable.Collect, none older than `from`,
 --- each `accept`ed), backed up to a full page when scrolled past the oldest (still paused), drawn in
---- `sort`'s order with `ctx`. With no window (`from` nil) the empty text alone. Answers how many.
+--- `sort`'s order with `ctx`, the scroll indicator set from the page. With no window (`from` nil) the
+--- empty text alone. Answers how many.
 --- @return number
 function View:DrawFeed(feed, from, accept, ctx, sort, emptyText)
-    local rows, n = self.nRows or 0, 0
+    local rows, n, total = self.nRows or 0, 0, 0
     if from then
         n = LogTable.Collect(feed, rows, from, accept, self.seqs)
         if n < rows and feed.offset > 0 then
             feed.offset = math.max(0, feed.offset - (rows - n))
             n = LogTable.Collect(feed, rows, from, accept, self.seqs)
         end
+        total = LogTable.Count(feed, from, accept)
     end
     self:SetSort(sort)
     self:Draw(self.seqs, n, NS.CombatLog.Line, ctx, emptyText)
+    -- The page's place from the top of the list: newest first, the offset itself; oldest first (the
+    -- newest at the bottom), the rest of the way.
+    local most = math.max(0, total - rows)
+    self:SetScroll(total, rows, sort == "oldest" and (most - math.min(feed.offset, most)) or feed.offset)
     return n
+end
+
+-- The indicator's track and thumb, built on its first want.
+local function scrollParts(self)
+    if self.track then return end
+    self.track = self.frame:CreateTexture(nil, "ARTWORK")
+    Style.Fill(self.track, "ct.scroll.track")
+    self.thumb = self.frame:CreateTexture(nil, "OVERLAY")
+    Style.Fill(self.thumb, "ct.scroll.thumb")
+    self.scroll = {}   -- what the indicator shows (the suites read it)
+end
+
+--- The scroll indicator for `total` lines, `visible` of them in view, the page `top` lines down from
+--- the list's top: shown while lines lie past the rows, in the gutter right of them (Spell
+--- breakdown's look: HudStates.THUMB_W wide, THUMB_GAP clear of the rows, never shorter than
+--- THUMB_MIN). Plain counts and configured sizes only.
+function View:SetScroll(total, visible, top)
+    local S = NS.HudStates
+    scrollParts(self)
+    total, visible = tonumber(total) or 0, tonumber(visible) or 0
+    local most, h = total - visible, (self.nRows or 0) * self.rowH
+    local on, sc = most > 0 and h > 0 and self.width ~= nil, self.scroll
+    if sc.on ~= on then
+        self.track:SetShown(on)
+        self.thumb:SetShown(on)
+        sc.on = on
+    end
+    if not on then return end
+    local thumbH = math.max(S.THUMB_MIN, math.floor(h * visible / total + 0.5))
+    local dy = math.floor((h - thumbH) * math.max(0, math.min(most, top or 0)) / most + 0.5)
+    local x, y = self.width + S.THUMB_GAP, -(self.opts.noHeader and 0 or LogTable.HEAD_H)
+    -- A paint that moved nothing places nothing (the live homes paint at every tick that moved).
+    if sc.thumbH == thumbH and sc.dy == dy and sc.h == h and sc.x == x then return end
+    self.track:ClearAllPoints()
+    self.track:SetPoint("TOPLEFT", self.frame, "TOPLEFT", x, y)
+    self.track:SetSize(S.THUMB_W, h)
+    self.thumb:ClearAllPoints()
+    self.thumb:SetPoint("TOPLEFT", self.frame, "TOPLEFT", x, y - dy)
+    self.thumb:SetSize(S.THUMB_W, thumbH)
+    sc.thumbH, sc.dy, sc.h, sc.x = thumbH, dy, h, x
 end
 
 --- The wheel: lines away from the newest, by the sort's direction (newest first: down is away).
@@ -401,7 +451,7 @@ function View:Rows() return self.rows end
 -- ── the live chips (CL-REV) ─────────────────────────────────────────────────────────────────────
 -- A strip of LogTable.CHIPS on a live home (the detached window under its status line, the drawer
 -- behind its filter mark): one button per chip, lit ("primary") while LogTable.ChipOn, laid left to
--- right and wrapped at the width it is given. The Results Log tab builds its own (with counts).
+-- right and wrapped at the width it is given. The Results Log section builds its own (with counts).
 
 LogTable.CHIP_H, LogTable.CHIP_GAP = 18, 4
 

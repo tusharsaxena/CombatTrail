@@ -10,7 +10,7 @@ local function out(line) NS.Print(line) end
 
 local cli   -- built at the bottom, once NS.COMMANDS exists; handlers reach it at CALL time
 local doEnabled, doDebug, doPerf, doSetVerb
-local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy, doRace, doLog
+local doResults, doHud, doLock, doLanes, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy, doRace, doLog
 
 -- Race mode's verb is Retail's (clients-§4): declared on its triple, which the library gates, and
 -- gated the same way on the library-absent stub and NS.RunVerb below.
@@ -62,8 +62,9 @@ NS.COMMANDS = {
     { "hud",         L["The DPS HUD: /ct hud show or hide"],      feature(function(rest) doHud(rest) end) },
     { "log",         L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"],
                                                                    feature(function(rest) doLog(rest) end) },
-    { "lock",        L["Lock the lanes and the DPS HUD in place"], feature(function() doLock(true) end) },
-    { "unlock",      L["Unlock the lanes and the DPS HUD to move them"],
+    -- `lock`/`unlock` are the DPS HUD's and the windows'; the lanes lock apart (owner feedback item 15).
+    { "lock",        L["Lock the DPS HUD and the windows in place"], feature(function() doLock(true) end) },
+    { "unlock",      L["Unlock the DPS HUD and the windows to move them"],
                                                                    feature(function() doLock(false) end) },
     { "test",        NS.Compat.ForClient(RETAIL)
                          and L["Test mode: sample data in the lanes, the HUD and the Results window; /ct test race [armed|running|result] holds a sample race"]
@@ -79,6 +80,10 @@ NS.COMMANDS = {
     -- (HOST_LIVE_VERBS below), as the schema CLI that writes the same rows is.
     { "lane",        L["Turn a lane on or off: /ct lane player|pet on|off"],
                                                                    function(rest) doLane(rest) end },
+    -- The lanes' own lock (owner feedback item 15), after `lane` so help reads the two lane verbs
+    -- together. A feature verb, as `lock` is: behind feature(), refused while disabled.
+    { "lanes",       L["Lock or unlock the lanes alone: /ct lanes lock|unlock|toggle"],
+                                                                   feature(function(rest) doLanes(rest) end) },
     { "ignore",      L["A lane's ignore list: /ct ignore add|remove <spell> [player|pet]"],
                                                                    function(rest) doIgnore(rest) end },
     -- The training dummies (modules/Dummies.lua, race plan Task A2): the player's own list, on both
@@ -283,9 +288,23 @@ function doRace(rest)
     return delegate("RaceVerb")(rest)
 end
 
---- `lock` / `unlock`: the Locked row (slash-commands-§8).
+--- `lock` / `unlock`: the Locked row (slash-commands-§8): the DPS HUD and the windows, never the lanes.
 function doLock(want)
     doSetVerb("general.locked", want, NS.ApplyLocked)
+end
+
+--- `lanes lock|unlock|toggle`: the lanes' own lock row (owner feedback item 15). `toggle` unlocks
+--- lanes that are not showing their move boxes and locks lanes that are. The reaction runs even when
+--- the stored value does not move, so an unlock always shows the boxes.
+function doLanes(rest)
+    local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
+    local want
+    if word == "lock" then want = true
+    elseif word == "unlock" then want = false
+    elseif word == "toggle" then want = NS.LaneAnchor ~= nil and NS.LaneAnchor.IsUnlocked() end
+    if want == nil then return out(L["Usage: /ct lanes lock|unlock|toggle"]) end
+    doSetVerb("general.lanesLocked", want, NS.ApplyLanesLocked)
+    NS.ApplyLanesLocked(want)
 end
 
 --- `test`: test mode on or off, through the Master controls' row. On Retail `test race [state]` holds

@@ -31,8 +31,9 @@ local _, NS = ...
 -- BOTTOM point (the dock default) back to CENTER-to-CENTER, so the lane lands on the screen.
 --
 -- THE EDIT OVERLAY (frame-layering-§2): one mouse-live box per lane, shown while Blizzard's Edit
--- Mode is open (EventRegistry "EditMode.Enter"/"EditMode.Exit") and the Locked row is off, or after
--- `/ct unlock` (NS.Lanes.SetLocked, from the Locked row's reaction) until `/ct lock`. It is chrome:
+-- Mode is open (EventRegistry "EditMode.Enter"/"EditMode.Exit") and the lanes' own lock
+-- (`general.lanesLocked`, owner feedback item 15) is off, or after `/ct lanes unlock` (NS.Lanes.SetLocked,
+-- from that row's reaction) until `/ct lanes lock`. `/ct lock` and `/ct unlock` never reach them. It is chrome:
 -- floored at LAYERS.STRATA.CHROME over a lower lane, fixed and re-lifted after every strata the lane
 -- takes, at lane level + LEVEL.LANE_EDIT over the whole icon band, and blind to the lane's alpha. An
 -- unlocked lane shows whatever its visibility rules say (modules/LaneVisibility.lua asks
@@ -50,8 +51,8 @@ local _, NS = ...
 local LaneAnchor = {}
 NS.LaneAnchor = LaneAnchor
 
--- The placed-frame contract core/CombatTrail.lua's NS.ApplyLocked and NS.ResetPositions call
--- (SetLocked, ResetPosition). settings/Lanes.lua (plan Task 1.4) adds OnVerb, the `lane` verb.
+-- The placed-frame contract core/CombatTrail.lua calls: SetLocked from NS.ApplyLanesLocked (the lanes'
+-- own lock), ResetPosition from NS.ResetPositions. settings/Lanes.lua (plan Task 1.4) adds OnVerb, the `lane` verb.
 NS.Lanes = NS.Lanes or {}
 local Lanes = NS.Lanes
 
@@ -306,13 +307,13 @@ end
 
 -- ── the edit overlay ───────────────────────────────────────────────────────────────────────────
 
---- Whether the lanes show their edit overlay now: after `/ct unlock`, or in Edit Mode while the
---- Locked row is off. Never while stood down.
+--- Whether the lanes show their edit overlay now: after `/ct lanes unlock`, or in Edit Mode while the
+--- lanes' own lock (`general.lanesLocked`) is off. Never while stood down.
 --- @return boolean
 function LaneAnchor.IsUnlocked()
     if NS.IsStoodDown() then return false end
     if state.unlocked then return true end
-    return state.editMode and NS.GetSetting("general.locked") ~= true
+    return state.editMode and NS.GetSetting("general.lanesLocked") ~= true
 end
 
 local function laneCenter(lane)
@@ -429,14 +430,14 @@ local function refreshAll()
     for _, laneKey in ipairs(LANES) do refreshOverlay(laneKey) end
 end
 
---- Show or hide the edit overlay outside Edit Mode (`/ct unlock`, `/ct lock`).
+--- Show or hide the edit overlay outside Edit Mode (`/ct lanes unlock`, `/ct lanes lock`).
 --- @param on boolean
 function LaneAnchor.SetUnlocked(on)
     state.unlocked = on == true
     refreshAll()
 end
 
---- The Locked row's reaction (core/CombatTrail.lua NS.ApplyLocked).
+--- The lanes' own lock row's reaction (core/CombatTrail.lua NS.ApplyLanesLocked).
 function Lanes.SetLocked(locked)
     LaneAnchor.SetUnlocked(locked ~= true)
 end

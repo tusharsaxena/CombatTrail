@@ -89,10 +89,10 @@ test("window chrome: the HUD footer's right line clears the grip while the grip 
     local inst, _, Hud = H.fresh()
     Hud.Show()
     local ui = Hud.__ui()
-    assertEqual(ui.foot.__grip, true, "fixed and unlocked: the grip shows, the right line clears it")
-    H.setHud(inst, "sizeMode", "auto")
+    assertEqual(ui.foot.__grip, true, "unlocked: the grip shows, the right line clears it")
+    inst.NS.SetByPath("general.locked", true)
     Hud.Refresh()
-    assertEqual(ui.foot.__grip, nil, "auto-grow: no grip, the right line on the footer's padding")
+    assertTrue(ui.foot.__grip ~= true, "locked: no grip, the right line on the footer's padding")
 end)
 
 test("window chrome: the Results footer is W.Footer with the grip's corner, the body over it", function()

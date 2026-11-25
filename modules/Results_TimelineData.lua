@@ -88,7 +88,7 @@ end
 
 --- A moment `t` of the fight (seconds from its start, as its saved log times a line) on the axis the
 --- window draws it on: a race's on its race clock (Decode's shift), a fight's as it is; nil without a
---- plain time (the Results Log tab's jump to a cast, CL-11c).
+--- plain time (the Results Log section's jump to a cast, CL-11c).
 --- @return number|nil
 function Data.OnAxis(record, t)
     if type(t) ~= "number" then return nil end

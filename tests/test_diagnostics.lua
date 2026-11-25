@@ -37,7 +37,7 @@ test("diagnostics: the report carries every section of this addon's own", functi
     local lines = report(inst)
     assertTrue(#lines > 0, "no report landed")
     for _, needle in ipairs({
-        "schema stored=4 code=4 fightFormat=6", "profile=", "fights stored=0",
+        "schema stored=7 code=7 fightFormat=6", "profile=", "fights stored=0",
         "lanes player=on pet=on", "cast events=", "fight state=idle",
         "hud state=", "results shown=false", "test active=false mode=none",
     }) do
@@ -52,14 +52,15 @@ test("diagnostics: the fight section names the Combat Log's capture and the even
     local bad = T.load{ mutate = function(m) m.__badEvents = { UNIT_COMBAT = true } end }
     bad.NS.CombatLog.Begin("diag-fight", 100, nil)
     local lines = report(bad)
-    assertTrue(has(lines, "combat log registered=true refused=UNIT_COMBAT lines=1"), dump(lines))
+    -- No line at the pull now (owner feedback item 10): the begin alone captures nothing.
+    assertTrue(has(lines, "combat log registered=true refused=UNIT_COMBAT lines=0"), dump(lines))
 end)
 
 test("diagnostics: a setting off its default is listed with its default", function()
     local inst = T.load()
     inst.NS.SetByPath("hud.width", 360)
     local lines = report(inst)
-    assertTrue(has(lines, "hud.width = 360 (260)"), dump(lines))
+    assertTrue(has(lines, "hud.width = 360 (390)"), dump(lines))
 end)
 
 test("diagnostics: test mode shows in the preview line", function()
@@ -130,7 +131,7 @@ test("diagnostics: stood down, the runtime sections say so and the stored ones s
     inst.NS.Slash:OnSlash("disable")
     local lines = report(inst)
     assertTrue(has(lines, "stood down: runtime state released"), dump(lines))
-    assertTrue(has(lines, "hud.width = 360 (260)"), "the settings still print:\n" .. dump(lines))
+    assertTrue(has(lines, "hud.width = 360 (390)"), "the settings still print:\n" .. dump(lines))
     assertTrue(has(lines, "fights stored=0"), "the store still prints:\n" .. dump(lines))
     assertFalse(has(lines, "fight state="), "no runtime fight line while stood down:\n" .. dump(lines))
 end)

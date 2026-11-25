@@ -56,7 +56,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `core/DebugLogSetup.lua` | `NS.DebugLog`, the gated `NS.Debug` sink and the diagnostics descriptor |
 | `core/LauncherSetup.lua` | The minimap button and broker row, and the three binding buttons |
 | `core/CombatTrail.lua` | AceAddon registration, `NS.RegisterGameEvents`, and the host handlers every surface shares |
-| `core/Database.lua` | AceDB setup, the profile callbacks and the migration runner |
+| `core/Database.lua` | AceDB setup, the profile callbacks and the migration runner, with steps 5 to 7's bodies (`NS.DropRetiredLogKeys`, `NS.DropRetiredWindowKeys`, `NS.CarryLanesLock`) |
 | `defaults/IgnoreSeeds.lua` | Each lane's ignored spells out of the box, per client |
 | `defaults/Profile.lua` | The AceDB defaults tree, the only place a default is written |
 | `defaults/Dummies.lua` | The measured training dummies' seed, per client, with each dummy's category |
@@ -85,7 +85,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceVerb.lua` | `/ct race`'s words: arm with a typed length, cancel, the Race window, the late-cast ignore list; the arm refusals' copy (Race mode, Retail) |
 | `modules/CastCodec.lua` | The packed cast-list string a record stores, pure |
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |
-| `modules/CombatLog.lua` | The Combat Log's capture (casts from the lanes' listener; auras, hits and heals on you, deaths and combat ends on its own frame while a fight is open), its in-memory ring, and each fight's saved `log` (#11) |
+| `modules/CombatLog.lua` | The Combat Log's capture (casts from the lanes' listener; auras, hits and heals on you and deaths on its own frame while a fight is open; no PULL or END line, owner feedback item 10, `CombatLog.IsBoundary` dropping an old log's at read time), its in-memory ring, the live window that each pull moves to the new fight (`CombatLog.Window`, item 5), and each fight's saved `log` (#11) |
 | `modules/Usage.lua` | What a fight used: on-use gear and consumables |
 | `modules/Stats.lua` | The character's stats at the fight's start, completed after combat |
 | `modules/Loadouts.lua` | The interned equipment sets (and their recon) and talent loadouts a fight refers to |
@@ -94,7 +94,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Bests.lua` | Personal bests, worked out from the stored fights: fight boards, race boards and their clean view |
 | `modules/Recorder.lua` | The fight record and the store |
 | `modules/Retention.lua` | The purge, its daily timer and `/ct purge`, and the store's size |
-| `modules/Slices.lua` | The damage chart's in-session store |
+| `modules/Slices.lua` | The damage chart's in-session store (a skipped fight's held for its fight-over card, owner feedback item 7) |
 | `modules/Format.lua` | Every number the UI draws, secret-safe; `Format.RaceClock`, the one count of tenths the race's elapsed time and time left share |
 | `modules/Style.lua` | The look the HUD and the Results window share; `Style.FitControlArt`, which crops each header control's mark to its measured box (`Style.ART_BOX`) and sizes its long side to `Style.CONTROL_ART`; the tooltip seam onto LibKa0s-Tooltip-1.0 (`Style.OwnTip`, `Style.PlaceBody`, `Style.PlaceChrome`, `Style.TipGroup`; ARCHITECTURE.md, *Tooltip placement*) |
 | `modules/Hud_Appearance.lua` | The HUD's configured look |
@@ -102,12 +102,12 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Hud_Best.lua` | The pace data: which stored fight the live one is paced against (`Best.PaceRecord`, the HUD's `Hud.PaceRecord`), its target line and curve, and what it had done by each second |
 | `modules/Hud_Breakdown.lua` | The HUD's spell rows, live and after combat |
 | `modules/Hud_Chart.lua` | The HUD's damage chart and pace bar; `Chart.NewPace(parent, opts)` also builds the Race window's thinner mini pace bars |
-| `modules/Hud_States.lua` | The HUD's two bodies, the live view and the fight-over card |
-| `modules/LogTable.lua` | The Combat Log table's cells (Time, Event, Source, Target, Spell/School, Amount, Info, each color a `ct.log.*` or `ct.school.*` token), what the live views show (`log.show`), and the feed over the capture's ring: its sort, follow and pause, and the display throttle (#11) |
+| `modules/Hud_States.lua` | The HUD's two bodies, the live view and the fight-over card, over one fixed stack (`HudStates.FixedStack`: the boxes, the reserved status line `STATUS_H`, Damage profile at its fixed height, Spell breakdown's rows; owner feedback item 12) |
+| `modules/LogTable.lua` | The Combat Log table's cells (Time, Event, Spell/School, Amount, Info, each color a `ct.log.*` or `ct.school.*` token; a heal reads Healing), what the live views show (`log.show`), and the feed over the capture's ring: its sort, follow and pause, and the display throttle (#11) |
 | `modules/LogTable_View.lua` | The Combat Log table's frames: the column header (the Time header flips the sort), the pooled rows at the configured row height and text size, the columns laid to the home's width (#11) |
-| `modules/Hud_Log.lua` | The Combat Log drawer docked in the DPS HUD under the spell rows: its seam, its fold to one line, its rows, its repaint timer while shown, its detach mark, `/ct log` (#11) |
-| `modules/LogWindow.lua` | The Combat Log's detached window, "Combat Trail · Log": wider, with the Info column; follows the DPS HUD unless pinned, attached beside it (LEFT by default, beyond an attached Race window on the same side) or standing at its own place; its rows fill its height; its grip; its dock mark (#11, CL-11b2) |
-| `modules/Hud.lua` | The HUD's shell: the window, when it opens and fades, and the view the bodies draw; `Hud.Dock`, the frame an attached Race window stands beside, and `Hud.Height`, the height it takes; `Hud.HideWithRace`, the toggle's closing half, which closes an open Race window with the HUD; `Hud.ShowForRace`, the race's open of the HUD under the Race window, and `Hud.OnRaceIdle`, the race's idle edge that lets it go or starts its fade (no fade while a race holds it, W29); `Hud.LiveDamage`, the last live read's player total the Race window draws (and whether the pet has its own source); `Hud.Toggle`, whose open takes the Race window too near a dummy; `Hud.SyncBeat`, the HUD's own beat at `hud.refreshRate` outside a race (one read and the whole redraw), `Hud.RefreshInterval`, the rate both beats run at, and `Hud.OnRaceClock`, the race beat's direct call; `Hud.OnRaceArmed`, the reset to the pre-fight look; the title bar's Race button (the flag, gold under the pointer only) (Retail) |
+| `modules/Hud_Log.lua` | The Combat Log drawer docked in the DPS HUD under the spell rows, a section like Spell breakdown and part of the HUD's one static height: its heading, count and title-bar-styled marks (filter, detach), its chips (on by default), its rows (10 by default, the grip's while it is dragged) and their scroll indicator, its repaint timer while shown, `/ct log` (#11) |
+| `modules/LogWindow.lua` | The Combat Log's detached window, "Combat Trail · Log": wider, with the Info column; a standalone window at its own place and size, up whether or not the DPS HUD is (owner feedback item 11: no attached state); its rows fill its height and scroll with Spell breakdown's indicator; its grip; its dock mark (#11, CL-11b2) |
+| `modules/Hud.lua` | The HUD's shell: the window, when it opens and fades, and the view the bodies draw; `Hud.Dock`, the frame an attached Race window stands beside, and `Hud.Height`, the height it takes; `Hud.FixedHeight`, the one static height worked out from the configuration (owner feedback item 12: no auto-grow), the grip's extra height going to the log's rows while it is docked open; `Hud.HideWithRace`, the toggle's closing half, which closes an open Race window with the HUD; `Hud.ShowForRace`, the race's open of the HUD under the Race window, and `Hud.OnRaceIdle`, the race's idle edge that lets it go or starts its fade (no fade while a race holds it, W29); `Hud.LiveDamage`, the last live read's player total the Race window draws (and whether the pet has its own source); `Hud.Toggle`, whose open takes the Race window too near a dummy; `Hud.SyncBeat`, the HUD's own beat at `hud.refreshRate` outside a race (one read and the whole redraw), `Hud.RefreshInterval`, the rate both beats run at, and `Hud.OnRaceClock`, the race beat's direct call; `Hud.OnRaceArmed`, the reset to the pre-fight look; the title bar's Race button (the flag, gold under the pointer only) (Retail) |
 | `modules/RaceWindow_Best.lua` | The Race window's Your best card: the race board's best for the dummy targeted and the length picked, and `Best.Figure`, the labeled Damage and DPS pair on one row that Best to beat and Best by now share (Race mode, Retail) |
 | `modules/RaceWindow_Board.lua` | The race board's figures the Race window draws: Best by now and the Checkpoints (the best's straight line, the player's figure as *Current* and their mini pace bars), Against your best and Top races on one column grid, `Board.Spread` (the result card's rows and gaps in a taller window) and `Board.ClockColor` (the countdown's and the time bar's green to amber to red) (Race mode, Retail) |
 | `modules/RaceWindow_States.lua` | The Race window's six bodies: idle, armed, running, Stop!, waiting, the result card, and the layouts that stretch them to the window's size: `States.ResultLayout`, `States.IdleLayout`, `States.RunningGap` (Race mode, Retail) |
@@ -124,8 +124,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_Usage.lua` | The detail's Usage list and its edit, and the list's Used icons |
 | `modules/Results_Targets.lua` | The detail's Targets list: each enemy your damage reached and how much it took (issue #6) |
 | `modules/Results_RaceDetail.lua` | A race's detail: the Timing strip and the Flags box, its score and race DPS, the late-cast right-click (Retail; Race mode plan D1) |
-| `modules/Results_Log.lua` | The detail's Log tab: the fight's saved log in the shared table, the chips with their counts, the Damage by spell panel in the HUD's spell rows, a CAST row's click that jumps the Timeline to it (#11, CL-11c) |
-| `modules/Results_Detail.lua` | One fight in full, under its Overview, Timeline and Log tabs |
+| `modules/Results_Log.lua` | The detail's Log section, a folding section under Targets (owner feedback item 19): the fight's saved log in the shared table, the chips with their counts, a CAST row's click that jumps the Timeline to it (#11, CL-11c). No Damage by spell panel (item 20) |
+| `modules/Results_Detail.lua` | One fight in full, one scrolling page of folding sections with no tabs (owner feedback item 19); the Timeline through the footer's button |
 | `modules/Share.lua` | The one-line chat summary of a fight or a race, and the race's own lines on the arm and at its result |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |
 | `modules/Results_Timeline.lua` | The ability timeline window |
@@ -146,7 +146,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `settings/Schema.lua` | The schema array and the one write seam |
 | `settings/Slash.lua` | `NS.COMMANDS` and the slash descriptor |
 | `settings/OptionsSetup.lua` | The LibKa0s-Options descriptor (`NS.Helpers`), the panel's color codec (`NS.ColorEncode`, `NS.ColorDecode`) and `NS.RegisterTabbedPage` |
-| `settings/General.lua` | The General page: Master controls, Look and skin, Keybindings |
+| `settings/General.lua` | The General page: Master controls (Locked, and the lanes' own *Lock the lanes*), Look and skin, Keybindings |
 | `settings/Lanes.lua` | The Lanes page and the `/ct lane` verb |
 | `settings/Hud.lua` | The DPS HUD page |
 | `settings/Log.lua` | The Combat Log page: eight tabs over every `log.*` key a player chooses (#11, CL-11c2) |

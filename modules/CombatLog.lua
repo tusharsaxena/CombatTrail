@@ -17,8 +17,10 @@ local _, NS = ...
 --   * HITS AND HEALS ON YOU: UNIT_COMBAT for `player` (WOUND and HEAL), with its school and its
 --     critical, glancing or crushing mark. The amount is kept plain when it is plain; a sealed one is
 --     saved as "s" (CombatLog.SEALED), never compared, counted or stored as a number.
---   * DEATHS AND BOUNDARIES: the fight's start, each combat end (PLAYER_REGEN_ENABLED) and the
---     player's death (PLAYER_DEAD). The addon knows no target's death, so none is logged.
+--   * DEATHS: the player's (PLAYER_DEAD). The addon knows no target's death, so none is logged.
+-- NO BOUNDARY LINES (owner feedback item 10, 2026-11-25): the fight's start and the combat end are no
+-- lines, captured or saved; the pull is still time 0.0. A log saved before then may hold them (kinds
+-- START and END, kept in KIND for it alone): every read drops them (CombatLog.IsBoundary).
 -- Every client event goes through NS.SafeRegisterUnitEvent / NS.SafeRegisterEvent on this file's
 -- own frame, and only while a fight is open and `log.enabled` is on: an event the client refuses
 -- costs only itself and is named by CombatLog.Diagnose (UNIT_COMBAT is the one this probes, #11).
@@ -65,7 +67,8 @@ local Secrets = NS.Secrets
 local Perf = NS.Perf
 local C = NS.Constants.LOG
 
---- The line kinds (`k`). BUFF_ON / BUFF_OFF are BUFF+ and BUFF− in a view.
+--- The line kinds (`k`). BUFF_ON / BUFF_OFF are BUFF+ and BUFF− in a view. START and END are retired:
+--- never captured, kept only so a log saved before item 10 can be read past them (CombatLog.IsBoundary).
 CombatLog.KIND = { CAST = 1, BUFF_ON = 2, BUFF_OFF = 3, DEBUFF_ON = 4, DEBUFF_OFF = 5, HIT = 6, HEAL = 7,
                    DIES = 8, START = 9, END = 10 }
 --- The units (`u`): whose cast, whose aura, who was hit.
@@ -116,11 +119,17 @@ local CATEGORY = {
     [K.DEBUFF_OFF] = { "playerDebuffs", nil, "targetDebuffs" },
 }
 
---- The category a line is saved under, or nil: a boundary is always saved ("boundary"), an auto
---- attack never (nil).
+--- Whether a line is a retired boundary (the PULL or END of a log saved before item 10): every view
+--- drops it at read time, and nothing captures one now.
+--- @return boolean
+function CombatLog.IsBoundary(e)
+    local k = type(e) == "table" and e.k or nil
+    return k == K.START or k == K.END
+end
+
+--- The category a line is saved under, or nil: an auto attack and a retired boundary never (nil).
 --- @return string|nil
 function CombatLog.CategoryOf(k, u, id)
-    if k == K.START or k == K.END then return "boundary" end
     if k == K.CAST then
         if id and NS.Casts and NS.Casts.AUTO[id] then return nil end
         return u == U.pet and "petCasts" or "casts"
@@ -161,14 +170,13 @@ local function savedBy(cap, e)
 end
 
 -- Keep the line in every open capture whose window it falls in and whose settings save it, and count
--- it there (a boundary is kept, never counted).
+-- it there.
 local function count(e)
     if next(captures) == nil then return end
     for _, cap in pairs(captures) do
-        local cat = savedBy(cap, e)
-        if cat then
+        if savedBy(cap, e) then
             if cap.store then keep(cap, e) end
-            if cat ~= "boundary" then cap.n = cap.n + 1 end
+            cap.n = cap.n + 1
         end
     end
 end
@@ -379,7 +387,6 @@ local HANDLERS = {
         CombatLog.OnCombat(unit, action, descriptor, amount, school, at)
     end,
     PLAYER_DEAD = function(at) append(at, K.DIES, U.player, nil, nil, nil, nil, nil) end,
-    PLAYER_REGEN_ENABLED = function(at) append(at, K.END, nil, nil, nil, nil, nil, nil) end,
     PLAYER_TARGET_CHANGED = function()
         curTarget = noteTarget()
         walk("target")
@@ -395,7 +402,7 @@ end
 
 -- What is registered, and on which units.
 local UNIT_EVENTS = { { "UNIT_AURA", "player", "target" }, { "UNIT_COMBAT", "player" } }
-local EVENTS = { "PLAYER_DEAD", "PLAYER_REGEN_ENABLED", "PLAYER_TARGET_CHANGED" }
+local EVENTS = { "PLAYER_DEAD", "PLAYER_TARGET_CHANGED" }
 
 local function wanted()
     if NS.IsStoodDown and NS.IsStoodDown() then return false end
@@ -464,7 +471,7 @@ local function linesKept()
 end
 
 local function categories()
-    local out = { boundary = true }
+    local out = {}
     for _, key in ipairs(CombatLog.CATEGORIES) do out[key] = setting("store.categories." .. key) ~= false end
     return out
 end
@@ -489,8 +496,7 @@ local function countPrepull(cap)
     end
     for n = oldest, seq do
         local e = CombatLog.Line(n)
-        local cat = e and savedBy(cap, e)
-        if cat and cat ~= "boundary" then
+        if e and savedBy(cap, e) then
             if cap.store then keep(cap, e) end
             cap.n = cap.n + 1
         end
@@ -512,7 +518,6 @@ function CombatLog.Begin(fightID, startT, fight)
     captures[fightID] = cap
     if viewStart == nil or startT >= viewStart then viewStart, viewFrom = startT, cap.from end
     CombatLog.Sync()
-    append(startT, K.START, nil, nil, nil, nil, nil, nil)
 end
 
 local function tenth(x)
@@ -523,8 +528,6 @@ end
 local function saved(e, startT, g)
     return { t = tenth(e.at - startT), k = e.k, id = e.id, u = e.u, a = e.a, s = e.s, f = e.f, g = g }
 end
-
-local function isBoundary(e) return e.k == K.START or e.k == K.END end
 
 -- A kept line's session target (`g`) in the fight's own list `out`, by `map` [session g] = fight g.
 local function ownTarget(g, map, out)
@@ -546,8 +549,8 @@ local function listOf(cap, to)
         local e = cap.keep[(i - 1) % cap.lines + 1]
         if e.at <= to then
             log[#log + 1] = saved(e, cap.startT, ownTarget(e.g, map, own))
-            if not isBoundary(e) then kept = kept + 1 end
-        elseif not isBoundary(e) then
+            kept = kept + 1
+        else
             over = over + 1
         end
     end
@@ -619,7 +622,10 @@ end
 --- The fight a live view shows (modules/Hud_Log.lua, plan item CL-11b): the newest capture begun this
 --- session, open or closed, as its start and the first moment its lines are held from (its pre-pull
 --- floor), both GetTime() seconds. A view draws the ring's lines from `from` on, timed from `startT`.
---- nil before any fight, and after a stand-down.
+--- So THE LIVE VIEW RESETS AT EACH PULL (owner feedback item 5): FIGHT_STARTED moves the window to the
+--- new fight, whose floor is Casts.PREPULL seconds before it and never before the last fight's end,
+--- and no line of an earlier fight is drawn; lines that arrive after the combat ends still show,
+--- until the next pull moves it again. nil before any fight, and after a stand-down.
 --- @return number|nil startT, number|nil from
 function CombatLog.Window()
     return viewStart, viewFrom

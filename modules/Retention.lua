@@ -12,7 +12,7 @@ local _, NS = ...
 -- with the fight (docs/performance.md, *Stored size*), and a best-holding fight is kept for ever, so
 -- after the age and the cap each run strips the log (`log`, `logDropped`, `logTargets`) from every
 -- stored fight but the newest `log.store.fights` that carry one (100; 0 keeps every log). The fight
--- itself stays: its Log tab then says no log was saved. Between runs the fights stored this session
+-- itself stays: its Log section then says no log was saved. Between runs the fights stored this session
 -- add theirs, so the bound holds from the next run.
 --
 -- A record written by a later version (modules/Recorder.lua's Recorder.Known) is never removed and

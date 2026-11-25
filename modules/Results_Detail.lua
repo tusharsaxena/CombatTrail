@@ -11,7 +11,7 @@ local _, NS = ...
 -- here through its Build, Fill and Layout seams.
 --
 -- THE FOLDING SECTIONS (v0.2 plan Task C3, DPS Race's mechanism): every section heading (Damage
--- profile, Spell breakdown, Gear and Talents, Usage, Note) has an arrow left of its text, chevron-down
+-- profile, Spell breakdown, Gear and Talents, Usage, Targets, Log, Note) has an arrow left of its text, chevron-down
 -- open and chevron-right folded; a click on the arrow or a left click on the heading's text folds or
 -- opens it, and a folded section is its heading line alone, the sections under it moved up. The folds
 -- are per profile in `results.collapsedSections` (Detail.SECTIONS' keys, true = folded, open stored
@@ -35,12 +35,10 @@ local _, NS = ...
 -- Share while modules/Share.lua answers (never on a sample fight); Add note and Delete are the
 -- shell's (the note box and the delete's confirmation).
 --
--- THE TABS (CombatTrail #11, plan item CL-11c; the spec's addendum, home C): Overview, Timeline and
--- Log along the pane's top, in the Results window's tab look. Overview is the pane above. Log is the
--- fight's saved log (modules/Results_Log.lua). Timeline keeps its own window (modules/Results_Timeline.lua,
--- its zoom and its compare need the room): the tab is its way in, opening the window as the Timeline
--- button does, and the tab shown stays as it was; it is grayed for a fight with no casts. The tab shown
--- is the session's (Detail.Tab), kept from fight to fight, never saved: the pane opens on Overview.
+-- NO TABS (owner feedback item 19, 2026-11-25): the detail is one scrolling page. The fight's saved
+-- log (CombatTrail #11, modules/Results_Log.lua) is its Log section, under Targets and open by
+-- default; the Timeline keeps its own window (modules/Results_Timeline.lua), reached by the footer's
+-- Timeline button, or by a click on a CAST row of the Log section, which opens it at that cast.
 --
 -- LAYOUT FROM CONFIG. Every block is placed from the constants here and the widths the shell hands
 -- it; nothing reads a size back. The content scrolls (the mouse wheel); the buttons stay put.
@@ -73,21 +71,9 @@ Detail.BUTTON_GAP = 6
 Detail.DELETE_W = 78
 -- The folding sections, in the pane's order, and their heading's arrow: ARROW px square, the text
 -- INDENT in from the left edge (the arrow and 2 px).
-Detail.SECTIONS = { "chart", "timing", "spells", "loadout", "usage", "targets", "flags", "note" }
+Detail.SECTIONS = { "chart", "timing", "spells", "loadout", "usage", "targets", "log", "flags", "note" }
 Detail.ARROW = 14
 Detail.INDENT = Detail.ARROW + 2
--- The tabs along the pane's top, left to right: TAB_W wide, TAB_H tall, TAB_GAP under them.
-Detail.TABS = { "overview", "timeline", "log" }
-Detail.TAB_W = 80
-Detail.TAB_H = 22
-Detail.TAB_GAP = 6
-local TAB_LABELS = { overview = "Overview", timeline = "Timeline", log = "Log" }
-local TAB_TIPS = {
-    overview = "The fight's figures, chart, spells, gear, usage and note.",
-    timeline = "Every cast of the fight along its length, in its own window.",
-    log = "The fight's saved Combat Log, with its damage by spell.",
-}
-local shownTab = "overview"   -- the session's tab (never saved)
 
 local DASH = "\226\128\148"
 local SEP = " \194\183 "
@@ -432,41 +418,6 @@ end
 -- the pane), so its buttons are body elements: their tooltips open beside the Results window, level
 -- with the button (Style.Button's `tipBody`, LibKa0s#92). Back, on the toolbar above the scrolled
 -- detail, is chrome: attached above it.
--- One tab: Style.FONT.TAB, the skin's `tab.onText` and its `tab.onLine` underline when shown,
--- `tab.text` when not (the Results window's tabs, modules/Results.lua), `text.disabled` while it
--- cannot open. Its tooltip is a body element's (LibKa0s#92).
-local function tabButton(p, name)
-    local b = CreateFrame("Button", nil, p.frame)
-    b:SetSize(Detail.TAB_W, Detail.TAB_H)
-    b.label = Style.Text(b, FONT.TAB, nil, "CENTER")
-    b.label:SetPoint("CENTER", b, "CENTER", 0, 0)
-    b.label:SetText(L[TAB_LABELS[name]])
-    b.underline = b:CreateTexture(nil, "OVERLAY")
-    Style.Fill(b.underline, "tab.onLine")
-    b.underline:SetHeight(2)
-    b.underline:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 8, 0)
-    b.underline:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -8, 0)
-    b:SetScript("OnClick", function() p:ShowTab(name) end)
-    b:SetScript("OnEnter", function(self)
-        if not GameTooltip then return end
-        Style.OwnTip(GameTooltip, self)
-        GameTooltip:SetText(L[TAB_LABELS[name]], Style.Rgb("gtip.title"))
-        Style.AddTipLines(GameTooltip, { "", self.tipLine or L[TAB_TIPS[name]] }, 2)
-        GameTooltip:Show()
-        Style.PlaceBody(GameTooltip, self)
-    end)
-    b:SetScript("OnLeave", function() Tbl().HideTip() end)
-    return b
-end
-
-local function buildTabs(p)
-    p.tabs = {}
-    for _, name in ipairs(Detail.TABS) do p.tabs[name] = tabButton(p, name) end
-    p.tabRule = p.frame:CreateTexture(nil, "ARTWORK")
-    p.tabRule:SetHeight(1)
-    NS.Skin.Divider(p.tabRule)
-end
-
 local function buildButtons(p)
     local w, f, hooks = p.w, p.frame, p.hooks
     local act = {
@@ -530,11 +481,10 @@ function Detail.Build(parent, hooks)
     NS.ResultsLoadout.Build(p, c)
     NS.ResultsUsage.Build(p, c)
     NS.ResultsTargets.Build(p, c)
+    NS.ResultsLog.Build(p, c)
     buildNote(p, c)
     buildHeadings(p)
     buildButtons(p)
-    buildTabs(p)
-    NS.ResultsLog.Build(p)
     return p
 end
 
@@ -615,41 +565,7 @@ end
 
 local PARTS = { "timeline", "compare", "addNote", "share", "delete" }
 
---- The tab the detail shows this session: "overview" (the default) or "log". Timeline is a way into
---- its window, never shown here.
-function Detail.Tab()
-    return shownTab
-end
-
---- Show tab `name` of Detail.TABS: Overview or Log in the pane, or Timeline's window over the Results
---- window (the tab shown kept). Answers whether anything happened.
---- @return boolean
-function Pane:ShowTab(name)
-    if not self.record then return false end
-    if name == "timeline" then
-        if not (self.canTimeline and self.hooks.timeline) then return false end
-        self.hooks.timeline(self)
-        return true
-    end
-    if name ~= "overview" and name ~= "log" then return false end
-    shownTab = name
-    self:Layout(self.width, self.height, self.narrow)
-    return true
-end
-
--- Each tab's label and underline for the tab shown; Timeline grayed while it cannot open.
-function Pane:paintTabs()
-    for _, name in ipairs(Detail.TABS) do
-        local b, on = self.tabs[name], name == shownTab
-        local role = on and "tab.onText" or "tab.text"
-        if name == "timeline" and not self.canTimeline then role = "text.disabled" end
-        Style.Paint(b.label, role, FONT.TAB)
-        b.underline:SetShown(on)
-        b.tipLine = (name == "timeline" and not self.canTimeline) and L["This fight has no casts to draw."] or nil
-    end
-end
-
---- A `log.` setting moved: a shown Log tab draws again (modules/Results_Log.lua Refresh).
+--- A `log.` setting moved: an open Log section draws again (modules/Results_Log.lua Refresh).
 function Pane:RefreshLog()
     NS.ResultsLog.Refresh(self)
 end
@@ -663,8 +579,6 @@ function Pane:Show(record)
     self.scrollFrame:SetShown(has)
     self.w.empty:SetShown(not has)
     for _, key in ipairs(PARTS) do self.w[key]:SetShown(has) end
-    for _, name in ipairs(Detail.TABS) do self.tabs[name]:SetShown(has) end
-    self.tabRule:SetShown(has)
     if not has then return NS.ResultsLog.Hide(self) end
     self:fillHeader(record)
     self:fillFigures(record)
@@ -793,28 +707,9 @@ function Pane:layoutNote(y, cw)
     return y - lines * Detail.LINE_H
 end
 
--- The tabs' top: under the Back control when narrow.
-local function tabsTop(narrow)
-    return narrow and (Detail.BUTTON_H + 12) or 6
-end
-
--- The scroll frame's top (and the Log tab's): under the tabs.
+-- The scroll frame's top: under the Back control when narrow.
 local function topOf(narrow)
-    return tabsTop(narrow) + Detail.TAB_H + Detail.TAB_GAP
-end
-
--- The tabs and their rule across the pane's top.
-function Pane:layoutTabs(width)
-    local y = -tabsTop(self.narrow)
-    for i, name in ipairs(Detail.TABS) do
-        local b = self.tabs[name]
-        b:ClearAllPoints()
-        b:SetPoint("TOPLEFT", self.frame, "TOPLEFT", Detail.PADX - 8 + (i - 1) * Detail.TAB_W, y)
-    end
-    self.tabRule:ClearAllPoints()
-    self.tabRule:SetPoint("TOPLEFT", self.frame, "TOPLEFT", Detail.PADX, y - Detail.TAB_H)
-    self.tabRule:SetWidth(math.max(1, width - 2 * Detail.PADX))
-    self:paintTabs()
+    return narrow and (Detail.BUTTON_H + 16) or 10
 end
 
 --- Lay the pane out for `width` x `height`; `narrow` (the detail in the list's place) shows Back.
@@ -829,11 +724,6 @@ function Pane:Layout(width, height, narrow)
     self.scrollFrame:SetSize(cw, self.viewH)
     self.content:SetWidth(cw)
     if not self.record then return end
-    self:layoutTabs(width)
-    local onLog = shownTab == "log"
-    self.scrollFrame:SetShown(not onLog)
-    if onLog then return NS.ResultsLog.Layout(self, Detail.PADX, top, cw, self.viewH) end
-    NS.ResultsLog.Hide(self)
     local y = self:layoutHeader(0, cw)
     y = self:layoutChart(y, cw)
     y = NS.ResultsRaceDetail.LayoutTiming(self, y, cw)
@@ -841,6 +731,7 @@ function Pane:Layout(width, height, narrow)
     y = NS.ResultsLoadout.Layout(self, y, cw)
     y = NS.ResultsUsage.Layout(self, y, cw)
     y = NS.ResultsTargets.Layout(self, y, cw)
+    y = NS.ResultsLog.Layout(self, y, cw)
     y = NS.ResultsRaceDetail.LayoutFlags(self, y, cw)
     y = self:layoutNote(y, cw)
     self.contentH = -y + 8

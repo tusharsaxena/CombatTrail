@@ -349,7 +349,7 @@ test("slices: a secret fight is captured once a step, opaque, and its record fin
     assertNil(record.slices, "nothing of the chart is persisted")
 end)
 
-test("slices: a fight the recording filters skip lets its store go, so it never holds a KEEP slot", function()
+test("slices: a skipped fight's store is held apart for its card, never in a KEEP slot, until the next skip", function()
     local inst, meter = fresh()
     local NS = inst.NS
     local s = {}
@@ -366,8 +366,18 @@ test("slices: a fight the recording filters skip lets its store go, so it never 
     leave(inst, 22)
     settle(inst, 27)
     settle(inst, 32)
-    assertNil(NS.Slices.Get(fight.id), "a skipped fight has no record to draw, so no chart is kept")
-    assertEqual(NS.Slices.Held(), 0)
+    -- Held for the DPS HUD's card (owner feedback item 7): closed, and outside the KEEP list.
+    local rec = NS.Slices.Get(fight.id)
+    assertTrue(rec ~= nil and rec.open == false, "held closed for the fight-over card")
+    assertEqual(NS.Slices.Held(), 1)
+    for _ = 1, NS.Slices.KEEP + 1 do
+        NS.Slices.Begin("other" .. _)
+        NS.Slices.Close("other" .. _)
+    end
+    assertTrue(NS.Slices.Get(fight.id) ~= nil, "KEEP's closed stores never push the held one out")
+    NS.Slices.Begin("next")
+    NS.Slices.HoldSkipped("next")
+    assertNil(NS.Slices.Get(fight.id), "the next skip lets it go")
 end)
 
 test("slices: no read before a session is bound, and those boundaries become holes", function()

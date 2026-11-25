@@ -16,11 +16,10 @@ local _, NS = ...
 -- swatch) are this addon's own rows in the block's `extra`, in its own words, so they carry no
 -- `composed` mark (skinning-§6).
 --
--- THE SIZE (v0.2 Task B3, Layout > Size): Window size (`hud.sizeMode`: Fixed, whose height follows
--- Spell bars and the grip, or Auto-grow), Spell bars (`hud.bars`, 1-15: the fixed window's rows, the
--- auto window's most before it scrolls) and Grow (`hud.grow`, read only by Auto-grow, so it is drawn
--- disabled in Fixed: disabledIf). The window has no Lock row: Lock frame is General >
--- Master controls' (`general.locked`), the one switch for the lanes and the HUD together.
+-- THE SIZE (Layout > Size): Spell bars (`hud.bars`, 1-15, the window's spell rows) and the width. The
+-- HUD is one window of one static height (owner feedback item 12): the Window size and Grow rows went
+-- with the auto-grow mode (schema step 6). The window has no Lock row: Lock frame is General >
+-- Master controls' (`general.locked`).
 --
 -- WRITES: every row writes through the seam (NS.SetByPath), whose SETTINGS_CHANGED on a `hud.*` path
 -- the HUD answers with Hud.Apply (a restyle and a redraw), so no row carries an onChange.
@@ -66,10 +65,6 @@ local RATES, RATE_OK = choices(4, L["%d a second"]:format(4), 5, L["%d a second"
 local STRATA = { "BACKGROUND", "LOW", "MEDIUM", "HIGH" }
 local STRATAS, STRATA_OK = choices(
     "BACKGROUND", L["Background"], "LOW", L["Low"], "MEDIUM", L["Medium"], "HIGH", L["High"])
-local SIZES, SIZE_OK = choices(
-    "fixed", L["Fixed: drag the corner to set the bars"], "auto", L["Auto-grow with the rows"])
-local GROWS, GROW_OK = choices(
-    "down", L["Down: the top stays put"], "up", L["Up: the bottom stays put"])
 
 -- ── the rows ───────────────────────────────────────────────────────────────────────────────────
 
@@ -194,16 +189,12 @@ row("layout.spells", { type = "bool", label = L["Show spell rows"],
     tooltip = L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] })
 
 at(TAB.layout, L["Size"])
-row("sizeMode", { type = "string", label = L["Window size"], values = SIZES, validate = SIZE_OK, startsLine = true,
-    tooltip = L["Fixed: the HUD keeps one height, room for Spell bars rows, and dragging its bottom-right corner sets the width and the bars. Auto-grow: it grows with the spell rows up to Spell bars, then scrolls. Either way the mouse wheel scrolls through spells past the rows."] })
 row("bars", { type = "number", label = L["Spell bars"], min = NS.Hud.MIN_BARS, max = NS.Hud.MAX_BARS, step = 1,
-    tooltip = L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel."] })
-row("grow", { type = "string", label = L["Grow"], values = GROWS, validate = GROW_OK, startsLine = true,
-    disabledIf = function() return NS.GetSetting("hud.sizeMode") ~= "auto" end,
-    tooltip = L["Which way an Auto-grow HUD grows as rows arrive: down keeps its top in place, up keeps its bottom. Needs Window size Auto-grow."] })
+    startsLine = true,
+    tooltip = L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Log is closed or detached, the log's rows while it is docked open."] })
 row("width", { type = "number", label = L["HUD width (px)"], min = NS.Hud.MIN_WIDTH, max = NS.Hud.MAX_WIDTH, step = 10,
     startsLine = true,
-    tooltip = L["How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."] })
+    tooltip = L["How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."] })
 row("scale", { type = "number", label = L["HUD scale"], min = 0.5, max = 2, step = 0.05, isPercent = true,
     tooltip = L["The size of the whole HUD, its text included."] })
 

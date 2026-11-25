@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 4
+NS.SCHEMA_VERSION = 7
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -110,8 +110,57 @@ local STEPS = {
     end },
     -- 3 -> 4, per profile: what the retired skin-defaults step wrote goes back (NS.RestoreOwnLooks).
     { to = 4, perProfile = true, run = function(_, profile) NS.RestoreOwnLooks(profile) end },
+    -- 4 -> 5, per profile: the Combat Log keys the owner's feedback retired (2026-11-25, CLF-1). The
+    -- Source and Target columns are gone (item 3), so their toggles `log.view.columns.source` and
+    -- `.target` go; the drawer's fold is gone (item 14), so `log.drawer.collapsed` and the folded line's
+    -- `log.drawer.strip` go. Nothing is carried across: each served only what was removed. Idempotent:
+    -- a fresh profile stores none of them.
+    { to = 5, perProfile = true, run = function(_, profile) NS.DropRetiredLogKeys(profile) end },
+    -- 5 -> 6, per profile: the keys of the HUD's and the log window's retired states (2026-11-25,
+    -- CLF-2). The HUD is one window of one static height (owner feedback item 12), so the auto-grow
+    -- `hud.sizeMode` and its `hud.grow` edge go; the detached log is a standalone window (item 11), so
+    -- the attached state's `log.window.attached`, `.side`, `.matchHud` and `.pinned` go. Nothing is
+    -- carried across: a HUD that grew is fixed at its bars, and a log window that stood beside the HUD
+    -- stands at its own stored place. Idempotent: a fresh profile stores none of them.
+    { to = 6, perProfile = true, run = function(_, profile) NS.DropRetiredWindowKeys(profile) end },
+    -- 6 -> 7, per profile: the lanes lock apart (2026-11-25, CLF-3, owner feedback item 15). Until now
+    -- `general.locked` also kept Edit Mode from unlocking the lanes; from here the lanes read their own
+    -- `general.lanesLocked`, so each profile's stored lock is carried across and nobody's lanes unlock
+    -- by surprise. `general.locked` stays: it is still the DPS HUD's and the windows' lock. Idempotent: a
+    -- lanes lock already stored is kept, and a profile with no stored lock stores nothing.
+    { to = 7, perProfile = true, run = function(_, profile) NS.CarryLanesLock(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
+
+--- Step 5's body: `profile.log`'s retired keys (the Source and Target column toggles, the drawer's
+--- fold and its folded line) dropped. A profile with no `log` table is left alone.
+function NS.DropRetiredLogKeys(profile)
+    local log = type(profile) == "table" and profile.log
+    if type(log) ~= "table" then return end
+    local view = log.view
+    local cols = type(view) == "table" and view.columns
+    if type(cols) == "table" then cols.source, cols.target = nil, nil end
+    if type(log.drawer) == "table" then log.drawer.collapsed, log.drawer.strip = nil, nil end
+end
+
+--- Step 6's body: the HUD's `sizeMode` and `grow`, and the log window's `attached`, `side`, `matchHud`
+--- and `pinned`, dropped. A profile with neither table is left alone.
+function NS.DropRetiredWindowKeys(profile)
+    if type(profile) ~= "table" then return end
+    local hud = profile.hud
+    if type(hud) == "table" then hud.sizeMode, hud.grow = nil, nil end
+    local log = profile.log
+    local w = type(log) == "table" and log.window
+    if type(w) == "table" then w.attached, w.side, w.matchHud, w.pinned = nil, nil, nil, nil end
+end
+
+--- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where
+--- the profile stores no lanes lock yet. A profile with no `general` table is left alone.
+function NS.CarryLanesLock(profile)
+    local g = type(profile) == "table" and profile.general
+    if type(g) ~= "table" or g.lanesLocked ~= nil then return end
+    if g.locked == true then g.lanesLocked = true end
+end
 
 --- A profile switch, copy or reset replaces the whole profile wholesale: the stored `enabled` can
 --- flip, so re-take the hold and re-decide (slash-commands-§7: these callbacks are SETUP and stay live

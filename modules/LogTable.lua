@@ -4,50 +4,45 @@ local _, NS = ...
 -- lines a view shows, and the feed that walks the ring for a live view (its sort, its follow and pause,
 -- its display throttle). The frames are modules/LogTable_View.lua's; the homes are the DPS HUD's docked
 -- drawer (modules/Hud_Log.lua), the detached companion (modules/LogWindow.lua) and the Results fight
--- detail's Log tab (modules/Results_Log.lua), all three over this one component. Its settings are the
+-- detail's Log section (modules/Results_Log.lua), all three over this one component. Its settings are the
 -- Combat Log page's (settings/Log.lua).
 --
--- THE COLUMNS. Time · Event · Source · Target · Spell/School · Amount, plus Info where the home has
--- room (Columns: `opts.info`). Time and Event always show; the others follow `log.view.columns.*`, and
--- a home too narrow for them drops Source, then Target, then Info, so Spell/School keeps SPELL_MIN.
---   Time          from the pull (seconds, `-` before it for a pre-pull cast) or the clock time
+-- THE COLUMNS. Time · Event · Spell/School · Amount, plus Info where the home has room (Columns:
+-- `opts.info`), every one centered in its header and its cells. Time and Event always show; the others
+-- follow `log.view.columns.*`, and a home too narrow for them drops Info, so Spell/School keeps
+-- SPELL_MIN. There is no Source or Target column (owner feedback item 3, 2026-11-25): a line's `u`
+-- stays in the data, for the chips (Pet) and the categories, and is never a column.
+--   Time          from the pull (seconds, `-` before it for a pre-pull line) or the clock time
 --                 (`log.view.timeFormat` "pull" | "clock")
---   Event         CAST, BUFF+, BUFF-, DEBUFF+, DEBUFF-, HIT, HEAL, DIES, and PULL / END for the fight's
---                 boundaries (muted rows)
---   Source        who did it: "You", the pet, or a dash where the client says nothing (a hit or heal on
---                 you, a buff on you, a buff on your target)
---   Target        who it landed on: "You", or the target the line was on (its `g` in the view's
---                 target list, ctx.targets: the session's CombatLog.Targets live, the record's
---                 `logTargets` in Results), so a swap mid-fight never renames the rows before it; a
---                 line with no `g` falls back to ctx.targetName (the target now, or the record's)
---   Spell/School  the spell's icon and name; for a hit or a heal the school (the client gives no spell)
+--   Event         CAST, BUFF+, BUFF-, DEBUFF+, DEBUFF-, HIT, HEAL, DIES. The fight's start and end are
+--                 no lines (item 10); a saved log's old PULL / END lines are dropped at read time.
+--   Spell/School  the spell's icon and name; for a hit the school (the client gives no spell); for a
+--                 heal "Healing" in the heal color, naming a school only when the client reports one
+--                 other than Physical (item 4: UNIT_COMBAT's HEAL reports school 1, Physical, or nil)
 --   Amount        a hit's (red) or a heal's (green, "+") amount; `*` after a critical's plain amount
 --   Info          Critical, Glancing, Crushing, Interrupted
 --
 -- THE COLORS (the spec's board D), each a skin token (core/SkinSetup.lua's `ct.log.*` and `ct.school.*`)
--- with its Ka0s Default value. "You" is the player's class color (the library's NS.ClassColor, the one
--- the HUD's Use class color rows draw) and the pet the HUD's pet color (Hud_Appearance.PetColor, the
--- spell rows' `hud.spells.petColor`): reused, never copied. The target is `ct.log.hostile` when you
--- could attack it (when the line was captured, from its `g`), else `ct.log.friendly`. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell
--- whose base cooldown is long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash
--- (DEBUFF- dimmed, no wash), HIT a red wash and a red amount, HEAL green with "+". A school name is in
--- its school's color. COLOR-BLIND SAFETY: every kind differs by its tag's text and its wash as well as
--- its hue, and `log.view.schoolColors` / `log.view.washes` off draw the names in the body text and no
--- wash. THE WHO COLORS can be the player's own (CL-11c2, the Combat Log page's Colors tab): "You"
--- takes `log.colors.you` once `log.colors.useClassColorYou` is off, and the target `log.colors.hostile`
--- / `log.colors.friendly` once its `...FromSkin` companion is off (LogTable.ReadColors, into each
--- view's ctx). WoW's fonts have no bold weight and FRIZQT__ has no star glyph: "You" carries its class color
--- and a critical its `*` and the row's larger amount face instead (the view's Cells.big).
+-- with its Ka0s Default value. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell whose
+-- base cooldown is long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash
+-- (DEBUFF- dimmed, no wash), HIT a red wash and a red amount, HEAL green with "+" and its "Healing"
+-- cell. A hit's school name is in its school's color. COLOR-BLIND SAFETY: every kind differs by its
+-- tag's text and its wash as well as its hue, and `log.view.schoolColors` / `log.view.washes` off draw
+-- the names in the body text and no wash. WoW's fonts have no bold weight and FRIZQT__ has no star
+-- glyph: a critical carries its `*` and the row's larger amount face instead (the view's Cells.big).
+-- The who colors (`log.colors.*`, LogTable.ReadColors) are still read into each view's ctx, but with
+-- no Source or Target column nothing draws them now.
 --
 -- WHAT IS SHOWN is a view's own `show` table, shaped as `log.show.*`: each category of
 -- CombatLog.CategoryOf on or off, the auto attacks (Auto Shot, Shoot: no category) off by default, and
 -- a hit or heal under `log.show.minAmount` hidden, judged on a PLAIN amount only. A sealed amount is
--- never compared: it always shows. The boundaries always show. What is shown never changes what is
+-- never compared: it always shows. A retired boundary never shows. What is shown never changes what is
 -- captured or saved.
 -- THE CHIPS (LogTable.CHIPS: Casts, Pet, Buffs, Debuffs, Taken, Heals, each over the categories it
--- covers) filter a view's lines. The Results Log tab's open on `log.results.chips` and count their
+-- covers) filter a view's lines. The Results Log section's open on `log.results.chips` and count their
 -- lines (modules/Results_Log.lua). The live views' (the detached window's strip under its status line,
--- the drawer's behind its filter mark) are each view's own `show`, SEEDED from `log.show.*` (the What
+-- the drawer's under its heading, shown by default and hidden by its filter mark, `log.drawer.chips`)
+-- are each view's own `show`, SEEDED from `log.show.*` (the What
 -- to show page, so `log.show` is those chips' defaults) when the view is built, when the log is opened,
 -- at each FIGHT_STARTED and at a `log.show` write; a click turns every category the chip covers on
 -- or off in that view alone for the session (LogTable.ToggleChip), never written to the settings. A
@@ -77,25 +72,23 @@ NS.LogTable = LogTable
 local L = NS.L
 local Secrets = NS.Secrets
 local CL = NS.CombatLog
-local K, U, F = CL.KIND, CL.UNIT, CL.FLAG
+local K, F = CL.KIND, CL.FLAG
 
 LogTable.SORTS = { newest = true, oldest = true }
 LogTable.THROTTLES = { instant = true, every = true, batch = true }
 LogTable.MIN_MS, LogTable.MAX_MS = 50, 1000
-LogTable.DASH = "\226\128\148"
 
 -- ── the cells ───────────────────────────────────────────────────────────────────────────────────
 
 LogTable.TAG = {
     [K.CAST] = L["CAST"], [K.BUFF_ON] = L["BUFF+"], [K.BUFF_OFF] = L["BUFF-"], [K.DEBUFF_ON] = L["DEBUFF+"],
     [K.DEBUFF_OFF] = L["DEBUFF-"], [K.HIT] = L["HIT"], [K.HEAL] = L["HEAL"], [K.DIES] = L["DIES"],
-    [K.START] = L["PULL"], [K.END] = L["END"],
 }
 -- The tag's color token per kind.
 LogTable.TAG_COLOR = {
     [K.CAST] = "ct.text", [K.BUFF_ON] = "ct.log.buff", [K.BUFF_OFF] = "ct.log.buffOff",
     [K.DEBUFF_ON] = "ct.log.debuff", [K.DEBUFF_OFF] = "ct.log.debuffOff", [K.HIT] = "ct.log.hit",
-    [K.HEAL] = "ct.log.heal", [K.DIES] = "ct.log.hit", [K.START] = "ct.dim", [K.END] = "ct.dim",
+    [K.HEAL] = "ct.log.heal", [K.DIES] = "ct.log.hit",
 }
 -- The row wash per kind (a long-cooldown CAST's is decided per spell).
 LogTable.WASH = { [K.HIT] = "ct.log.wash.hit", [K.DEBUFF_ON] = "ct.log.wash.debuff" }
@@ -189,60 +182,28 @@ function LogTable.LongCooldown(id)
     return ms ~= false and NS.Casts.IsLong(ms)
 end
 
--- The who colors, refilled on each read (a class color or the pet's swatch, never a copy of either).
-local youHue, petHue = {}, {}
-
-local function you(ctx)
-    if ctx.youColor then return L["You"], ctx.youColor end
-    local r, g, b = NS.ClassColor("player")
-    if r == nil then return L["You"], "ct.text" end
-    youHue[1], youHue[2], youHue[3] = r, g, b
-    return L["You"], youHue
-end
-
-local function pet(ctx)
-    local c = NS.HudAppearance.PetColor()
-    petHue[1], petHue[2], petHue[3] = c.r, c.g, c.b
-    return ctx.petName or L["Pet"], petHue
-end
-
--- The line's own target (its `g` in ctx.targets) when it has one, else the view's (ctx.targetName).
-local function target(ctx, g)
-    local list = g and ctx.targets
-    local own = type(list) == "table" and list[g] or nil
-    local name, friendly = ctx.targetName, ctx.targetFriendly
-    if type(own) == "table" then name, friendly = Secrets.PlainString(own.name), own.friendly == true end
-    if friendly then return name or L["Target"], ctx.friendlyColor or "ct.log.friendly" end
-    return name or L["Target"], ctx.hostileColor or "ct.log.hostile"
-end
-
-local DASH = LogTable.DASH
-
--- Source and Target: { source, its color, target, its color }.
-local function who(c, e, ctx)
-    local k, u = e.k, e.u
-    c.source, c.sourceColor, c.target, c.targetColor = DASH, "ct.dim", DASH, "ct.dim"
-    if k == K.START or k == K.END then
-        c.source, c.target = "", ""
-    elseif k == K.CAST then
-        if u == U.pet then c.source, c.sourceColor = pet(ctx) else c.source, c.sourceColor = you(ctx) end
-    elseif u == U.target then
-        c.target, c.targetColor = target(ctx, e.g)
-        if k == K.DEBUFF_ON or k == K.DEBUFF_OFF then c.source, c.sourceColor = you(ctx) end
-    else
-        c.target, c.targetColor = you(ctx)
-    end
-end
-
-local BOUNDARY_WORDS = { [K.START] = L["Fight started"], [K.END] = L["Combat ended"] }
 local OFF = { [K.BUFF_OFF] = true, [K.DEBUFF_OFF] = true }
 
--- Spell/School: the spell's icon and name, the school for a hit or a heal, words for a boundary.
+local PHYSICAL = 1
+
+--- A heal's Spell/School words: "Healing", naming the school only when the client reports one other
+--- than Physical. UNIT_COMBAT's HEAL gives school 1 (Physical) or nothing for an ordinary heal, which
+--- read as "Physical" before (owner feedback item 4): the capture keeps what the client gave, and the
+--- view words it.
+--- @return string
+function LogTable.HealWords(mask)
+    mask = Secrets.PlainNumber(mask)
+    if not mask or mask == PHYSICAL then return L["Healing"] end
+    local _, words = LogTable.School(mask)
+    return words and L["Healing (%s)"]:format(words) or L["Healing"]
+end
+
+-- Spell/School: the spell's icon and name, the school for a hit, "Healing" for a heal.
 local function spell(c, e, ctx)
     c.icon, c.spellID, c.spellColor = nil, nil, OFF[e.k] and "ct.dim" or "ct.text"
-    if BOUNDARY_WORDS[e.k] then
-        c.spell, c.spellColor = BOUNDARY_WORDS[e.k], "ct.dim"
-    elseif e.k == K.HIT or e.k == K.HEAL then
+    if e.k == K.HEAL then
+        c.spell, c.spellColor = LogTable.HealWords(e.s), "ct.log.heal"
+    elseif e.k == K.HIT then
         local s, words = LogTable.School(e.s)
         c.spell = words or ""
         if s and ctx.schoolColors ~= false then c.spellColor = "ct.school." .. s.key end
@@ -272,17 +233,14 @@ local function amount(c, e)
     end
 end
 
---- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, source, sourceColor, target,
---- targetColor, spell, spellColor, spellID, icon, amount, amountColor, big, info, wash (a token or nil).
---- `ctx`: startT, startClock, timeFormat, targets (the list a line's `g` indexes), targetName and
---- targetFriendly (a line with no `g`), petName, schoolColors, washes, and the player's own who colors
---- (youColor, hostileColor, friendlyColor: nil follows the default).
+--- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, spell, spellColor, spellID,
+--- icon, amount, amountColor, big, info, wash (a token or nil). `ctx`: startT, startClock, timeFormat,
+--- schoolColors, washes.
 --- @return table c
 function LogTable.Cells(e, ctx, c)
     c = c or {}
     c.time = LogTable.Time(e, ctx)
     c.tag, c.tagColor = LogTable.TAG[e.k] or "", LogTable.TAG_COLOR[e.k] or "ct.text"
-    who(c, e, ctx)
     spell(c, e, ctx)
     amount(c, e)
     c.info = LogTable.Info(e.f)
@@ -297,7 +255,6 @@ end
 --- Whether line `e` shows under `show` (`log.show`: its categories, autoAttacks and minAmount).
 function LogTable.Shows(e, show)
     local cat = CL.CategoryOf(e.k, e.u, e.id)
-    if cat == "boundary" then return true end
     if cat == nil then return e.k == K.CAST and show.autoAttacks == true end
     if show[cat] == false then return false end
     local min = Secrets.PlainNumber(show.minAmount) or 0
@@ -311,7 +268,7 @@ end
 -- ── the chips ───────────────────────────────────────────────────────────────────────────────────
 
 --- The chips, left to right: their key, their label and the saved categories each one covers (the
---- Results Log tab's and the live views' alike).
+--- Results Log section's and the live views' alike).
 LogTable.CHIPS = {
     { key = "casts", label = "Casts", cats = { "casts" } },
     { key = "pet", label = "Pet", cats = { "petCasts" } },
@@ -412,25 +369,13 @@ function LogTable.ReadColors(ctx)
     return ctx
 end
 
-local function unitName(unit)
-    if type(UnitExists) == "function" and not Secrets.PlainTruth(UnitExists(unit)) then return nil end
-    local ok, name = pcall(UnitName, unit)
-    return ok and Secrets.PlainString(name) or nil
-end
-
 --- `ctx` (a reused table) refilled for a live view whose window starts at `startT` (GetTime()): the
---- time format, the clock time of the start, the session's target list (each line's own target), the
---- target's and the pet's names now and the target's reaction (plain answers only: a line with no
---- `g`), and the color switches.
+--- time format, the clock time of the start and the color switches.
 function LogTable.LiveContext(ctx, startT)
     ctx.startT = startT
     ctx.timeFormat = setting("log.view.timeFormat")
     ctx.startClock = nil
     if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
-    ctx.targets = CL.Targets()
-    ctx.targetName, ctx.petName = unitName("target"), unitName("pet")
-    local ok, hostile = pcall(UnitCanAttack, "player", "target")
-    ctx.targetFriendly = type(UnitCanAttack) == "function" and ok and Secrets.PlainEquals(hostile, false) or false
     ctx.schoolColors = setting("log.view.schoolColors") ~= false
     ctx.washes = setting("log.view.washes") ~= false
     return LogTable.ReadColors(ctx)
@@ -488,14 +433,18 @@ function LogTable.Advance(feed, now, mode, ms, accept)
     return feed.shown ~= was
 end
 
+--- The feed's top line: `anchor` while paused, else `shown`.
+local function feedTop(feed)
+    return math.min(feed.anchor or feed.shown, feed.shown)
+end
+
 --- The view's lines: up to `rows` sequence numbers into `out` (newest first), from the feed's top line
 --- (`anchor` while paused, else `shown`) down, `offset` shown lines in, none older than `from`
 --- (GetTime()). Answers how many, and whether any shown line lies past them (older).
 --- @return number n, boolean more
 function LogTable.Collect(feed, rows, from, accept, out)
     local n, skip = 0, feed.offset
-    local top = math.min(feed.anchor or feed.shown, feed.shown)
-    for seq = top, CL.First(), -1 do
+    for seq = feedTop(feed), CL.First(), -1 do
         local e = CL.Line(seq)
         if not e or (from and e.at < from) then break end
         if accept(e) then
@@ -509,6 +458,42 @@ function LogTable.Collect(feed, rows, from, accept, out)
     end
     for i = n + 1, #out do out[i] = nil end
     return n, false
+end
+
+local RING = NS.Constants.LOG.RING
+
+--- How many lines the view holds, from the window's floor `from` up to the feed's top line, each
+--- `accept`ed: the scroll indicator's length (owner feedback item 6). KEPT ON THE FEED, never walked
+--- whole on a paint: `feed.count` moves on by the lines that arrived since the last count, and
+--- `feed.acc[slot]` remembers whether each counted line was accepted, so a line the ring lets go is
+--- taken off again. A new floor (each pull, CombatLog.Window), a top that went back (the ring
+--- emptied) or a new filter (LogTable.Refilter: a chip, a What to show write) counts again from the
+--- floor. Plain counts only; the `acc` slots are reused once the ring has been round.
+--- @return number
+function LogTable.Count(feed, from, accept)
+    local first, top, acc = CL.First(), feedTop(feed), feed.acc
+    if not acc then acc = {}; feed.acc = acc end
+    if feed.cTop == nil or feed.cFrom ~= from or top < feed.cTop then
+        feed.cFrom, feed.count, feed.cLow, feed.cTop = from, 0, first, first - 1
+    end
+    -- The lines the ring let go since the last count (their slots still hold their marks).
+    for seq = feed.cLow, math.min(first - 1, feed.cTop) do
+        if acc[(seq - 1) % RING + 1] then feed.count = feed.count - 1 end
+    end
+    feed.cLow = math.max(feed.cLow, first)
+    for seq = math.max(feed.cTop + 1, first), top do
+        local e = CL.Line(seq)
+        local on = e ~= nil and (from == nil or e.at >= from) and accept(e) == true
+        acc[(seq - 1) % RING + 1] = on
+        if on then feed.count = feed.count + 1 end
+    end
+    feed.cTop = top
+    return feed.count
+end
+
+--- The home's filter changed (its chips, a What to show write): the next LogTable.Count counts again.
+function LogTable.Refilter(feed)
+    if feed then feed.cTop = nil end
 end
 
 --- Scroll the view `away` lines from the newest (negative: toward it). Away from it pauses at the line

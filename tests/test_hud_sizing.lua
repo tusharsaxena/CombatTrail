@@ -1,11 +1,11 @@
 -- tests/test_hud_sizing.lua — the DPS HUD's size model (v0.2 Task B3, plan decisions D2 and D9,
--- R:hud-sizing#2-#3, Review focus 3): `hud.sizeMode` "fixed" (the default) derives the window's height
--- from `hud.bars` and the configured parts, never from the spell count; the grip (fixed mode only,
--- hidden while locked) sets the width and rounds the height to a whole number of bars, then stores
--- `hud.bars` (1-15); "auto" grows the window with the rows up to `hud.bars` and then scrolls, keeping
--- the top (`hud.grow` "down", the default) or the bottom ("up") in place. The breakdown scrolls with
--- the wheel whenever there are more spells than visible rows, in both modes. Every size read here is
--- one the code set (a recorder over the setter), never a measurement of a value-bearing region.
+-- R:hud-sizing#2-#3, Review focus 3; owner feedback item 12, 2026-11-25): one static height derived
+-- from `hud.bars` and the configured parts, never from the spell count (the auto-grow `hud.sizeMode`
+-- and its `hud.grow` edge are retired); the grip (hidden while locked) sets the width and rounds the
+-- height to a whole number of bars, then stores `hud.bars` (1-15), the top left held in place. The
+-- breakdown scrolls with the wheel whenever there are more spells than visible rows. Every size read
+-- here is one the code set (a recorder over the setter), never a measurement of a value-bearing region.
+-- The docked Combat Log's share of the height is tests/test_hud_static.lua's.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse =
@@ -29,7 +29,7 @@ end
 -- The chrome over and under the content (DPS Race's insets, the footer the library's FOOTER.HEIGHT,
 -- 24 since AD-89-CT) and the stack's pitches (v0.2 Task B2).
 local function chrome(inst) return inst.NS.Style.TITLE_BAR_H + 10 + inst.NS.FOOTER_HEIGHT + 8 end
-local TOP = 52 + 18 + (46 + 14) + 8          -- clock, target, the boxes with the pet's row, GAP
+local TOP = 52 + 18 + (46 + 14) + 8 + 26     -- clock, target, the boxes with the pet's row, GAP, status line
 local PROFILE = 6 + 22 + 16 + 80 + 13 + 2 + 12 + 8   -- HEAD_GAP, heading, pace line, plot, labels, GAP
 local function spellsBlock(n) return 6 + 22 + (n > 0 and n * 20 - 2 or 0) + 8 end
 
@@ -77,13 +77,14 @@ end
 
 -- ── the defaults and the rows ───────────────────────────────────────────────────────────────────
 
-test("hud sizing: the defaults are fixed, 5 bars, grow down; spells.rows is retired", function()
+test("hud sizing: the defaults are 5 bars and 390 wide; spells.rows, sizeMode and grow are retired", function()
     local inst = H.fresh()
     local NS = inst.NS
     local d = NS.defaults.profile.hud
-    assertEqual(d.sizeMode, "fixed")
-    assertEqual(d.bars, 5)
-    assertEqual(d.grow, "down")
+    assertEqual(d.bars, 5, "owner feedback item 16")
+    assertEqual(d.width, 390, "owner feedback item 2")
+    assertEqual(d.sizeMode, nil, "one static height: no size mode (item 12)")
+    assertEqual(d.grow, nil, "and no grow edge")
     assertEqual(d.spells.rows, nil, "hud.spells.rows retired into hud.bars")
     assertEqual(NS.FindSchemaRow("hud.spells.rows"), nil)
     local bars = NS.FindSchemaRow("hud.bars")
@@ -92,18 +93,13 @@ test("hud sizing: the defaults are fixed, 5 bars, grow down; spells.rows is reti
     assertEqual(bars.max, 15)
     assertEqual(NS.Hud.MIN_BARS, 1)
     assertEqual(NS.Hud.MAX_BARS, 15)
-    local mode, grow = NS.FindSchemaRow("hud.sizeMode"), NS.FindSchemaRow("hud.grow")
-    assertTrue(mode ~= nil and grow ~= nil, "the Window size and Grow rows")
-    assertTrue(mode.validate("fixed") and mode.validate("auto") and not mode.validate("big"))
-    assertTrue(grow.validate("down") and grow.validate("up") and not grow.validate("left"))
-    assertEqual(type(grow.disabledIf), "function")
-    assertTrue(grow.disabledIf(grow), "Grow is drawn disabled in fixed mode")
-    NS.SetByPath("hud.sizeMode", "auto")
-    assertFalse(grow.disabledIf(grow), "and live in auto mode")
+    assertEqual(NS.FindSchemaRow("hud.sizeMode"), nil, "no Window size row")
+    assertEqual(NS.FindSchemaRow("hud.grow"), nil, "no Grow row")
     assertEqual(NS.FindSchemaRow("hud.width").max, NS.Hud.MAX_WIDTH)
+    assertEqual(NS.FindSchemaRow("hud.width").default, 390)
 end)
 
--- ── fixed mode ──────────────────────────────────────────────────────────────────────────────────
+-- ── the one height ──────────────────────────────────────────────────────────────────────────────
 
 test("hud sizing: the fixed height is derived from the bars, the same with 0, 3 or 20 spells", function()
     local heights = {}
@@ -112,7 +108,7 @@ test("hud sizing: the fixed height is derived from the bars, the same with 0, 3 
         local f = Hud.Frame()
         assertEqual(f.__h, chrome(inst) + TOP + PROFILE + spellsBlock(5), n .. " spells: the stack for 5 bars")
         assertEqual(f.__h, Hud.FixedHeight())
-        assertEqual(f.__w, 260)
+        assertEqual(f.__w, 390)
         assertEqual(#rows(Hud), math.min(n, 5), n .. " spells: at most 5 rows")
         heights[#heights + 1] = f.__h
     end
@@ -160,7 +156,7 @@ test("hud sizing: a pet appearing mid-fight keeps the fixed height and the bars"
     assertEqual(#rows(Hud), 5, "the pet's row in the boxes was reserved")
 end)
 
-test("hud sizing: the fight-over card fits the fixed window, fewer rows and the wheel past them", function()
+test("hud sizing: the fight-over card fits the same window, its chips in the status line, the wheel past the rows", function()
     local inst, _, Hud = liveOn(fightOf(9), { best = fightOf(9) })
     H.finish(inst, 100, 40)
     assertEqual(Hud.State(), "over")
@@ -169,7 +165,7 @@ test("hud sizing: the fight-over card fits the fixed window, fewer rows and the 
     assertEqual(f.__h, Hud.FixedHeight(), "the same window after the fight")
     assertTrue(body.height <= f.__h - chrome(inst), "the card's stack overflows the window")
     local n = #rows(Hud, "over")
-    assertTrue(n >= 1 and n <= 5, "at most the bars: " .. n)
+    assertEqual(n, 5, "the chips take the reserved status line, so every bar still shows")
     assertEqual(body.visible, n)
     wheel(Hud, -50, "over")
     assertEqual(body.offset, 9 - n, "held at the last full window")
@@ -230,7 +226,7 @@ test("hud sizing: the grip's bounds follow the parts shown", function()
     local inst, _, Hud = liveOn(fightOf(3))
     local f = Hud.Frame()
     local b = f.__resizeBounds
-    assertEqual(b[1], 260)
+    assertEqual(b[1], inst.NS.Hud.MIN_WIDTH)
     assertEqual(b[2], chrome(inst) + TOP + PROFILE + spellsBlock(1), "one bar at the least")
     assertEqual(b[4], chrome(inst) + TOP + PROFILE + spellsBlock(15), "fifteen at the most")
     H.setHud(inst, "layout.chart", false)
@@ -238,7 +234,7 @@ test("hud sizing: the grip's bounds follow the parts shown", function()
     assertEqual(f.__resizeBounds[2], chrome(inst) + TOP + spellsBlock(1))
 end)
 
-test("hud sizing: the grip is hidden while locked and in auto mode, and refuses a drag", function()
+test("hud sizing: the grip is hidden while locked, and refuses a drag", function()
     local inst, _, Hud = liveOn(fightOf(8))
     local NS = inst.NS
     local f = Hud.Frame()
@@ -249,13 +245,6 @@ test("hud sizing: the grip is hidden while locked and in auto mode, and refuses 
     assertFalse(NS.Sizing.IsSizing(f), "a locked HUD refuses the drag")
     grip:__fire("OnMouseUp")
     NS.SetByPath("general.locked", false)
-    assertTrue(grip:IsShown())
-    H.setHud(inst, "sizeMode", "auto")
-    assertFalse(grip:IsShown(), "auto mode sizes itself")
-    grip:__fire("OnMouseDown", "LeftButton")
-    assertFalse(NS.Sizing.IsSizing(f))
-    grip:__fire("OnMouseUp")
-    H.setHud(inst, "sizeMode", "fixed")
     assertTrue(grip:IsShown())
 end)
 
@@ -295,12 +284,11 @@ test("hud sizing: with every spell in view there is no scroll and no count", fun
 end)
 
 test("hud sizing: zero spells draws no row and keeps the HUD drawable", function()
-    local inst, _, Hud = liveOn(fightOf(0))
+    local _, _, Hud = liveOn(fightOf(0))
     assertEqual(#rows(Hud), 0)
     wheel(Hud, -1)
     assertEqual(H.body(Hud, "live").offset, 0)
-    H.setHud(inst, "sizeMode", "auto")
-    assertEqual(Hud.Frame().__h, chrome(inst) + H.body(Hud, "live").height)
+    assertEqual(Hud.Frame().__h, Hud.FixedHeight(), "the same one height with no spells")
 end)
 
 test("hud sizing: a new fight starts its rows at the top", function()
@@ -314,20 +302,7 @@ test("hud sizing: a new fight starts its rows at the top", function()
     assertEqual(firstID(Hud), 1001)
 end)
 
--- ── auto mode ───────────────────────────────────────────────────────────────────────────────────
-
-test("hud sizing: auto mode grows with the rows up to the bars, then scrolls", function()
-    local heights = {}
-    for _, n in ipairs({ 3, 5, 12 }) do
-        local inst, _, Hud = liveOn(fightOf(n), { hud = { sizeMode = "auto" } })
-        local body = H.body(Hud, "live")
-        assertEqual(#rows(Hud), math.min(n, 5))
-        assertEqual(Hud.Frame().__h, chrome(inst) + body.height, "the window is the stack")
-        heights[n] = body.height
-    end
-    assertEqual(heights[5] - heights[3], 2 * 20, "two more rows, two more pitches")
-    assertEqual(heights[12], heights[5], "past the bars it scrolls instead of growing")
-end)
+-- ── the place ───────────────────────────────────────────────────────────────────────────────────
 
 -- The anchor the frame was last placed by.
 local function anchor(f) return f.__points[1] end
@@ -339,73 +314,48 @@ local function edges(f, left, top, bottom)
     rawset(f, "GetBottom", function() return bottom end)
 end
 
-test("hud sizing: grow down keeps the top in place, grow up the bottom", function()
-    local inst, _, Hud = liveOn(fightOf(2), { hud = { sizeMode = "auto" } })
+test("hud sizing: a drag stores the top left, so a height change keeps the top in place", function()
+    local inst, _, Hud = liveOn(fightOf(2))
     local NS = inst.NS
     local f, ui = Hud.Frame(), Hud.__ui()
     edges(f, 400.4, 700.6, 300.2)
     ui.drag:__fire("OnDragStop")
     local p = NS.db.profile.hud.position
-    assertEqual(p.point, "TOPLEFT", "grow down: the top edge is the anchor")
+    assertEqual(p.point, "TOPLEFT", "the top edge is the anchor")
     assertEqual(p.relPoint, "BOTTOMLEFT")
     assertEqual(p.x, 400)
     assertEqual(p.y, 701)
-    assertEqual(anchor(f)[1], "TOPLEFT")
-    H.setHud(inst, "grow", "up")
-    assertEqual(p.point, "BOTTOMLEFT", "grow up: the bottom edge is the anchor")
-    assertEqual(p.relPoint, "BOTTOMLEFT")
-    assertEqual(p.y, 300)
-    assertEqual(anchor(f)[1], "BOTTOMLEFT")
-    assertEqual(anchor(f)[5], 300)
     local before = f.__h
     H.setHud(inst, "layout.target", false)
     assertTrue(f.__h ~= before, "the window changed height")
-    assertEqual(anchor(f)[1], "BOTTOMLEFT", "and kept its bottom")
-    assertEqual(anchor(f)[5], 300)
+    assertEqual(anchor(f)[1], "TOPLEFT", "and kept its top")
+    assertEqual(anchor(f)[5], 701)
 end)
 
-test("hud sizing: a stored point that already suits the grow edge is kept", function()
-    local inst, _, Hud = liveOn(fightOf(2), { hud = { sizeMode = "auto" } })
+test("hud sizing: a stored point already on the top edge is kept", function()
+    local inst, _, Hud = liveOn(fightOf(2))
     local NS = inst.NS
-    local f = Hud.Frame()
-    edges(f, 10, 20, 5)
-    H.setHud(inst, "grow", "down")
+    edges(Hud.Frame(), 10, 20, 5)
+    Hud.Refresh()
     local p = NS.db.profile.hud.position
-    assertEqual(p.point or NS.defaults.profile.hud.position.point, "TOPRIGHT", "the default already grows down")
+    assertEqual(p.point or NS.defaults.profile.hud.position.point, "TOPRIGHT", "the default is on the top edge")
     Hud.ResetPosition()
     assertEqual(p.point, "TOPRIGHT")
 end)
 
-test("hud sizing: switching the mode mid-fight redraws without error", function()
-    local inst, _, Hud = liveOn(fightOf(12))
-    local f = Hud.Frame()
-    local fixed = f.__h
-    H.setHud(inst, "sizeMode", "auto")
-    assertEqual(f.__h, chrome(inst) + H.body(Hud, "live").height)
-    assertEqual(#rows(Hud), 5)
-    H.tick(inst, 102.25, 103)
-    H.setHud(inst, "sizeMode", "fixed")
-    assertEqual(f.__h, fixed)
-    H.finish(inst, 100, 40)
-    H.setHud(inst, "sizeMode", "auto")
-    assertEqual(Hud.State(), "over")
-    assertEqual(f.__h, chrome(inst) + H.body(Hud, "over").height)
-end)
-
-test("hud sizing: grow up chosen before the window is built takes the bottom edge at its first show", function()
+test("hud sizing: a stored point off the top edge (an older profile) takes the top left at the first show", function()
     local inst, meter, Hud = H.fresh()
     local NS = inst.NS
+    local p = NS.db.profile.hud.position
+    p.point, p.relPoint, p.x, p.y = "BOTTOMLEFT", "BOTTOMLEFT", 400, 300
     assertTrue(Hud.Frame() == nil, "the window is built on first show")
-    H.setHud(inst, "sizeMode", "auto")
-    H.setHud(inst, "grow", "up")
     H.start(inst, meter, 2, fightOf(2), 100)
     local f = Hud.Frame()
     track(f)
     edges(f, 400.4, 700.6, 300.2)
     Hud.Refresh()
-    local p = NS.db.profile.hud.position
-    assertEqual(p.point, "BOTTOMLEFT", "the stored point moved onto the grow edge")
+    assertEqual(p.point, "TOPLEFT", "the stored point moved onto the top edge")
     assertEqual(p.relPoint, "BOTTOMLEFT")
-    assertEqual(p.y, 300)
-    assertEqual(anchor(f)[1], "BOTTOMLEFT")
+    assertEqual(p.y, 701)
+    assertEqual(anchor(f)[1], "TOPLEFT")
 end)

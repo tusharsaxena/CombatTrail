@@ -20,7 +20,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `race` | every race event: both regen edges, `PLAYER_DEAD`, the meter's session updates and the player's casts (modules/RaceWatchers.lua) | only while a race runs or waits for its read (Retail) |
 | `autoArm` | auto-show's and auto-arm's target, nameplate and `PLAYER_ENTERING_WORLD` events (modules/AutoArm.lua) | only while either rule is on, Race mode on (Retail); nameplates churn in a city |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
-| `combatLog` | every aura, hit, heal, death and combat end the Combat Log hears (modules/CombatLog.lua's frame); its casts come in through `laneCast` and are not bracketed again | every `UNIT_AURA` on the player and the target and every `UNIT_COMBAT` on the player, only while a fight is open |
+| `combatLog` | every aura, hit, heal and death the Combat Log hears (no combat-end line since owner feedback item 10) (modules/CombatLog.lua's frame); its casts come in through `laneCast` and are not bracketed again | every `UNIT_AURA` on the player and the target and every `UNIT_COMBAT` on the player, only while a fight is open |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
 | `hud` | the HUD's read and redraw on each beat (modules/Hud.lua: its own beat, or the race beat's call), holding `meter` | `hud.refreshRate` times a second (4, 5, 10 or 20, default 10) while the HUD is up on a live fight; no read in the settle |
 | `raceWindow` | the Race window's redraw on each race beat and its idle events (modules/RaceWindow.lua); it reads no meter | `hud.refreshRate` times a second (default 10), only while the window is shown and a race runs or waits for its read (Retail) |
@@ -79,6 +79,16 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   and height (`log.view.fontSize`, `log.view.rowHeight`) are read at layout, which runs only when the
   width, the rows, the columns or one of those two change, never on a paint: a new text size sets each
   pooled label's face once (a named font object per size, made once and kept).
+- The live views' scroll bar (owner feedback item 6, Spell breakdown's indicator) needs the count of
+  lines the view accepts, and walking the 2000-line ring on every paint cost 2.2 ms a paint against
+  0.16, so the feed keeps the count instead (`LogTable.Count`): it adds the lines that arrive, takes
+  off the lines the ring drops (a mark per slot), and counts again only when the floor, the top or the
+  filter changes (`LogTable.Refilter`, from each home's seed and chip click). An indicator that did not
+  move is not placed again. With the chips shown by default (item 9) the drawer's height reads the
+  HUD's width on every beat, so the HUD's `width()` reads through `NS.GetSetting` rather than the
+  local path walker, whose iterator cost 88 bytes a call (`logPlaceIdle` back to 0.2 bytes a beat).
+  `logPaint` is 6,992 bytes and about 0.2 ms a repaint at the default ten rows (5,696 at eight, CLF-2);
+  its ceiling is still 10,240.
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
 - When the HUD's beat and a slices boundary tick land in one frame they share one `Meter.ReadLive` of

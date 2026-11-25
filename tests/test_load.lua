@@ -100,12 +100,12 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 4 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 4)
+test("load: the settings stamp is 7 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 7)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
-test("load: a schema 1 store loads empty at version 4, keeping the account's other state", function()
+test("load: a schema 1 store loads empty at the current version, keeping the account's other state", function()
     local old = { schema = 1, id = "f-old", t = 1000, duration = 60, status = "final", dps = 100 }
     local NS = boot({ global = {
         schemaVersion = 1,
@@ -114,7 +114,7 @@ test("load: a schema 1 store loads empty at version 4, keeping the account's oth
         usage = { hidden = "6948" }, minimap = { hide = true },
     } })
     local g = NS.db.global
-    assertEqual(g.schemaVersion, 4, "stamped")
+    assertEqual(g.schemaVersion, NS.SCHEMA_VERSION, "stamped")
     assertEqual(count(g.fights), 0, "fights emptied")
     assertEqual(#g.fightOrder, 0, "fightOrder emptied")
     assertEqual(count(g.loadouts), 0, "loadouts emptied")
@@ -137,8 +137,83 @@ end)
 test("load: a fresh install runs step 2 harmlessly", function()
     local NS = boot(nil)
     local g = NS.db.global
-    assertEqual(g.schemaVersion, 4)
+    assertEqual(g.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(type(g.fights), "table")
     assertEqual(type(g.fightOrder), "table")
     assertEqual(count(g.fights), 0)
+end)
+
+test("load: step 5 drops the Combat Log's retired keys in every profile, and keeps the rest", function()
+    local function stored()
+        return { log = { drawer = { shown = true, collapsed = true, strip = false, rows = 12 },
+                         view = { columns = { source = false, target = true, info = false } } } }
+    end
+    local NS = boot({ global = { schemaVersion = 4 }, profiles = { Default = stored(), Other = stored() } })
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Other" }) do
+        local log = sv[name].log
+        -- red under: no step, or one over the active profile alone
+        assertEqual(rawget(log.drawer, "collapsed"), nil, name .. ": the fold's key")
+        assertEqual(rawget(log.drawer, "strip"), nil, name .. ": the folded line's key")
+        assertEqual(rawget(log.view.columns, "source"), nil, name .. ": the Source toggle")
+        assertEqual(rawget(log.view.columns, "target"), nil, name .. ": the Target toggle")
+        assertEqual(log.drawer.shown, true, name .. ": the open kept")
+        assertEqual(log.drawer.rows, 12, name .. ": the rows kept")
+        assertEqual(log.view.columns.info, false, name .. ": the Info toggle kept")
+    end
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    -- Idempotent, and harmless on a profile with no log table.
+    NS.DropRetiredLogKeys(sv.Default)
+    NS.DropRetiredLogKeys({})
+    assertEqual(sv.Default.log.drawer.rows, 12)
+end)
+
+test("load: step 6 drops the HUD's auto-grow and the log window's attached state in every profile", function()
+    local function stored()
+        return { hud = { sizeMode = "auto", grow = "up", bars = 7, width = 390 },
+                 log = { window = { attached = true, side = "RIGHT", matchHud = false, pinned = true, rows = 20,
+                                    width = 500, position = { point = "TOPLEFT", x = 10, y = 20 } } } }
+    end
+    local NS = boot({ global = { schemaVersion = 5 }, profiles = { Default = stored(), Other = stored() } })
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Other" }) do
+        local hud, w = sv[name].hud, sv[name].log.window
+        -- red under: no step, or one over the active profile alone
+        assertEqual(rawget(hud, "sizeMode"), nil, name .. ": the size mode")
+        assertEqual(rawget(hud, "grow"), nil, name .. ": the grow edge")
+        for _, key in ipairs({ "attached", "side", "matchHud", "pinned" }) do
+            assertEqual(rawget(w, key), nil, name .. ": log.window." .. key)
+        end
+        assertEqual(hud.bars, 7, name .. ": the bars kept")
+        assertEqual(hud.width, 390, name .. ": the width kept")
+        assertEqual(w.rows, 20, name .. ": the window's rows kept")
+        assertEqual(w.width, 500, name .. ": its width kept")
+        assertEqual(w.position.x, 10, name .. ": its own place kept")
+    end
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    NS.DropRetiredWindowKeys(sv.Default)
+    NS.DropRetiredWindowKeys({})
+    NS.DropRetiredWindowKeys({ log = {} })
+    assertEqual(sv.Default.hud.bars, 7)
+end)
+
+test("load: step 7 carries each profile's lock to the lanes' own, so no lanes unlock by surprise", function()
+    local NS = boot({ global = { schemaVersion = 6 }, profiles = {
+        Locked = { general = { locked = true } },
+        Open = { general = { locked = false } },
+        Bare = { hud = { bars = 6 } },
+        Own = { general = { locked = true, lanesLocked = false } },
+    } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: no step, or one over the active profile alone
+    assertEqual(sv.Locked.general.lanesLocked, true, "a locked profile keeps its lanes locked")
+    assertEqual(sv.Locked.general.locked, true, "and keeps its HUD lock")
+    assertEqual(rawget(sv.Open.general, "lanesLocked"), nil, "an unlocked one stores nothing")
+    assertEqual(rawget(sv.Bare, "general"), nil, "a profile with no lock is left alone")
+    assertEqual(sv.Own.general.lanesLocked, false, "a lanes lock already stored is kept")
+    assertEqual(NS.db.global.schemaVersion, 7)
+    NS.CarryLanesLock(sv.Locked)
+    NS.CarryLanesLock({})
+    NS.CarryLanesLock(nil)
+    assertEqual(sv.Locked.general.lanesLocked, true, "idempotent")
 end)

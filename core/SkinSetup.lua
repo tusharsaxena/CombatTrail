@@ -297,8 +297,9 @@ NS.SKIN_TOKENS = {
     ["ct.modal.divider"] = { default = opaque(NS.SKIN_FALLBACK["divider"], WIN_BG), follow = "divider",
                              skins = modal("divider") },
     -- The Combat Log's table (modules/LogTable.lua): the event tags (the off tags dimmed), the who
-    -- colors past the class and pet ones the HUD already draws, the three row washes (a hit, a debuff
-    -- you put on, a long-cooldown cast) and the HUD drawer's accent seam.
+    -- colors past the class and pet ones the HUD already draws (undrawn since the Source and Target
+    -- columns went, owner feedback item 3), and the three row washes (a hit, a debuff you put on, a
+    -- long-cooldown cast). The drawer has no seam (item 18).
     ["ct.log.buff"]        = { default = rgba(GREEN, 1), follow = "sem.good" },
     ["ct.log.buffOff"]     = { default = rgba(GREEN, 0.55), follow = "text.muted" },
     ["ct.log.debuff"]      = { default = rgba(ORANGE, 1), follow = "sem.warn" },
@@ -310,7 +311,6 @@ NS.SKIN_TOKENS = {
     ["ct.log.wash.hit"]    = { default = rgba(RED, 0.10), follow = "list.hover", skins = wash("sem.statusBad", 0.10) },
     ["ct.log.wash.debuff"] = { default = rgba(ORANGE, 0.10), follow = "list.hover", skins = wash("sem.warn", 0.10) },
     ["ct.log.wash.cd"]     = { default = rgba(GOLD, 0.07), follow = "list.stripe", skins = wash("text.accent", 0.07) },
-    ["ct.log.seam"]        = { default = rgba(GOLD, 0.6), follow = "section.rule" },
     -- The spell schools, the client's combat log colors under every Ka0s skin (a meaning hue).
     ["ct.school.physical"] = { default = SCHOOL.physical, follow = "text.body", skins = same(SCHOOL.physical) },
     ["ct.school.holy"]     = { default = SCHOOL.holy, follow = "text.body", skins = same(SCHOOL.holy) },

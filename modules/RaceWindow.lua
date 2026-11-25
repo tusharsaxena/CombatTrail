@@ -24,9 +24,10 @@ local _, NS = ...
 --
 -- ITS HEIGHT (Task W4, ruling O3). Its least, RW.Height(): the chrome and the content the tallest body
 -- needs. Attached LEFT or RIGHT with `raceWindow.matchHud` on (the default), it takes the DPS HUD's
--- height instead (Hud.Height(): its fixed or grown height, or the grip's while held), never less than
--- its least; the HUD tells it each time that height changes (RW.OnHudResized: the bars, auto-grow, the
--- grip, the title bar or footer, a layout part), so the two stay level. TOP, BOTTOM, detached or the
+-- height instead (Hud.Height(): its one static height, the docked log's sections in it, or the grip's
+-- while held), never less than its least; the HUD tells it each time that height changes
+-- (RW.OnHudResized: the bars, the log's open and close and its rows, the grip, the title bar or
+-- footer, a layout part), so the two stay level. TOP, BOTTOM, detached or the
 -- row off: `raceWindow.height`, never less than its least (the default 0 is its least). The bodies
 -- fill the content frame, so their bottom buttons stay pinned to the window's bottom whatever its
 -- height, and the view carries the content's height (`height`) and width (`width`).
@@ -836,12 +837,9 @@ end
 
 -- The sim window (`/ct sim`'s step panel, modules/Sim.lua) docks beside this window while it is up
 -- and beside the DPS HUD otherwise, so each show and hide of the frame docks a shown one again.
--- modules/Sim.lua loads after this file, so it is reached at call time. The detached Combat Log
--- window (modules/LogWindow.lua, CL-11b2) stands beyond this window when both are attached on one
--- side, so it docks again too, and the two never overlap.
+-- modules/Sim.lua loads after this file, so it is reached at call time. The detached Combat Log is a
+-- standalone window (owner feedback item 11): nothing here moves it.
 local function redockSim()
-    local LW = NS.LogWindow
-    if LW and LW.Redock then LW.Redock() end
     local Sim = NS.Sim
     if Sim and Sim.Redock then Sim.Redock() end
 end

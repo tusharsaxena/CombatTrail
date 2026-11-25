@@ -59,7 +59,7 @@ LibSharedMedia, LibDataBroker and LibDBIcon copies are Panel Master's (the set t
 clients).
 
 Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.113.0 (MIT).
-LibKa0s icons: arrow-left, chart, chat, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
+LibKa0s icons: arrow-left, chart, chevron-down, chevron-left, chevron-right, chevron-up, clear, close, confirm, copy, export, eye, flag, info, lock, move, ph:check, ph:flag, ph:ghost, ph:list-bullets, ph:paw-print, ph:skull, ph:trophy, ph:x, reset, settings, sort-down, sort-up, unlock, volume-high.
 LibKa0s sounds: callout/male-arena-john, callout/female-kathleen, callout/female-kristin, callout/female-cori, callout/female-bella, callout/male-joe, callout/male-john, callout/male-norman.
 
 The first of those three lines is the **provenance line**: `tests/test_vendor_sync.lua` reads it and
