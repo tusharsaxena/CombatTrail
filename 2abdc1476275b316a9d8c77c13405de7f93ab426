@@ -1,0 +1,4 @@
+Independent review, Ka0sAddonsCommonTasks docs/2026-11-25-SEEDS_AND_FOREVERDB (workflows wf_df07c1ab-8d1, wf_219c4c4a-92a)
+SF-CT-01: 1 findings (minor); fix pass: 2abdc14 SF-CT-01: review fixes, drop the executable bit from the seed fixture CSVs; fix gate green=True
+  - [minor] tools/seeds/fixtures/SpellName.csv:1 All six new fixture CSVs (ItemEffect, ItemXItemEffect, SpellCategories, SpellEffect, SpellName, Toy) were committed with mode 100755. They are data files and should not be executable. The rest of tool
+Lead gate re-run 2026-11-25 at this head: green (see EXECUTION_RECORD.md).
