@@ -175,6 +175,28 @@ test("log window: at its own place, scale and height by default, never beside th
     assertEqual(LW.Anchor()[5], 600, "the stored place")
 end)
 
+test("log window: Master controls' Reset position puts it back at its shipped place; /ct lock locks it", function()
+    local _, NS = fresh()
+    detached(NS)
+    local LW, d = NS.LogWindow, NS.defaults.profile.log.window.position
+    NS.db.profile.log.window.position = { point = "TOPLEFT", relPoint = "BOTTOMLEFT", x = 30, y = 600 }
+    LW.Refresh()
+    assertEqual(LW.Anchor()[1], "TOPLEFT")
+    NS.ResetPositions()
+    local p = NS.db.profile.log.window.position
+    assertEqual(p.point, d.point)
+    assertEqual(p.x, d.x)
+    assertEqual(p.y, d.y)
+    assertEqual(LW.Anchor()[1], d.point, "applied at once")
+    assertEqual(LW.Anchor()[4], d.x)
+    local grip = LW.__ui().frame.resizeGrip
+    assertTrue(grip ~= nil and grip:IsShown(), "unlocked: the grip")
+    assertTrue(NS.SetByPath("general.locked", true))
+    assertFalse(grip:IsShown(), "/ct lock: no grip, no drag")
+    assertTrue(NS.SetByPath("general.locked", false))
+    assertTrue(grip:IsShown(), "/ct unlock: the grip back")
+end)
+
 test("log window: its rows fill the height it has", function()
     local _, NS = fresh()
     local ui = detached(NS)

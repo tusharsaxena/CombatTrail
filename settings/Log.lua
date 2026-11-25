@@ -178,20 +178,20 @@ for _, r in ipairs(H.ColorPair({
     prefix = "log.colors.", page = PAGE, group = group, subgroup = subgroup, classColor = { source = "player" },
     key = "you", companionKey = "useClassColorYou", label = L["Your color"], colorFromSkin = false,
     defaults = { you = D.colors.you, useClassColorYou = D.colors.useClassColorYou },
-    tooltips = { you = L["The color \"You\" is drawn in, in Source and Target."] },
+    tooltips = { you = L["The color kept for \"You\". No part of the log draws it now."] },
 })) do
     r.composed = true
     out[#out + 1] = r
 end
 at(TAB.colors, L["Targets"])
 row("colors.hostile", { type = "color", hasAlpha = false, label = L["Hostile target color"], startsLine = true,
-    tooltip = L["The color of a target you can attack. Not read while Use the skin's color is on."] })
+    tooltip = L["The color kept for a target you can attack. No part of the log draws it now."] })
 row("colors.hostileFromSkin", { type = "bool", label = L["Use the skin's color"],
-    tooltip = L["Draw a hostile target in the skin's own color. The swatch is not read while this is on."] })
+    tooltip = L["Take the hostile target color from the skin. The swatch is not read while this is on."] })
 row("colors.friendly", { type = "color", hasAlpha = false, label = L["Friendly target color"], startsLine = true,
-    tooltip = L["The color of a target you cannot attack. Not read while Use the skin's color is on."] })
+    tooltip = L["The color kept for a target you cannot attack. No part of the log draws it now."] })
 row("colors.friendlyFromSkin", { type = "bool", label = L["Use the skin's color"],
-    tooltip = L["Draw a friendly target in the skin's own color. The swatch is not read while this is on."] })
+    tooltip = L["Take the friendly target color from the skin. The swatch is not read while this is on."] })
 
 -- Storage
 at(TAB.store, L["Storage"])

@@ -283,9 +283,9 @@ modules\Results_Loadout.lua
 modules\Results_Usage.lua
 modules\Results_Targets.lua
 modules\Results_RaceDetail.lua
-# The detail's Log tab (CL-11c): captures NS.Style, NS.LogTable, NS.CombatLog and NS.HudStates (the
-# scroll indicator's sizes, owner feedback item 6) at FILE SCOPE;
-# reaches NS.ResultsFights, NS.Recorder, NS.HudBreakdown and NS.ResultsTimelineData at CALL time only.
+# The detail's Log section (CL-11c, owner feedback item 19): captures NS.Style, NS.LogTable, NS.CombatLog
+# and NS.HudStates (the scroll indicator's sizes, owner feedback item 6) at FILE SCOPE;
+# reaches NS.ResultsTimelineData at CALL time only.
 modules\Results_Log.lua
 modules\Results_Detail.lua
 modules\Share.lua

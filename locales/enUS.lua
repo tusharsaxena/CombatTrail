@@ -1424,17 +1424,17 @@ L["Row washes"] = "Row washes"
 L["Tint the rows of hits taken, debuffs going on and long-cooldown casts. Off, every row has the plain stripe."] =
     "Tint the rows of hits taken, debuffs going on and long-cooldown casts. Off, every row has the plain stripe."
 L["Your color"] = "Your color"
-L["The color \"You\" is drawn in, in Source and Target."] = "The color \"You\" is drawn in, in Source and Target."
+L["The color kept for \"You\". No part of the log draws it now."] = "The color kept for \"You\". No part of the log draws it now."
 L["Hostile target color"] = "Hostile target color"
-L["The color of a target you can attack. Not read while Use the skin's color is on."] =
-    "The color of a target you can attack. Not read while Use the skin's color is on."
-L["Draw a hostile target in the skin's own color. The swatch is not read while this is on."] =
-    "Draw a hostile target in the skin's own color. The swatch is not read while this is on."
+L["The color kept for a target you can attack. No part of the log draws it now."] =
+    "The color kept for a target you can attack. No part of the log draws it now."
+L["Take the hostile target color from the skin. The swatch is not read while this is on."] =
+    "Take the hostile target color from the skin. The swatch is not read while this is on."
 L["Friendly target color"] = "Friendly target color"
-L["The color of a target you cannot attack. Not read while Use the skin's color is on."] =
-    "The color of a target you cannot attack. Not read while Use the skin's color is on."
-L["Draw a friendly target in the skin's own color. The swatch is not read while this is on."] =
-    "Draw a friendly target in the skin's own color. The swatch is not read while this is on."
+L["The color kept for a target you cannot attack. No part of the log draws it now."] =
+    "The color kept for a target you cannot attack. No part of the log draws it now."
+L["Take the friendly target color from the skin. The swatch is not read while this is on."] =
+    "Take the friendly target color from the skin. The swatch is not read while this is on."
 L["Save a log with each fight"] = "Save a log with each fight"
 L["Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."] =
     "Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."

@@ -247,7 +247,7 @@ NS.defaults = {
         -- (modules/LogWindow.lua), whose keys are `window`: a standalone window at its own `position`
         -- (owner feedback item 11: no attached state, so no side, HUD-height match or pin, schema step 6),
         -- its rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least)
-        -- set by its grip, `locked`, its `scale` and its `alpha` (0.1-1). Then the Results fight detail's Log tab (CL-11c,
+        -- set by its grip, `locked`, its `scale` and its `alpha` (0.1-1). Then the Results fight detail's Log section (CL-11c,
         -- modules/Results_Log.lua): the chips each fight opens on, and whether a click on a CAST row jumps
         -- the ability timeline to that cast.
         log = {

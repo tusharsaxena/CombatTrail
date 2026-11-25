@@ -499,6 +499,18 @@ end
 --- The place applied last: { point, relativeTo, relPoint, x, y } (the suites read it), or nil.
 function LW.Anchor() return anchor end
 
+--- Master controls' Reset position (core/CombatTrail.lua's PLACED): back to the shipped place. Its
+--- size, scale and lock stay; the lock follows `general.locked` through LW.Refresh already.
+function LW.ResetPosition()
+    local w, d = store(), NS.defaults and NS.defaults.profile and NS.defaults.profile.log
+    d = type(d) == "table" and type(d.window) == "table" and d.window.position or nil
+    if not (w and type(d) == "table") then return end
+    local p = w.position
+    for k in pairs(p) do p[k] = nil end
+    for k, v in pairs(d) do p[k] = v end
+    if ui and windowShown() then applyPlacement() end
+end
+
 -- ── the acts ────────────────────────────────────────────────────────────────────────────────────
 
 function Act.close()

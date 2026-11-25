@@ -64,8 +64,8 @@ an open Race window with the HUD, and opens the HUD alone. The keys are the game
 never reaches them; the same bindings show under Options → Keybindings → Ka0s Combat Trail.
 
 Master controls also carries *Reset position* (the lanes, the HUD and the Results window back to their
-starting places, and with them the detached Race window's place on Retail and the new-best toast's
-dragged place: `NS.ResetPositions`, core/CombatTrail.lua) and *Reset all settings*, which asks first.
+starting places, and with them the detached Race window's place on Retail, the new-best toast's
+dragged place and the detached Combat Log window's place: `NS.ResetPositions`, core/CombatTrail.lua) and *Reset all settings*, which asks first.
 Race mode adds one key binding on Retail, *Toggle Race window*, after *Toggle Results window* (the
 owner's decision of 2026-11-13, superseding ruling X18; its row is built under `ForClient` and its
 binding lives in Retail's `Bindings_Mainline.xml`, a documented deviation). WoW Forever's tab keeps
