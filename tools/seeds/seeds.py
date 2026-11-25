@@ -64,7 +64,14 @@ HOW THE BUFF RULES READ (defaults/BuffSeeds.lua's header)
               ignored) and that has a SpellEffect row applying an aura (AURA_EFFECTS), at any
               DifficultyID. Each candidate's notes carry the catalog entry and the aura types, so the
               ruling can tell a stat buff from an experience buff or a placeholder.
-    wellfed   every spell whose name matches WELL_FED_NAME and that applies an aura.
+    wellfed   rule 1, every spell whose name matches WELL_FED_NAME and that applies an aura; plus rule 2,
+              the buff a food item gives under another name (Dirge's Kickin' Chimaerok Chops' "Increased
+              Stamina"): for every Consumable item of the Food & Drink subclass the food rule derives,
+              or whose use spell is named one of EATING_NAMES, the aura spells its use spell triggers
+              (EffectTriggerSpell, one hop), and the use spell itself when it applies an aura that is not
+              an eating aura (EATING_AURAS). Names in FOOD_AURA_EXCLUDED (the Eat and Drink auras, the
+              Become Well Fed triggers, test and [DNT] spells) are left out. Each rule 2 candidate's
+              notes name the items that give it ("item <id> triggers" or "item <id> applies").
     food      the Consumable (Item ClassID 0) subclass holding the most items whose use spell
               (ItemEffect -> ItemXItemEffect) is named one of EATING_NAMES, the Eat and Drink
               auras. The counts per class and subclass are kept as evidence.
@@ -81,7 +88,7 @@ FOREVERDB (flavor `forever` only; GPL-3.0 data, standard clients-§10)
 THE STEPS
     python3 tools/seeds/seeds.py status --flavor retail
     python3 tools/seeds/seeds.py status --flavor forever --foreverdb <tag>
-    python3 tools/seeds/seeds.py derive --flavor retail --bundle docs/seed-research/<date>-retail --date <date> [--build V] [--replay]
+    python3 tools/seeds/seeds.py derive --flavor retail --bundle docs/seed-research/<date>-retail[-<label>] --date <date> [--build V] [--replay]
     python3 tools/seeds/seeds.py derive --flavor forever --bundle docs/seed-research/<date>-forever --date <date> \\
         --foreverdb <tag> --foreverdb-script <root>/scripts/foreverdb.py [--foreverdb-install DIR] [--build V] [--replay]
     python3 tools/seeds/seeds.py check  --bundle <bundle>
@@ -229,6 +236,19 @@ WELL_FED_SENTINEL = {19705: "Well Fed"}
 # The use spells of food and drink: the Eat and Drink auras (enUS names on both clients' builds).
 EATING_NAMES = ("Food", "Drink", "Refreshment", "Food & Drink")
 CONSUMABLE_CLASS = 0
+# The Well Fed rule 2's exclusions: a spell a food item's use spell triggers, or the use spell itself,
+# under one of these names is the eating itself, a trigger or test data, never the buff the food gives.
+# Matched in full for the names (Brain Food is not Food), anywhere for the test markers.
+FOOD_AURA_EXCLUDED = re.compile(r"\A(?:Food|Drink|Refreshment|Food & Drink|Become Well Fed)\Z|\[DNT\]|\bTEST\b|\(TEST\)")
+# The aura types of the eating itself (SpellAuraNames): DUMMY 4, PERIODIC_TRIGGER_SPELL 23, MOD_REGEN 84,
+# MOD_POWER_REGEN 85, PERIODIC_DUMMY 226, PERIODIC_TRIGGER_SPELL_WITH_VALUE 227. A use spell with only
+# these is the Eat or Drink aura (Blessed Sunfruit 18124); one with another aura is itself the buff
+# (Dragonbreath Chili 15852, a proc).
+EATING_AURAS = frozenset((4, 23, 84, 85, 226, 227))
+# A bundle's folder: <date>-<flavor>, or <date>-<flavor>-<label> for a second run on the same day and
+# build that must not rewrite a frozen bundle (2026-11-25-retail-buffs). Sorted by name, a labelled
+# bundle follows its day's plain one.
+BUNDLE_NAME = re.compile(r"^\d{4}-\d{2}-\d{2}-(?P<flavor>[a-z]+)(?:-[a-z0-9]+)?$")
 
 LISTS = ("hearthstones", "ignore", "dummies", "buffs", "wellfed", "food")
 BUFF_LISTS = ("buffs", "wellfed", "food")
@@ -438,6 +458,7 @@ class Facts:
         self.spell_names = {_int(r["ID"]): r["Name_lang"] for r in iter_csv(tables["SpellName"])}
         self.charge, self.teleports, self.triggered_by, self.cast_by = set(), set(), {}, {}
         self.auras, self.eating = {}, {}  # spell -> {EffectAura}; (ClassID, SubclassID) -> {item}
+        self.triggers, self.item_kind = {}, {}  # spell -> {EffectTriggerSpell}; item -> (ClassID, SubclassID)
         if "SpellCategories" in tables:
             self.charge = {_int(r["SpellID"]) for r in iter_csv(tables["SpellCategories"])
                            if r["ChargeCategory"] == HEARTH_CHARGE_CATEGORY}
@@ -455,6 +476,7 @@ class Facts:
             trigger = _int(r.get("EffectTriggerSpell"))
             if trigger:
                 self.triggered_by.setdefault(trigger, set()).add(spell)
+                self.triggers.setdefault(spell, set()).add(trigger)
             if r["Effect"] in AURA_EFFECTS:
                 self.auras.setdefault(spell, set()).add(_int(r.get("EffectAura")))
 
@@ -463,6 +485,7 @@ class Facts:
         toys = {_int(r["ItemID"]) for r in iter_csv(tables["Toy"])} if "Toy" in tables else set()
         kinds = {_int(r["ID"]): (_int(r["ClassID"]), _int(r["SubclassID"]))
                  for r in iter_csv(tables["Item"])} if "Item" in tables else {}
+        self.item_kind = kinds
         for r in iter_csv(tables["ItemXItemEffect"]):  # spell -> {(item, is_toy)}
             spell = effect_spell.get(_int(r["ItemEffectID"]))
             if spell:
@@ -525,11 +548,56 @@ def derive_buffs(facts: Facts, flavor: str) -> dict:
     return out
 
 
-def derive_wellfed(facts: Facts) -> dict:
-    """`{id: [notes]}`: every aura spell named like Well Fed (WELL_FED_NAME)."""
+def _food_item(facts: Facts, item: int, spell: int, food_subclass) -> bool:
+    """Whether `item`, which casts `spell`, is food: a Consumable of the Food & Drink subclass, or one
+    whose use spell is an Eat or Drink aura (the holiday foods filed under Other)."""
+    kind = facts.item_kind.get(item)
+    if not kind or kind[0] != CONSUMABLE_CLASS:
+        return False
+    return kind[1] == food_subclass or facts.spell_names.get(spell) in EATING_NAMES
+
+
+def _food_buff(facts: Facts, spell: int) -> bool:
+    name = facts.spell_names.get(spell)
+    return bool(name) and spell in facts.auras and not FOOD_AURA_EXCLUDED.search(name)
+
+
+def food_buffs(facts: Facts, food_subclass) -> dict:
+    """`{id: [notes]}`: Well Fed rule 2, the auras food gives under another name. For each food item's
+    use spell, every aura spell it triggers (one hop), and the use spell itself when it applies an
+    aura other than an eating one (EATING_AURAS); the names FOOD_AURA_EXCLUDED lists are left out."""
+    givers = {}  # aura spell -> {(verb, item)}
+    for spell, casters in facts.cast_by.items():
+        foods = sorted(item for item, _toy in casters if _food_item(facts, item, spell, food_subclass))
+        if not foods:
+            continue
+        found = [(t, "triggers") for t in sorted(facts.triggers.get(spell, ())) if _food_buff(facts, t)]
+        if facts.auras.get(spell, set()) - EATING_AURAS and _food_buff(facts, spell):
+            found.append((spell, "applies"))
+        for aura, verb in found:
+            givers.setdefault(aura, set()).update((verb, item) for item in foods)
+    out = {}
+    for aura, given in givers.items():
+        items = sorted(given, key=lambda g: (g[1], g[0]))
+        shown = ", ".join("item %d %s" % (item, verb) for verb, item in items[:4])
+        more = " (and %d more)" % (len(items) - 4) if len(items) > 4 else ""
+        out[aura] = ["food: " + shown + more, facts.aura_note(aura)]
+    return out
+
+
+def derive_wellfed(facts: Facts, food_subclass=None) -> dict:
+    """`{id: [notes]}`: every aura spell named like Well Fed (rule 1, WELL_FED_NAME), plus the auras
+    food gives under another name (rule 2, food_buffs) when the Food & Drink subclass is known. An id
+    both rules derive carries both notes."""
     out = {spell: ["name: " + name, facts.aura_note(spell)] for spell, name in facts.spell_names.items()
            if spell in facts.auras and WELL_FED_NAME.match(name)}
     _gate("Well Fed", WELL_FED_SENTINEL, out, facts)
+    if food_subclass is not None:
+        for spell, notes in food_buffs(facts, food_subclass).items():
+            if spell in out:
+                out[spell].insert(1, notes[0])
+            else:
+                out[spell] = notes
     return out
 
 
@@ -709,7 +777,8 @@ def hearth_findings(facts: Facts, derived: dict, shipped: list):
 def buff_findings(doc: dict, facts: Facts, flavor: str, path: Path) -> None:
     """Derive the three BuffSeeds lists for `flavor` into `doc` (shipped, derived, candidates, flags)."""
     shipped = read_buffs(path, FLAVORS[flavor]["client"])
-    derived = {"buffs": derive_buffs(facts, flavor), "wellfed": derive_wellfed(facts), "food": derive_food(facts)}
+    food = derive_food(facts)
+    derived = {"buffs": derive_buffs(facts, flavor), "wellfed": derive_wellfed(facts, next(iter(food))), "food": food}
     for lst in BUFF_LISTS:
         candidates, flags = derived_findings(facts, lst, derived[lst], shipped[lst])
         doc["shipped"][lst] = len(shipped[lst])
@@ -763,8 +832,13 @@ def derive_doc(tables: dict, flavor: str, build: str, date: str, hearth: Path = 
 # ---------------------------------------------------------------------------
 
 def bundles(root: Path, flavor: str) -> list:
-    """Every bundle of `flavor` under `root` that holds a candidates.json, oldest first."""
-    return sorted(p for p in root.glob("*-" + flavor) if (p / "candidates.json").exists())
+    """Every bundle of `flavor` under `root` (BUNDLE_NAME) that holds a candidates.json, oldest first."""
+    if not root.is_dir():
+        return []
+    def ours(path: Path) -> bool:
+        named = BUNDLE_NAME.match(path.name)
+        return bool(named) and named.group("flavor") == flavor and (path / "candidates.json").exists()
+    return sorted((p for p in root.iterdir() if ours(p)), key=lambda p: p.name)
 
 
 def bundle_doc(bundle: Path) -> dict:
@@ -1175,8 +1249,9 @@ def _derive_foreverdb(args, info: dict, old: dict):
 
 def cmd_derive(args) -> int:
     info = FLAVORS[args.flavor]
-    if not args.bundle.name.endswith("-" + args.flavor):
-        raise SystemExit("--bundle %s: a %s bundle is named <date>-%s." % (args.bundle, args.flavor, args.flavor))
+    named = BUNDLE_NAME.match(args.bundle.name)
+    if not named or named.group("flavor") != args.flavor:
+        raise SystemExit("--bundle %s: a %s bundle is named <date>-%s[-<label>]." % (args.bundle, args.flavor, args.flavor))
     old = bundle_doc(args.bundle) if (args.bundle / "candidates.json").exists() else {}
     build, fdb = _derive_build(args, info, old), _derive_foreverdb(args, info, old)
     log("Build %s (%s)" % (build, args.flavor))

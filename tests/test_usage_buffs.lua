@@ -13,7 +13,9 @@ local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
 
 local POTION, POTION_SPELL = 211001, 431932
 local BREAD, BREAD_SPELL = 4540, 7737        -- a plain food (Food & Drink), its Eat aura
-local NECTAR = 19299                         -- a holiday drink filed under Other, its use spell Drink
+-- An invented Other-subclass (8) drink whose use spell is Drink 430: the holiday treats filed under
+-- Other. Not Sweet Nectar 19299, which both clients file under Food & Drink (5).
+local NECTAR = 900001
 
 local function kinds(list)
     local out = {}
@@ -131,6 +133,54 @@ test("usage buffs: an Other consumable whose use spell is an Eat or Drink aura i
     inst.mocks.__bags[0][1] = { NECTAR, 3 }
     assertEqual(#NS.Usage.Detect(snap, {}, NS.Usage.BagCounts()), 0, "the nectar is never listed")
     assertEqual(#NS.Usage.Candidates(snap), 1, "only the potion is a candidate")
+end)
+
+test("usage buffs: buff food under another name lists the food once (Dirge's Increased Stamina)", function()
+    local NS = T.load().NS
+    -- The active client's Well Fed seed holds what a food gives under another name (Well Fed rule 2):
+    -- Increased Stamina 25661, the aura Dirge's Kickin' Chimaerok Chops 21023 triggers, on both clients.
+    assertTrue(NS.Usage.WELL_FED_SPELLS[25661], "Increased Stamina is in the client's Well Fed seed")
+    local snap = snapWith(NS, { { spellID = BREAD_SPELL, name = "Food" }, { spellID = 25661, name = "Increased Stamina" },
+                                { spellID = NS.BUFF_SEEDS.wellFed[1] } })
+    local used = NS.Usage.Detect(snap, { c(-8, BREAD_SPELL) }, { [POTION] = 3, [BREAD] = 4 })
+    assertEqual(kinds(used), "food:buff", "food once, through the buff it gives; never its Eat aura or count")
+    assertNil(used[1].itemID)
+end)
+
+test("usage buffs: an item first read under sealing is asked again, so plain food stays unlisted", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local sealed = true
+        local inst = T.load({ mutate = function(m)
+            m.__itemSpells[BREAD], m.__itemSpells[NECTAR] = BREAD_SPELL, 430      -- Drink
+            m.__itemInfo[BREAD], m.__itemInfo[NECTAR] = { 0, 5 }, { 0, 8 }
+            m.__bags[0] = { size = 2, [1] = { BREAD, 5 }, [2] = { NECTAR, 4 } }
+            m.__auras = { { BREAD_SPELL, "Food" }, { 430, "Drink" } }
+            local info, name = m.C_Item.GetItemInfoInstant, m.C_Spell.GetSpellName
+            m.C_Item.GetItemInfoInstant = function(itemID)
+                local a, b, c2, d, e, class, sub = info(itemID)
+                if sealed and sub ~= nil then sub = T.secret(sub) end
+                return a, b, c2, d, e, class, sub
+            end
+            m.C_Spell.GetSpellName = function(id)
+                if sealed and id == 430 then return T.secret("Drink") end
+                return name(id)
+            end
+        end })
+        local NS = inst.NS
+        local first = NS.Usage.Snapshot()
+        assertEqual(first.bags[BREAD].subclass, 0, "a sealed subclass reads as none this time")
+        assertNil(first.bags[NECTAR].eats, "a sealed Drink name is not known as eating this time")
+        sealed = false
+        local snap = NS.Usage.Snapshot()
+        assertEqual(snap.bags[BREAD].subclass, NS.Usage.FOOD_SUBCLASS, "asked again: Food & Drink")
+        assertTrue(snap.bags[NECTAR].eats, "asked again: its use spell is the client's Drink")
+        inst.mocks.__bags[0] = { size = 2, [1] = { BREAD, 4 }, [2] = { NECTAR, 3 } }
+        assertEqual(#NS.Usage.Detect(snap, {}, NS.Usage.BagCounts()), 0, "neither is listed")
+        assertEqual(#NS.Usage.Candidates(snap), 0, "nor a candidate")
+    end)
+    restore()
+    assertTrue(ok, tostring(err))
 end)
 
 -- ── the section, the edit and never show ────────────────────────────────────────────────────────

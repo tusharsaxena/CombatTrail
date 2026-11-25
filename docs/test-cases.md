@@ -1626,7 +1626,7 @@ Total.
 - usage edit: never-show list hides
 - usage edit: a sample fight changes in memory only
 
-### test_usage_buffs.lua (13)
+### test_usage_buffs.lua (15)
 
 - usage buffs: the active client's seeded buffs at the start are listed under their spell IDs
 - usage buffs: the other client's buffs are not listed
@@ -1635,6 +1635,8 @@ Total.
 - usage buffs: Well Fed lists the food once, never its Eat aura
 - usage buffs: a potion is still listed as before
 - usage buffs: an Other consumable whose use spell is an Eat or Drink aura is plain food too
+- usage buffs: buff food under another name lists the food once (Dirge's Increased Stamina)
+- usage buffs: an item first read under sealing is asked again, so plain food stays unlisted
 - usage buffs: the section and the Used column show a buff with its spell's icon and name
 - usage buffs: the edit unticks a buff, keeps its row, and ticks it back as detected
 - usage buffs: never show hides a buff by its spell ID, stored beside the hidden items
@@ -2017,7 +2019,7 @@ Total.
 | test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
-| test_usage_buffs.lua | 13 |
+| test_usage_buffs.lua | 15 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 14 |
@@ -2038,4 +2040,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1668** |
+| **Total** | **1670** |

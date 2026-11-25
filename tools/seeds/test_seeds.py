@@ -7,6 +7,9 @@ Mutation-checked (2026-11-25): with the rule-4 guard in `derive_hearthstones` br
 `out.pop(spell, None)` loop over EXCLUDED deleted), `test_rule_4_removes_excluded_ids` and
 `test_four_rules` fail; with `DUMMY_NAME` matching nothing, `test_dummies_from_foreverdb` fails;
 with `name_flags`' renamed branch deleted, `test_ignore_flags` fails; restored, they pass.
+Mutation-checked (2026-11-25, CL-REV): with `food_buffs`' EATING_AURAS test deleted (every use spell
+counted as its own buff), or FOOD_AURA_EXCLUDED matching nothing,
+`test_wellfed_rule_2_follows_what_food_gives` fails; restored, it passes.
 Mutation-checked (2026-11-25, CL-13a): with `derive_buffs`' aura guard deleted, `test_buff_rule` fails;
 with a shipped BuffSeeds id dropped from the repo's file, `test_shipped_buffs_match_the_rulings` fails;
 with `apply_buffs` writing into the other client's block, `test_apply_buffs_*` fail; restored, they pass.
@@ -343,6 +346,18 @@ class TestRulings(unittest.TestCase):
                              "CURRENT 9.8 (2026-01-02-retail)")
             self.assertTrue(seeds.status_line("9.9", seeds.bundles(root, "retail")).startswith("NEW 9.9 (last ruled 9.8"))
 
+    def test_a_labelled_bundle_follows_its_day(self):
+        """<date>-<flavor>-<label> (CL-REV): a second run on a frozen bundle's day and build."""
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in ("2026-01-02-retail-buffs", "2026-01-02-retail", "2026-01-01-retail", "2026-01-02-forever-buffs",
+                         "notes-retail", "2026-01-03-retailx"):
+                (root / name).mkdir()
+                (root / name / "candidates.json").write_text("{}")
+            self.assertEqual([p.name for p in seeds.bundles(root, "retail")],
+                             ["2026-01-01-retail", "2026-01-02-retail", "2026-01-02-retail-buffs"])
+            self.assertEqual([p.name for p in seeds.bundles(root, "forever")], ["2026-01-02-forever-buffs"])
+
     def test_rulings_path_per_flavor(self):
         self.assertEqual(seeds.rulings_path("retail").name, "retail_rulings.json")
         self.assertEqual(seeds.rulings_path("forever").name, "forever_rulings.json")
@@ -399,6 +414,29 @@ class TestBuffs(Workspace):
         with self.assertRaises(SystemExit):
             seeds.derive_wellfed(self.facts)
 
+    def test_wellfed_rule_2_follows_what_food_gives(self):
+        """The buff a food gives under another name (CL-REV): a triggered aura, or the use spell's own
+        non-eating aura, of a Food & Drink item or of an item whose use spell is an Eat or Drink aura."""
+        derived = seeds.derive_wellfed(self.facts, 5)
+        self.assertEqual(sorted(derived), [19705, 700200, 700302, 700400, 700404, 700406])
+        self.assertEqual(derived[700406][0], "food: item 6000 triggers, item 6001 triggers",
+                         "an eating name is excluded in full only: Spiced Food is not Food (Brain Food)")
+        self.assertEqual(derived[700400], ["food: item 6000 triggers, item 6001 triggers, item 6002 triggers",
+                                           "auras 29"],
+                         "Food triggers it (subclass 5), and so does a Drink filed under Other (6002), "
+                         "never the class 7 item (6003)")
+        self.assertEqual(derived[700302], ["food: item 6004 applies", "auras 42"],
+                         "a use spell with a non-eating aura is the buff itself (Dragonbreath Chili)")
+        self.assertEqual(derived[700404], ["food: item 6005 triggers", "auras 29"],
+                         "a use spell with only an eating aura is not, what it triggers is (Blessed Sunfruit)")
+        self.assertEqual(derived[19705], ["name: Well Fed", "food: item 6000 triggers, item 6001 triggers",
+                                          "auras 29"], "an id both rules derive carries both notes")
+        self.assertNotIn(700401, derived, "a triggered Food aura is the eating, not the buff")
+        self.assertNotIn(700402, derived, "a [DNT] spell is left out")
+        self.assertNotIn(700405, derived, "a potion's buff is not food's")
+        self.assertEqual(sorted(seeds.derive_wellfed(self.facts)), [19705, 700200],
+                         "without the subclass only rule 1 runs")
+
     def test_food_rule(self):
         self.assertEqual(seeds.food_counts(self.facts), [{"class": 0, "subclass": 5, "items": 2},
                                                          {"class": 0, "subclass": 8, "items": 1},
@@ -421,7 +459,8 @@ class TestBuffs(Workspace):
     def test_buff_findings(self):
         doc = self.doc()
         self.assertEqual([c["key"] for c in doc["candidates"] if c["list"] in seeds.BUFF_LISTS],
-                         ["buffs:460940", "buffs:700202", "buffs:1229741", "wellfed:700200"])
+                         ["buffs:460940", "buffs:700202", "buffs:1229741", "wellfed:700200", "wellfed:700302",
+                          "wellfed:700400", "wellfed:700404", "wellfed:700406"])
         self.assertEqual(sorted(f["key"] for f in doc["flags"] if f["list"] in seeds.BUFF_LISTS),
                          ["shipped:renamed:buffs:22888", "shipped:unfit:buffs:700203", "shipped:unnamed:buffs:950001"])
         self.assertEqual(doc["food"][0], {"class": 0, "subclass": 5, "items": 2})

@@ -106,9 +106,10 @@ local function wellFedName()
     return fedName or L["Well Fed"]
 end
 
--- The client's names for an Eat or Drink aura. A secret answer is never kept: the next look asks again.
+-- The client's names for an Eat or Drink aura, and whether every one was read (false: a secret answer
+-- left a word out). A secret answer is never kept: the next look asks again.
 local function eatingWords()
-    if eatingNames then return eatingNames end
+    if eatingNames then return eatingNames, true end
     local out, whole = {}, true
     for _, id in ipairs(Usage.EATING_SPELLS) do
         local ok, v = pcall(NS.Compat.SpellName, id)
@@ -116,14 +117,19 @@ local function eatingWords()
         if plain then out[plain] = true elseif Secrets.IsSealed(v) then whole = false end
     end
     if whole then eatingNames = out end
-    return out
+    return out, whole
 end
 
--- Whether a use spell is an Eat or Drink aura, by the client's name for it.
+-- Whether a use spell is an Eat or Drink aura, by the client's name for it, and whether that answer is
+-- sure: false when its name, or one of the eating words, came back secret (CL-REV: an unsure "no" is
+-- never cached, so the item is asked again at the next snapshot).
 local function isEating(spellID)
     local ok, v = pcall(NS.Compat.SpellName, spellID)
     local name = ok and Secrets.PlainString(v) or nil
-    return name ~= nil and eatingWords()[name] == true
+    if name == nil then return false, not (ok and Secrets.IsSealed(v)) end
+    local words, whole = eatingWords()
+    if words[name] then return true, true end
+    return false, whole
 end
 
 -- Whether a start aura is Well Fed: by its plain spell ID, else by name.
@@ -132,9 +138,11 @@ local function isWellFed(aura)
     return aura.name ~= nil and aura.name == wellFedName()
 end
 
--- What each item is, asked once per session ({ [itemID] = { subclass, spellID } | false }): an item's
--- class and use spell do not change. Only a definite answer is kept (a consumable whose use spell the
--- client has not loaded yet is asked again next time).
+-- What each item is, asked once per session ({ [itemID] = { subclass, spellID, eats } | false }): an
+-- item's class and use spell do not change. Only a definite answer is kept: a consumable whose use spell
+-- the client has not loaded yet, whose subclass came back secret, or whose Eat or Drink answer was not
+-- sure (a secret spell name) is asked again next time, so a plain food first seen under sealing is
+-- still known as food at the next snapshot (CL-REV).
 local items = {}
 
 local lastFight   -- the last fight that started, until it ends (its end counts at the next start)
@@ -189,8 +197,11 @@ local function consumable(itemID)
     end
     local spellID = itemSpell(itemID)
     if not spellID then return false end
-    items[itemID] = { subclass = Secrets.PlainNumber(subclass) or 0, spellID = spellID, eats = isEating(spellID) }
-    return items[itemID]
+    local plainSub = Secrets.PlainNumber(subclass)
+    local eats, sure = isEating(spellID)
+    local entry = { subclass = plainSub or 0, spellID = spellID, eats = eats }
+    if plainSub ~= nil and sure then items[itemID] = entry end
+    return entry
 end
 
 -- Every stack in the bags as (itemID, count), through `fn`; answers false when a stack could not be

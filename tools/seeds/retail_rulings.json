@@ -143,6 +143,10 @@
     "reason": "the data decides it: no SpellName row on live 12.1.5.70961 (nor on 70783 or 70575), but the Retail PTR 12.1.7.71087 names it Wood-Cursed Hearthstone and gives it ChargeCategory 2309 (rule 1), so it is a real hearthstone arriving with 12.1.7; inert on live until then (DPS Race ruled the same on 2026-11-15)",
     "ruling": "keep"
   },
+  "wellfed:100367": {
+    "reason": "Well Fed rule 2 (food: item 70924 triggers, item 70925 triggers, item 70926 triggers, item 70927 triggers): a drinking aura (85, 226) of the Bountiful feast, the eating itself",
+    "ruling": "reject"
+  },
   "wellfed:100368": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -219,9 +223,17 @@
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:105225": {
+    "reason": "Well Fed rule 2 (food: item 75038 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
   "wellfed:105226": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:105234": {
+    "reason": "Well Fed rule 2 (food: item 75037 triggers): no combat stat, damage or healing (auras 3: periodic damage)",
+    "ruling": "reject"
   },
   "wellfed:108028": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
@@ -239,9 +251,37 @@
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:111840": {
+    "reason": "Well Fed rule 2 (food: item 79320 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 4, 29)",
+    "ruling": "accept"
+  },
+  "wellfed:111841": {
+    "reason": "Well Fed rule 2 (food: item 79320 triggers): a drinking aura (85, 226), the eating itself",
+    "ruling": "reject"
+  },
+  "wellfed:114470": {
+    "reason": "Well Fed rule 2 (food: item 88530 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
   "wellfed:114733": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:115037": {
+    "reason": "Well Fed rule 2 (food: item 80313 applies): no combat stat, damage or healing (auras 326: a phase)",
+    "ruling": "reject"
+  },
+  "wellfed:1214555": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 234618 applies): auras 80, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:1214575": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 234620 applies): auras 80, 405, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:1216159": {
+    "reason": "Well Fed rule 2 (food: item 235230 triggers): no combat stat, damage or healing (auras 129: run speed)",
+    "ruling": "reject"
   },
   "wellfed:1219179": {
     "reason": "a trigger with a dummy aura; the Well Fed it grants is ruled under its own id",
@@ -531,6 +571,10 @@
     "reason": "a buff food's aura (Hearty Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:1239149": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 245573 applies): a combat rating (189) named Satiated, from an item the data cannot place",
+    "ruling": "reject"
+  },
   "wellfed:124151": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -583,6 +627,14 @@
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:1248409": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 249028 applies): auras 80, 405, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:1248415": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 249030 applies): auras 80, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:125070": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -618,6 +670,54 @@
   "wellfed:1254815": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:125686": {
+    "reason": "Well Fed rule 2 (food: item 86432 applies): no combat stat, damage or healing (auras 12, 56: stun, transform)",
+    "ruling": "reject"
+  },
+  "wellfed:126144": {
+    "reason": "Well Fed rule 2 (food: item 87264 applies): no combat stat, damage or healing (auras 260: a screen effect)",
+    "ruling": "reject"
+  },
+  "wellfed:1263074": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 263974 applies): a periodic heal (8) from an item the data cannot place",
+    "ruling": "reject"
+  },
+  "wellfed:1271918": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 264391 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:127770": {
+    "reason": "Well Fed rule 2 (food: item 88382 applies, item 103645 applies, item 103646 applies, item 103647 applies): the buff the food gives under another name, an aura that changes the player's combat ratings (auras 189)",
+    "ruling": "accept"
+  },
+  "wellfed:127881": {
+    "reason": "Well Fed rule 2 (food: item 88388 triggers, item 140343 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
+  "wellfed:1280336": {
+    "reason": "Well Fed rule 2 (food: item 267381 applies): no combat stat, damage or healing (auras 23, 88, 110: health regeneration %, periodic trigger, power regeneration %)",
+    "ruling": "reject"
+  },
+  "wellfed:1280337": {
+    "reason": "Well Fed rule 2 (food: item 267381 triggers): no combat stat, damage or healing (auras 129: run speed)",
+    "ruling": "reject"
+  },
+  "wellfed:128290": {
+    "reason": "Well Fed rule 2 (food: item 88492 applies): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
+  "wellfed:128307": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 88530 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:128308": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 88529 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:128312": {
+    "reason": "Well Fed rule 2 (food: item 88529 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
   },
   "wellfed:1283372": {
     "reason": "a buff food's aura (Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
@@ -674,6 +774,10 @@
   "wellfed:1285644": {
     "reason": "a buff food's aura (Hearty Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:1292077": {
+    "reason": "Well Fed rule 2 (food: item 273307 applies): no combat stat, damage or healing (auras 171: run speed)",
+    "ruling": "reject"
   },
   "wellfed:1294727": {
     "reason": "a buff food's aura (Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
@@ -767,6 +871,10 @@
     "reason": "a buff food's aura (Hearty Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:1308719": {
+    "reason": "Well Fed rule 2 (food: item 280422 triggers): no combat stat, damage or healing (auras 226: periodic dummy)",
+    "ruling": "reject"
+  },
   "wellfed:131828": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -815,12 +923,32 @@
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:135451": {
+    "reason": "Well Fed rule 2 (food: item 98121 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
   "wellfed:140410": {
     "reason": "a buff food's aura (Well Fed, auras 61, 79, 147): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:142271": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 98111 triggers): auras 87, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:142280": {
+    "reason": "Well Fed rule 2 (food: item 98116 triggers): no combat stat, damage or healing (auras 31: run speed)",
+    "ruling": "reject"
+  },
+  "wellfed:142286": {
+    "reason": "Well Fed rule 2 (food: item 98118 triggers): the buff the food gives under another name, an aura that changes the player's damage done % (auras 79)",
+    "ruling": "accept"
+  },
   "wellfed:145304": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:145635": {
+    "reason": "Well Fed rule 2 (food: item 13934 triggers, item 24008 triggers, item 24009 triggers, item 28501 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
     "ruling": "accept"
   },
   "wellfed:146804": {
@@ -847,13 +975,37 @@
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:147055": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 103641 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:147226": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 103642 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:147312": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:147476": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 103643 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:148247": {
+    "reason": "Well Fed rule 2 (food: item 104196 triggers): no combat stat, damage or healing (auras 20, 21, 61, 304: a drunk effect, restores health, restores mana, scale)",
+    "ruling": "reject"
+  },
+  "wellfed:148999": {
+    "reason": "Well Fed rule 2 (food: item 105711 triggers): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
   "wellfed:154295": {
     "reason": "needs owner review: named like Well Fed (auras 20) but the data does not show a buff food casts it",
     "ruling": "reject"
+  },
+  "wellfed:15852": {
+    "reason": "Well Fed rule 2 (food: item 12217 applies): Dragonbreath Chili's own aura is a proc (42) that breathes fire at the target: the raid food's damage buff",
+    "ruling": "accept"
   },
   "wellfed:159372": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
@@ -923,6 +1075,10 @@
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:161495": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 111842 applies): auras 87, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:165802": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -935,9 +1091,21 @@
     "reason": "a buff food's aura (Well Fed, auras 79): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:169356": {
+    "reason": "Well Fed rule 2 (food: item 114982 applies): the buff the food gives under another name, an aura that changes the player's total stat % (auras 137)",
+    "ruling": "accept"
+  },
+  "wellfed:170937": {
+    "reason": "Well Fed rule 2 (food: item 119157 applies): no combat stat, damage or healing (auras 233: a disguise)",
+    "ruling": "reject"
+  },
   "wellfed:174062": {
     "reason": "a buff food's aura (Well Fed, auras 23, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:174063": {
+    "reason": "Well Fed rule 2 (food: item 118273 triggers, item 118274 triggers, item 118275 triggers, item 118276 triggers (and 1 more)): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
   },
   "wellfed:174077": {
     "reason": "a buff food's aura (Well Fed, auras 23, 189): food counts through it, never through its Eat aura (#13)",
@@ -954,6 +1122,10 @@
   "wellfed:174080": {
     "reason": "a buff food's aura (Well Fed, auras 23, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:174613": {
+    "reason": "Well Fed rule 2 (food: item 118424 triggers): no combat stat, damage or healing (auras 31, 56: run speed, transform)",
+    "ruling": "reject"
   },
   "wellfed:175218": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -987,9 +1159,21 @@
     "reason": "needs owner review: named like Well Fed (auras 79) but the data does not show a buff food casts it",
     "ruling": "reject"
   },
+  "wellfed:176049": {
+    "reason": "Well Fed rule 2 (food: item 118897 applies): no combat stat, damage or healing (auras 129: run speed)",
+    "ruling": "reject"
+  },
+  "wellfed:176057": {
+    "reason": "Well Fed rule 2 (food: item 118900 applies): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
   "wellfed:177931": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:179201": {
+    "reason": "Well Fed rule 2 (food: item 120959 triggers): no combat stat, damage or healing (auras 89: periodic damage %)",
+    "ruling": "reject"
   },
   "wellfed:180745": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1015,6 +1199,34 @@
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:18125": {
+    "reason": "Well Fed rule 2 (food: item 13810 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
+    "ruling": "accept"
+  },
+  "wellfed:18191": {
+    "reason": "Well Fed rule 2 (food: item 13927 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
+    "ruling": "accept"
+  },
+  "wellfed:18192": {
+    "reason": "Well Fed rule 2 (food: item 13928 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
+    "ruling": "accept"
+  },
+  "wellfed:18193": {
+    "reason": "Well Fed rule 2 (food: item 24539 triggers): the buff the food gives under another name, an aura that changes the player's combat ratings (auras 189)",
+    "ruling": "accept"
+  },
+  "wellfed:18194": {
+    "reason": "Well Fed rule 2 (food: item 13931 triggers): the buff the food gives under another name, an aura that changes the player's mana regeneration (auras 85)",
+    "ruling": "accept"
+  },
+  "wellfed:18222": {
+    "reason": "Well Fed rule 2 (food: item 13932 triggers): the buff the food gives under another name, an aura that changes the player's periodic heal (auras 8)",
+    "ruling": "accept"
+  },
+  "wellfed:185703": {
+    "reason": "Well Fed rule 2 (food: item 126934 applies): no combat stat, damage or healing (auras 20, 21, 23: periodic trigger, restores health, restores mana)",
+    "ruling": "reject"
+  },
   "wellfed:185736": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -1030,6 +1242,14 @@
   "wellfed:192004": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:192475": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 128875 applies): auras 133, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:196001": {
+    "reason": "Well Fed rule 2 (food: item 130259 triggers): no combat stat, damage or healing (auras 31, 56: run speed, transform)",
+    "ruling": "reject"
   },
   "wellfed:19705": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
@@ -1058,6 +1278,10 @@
   "wellfed:201223": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:201314": {
+    "reason": "Well Fed rule 2 (food: item 49602 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
   },
   "wellfed:201330": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1119,6 +1343,10 @@
     "reason": "a buff food's aura (Well Fed, auras 8): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:203443": {
+    "reason": "Well Fed rule 2 (food: item 133983 applies): no combat stat, damage or healing (auras 20: restores health)",
+    "ruling": "reject"
+  },
   "wellfed:207076": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -1138,6 +1366,14 @@
   "wellfed:216828": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:217846": {
+    "reason": "Well Fed rule 2 (food: item 138966 applies): no combat stat, damage or healing (auras 21: restores mana)",
+    "ruling": "reject"
+  },
+  "wellfed:223602": {
+    "reason": "Well Fed rule 2 (food: item 140352 applies): no combat stat, damage or healing (auras 20, 21: restores health, restores mana)",
+    "ruling": "reject"
   },
   "wellfed:225597": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1187,9 +1423,17 @@
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:22730": {
+    "reason": "Well Fed rule 2 (food: item 18254 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
+    "ruling": "accept"
+  },
   "wellfed:230061": {
     "reason": "a buff food's aura (Well Fed, auras 42): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:236821": {
+    "reason": "Well Fed rule 2 (food: item 144411 triggers): no combat stat, damage or healing (auras 56, 60: pacify silence, transform)",
+    "ruling": "reject"
   },
   "wellfed:24799": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
@@ -1211,9 +1455,17 @@
     "reason": "a buff food's aura (Well Fed, auras 58, 82, 226): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:25661": {
+    "reason": "Well Fed rule 2 (food: item 21023 triggers): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
+    "ruling": "accept"
+  },
   "wellfed:25694": {
     "reason": "a buff food's aura (Well Fed, auras 85): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:25703": {
+    "reason": "Well Fed rule 2 (food: item 21072 triggers): Brain Food's eating aura (85 while drinking): it triggers Well Fed 25694, which is shipped",
+    "ruling": "reject"
   },
   "wellfed:257408": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1246,6 +1498,14 @@
   "wellfed:257424": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:258258": {
+    "reason": "Well Fed rule 2 (food: item 155820 triggers): no combat stat, damage or healing (auras 12: stun)",
+    "ruling": "reject"
+  },
+  "wellfed:25889": {
+    "reason": "Well Fed rule 2 (food: item 21217 triggers): Brain Food's eating aura (85 while drinking): it triggers Well Fed 25941, which is shipped",
+    "ruling": "reject"
   },
   "wellfed:25941": {
     "reason": "a buff food's aura (Well Fed, auras 85): food counts through it, never through its Eat aura (#13)",
@@ -1283,9 +1543,17 @@
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:261620": {
+    "reason": "Well Fed rule 2 (food: item 156835 applies): no combat stat, damage or healing (auras 31: run speed)",
+    "ruling": "reject"
+  },
   "wellfed:262571": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:26390": {
+    "reason": "Well Fed rule 2 (food: item 21721 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
   },
   "wellfed:267948": {
     "reason": "a buff food's aura (Well Fed, auras 80): food counts through it, never through its Eat aura (#13)",
@@ -1303,9 +1571,41 @@
     "reason": "a buff food's aura (Well Fed, auras 80): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:270372": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 160092 applies): auras 80, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:272817": {
     "reason": "a buff food's aura (Well Fed, auras 42): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:274375": {
+    "reason": "Well Fed rule 2 (food: item 162117 triggers): the buff the food gives under another name, an aura that changes the player's combat ratings (auras 189)",
+    "ruling": "accept"
+  },
+  "wellfed:276024": {
+    "reason": "Well Fed rule 2 (food: item 162011 applies): no combat stat, damage or healing (auras 244: language)",
+    "ruling": "reject"
+  },
+  "wellfed:276040": {
+    "reason": "Well Fed rule 2 (food: item 162010 triggers): no combat stat, damage or healing (auras 33: a slow)",
+    "ruling": "reject"
+  },
+  "wellfed:276041": {
+    "reason": "Well Fed rule 2 (food: item 162010 applies): no combat stat, damage or healing (auras 20: restores health)",
+    "ruling": "reject"
+  },
+  "wellfed:276214": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 162117 applies): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:279882": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 163707 applies): auras 33, 312, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:280271": {
+    "reason": "Well Fed rule 2 (food: item 163781 triggers): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
   },
   "wellfed:285719": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
@@ -1343,6 +1643,10 @@
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:29055": {
+    "reason": "Well Fed rule 2 (food: item 23172 applies): no combat stat, damage or healing (auras 20, 21: restores health, restores mana)",
+    "ruling": "reject"
+  },
   "wellfed:290726": {
     "reason": "a buff food's aura (Well Fed, auras 61, 79, 133): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -1374,6 +1678,10 @@
   "wellfed:294473": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:295402": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 169280 applies): auras 43, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
   },
   "wellfed:296178": {
     "reason": "a buff food's aura (Well Fed, auras 61, 79, 133): food counts through it, never through its Eat aura (#13)",
@@ -1418,6 +1726,18 @@
   "wellfed:297119": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:303628": {
+    "reason": "Well Fed rule 2 (food: item 169949 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
+  "wellfed:306426": {
+    "reason": "Well Fed rule 2 (food: item 171195 applies): no combat stat, damage or healing (auras 260: a screen effect)",
+    "ruling": "reject"
+  },
+  "wellfed:306453": {
+    "reason": "Well Fed rule 2 (food: item 171196 applies): no combat stat, damage or healing (auras 31: run speed)",
+    "ruling": "reject"
   },
   "wellfed:308430": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1583,6 +1903,10 @@
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:33774": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 28112 triggers): a mana-regeneration aura (85) triggered while eating, not shown to outlast the meal",
+    "ruling": "reject"
+  },
   "wellfed:340111": {
     "reason": "a buff food's aura (Well Fed, auras 23): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -1602,6 +1926,18 @@
   "wellfed:35272": {
     "reason": "a buff food's aura (Well Fed, auras 29, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:371541": {
+    "reason": "Well Fed rule 2 (food: item 191917 applies): no combat stat, damage or healing (auras 21, 226: periodic dummy, restores mana)",
+    "ruling": "reject"
+  },
+  "wellfed:371546": {
+    "reason": "Well Fed rule 2 (food: item 191918 applies): no combat stat, damage or healing (auras 21, 226: periodic dummy, restores mana)",
+    "ruling": "reject"
+  },
+  "wellfed:371547": {
+    "reason": "Well Fed rule 2 (food: item 191919 applies): no combat stat, damage or healing (auras 21, 226: periodic dummy, restores mana)",
+    "ruling": "reject"
   },
   "wellfed:382145": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1675,6 +2011,10 @@
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:382761": {
+    "reason": "Well Fed rule 2 (food: item 197767 applies, item 198832 applies): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
   "wellfed:383212": {
     "reason": "needs owner review: named like Well Fed (auras 58, 82, 226) but the data does not show a buff food casts it",
     "ruling": "reject"
@@ -1683,32 +2023,232 @@
     "reason": "a buff food's aura (Well Fed, auras 171): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:391589": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200888 applies): auras 80, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391590": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200887 applies): auras 80, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391596": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200885 applies): auras 129, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391603": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200759 applies): auras 87, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391615": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200890 applies): auras 379, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391619": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200892 applies): auras 105, 409, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391620": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200893 applies): auras 80, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391624": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200894 applies): auras 163, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391626": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200896 applies): auras 466, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391628": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200898 applies): auras 82, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391641": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200899 applies): auras 193, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391643": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200900 applies): auras 318, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391657": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200902 applies): auras 166, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:391664": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200903 applies): auras 9, 495, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:392439": {
+    "reason": "Well Fed rule 2 (food: item 200862 triggers): no combat stat, damage or healing (auras 56, 293: an override, transform)",
+    "ruling": "reject"
+  },
+  "wellfed:392441": {
+    "reason": "Well Fed rule 2 (food: item 200862 triggers): no combat stat, damage or healing (auras 56, 293: an override, transform)",
+    "ruling": "reject"
+  },
+  "wellfed:392721": {
+    "reason": "Well Fed rule 2 (food: item 200953 applies): no combat stat, damage or healing (auras 31: run speed)",
+    "ruling": "reject"
+  },
+  "wellfed:392749": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 200966 applies): auras 61, 133, 147, 485, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:393372": {
     "reason": "needs owner review: named like Well Fed (auras 189) but the data does not show a buff food casts it",
+    "ruling": "reject"
+  },
+  "wellfed:393455": {
+    "reason": "Well Fed rule 2 (food: item 201327 applies): no combat stat, damage or healing (auras 12, 260: a screen effect, stun)",
+    "ruling": "reject"
+  },
+  "wellfed:394174": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 201090 applies): auras 133, 166, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:394185": {
+    "reason": "Well Fed rule 2 (food: item 201089 triggers): no combat stat, damage or healing (auras 23, 105, 409: feather fall, periodic trigger, slow fall)",
+    "ruling": "reject"
+  },
+  "wellfed:394196": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 201089 triggers): auras 80, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
     "ruling": "reject"
   },
   "wellfed:396092": {
     "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:396184": {
+    "reason": "Well Fed rule 2 (food: item 200759 triggers, item 200885 triggers, item 200887 triggers, item 200888 triggers (and 10 more)): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
+  "wellfed:396381": {
+    "reason": "Well Fed rule 2 (food: item 202033 applies): no combat stat, damage or healing (auras 20: restores health)",
+    "ruling": "reject"
+  },
+  "wellfed:396407": {
+    "reason": "Well Fed rule 2 (food: item 202033 triggers, item 202063 triggers, item 202108 triggers): no combat stat, damage or healing (auras 31: run speed)",
+    "ruling": "reject"
+  },
+  "wellfed:396621": {
+    "reason": "Well Fed rule 2 (food: item 202063 applies): no combat stat, damage or healing (auras 20: restores health)",
+    "ruling": "reject"
+  },
+  "wellfed:397012": {
+    "reason": "Well Fed rule 2 (food: item 202108 applies): no combat stat, damage or healing (auras 20: restores health)",
+    "ruling": "reject"
+  },
   "wellfed:398458": {
     "reason": "a buff food's aura (Well Fed, auras 61, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:404578": {
+    "reason": "Well Fed rule 2 (food: item 204342 applies): no combat stat, damage or healing (auras 12: stun)",
+    "ruling": "reject"
+  },
+  "wellfed:405351": {
+    "reason": "Well Fed rule 2 (food: item 206140 applies): no combat stat, damage or healing (auras 20: restores health)",
+    "ruling": "reject"
+  },
+  "wellfed:405420": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 206139 applies): auras 79, 89, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:405444": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 206143 applies): auras 31, 133, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:405449": {
+    "reason": "Well Fed rule 2 (food: item 206141 applies): the buff the food gives under another name, an aura that changes the player's crit % (auras 290)",
+    "ruling": "accept"
+  },
+  "wellfed:405452": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 206144 applies): auras 33, 61, 87, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:405454": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 206142 applies): auras 33, 101, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
   },
   "wellfed:406941": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:407013": {
+    "reason": "Well Fed rule 2 (food: item 205684 triggers): no combat stat, damage or healing (auras 89: periodic damage %)",
+    "ruling": "reject"
+  },
+  "wellfed:407063": {
+    "reason": "Well Fed rule 2 (food: item 204845 applies, item 204846 applies): no combat stat, damage or healing (auras 56, 239: scale, transform)",
+    "ruling": "reject"
+  },
+  "wellfed:410276": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 205684 triggers): an aura named Agonizing Pain from an item named Not Edible",
+    "ruling": "reject"
+  },
   "wellfed:417336": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:419536": {
+    "reason": "Well Fed rule 2 (food: item 208448 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
+  "wellfed:42207": {
+    "reason": "Well Fed rule 2 (food: item 32722 triggers): no combat stat, damage or healing (auras 84: out-of-combat regeneration)",
+    "ruling": "reject"
+  },
+  "wellfed:422075": {
+    "reason": "Well Fed rule 2 (food: item 209019 applies): no combat stat, damage or healing (auras 61: scale)",
+    "ruling": "reject"
+  },
+  "wellfed:422840": {
+    "reason": "Well Fed rule 2 (food: item 209433 applies): the buff the food gives under another name, an aura that changes the player's total stat % (auras 137)",
+    "ruling": "accept"
+  },
+  "wellfed:422842": {
+    "reason": "Well Fed rule 2 (food: item 209434 applies): the buff the food gives under another name, an aura that changes the player's mastery (auras 318)",
+    "ruling": "accept"
+  },
+  "wellfed:422843": {
+    "reason": "Well Fed rule 2 (food: item 209435 applies): the buff the food gives under another name, an aura that changes the player's haste (auras 193)",
     "ruling": "accept"
   },
   "wellfed:42293": {
     "reason": "a buff food's aura (Well Fed, auras 29, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:423074": {
+    "reason": "Well Fed rule 2 (food: item 209605 applies): the buff the food gives under another name, an aura that changes the player's haste, mastery, total stat % (auras 137, 193, 318)",
+    "ruling": "accept"
+  },
+  "wellfed:42312": {
+    "reason": "Well Fed rule 2 (food: item 33053 triggers): Brain Food's eating aura (85 while drinking), the food's drink phase",
+    "ruling": "reject"
+  },
+  "wellfed:43722": {
+    "reason": "Well Fed rule 2 (food: item 33825 triggers): the buff the food gives under another name, an aura that changes the player's combat ratings (auras 189)",
+    "ruling": "accept"
+  },
+  "wellfed:43730": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 33866 applies): auras 23, 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:43764": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:43771": {
+    "reason": "Well Fed rule 2 (food: item 43005 applies): a pet's food (Pet Treat): its heal is the pet's, not a fight buff of the player's",
+    "ruling": "reject"
+  },
+  "wellfed:43776": {
+    "reason": "Well Fed rule 2 (food: item 33924 triggers): no combat stat, damage or healing (auras 4: dummy)",
+    "ruling": "reject"
+  },
+  "wellfed:439413": {
+    "reason": "Well Fed rule 2 (food: item 217342 applies): the buff the food gives under another name, an aura that changes the player's crit % (auras 290)",
     "ruling": "accept"
   },
   "wellfed:439608": {
@@ -1718,6 +2258,42 @@
   "wellfed:442522": {
     "reason": "a buff food's aura (Well Fed, auras 137): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:450770": {
+    "reason": "Well Fed rule 2 (food: item 224009 applies): no combat stat, damage or healing (auras 20, 226: periodic dummy, restores health)",
+    "ruling": "reject"
+  },
+  "wellfed:450774": {
+    "reason": "Well Fed rule 2 (food: item 224010 applies): no combat stat, damage or healing (auras 21, 226: periodic dummy, restores mana)",
+    "ruling": "reject"
+  },
+  "wellfed:450902": {
+    "reason": "Well Fed rule 2 (food: item 224048 applies): no combat stat, damage or healing (auras 33: a slow)",
+    "ruling": "reject"
+  },
+  "wellfed:450903": {
+    "reason": "Well Fed rule 2 (food: item 224042 applies): the buff the food gives under another name, an aura that changes the player's damage done % (auras 79)",
+    "ruling": "accept"
+  },
+  "wellfed:450904": {
+    "reason": "Well Fed rule 2 (food: item 224043 applies): the buff the food gives under another name, an aura that changes the player's versatility (auras 471)",
+    "ruling": "accept"
+  },
+  "wellfed:450905": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 224044 applies): auras 87, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:450906": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 224045 applies): auras 270, 455, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:450907": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 224046 applies): auras 33, 405, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:450909": {
+    "reason": "Well Fed rule 2 (food: item 224041 triggers): no combat stat, damage or healing (auras 33: a slow)",
+    "ruling": "reject"
   },
   "wellfed:451916": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
@@ -1767,6 +2343,18 @@
     "reason": "a buff food's aura (Hearty Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:454497": {
+    "reason": "Well Fed rule 2 (food: item 212492 triggers): no combat stat, damage or healing (auras 31, 104: run speed, water walking)",
+    "ruling": "reject"
+  },
+  "wellfed:455290": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 212491 triggers): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
+  "wellfed:455325": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 215448 triggers): auras 42, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
+  },
   "wellfed:455369": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -1775,6 +2363,10 @@
     "reason": "a buff food's aura (Well Fed, auras 22): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:456363": {
+    "reason": "Well Fed rule 2 (food: item 222749 applies): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
   "wellfed:456406": {
     "reason": "a buff food's aura (Well Fed, auras 30, 511): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -1782,6 +2374,26 @@
   "wellfed:456410": {
     "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:456413": {
+    "reason": "Well Fed rule 2 (food: item 222747 applies): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
+  "wellfed:456576": {
+    "reason": "Well Fed rule 2 (food: item 223967 applies): no combat stat, damage or healing (auras 61: scale)",
+    "ruling": "reject"
+  },
+  "wellfed:456577": {
+    "reason": "Well Fed rule 2 (food: item 222748 applies): no combat stat, damage or healing (auras 56: transform)",
+    "ruling": "reject"
+  },
+  "wellfed:456578": {
+    "reason": "Well Fed rule 2 (food: item 223971 applies): no combat stat, damage or healing (auras 31: run speed)",
+    "ruling": "reject"
+  },
+  "wellfed:45694": {
+    "reason": "Well Fed rule 2 (food: item 34832 applies): no combat stat, damage or healing (auras 30: a profession skill)",
+    "ruling": "reject"
   },
   "wellfed:456961": {
     "reason": "a trigger with a dummy aura; the Well Fed it grants is ruled under its own id",
@@ -1914,6 +2526,10 @@
   "wellfed:461960": {
     "reason": "a buff food's aura (Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:462148": {
+    "reason": "needs owner review: Well Fed rule 2 (food: item 222745 triggers): auras 104, 189, which the DB2 alone cannot read as a stat buff (a proc, a signed percentage or an unknown aura type)",
+    "ruling": "reject"
   },
   "wellfed:462180": {
     "reason": "a buff food's aura (Hearty Well Fed, auras 4, 29, 189): food counts through it, never through its Eat aura (#13)",
@@ -2059,6 +2675,10 @@
     "reason": "a buff food's aura (Well Fed, auras 99, 124): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:46926": {
+    "reason": "Well Fed rule 2 (food: item 35720 triggers): no combat stat, damage or healing (auras 23: periodic trigger)",
+    "ruling": "reject"
+  },
   "wellfed:473173": {
     "reason": "a buff food's aura (Greasy Well Fed, auras 4, 29, 33, 80, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -2074,6 +2694,10 @@
   "wellfed:473184": {
     "reason": "a buff food's aura (Greasy Well Fed, auras 4, 29, 33, 80, 189): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:50986": {
+    "reason": "Well Fed rule 2 (food: item 38466 applies): no combat stat, damage or healing (auras 3: periodic damage)",
+    "ruling": "reject"
   },
   "wellfed:53284": {
     "reason": "a buff food's aura (Well Fed, auras 29, 189): food counts through it, never through its Eat aura (#13)",
@@ -2175,6 +2799,10 @@
     "reason": "a buff food's aura (Well Fed, auras 44): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
   },
+  "wellfed:57388": {
+    "reason": "Well Fed rule 2 (food: item 43004 applies): no combat stat, damage or healing (auras 25, 177: charm, pacify)",
+    "ruling": "reject"
+  },
   "wellfed:57399": {
     "reason": "a buff food's aura (Well Fed, auras 13, 29, 99, 124, 135): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
@@ -2187,8 +2815,24 @@
     "reason": "a size aura (61, scale) named like Well Fed: not a buff food's stat aura",
     "ruling": "reject"
   },
+  "wellfed:58496": {
+    "reason": "Well Fed rule 2 (food: item 43488 applies): no combat stat, damage or healing (auras 0, 4: dummy, none)",
+    "ruling": "reject"
+  },
+  "wellfed:58502": {
+    "reason": "Well Fed rule 2 (food: item 43492 applies): no combat stat, damage or healing (auras 0, 4: dummy, none)",
+    "ruling": "reject"
+  },
   "wellfed:59230": {
     "reason": "a buff food's aura (Well Fed, auras 189): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:60122": {
+    "reason": "Well Fed rule 2 (food: item 44228 applies): no combat stat, damage or healing (auras 61: scale)",
+    "ruling": "reject"
+  },
+  "wellfed:6114": {
+    "reason": "Well Fed rule 2 (food: item 5342 applies): the buff the food gives under another name, an aura that changes the player's stats (auras 29)",
     "ruling": "accept"
   },
   "wellfed:62349": {
@@ -2198,6 +2842,10 @@
   "wellfed:64057": {
     "reason": "a buff food's aura (Well Fed, auras 29, 99, 124): food counts through it, never through its Eat aura (#13)",
     "ruling": "accept"
+  },
+  "wellfed:6411": {
+    "reason": "Well Fed rule 2 (food: item 5473 triggers): no combat stat, damage or healing (auras 3: periodic damage)",
+    "ruling": "reject"
   },
   "wellfed:65247": {
     "reason": "a size aura (61, scale) named like Well Fed: not a buff food's stat aura",

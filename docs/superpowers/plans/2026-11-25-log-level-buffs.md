@@ -25,6 +25,20 @@
 
 **Merging** waits for the owner's go-ahead.
 
+## Execution notes
+
+- **CL-REV: the buff seed research has its own bundles, against the spec.** The spec put the buff
+  research in `docs/seed-research/2026-11-25-{retail,forever}/`. Those bundles were frozen and merged
+  by the same day's seeds run (SF-CT-01), and clients-§10 says a seed bundle is never edited after
+  the fact. CL-13a re-derived into them anyway. CL-REV restored both to master's bytes and derived
+  the buff seeds, at the same pinned builds, into `docs/seed-research/2026-11-25-retail-buffs/` and
+  `docs/seed-research/2026-11-25-forever-buffs/`. `tools/seeds/seeds.py` now accepts a
+  `<date>-<flavor>-<label>` bundle, which sorts after its day's plain one.
+- **CL-REV: Well Fed rule 2.** Buff food whose buff is not named Well Fed is now seeded through
+  what it gives, for example Dirge's *Increased Stamina* 25661.
+- **Owed (owner): the current Retail fight buffs.** The Retail `buffs` list is Classic-era and event
+  buffs only, so SM-CT-R35 is event-gated until the owner names the buffs to track.
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.

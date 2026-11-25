@@ -15,11 +15,7 @@ the run, apart from the hand-written `ANALYSIS.md`.
 
 | Table | Why | URL |
 | --- | --- | --- |
-| `SpellName` | every shipped seed's name, for the unnamed and renamed flags; the buff catalog and Well Fed names | <https://wago.tools/db2/SpellName/csv?build=1.60.1.71091> |
-| `SpellEffect` | the aura effects: the buff and Well Fed rules | <https://wago.tools/db2/SpellEffect/csv?build=1.60.1.71091> |
-| `ItemEffect` | the spell an item effect casts: the food rule | <https://wago.tools/db2/ItemEffect/csv?build=1.60.1.71091> |
-| `ItemXItemEffect` | item effect -> item: the food rule | <https://wago.tools/db2/ItemXItemEffect/csv?build=1.60.1.71091> |
-| `Item` | ClassID and SubclassID: the food rule, the Food & Drink subclass | <https://wago.tools/db2/Item/csv?build=1.60.1.71091> |
+| `SpellName` | every shipped ignore seed's name, for the unnamed and renamed flags | <https://wago.tools/db2/SpellName/csv?build=1.60.1.71091> |
 
 The gzipped exports are in `raw/`. Re-derive offline with `--replay`; a new run needs
 network access to wago.tools.
@@ -36,7 +32,7 @@ network access to wago.tools.
 | Read from | github + install |
 | Owner's install | version `2026.11.24.46` |
 | Cache date | 2026-11-25 |
-| Helper | `foreverdb.py` (dev-copilot `f475b8732e7de0b76bd64d79dad4a0869dd9c27a`) |
+| Helper | `foreverdb.py` (dev-copilot `ab560b3274052d7ecf37218d14abf80853736291`) |
 | foreverdb.json sha256 | `156924e2e077ce87b7e0ee88d98bb3c4a42c2f1641584540dce2cdd722fffbdc` |
 
 | File | Bytes | sha256 |

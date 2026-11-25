@@ -10,9 +10,13 @@ keep them as they are.
 DPS Race is retired and its repository is archived. Its hearthstone list and its dummy catalog now
 live here, so its contract is left where it is and never run again.
 
-Each run ends in a frozen bundle under `docs/seed-research/<date>-<flavor>/`. The tool is
-`tools/seeds/seeds.py`, and its docstring is its manual. The first runs are
-`docs/seed-research/2026-11-25-retail/` and `docs/seed-research/2026-11-25-forever/`.
+Each run ends in a frozen bundle under `docs/seed-research/<date>-<flavor>/`. A second run on a day
+that already has a frozen bundle, at the same build, goes into `<date>-<flavor>-<label>/` instead and
+never rewrites the first; sorted by name, it follows its day's plain bundle, so it is the newest. The
+tool is `tools/seeds/seeds.py`, and its docstring is its manual. The first runs are
+`docs/seed-research/2026-11-25-retail/` and `docs/seed-research/2026-11-25-forever/` (hearthstones,
+ignore seeds, dummies). The buff seeds were derived later that day, at the same builds, into
+`docs/seed-research/2026-11-25-retail-buffs/` and `docs/seed-research/2026-11-25-forever-buffs/`.
 
 **What is validated, and what is not.**
 
@@ -92,7 +96,14 @@ client's data (clients-§5, clients-§10). The Retail flavor never reads Forever
      ignored) and that has a `SpellEffect` row putting an aura on a unit (`Effect` 6, 35, 65 or 128),
      at any `DifficultyID`. Each candidate's notes name its catalog entry and its `EffectAura` types.
   2. `wellfed`: every aura spell named "Well Fed", or one word and "Well Fed" (*Hearty Well Fed*), or
-     *Well Fed & Inspired*.
+     *Well Fed & Inspired*; plus the buff a food gives under another name. For every Consumable
+     item of the derived Food & Drink subclass, or whose use spell is named *Food*, *Drink*,
+     *Refreshment* or *Food & Drink*, this takes the aura spells its use spell triggers (one
+     `EffectTriggerSpell` hop), and the use spell itself when it applies an aura that is not an
+     eating aura (`EffectAura` 4, 23, 84, 85, 226 or 227). Spells named exactly *Food*, *Drink*,
+     *Refreshment*, *Food & Drink* or *Become Well Fed*, and test and `[DNT]` spells, are left out.
+     Each such candidate's notes name the items that give it (`food: item <id> triggers` or `item
+     <id> applies`).
   3. `food`: the Consumable (`Item.ClassID` 0) subclass holding the most items whose use spell
      (`ItemEffect` through `ItemXItemEffect`) is named *Food*, *Drink*, *Refreshment* or *Food &
      Drink*. The counts for every class and subclass are kept in `candidates.json` and `DIFF.md`.
@@ -110,7 +121,13 @@ client's data (clients-§5, clients-§10). The Retail flavor never reads Forever
   decide the ruling: matching an id that never appears costs nothing. Reject an aura that changes
   no stat (*WHEE!*'s experience and reputation), a size aura named like Well Fed, and a trigger.
   When the source is not clear, reject with `needs owner review: <why>`.
-- **What "accept" means for Well Fed and food.** Accept a buff food's aura. Accept the derived
+- **What "accept" means for Well Fed and food.** Accept a buff food's aura: one that changes the
+  player's stats, ratings, damage, healing or regeneration for the buff's length (*Increased
+  Stamina*, *Mana Regeneration*, Dragonbreath Chili's fire proc). Reject a food's transform, scale,
+  run speed, screen effect, stun or damage over time, and a heal or regeneration that lasts only
+  while eating (*Brain Food*'s drink phase, which then grants Well Fed). An aura whose types the DB2
+  cannot read as a stat buff (most procs, a signed percentage, an unknown type) is rejected as *needs
+  owner review*. Accept the derived
   Food & Drink subclass. Its replacement removes the old value as an `unfit` flag, and `apply`
   refuses a removal that has no accepted replacement.
 - **Precedent, in this order, never re-litigated:**
@@ -164,7 +181,7 @@ python3 tools/seeds/seeds.py status --flavor retail
 ```
 
 Prints `CURRENT <build> (<bundle>)`, or `NEW <build> (last ruled <build>, <bundle>)`. It compares the
-newest live, non-background-download `wow` build with the newest `*-retail` bundle.
+newest live, non-background-download `wow` build with the newest `<date>-retail[-<label>]` bundle.
 
 ### Freeze and derive
 
@@ -249,7 +266,7 @@ python3 tools/seeds/seeds.py status --flavor forever --foreverdb <foreverdb>
 ```
 
 The first command prints the newest ForeverDB tag, which fills `<foreverdb>`. The second prints
-`CURRENT <build> + ForeverDB <tag> (<bundle>)` or `NEW ...`. The newest `*-forever` bundle is
+`CURRENT <build> + ForeverDB <tag> (<bundle>)` or `NEW ...`. The newest `<date>-forever[-<label>]` bundle is
 current only when both its `wowf` build and its ForeverDB tag are the newest, so either one moving
 means a run.
 

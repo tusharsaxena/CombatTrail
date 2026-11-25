@@ -1,0 +1,2244 @@
+{
+ "build": "1.60.1.71091",
+ "candidates": [
+  {
+   "id": 353694,
+   "key": "buffs:353694",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 452454,
+   "key": "buffs:452454",
+   "list": "buffs",
+   "name": "Boon of Water",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 452456,
+   "key": "buffs:452456",
+   "list": "buffs",
+   "name": "Boon of Air",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 452460,
+   "key": "buffs:452460",
+   "list": "buffs",
+   "name": "Boon of Fire",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 452464,
+   "key": "buffs:452464",
+   "list": "buffs",
+   "name": "Boon of Earth",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 51"
+   ]
+  },
+  {
+   "id": 467410,
+   "key": "buffs:467410",
+   "list": "buffs",
+   "name": "Brood Boon: Bronze",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 467411,
+   "key": "buffs:467411",
+   "list": "buffs",
+   "name": "Brood Boon: Black",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 467412,
+   "key": "buffs:467412",
+   "list": "buffs",
+   "name": "Brood Boon: Blue",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 467413,
+   "key": "buffs:467413",
+   "list": "buffs",
+   "name": "Brood Boon: Green",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 467414,
+   "key": "buffs:467414",
+   "list": "buffs",
+   "name": "Brood Boon: Red",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 469208,
+   "key": "buffs:469208",
+   "list": "buffs",
+   "name": "Boon of Earth",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 52, 57"
+   ]
+  },
+  {
+   "id": 469209,
+   "key": "buffs:469209",
+   "list": "buffs",
+   "name": "Boon of Fire",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 469210,
+   "key": "buffs:469210",
+   "list": "buffs",
+   "name": "Boon of Water",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 135"
+   ]
+  },
+  {
+   "id": 473403,
+   "key": "buffs:473403",
+   "list": "buffs",
+   "name": "Blessing of Neptulon",
+   "notes": [
+    "catalog: unknown source: named like a world buff",
+    "auras 57, 99, 124, 137"
+   ]
+  },
+  {
+   "id": 5909,
+   "key": "wellfed:5909",
+   "list": "wellfed",
+   "name": "Watered-down Beer",
+   "notes": [
+    "food: item 5265 applies",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 6114,
+   "key": "wellfed:6114",
+   "list": "wellfed",
+   "name": "Raptor Punch",
+   "notes": [
+    "food: item 5342 applies",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 6411,
+   "key": "wellfed:6411",
+   "list": "wellfed",
+   "name": "Scorpid Poison",
+   "notes": [
+    "food: item 5473 triggers",
+    "auras 3"
+   ]
+  },
+  {
+   "id": 8213,
+   "key": "wellfed:8213",
+   "list": "wellfed",
+   "name": "Savory Deviate Delight",
+   "notes": [
+    "food: item 6657 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 15852,
+   "key": "wellfed:15852",
+   "list": "wellfed",
+   "name": "Dragonbreath Chili",
+   "notes": [
+    "food: item 12217 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 18125,
+   "key": "wellfed:18125",
+   "list": "wellfed",
+   "name": "Blessed Sunfruit",
+   "notes": [
+    "food: item 13810 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25037,
+   "key": "wellfed:25037",
+   "list": "wellfed",
+   "name": "Rumsey Rum Light",
+   "notes": [
+    "food: item 20709 applies",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25661,
+   "key": "wellfed:25661",
+   "list": "wellfed",
+   "name": "Increased Stamina",
+   "notes": [
+    "food: item 21023 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25722,
+   "key": "wellfed:25722",
+   "list": "wellfed",
+   "name": "Rumsey Rum Dark",
+   "notes": [
+    "food: item 21114 applies, item 287972 applies",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25804,
+   "key": "wellfed:25804",
+   "list": "wellfed",
+   "name": "Rumsey Rum Black Label",
+   "notes": [
+    "food: item 21151 applies",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25990,
+   "key": "wellfed:25990",
+   "list": "wellfed",
+   "name": "Graccu's Mince Meat Fruitcake",
+   "notes": [
+    "food: item 21215 applies",
+    "auras 20, 21"
+   ]
+  },
+  {
+   "id": 26390,
+   "key": "wellfed:26390",
+   "list": "wellfed",
+   "name": "Glowy (NoColor)",
+   "notes": [
+    "food: item 21721 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 29055,
+   "key": "wellfed:29055",
+   "list": "wellfed",
+   "name": "Refreshing Red Apple",
+   "notes": [
+    "food: item 23172 applies",
+    "auras 20, 21"
+   ]
+  },
+  {
+   "id": 470361,
+   "key": "wellfed:470361",
+   "list": "wellfed",
+   "name": "Increased Spell Damage",
+   "notes": [
+    "food: item 232436 triggers",
+    "auras 13"
+   ]
+  },
+  {
+   "id": 470367,
+   "key": "wellfed:470367",
+   "list": "wellfed",
+   "name": "Increased Healing Power",
+   "notes": [
+    "food: item 232438 triggers",
+    "auras 135"
+   ]
+  },
+  {
+   "id": 1248398,
+   "key": "wellfed:1248398",
+   "list": "wellfed",
+   "name": "Nutritious Food",
+   "notes": [
+    "food: item 252683 triggers",
+    "auras 227"
+   ]
+  },
+  {
+   "id": 1254546,
+   "key": "wellfed:1254546",
+   "list": "wellfed",
+   "name": "Cleansed",
+   "notes": [
+    "food: item 252683 triggers",
+    "auras 79, 226"
+   ]
+  },
+  {
+   "id": 1312719,
+   "key": "wellfed:1312719",
+   "list": "wellfed",
+   "name": "Restorative Bread",
+   "notes": [
+    "food: item 282018 applies",
+    "auras 20, 21, 226"
+   ]
+  },
+  {
+   "id": 1921,
+   "key": "dummies:1921",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 2673,
+   "key": "dummies:2673",
+   "list": "dummies",
+   "name": "Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 2674,
+   "key": "dummies:2674",
+   "list": "dummies",
+   "name": "Advanced Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 4952,
+   "key": "dummies:4952",
+   "list": "dummies",
+   "name": "Theramore Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 4957,
+   "key": "dummies:4957",
+   "list": "dummies",
+   "name": "Theramore Combat Dummy 4",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 5652,
+   "key": "dummies:5652",
+   "list": "dummies",
+   "name": "Practice Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 5723,
+   "key": "dummies:5723",
+   "list": "dummies",
+   "name": "Warug's Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 9659,
+   "key": "dummies:9659",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 10156,
+   "key": "dummies:10156",
+   "list": "dummies",
+   "name": "Scott's Test Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 10736,
+   "key": "dummies:10736",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Mage",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 11875,
+   "key": "dummies:11875",
+   "list": "dummies",
+   "name": "Mortar Team Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12317,
+   "key": "dummies:12317",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Low AC",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12385,
+   "key": "dummies:12385",
+   "list": "dummies",
+   "name": "Mortar Team Advanced Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12426,
+   "key": "dummies:12426",
+   "list": "dummies",
+   "name": "Masterwork Target Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12916,
+   "key": "dummies:12916",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Low Magic Resistances",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 12917,
+   "key": "dummies:12917",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 High Magic Resistances",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 13619,
+   "key": "dummies:13619",
+   "list": "dummies",
+   "name": "Gizlock's Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 14830,
+   "key": "dummies:14830",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 Warrior",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 14831,
+   "key": "dummies:14831",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 63 Warrior",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15133,
+   "key": "dummies:15133",
+   "list": "dummies",
+   "name": "Killable Test Dummy 60 Warrior",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15134,
+   "key": "dummies:15134",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 70",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15142,
+   "key": "dummies:15142",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 60",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15143,
+   "key": "dummies:15143",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 63",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15144,
+   "key": "dummies:15144",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 65",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15145,
+   "key": "dummies:15145",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 67",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15151,
+   "key": "dummies:15151",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 55",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15152,
+   "key": "dummies:15152",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 56",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15153,
+   "key": "dummies:15153",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 57",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15154,
+   "key": "dummies:15154",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 58",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15155,
+   "key": "dummies:15155",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 59",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15156,
+   "key": "dummies:15156",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 61",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15157,
+   "key": "dummies:15157",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 62",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15158,
+   "key": "dummies:15158",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 64",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15159,
+   "key": "dummies:15159",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 66",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15160,
+   "key": "dummies:15160",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 68",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15161,
+   "key": "dummies:15161",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 69",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15173,
+   "key": "dummies:15173",
+   "list": "dummies",
+   "name": "Outlands Test Dummy Warrior 54",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15992,
+   "key": "dummies:15992",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 1",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15993,
+   "key": "dummies:15993",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 2",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15996,
+   "key": "dummies:15996",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 1 (1)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15997,
+   "key": "dummies:15997",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 2 (1)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15998,
+   "key": "dummies:15998",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 1 (2)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 15999,
+   "key": "dummies:15999",
+   "list": "dummies",
+   "name": "Sam's Test Dummy 2 (2)",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 16078,
+   "key": "dummies:16078",
+   "list": "dummies",
+   "name": "Unkillable Fixed Damage Test Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 16211,
+   "key": "dummies:16211",
+   "list": "dummies",
+   "name": "Naxxramas Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 17313,
+   "key": "dummies:17313",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy Spammer",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 17685,
+   "key": "dummies:17685",
+   "list": "dummies",
+   "name": "Unkillable Test Dummy 60 No Armor",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 167875,
+   "key": "dummies:167875",
+   "list": "dummies",
+   "name": "RTC Player Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 176721,
+   "key": "dummies:176721",
+   "list": "dummies",
+   "name": "Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 177063,
+   "key": "dummies:177063",
+   "list": "dummies",
+   "name": "Spellcaster Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206152,
+   "key": "dummies:206152",
+   "list": "dummies",
+   "name": "SoD Test Dummy 25",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206153,
+   "key": "dummies:206153",
+   "list": "dummies",
+   "name": "SoD Test Dummy 26",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206154,
+   "key": "dummies:206154",
+   "list": "dummies",
+   "name": "SoD Test Dummy 27",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 206155,
+   "key": "dummies:206155",
+   "list": "dummies",
+   "name": "SoD Test Dummy 28",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 214528,
+   "key": "dummies:214528",
+   "list": "dummies",
+   "name": "Boss Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 217987,
+   "key": "dummies:217987",
+   "list": "dummies",
+   "name": "Giga Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 218019,
+   "key": "dummies:218019",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "spawn recorded on 1 map(s)"
+   ]
+  },
+  {
+   "id": 218020,
+   "key": "dummies:218020",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "spawn recorded on 1 map(s)"
+   ]
+  },
+  {
+   "id": 218021,
+   "key": "dummies:218021",
+   "list": "dummies",
+   "name": "Combat Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "spawn recorded on 1 map(s)"
+   ]
+  },
+  {
+   "id": 219762,
+   "key": "dummies:219762",
+   "list": "dummies",
+   "name": "SoD Test Dummy 40 DNT",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 236987,
+   "key": "dummies:236987",
+   "list": "dummies",
+   "name": "Satyrweed Quest Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 239817,
+   "key": "dummies:239817",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 239820,
+   "key": "dummies:239820",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 239855,
+   "key": "dummies:239855",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 250192,
+   "key": "dummies:250192",
+   "list": "dummies",
+   "name": "[DNT] Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 259957,
+   "key": "dummies:259957",
+   "list": "dummies",
+   "name": "Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 263911,
+   "key": "dummies:263911",
+   "list": "dummies",
+   "name": "Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 265987,
+   "key": "dummies:265987",
+   "list": "dummies",
+   "name": "Spell Resistant Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268079,
+   "key": "dummies:268079",
+   "list": "dummies",
+   "name": "Dummy Beast",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268080,
+   "key": "dummies:268080",
+   "list": "dummies",
+   "name": "Dummy Demon",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268081,
+   "key": "dummies:268081",
+   "list": "dummies",
+   "name": "Dummy Dragonkin",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268082,
+   "key": "dummies:268082",
+   "list": "dummies",
+   "name": "Dummy Elemental",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268083,
+   "key": "dummies:268083",
+   "list": "dummies",
+   "name": "Dummy Giant",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268084,
+   "key": "dummies:268084",
+   "list": "dummies",
+   "name": "Dummy Humanoid",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268085,
+   "key": "dummies:268085",
+   "list": "dummies",
+   "name": "Dummy Undead",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 268257,
+   "key": "dummies:268257",
+   "list": "dummies",
+   "name": "Dummy Mechanical",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 271897,
+   "key": "dummies:271897",
+   "list": "dummies",
+   "name": "[DNT] Dummy Quest Kill Credit",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 273690,
+   "key": "dummies:273690",
+   "list": "dummies",
+   "name": "Armor Debuffed Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 273946,
+   "key": "dummies:273946",
+   "list": "dummies",
+   "name": "Armor Debuffed Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 274574,
+   "key": "dummies:274574",
+   "list": "dummies",
+   "name": "Dummy Healing",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277132,
+   "key": "dummies:277132",
+   "list": "dummies",
+   "name": "Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277205,
+   "key": "dummies:277205",
+   "list": "dummies",
+   "name": "Dummy Healing",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277601,
+   "key": "dummies:277601",
+   "list": "dummies",
+   "name": "Armor Debuffed Dummy Boss",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  },
+  {
+   "id": 277685,
+   "key": "dummies:277685",
+   "list": "dummies",
+   "name": "Interruptable Spellcaster Dummy",
+   "notes": [
+    "ForeverDB creature name match",
+    "no spawn recorded"
+   ]
+  }
+ ],
+ "client": "forever",
+ "date": "2026-11-25",
+ "derived": {
+  "buffs": [
+   {
+    "id": 8733,
+    "name": "Blessing of Blackfathom",
+    "rules": [
+     "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+     "auras 13, 29"
+    ]
+   },
+   {
+    "id": 15366,
+    "name": "Songflower Serenade",
+    "rules": [
+     "catalog: world: a Songflower, Felwood",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 16609,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 22817,
+    "name": "Fengus' Ferocity",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 22818,
+    "name": "Mol'dar's Moxie",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 22820,
+    "name": "Slip'kik's Savvy",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 22888,
+    "name": "Rallying Cry of the Dragonslayer",
+    "rules": [
+     "catalog: world: Onyxia's or Nefarian's head",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 23735,
+    "name": "Sayge's Dark Fortune of Strength",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23736,
+    "name": "Sayge's Dark Fortune of Agility",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23737,
+    "name": "Sayge's Dark Fortune of Stamina",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23738,
+    "name": "Sayge's Dark Fortune of Spirit",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23766,
+    "name": "Sayge's Dark Fortune of Intelligence",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23767,
+    "name": "Sayge's Dark Fortune of Armor",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 101"
+    ]
+   },
+   {
+    "id": 23768,
+    "name": "Sayge's Dark Fortune of Damage",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 23769,
+    "name": "Sayge's Dark Fortune of Resistance",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 24425,
+    "name": "Spirit of Zandalar",
+    "rules": [
+     "catalog: world: Hakkar's heart, Yojamba Isle",
+     "auras 31, 137"
+    ]
+   },
+   {
+    "id": 26462,
+    "name": "Festival Fortune!",
+    "rules": [
+     "catalog: event: a festival fortune",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 26522,
+    "name": "Lunar Fortune",
+    "rules": [
+     "catalog: event: Lunar Festival",
+     "auras 34"
+    ]
+   },
+   {
+    "id": 29235,
+    "name": "Fire Festival Fortitude",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 29338,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 29534,
+    "name": "Traces of Silithyst",
+    "rules": [
+     "catalog: zone: Silithus",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 29846,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 353694,
+    "name": "Sayge's Dark Fortune",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 355363,
+    "name": "Rallying Cry of the Dragonslayer",
+    "rules": [
+     "catalog: world: Onyxia's or Nefarian's head",
+     "auras 52, 57, 99, 124"
+    ]
+   },
+   {
+    "id": 355365,
+    "name": "Spirit of Zandalar",
+    "rules": [
+     "catalog: world: Hakkar's heart, Yojamba Isle",
+     "auras 31, 137"
+    ]
+   },
+   {
+    "id": 355366,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 34, 85, 319"
+    ]
+   },
+   {
+    "id": 430352,
+    "name": "Ashenvale Rallying Cry",
+    "rules": [
+     "catalog: world: the Ashenvale battle (Season of Discovery)",
+     "auras 79, 118"
+    ]
+   },
+   {
+    "id": 430947,
+    "name": "Boon of Blackfathom",
+    "rules": [
+     "catalog: world: Blackfathom Deeps (Season of Discovery)",
+     "auras 13, 31, 52, 55, 99, 124"
+    ]
+   },
+   {
+    "id": 431111,
+    "name": "Boon of Blackfathom",
+    "rules": [
+     "catalog: world: Blackfathom Deeps (Season of Discovery)",
+     "auras 13, 31, 52, 55, 99, 124"
+    ]
+   },
+   {
+    "id": 438536,
+    "name": "Spark of Inspiration",
+    "rules": [
+     "catalog: world: the Sunken Temple (Season of Discovery)",
+     "auras 13, 57, 135, 140, 319"
+    ]
+   },
+   {
+    "id": 438537,
+    "name": "Spark of Inspiration",
+    "rules": [
+     "catalog: world: the Sunken Temple (Season of Discovery)",
+     "auras 13, 57, 135, 140, 319"
+    ]
+   },
+   {
+    "id": 446695,
+    "name": "Fervor of the Temple Explorer",
+    "rules": [
+     "catalog: world: the Sunken Temple (Season of Discovery)",
+     "auras 13, 137, 290"
+    ]
+   },
+   {
+    "id": 446698,
+    "name": "Fervor of the Temple Explorer",
+    "rules": [
+     "catalog: world: the Sunken Temple (Season of Discovery)",
+     "auras 13, 137, 290"
+    ]
+   },
+   {
+    "id": 452454,
+    "name": "Boon of Water",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 452456,
+    "name": "Boon of Air",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 452460,
+    "name": "Boon of Fire",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 452464,
+    "name": "Boon of Earth",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 51"
+    ]
+   },
+   {
+    "id": 460939,
+    "name": "Might of Stormwind",
+    "rules": [
+     "catalog: world: the head turn-in, Stormwind",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 460940,
+    "name": "Might of Stormwind",
+    "rules": [
+     "catalog: world: the head turn-in, Stormwind",
+     "auras 34, 85, 319"
+    ]
+   },
+   {
+    "id": 467410,
+    "name": "Brood Boon: Bronze",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 467411,
+    "name": "Brood Boon: Black",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 467412,
+    "name": "Brood Boon: Blue",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 467413,
+    "name": "Brood Boon: Green",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 467414,
+    "name": "Brood Boon: Red",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 469208,
+    "name": "Boon of Earth",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 469209,
+    "name": "Boon of Fire",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 469210,
+    "name": "Boon of Water",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 135"
+    ]
+   },
+   {
+    "id": 473399,
+    "name": "Songflower Lullaby",
+    "rules": [
+     "catalog: world: a Songflower (Season of Discovery)",
+     "auras 29, 52, 57"
+    ]
+   },
+   {
+    "id": 473403,
+    "name": "Blessing of Neptulon",
+    "rules": [
+     "catalog: unknown source: named like a world buff",
+     "auras 57, 99, 124, 137"
+    ]
+   },
+   {
+    "id": 473441,
+    "name": "Might of Blackrock",
+    "rules": [
+     "catalog: world: a Warchief's Blessing twin (Season of Discovery)",
+     "auras 34, 85, 319"
+    ]
+   },
+   {
+    "id": 473450,
+    "name": "Dark Fortune of Damage",
+    "rules": [
+     "catalog: faire: Darkmoon Faire (Season of Discovery)",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 473476,
+    "name": "Dreams of Zandalar",
+    "rules": [
+     "catalog: world: Zandalar (Season of Discovery)",
+     "auras 31, 137"
+    ]
+   },
+   {
+    "id": 1216566,
+    "name": "Traces of Silithyst",
+    "rules": [
+     "catalog: zone: Silithus",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 1229741,
+    "name": "Camp Benefits",
+    "rules": [
+     "catalog: camp: the Camp Chair and Sharpening Wheel (WoW Forever)",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1304452,
+    "name": "Rallying Cry of the Dragonslayer",
+    "rules": [
+     "catalog: world: Onyxia's or Nefarian's head",
+     "auras 13, 99, 124, 135, 290"
+    ]
+   },
+   {
+    "id": 1304594,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 34, 65, 85, 342"
+    ]
+   },
+   {
+    "id": 1304678,
+    "name": "Might of Stormwind",
+    "rules": [
+     "catalog: world: the head turn-in, Stormwind",
+     "auras 34, 65, 85, 342"
+    ]
+   },
+   {
+    "id": 1304690,
+    "name": "Songflower Serenade",
+    "rules": [
+     "catalog: world: a Songflower, Felwood",
+     "auras 29, 290"
+    ]
+   },
+   {
+    "id": 1304751,
+    "name": "Slip'kik's Savvy",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 290"
+    ]
+   },
+   {
+    "id": 1304753,
+    "name": "Mol'dar's Moxie",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 1304759,
+    "name": "Fengus' Ferocity",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 13, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 1304767,
+    "name": "Sayge's Dark Fortune of Resistance",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 1304769,
+    "name": "Sayge's Dark Fortune of Damage",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 1304771,
+    "name": "Sayge's Dark Fortune of Armor",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 101"
+    ]
+   },
+   {
+    "id": 1304772,
+    "name": "Sayge's Dark Fortune of Intelligence",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 1304775,
+    "name": "Sayge's Dark Fortune of Spirit",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 1304778,
+    "name": "Sayge's Dark Fortune of Stamina",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 1304780,
+    "name": "Sayge's Dark Fortune of Agility",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 1304782,
+    "name": "Sayge's Dark Fortune of Strength",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   }
+  ],
+  "food": [
+   {
+    "id": 5,
+    "name": "",
+    "rules": [
+     "176 of the 198 Consumable items that use Food/Drink/Refreshment/Food & Drink"
+    ]
+   }
+  ],
+  "wellfed": [
+   {
+    "id": 5909,
+    "name": "Watered-down Beer",
+    "rules": [
+     "food: item 5265 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 6114,
+    "name": "Raptor Punch",
+    "rules": [
+     "food: item 5342 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 6411,
+    "name": "Scorpid Poison",
+    "rules": [
+     "food: item 5473 triggers",
+     "auras 3"
+    ]
+   },
+   {
+    "id": 8213,
+    "name": "Savory Deviate Delight",
+    "rules": [
+     "food: item 6657 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 15852,
+    "name": "Dragonbreath Chili",
+    "rules": [
+     "food: item 12217 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 18125,
+    "name": "Blessed Sunfruit",
+    "rules": [
+     "food: item 13810 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19705,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 7806 triggers, item 7807 triggers, item 7808 triggers, item 11584 triggers (and 4 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19706,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19708,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 5527 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19709,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 12211 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19710,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 16971 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19711,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 24799,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 24870,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 25037,
+    "name": "Rumsey Rum Light",
+    "rules": [
+     "food: item 20709 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 25661,
+    "name": "Increased Stamina",
+    "rules": [
+     "food: item 21023 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 25694,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 24"
+    ]
+   },
+   {
+    "id": 25722,
+    "name": "Rumsey Rum Dark",
+    "rules": [
+     "food: item 21114 applies, item 287972 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 25804,
+    "name": "Rumsey Rum Black Label",
+    "rules": [
+     "food: item 21151 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 25941,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 24"
+    ]
+   },
+   {
+    "id": 25990,
+    "name": "Graccu's Mince Meat Fruitcake",
+    "rules": [
+     "food: item 21215 applies",
+     "auras 20, 21"
+    ]
+   },
+   {
+    "id": 26390,
+    "name": "Glowy (NoColor)",
+    "rules": [
+     "food: item 21721 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 29055,
+    "name": "Refreshing Red Apple",
+    "rules": [
+     "food: item 23172 applies",
+     "auras 20, 21"
+    ]
+   },
+   {
+    "id": 470361,
+    "name": "Increased Spell Damage",
+    "rules": [
+     "food: item 232436 triggers",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 470367,
+    "name": "Increased Healing Power",
+    "rules": [
+     "food: item 232438 triggers",
+     "auras 135"
+    ]
+   },
+   {
+    "id": 1225778,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 238637 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1225779,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 238638 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1225780,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 238639 triggers",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 1225782,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 99, 135"
+    ]
+   },
+   {
+    "id": 1248398,
+    "name": "Nutritious Food",
+    "rules": [
+     "food: item 252683 triggers",
+     "auras 227"
+    ]
+   },
+   {
+    "id": 1248406,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 3663 triggers, item 3665 triggers, item 3666 triggers, item 3729 triggers (and 16 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1248420,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 1017 triggers, item 2680 triggers, item 2684 triggers, item 3662 triggers (and 11 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1248421,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 1082 triggers, item 2682 triggers, item 2683 triggers, item 4457 triggers (and 13 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1248422,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 724 triggers, item 2681 triggers, item 2685 triggers, item 2687 triggers (and 11 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1248688,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 733 triggers",
+     "auras 4, 129"
+    ]
+   },
+   {
+    "id": 1249519,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 787 triggers, item 4592 triggers, item 6290 triggers, item 8364 triggers (and 4 more)",
+     "auras 99, 124"
+    ]
+   },
+   {
+    "id": 1249520,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 5095 triggers, item 6887 triggers, item 13931 triggers, item 13933 triggers (and 4 more)",
+     "auras 13"
+    ]
+   },
+   {
+    "id": 1249521,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 4593 triggers, item 4594 triggers, item 5476 triggers, item 6316 triggers (and 2 more)",
+     "auras 30"
+    ]
+   },
+   {
+    "id": 1249523,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 13928 triggers, item 13929 triggers, item 287974 triggers",
+     "auras 290"
+    ]
+   },
+   {
+    "id": 1249907,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 10841 triggers",
+     "auras 30"
+    ]
+   },
+   {
+    "id": 1249926,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 249871 triggers, item 249872 triggers, item 249873 triggers, item 249874 triggers (and 2 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1249927,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 249865 triggers, item 249866 triggers, item 249867 triggers, item 249868 triggers (and 2 more)",
+     "auras 135"
+    ]
+   },
+   {
+    "id": 1254546,
+    "name": "Cleansed",
+    "rules": [
+     "food: item 252683 triggers",
+     "auras 79, 226"
+    ]
+   },
+   {
+    "id": 1283082,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1294007,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 267341 triggers",
+     "auras 4, 129"
+    ]
+   },
+   {
+    "id": 1302064,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 277313 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 1312719,
+    "name": "Restorative Bread",
+    "rules": [
+     "food: item 282018 applies",
+     "auras 20, 21, 226"
+    ]
+   },
+   {
+    "id": 1319310,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 286152 triggers",
+     "auras 465"
+    ]
+   }
+  ]
+ },
+ "flags": [
+  {
+   "comment": "Auto Attack",
+   "id": 6603,
+   "key": "shipped:renamed:ignore:6603",
+   "kind": "renamed",
+   "list": "ignore",
+   "name": "Attack"
+  }
+ ],
+ "food": [
+  {
+   "class": 0,
+   "items": 176,
+   "subclass": 5
+  },
+  {
+   "class": 0,
+   "items": 22,
+   "subclass": 8
+  },
+  {
+   "class": 7,
+   "items": 17,
+   "subclass": 8
+  },
+  {
+   "class": 4,
+   "items": 2,
+   "subclass": 0
+  },
+  {
+   "class": 12,
+   "items": 1,
+   "subclass": 0
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 0
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 3
+  }
+ ],
+ "foreverdb": {
+  "commit": "6e0a34b4bd017483aff616f5766348e1cea519ae",
+  "json_sha256": "156924e2e077ce87b7e0ee88d98bb3c4a42c2f1641584540dce2cdd722fffbdc",
+  "meta": {
+   "build": "2026-11-24",
+   "hash": "34e1dda1e0baf54c"
+  },
+  "tag": "v2026.11.24.46"
+ },
+ "ignore": {
+  "checked": [
+   {
+    "build": "Attack",
+    "file": "Auto Attack",
+    "id": 6603,
+    "lanes": [
+     "player",
+     "pet"
+    ]
+   },
+   {
+    "build": "Auto Shot",
+    "file": "Auto Shot",
+    "id": 75,
+    "lanes": [
+     "player"
+    ]
+   },
+   {
+    "build": "Shoot",
+    "file": "Shoot",
+    "id": 5019,
+    "lanes": [
+     "player"
+    ]
+   }
+  ],
+  "lanes": {
+   "pet": [
+    6603
+   ],
+   "player": [
+    6603,
+    75,
+    5019
+   ]
+  }
+ },
+ "product": "wowf",
+ "shipped": {
+  "buffs": 55,
+  "dummies": 0,
+  "food": 1,
+  "ignore": 3,
+  "wellfed": 30
+ },
+ "tool": "tools/seeds/seeds.py derive"
+}

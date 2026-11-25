@@ -17,8 +17,16 @@ local _, NS = ...
 --                and Blackfathom zone buffs, the Midsummer and Lunar Festival buffs, and Camp Benefits.
 --                Every derived id is then ruled: one that changes no stat (WHEE!, experience) and one
 --                whose source the data cannot show are left out.
---   wellFed      every aura spell named "Well Fed", or one word and "Well Fed" (Hearty Well Fed). Buff
---                food counts only through these auras, never through its Eat aura (#13's owner comment).
+--   wellFed      every aura spell named "Well Fed", or one word and "Well Fed" (Hearty Well Fed); plus
+--                the buff a food gives under another name: for every Consumable of the Food & Drink
+--                subclass, or whose use spell is Food, Drink, Refreshment or Food & Drink, the aura spells
+--                its use spell triggers (one EffectTriggerSpell hop: Dirge's Kickin' Chimaerok Chops'
+--                Increased Stamina 25661, Nightfin Soup's Mana Regeneration 18194), and the use spell
+--                itself when it applies an aura other than an eating one (Dragonbreath Chili 15852). The
+--                eating auras, Become Well Fed, test and [DNT] spells are left out, and every id is ruled:
+--                one that changes no stat (a transform, a run speed, a heal over the meal) is rejected.
+--                Buff food counts only through these auras, never through its Eat aura (#13's owner
+--                comment).
 --   foodSubclass the Consumable (item class 0) subclass that holds the most items whose use spell is
 --                Food, Drink, Refreshment or Food & Drink: Food & Drink, 5 on both clients. A Consumable
 --                of this subclass is never listed by its own Eat or Drink aura, cast or bag count.
@@ -31,8 +39,10 @@ local _, NS = ...
 -- rolled by hand. The rulings are tools/seeds/<flavor>_rulings.json, and tools/seeds/test_seeds.py's
 -- gate holds each client's shipped ids to them. The names in the comments are enUS, for review only;
 -- a Well Fed row carries no name.
--- Derived 2026-11-25 from Retail 12.1.5.70961 (docs/seed-research/2026-11-25-retail/) and WoW Forever
--- 1.60.1.71091 (docs/seed-research/2026-11-25-forever/).
+-- Derived 2026-11-25 from Retail 12.1.5.70961 (docs/seed-research/2026-11-25-retail-buffs/) and WoW
+-- Forever 1.60.1.71091 (docs/seed-research/2026-11-25-forever-buffs/). The Retail buffs are the legacy
+-- world, faire and festival buffs only: no current-expansion fight buff is in the catalog yet, so most
+-- are seen in game only during a Midsummer or Lunar Festival, or not at all.
 --
 -- LOAD-BEARING: reads NS.Compat (core/Compat.lua) at FILE SCOPE.
 
@@ -67,14 +77,24 @@ NS.BuffSeeds = {
             1225929,  -- Lunar Fortune
         },
         wellFed = {
+            6114,
+            15852,
+            18125,
+            18191,
+            18192,
+            18193,
+            18194,
+            18222,
             19705,
             19706,
             19708,
             19709,
             19710,
             19711,
+            22730,
             24799,
             24870,
+            25661,
             25694,
             25941,
             33254,
@@ -87,6 +107,7 @@ NS.BuffSeeds = {
             33268,
             35272,
             42293,
+            43722,
             43764,
             45245,
             45619,
@@ -178,6 +199,7 @@ NS.BuffSeeds = {
             108031,
             108032,
             110645,
+            111840,
             114733,
             124151,
             124210,
@@ -200,6 +222,7 @@ NS.BuffSeeds = {
             125108,
             125113,
             125115,
+            127770,
             130342,
             130343,
             130344,
@@ -227,7 +250,9 @@ NS.BuffSeeds = {
             135076,
             135440,
             140410,
+            142286,
             145304,
+            145635,
             146804,
             146805,
             146806,
@@ -255,6 +280,7 @@ NS.BuffSeeds = {
             165802,
             168349,
             168475,
+            169356,
             174062,
             174077,
             174078,
@@ -337,6 +363,7 @@ NS.BuffSeeds = {
             267950,
             267951,
             272817,
+            274375,
             285719,
             285720,
             285721,
@@ -423,10 +450,18 @@ NS.BuffSeeds = {
             386723,
             396092,
             398458,
+            405449,
             406941,
             417336,
+            422840,
+            422842,
+            422843,
+            423074,
+            439413,
             439608,
             442522,
+            450903,
+            450904,
             451916,
             451917,
             451918,
@@ -666,6 +701,10 @@ NS.BuffSeeds = {
             1304782,  -- Sayge's Dark Fortune of Strength
         },
         wellFed = {
+            5909,
+            6114,
+            15852,
+            18125,
             19705,
             19706,
             19708,
@@ -674,8 +713,14 @@ NS.BuffSeeds = {
             19711,
             24799,
             24870,
+            25037,
+            25661,
             25694,
+            25722,
+            25804,
             25941,
+            470361,
+            470367,
             1225778,
             1225779,
             1225780,
