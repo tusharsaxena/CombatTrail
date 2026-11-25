@@ -1,0 +1,31 @@
+# Plan: combat log window, target level, buffs in Used (#11, #12, #13)
+
+- **Spec:** `docs/superpowers/specs/2026-11-25-log-level-buffs-design.md`.
+- **Branch:** `feat/2026-11-25-log-level-buffs`.
+- **Where it's built:** the scratch clone `~/ka0s-scratch/ctlog/CombatTrail`. The live repo is left alone, because the game
+  loads it. The lead brings the branch over with
+  `git fetch ~/ka0s-scratch/ctlog/CombatTrail feat/2026-11-25-log-level-buffs:feat/2026-11-25-log-level-buffs`.
+- **State is git.** An item is done when a commit whose subject starts `<ID>: ` is on the branch.
+
+| ID | Milestone | Item | Depends on |
+|---|---|---|---|
+| CL-PLAN | M0 | spec and plan | – |
+| CL-12 | M1 | target level formatter in the Encounter column, the detail title, Targets and Insights; tests | CL-PLAN |
+| CL-13a | M1 | buff seed research (wago, pinned per client), frozen bundles, `defaults/BuffSeeds.lua`, validate-seeds contract, gate test | CL-PLAN |
+| CL-13b | M1 | buffs in Used (spell-keyed entries, schema step, migration), plain food and drink excluded; tests | CL-13a |
+| CL-11a | M2 | log capture (casts, auras, UNIT_COMBAT probe), ring buffer, saved `log` on the fight record, schema step, cap, retention; tests and a perf scenario | CL-13b |
+| CL-11b | M2 | the Combat Log window: live feed and saved-fight view, chips, damage by spell, Older/Newer, `/ct log`, entry button, Results Log button | CL-11a |
+| CL-11c | M2 | settings, docs, locales, smoke rows, full gate on both profiles | CL-11b |
+| CL-REV | M3 | independent review, then a fix pass | CL-11c |
+
+**Checkpoints:**
+- **M1:** the gate is green on both profiles.
+- **M2:** the full gate is green.
+- **M3:** the lead re-runs the gate and pushes the feature branch.
+
+**Merging** waits for the owner's go-ahead.
+
+**Resume:**
+1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
+2. Read `git status` and either continue or stash any uncommitted work.
+3. Relaunch the workflow with `resumeFromRunId`, or brief a builder from the spec for the missing IDs.
