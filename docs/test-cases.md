@@ -19,7 +19,7 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 4 and the fight record's format is 4
+- load: the settings stamp is 4 and the fight record's format is 5
 - load: a schema 1 store loads empty at version 4, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
@@ -1626,6 +1626,22 @@ Total.
 - usage edit: never-show list hides
 - usage edit: a sample fight changes in memory only
 
+### test_usage_buffs.lua (13)
+
+- usage buffs: the active client's seeded buffs at the start are listed under their spell IDs
+- usage buffs: the other client's buffs are not listed
+- usage buffs: a sealed aura ends the walk, and a buff after it never produces an entry
+- usage buffs: plain food eaten at the pull lists nothing (aura up, a pre-pull cast, count dropped)
+- usage buffs: Well Fed lists the food once, never its Eat aura
+- usage buffs: a potion is still listed as before
+- usage buffs: an Other consumable whose use spell is an Eat or Drink aura is plain food too
+- usage buffs: the section and the Used column show a buff with its spell's icon and name
+- usage buffs: the edit unticks a buff, keeps its row, and ticks it back as detected
+- usage buffs: never show hides a buff by its spell ID, stored beside the hidden items
+- usage buffs: the hidden buffs row validates and normalizes like the hidden items
+- usage buffs: Compare matches a buff across two fights by its spell
+- usage buffs: a CT_SCHEMA 4 record's v 1 usage still renders, its plain food left out
+
 ### test_history_page.lua (17)
 
 - history page: six tabs, Recording filters first and New-best toast last
@@ -2001,6 +2017,7 @@ Total.
 | test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
+| test_usage_buffs.lua | 13 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 14 |
@@ -2021,4 +2038,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1655** |
+| **Total** | **1668** |

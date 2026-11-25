@@ -838,6 +838,7 @@ L["Talents for %s: %s. Click the link to see the tree."] =
     "Talents for %s: %s. Click the link to see the tree."
 L["this fight"] = "this fight"
 L["Item %d"] = "Item %d"
+L["Spell %d"] = "Spell %d"
 L["Gear and Talents"] = "Gear and Talents"
 L["Gear view"] = "Gear view"
 L["Gear not recorded"] = "Gear not recorded"
@@ -1038,11 +1039,15 @@ L["vs %s"] = "vs %s"
 
 -- The Usage edit and its "never show" list (modules/Results_Usage.lua, modules/Usage.lua, settings/History.lua)
 L["Right-click: never show this item."] = "Right-click: never show this item."
+L["Right-click: never show this buff."] = "Right-click: never show this buff."
 L["Never show %s"] = "Never show %s"
 L["Keep these ticks as what the fight used."] = "Keep these ticks as what the fight used."
 L["Nothing to list: no on-use item or consumable was found at the start."] =
     "Nothing to list: no on-use item or consumable was found at the start."
 L["Hidden items"] = "Hidden items"
+L["Hidden buffs"] = "Hidden buffs"
+L["Account-wide: shared by every profile. Buff spell IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that had one still records it, so taking it off the list brings it back."] =
+    "Account-wide: shared by every profile. Buff spell IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that had one still records it, so taking it off the list brings it back."
 L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."] =
     "Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."
 
@@ -1102,9 +1107,15 @@ L["Every fight is tracked live on the DPS HUD. A fight is stored only when it pa
 L["Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."] =
     "Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."
 L["Hide an item"] = "Hide an item"
+L["Hide a buff"] = "Hide a buff"
+L["Buffs the Results window's Usage never lists, on any fight. Right-click a buff in a fight's Usage edit to add it here."] =
+    "Buffs the Results window's Usage never lists, on any fight. Right-click a buff in a fight's Usage edit to add it here."
+L["A spell ID, a shift-clicked spell link, or the name of a buff a fight listed."] =
+    "A spell ID, a shift-clicked spell link, or the name of a buff a fight listed."
 L["An item ID, a shift-clicked item link, or the name of an item a fight listed."] =
     "An item ID, a shift-clicked item link, or the name of an item a fight listed."
 L["No item is hidden."] = "No item is hidden."
+L["No buff is hidden."] = "No buff is hidden."
 -- The Training dummies tab (settings/History.lua, race plan Task A2)
 L["Your training dummies"] = "Your training dummies"
 L["The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."] =

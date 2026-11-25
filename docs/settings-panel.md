@@ -410,6 +410,7 @@ same key, and an open timeline redraws with its zoom and pan kept.
 | Row | Key |
 |---|---|
 | Hidden items | `global.usage.hidden` (drawn as a list with add and remove, not a text box) |
+| Hidden buffs | `global.usage.hiddenSpells` (drawn as a spell list with add and remove, under the items; CombatTrail #13) |
 
 ### Training dummies
 

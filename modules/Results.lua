@@ -1124,7 +1124,7 @@ local function onSettings(path)
     -- How the ability timeline's By ability draws a cast (v0.2 Task D1): an open one redraws, its zoom kept.
     if path == "results.timelineMarks" then NS.ResultsTimeline.Redraw() end
     -- The Usage "never show" list: the detail redraws (an edit under way keeps its ticks).
-    if path == NS.Usage.HIDDEN_PATH and windowShown() then renderDetail() end
+    if (path == NS.Usage.HIDDEN_PATH or path == NS.Usage.HIDDEN_SPELLS_PATH) and windowShown() then renderDetail() end
     -- The late-cast ignore list re-scores every race's flags, and the Training dummies list moves races
     -- between kinds: the sample's boards are dropped and the window redraws (Race mode plan Task D1).
     if path == NS.LateIgnore.PATH or path == NS.Dummies.PATH then

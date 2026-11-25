@@ -164,6 +164,14 @@ out[#out + 1] = {
     normalize = function(v) return NS.Usage.NormalizeHidden(v) end,
     tooltip = L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."],
 }
+-- The hidden buffs (CombatTrail #13), beside the hidden items: spell IDs, the same shape and seam.
+out[#out + 1] = {
+    path = NS.Usage.HIDDEN_SPELLS_PATH, page = PAGE, group = TAB.usage, type = "string", skipRender = true,
+    label = L["Hidden buffs"], default = NS.defaults.global.usage.hiddenSpells,
+    validate = function(v) return NS.Usage.ParseHidden(v) ~= nil end,
+    normalize = function(v) return NS.Usage.NormalizeHidden(v) end,
+    tooltip = L["Account-wide: shared by every profile. Buff spell IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that had one still records it, so taking it off the list brings it back."],
+}
 
 -- Training dummies: the player's own list (modules/Dummies.lua, race plan Task A2). One plain string
 -- written WHOLE through the seam, as the hidden items are, so the CLI and the page's Defaults reach it;
@@ -287,6 +295,24 @@ local function afterUsage(ctx)
         removeStyle = "icon",
         columns     = 2,
     })
+    -- The buffs (CombatTrail #13): world, camp, zone and event buffs Usage lists by their spell.
+    H.TextRow(ctx, L["Buffs the Results window's Usage never lists, on any fight. Right-click a buff in a fight's Usage edit to add it here."])
+    H.IdList(ctx, {
+        kind        = "spell",
+        label       = L["Hide a buff"],
+        tooltip     = L["A spell ID, a shift-clicked spell link, or the name of a buff a fight listed."],
+        emptyText   = L["No buff is hidden."],
+        entries     = function()
+            local list = {}
+            for i, id in ipairs(NS.Usage.HiddenSpellList()) do list[i] = { id = id } end
+            return list
+        end,
+        candidates  = function() return NS.Usage.KnownSpells() end,
+        onAdd       = function(id) NS.Usage.HideSpell(id) end,
+        onRemove    = function(id) NS.Usage.UnhideSpell(id) end,
+        removeStyle = "icon",
+        columns     = 2,
+    })
 end
 
 -- The Training dummies tab's body, after its one skipRender row: a blurb, Add your target, the
@@ -399,7 +425,10 @@ do
         bus:RegisterMessage(NS.MSG.FIGHTS_CHANGED, repaint)
         bus:RegisterMessage(NS.MSG.FIGHT_SAVED, repaint)
         bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
-            if path == NS.Usage.HIDDEN_PATH or path == NS.Dummies.PATH or path == "profile" then repaint() end
+            if path == NS.Usage.HIDDEN_PATH or path == NS.Usage.HIDDEN_SPELLS_PATH or path == NS.Dummies.PATH
+                    or path == "profile" then
+                repaint()
+            end
         end)
     end
 end

@@ -180,6 +180,7 @@ local SUITES = {
     "test_tooltip_place",
     "test_window_chrome",
     "test_usage_edit",
+    "test_usage_buffs",
     "test_history_page",
     "test_preview",
     "test_sim",

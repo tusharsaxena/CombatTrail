@@ -40,7 +40,7 @@ local _, NS = ...
 -- packed string), cooldowns ({ [spellID] = ms }, the timeline's),
 -- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, targets? (CT_SCHEMA
 -- 3: Recorder.Targets, the enemies your damage reached), race? (CT_SCHEMA 4: RaceRecord.Plain's race
--- part), note?, client, build, version, status = "final" }.
+-- part; usage v 2 from CT_SCHEMA 5), note?, client, build, version, status = "final" }.
 
 local Recorder = {}
 NS.Recorder = Recorder
@@ -51,7 +51,9 @@ local L = NS.L
 --- The fight record's format version (spec §5). Distinct from NS.SCHEMA_VERSION, the settings'.
 -- 3 (issue #6) adds the optional `targets`; a CT_SCHEMA 2 record reads the same, with no targets.
 -- 4 (Race mode) adds the optional `race`; an older record reads the same, as a fight (no migration).
-Recorder.CT_SCHEMA = 4
+-- 5 (CombatTrail #13) moves `usage` to its v 2, which adds the spell-keyed buff entry
+-- ({ spellID, kind = "buff" }); an older record's v 1 usage reads as it is (no step).
+Recorder.CT_SCHEMA = 5
 --- The most targets a record keeps (the highest).
 Recorder.TARGETS_MAX = 10
 --- The longest note a record keeps.

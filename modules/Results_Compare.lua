@@ -327,9 +327,11 @@ end
 
 -- ── pure: what was used ─────────────────────────────────────────────────────────────────────────
 
--- A used entry's match across the fights: its item, or its kind for an entry with none (food).
+-- A used entry's match across the fights: its item, its spell (a buff), or its kind for an entry with
+-- neither (food).
 local function usageKey(e)
     if e.itemID ~= nil then return "i" .. tostring(e.itemID) end
+    if e.spellID ~= nil then return "s" .. tostring(e.spellID) end
     return "k" .. tostring(e.kind)
 end
 
@@ -346,7 +348,7 @@ function Compare.UsageRows(a, b)
         local k = usageKey(e)
         local row = at[k]
         if not row then
-            row = { itemID = e.itemID, kind = e.kind }
+            row = { itemID = e.itemID, spellID = e.spellID, kind = e.kind }
             at[k], rows[#rows + 1] = row, row
         end
         if row[side] == nil then row[side] = e end
@@ -712,7 +714,12 @@ local function usageTip(line)
     local tt, d = GameTooltip, line.data
     if not (tt and d) then return end
     Style.OwnTip(tt, line)
-    local shown = d.itemID and tt.SetItemByID and pcall(tt.SetItemByID, tt, d.itemID)
+    local shown
+    if d.itemID then
+        shown = tt.SetItemByID and pcall(tt.SetItemByID, tt, d.itemID)
+    elseif d.spellID then
+        shown = tt.SetSpellByID and pcall(tt.SetSpellByID, tt, d.spellID)
+    end
     if not shown then tt:SetText(NS.ResultsUsage.Name(d.a or d.b), Style.Rgb("gtip.value")) end
     tt:AddLine(L["This fight: %s"]:format(line.this:GetText() or ""), Style.Rgb(PALETTE.THIS_TEXT))
     tt:AddLine(L["The other fight: %s"]:format(line.other:GetText() or ""), Style.Rgb(PALETTE.BEST_TEXT))

@@ -320,7 +320,7 @@ NS.defaults = {
         fightOrder = {},
         -- The items the Results detail's Usage never lists (modules/Usage.lua, spec §7's "never show"
         -- list): item IDs, comma-separated. Global, as the fight store it filters is.
-        usage = { hidden = "" },
+        usage = { hidden = "", hiddenSpells = "" },
         -- What the game said about each creature `/ct dummy` captured, by creature ID
         -- (modules/Dummies.lua): data, not a setting. Global, as a creature is the same on every
         -- profile.
