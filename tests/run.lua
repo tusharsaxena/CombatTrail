@@ -130,6 +130,7 @@ local SUITES = {
     "test_dummies",
     "test_cast_codec",
     "test_casts",
+    "test_combat_log",
     "test_usage",
     "test_stats",
     "test_loadouts",

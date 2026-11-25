@@ -93,6 +93,8 @@ files["modules/Style.lua"] = { read_globals = { "CreateFont" } }
 
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
 -- time, so a client without one leaves the field absent).
+-- The Combat Log reads the auras on the player and the target (modules/CombatLog.lua).
+files["modules/CombatLog.lua"] = { read_globals = { "C_UnitAuras" } }
 files["modules/Usage.lua"] = {
     read_globals = { "C_Item", "C_Container", "C_UnitAuras", "GetInventoryItemID" },
 }

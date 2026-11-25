@@ -100,9 +100,9 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 4 and the fight record's format is 5", function()
+test("load: the settings stamp is 4 and the fight record's format is 6", function()
     assertEqual(T.NS.SCHEMA_VERSION, 4)
-    assertEqual(T.NS.Recorder.CT_SCHEMA, 5)
+    assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
 test("load: a schema 1 store loads empty at version 4, keeping the account's other state", function()

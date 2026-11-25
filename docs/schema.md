@@ -63,6 +63,8 @@ default; the file's comments say what each value means.
 | `toast.fights`, `toast.races` | `false`, `true`: the new-best toast for a stored fight's new best on its board (both clients) and for a race's (modules/BestToast.lua, race plan Task C2): a new profile toasts a race's new best and not a fight's. `toast.races` is Retail only: ABSENT on WoW Forever | History → New-best toast |
 | `toast.sound`, `toast.soundKey`, `toast.duration`, `toast.scale` | `true`, `"Default"` (the toast shell's alert; any other value a LibSharedMedia sound key, one it does not know plays Default), `10` (s, 3-30), `1.0` (0.5-2.0), DPS Race's | History → New-best toast |
 | `toast.point` | none: where *Test toast*'s sample was dragged to, `{ point, relativePoint, x, y }` in UIParent's units; cleared by Master controls' Reset position | none (the sample's drag) |
+| `log.enabled` | `true`: the Combat Log captures (modules/CombatLog.lua, CombatTrail #11); off, it registers nothing and no fight saves a log. No row yet: its page arrives with plan item CL-11c, and until then it is set in the profile alone | none yet (Combat Log page, CL-11c) |
+| `log.store.enabled`, `log.store.lines`, `log.store.categories.*` | `true`; `NS.Constants.LOG.MAX_PER_FIGHT` (400; read as 100 to 1000, `MIN_PER_FIGHT` to `MAX_LINES`); one `true` per category in `CombatLog.CATEGORIES` (`casts`, `petCasts`, `playerBuffs`, `playerDebuffs`, `targetBuffs`, `targetDebuffs`, `hits`, `heals`, `deaths`): whether a fight's record keeps its log, how many lines (the newest), and which kinds of line it keeps, apart from what any view shows. Each fight freezes them at its start. No rows yet (CL-11c) | none yet (Combat Log page, CL-11c) |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
@@ -121,7 +123,7 @@ edge in that color in place of the skin's icon outline (a meaning color, skinnin
 | The minimap button | `global.minimap` | LibDBIcon-1.0 (vendored) | its own drag; the `general.minimap.shown` row |
 | The perf record | `CombatTrailPerfDB` | LibKa0s-Perf-1.0 (vendored) | `/ct perf` |
 
-## The fight record (CT_SCHEMA 5)
+## The fight record (CT_SCHEMA 6)
 
 Built by `Recorder.Build` after combat from plain values only; anything that came back secret is left
 absent. `Recorder.CT_SCHEMA` is the record's own format version, separate from the settings stamp; a
@@ -138,6 +140,7 @@ record with a higher `schema` than this build knows is never listed.
 | `gearSet`, `stats`, `loadout`, `usage` | the key of the equipment set current at combat start (`global.gearSets`; read through `Loadouts.GearOf`, which also takes a sample fight's inline `gear`), the stats (per fight: they move with buffs), the loadout key, what was used (below) |
 | `targets` | CT_SCHEMA 3, optional: `{ { name, total }, ... }`, the enemies your damage reached (the meter's EnemyDamageTaken view, read after combat), enemies of one name merged, highest first, at most `Recorder.TARGETS_MAX` (10). Absent on a CT_SCHEMA 2 record or when the meter answered none; the fight detail's Targets section is then not drawn |
 | `race` | CT_SCHEMA 4, optional: a race's part (Race mode; `modules/RaceRecord.lua`, `RaceRecord.Plain` keeps these fields only, each only when plain): `length` (the race length picked, s), `kind` (the dummy's category when saved; the boards read the Training dummies list now and fall back to it), `status` (`complete` or `incomplete`: a lost or canceled race is taken off its fight, which is then judged as a plain fight), `flags` (`lateCasts` `{ { t, spellID } }`, `restartedAt`, `reloaded`, `died`, `sessionFromList`: the race's fight bound its session only on a tick's look at the meter's list, ruling X14, `sharedSession`: the pull carried on a meter session alive at the arm, ruling X3, `carriedOn`: combat came back inside the grace after an early end, ruling X16), `score` (the session's merged total; for a shared session, less what it held at the arm, as is the record's own damage), `dps` (score over `length`, over `endedAt` when incomplete, over the first hit to the fight's end when incomplete and `carriedOn`), `tail`, `endedAt`, `combatEnd`, `grace`, `restartGap`, `firstHit` (the race clock's zero on the fight clock, ruling X9: seconds from combat entry, the zero of `casts` and of the chart's steps, to the first hit, to the hundredth; a resumed race keeps its pull's, or 0 when its slot kept no `startT`. The Results detail's chart and the Timeline shift a race by it and draw its buzzer line at `length`, on Retail only: `NS.ResultsRaces.Clock`. Absent on a race saved before it, which reads as 0, no shift; no migration, as the part is new in CT_SCHEMA 4). A race is saved without the recording filters; the record's own `duration` and `dps` stay the fight's, and `RaceRecord.Dps` is the race DPS wherever a race is shown. Absent on a fight and on every older record |
+| `log`, `logDropped` | CT_SCHEMA 6, optional (CombatTrail #11, modules/CombatLog.lua): the fight's Combat Log, an array oldest first of `{ t, k, id?, u?, a?, s?, f? }`: `t` seconds from the fight's start (to the tenth, a pre-pull cast negative), `k` the kind (`CombatLog.KIND`: 1 CAST, 2 BUFF+, 3 BUFF−, 4 DEBUFF+, 5 DEBUFF−, 6 HIT, 7 HEAL, 8 DIES, 9 START, 10 END), `id` the spell ID, `u` the unit (`CombatLog.UNIT`: 1 the player, 2 the pet, 3 the target; none on a boundary), `a` a hit's or heal's plain amount or `"s"` for a sealed one, `s` its school mask, `f` its marks (`CombatLog.FLAG`, summed: 1 critical, 2 glancing, 4 crushing, 8 an interrupted cast). Names and icons are read at display time from the ID. At most `log.store.lines` lines, the newest; `logDropped` counts the lines of saved categories that were not kept, present only when some were. Absent on an older record, with saving off, and on a sample fight: `CombatLog.Of` answers nil and a view shows none |
 | `note`, `client`, `build`, `version`, `status` | the player's note (`Recorder.ClampNote`: a control character to a space, `\|` to `/`, trimmed, at most 200 UTF-8 characters), `retail`/`forever`, the client build, the addon version, `"final"` |
 
 `usage` (modules/Usage.lua) is `{ v, used, candidates, edited }`. Each `used` entry is
@@ -150,8 +153,10 @@ v 2 on. A v 1 usage (CT_SCHEMA 4 and older) has no spell-keyed entry and reads a
 item entry in it (`kind = "food"` with an `itemID`, the Eat aura or count of a food) is kept in the
 record and never shown.
 
-A five-minute raid fight packs under 6 KB (pinned by `tests/test_record.lua`), so 500 fights stay
-near 3 MB. The History page's History tab shows the count and an estimate (`Retention.EstimateBytes`).
+A five-minute raid fight packs under 6 KB without its Combat Log (pinned by `tests/test_record.lua`). A
+log at the default cap of 400 lines adds about 37 KB (pinned under 38,000 bytes by
+`tests/test_combat_log.lua`; [`performance.md`](performance.md), *Stored size*). The History page's
+History tab shows the count and an estimate (`Retention.EstimateBytes`), logs included.
 
 ## Migrations
 
@@ -176,5 +181,6 @@ A change to the fight record bumps `Recorder.CT_SCHEMA` and reads the older shap
 never by rewriting stored fights: CT_SCHEMA 3 → 4 (the optional `race`) has no step, and an older record
 loads as it was, a fight. CT_SCHEMA 4 → 5 (usage v 2, the spell-keyed buff entry) has no step either:
 a v 1 usage reads as it is, its Food & Drink item entries left unshown (`Usage.Shown`), and
-`tests/test_usage_buffs.lua` holds an older record to that. The one exception is step 2: the addon was unpublished, so the v0.1
+`tests/test_usage_buffs.lua` holds an older record to that. CT_SCHEMA 5 → 6 (the optional `log` and
+`logDropped`) has no step: an older record has no log and reads as it was (`tests/test_combat_log.lua`). The one exception is step 2: the addon was unpublished, so the v0.1
 store was emptied once instead of migrated (v0.2 plan, decision D1).

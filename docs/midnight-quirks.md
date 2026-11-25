@@ -308,3 +308,15 @@ lines each anchor to the cell; and a bar handed the figure has secret geometry, 
 to one: Best by now's bar stands on the body's content frame and each checkpoint's on its cell.
 *Source:* this repo, `modules/RaceWindow_Board.lua` and `modules/RaceWindow.lua` headers (race window
 redesign plan W13, and the mini pace bars of 2026-11-13).
+
+**`UNIT_COMBAT`'s amounts and `UNIT_AURA`'s aura data in combat are assumed sealed, not yet probed.**
+*Client:* Retail (12.1.5). *Measured:* not measured; assumed, until the owner probes it (CombatTrail
+#11, plan item CL-11a, 2026-11-25). The Combat Log registers `UNIT_COMBAT` for `player` and
+`UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while a fight is open.
+The assumption is that both are delivered, and that in combat a hit's amount, and an aura's spell ID or
+instance, may arrive secret. *Cost:* a sealed aura is no line, so a fully sealed fight logs no aura.
+A sealed amount is saved as `"s"`, and the in-memory ring keeps the client's value for a FontString
+alone. A refused `UNIT_COMBAT` costs only the hits and heals. *Do:* never compare, count or store a
+sealed amount as a number, and never guess a sealed aura's name or ID. After a fight, `/ct diagnostics`
+lists any refused event under *rejected events*, and the smoke rows for #11 record what the log showed.
+*Source:* this repo, `modules/CombatLog.lua`.

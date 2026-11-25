@@ -227,6 +227,19 @@ NS.defaults = {
             minLength = NS.Compat.ForClient({ "forever" }) and 15 or 30, bossesOnly = false, content = content(),
             days = 7, keepBests = true, maxFights = 500,
         },
+        -- The Combat Log (CombatTrail #11, modules/CombatLog.lua): whether it captures at all, and what
+        -- a fight's record keeps of it: a log with each fight, the lines kept (the newest; NS.Constants.LOG
+        -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each
+        -- fight freezes these at its start. The view's own keys arrive with its settings page (CL-11c).
+        log = {
+            enabled = true,
+            store = {
+                enabled = true, lines = NS.Constants.LOG.MAX_PER_FIGHT,
+                categories = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true,
+                               targetBuffs = true, targetDebuffs = true, hits = true, heals = true,
+                               deaths = true },
+            },
+        },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view
         -- (the filters, the grouping and the sort Save view stores; "current" is the logged-in
         -- character, `days` 0 is all time), where the window stands, its list's width and its height,

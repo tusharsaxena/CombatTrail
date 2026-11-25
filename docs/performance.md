@@ -20,6 +20,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `race` | every race event: both regen edges, `PLAYER_DEAD`, the meter's session updates and the player's casts (modules/RaceWatchers.lua) | only while a race runs or waits for its read (Retail) |
 | `autoArm` | auto-show's and auto-arm's target, nameplate and `PLAYER_ENTERING_WORLD` events (modules/AutoArm.lua) | only while either rule is on, Race mode on (Retail); nameplates churn in a city |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
+| `combatLog` | every aura, hit, heal, death and combat end the Combat Log hears (modules/CombatLog.lua's frame); its casts come in through `laneCast` and are not bracketed again | every `UNIT_AURA` on the player and the target and every `UNIT_COMBAT` on the player, only while a fight is open |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
 | `hud` | the HUD's read and redraw on each beat (modules/Hud.lua: its own beat, or the race beat's call), holding `meter` | `hud.refreshRate` times a second (4, 5, 10 or 20, default 10) while the HUD is up on a live fight; no read in the settle |
 | `raceWindow` | the Race window's redraw on each race beat and its idle events (modules/RaceWindow.lua); it reads no meter | `hud.refreshRate` times a second (default 10), only while the window is shown and a race runs or waits for its read (Retail) |
@@ -65,6 +66,12 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
 - The equipment recon walks the gear once per burst of `PLAYER_EQUIPMENT_CHANGED` /
   `UNIT_INVENTORY_CHANGED` (one coalesced 0.5 s timer), never per event and never per fight: the pull
   takes the current set's key.
+- The Combat Log (#11) does constant work per event: one line into its ring, whose slots are reused
+  once it is full (`NS.Constants.LOG.RING`, 2000 lines), so a busy fight allocates nothing per line
+  after the first 2000 of the session (`tests/perf.lua` pins 0 bytes per event). Its events are
+  registered only while a fight is open. A loss is a lookup in the unit's aura-instance map; the
+  map is walked again only at the fight's start, a target change and a full update. The fight's
+  saved lines are built once, out of combat, when the record is.
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
 - When the HUD's beat and a slices boundary tick land in one frame they share one `Meter.ReadLive` of
@@ -79,8 +86,25 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
 want measured, `/ct perf finish`, then copy the report and the JSON dump from the console. The
 in-game captures and their write-ups live in [`perf-analysis/README.md`](perf-analysis/README.md).
 
+## Stored size
+
+A fight's saved Combat Log (the record's `log`, CT_SCHEMA 6) is the one part of a record whose size
+grows with the fight. Measured with `Retention.SizeOf` (the client's SavedVariables layout) on
+2026-11-25 (CL-11a): a log at the default cap of 400 lines, a busy fight's mix of casts, auras and
+hits with an amount, a school and a mark, takes about 36.9 KB, about 92 bytes a line.
+`tests/test_combat_log.lua` holds it under 38,000 bytes. A fight shorter than the cap takes less in
+proportion (about 92 bytes a line; an in-game figure for a typical pull is still owed), and the lines kept per
+fight (100 to 1000) and the categories saved are the player's to lower. The budget is that of the
+store as a whole: `history.days` (7) and `history.maxFights` (500) bound how many fights carry a log,
+so the worst case at the defaults is 500 fights at the cap, about 18 MB. The History tab's size
+(`Retention.EstimateBytes`) counts the logs.
+
 ## Offline
 
-There is no `tests/perf.lua` yet, so the automated-test runner records the `perf` suite as a skip
-(automated-tests-§3); a skip is not evaluated at the tag. The offline runs, when they exist, live in
+`tests/perf.lua` (performance-§9) is outside the green gate: `lua tests/perf.lua`, and the vendored
+runner's `perf` suite. It drives the Combat Log's handlers inside an open fight, as the client calls
+them: a hit (`logHit`), an aura gained and lost (`logAura`), a cast from the lanes' listener
+(`logCast`) and a busy fight's beat of all of them (`busyFight`), the first two with capture off and
+on. Every scenario measured 0 bytes per iteration once the ring is full (2026-11-25, Lua 5.1.5), and
+its ceilings sit just above that. The recorded runs live in
 [`automated-tests/README.md`](automated-tests/README.md)'s bundles.

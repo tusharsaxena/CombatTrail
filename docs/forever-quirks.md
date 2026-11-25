@@ -307,3 +307,17 @@ the pet color, 75 to the player color), and its color unpacks and reaches `SetSt
 secret spell ID in combat, `curve:Evaluate` raises "Secret values are only allowed during untainted
 execution". *Do:* issue #7's route is closed; live rows stay in the player color mid-combat.
 *Source:* this repo, `modules/ProbeCurve.lua`.
+
+**`UNIT_COMBAT` and `UNIT_AURA`'s update info for the Combat Log are assumed, not yet probed.**
+*Client:* Forever (1.60.1). *Measured:* not measured; assumed, until the owner probes it (CombatTrail
+#11, plan item CL-11a, 2026-11-25). The Combat Log registers `UNIT_COMBAT` for `player` and
+`UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while a fight is open.
+The assumption is that both events exist on Forever, as its client globals list
+`C_UnitAuras.GetAuraDataByIndex` and `GetAuraDataByAuraInstanceID`, and that `UNIT_AURA` carries
+`addedAuras` and `removedAuraInstanceIDs`, with plain amounts and spell IDs in combat, as the casts are.
+*Cost, if wrong:* a refused `UNIT_COMBAT` means no hits or heals in the log, and the rest still
+works. Missing update info means aura gains and losses are not logged: each update is a full walk and
+writes no line. A raise from the aura reader (§3's `GetBuffDataByIndex` entry) ends that walk. *Do:*
+after a fight, `/ct diagnostics` lists any refused event under *rejected events*. The smoke rows for
+#11 record what the log showed, and this entry becomes a measured one or is corrected. *Source:* this
+repo, `modules/CombatLog.lua`.

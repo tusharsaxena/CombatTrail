@@ -19,7 +19,7 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 4 and the fight record's format is 5
+- load: the settings stamp is 4 and the fight record's format is 6
 - load: a schema 1 store loads empty at version 4, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
@@ -546,6 +546,29 @@ Total.
 - casts: while idle the buffer holds only the pre-pull's worth
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
+
+### test_combat_log.lua (20)
+
+- combat log: a fight's casts, auras, hits, heals and boundaries are saved with its record
+- combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
+- combat log: the target's debuffs are only the player's, and a target change logs nothing
+- combat log: an aura on at the start is known when it falls off
+- combat log: a sealed aura and a sealed cast are no line; a sealed amount is saved as "s"
+- combat log: past `log.store.lines` only the newest are kept and the record counts the rest
+- combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is held to its range
+- combat log: a category not saved is no line and not counted as dropped
+- combat log: saving off keeps no log on the record; the log off registers nothing
+- combat log: the settings are frozen at the fight's start
+- combat log: the storage keys have their shipped defaults
+- combat log: its events are registered only while a fight is open, for player and target
+- combat log: a stand-down mid-fight drops every registration and line
+- combat log: a client that refuses UNIT_COMBAT costs only it, and the diagnosis names it
+- combat log: the combatLog perf bucket is reached by its events
+- combat log: the ring holds at most C.LOG.RING lines and reuses its slots
+- combat log: a CT_SCHEMA 5 record reads with no log and still opens in the Results
+- combat log: a fight's log goes with it when retention purges the fight
+- combat log: a fight lost or skipped keeps no log waiting
+- combat log: a log at the cap stays under its stored-size ceiling
 
 ### test_usage.lua (11)
 
@@ -1969,6 +1992,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
+| test_combat_log.lua | 20 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2040,4 +2064,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1670** |
+| **Total** | **1690** |

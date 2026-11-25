@@ -60,6 +60,13 @@ C.LOGO_128 = ("Interface\\AddOns\\%s\\media\\logos\\combattrail.logo.128.tga"):f
 -- the HUD reads and redraws on its own beat (`hud.refreshRate`, modules/Hud.lua).
 C.FIGHT = { GRACE = 4, SETTLE = 2, TICK = 0.25 }
 
+-- THE COMBAT LOG (CombatTrail #11, modules/CombatLog.lua). MAX_PER_FIGHT: the lines a fight's saved
+-- log keeps by default (`log.store.lines`, defaults/Profile.lua), MIN_PER_FIGHT to MAX_LINES its
+-- range; only the newest are kept, and the record counts the rest. RING: the in-memory ring's size,
+-- every captured line of the session, twice the most a fight keeps, so a fight's newest lines are
+-- still in it when the fight ends. REPAINT: the most often a shown log view repaints (seconds).
+C.LOG = { MAX_PER_FIGHT = 400, MIN_PER_FIGHT = 100, MAX_LINES = 1000, RING = 2000, REPAINT = 0.1 }
+
 C.LAYERS = {
     STRATA = { LANE = "LOW", CHROME = "MEDIUM", HUD = "MEDIUM", WINDOW = "HIGH", MODAL = "DIALOG",
                 SCREEN_ALERT = "FULLSCREEN" },

@@ -12,7 +12,7 @@ UNIT_SPELLCAST_START / _SUCCEEDED / _INTERRUPTED / _FAILED / _EMPOWER_START (pla
        dedupe by castGUID (skipped when the GUID is secret), the ignore list (spell IDs, skipped when
        the ID is secret), interrupt marks for a cast that showed a START
   -> LANE_PUSH(laneKey, item { texture, spellID|nil, t, interrupted })
-       and every LaneCasts.Listen listener (modules/Casts.lua, in pcall)
+       and every LaneCasts.Listen listener (modules/Casts.lua, modules/CombatLog.lua, in pcall)
   -> modules/LaneRender.lua  an icon from the lane's pool, placed by modules/LaneLayout.lua
        (position = speed x age), faded over the last `fade` of the window, glowing for a base
        cooldown >= glowMinCD; the lane's OnUpdate runs only while an icon is visible
@@ -29,7 +29,12 @@ events listed in ARCHITECTURE's *Event Subscriptions*.
 PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
   -> modules/Fight.lua  IDLE -> COMBAT; snapshots who and the target (modules/Identity.lua),
        sends FIGHT_STARTED(fight): Stats, Loadouts and Usage take their snapshots, Casts opens the
-       fight's cast list, Slices opens the chart store, the HUD opens
+       fight's cast list, the Combat Log opens the fight's capture and registers its events,
+       Slices opens the chart store, the HUD opens
+  UNIT_AURA (player, target) / UNIT_COMBAT (player) / PLAYER_DEAD / PLAYER_REGEN_ENABLED
+  -> modules/CombatLog.lua  one line each into its ring (NS.Constants.LOG.RING, slots reused): an
+       aura gained (added) or lost (its instance, mapped to its spell), a hit or heal with its school
+       and mark, a death, a combat end; a sealed aura or cast ID is no line, a sealed amount "s"
   DAMAGE_METER_COMBAT_SESSION_UPDATED / _CURRENT_SESSION_UPDATED (combat set)
   -> Fight binds the fight to the meter session that appeared after combat entry
        (Meter.SessionAfter), and merges a second session of the same encounter
@@ -87,7 +92,9 @@ FIGHT_ENDED
        no readable character -> FIGHT_SKIPPED "unknown"; lost -> FIGHT_SKIPPED "lost"
        else Recorder.Build: identity and board key (Identity), casts packed (CastCodec), the gear set
        taken at the pull and the loadout interned (Loadouts), stats completed (Stats.Fill), usage
-       (Usage), every value copied through plainCopy so nothing sealed survives
+       (Usage), the Combat Log's saved lines (CombatLog.Finish: the categories saved, the newest
+       log.store.lines, logDropped for the rest), every value copied through plainCopy so nothing
+       sealed survives
   -> db.global.fights[id], fightOrder; FIGHT_SAVED(record)
   -> Bests recomputes the board; Slices adopts the record id for the chart; the HUD's card shows
        Saved and New best; the Results window redraws

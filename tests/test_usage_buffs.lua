@@ -331,7 +331,7 @@ end)
 
 test("usage buffs: a CT_SCHEMA 4 record's v 1 usage still renders, its plain food left out", function()
     local NS = fresh()
-    assertEqual(NS.Recorder.CT_SCHEMA, 5)
+    assertTrue(NS.Recorder.CT_SCHEMA >= 5, "usage v 2 arrived with CT_SCHEMA 5")
     local old = rec(NS, "old", { v = 1, edited = false,
         candidates = { { itemID = POTION, kind = "potion" }, { itemID = BREAD, kind = "food" } },
         used = { { itemID = POTION, kind = "potion", times = { 4 }, n = 1, src = "cast" },

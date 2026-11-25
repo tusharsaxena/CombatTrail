@@ -85,6 +85,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/RaceVerb.lua` | `/ct race`'s words: arm with a typed length, cancel, the Race window, the late-cast ignore list; the arm refusals' copy (Race mode, Retail) |
 | `modules/CastCodec.lua` | The packed cast-list string a record stores, pure |
 | `modules/Casts.lua` | Each fight's cast list, from the lanes' capture |
+| `modules/CombatLog.lua` | The Combat Log's capture (casts from the lanes' listener; auras, hits and heals on you, deaths and combat ends on its own frame while a fight is open), its in-memory ring, and each fight's saved `log` (#11) |
 | `modules/Usage.lua` | What a fight used: on-use gear and consumables |
 | `modules/Stats.lua` | The character's stats at the fight's start, completed after combat |
 | `modules/Loadouts.lua` | The interned equipment sets (and their recon) and talent loadouts a fight refers to |

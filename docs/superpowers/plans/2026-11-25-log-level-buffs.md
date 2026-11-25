@@ -39,6 +39,12 @@
 - **Owed (owner): the current Retail fight buffs.** The Retail `buffs` list is Classic-era and event
   buffs only, so SM-CT-R35 is event-gated until the owner names the buffs to track.
 
+- **CL-11a: the storage keys have defaults and no rows yet.** `log.enabled`, `log.store.enabled`,
+  `log.store.lines` and `log.store.categories.*` are in `defaults/Profile.lua` and read by
+  `modules/CombatLog.lua`. Their schema rows, the Combat Log page and their settings-panel.md lines
+  arrive with CL-11c, so until then `NS.SetByPath` refuses them. CL-11a also adds `tests/perf.lua`, the
+  first offline scenario runner, which CL-11b's repaint can extend.
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.

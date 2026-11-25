@@ -197,7 +197,7 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   LauncherSetup, CombatTrail, Database.
 - **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones, BuffSeeds; enUS, enUS_Race, enUS_Insights.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
-- **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
+- **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, CombatLog, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
 - **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, RaceClock, AutoArm, RaceVerb.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
@@ -277,7 +277,7 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   `SETTINGS_CHANGED`; while a race runs, one AceTimer waits until a second before
   the countdown's window, and the call-out's own OnUpdate runs from then to the buzzer and through
   STOP's hold, never longer. The stand-down cancels the timer and suspends the call-out.
-- **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges.
+- **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges. **Combat Log (CombatLog):** in a fight, `UNIT_AURA`, `UNIT_COMBAT`, `PLAYER_DEAD`, `PLAYER_REGEN_ENABLED`, `PLAYER_TARGET_CHANGED`.
 - **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
   `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an
   AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one
