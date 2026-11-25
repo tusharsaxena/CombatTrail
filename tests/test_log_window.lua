@@ -254,6 +254,53 @@ test("log window: it paints the newest fight's lines with their Info; the wheel 
     assertFalse(ui.resume:IsShown())
 end)
 
+test("log window: its chips filter what it shows, for the session, seeded from What to show", function()
+    local inst, NS = fresh()
+    local ui = detached(NS)
+    local b = ui.chips.buttons
+    for _, chip in ipairs(NS.LogTable.CHIPS) do
+        assertTrue(b[chip.key]:IsShown(), chip.key .. " under the status line")
+        assertEqual(b[chip.key].styleName, "primary", chip.key .. " lit: log.show is all on")
+    end
+    NS.CombatLog.Begin("f1", 100)
+    NS.CombatLog.OnCast("player", FIREBALL, 100.5)
+    NS.CombatLog.OnCombat("player", "WOUND", "", 2000, 4, 101)
+    inst.mocks.__now = 101.5
+    NS.LogWindow.Paint()
+    local rows = ui.table:Rows()
+    assertEqual(rows[1].text.event:GetText(), "HIT")
+    click(b.taken)
+    assertEqual(b.taken.styleName, "normal", "off")
+    assertEqual(rows[1].text.event:GetText(), "CAST", "the hit is hidden at once")
+    assertTrue(NS.GetSetting("log.show.hits"), "never written to the settings")
+    assertTrue(NS.HudLog.__show().hits ~= false, "the drawer's own chips untouched")
+    NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f2", startT = 102 })
+    NS.LogWindow.Paint()
+    assertEqual(b.taken.styleName, "primary", "a new fight seeds the chips from log.show again")
+    NS.SetByPath("log.show.casts", false)
+    NS.LogWindow.Paint()
+    assertEqual(b.casts.styleName, "normal", "a What to show write seeds them too")
+    click(b.casts)
+    assertTrue(NS.LogWindow.__show().casts, "a click turns the chip back on for this window")
+    assertEqual(NS.GetSetting("log.show.casts"), false, "the default stays as written")
+end)
+
+test("log window: the chips take their room above the table, wrapping when narrow", function()
+    local _, NS = fresh()
+    local ui = detached(NS)
+    local lt = NS.LogTable
+    assertEqual(lt.ChipLines(NS.LogWindow.Width() - 24), 1, "one line at 460")
+    local f, y = ui.table.frame, nil
+    local setPoint = f.SetPoint
+    rawset(f, "SetPoint", function(self, p, rel, rp, x, yy)
+        if p == "TOPLEFT" then y = yy end
+        return setPoint(self, p, rel, rp, x, yy)
+    end)
+    NS.LogWindow.Refresh()
+    assertEqual(y, -(NS.LogWindow.LINE_H + lt.ChipsHeight(436) + lt.CHIP_GAP), "the table under the chips")
+    assertTrue(lt.ChipLines(150) > 1, "a narrow width wraps them")
+end)
+
 test("log window: /ct log detach and dock move it; the HUD's Log control opens and closes it", function()
     local _, NS = fresh()
     NS.Slash:OnSlash("log")

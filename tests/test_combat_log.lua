@@ -272,6 +272,35 @@ test("combat log: past `log.store.lines` only the newest are kept and the record
     assertEqual(r.logDropped, 151)
 end)
 
+test("combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local C = NS.Constants.LOG
+    NS.db.profile.log.store.lines = C.MAX_LINES
+    for _, key in ipairs(NS.CombatLog.CATEGORIES) do NS.db.profile.log.store.categories[key] = key == "casts" end
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        for n = 1, 1500 do
+            local t = 11 + n * 0.01
+            at(i, t)
+            NS.CombatLog.OnCast("player", FIREBALL, t, false)
+            NS.CombatLog.OnCast("player", 75, t, false)      -- Auto Shot: in the ring, never saved
+            NS.CombatLog.OnCast("player", 75, t, false)
+            hit(i, t, "WOUND", n)                             -- hits: in the ring, not saved here
+            hit(i, t, "WOUND", n)
+        end
+    end)
+    assertTrue(NS.CombatLog.Seq() > 3 * C.RING, "the ring wrapped several times over")
+    local log, dropped = NS.CombatLog.Of(r)
+    assertEqual(#log, C.MAX_LINES, "the log reaches `lines` however much else the ring held")
+    assertEqual(log[#log].k, NS.CombatLog.KIND.END, "the newest kept")
+    for i = 1, #log - 1 do
+        if log[i].k ~= NS.CombatLog.KIND.CAST or log[i].id ~= FIREBALL then
+            error("line " .. i .. " is not a saved cast", 0)
+        end
+    end
+    assertEqual(dropped, 1500 - (C.MAX_LINES - 1), "only the casts the cap left out are counted")
+end)
+
 test("combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is held to its range", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
@@ -481,11 +510,78 @@ test("combat log: a fight lost or skipped keeps no log waiting", function()
     assertEqual(kinds(NS, NS.CombatLog.Of(r)), "START,HIT,END", "the short fight's lines are not this one's")
 end)
 
+-- ── which target ────────────────────────────────────────────────────────────────────────────────
+
+test("combat log: a target swap mid-fight keeps the earlier rows' target, live and saved", function()
+    local inst, meter, saved = fresh{ mutate = function(m)
+        m.__unitExists.target = true
+        m.__unitNames.target = "Angry Boar"
+        m.__hostile = true
+        m.UnitCanAttack = function() return m.__hostile end
+    end }
+    local NS = inst.NS
+    local K = NS.CombatLog.KIND
+    local LT = NS.LogTable
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        aura(i, 12, "target", { addedAuras = { { auraInstanceID = 8, spellId = IGNITE, isHarmful = true,
+                                                 isFromPlayerOrPlayerPet = true } } })
+        at(i, 14)
+        i.mocks.__unitNames.target = "Stormwind Guard"
+        i.mocks.__hostile = false
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        aura(i, 15, "target", { addedAuras = { { auraInstanceID = 9, spellId = MARK, isHelpful = true } } })
+        at(i, 16)
+        i.mocks.__unitNames.target = "Angry Boar"
+        i.mocks.__hostile = true
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        aura(i, 17, "target", { addedAuras = { { auraInstanceID = 10, spellId = POLY, isHarmful = true,
+                                                 isFromPlayerOrPlayerPet = true } } })
+    end)
+    -- Live: the target now is gone, and the ring's lines still name theirs.
+    inst.mocks.__unitExists.target = false
+    local ctx, c = LT.LiveContext({}, 10), {}
+    local live = {}
+    for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
+        local e = NS.CombatLog.Line(n)
+        if e and (e.k == K.DEBUFF_ON or e.k == K.BUFF_ON) and e.u == NS.CombatLog.UNIT.target then
+            LT.Cells(e, ctx, c)
+            live[#live + 1] = c.target .. "/" .. c.targetColor
+        end
+    end
+    assertEqual(table.concat(live, ","),
+        "Angry Boar/ct.log.hostile,Stormwind Guard/ct.log.friendly,Angry Boar/ct.log.hostile")
+    -- Saved: the record's own target list, each name once per reaction.
+    local log, _, targets = NS.CombatLog.Of(r)
+    assertEqual(#targets, 2, "Angry Boar once, Stormwind Guard once")
+    assertEqual(r.logTargets, targets)
+    local rctx = NS.ResultsLog.Context(r, {})
+    local got = {}
+    for _, e in ipairs(log) do
+        if e.u == NS.CombatLog.UNIT.target then
+            LT.Cells(e, rctx, c)
+            got[#got + 1] = c.target .. "/" .. c.targetColor
+        end
+    end
+    assertEqual(table.concat(got, ","),
+        "Angry Boar/ct.log.hostile,Stormwind Guard/ct.log.friendly,Angry Boar/ct.log.hostile")
+end)
+
+test("combat log: a saved line with no target of its own reads as the record's target, hostile", function()
+    local NS = T.load().NS
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    local record = { t = 0, identity = { targetName = "Training Dummy" },
+                     log = { { t = 1, k = K.DEBUFF_ON, id = IGNITE, u = U.target } } }
+    local c = NS.LogTable.Cells(record.log[1], NS.ResultsLog.Context(record, {}), {})
+    assertEqual(c.target, "Training Dummy")
+    assertEqual(c.targetColor, "ct.log.hostile")
+    assertNil(select(3, NS.CombatLog.Of(record)), "no target list")
+end)
+
 -- ── the stored size ─────────────────────────────────────────────────────────────────────────────
 
 --- How many bytes a log at the cap takes in SavedVariables (docs/performance.md, *Stored size*): 400
 --- lines, a busy fight's mix (casts, auras with IDs, hits with an amount, school and a mark).
-local LOG_BYTES_CEILING = 38000
+local LOG_BYTES_CEILING = 39500
 
 test("combat log: a log at the cap stays under its stored-size ceiling", function()
     local NS = T.load().NS
@@ -495,11 +591,11 @@ test("combat log: a log at the cap stays under its stored-size ceiling", functio
         local t = math.floor(n * 7.5) / 10 + 0.1
         local m = n % 4
         if m == 0 then log[n] = { t = t, k = K.CAST, id = 1234567, u = U.player }
-        elseif m == 1 then log[n] = { t = t, k = K.DEBUFF_ON, id = 1234567, u = U.target }
+        elseif m == 1 then log[n] = { t = t, k = K.DEBUFF_ON, id = 1234567, u = U.target, g = 1 }
         elseif m == 2 then log[n] = { t = t, k = K.HIT, u = U.player, a = 123456, s = 32, f = 1 }
         else log[n] = { t = t, k = K.BUFF_OFF, id = 1234567, u = U.player } end
     end
-    local bytes = NS.Retention.SizeOf({ log = log, logDropped = 600 })
+    local bytes = NS.Retention.SizeOf({ log = log, logDropped = 600, logTargets = { { name = "Training Dummy" } } })
     assertTrue(bytes <= LOG_BYTES_CEILING, "a log at the cap takes " .. bytes .. " bytes")
     assertTrue(bytes > LOG_BYTES_CEILING * 0.8, "the ceiling sits close to the measure (" .. bytes .. ")")
 end)

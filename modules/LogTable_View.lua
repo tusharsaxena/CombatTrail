@@ -397,3 +397,70 @@ end
 
 --- The rows on screen (the suites).
 function View:Rows() return self.rows end
+
+-- ── the live chips (CL-REV) ─────────────────────────────────────────────────────────────────────
+-- A strip of LogTable.CHIPS on a live home (the detached window under its status line, the drawer
+-- behind its filter mark): one button per chip, lit ("primary") while LogTable.ChipOn, laid left to
+-- right and wrapped at the width it is given. The Results Log tab builds its own (with counts).
+
+LogTable.CHIP_H, LogTable.CHIP_GAP = 18, 4
+
+--- How many lines the chips take at width `w`, wrapped as LogTable.LayChips lays them.
+--- @return number
+function LogTable.ChipLines(w)
+    local x, lines = 0, 1
+    for _, chip in ipairs(LogTable.CHIPS) do
+        local cw = LogTable.ChipWidth(L[chip.label])
+        if x > 0 and x + cw > w then x, lines = 0, lines + 1 end
+        x = x + cw + LogTable.CHIP_GAP
+    end
+    return lines
+end
+
+--- The chips' height at width `w`.
+--- @return number
+function LogTable.ChipsHeight(w)
+    local n = LogTable.ChipLines(w)
+    return n * LogTable.CHIP_H + (n - 1) * LogTable.CHIP_GAP
+end
+
+--- The live chips on `parent`; a click is `onToggle(key)`.
+--- @return table strip  { buttons = { [key] = button } }
+function LogTable.NewChips(parent, onToggle)
+    local strip = { buttons = {} }
+    for _, chip in ipairs(LogTable.CHIPS) do
+        local text = L[chip.label]
+        local b = Style.Button(parent, text, function() onToggle(chip.key) end)
+        b:SetHeight(LogTable.CHIP_H)
+        b:SetWidth(LogTable.ChipWidth(text))
+        b.tip, b.tipBody = { text, L[LogTable.CHIP_TIPS[chip.key]], L["Click to show or hide them in this view."] }, true
+        strip.buttons[chip.key] = b
+    end
+    return strip
+end
+
+--- Lay the chips from (x, y) on `anchor`'s top left, wrapping at width `w`, and show them.
+function LogTable.LayChips(strip, anchor, x, y, w)
+    local cx, rowY = 0, y
+    for _, chip in ipairs(LogTable.CHIPS) do
+        local b = strip.buttons[chip.key]
+        local cw = LogTable.ChipWidth(L[chip.label])
+        if cx > 0 and cx + cw > w then cx, rowY = 0, rowY - LogTable.CHIP_H - LogTable.CHIP_GAP end
+        b:ClearAllPoints()
+        b:SetPoint("TOPLEFT", anchor, "TOPLEFT", x + cx, rowY)
+        b:Show()
+        cx = cx + cw + LogTable.CHIP_GAP
+    end
+end
+
+--- Light each chip by `show` (a view's own).
+function LogTable.PaintChips(strip, show)
+    for _, chip in ipairs(LogTable.CHIPS) do
+        Style.SetButtonStyle(strip.buttons[chip.key], LogTable.ChipOn(show, chip.key) and "primary" or "normal")
+    end
+end
+
+--- Show or hide every chip.
+function LogTable.ShowChips(strip, shown)
+    for _, b in pairs(strip.buttons) do b:SetShown(shown) end
+end

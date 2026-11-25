@@ -40,8 +40,9 @@ local _, NS = ...
 -- packed string), cooldowns ({ [spellID] = ms }, the timeline's),
 -- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, targets? (CT_SCHEMA
 -- 3: Recorder.Targets, the enemies your damage reached), race? (CT_SCHEMA 4: RaceRecord.Plain's race
--- part; usage v 2 from CT_SCHEMA 5), log? and logDropped? (CT_SCHEMA 6: modules/CombatLog.lua's saved
--- lines and how many were not kept), note?, client, build, version, status = "final" }.
+-- part; usage v 2 from CT_SCHEMA 5), log?, logDropped? and logTargets? (CT_SCHEMA 6:
+-- modules/CombatLog.lua's saved lines, how many were not kept and the targets its lines name), note?,
+-- client, build, version, status = "final" }.
 
 local Recorder = {}
 NS.Recorder = Recorder
@@ -54,9 +55,10 @@ local L = NS.L
 -- 4 (Race mode) adds the optional `race`; an older record reads the same, as a fight (no migration).
 -- 5 (CombatTrail #13) moves `usage` to its v 2, which adds the spell-keyed buff entry
 -- ({ spellID, kind = "buff" }); an older record's v 1 usage reads as it is (no step).
--- 6 (CombatTrail #11) adds the optional `log` (the Combat Log's saved lines, CombatLog.Of) and
--- `logDropped` (how many were not kept, only when some were); an older record reads the same, with no
--- log (no step, no rewrite).
+-- 6 (CombatTrail #11) adds the optional `log` (the Combat Log's saved lines, CombatLog.Of),
+-- `logDropped` (how many were not kept, only when some were) and `logTargets` (the targets its lines
+-- name, by each line's `g`, only when it names any); an older record reads the same, with no log (no
+-- step, no rewrite).
 Recorder.CT_SCHEMA = 6
 --- The most targets a record keeps (the highest).
 Recorder.TARGETS_MAX = 10
@@ -323,12 +325,13 @@ local function castsOf(fight)
     return NS.CastCodec.Encode(casts), cooldowns, usage
 end
 
--- The fight's Combat Log (modules/CombatLog.lua): its saved lines and how many were not kept (nil
--- when none were), or nothing when it saved none.
+-- The fight's Combat Log (modules/CombatLog.lua): its saved lines, how many were not kept (nil when
+-- none were) and the targets its lines name (nil when none), or nothing when it saved none.
 local function logOf(fight)
-    local log, dropped = nil, nil
-    if NS.CombatLog then log, dropped = NS.CombatLog.Finish(fight.id) end
-    return log, (dropped and dropped > 0) and dropped or nil
+    local log, dropped, targets = nil, nil, nil
+    if NS.CombatLog then log, dropped, targets = NS.CombatLog.Finish(fight.id) end
+    if type(targets) == "table" and #targets == 0 then targets = nil end
+    return log, (dropped and dropped > 0) and dropped or nil, targets
 end
 
 -- The talents' key (stored now, once) and the gear set's (interned at the pull, modules/Loadouts.lua).
@@ -352,7 +355,7 @@ function Recorder.Build(fight, final, identity, duration, enemies)
     local total = Secrets.PlainNumber(merged.total) or 0
     local casts, cooldowns, usage = castsOf(fight)
     local gearSet, loadout = loadoutOf(fight)
-    local log, logDropped = logOf(fight)
+    local log, logDropped, logTargets = logOf(fight)
     local raw = {
         schema = Recorder.CT_SCHEMA, t = startEpoch(fight), duration = duration,
         who = type(fight.snapshot) == "table" and fight.snapshot.who or nil,
@@ -363,7 +366,7 @@ function Recorder.Build(fight, final, identity, duration, enemies)
         spells = spellsOf(merged), casts = casts, cooldowns = cooldowns, gearSet = gearSet,
         stats = NS.Stats.Fill(plainCopy(fight.stats, 0)), loadout = loadout, usage = usage,
         targets = Recorder.Targets(enemies), race = NS.RaceRecord.Plain(fight.race),
-        log = log, logDropped = logDropped,
+        log = log, logDropped = logDropped, logTargets = logTargets,
         client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version, status = "final",
     }
     local record = plainCopy(raw, 0)

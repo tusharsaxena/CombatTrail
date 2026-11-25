@@ -1,8 +1,9 @@
 -- tests/test_retention.lua — modules/Retention.lua (plan Task 2.5, spec §5): the purge drops fights
 -- older than `history.days` (0 keeps them for ever) except those holding a best (`history.keepBests`),
--- then caps the store at `history.maxFights`, the oldest non-best first; it runs at login, on a daily
--- timer while logged in and from `/ct purge`, and fires FIGHTS_CHANGED once. EstimateBytes sizes the
--- store as SavedVariables writes it.
+-- then caps the store at `history.maxFights`, the oldest non-best first, then strips the Combat Log
+-- from every fight but the newest `log.store.fights` carrying one; it runs at login, on a daily timer
+-- while logged in and from `/ct purge`, and fires FIGHTS_CHANGED once. EstimateBytes sizes the store
+-- as SavedVariables writes it.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -51,6 +52,46 @@ local function heardChanged(NS)
     NS.NewBusTarget():RegisterMessage(NS.MSG.FIGHTS_CHANGED, function() heard.n = heard.n + 1 end)
     return heard
 end
+
+test("retention: only the newest log.store.fights fights keep their log, bests included", function()
+    local NS = fresh()
+    local R = NS.Recorder
+    assertEqual(NS.GetSetting("log.store.fights"), NS.Constants.LOG.FIGHTS, "100 by default")
+    local function logged(o)
+        local r = rec(o)
+        r.log, r.logDropped, r.logTargets = { { t = 0, k = 9 }, { t = 1, k = 6, u = 1, a = 5 } }, 3, { { name = "Boar" } }
+        return r
+    end
+    local oldBest = logged({ t = NOW - 3 * DAY, boardKey = "c:9:0", dps = 999 })
+    local older = logged({ t = NOW - 2 * DAY, boardKey = "c:9:0", dps = 10 })
+    local bare = rec({ t = NOW - 1.5 * DAY })
+    local newer = logged({ t = NOW - 1 * DAY })
+    local newest = logged({ t = NOW - 0.5 * DAY })
+    for _, r in ipairs({ oldBest, older, bare, newer, newest }) do R.Save(r) end
+    NS.SetByPath("log.store.fights", 2)
+    local heard = heardChanged(NS)
+    assertEqual(NS.Retention.Purge(NOW), 0, "no fight removed: only logs")
+    assertEqual(heard.n, 1, "FIGHTS_CHANGED once: the stored size moved")
+    local fights = store(NS)
+    assertTrue(fights[newest.id].log ~= nil and fights[newer.id].log ~= nil, "the newest two with a log keep it")
+    assertEqual(fights[newer.id].logDropped, 3)
+    assertTrue(fights[bare.id] ~= nil, "a fight with no log is not counted")
+    for _, r in ipairs({ older, oldBest }) do
+        local kept = fights[r.id]
+        assertTrue(kept ~= nil, "the fight itself stays")
+        assertNil(kept.log)
+        assertNil(kept.logDropped)
+        assertNil(kept.logTargets)
+    end
+    assertNil(NS.CombatLog.Of(fights[oldBest.id]), "a best-holding fight's log goes too")
+    assertEqual(NS.Retention.Purge(NOW), 0)
+    assertEqual(heard.n, 1, "nothing more to strip: no message")
+    NS.SetByPath("log.store.fights", 0)
+    local again = logged({ t = NOW - 4 * DAY, boardKey = "c:8:0" })
+    R.Save(again)
+    NS.Retention.Purge(NOW)
+    assertTrue(store(NS)[again.id].log ~= nil, "0 keeps every log")
+end)
 
 test("retention: purge removes >7 days except bests", function()
     local NS = fresh()

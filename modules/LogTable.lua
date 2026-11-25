@@ -16,7 +16,10 @@ local _, NS = ...
 --                 boundaries (muted rows)
 --   Source        who did it: "You", the pet, or a dash where the client says nothing (a hit or heal on
 --                 you, a buff on you, a buff on your target)
---   Target        who it landed on: "You", or the target
+--   Target        who it landed on: "You", or the target the line was on (its `g` in the view's
+--                 target list, ctx.targets: the session's CombatLog.Targets live, the record's
+--                 `logTargets` in Results), so a swap mid-fight never renames the rows before it; a
+--                 line with no `g` falls back to ctx.targetName (the target now, or the record's)
 --   Spell/School  the spell's icon and name; for a hit or a heal the school (the client gives no spell)
 --   Amount        a hit's (red) or a heal's (green, "+") amount; `*` after a critical's plain amount
 --   Info          Critical, Glancing, Crushing, Interrupted
@@ -24,8 +27,8 @@ local _, NS = ...
 -- THE COLORS (the spec's board D), each a skin token (core/SkinSetup.lua's `ct.log.*` and `ct.school.*`)
 -- with its Ka0s Default value. "You" is the player's class color (the library's NS.ClassColor, the one
 -- the HUD's Use class color rows draw) and the pet the HUD's pet color (Hud_Appearance.PetColor, the
--- spell rows' `hud.spells.petColor`): reused, never copied. The target is `ct.log.hostile` when you can
--- attack it, else `ct.log.friendly`. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell
+-- spell rows' `hud.spells.petColor`): reused, never copied. The target is `ct.log.hostile` when you
+-- could attack it (when the line was captured, from its `g`), else `ct.log.friendly`. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell
 -- whose base cooldown is long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash
 -- (DEBUFF- dimmed, no wash), HIT a red wash and a red amount, HEAL green with "+". A school name is in
 -- its school's color. COLOR-BLIND SAFETY: every kind differs by its tag's text and its wash as well as
@@ -36,11 +39,19 @@ local _, NS = ...
 -- view's ctx). WoW's fonts have no bold weight and FRIZQT__ has no star glyph: "You" carries its class color
 -- and a critical its `*` and the row's larger amount face instead (the view's Cells.big).
 --
--- WHAT IS SHOWN is `log.show.*` (the What to show chips' defaults): each category of
+-- WHAT IS SHOWN is a view's own `show` table, shaped as `log.show.*`: each category of
 -- CombatLog.CategoryOf on or off, the auto attacks (Auto Shot, Shoot: no category) off by default, and
 -- a hit or heal under `log.show.minAmount` hidden, judged on a PLAIN amount only. A sealed amount is
 -- never compared: it always shows. The boundaries always show. What is shown never changes what is
 -- captured or saved.
+-- THE CHIPS (LogTable.CHIPS: Casts, Pet, Buffs, Debuffs, Taken, Heals, each over the categories it
+-- covers) filter a view's lines. The Results Log tab's open on `log.results.chips` and count their
+-- lines (modules/Results_Log.lua). The live views' (the detached window's strip under its status line,
+-- the drawer's behind its filter mark) are each view's own `show`, SEEDED from `log.show.*` (the What
+-- to show page, so `log.show` is those chips' defaults) when the view is built, when the log is opened,
+-- at each FIGHT_STARTED and at a `log.show` write; a click turns every category the chip covers on
+-- or off in that view alone for the session (LogTable.ToggleChip), never written to the settings. A
+-- chip is lit while any category it covers shows (LogTable.ChipOn).
 --
 -- THE FEED (a live view over modules/CombatLog.lua's ring). `shown` is the newest sequence number the
 -- view has revealed; each repaint tick (NS.Constants.LOG.REPAINT, the view's own timer) moves it toward
@@ -195,9 +206,14 @@ local function pet(ctx)
     return ctx.petName or L["Pet"], petHue
 end
 
-local function target(ctx)
-    if ctx.targetFriendly then return ctx.targetName or L["Target"], ctx.friendlyColor or "ct.log.friendly" end
-    return ctx.targetName or L["Target"], ctx.hostileColor or "ct.log.hostile"
+-- The line's own target (its `g` in ctx.targets) when it has one, else the view's (ctx.targetName).
+local function target(ctx, g)
+    local list = g and ctx.targets
+    local own = type(list) == "table" and list[g] or nil
+    local name, friendly = ctx.targetName, ctx.targetFriendly
+    if type(own) == "table" then name, friendly = Secrets.PlainString(own.name), own.friendly == true end
+    if friendly then return name or L["Target"], ctx.friendlyColor or "ct.log.friendly" end
+    return name or L["Target"], ctx.hostileColor or "ct.log.hostile"
 end
 
 local DASH = LogTable.DASH
@@ -211,7 +227,7 @@ local function who(c, e, ctx)
     elseif k == K.CAST then
         if u == U.pet then c.source, c.sourceColor = pet(ctx) else c.source, c.sourceColor = you(ctx) end
     elseif u == U.target then
-        c.target, c.targetColor = target(ctx)
+        c.target, c.targetColor = target(ctx, e.g)
         if k == K.DEBUFF_ON or k == K.DEBUFF_OFF then c.source, c.sourceColor = you(ctx) end
     else
         c.target, c.targetColor = you(ctx)
@@ -258,8 +274,9 @@ end
 
 --- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, source, sourceColor, target,
 --- targetColor, spell, spellColor, spellID, icon, amount, amountColor, big, info, wash (a token or nil).
---- `ctx`: startT, startClock, timeFormat, targetName, targetFriendly, petName, schoolColors, washes, and
---- the player's own who colors (youColor, hostileColor, friendlyColor: nil follows the default).
+--- `ctx`: startT, startClock, timeFormat, targets (the list a line's `g` indexes), targetName and
+--- targetFriendly (a line with no `g`), petName, schoolColors, washes, and the player's own who colors
+--- (youColor, hostileColor, friendlyColor: nil follows the default).
 --- @return table c
 function LogTable.Cells(e, ctx, c)
     c = c or {}
@@ -291,6 +308,68 @@ function LogTable.Shows(e, show)
     return true
 end
 
+-- ── the chips ───────────────────────────────────────────────────────────────────────────────────
+
+--- The chips, left to right: their key, their label and the saved categories each one covers (the
+--- Results Log tab's and the live views' alike).
+LogTable.CHIPS = {
+    { key = "casts", label = "Casts", cats = { "casts" } },
+    { key = "pet", label = "Pet", cats = { "petCasts" } },
+    { key = "buffs", label = "Buffs", cats = { "playerBuffs", "targetBuffs" } },
+    { key = "debuffs", label = "Debuffs", cats = { "playerDebuffs", "targetDebuffs" } },
+    { key = "taken", label = "Taken", cats = { "hits" } },
+    { key = "heals", label = "Heals", cats = { "heals" } },
+}
+--- Each chip's tooltip line (an L key).
+LogTable.CHIP_TIPS = {
+    casts = "Your casts.",
+    pet = "Your pet's casts.",
+    buffs = "Buffs gained and lost, on you and on your target.",
+    debuffs = "Debuffs on you, and the debuffs you put on your target.",
+    taken = "Hits taken: the damage done to you.",
+    heals = "Heals taken: the healing done to you.",
+}
+LogTable.CHIP_PAD = 14     -- a chip's width past its text's
+LogTable.CHIP_CHAR_W = 5.6 -- the chip label's width per character (estimated: nothing is read back)
+
+local CHIP_BY_KEY = {}
+for _, chip in ipairs(LogTable.CHIPS) do CHIP_BY_KEY[chip.key] = chip end
+
+--- A chip's estimated width for `text` (nothing is measured).
+function LogTable.ChipWidth(text)
+    return math.floor(#tostring(text) * LogTable.CHIP_CHAR_W + LogTable.CHIP_PAD + 0.5)
+end
+
+--- Whether chip `key` is lit in a view's `show`: any category it covers shows.
+--- @return boolean
+function LogTable.ChipOn(show, key)
+    local chip = CHIP_BY_KEY[key]
+    if not chip then return false end
+    for _, cat in ipairs(chip.cats) do
+        if show[cat] ~= false then return true end
+    end
+    return false
+end
+
+--- Turn chip `key` on or off in a view's `show` (every category it covers), for that view alone and
+--- never in the settings. Answers whether it is on now.
+--- @return boolean
+function LogTable.ToggleChip(show, key)
+    local chip = CHIP_BY_KEY[key]
+    if not chip then return false end
+    local on = not LogTable.ChipOn(show, key)
+    for _, cat in ipairs(chip.cats) do show[cat] = on end
+    return on
+end
+
+--- Whether a write to `path` re-seeds a live view's chips: the log opened (`log.drawer.shown`), moved
+--- (`log.home`), What to show (`log.show.*`) or the profile.
+--- @return boolean
+function LogTable.Reseeds(path)
+    return path == "log.drawer.shown" or path == "log.home" or path == "profile" or path == "log.show"
+        or path:find("^log%.show%.") ~= nil
+end
+
 -- ── the live homes' shared reads (the docked drawer and the detached window) ───────────────────
 
 local function setting(path)
@@ -303,7 +382,8 @@ function LogTable.SortOf()
     return LogTable.SORTS[s] and s or "newest"
 end
 
---- `show` (a reused table) refilled from `log.show`, the What to show chips' defaults.
+--- `show` (a reused table) refilled from `log.show`, the What to show page: a live view's chips'
+--- seed.
 function LogTable.ReadShow(show)
     local s = setting("log.show")
     for k in pairs(show) do show[k] = nil end
@@ -339,13 +419,15 @@ local function unitName(unit)
 end
 
 --- `ctx` (a reused table) refilled for a live view whose window starts at `startT` (GetTime()): the
---- time format, the clock time of the start, the target's and the pet's names, the target's reaction
---- (plain answers only) and the color switches.
+--- time format, the clock time of the start, the session's target list (each line's own target), the
+--- target's and the pet's names now and the target's reaction (plain answers only: a line with no
+--- `g`), and the color switches.
 function LogTable.LiveContext(ctx, startT)
     ctx.startT = startT
     ctx.timeFormat = setting("log.view.timeFormat")
     ctx.startClock = nil
     if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
+    ctx.targets = CL.Targets()
     ctx.targetName, ctx.petName = unitName("target"), unitName("pet")
     local ok, hostile = pcall(UnitCanAttack, "player", "target")
     ctx.targetFriendly = type(UnitCanAttack) == "function" and ok and Secrets.PlainEquals(hostile, false) or false

@@ -29,22 +29,34 @@ local _, NS = ...
 -- a FontString, display only) and saved as "s".
 --
 -- THE RING holds the session's newest NS.Constants.LOG.RING lines, each { n (its sequence number),
--- at (GetTime()), k (CombatLog.KIND), u (CombatLog.UNIT), id?, a?, s?, f?, x? }. Its slots are
+-- at (GetTime()), k (CombatLog.KIND), u (CombatLog.UNIT), id?, a?, s?, f?, x?, g? }. Its slots are
 -- reused once it is full, so a busy fight allocates nothing per line after the first RING. A view
 -- reads it by sequence number (CombatLog.Seq, CombatLog.Line) and redraws when the number moves:
 -- appending a line is the whole of "marking it dirty".
+--
+-- WHICH TARGET. A line on the target (`u` 3) carries `g`, its index into the session's target list
+-- (CombatLog.Targets): each target the capture saw, { name? (plain, nil when the client sealed it),
+-- friendly? (true when the player could not attack it) }, noted at the capture's registration and at
+-- each PLAYER_TARGET_CHANGED, once per name and reaction (at most TARGET_LIMIT; past it a line has no
+-- `g`). So a target swap mid-fight never renames the rows before it.
 --
 -- A FIGHT'S LOG. FIGHT_STARTED opens a capture that freezes the settings at the start (save a log,
 -- the lines kept, the categories saved) and takes the pre-pull casts still in the ring (from
 -- Casts.PREPULL seconds before the start, never from before the last capture's end). FIGHT_ENDED
 -- "final" closes it into its list at once and parks it (CombatLog.KEEP_FINISHED); the recorder takes
 -- it with CombatLog.Finish(fightID). A lost fight's capture is dropped. The stand-down drops all.
+-- EACH CAPTURE KEEPS ITS OWN LIST of the lines it saves (`keep`, at most its `lines`, its slots reused
+-- once full), appended as each line arrives, so the saved log never depends on what else the shared
+-- ring held: a fight with heavy unsaved traffic (auto attacks, categories not saved) still keeps its
+-- `lines` newest saved lines.
 --
 -- THE SAVED LOG (the record's `log`, CT_SCHEMA 6) is an array, oldest first, of
--- { t (seconds from the fight's start, to the tenth), k, id?, u?, a?, s?, f? }: no string but "s",
--- names and icons resolved at display time from the spell ID. At most the frozen `lines`, the newest
--- kept; `logDropped` on the record counts the lines of saved categories that were not kept. A fight
--- saved before CT_SCHEMA 6, or with saving off, has no `log`, and CombatLog.Of answers nil for it.
+-- { t (seconds from the fight's start, to the tenth), k, id?, u?, a?, s?, f?, g? }: no string but
+-- "s", names and icons resolved at display time from the spell ID. At most the frozen `lines`, the
+-- newest kept; `logDropped` on the record counts the lines of saved categories that were not kept.
+-- `logTargets` on the record is the fight's own target list, { { name?, friendly? }, ... }, which a
+-- saved line's `g` indexes. A fight saved before CT_SCHEMA 6, or with saving off, has no `log`, and
+-- CombatLog.Of answers nil for it.
 
 local CombatLog = {}
 NS.CombatLog = CombatLog
@@ -69,6 +81,8 @@ CombatLog.CATEGORIES = { "casts", "petCasts", "playerBuffs", "playerDebuffs", "t
 CombatLog.KEEP_FINISHED = 4
 --- The most auras walked per unit and filter when the instance map is (re)built.
 CombatLog.AURA_LIMIT = 40
+--- The most targets the session's list notes (a guard: one entry per name and reaction).
+CombatLog.TARGET_LIMIT = 500
 -- The most entries read from one update-info list (a guard, never a shape).
 local LIST_LIMIT = 255
 
@@ -77,7 +91,10 @@ local UNIT_BY_CODE = { "player", "pet", "target" }
 
 local ring = {}         -- [slot] = line, slot = (n - 1) % C.RING + 1
 local seq = 0           -- lines appended this session
-local captures = {}     -- [fightID] = { fight, startT, from, store, lines, cats, n }
+local captures = {}     -- [fightID] = { fight, startT, from, store, lines, cats, n, keep, head }
+local targets = {}      -- the session's targets: [g] = { name?, friendly? }
+local targetAt = {}     -- [name .. reaction] = g
+local curTarget         -- the target now (its g), or nil
 local finished = {}     -- [fightID] = { log, dropped }
 local finishedOrder = {}
 local lastEnd = -math.huge
@@ -121,28 +138,85 @@ local function endOf(fight)
     return type(fight) == "table" and (fight.closedT or fight.combatEndT) or nil
 end
 
--- Count the line toward every open capture whose window it falls in and whose settings save it.
-local function count(at, k, u, id)
-    if next(captures) == nil then return end
-    local cat = CombatLog.CategoryOf(k, u, id)
-    if not cat or cat == "boundary" then return end
-    for _, cap in pairs(captures) do
-        local stop = endOf(cap.fight)
-        if at >= cap.from and (stop == nil or at <= stop) and cap.cats[cat] then cap.n = cap.n + 1 end
+-- Line `e` into capture `cap`'s own list of saved lines: at most its `lines`, the slots reused once
+-- it is full (the oldest goes). A copy of the plain fields: the ring's table is reused.
+local function keep(cap, e)
+    cap.head = cap.head + 1
+    local slot = (cap.head - 1) % cap.lines + 1
+    local c = cap.keep[slot]
+    if c then
+        c.at, c.k, c.u, c.id, c.a, c.s, c.f, c.g = e.at, e.k, e.u, e.id, e.a, e.s, e.f, e.g
+    else
+        cap.keep[slot] = { at = e.at, k = e.k, u = e.u, id = e.id, a = e.a, s = e.s, f = e.f, g = e.g }
     end
 end
 
--- One line into the ring: the slot's table is reused once the ring is full.
+-- Whether line `e` falls in capture `cap`'s window and its settings save it: its category, or nil.
+local function savedBy(cap, e)
+    local cat = CombatLog.CategoryOf(e.k, e.u, e.id)
+    if not cat or not cap.cats[cat] or e.at < cap.from then return nil end
+    local stop = endOf(cap.fight)
+    if stop ~= nil and e.at > stop then return nil end
+    return cat
+end
+
+-- Keep the line in every open capture whose window it falls in and whose settings save it, and count
+-- it there (a boundary is kept, never counted).
+local function count(e)
+    if next(captures) == nil then return end
+    for _, cap in pairs(captures) do
+        local cat = savedBy(cap, e)
+        if cat then
+            if cap.store then keep(cap, e) end
+            if cat ~= "boundary" then cap.n = cap.n + 1 end
+        end
+    end
+end
+
+-- One line into the ring: the slot's table is reused once the ring is full. A line on the target
+-- carries the target now (`g`).
 local function append(at, k, u, id, a, s, f, x)
     seq = seq + 1
+    local g = u == U.target and curTarget or nil
     local slot = (seq - 1) % C.RING + 1
     local e = ring[slot]
     if e then
-        e.n, e.at, e.k, e.u, e.id, e.a, e.s, e.f, e.x = seq, at, k, u, id, a, s, f, x
+        e.n, e.at, e.k, e.u, e.id, e.a, e.s, e.f, e.x, e.g = seq, at, k, u, id, a, s, f, x, g
     else
-        ring[slot] = { n = seq, at = at, k = k, u = u, id = id, a = a, s = s, f = f, x = x }
+        e = { n = seq, at = at, k = k, u = u, id = id, a = a, s = s, f = f, x = x, g = g }
+        ring[slot] = e
     end
-    count(at, k, u, id)
+    count(e)
+end
+
+-- ── the targets ─────────────────────────────────────────────────────────────────────────────────
+
+-- The target now as the session's list knows it (noted once per name and reaction), or nil with no
+-- target (or the list full). Plain answers only: a sealed name is noted as no name.
+local function noteTarget()
+    if type(UnitExists) == "function" and not Secrets.PlainTruth(UnitExists("target")) then return nil end
+    local okName, raw = pcall(UnitName, "target")
+    local name = okName and Secrets.PlainString(raw) or nil
+    local friendly = false
+    if type(UnitCanAttack) == "function" then
+        local ok, hostile = pcall(UnitCanAttack, "player", "target")
+        friendly = ok and Secrets.PlainEquals(hostile, false) or false
+    end
+    local key = (name or "") .. (friendly and "|f" or "|h")
+    local g = targetAt[key]
+    if g then return g end
+    if #targets >= CombatLog.TARGET_LIMIT then return nil end
+    g = #targets + 1
+    targets[g] = { name = name, friendly = friendly or nil }
+    targetAt[key] = g
+    return g
+end
+
+--- The session's target list, [g] = { name?, friendly? }: what a ring line's `g` indexes. The table is
+--- this file's own: read it, never change it.
+--- @return table
+function CombatLog.Targets()
+    return targets
 end
 
 --- The newest line's sequence number (0 before any). A view redraws when it moves.
@@ -306,7 +380,10 @@ local HANDLERS = {
     end,
     PLAYER_DEAD = function(at) append(at, K.DIES, U.player, nil, nil, nil, nil, nil) end,
     PLAYER_REGEN_ENABLED = function(at) append(at, K.END, nil, nil, nil, nil, nil, nil) end,
-    PLAYER_TARGET_CHANGED = function() walk("target") end,
+    PLAYER_TARGET_CHANGED = function()
+        curTarget = noteTarget()
+        walk("target")
+    end,
 }
 
 local function onEvent(_, event, ...)
@@ -344,6 +421,7 @@ local function register()
         end
     end
     registered = true
+    curTarget = noteTarget()
     walk("player")
     walk("target")
 end
@@ -354,12 +432,12 @@ function CombatLog.Sync()
     if want == registered then return end
     if want then return register() end
     if frame then frame:UnregisterAllEvents() end
-    registered = false
+    registered, curTarget = false, nil
     clear(auras.player)
     clear(auras.target)
 end
 
---- What the capture registers and what the client refused (the diagnostics' and `/ct probe`'s line).
+--- What the capture registers and what the client refused (`/ct diagnostics`' fight section line).
 --- @return table  { registered = boolean, refused = { event, ... } (sorted), lines = number }
 function CombatLog.Diagnose()
     local out = {}
@@ -401,13 +479,21 @@ local function floorAt()
     return f
 end
 
--- The pre-pull casts still in the ring, counted toward the new capture.
+-- The pre-pull lines still in the ring, kept and counted toward the new capture, oldest first.
 local function countPrepull(cap)
+    local oldest = seq + 1
     for n = seq, CombatLog.First(), -1 do
         local e = CombatLog.Line(n)
         if not e or e.at < cap.from then break end
-        local cat = CombatLog.CategoryOf(e.k, e.u, e.id)
-        if cat and cat ~= "boundary" and cap.cats[cat] then cap.n = cap.n + 1 end
+        oldest = n
+    end
+    for n = oldest, seq do
+        local e = CombatLog.Line(n)
+        local cat = e and savedBy(cap, e)
+        if cat and cat ~= "boundary" then
+            if cap.store then keep(cap, e) end
+            cap.n = cap.n + 1
+        end
     end
 end
 
@@ -421,42 +507,51 @@ function CombatLog.Begin(fightID, startT, fight)
     local prepull = NS.Casts and NS.Casts.PREPULL or 0
     local cap = { fight = fight or { startT = startT }, startT = startT,
                   from = math.max(startT - prepull, floorAt()), store = setting("store.enabled") ~= false,
-                  lines = linesKept(), cats = categories(), n = 0 }
+                  lines = linesKept(), cats = categories(), n = 0, keep = {}, head = 0 }
     countPrepull(cap)
     captures[fightID] = cap
     if viewStart == nil or startT >= viewStart then viewStart, viewFrom = startT, cap.from end
-    append(startT, K.START, nil, nil, nil, nil, nil, nil)
     CombatLog.Sync()
+    append(startT, K.START, nil, nil, nil, nil, nil, nil)
 end
 
 local function tenth(x)
     return math.floor(x * 10 + 0.5) / 10
 end
 
--- A saved line out of a ring line.
-local function saved(e, startT)
-    return { t = tenth(e.at - startT), k = e.k, id = e.id, u = e.u, a = e.a, s = e.s, f = e.f }
+-- A saved line out of a kept line; `g` re-indexed into the fight's own target list.
+local function saved(e, startT, g)
+    return { t = tenth(e.at - startT), k = e.k, id = e.id, u = e.u, a = e.a, s = e.s, f = e.f, g = g }
 end
 
--- The capture's lines up to `to` that its settings save, oldest first, at most its `lines` (the
--- newest), and how many lines of saved categories were not kept.
+local function isBoundary(e) return e.k == K.START or e.k == K.END end
+
+-- A kept line's session target (`g`) in the fight's own list `out`, by `map` [session g] = fight g.
+local function ownTarget(g, map, out)
+    if not g or not targets[g] then return nil end
+    if not map[g] then
+        local t = targets[g]
+        out[#out + 1] = { name = t.name, friendly = t.friendly }
+        map[g] = #out
+    end
+    return map[g]
+end
+
+-- The capture's kept lines up to `to`, oldest first (at most its `lines`, the newest), how many lines
+-- of saved categories were not kept, and the fight's target list its lines index.
 local function listOf(cap, to)
-    local picked = {}
-    for n = CombatLog.First(), seq do
-        local e = CombatLog.Line(n)
-        if e and e.at >= cap.from and e.at <= to then
-            local cat = CombatLog.CategoryOf(e.k, e.u, e.id)
-            if cat and cap.cats[cat] then picked[#picked + 1] = e end
+    local total = math.min(cap.head, cap.lines)
+    local log, kept, over, own, map = {}, 0, 0, {}, {}
+    for i = cap.head - total + 1, cap.head do
+        local e = cap.keep[(i - 1) % cap.lines + 1]
+        if e.at <= to then
+            log[#log + 1] = saved(e, cap.startT, ownTarget(e.g, map, own))
+            if not isBoundary(e) then kept = kept + 1 end
+        elseif not isBoundary(e) then
+            over = over + 1
         end
     end
-    local skip = math.max(0, #picked - cap.lines)
-    local log, kept = {}, 0
-    for i = skip + 1, #picked do
-        local e = picked[i]
-        log[#log + 1] = saved(e, cap.startT)
-        if e.k ~= K.START and e.k ~= K.END then kept = kept + 1 end
-    end
-    return log, math.max(0, cap.n - kept)
+    return log, math.max(0, cap.n - over - kept), own
 end
 
 local function close(fightID)
@@ -467,9 +562,9 @@ local function close(fightID)
     if to > lastEnd then lastEnd = to end
     CombatLog.Sync()
     if not cap.store then return { dropped = 0 } end
-    local log, dropped = listOf(cap, to)
+    local log, dropped, own = listOf(cap, to)
     debug("fight %s: %d line(s) kept, %d dropped", fightID, #log, dropped)
-    return { log = log, dropped = dropped }
+    return { log = log, dropped = dropped, targets = own }
 end
 
 local function park(fightID, done)
@@ -489,13 +584,13 @@ local function unpark(fightID)
     return done
 end
 
---- The fight's saved log and how many lines were dropped; nil when it has none (saving off, lost,
---- never begun, or taken already). Answers once.
---- @return table|nil log, number|nil dropped
+--- The fight's saved log, how many lines were dropped and the fight's target list (what its lines'
+--- `g` index); nil when it has none (saving off, lost, never begun, or taken already). Answers once.
+--- @return table|nil log, number|nil dropped, table|nil targets
 function CombatLog.Finish(fightID)
     local done = unpark(fightID) or close(fightID)
     if not done or not done.log then return nil end
-    return done.log, done.dropped
+    return done.log, done.dropped, done.targets
 end
 
 --- Let a fight's capture go without a log (a lost or skipped fight). Its end still bounds the next
@@ -532,14 +627,15 @@ end
 
 -- ── a stored fight's log ────────────────────────────────────────────────────────────────────────
 
---- A stored record's log, or nil (a fight saved before CT_SCHEMA 6, or with saving off), and how many
---- lines it dropped (0 when none were).
+--- A stored record's log, or nil (a fight saved before CT_SCHEMA 6, or with saving off), how many
+--- lines it dropped (0 when none were) and its target list (nil when it has none).
 --- @param record table|nil
---- @return table|nil log, number dropped
+--- @return table|nil log, number dropped, table|nil targets
 function CombatLog.Of(record)
     local log = type(record) == "table" and record.log or nil
-    if type(log) ~= "table" then return nil, 0 end
-    return log, Secrets.PlainNumber(record.logDropped) or 0
+    if type(log) ~= "table" then return nil, 0, nil end
+    local own = type(record.logTargets) == "table" and record.logTargets or nil
+    return log, Secrets.PlainNumber(record.logDropped) or 0, own
 end
 
 --- The unit token a line's `u` stands for, or nil.
@@ -553,6 +649,7 @@ end
 function CombatLog.Suspend()
     captures, finished, finishedOrder = {}, {}, {}
     ring, seq, lastEnd = {}, 0, -math.huge
+    targets, targetAt, curTarget = {}, {}, nil
     viewStart, viewFrom = nil, nil
     if frame then frame:UnregisterAllEvents() end
     registered = false

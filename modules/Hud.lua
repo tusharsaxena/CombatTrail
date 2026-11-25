@@ -829,7 +829,7 @@ function render()
         ui.frame:SetSize(width(), ui.height)
     end
     footer(v)
-    NS.HudLog.Place(ui.frame, PAD, footInset() - NS.HudLog.GAP, (sizing() and ui.dragW or width()) - 2 * PAD)
+    NS.HudLog.Place(ui.frame, PAD, footInset() - NS.HudLog.GAP, Hud.LogWidth())
     tellHeight()
     return v
 end
@@ -1449,6 +1449,10 @@ function Hud.Frame() return ui and ui.frame or nil end
 --- The window's height now: the grip's while it is held, else the height the last draw (or Hud.Dock)
 --- gave it; nil before it is first sized. The Race window docked beside it reads it (Task W4).
 --- @return number|nil
+--- The width the docked log drawer is laid at (its chips wrap at it): the window's, the grip's while
+--- it is held, less the content's insets. Worked out from the configuration, never measured.
+function Hud.LogWidth() return (sizing() and ui.dragW or width()) - 2 * PAD end
+
 function Hud.Height()
     if not ui then return nil end
     if sizing() then return ui.dragH end

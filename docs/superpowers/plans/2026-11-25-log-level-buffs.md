@@ -100,6 +100,42 @@
   existing `log.show.autoAttacks`, drawn as *Show auto attacks* (off), and the window's "background
   opacity" is `log.window.alpha`, the whole window's opacity, drawn as *Window opacity*.
 
+- **CL-11b/CL-11c2: five table-design substitutions, for the owner to rule on (recorded by CL-REV).**
+  The addendum's *The table* asked for five things the build draws differently; each reason was only in
+  `modules/LogTable.lua`'s header. SM-CT-LG19 puts each in front of the owner.
+  1. *A critical "bold with ★"*: drawn as `*` after the plain amount, in the row's larger amount face.
+     WoW's font objects have no bold weight, and FRIZQT__ (the body font) has no ★ glyph.
+  2. *"You" "always bold"*: drawn in the class color (or the player's own `log.colors.you`) only, for
+     the same reason: no bold weight.
+  3. *"Spell names are in their school's colour"*: only the school word of a HIT or HEAL row is in its
+     school's color. A CAST or an aura row's spell has no school the addon can read: the client offers
+     no spell-school API for a cast or an aura (only UNIT_COMBAT's school, for a hit or a heal).
+  4. *"Friendly units blue or their class colour"*: a friendly target is `ct.log.friendly` (blue) or the
+     player's own swatch, never its class color. Each target line now records the target's name and
+     reaction when it was captured (`logTargets`, CL-REV); its class is not recorded.
+  5. *Batch mode painting "each repaint tick"*: it paints the queued rows together once every
+     `log.view.throttleMs` ms. A batch every repaint tick would be the same as Instant, because the tick
+     is the only time a view paints.
+
+- **CL-REV: the live views' chips.** The addendum's *What to show* row named "the default filter
+  chips", and only the Results Log tab had chips. The detached window now carries the chips under its
+  status line and the drawer behind a filter mark (the eye) in its header, which opens a chips row under
+  it, the HUD growing by it (the drawer's width at the HUD's default 260 px wraps them to two lines, so
+  they are not drawn by default). Each view's chips are its own for the session, seeded from `log.show.*`
+  when it is built, when the log is opened or moved, at each FIGHT_STARTED and at a `log.show` write.
+  `LogTable.CHIPS` is now the shared list (`ResultsLog.CHIPS` is it). SM-CT-LG17.
+- **CL-REV: which target, per line.** Each line on the target records which target it was: an index
+  `g` into the session's target list (`CombatLog.Targets`, noted at registration and each
+  PLAYER_TARGET_CHANGED, once per name and reaction), saved as the record's `logTargets` (CT_SCHEMA 6,
+  still unmerged, so no new step). A swap mid-fight no longer renames the earlier rows. SM-CT-LG18.
+- **CL-REV: each capture keeps its own saved lines.** The saved log was rebuilt from the shared
+  2000-line ring at the fight's end, so heavy unsaved traffic (auto attacks, categories not saved) could
+  push saved lines out before then. Each capture now keeps its own bounded list as lines arrive.
+- **CL-REV: the stored logs' total bound, `log.store.fights`** (100; 0 to 500, 0 keeps every log). Each
+  purge run strips the log from every stored fight but the newest that many carrying one, best-holding
+  fights included (docs/performance.md, *Stored size*: about 3.8 MB at the defaults instead of about
+  19 MB). SM-CT-LG20.
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.

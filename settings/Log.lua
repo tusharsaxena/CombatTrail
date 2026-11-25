@@ -217,6 +217,9 @@ row("store.enabled", { type = "bool", label = L["Save a log with each fight"], s
 row("store.lines", { type = "number", label = L["Lines kept per fight"], min = LOG.MIN_PER_FIGHT, max = LOG.MAX_LINES,
     step = 50, startsLine = true,
     tooltip = L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] })
+row("store.fights", { type = "number", label = L["Fights that keep their log (0 = all)"], min = 0,
+    max = LOG.MAX_FIGHTS, step = 10, startsLine = true,
+    tooltip = L["Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."] })
 at(TAB.store, L["Saved"])
 local SAVED = {
     { "casts", L["Your casts"] }, { "petCasts", L["Your pet's casts"] }, { "playerBuffs", L["Buffs on you"] },

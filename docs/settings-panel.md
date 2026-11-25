@@ -433,7 +433,11 @@ the drawer, the window and the Results Log tab all take their heights from it.
 
 ### What to show
 
-The live views' filter: the drawer and the window. What is saved is the Storage tab's, apart from it.
+The live views' filter: the drawer and the window. These rows are the defaults of each view's chips
+(Casts, Pet, Buffs, Debuffs, Taken, Heals: the window's under its status line, the drawer's behind its
+header's filter mark). Each view seeds its chips from them when it is built, when the log is opened or
+moved, at each fight's start and at a write here; a click on a chip turns it in that view alone, for the
+session, and is never stored. What is saved is the Storage tab's, apart from it.
 A hit or a heal whose amount the client keeps secret is never compared, so *Least amount shown* never
 hides it.
 
@@ -472,12 +476,15 @@ draws the skin's `ct.log.hostile` or `ct.log.friendly`.
 
 ### Storage
 
-Each fight freezes these at its start, so a change takes hold from the next fight.
+Each fight freezes these at its start, so a change takes hold from the next fight. *Fights that keep
+their log* is the store's own bound instead (modules/Retention.lua): each purge run (login, daily,
+`/ct purge`) strips the log from every stored fight but the newest that many carrying one.
 
 | Row | Key |
 |---|---|
 | Save a log with each fight | `log.store.enabled` |
 | Lines kept per fight (100 to 1000) | `log.store.lines` |
+| Fights that keep their log (0 = all; 0 to 500) | `log.store.fights` |
 | Your casts | `log.store.categories.casts` |
 | Your pet's casts | `log.store.categories.petCasts` |
 | Buffs on you | `log.store.categories.playerBuffs` |

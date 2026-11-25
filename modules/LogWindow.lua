@@ -37,6 +37,11 @@ local _, NS = ...
 -- the cheap layout runs (the size, the columns, the visible rows); the release stores the width and
 -- the height (the height only when it is not the HUD's) and repaints once.
 --
+-- THE CHIPS (Casts, Pet, Buffs, Debuffs, Taken, Heals; LogTable.NewChips) stand under the status
+-- line, wrapped at the window's width: the window's own What to show, seeded from `log.show.*` when it
+-- is built, when the log is opened or moved here, at each FIGHT_STARTED and at a What to show write
+-- (LogTable.Reseeds); a click turns one on or off here alone, for the session, never in the settings.
+--
 -- THE LOOK is the DPS HUD's, as the Race window's is: the same shell (NS.ApplySkin, the title band,
 -- NS.MakeHeader's marks: Dock, Attach, Settings, Close; the library footer) and the HUD's `hud.window.*`
 -- blocks, restyled once per Appearance stamp; its own opacity, `log.window.alpha`, over the HUD's.
@@ -89,6 +94,7 @@ local hiding = false    -- this file is hiding the frame (not the player's close
 local locked = false
 local anchor            -- the last place applied: { point, relativeTo, relPoint, x, y }
 local ctx, show = {}, {}
+local seeded = false    -- `show` holds the window's own chips (seeded from `log.show`)
 
 local function setting(path) return NS.GetSetting and NS.GetSetting(path) end
 local function write(path, value) if NS.SetByPath then NS.SetByPath(path, value) end end
@@ -158,9 +164,15 @@ function LW.DockSide() return attached() and side() or nil end
 local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD end
 local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
 
--- The window's height less the rows: the chrome, the status line and the table's column header.
+-- The chips' room under the status line at the window's width, the gap under them included.
+local function chipsRoom()
+    return LogTable.ChipsHeight(LW.Width() - 2 * PAD) + LogTable.CHIP_GAP
+end
+
+-- The window's height less the rows: the chrome, the status line, the chips and the table's column
+-- header.
 local function chrome()
-    return contentTop() + contentBottom() + LW.LINE_H + LogTable.HEAD_H
+    return contentTop() + contentBottom() + LW.LINE_H + chipsRoom() + LogTable.HEAD_H
 end
 
 --- The rows `log.window.rows` asks for, whole and in range.
@@ -299,9 +311,8 @@ local function buildBody(f)
     ui.resume.tipBody = true
     ui.resume.tip = { L["Resume"], L["Follow the newest line again."] }
     ui.resume:Hide()
+    ui.chips = LogTable.NewChips(c, function(key) LW.ToggleChip(key) end)
     ui.table = LogTable.New(c, { info = true, onSort = onSort, onScroll = onScroll })
-    ui.table.frame:SetPoint("TOPLEFT", c, "TOPLEFT", 0, -LW.LINE_H)
-    ui.table.frame:SetPoint("TOPRIGHT", c, "TOPRIGHT", 0, -LW.LINE_H)
 end
 
 local onHide, layout, redraw, trackSize, resized
@@ -409,6 +420,11 @@ function layout()
     local w, h = LW.Width(), LW.WindowHeight()
     if not sizing() then ui.frame:SetSize(w, h) end
     ui.laidH = h
+    LogTable.LayChips(ui.chips, ui.content, 0, -LW.LINE_H, w - 2 * PAD)
+    local top = -(LW.LINE_H + chipsRoom())
+    ui.table.frame:ClearAllPoints()
+    ui.table.frame:SetPoint("TOPLEFT", ui.content, "TOPLEFT", 0, top)
+    ui.table.frame:SetPoint("TOPRIGHT", ui.content, "TOPRIGHT", 0, top)
     ui.table:Layout(w - 2 * PAD, LW.Rows(h), setting("log.view.columns"))
 end
 
@@ -442,11 +458,30 @@ end
 
 -- ── the paint ───────────────────────────────────────────────────────────────────────────────────
 
+-- The window's chips from `log.show` again (built, opened, a fight's start, a What to show write).
+local function seed()
+    LogTable.ReadShow(show)
+    seeded = true
+    if ui then LogTable.PaintChips(ui.chips, show) end
+end
+
+--- Turn chip `key` on or off in this window alone (never in the settings), and repaint.
+function LW.ToggleChip(key)
+    if not seeded then seed() end
+    LogTable.ToggleChip(show, key)
+    if ui then LogTable.PaintChips(ui.chips, show) end
+    dirty = true
+    LW.Paint()
+end
+
+--- The window's own What to show (the suites): the table its chips turn.
+function LW.__show() return show end
+
 --- Repaint now when anything moved (the repaint tick, the controls, a draw).
 function LW.Paint()
     if not windowShown() then return end
     if not feed then feed = LogTable.NewFeed() end
-    LogTable.ReadShow(show)
+    if not seeded then seed() end
     local moved = LogTable.Advance(feed, GetTime(), setting("log.view.throttle"), setting("log.view.throttleMs"), accept)
     if not (moved or dirty) then return end
     dirty = false
@@ -580,7 +615,7 @@ end
 
 --- The stand-down: the timer goes (CancelAllTimers took it), the feed starts over, the frame hides.
 function LW.Suspend()
-    timer, feed, dirty = nil, nil, true
+    timer, feed, dirty, seeded = nil, nil, true, false
     hideWindow()
 end
 
@@ -605,10 +640,11 @@ local bus = NS.NewBusTarget()
 if bus then
     bus:RegisterMessage(NS.MSG.FIGHT_STARTED, function()
         if feed then LogTable.Resume(feed) end
-        dirty = true
+        dirty, seeded = true, false
     end)
     bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
         if type(path) ~= "string" then return end
+        if LogTable.Reseeds(path) then seeded = false end
         if path:find("^log%.") or path:find("^hud%.") or path:find("^general%.") or path == "profile" then
             dirty = true
             if ui then ui.table.laid = nil end

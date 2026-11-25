@@ -20,6 +20,8 @@
 --   logPaint      (CL-11b) the DPS HUD's docked Combat Log drawer open: a busy beat, then one repaint
 --                 tick (modules/Hud_Log.lua's HudLog.Paint), eight rows painted
 --   logPaintIdle  one repaint tick with nothing new: no paint at all
+--   logPlaceIdle  (CL-REV) the drawer's place at a HUD beat that moved nothing (HudLog.Place, which
+--                 the HUD's render calls on every live beat): compared field by field, no allocation
 -- logHit and logAura are each measured with capture OFF and ON: the pair is the zero-overhead
 -- evidence performance-§2 asks for (capture off may allocate nothing over capture on, and capture on
 -- no more than one note's PAIR_SLACK over off).
@@ -48,14 +50,14 @@ local BYTE_CEILING = {
     logAuraCaptureOff = 8, logAuraCaptureOn = 8,
     logCast = 8,
     busyFight = 16,
-    logPaint = 10240, logPaintIdle = 8,
+    logPaint = 10240, logPaintIdle = 8, logPlaceIdle = 8,
 }
 local NOTES_PER_ITER = {
     logHitCaptureOff = 0, logHitCaptureOn = 1,
     logAuraCaptureOff = 0, logAuraCaptureOn = 2,
     logCast = 0,
     busyFight = 0,
-    logPaint = 0, logPaintIdle = 0,
+    logPaint = 0, logPaintIdle = 0, logPlaceIdle = 0,
 }
 local PAIRS = { logHitCaptureOff = "logHitCaptureOn", logAuraCaptureOff = "logAuraCaptureOn" }
 local PAIR_SLACK = 64
@@ -216,6 +218,10 @@ measure("logPaint", N, function()
     NS.HudLog.Paint()
 end)
 measure("logPaintIdle", N, function() NS.HudLog.Paint() end)
+-- The HUD's every live beat places the drawer (Hud.lua's render): a place that moved nothing.
+local hudFrame, logW = NS.Hud.Frame(), NS.Hud.LogWidth()
+NS.HudLog.Place(hudFrame, 12, 0, logW)
+measure("logPlaceIdle", N, function() NS.HudLog.Place(hudFrame, 12, 0, logW) end)
 check(CL.Seq() > before, "no line was appended: the scenarios measured nothing")
 check(CL.__ringCount() == NS.Constants.LOG.RING, "the ring is not full: the steady state was never reached")
 NS.Perf.Note = realNote

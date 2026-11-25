@@ -97,14 +97,21 @@ in-game captures and their write-ups live in [`perf-analysis/README.md`](perf-an
 
 A fight's saved Combat Log (the record's `log`, CT_SCHEMA 6) is the one part of a record whose size
 grows with the fight. Measured with `Retention.SizeOf` (the client's SavedVariables layout) on
-2026-11-25 (CL-11a): a log at the default cap of 400 lines, a busy fight's mix of casts, auras and
-hits with an amount, a school and a mark, takes about 36.9 KB, about 92 bytes a line.
-`tests/test_combat_log.lua` holds it under 38,000 bytes. A fight shorter than the cap takes less in
-proportion (about 92 bytes a line; an in-game figure for a typical pull is still owed), and the lines kept per
-fight (100 to 1000) and the categories saved are the player's to lower. The budget is that of the
-store as a whole: `history.days` (7) and `history.maxFights` (500) bound how many fights carry a log,
-so the worst case at the defaults is 500 fights at the cap, about 18 MB. The History tab's size
-(`Retention.EstimateBytes`) counts the logs.
+2026-11-25 (CL-REV, after each target line gained its `g` and the record its `logTargets`): a log at
+the default cap of 400 lines, a busy fight's mix of casts, auras and hits with an amount, a school
+and a mark, takes about 38.4 KB, about 96 bytes a line (36.9 KB before `g`, at CL-11a).
+`tests/test_combat_log.lua` holds it under 39,500 bytes. A fight shorter than the cap takes less in
+proportion (an in-game figure for a typical pull is still owed), and the lines kept per fight (100 to
+1000) and the categories saved are the player's to lower.
+
+**The total is bounded by `log.store.fights`** (100 by default, 0 to 500; modules/Retention.lua). Age
+(`history.days`) and the cap (`history.maxFights`, 500) alone did not bound it: a best-holding fight
+is kept for ever with its log, so 500 fights at the cap would have been about 19 MB of SavedVariables,
+a real cost at load, logout and `/reload`. Each purge run (login, daily, `/ct purge`) now strips the
+log from every stored fight but the newest 100 carrying one, so the worst case at the defaults is 100
+logs at the cap, about 3.8 MB, plus the fights a session stores before the next run (each up to 38 KB).
+A player who wants every log back sets it to 0. The History tab's size (`Retention.EstimateBytes`)
+counts the logs.
 
 ## Offline
 
@@ -112,7 +119,10 @@ so the worst case at the defaults is 500 fights at the cap, about 18 MB. The His
 runner's `perf` suite. It drives the Combat Log's handlers inside an open fight, as the client calls
 them: a hit (`logHit`), an aura gained and lost (`logAura`), a cast from the lanes' listener
 (`logCast`) and a busy fight's beat of all of them (`busyFight`), the first two with capture off and
-on, then the drawer's repaint after a busy beat (`logPaint`) and with nothing new (`logPaintIdle`).
+on, then the drawer's repaint after a busy beat (`logPaint`) and with nothing new (`logPaintIdle`),
+and the drawer's place at a HUD beat that moved nothing (`logPlaceIdle`: `HudLog.Place`, which the HUD's
+render calls on every live beat, compares its last place field by field and allocates nothing; CL-REV,
+0.2 bytes per iteration, under an 8-byte ceiling).
 Every capture scenario measured 0 bytes per iteration once the ring is full (2026-11-25, Lua 5.1.5),
 and its ceilings sit just above that; `logPaint` measured 9,520 bytes per iteration, all of it the kit's
 widget mock, under a 10,240 ceiling (re-run 2026-11-25 after CL-11c2's sizes: unchanged). The recorded runs live in

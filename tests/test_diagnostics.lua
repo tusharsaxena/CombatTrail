@@ -46,6 +46,15 @@ test("diagnostics: the report carries every section of this addon's own", functi
     assertFalse(has(lines, "section "), "a section raised:\n" .. dump(lines))
 end)
 
+test("diagnostics: the fight section names the Combat Log's capture and the events the client refused", function()
+    local inst = T.load()
+    assertTrue(has(report(inst), "combat log registered=false refused=none lines=0"), "idle: nothing registered")
+    local bad = T.load{ mutate = function(m) m.__badEvents = { UNIT_COMBAT = true } end }
+    bad.NS.CombatLog.Begin("diag-fight", 100, nil)
+    local lines = report(bad)
+    assertTrue(has(lines, "combat log registered=true refused=UNIT_COMBAT lines=1"), dump(lines))
+end)
+
 test("diagnostics: a setting off its default is listed with its default", function()
     local inst = T.load()
     inst.NS.SetByPath("hud.width", 360)

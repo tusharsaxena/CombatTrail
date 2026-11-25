@@ -20,8 +20,9 @@ local _, NS = ...
 -- THE TABLE is the live homes' component on a stored list: no feed, no follow. `log.view.sort` decides
 -- the order (newest first by default, the Time header flips it, as everywhere), and the first page is
 -- the top of that order. The wheel moves SCROLL lines at a time. The cells' context is the record's:
--- the target's name, the pet's, the pull's clock time (`record.t`); a stored fight keeps no reaction,
--- so its target is drawn hostile.
+-- each line's own target from `record.logTargets` (its name and reaction when it was captured), the
+-- pet's name, the pull's clock time (`record.t`); a line with no target of its own (a record saved
+-- without `logTargets`) is drawn as the record's primary target, hostile.
 --
 -- A CLICK ON A CAST ROW opens the ability timeline on the fight (modules/Results_Timeline.lua) and
 -- jumps it to that cast (Timeline.FocusAt), while `log.results.jumpToCast` is on (the default) and the
@@ -51,8 +52,8 @@ local K = CL.KIND
 ResultsLog.TITLE_H = 18
 ResultsLog.CHIP_H = 18
 ResultsLog.CHIP_GAP = 4
-ResultsLog.CHIP_PAD = 14     -- a chip's width past its text's
-ResultsLog.CHAR_W = 5.6      -- the chip label's width per character (estimated: nothing is read back)
+ResultsLog.CHIP_PAD = LogTable.CHIP_PAD
+ResultsLog.CHAR_W = LogTable.CHIP_CHAR_W
 ResultsLog.GAP = 8
 ResultsLog.SIDE_W = 190      -- the Damage by spell panel beside the table
 ResultsLog.SIDE_MIN = 560    -- the least tab width that sets the panel beside the table
@@ -61,24 +62,11 @@ ResultsLog.PANEL_HEAD = 18
 ResultsLog.HINT_H = 14
 ResultsLog.SCROLL = 3        -- lines a wheel notch moves
 
---- The chips, left to right: their key, their label and the saved categories each one covers.
-ResultsLog.CHIPS = {
-    { key = "casts", label = "Casts", cats = { "casts" } },
-    { key = "pet", label = "Pet", cats = { "petCasts" } },
-    { key = "buffs", label = "Buffs", cats = { "playerBuffs", "targetBuffs" } },
-    { key = "debuffs", label = "Debuffs", cats = { "playerDebuffs", "targetDebuffs" } },
-    { key = "taken", label = "Taken", cats = { "hits" } },
-    { key = "heals", label = "Heals", cats = { "heals" } },
-}
+--- The chips, left to right: their key, their label and the saved categories each one covers (the
+--- shared table's, LogTable.CHIPS, which the live views' chips use too).
+ResultsLog.CHIPS = LogTable.CHIPS
 
-local CHIP_TIPS = {
-    casts = "Your casts.",
-    pet = "Your pet's casts.",
-    buffs = "Buffs gained and lost, on you and on your target.",
-    debuffs = "Debuffs on you, and the debuffs you put on your target.",
-    taken = "Hits taken: the damage done to you.",
-    heals = "Heals taken: the healing done to you.",
-}
+local CHIP_TIPS = LogTable.CHIP_TIPS
 
 local CHIP_OF = {}   -- [category] = chip key
 for _, chip in ipairs(ResultsLog.CHIPS) do
@@ -167,11 +155,13 @@ function ResultsLog.MaxOffset(n, rows)
 end
 
 --- `ctx` (a reused table) refilled for stored `record`: the time format, the pull's clock time, the
---- target's and the pet's names, the color switches. A stored fight keeps no reaction: hostile.
+--- fight's target list (`logTargets`, each line's own target), the primary target's and the pet's
+--- names, the color switches. A line with no target of its own is drawn as the primary, hostile.
 function ResultsLog.Context(record, ctx)
     ctx.startT = nil
     ctx.timeFormat = setting("log.view.timeFormat")
     ctx.startClock = Secrets.PlainNumber(record.t)
+    ctx.targets = select(3, CL.Of(record))
     ctx.targetName = NS.ResultsFights.TargetName(record)
     ctx.petName = type(record.who) == "table" and Secrets.PlainString(record.who.petName) or nil
     ctx.targetFriendly = false
@@ -195,10 +185,8 @@ function ResultsLog.Title(record)
     return table.concat(parts, " \194\183 ")
 end
 
---- A chip's estimated width for `text` (nothing is measured).
-function ResultsLog.ChipWidth(text)
-    return math.floor(#tostring(text) * ResultsLog.CHAR_W + ResultsLog.CHIP_PAD + 0.5)
-end
+--- A chip's estimated width for `text` (nothing is measured): the shared table's.
+ResultsLog.ChipWidth = LogTable.ChipWidth
 
 --- Whether the Damage by spell panel stands beside the table on a tab `width` wide.
 function ResultsLog.Beside(width)

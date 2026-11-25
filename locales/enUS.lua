@@ -1321,6 +1321,8 @@ L["Debuffs on you, and the debuffs you put on your target."] = "Debuffs on you, 
 L["Hits taken: the damage done to you."] = "Hits taken: the damage done to you."
 L["Heals taken: the healing done to you."] = "Heals taken: the healing done to you."
 L["Click to show or hide them."] = "Click to show or hide them."
+L["Click to show or hide them in this view."] = "Click to show or hide them in this view."
+L["Show or hide the Combat Log's filter chips"] = "Show or hide the Combat Log's filter chips"
 L["Damage by spell"] = "Damage by spell"
 L["Click a CAST row to see it on the Timeline."] = "Click a CAST row to see it on the Timeline."
 L["No log was saved for this fight"] = "No log was saved for this fight"
@@ -1476,6 +1478,9 @@ L["Keep each stored fight's Combat Log, for the Log tab of its Results detail. T
 L["Lines kept per fight"] = "Lines kept per fight"
 L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] =
     "The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."
+L["Fights that keep their log (0 = all)"] = "Fights that keep their log (0 = all)"
+L["Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."] =
+    "Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."
 L["Save these lines with each fight. Separate from What to show, which only filters the live views."] =
     "Save these lines with each fight. Separate from What to show, which only filters the live views."
 L["Log tab"] = "Log tab"

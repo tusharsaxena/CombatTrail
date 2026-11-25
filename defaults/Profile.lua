@@ -271,7 +271,7 @@ NS.defaults = {
                      targetDebuffs = true, hits = true, heals = true, deaths = true, autoAttacks = false,
                      minAmount = 0 },
             store = {
-                enabled = true, lines = NS.Constants.LOG.MAX_PER_FIGHT,
+                enabled = true, lines = NS.Constants.LOG.MAX_PER_FIGHT, fights = NS.Constants.LOG.FIGHTS,
                 categories = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true,
                                targetBuffs = true, targetDebuffs = true, hits = true, heals = true,
                                deaths = true },
