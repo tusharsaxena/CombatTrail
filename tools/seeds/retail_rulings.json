@@ -1,0 +1,6 @@
+{
+  "shipped:unnamed:hearthstones:1310840": {
+    "reason": "the data decides it: no SpellName row on live 12.1.5.70961 (nor on 70783 or 70575), but the Retail PTR 12.1.7.71087 names it Wood-Cursed Hearthstone and gives it ChargeCategory 2309 (rule 1), so it is a real hearthstone arriving with 12.1.7; inert on live until then (DPS Race ruled the same on 2026-11-15)",
+    "ruling": "keep"
+  }
+}

@@ -221,7 +221,8 @@ end)
 
 -- The frozen and generated stores the register names once, as directories (documentation-§3).
 local FROZEN = { "^docs/superpowers/", "^docs/audits/", "^docs/reviews/", "^docs/revendor/",
-                 "^docs/investigations/", "^docs/automated%-tests/[^/]+/", "^docs/perf%-analysis/[^/]+/" }
+                 "^docs/investigations/", "^docs/automated%-tests/[^/]+/", "^docs/perf%-analysis/[^/]+/",
+                 "^docs/seed%-research/[^/]+/" }
 
 --- Docs the register names that a LATER task writes: `path -> the task`. The test refuses a row
 --- here once its file exists, so the allowance cannot outlive its reason.

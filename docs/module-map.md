@@ -157,3 +157,5 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `tests/prose_waivers.lua` | The per-file, per-word waivers (and skipped dirs and files) the kit's US-English prose gate (`tests/_kit/test_prose.lua`) reads |
 | `tests/test_*.lua` | The suites ([`test-cases.md`](test-cases.md) lists every case) |
 | `tools/make_logo.py` | Draws the logo files in `media/logos/` |
+| `tools/seeds/seeds.py`, `tools/seeds/test_seeds.py`, `tools/seeds/fixtures/` | The seed-validation tool ([`validate-seeds.md`](validate-seeds.md)), its tests and their invented CSVs |
+| `tools/seeds/retail_rulings.json`, `tools/seeds/forever_rulings.json` | Each flavor's seed rulings, written only by `seeds.py rule` |

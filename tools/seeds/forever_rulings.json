@@ -1,0 +1,342 @@
+{
+  "dummies:10156": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:10736": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:11875": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:12317": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:12385": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:12426": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:12916": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:12917": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:13619": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:14830": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:14831": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15133": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15134": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15142": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15143": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15144": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15145": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15151": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15152": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15153": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15154": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15155": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15156": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15157": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15158": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15159": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15160": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15161": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15173": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15992": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15993": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15996": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15997": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15998": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:15999": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:16078": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:16211": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:167875": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:17313": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:176721": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:17685": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:177063": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:1921": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:206152": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:206153": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:206154": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:206155": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:214528": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:217987": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:218019": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only; ForeverDB records a spawn for it, so it is a candidate for an in-game capture (/ct dummy capture), not for this file",
+    "ruling": "reject"
+  },
+  "dummies:218020": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only; ForeverDB records a spawn for it, so it is a candidate for an in-game capture (/ct dummy capture), not for this file",
+    "ruling": "reject"
+  },
+  "dummies:218021": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only; ForeverDB records a spawn for it, so it is a candidate for an in-game capture (/ct dummy capture), not for this file",
+    "ruling": "reject"
+  },
+  "dummies:219762": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:236987": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:239817": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:239820": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:239855": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:250192": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:259957": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:263911": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:265987": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:2673": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:2674": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268079": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268080": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268081": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268082": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268083": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268084": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268085": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:268257": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:271897": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:273690": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:273946": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:274574": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:277132": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:277205": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:277601": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:277685": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:4952": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:4957": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:5652": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:5723": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "dummies:9659": {
+    "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
+    "ruling": "reject"
+  },
+  "shipped:renamed:ignore:6603": {
+    "reason": "the same spell under the client's own name: WoW Forever 1.60.1.71091 names 6603 Attack, Retail names it Auto Attack; the auto-attack swing id is what the lane ignores, so the row stays and the header comment notes the Forever name (comment only)",
+    "ruling": "keep"
+  }
+}
