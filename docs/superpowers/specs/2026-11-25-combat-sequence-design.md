@@ -429,3 +429,58 @@ New rows go in `docs/smoke-tests.md`, under a new header line for the branch
 | Window title | "Combat Trail · Combat Sequence" (the window was "Combat Trail · Log"). |
 | Saved logs | Never rewritten. Retired kinds and target BUFF lines are dropped at read time, as feedback item 10 did for PULL and END. |
 | Perf | No ceiling is raised. The new diff scenario is held to the same 8-byte ceiling as the other capture scenarios. |
+
+
+## 12. Addendum (CSEQ-4): the tooltip anchor audit
+
+The owner, verbatim: "The makes tooltip is not in the right position as per ka0s standard (should be
+to the right). Audit all tooltips for this Drop Watcher Item Search and CombatTrail Combat Log
+feature". The rule is WowAddonStandards standalone-windows, *Tooltip placement* (v2.112.0, chrome side
+v2.113.0). A **body** element's tooltip opens beside the window group, right when it fits and else
+left, its top level with the element's, 2 px off (`PlaceBeside`). A **chrome** element's tooltip is
+attached to the control, centered, 2 px above it, and below only without room above (`PlaceAttached`).
+The chrome is the title bar, tabs, filter bar, toolbar and footer. A toolbar is the band of controls
+between the title bar and the body. Combat Trail reaches both placers through one seam,
+`modules/Style.lua` (`Style.OwnTip` at `ANCHOR_NONE`, `Style.PlaceBody`, `Style.PlaceChrome`), onto
+`LibKa0s-Tooltip-1.0`. The Combat Sequence opens no tooltip at the client's default anchor. It shows no
+item tooltip either: no `SetHyperlink` or `SetItemByID` call, only the spell tooltip on a row.
+
+Every tooltip the feature shows (lines as of this commit):
+
+| # | Element | Where | Kind | Before | After |
+|---|---|---|---|---|---|
+| 1 | A row with a spell (the client's spell tooltip, `SetSpellByID`), in all three homes | `modules/LogTable_View.lua:142-148` (`rowEnter`, set at :175) | body | `Style.OwnTip` (`ANCHOR_NONE`), then `Style.PlaceBody` beside the home's window group | unchanged, compliant |
+| 2 | The drawer's chips (Casts, Pet, Buffs, Debuffs), under its heading in the DPS HUD's body | `modules/LogTable_View.lua:472` (`LogTable.NewChips`), built at `modules/Hud_Log.lua:194` | body | `tipBody` true: beside the HUD's group (`Style.Button`'s `buttonTip`, `modules/Style.lua:967-976`) | unchanged, compliant |
+| 3 | The drawer's Resume, on its heading line | `modules/Hud_Log.lua:186-187` | body | `tipBody` true: beside the HUD's group | unchanged, compliant |
+| 4 | The drawer's heading marks: the filter eye and the detach arrow | `modules/Hud_Log.lua:189-192` (`Style.ControlButton(..., "body")`, `modules/Style.lua:866-892`) | body (a section heading's controls) | `Style.PlaceBody` beside the HUD's group | unchanged, compliant |
+| 5 | The detached window's chips, under its status line, on the band between the title bar and the table | `modules/LogTable_View.lua:472`, built at `modules/LogWindow.lua:272` | chrome (filter bar) | `tipBody` true: beside the window, as a body element | **fixed**: `LogTable.NewChips(..., true)` makes them chrome, centered 2 px above the chip (`Style.PlaceChrome`) |
+| 6 | The detached window's Resume, on its status line | `modules/LogWindow.lua:270` | chrome (filter bar) | `tipBody` true: beside the window | **fixed**: `tipBody` dropped, so it is chrome, attached above |
+| 7 | The detached window's title-bar marks: Dock, Settings, Close | `modules/LogWindow.lua:222-227` (`NS.MakeHeader`, `core/WidgetsSetup.lua`) | chrome (title bar) | the library's `AttachTitleTip`, attached centered above | unchanged, compliant |
+| 8 | The DPS HUD's title-bar Combat Sequence mark (`ph:list-bullets`) | `modules/Hud.lua:514` (`NS.MakeHeader` extras) | chrome (title bar) | the library's `AttachTitleTip`, attached centered above | unchanged, compliant |
+| 9 | The Results section's chips, with counts | `modules/Results_Log.lua:220` | body (a section of the scrolled detail) | `tipBody` true: beside the Results window | unchanged, compliant |
+| 10 | The Results section's heading fold arrow | `modules/Results_Log.lua:237` through `modules/Results_Detail.lua:234-237` (`Pane:AddHeading`, `Style.ControlButton(..., "body")`) | body | `Style.PlaceBody` beside the Results window | unchanged, compliant |
+| 11 | The window's footer lines and its resize grip | `modules/LogWindow.lua` (`NS.MakeFooter`, `NS.Sizing.MakeResizable`) | chrome | no tooltip: the addon sets none, and the grip has none | nothing to place |
+| 12 | The column headers, the Time header's sort button, the count, the status line and the empty line | `modules/LogTable_View.lua:191-203`, `modules/Hud_Log.lua`, `modules/LogWindow.lua` | — | no tooltip | nothing to place |
+| 13 | The Combat Sequence settings page's rows (`tooltip`, `defaultsTooltip`) | `settings/Log.lua:81-222` | — | inside Blizzard's Settings canvas: options-ui governs them, and the library's Options widgets place them (*What it does not bind*) | out of scope, unchanged |
+| 14 | `modules/CombatLog.lua` and `modules/LogTable.lua` | — | — | no tooltip call; `LogTable.lua:190` holds the chips' tooltip words only | nothing to place |
+
+**The one finding** is rows 5 and 6. CLF had made the detached window's Resume and chips body
+elements, as the drawer's are. In the window they stand on the band between the title bar and the
+table, and the standard's Chrome element row names that band a filter bar. A filter bar's tooltip is
+attached above its control, as the Results fight list's filter bar already is (`docs/tooltips.md`).
+The drawer's chips stay body elements, because the drawer is a section of the HUD's body, under its
+heading.
+
+**Verification.** `tests/test_tooltip_place.lua` gains four cases, each red on the build before the
+fix: the drawer's marks, Resume, chips and a spell row beside the HUD's group; the window's Resume,
+chips and title-bar marks attached, and a row beside the window; a window chip's tooltip centered
+2 px above it on the kit's fake screen; and the Results section's chips and a row beside the Results
+window. Every case asserts the owner is the hovered element at `ANCHOR_NONE`. The file's existing
+guard still holds the source to no anchor but `ANCHOR_NONE`. Smoke row **SM-CT-SQ11** (unrun) is the
+in-game check.
+
+**Call made without asking.** I followed the standard's chrome rule for the window's chips and
+Resume, so they open above, even though the owner's note read "should be to the right". That note was
+about an item cell in Drop Watcher's results, which is a body element. If the owner wants the window's
+filter bar beside the window too, that would be a deviation from standalone-windows and would need a
+row in the register.

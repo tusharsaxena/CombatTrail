@@ -1744,7 +1744,7 @@ Total.
 - header strip: the gear view is a companion: the close alone, no settings mark
 - header strip: the ability timeline is a companion: the close alone, no settings mark
 
-### test_tooltip_place.lua (14)
+### test_tooltip_place.lua (18)
 
 - tooltip seam: a body tooltip opens right of its window, level with the row, 2 px off
 - tooltip seam: a body tooltip with no room on the right opens left of the window
@@ -1759,6 +1759,10 @@ Total.
 - tooltip surfaces: body elements open beside their window, chrome controls above themselves
 - tooltip surfaces: a Race window body button opens beside the HUD and the attached Race window
 - tooltip surfaces: the Insights charts place through the context's PlaceTip, beside the window
+- tooltip surfaces: the Combat Sequence drawer's marks, Resume, chips and rows open beside the HUD
+- tooltip surfaces: the Combat Sequence window's filter bar is chrome, above; its rows open beside it
+- tooltip surfaces: a chrome chip's tooltip is centered 2 px above it on the fake screen
+- tooltip surfaces: the Results Combat Sequence section's chips and rows open beside the Results window
 - tooltip guard: the addon's own code names no cursor or corner anchor
 
 ### test_window_chrome.lua (13)
@@ -2181,7 +2185,7 @@ Total.
 | test_gear.lua | 6 |
 | test_bar_textures.lua | 18 |
 | test_title_bar.lua | 14 |
-| test_tooltip_place.lua | 14 |
+| test_tooltip_place.lua | 18 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
 | test_usage_buffs.lua | 15 |
@@ -2205,4 +2209,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1811** |
+| **Total** | **1815** |

@@ -264,10 +264,12 @@ local function buildBody(f)
     end)
     ui.resume:SetSize(56, LW.LINE_H - 2)
     ui.resume:SetPoint("RIGHT", c, "TOPRIGHT", 0, -LW.LINE_H / 2)
-    ui.resume.tipBody = true
+    -- The status line and the chips under it are the band between the title bar and the table, the
+    -- window's filter bar: Resume and the chips are chrome controls, their tooltips centered 2 px
+    -- above each (Style.PlaceChrome; CSEQ-4, the tooltip anchor audit). The table's rows are body.
     ui.resume.tip = { L["Resume"], L["Follow the newest line again."] }
     ui.resume:Hide()
-    ui.chips = LogTable.NewChips(c, function(key) LW.ToggleChip(key) end)
+    ui.chips = LogTable.NewChips(c, function(key) LW.ToggleChip(key) end, true)
     ui.table = LogTable.New(c, { info = true, onSort = onSort, onScroll = onScroll })
 end
 

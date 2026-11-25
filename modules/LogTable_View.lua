@@ -454,16 +454,22 @@ function LogTable.ChipsHeight(w)
     return n * LogTable.CHIP_H + (n - 1) * LogTable.CHIP_GAP
 end
 
---- The live chips on `parent`; a click is `onToggle(key)`.
+--- The live chips on `parent`; a click is `onToggle(key)`. WHERE THEIR TOOLTIPS OPEN (CSEQ-4, the
+--- tooltip anchor audit): in the drawer the chips sit in the DPS HUD's body, under the section's
+--- heading, so each is a body element (beside the HUD's window group, Style.PlaceBody); in the
+--- detached window they sit on the band between its title bar and the table, its filter bar, so
+--- `chrome` makes each a chrome control (centered 2 px above the chip, Style.PlaceChrome;
+--- WowAddonStandards standalone-windows, *Tooltip placement*, the Chrome element row).
+--- @param chrome boolean|nil  true on a window's filter bar
 --- @return table strip  { buttons = { [key] = button } }
-function LogTable.NewChips(parent, onToggle)
+function LogTable.NewChips(parent, onToggle, chrome)
     local strip = { buttons = {} }
     for _, chip in ipairs(LogTable.CHIPS) do
         local text = L[chip.label]
         local b = Style.Button(parent, text, function() onToggle(chip.key) end)
         b:SetHeight(LogTable.CHIP_H)
         b:SetWidth(LogTable.ChipWidth(text))
-        b.tip, b.tipBody = { text, L[LogTable.CHIP_TIPS[chip.key]], L["Click to show or hide them in this view."] }, true
+        b.tip, b.tipBody = { text, L[LogTable.CHIP_TIPS[chip.key]], L["Click to show or hide them in this view."] }, not chrome
         strip.buttons[chip.key] = b
     end
     return strip
