@@ -132,3 +132,92 @@ beyond the entry table. Add a perf scenario that drives a busy fight through the
 - Any use of `COMBAT_LOG_EVENT_UNFILTERED`.
 - Logging other players' events.
 - Exporting a log as text, unless it falls out of the existing Share feature cheaply (your call, recorded).
+
+## Addendum: v2 design, approved (owner, 2026-11-25)
+
+The owner approved the v2 mockup, the "v2 · Part of Combat Trail" page of https://claude.ai/artifact/8ZYCiAp9t3MGQ8jgo6G6wg
+("Mock ups look good"), and added requirements. **This addendum replaces the window design in "#11" above.** Capture,
+storage, cap and retention stay as above.
+
+### One log component, three homes, all feeling like Combat Trail
+- **A: docked in the DPS HUD (the default).**
+  - A log button in the HUD title bar toggles a Log drawer under the spell rows, at the HUD's width, in its skin, with an
+    accent seam.
+  - The drawer is part of the HUD: it hides and fades with it, and it never shows while the HUD is hidden.
+  - **Collapsible (owner):** the drawer header collapses it to a one-line strip that shows the newest event, and expands it
+    again. The state is saved.
+  - Its **row count** is a setting (owner: "configure how many log events to show at a time"), 3–20, default 8. The HUD
+    grows by the drawer's height.
+- **B: detached companion window.**
+  - The drawer's detach button moves the log into a standalone companion window, titled "Combat Trail · Log", wider, with
+    an Info column.
+  - It still follows the HUD, shown and hidden with it the way the Race window follows it (`RaceWindow.FollowHud`), unless
+    pinned.
+  - A dock button sends it back. Docked or detached is saved, and so is the window's position and size.
+  - Its row count is its own setting (or fills the window's height: your call, recorded).
+- **C: the Results fight detail.**
+  - The detail gets tabs: Overview (what it shows today), Timeline (today's Timeline content moves into a tab, or keeps
+    its window with the tab as an entry point: your call, recorded) and **Log**.
+  - The Log tab shows the fight's saved log in the same table, with counts on the chips, a Damage by spell panel using
+    the HUD's own bar colours and order, and a click on a cast row that jumps the Timeline to that cast.
+  - A fight saved before this change shows "No log was saved for this fight".
+
+### The table (the same component in all three homes)
+- **Columns:** Time · Event · Source · Target · Spell/School · Amount, plus Info when there's room (wide companion
+  window, Results). Columns can be shown or hidden in settings; Time and Event always show.
+- **Events:** CAST, BUFF+, BUFF−, DEBUFF+, DEBUFF−, HIT, HEAL, DIES.
+  - For HIT and HEAL on you, the client gives no source or spell: Source reads "—", and Spell/School shows the school.
+    Critical and glancing go in Info, and a critical is also bold with ★.
+- **Colours** (mockup board D), each a skin token with a Ka0s Default value; reuse the HUD's class and pet colours, don't
+  copy them.
+  - **Who:** "You" is always bold in the player's class colour. The pet uses the HUD pet colour, hostile units red, and
+    friendly units blue or their class colour.
+  - **Events:** a CAST row is plain, with a faint gold wash for a long-cooldown cast. BUFF± is green (− dimmed).
+    DEBUFF+ has an orange tag and row wash (DEBUFF− dimmed, no wash). HIT has a red wash and a red amount. HEAL is green
+    with "+".
+  - **Spell names** are in their school's colour.
+  - **Colour-blind safety:** events also differ by tag text and wash, never by hue alone. There's a setting to turn off
+    school colouring and row washes.
+- **Sort (owner):** the default is **newest at the top**. The sort can be switched (newest first or oldest first, saved),
+  in settings and from a click on the Time header. Following means "keep the newest in view" in either order.
+  Scrolling away from the newest pauses following, and a "Resume" control brings it back.
+- **Throttle (owner):** a setting for how fast new rows are shown in the live views: Instant, or at most 1 row every N ms
+  (50–1000, default 0 = instant), plus a batch mode that paints queued rows together each repaint tick. Throttling only
+  affects display. Capture and storage are never throttled or dropped by it.
+
+### The Race window on Retail (owner)
+The Race window is the HUD's companion on Retail (RaceWindow follows the HUD). The docked drawer makes the HUD taller,
+and a detached log adds a second companion.
+- **Re-anchoring.** Re-anchor and, where the Race window sizes from the HUD, resize it so nothing overlaps: wherever the
+  Race window anchors relative to the HUD, it uses the HUD's full height including the drawer, and it follows
+  collapse and expand.
+- **Two companions.** The detached log and the Race window must not overlap. Give them a default layout (for example,
+  the Race window on one side and the log on the other, or stacked) and make it adjustable.
+- **Testing.** Cover race-armed and racing states, with the drawer expanded, collapsed and detached, on the Retail kit
+  profile. On Forever there is no Race window (the race is Retail-only), so nothing changes there.
+
+### Settings (owner: "plenty of config options")
+A **Combat Log** settings page, following the addon's schema conventions; every row has a default and a
+settings-panel.md entry.
+- **Enable:** enable the Combat Log; open the HUD's log drawer automatically in combat (on); where it lives (docked,
+  detached).
+- **Docked drawer:** collapsed or expanded; rows shown (8); collapsed strip shows the newest event (on).
+- **Detached window:** rows shown, or fill the window; pinned (stays up when the HUD hides); lock; scale; background
+  opacity.
+- **Order and display:** sort order (newest first); throttle (instant / every N ms / batch); font size; row height or
+  density; time format (from pull, or clock time); show the Info column; column visibility.
+- **What to show** (the default filter chips; all on): casts (yours, and your pet's as its own switch), buffs on you,
+  debuffs on you, debuffs you apply on your target, buffs on your target, hits taken, heals taken, deaths. Also: hide
+  auto attacks (Auto Shot, Shoot); a minimum amount to show for hits and heals.
+- **Colours:** school colours on or off; row washes on or off; the "You" colour (class colour, or a custom one); hostile
+  and friendly colours (skin tokens, with overrides).
+- **Storage:** save a log with each fight (on); lines kept per fight (400, 100–1000); which categories are saved
+  (separate from the display filter).
+- **Results:** the Log tab's default chips; jump to the Timeline on clicking a cast (on).
+
+### Plan impact
+- **CL-11b** builds the shared table component, the docked drawer (collapse and rows), the detached companion
+  (dock/detach and HUD-follow) and the Race window re-anchoring.
+- **CL-11c** builds the Results Overview/Timeline/Log tabs, the Combat Log settings page with every row above, then the
+  docs, smoke rows and the full gate.
+- Work too big for one item can be split into CL-11b2 and CL-11c2 commits; record the split in the plan file.
