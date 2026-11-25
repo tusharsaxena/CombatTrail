@@ -23,14 +23,24 @@ WHAT THIS IS
                                   Forever: EMPTY BY DECISION. The ForeverDB evidence step lists every
                                   ForeverDB creature whose name says "dummy" as a candidate `dummies:<id>`
                                   for information only; `reject` is the only ruling it takes.
+    defaults/BuffSeeds.lua      NS.BuffSeeds.<Client>: the world, zone, camp and event buffs the Used
+                                column lists (`buffs`), the Well Fed auras that stand for buff food
+                                (`wellFed`) and the Food & Drink item subclass (`foodSubclass`). DERIVED
+                                per client: the file's header states the three rules, and `derive` runs
+                                them on that client's own build (derive_buffs, derive_wellfed,
+                                derive_food). Both flavors.
 
     Candidates (ruled accept or reject):
         hearthstones:<id>   ids the build's rules derive that the list does not ship (retail)
         dummies:<id>        ForeverDB creatures named as dummies (forever; reject only)
+        buffs:<id>          catalog-named aura spells the client's `buffs` list does not ship
+        wellfed:<id>        Well Fed aura spells the client's `wellFed` list does not ship
+        food:<subclass>     the build's Food & Drink subclass, when it is not the shipped one
     Flags (ruled keep or remove), over every shipped id:
         shipped:unnamed:<list>:<id>   the build's SpellName has no row for it
         shipped:renamed:<list>:<id>   its name on the build disagrees with the file's name for it
-        shipped:unfit:hearthstones:<id>  it is named but the four rules no longer derive it
+        shipped:unfit:<list>:<id>     it is named but the list's rules no longer derive it
+                                      (hearthstones, buffs, wellfed; food: the subclass is not derived)
 
     A ruling is keyed by list and id, never by build, and holds until the thing it ruled on stops
     being proposed. Each flavor keeps its own file, tools/seeds/<flavor>_rulings.json.
@@ -48,6 +58,18 @@ HOW THE FOUR RULES READ (defaults/Hearthstones.lua's header)
     3. plus 222695 and 171253, by id;
     4. minus EXCLUDED, by id.
     A sentinel gate (SENTINELS) stops the run when the rules come up thin.
+
+HOW THE BUFF RULES READ (defaults/BuffSeeds.lua's header)
+    buffs     every spell whose enUS name matches one of BUFF_CATALOG's patterns in full (case
+              ignored) and that has a SpellEffect row applying an aura (AURA_EFFECTS), at any
+              DifficultyID. Each candidate's notes carry the catalog entry and the aura types, so the
+              ruling can tell a stat buff from an experience buff or a placeholder.
+    wellfed   every spell whose name matches WELL_FED_NAME and that applies an aura.
+    food      the Consumable (Item ClassID 0) subclass holding the most items whose use spell
+              (ItemEffect -> ItemXItemEffect) is named one of EATING_NAMES, the Eat and Drink
+              auras. The counts per class and subclass are kept as evidence.
+    Gates: BUFF_SENTINELS (per flavor) and WELL_FED_SENTINEL must be derived; a build with no
+    eating item stops the run.
 
 FOREVERDB (flavor `forever` only; GPL-3.0 data, standard clients-§10)
     Read only through dev-copilot's helper, `foreverdb.py fetch --tag <tag> --date <date>`, which
@@ -103,6 +125,7 @@ RESEARCH = REPO / "docs" / "seed-research"
 CACHE_DIR = HERE / ".cache"
 HEARTH_FILE = REPO / "defaults" / "Hearthstones.lua"
 IGNORE_FILE = REPO / "defaults" / "IgnoreSeeds.lua"
+BUFF_FILE = REPO / "defaults" / "BuffSeeds.lua"
 
 BUILDS_URL = "https://wago.tools/api/builds"
 CSV_URL = "https://wago.tools/db2/{table}/csv?build={build}"
@@ -114,22 +137,28 @@ DOWNLOAD_CHUNK = 1 << 20  # SpellEffect is ~57 MB: always streamed, never read i
 # claims a table it did not read.
 RETAIL_TABLES = (
     ("SpellCategories", "ChargeCategory: hearthstones rule 1, the hearthstone charge category 2309"),
-    ("SpellEffect", "Effect 252 + ImplicitTarget 9: hearthstones rule 2; EffectTriggerSpell: the item-cast note"),
-    ("SpellName", "every shipped hearthstone's and ignore seed's name, for the unnamed and renamed flags"),
-    ("ItemEffect", "the spell an item effect casts: the item-cast note on a rule 2 candidate"),
+    ("SpellEffect", "Effect 252 + ImplicitTarget 9: hearthstones rule 2; EffectTriggerSpell: the item-cast note; "
+                    "the aura effects: the buff and Well Fed rules"),
+    ("SpellName", "every shipped seed's name, for the unnamed and renamed flags; the buff catalog and Well Fed names"),
+    ("ItemEffect", "the spell an item effect casts: the item-cast note on a rule 2 candidate; the food rule"),
     ("ItemXItemEffect", "item effect -> item: which item casts it"),
     ("Toy", "item -> toy: whether the item that casts it is a toy"),
+    ("Item", "ClassID and SubclassID: the food rule, the Food & Drink subclass"),
 )
 FOREVER_TABLES = (
-    ("SpellName", "every shipped ignore seed's name, for the unnamed and renamed flags"),
+    ("SpellName", "every shipped seed's name, for the unnamed and renamed flags; the buff catalog and Well Fed names"),
+    ("SpellEffect", "the aura effects: the buff and Well Fed rules"),
+    ("ItemEffect", "the spell an item effect casts: the food rule"),
+    ("ItemXItemEffect", "item effect -> item: the food rule"),
+    ("Item", "ClassID and SubclassID: the food rule, the Food & Drink subclass"),
 )
 
 # The client a flavor validates, its own wago product (clients-§10), what it reads and checks.
 FLAVORS = {
     "retail": {"product": "wow", "title": "Retail", "client": "Retail", "tables": RETAIL_TABLES,
-               "lists": ("hearthstones", "ignore"), "foreverdb": False},
+               "lists": ("hearthstones", "ignore", "buffs", "wellfed", "food"), "foreverdb": False},
     "forever": {"product": "wowf", "title": "WoW Forever", "client": "Forever", "tables": FOREVER_TABLES,
-                "lists": ("ignore", "dummies"), "foreverdb": True},
+                "lists": ("ignore", "dummies", "buffs", "wellfed", "food"), "foreverdb": True},
 }
 
 HEARTH_CHARGE_CATEGORY = "2309"
@@ -154,13 +183,63 @@ SENTINELS = {8690: "Hearthstone", 222695: "Dalaran Hearthstone", 171253: "Garris
 # A ForeverDB creature is listed as a dummy candidate when its name holds this word.
 DUMMY_NAME = re.compile(r"\bdummy\b", re.I)
 
-LISTS = ("hearthstones", "ignore", "dummies")
+# The buff rule's catalog (defaults/BuffSeeds.lua's header): an enUS name pattern, matched in full with
+# case ignored, and what it is. One catalog serves both clients; each client's own SpellName decides
+# which ids exist. A name joins here, then every id it derives is ruled; nothing is accepted by name.
+BUFF_CATALOG = (
+    ("Songflower Serenade", "world: a Songflower, Felwood"),
+    ("Songflower Lullaby", "world: a Songflower (Season of Discovery)"),
+    ("Warchief's Blessing", "world: Rend's head, Orgrimmar"),
+    ("Might of Stormwind", "world: the head turn-in, Stormwind"),
+    ("Might of Blackrock", "world: a Warchief's Blessing twin (Season of Discovery)"),
+    ("Rallying Cry of the Dragonslayer", "world: Onyxia's or Nefarian's head"),
+    ("Spirit of Zandalar", "world: Hakkar's heart, Yojamba Isle"),
+    ("Dreams of Zandalar", "world: Zandalar (Season of Discovery)"),
+    ("Fengus' Ferocity", "zone: the Dire Maul tribute"),
+    ("Mol'dar's Moxie", "zone: the Dire Maul tribute"),
+    ("Slip'kik's Savvy", "zone: the Dire Maul tribute"),
+    (r"Sayge's Dark Fortune(?: of .+)?", "faire: Sayge, Darkmoon Faire"),
+    (r"Dark Fortune of .+", "faire: Darkmoon Faire (Season of Discovery)"),
+    ("WHEE!", "faire: the Darkmoon carousel"),
+    ("Boon of Blackfathom", "world: Blackfathom Deeps (Season of Discovery)"),
+    ("Blessing of Blackfathom", "shrine: the Altar of the Deeps, Blackfathom Deeps"),
+    ("Ashenvale Rallying Cry", "world: the Ashenvale battle (Season of Discovery)"),
+    ("Spark of Inspiration", "world: the Sunken Temple (Season of Discovery)"),
+    ("Fervor of the Temple Explorer", "world: the Sunken Temple (Season of Discovery)"),
+    ("Traces of Silithyst", "zone: Silithus"),
+    ("Fire Festival Fortitude", "event: Midsummer Fire Festival"),
+    ("Fire Festival Fury", "event: Midsummer Fire Festival"),
+    ("Festival Fortune!", "event: a festival fortune"),
+    ("Lunar Fortune", "event: Lunar Festival"),
+    ("Blessing of Neptulon", "unknown source: named like a world buff"),
+    (r"Brood Boon: .+", "unknown source: named like a world buff"),
+    (r"Boon of (?:Water|Air|Fire|Earth)", "unknown source: named like a world buff"),
+    ("Camp Benefits", "camp: the Camp Chair and Sharpening Wheel (WoW Forever)"),
+)
+BUFF_PATTERNS = tuple((re.compile(r"(?:%s)\Z" % pat, re.I), why) for pat, why in BUFF_CATALOG)
+# SpellEffect.Effect values that put an aura on a unit: APPLY_AURA, APPLY_AREA_AURA_PARTY,
+# APPLY_AREA_AURA_RAID, APPLY_AREA_AURA_FRIEND.
+AURA_EFFECTS = ("6", "35", "65", "128")
+# Ids each client's build must derive (the issue's anchors, and a Retail world buff the issue's
+# acceptance names one of): a run that misses one stops.
+BUFF_SENTINELS = {"retail": {15366: "Songflower Serenade", 22888: "Rallying Cry of the Dragonslayer"},
+                  "forever": {1229741: "Camp Benefits", 460940: "Might of Stormwind"}}
+WELL_FED_NAME = re.compile(r"(?:[A-Za-z]+ )?Well Fed(?: & Inspired)?\Z")
+WELL_FED_SENTINEL = {19705: "Well Fed"}
+# The use spells of food and drink: the Eat and Drink auras (enUS names on both clients' builds).
+EATING_NAMES = ("Food", "Drink", "Refreshment", "Food & Drink")
+CONSUMABLE_CLASS = 0
+
+LISTS = ("hearthstones", "ignore", "dummies", "buffs", "wellfed", "food")
+BUFF_LISTS = ("buffs", "wellfed", "food")
 CANDIDATE_RULINGS = {"hearthstones": ("accept", "reject"),
                      # defaults/Dummies.lua: Forever is EMPTY BY DECISION and a row is only measured.
-                     "dummies": ("reject",)}
+                     "dummies": ("reject",),
+                     "buffs": ("accept", "reject"), "wellfed": ("accept", "reject"), "food": ("accept", "reject")}
 FLAG_RULINGS = ("keep", "remove")
 FLAG_KINDS = {"hearthstones": ("unnamed", "renamed", "unfit"), "ignore": ("unnamed", "renamed"),
-              "dummies": ()}
+              "dummies": (), "buffs": ("unnamed", "renamed", "unfit"), "wellfed": ("unnamed", "renamed", "unfit"),
+              "food": ("unfit",)}
 KEY = re.compile(r"^(?:shipped:(?P<kind>[a-z-]+):)?(?P<list>[a-z]+):(?P<id>\d+)$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 TAG_RE = re.compile(r"^v\d{4}\.\d{2}\.\d{2}\.\d+$")
@@ -172,6 +251,12 @@ IGNORE_CLIENT = re.compile(r"^\s+(Retail|Forever)\s*=\s*\{\s*$")
 IGNORE_LANE = re.compile(r"^(\s+)(player|pet)(\s*=\s*)\{([\d,\s]*)\}(,?)\s*$")
 IGNORE_HEADER = re.compile(r"^--\s+(player|pet)\s+(.*)$")
 NAMED_ID = re.compile(r"^\s*(.+?)\s+(\d+)\b")
+BUFF_TABLE_OPEN = re.compile(r"^NS\.BuffSeeds\s*=\s*\{\s*$")
+BUFF_LIST_OPEN = re.compile(r"^\s+(buffs|wellFed)\s*=\s*\{\s*$")
+BUFF_LIST_CLOSE = re.compile(r"^\s+\},?\s*$")
+BUFF_ROW = re.compile(r"^(\s+)(\d+),(?:\s*--\s*(.*?))?\s*$")
+FOOD_LINE = re.compile(r"^(\s+foodSubclass\s*=\s*)(\d+)(,?)\s*$")
+FILE_LIST = {"buffs": "buffs", "wellFed": "wellfed"}
 
 
 def log(msg: str) -> None:
@@ -346,30 +431,48 @@ def derive_dummies(db: dict) -> list:
 # ---------------------------------------------------------------------------
 
 class Facts:
-    """What the rules and the flags read off one build's tables. A flavor that reads only SpellName
-    (forever) leaves the hearthstone facts empty."""
+    """What the rules and the flags read off one build's tables. A flavor reads only the tables its
+    lists need (forever has no SpellCategories or Toy), and the facts of a missing table stay empty."""
 
     def __init__(self, tables: dict):
         self.spell_names = {_int(r["ID"]): r["Name_lang"] for r in iter_csv(tables["SpellName"])}
         self.charge, self.teleports, self.triggered_by, self.cast_by = set(), set(), {}, {}
-        if "SpellCategories" not in tables:
-            return
-        self.charge = {_int(r["SpellID"]) for r in iter_csv(tables["SpellCategories"])
-                       if r["ChargeCategory"] == HEARTH_CHARGE_CATEGORY}
-        for r in iter_csv(tables["SpellEffect"]):
+        self.auras, self.eating = {}, {}  # spell -> {EffectAura}; (ClassID, SubclassID) -> {item}
+        if "SpellCategories" in tables:
+            self.charge = {_int(r["SpellID"]) for r in iter_csv(tables["SpellCategories"])
+                           if r["ChargeCategory"] == HEARTH_CHARGE_CATEGORY}
+        if "SpellEffect" in tables:
+            self._read_effects(tables["SpellEffect"])
+        if "ItemEffect" in tables:
+            self._read_items(tables)
+
+    def _read_effects(self, path: Path) -> None:
+        for r in iter_csv(path):
             spell = _int(r["SpellID"])
-            if r["Effect"] == TELEPORT_EFFECT and BIND_POINT_TARGET in (r["ImplicitTarget_0"], r["ImplicitTarget_1"]):
+            if r["Effect"] == TELEPORT_EFFECT and BIND_POINT_TARGET in (r.get("ImplicitTarget_0"),
+                                                                        r.get("ImplicitTarget_1")):
                 self.teleports.add(spell)
-            trigger = _int(r["EffectTriggerSpell"])
+            trigger = _int(r.get("EffectTriggerSpell"))
             if trigger:
                 self.triggered_by.setdefault(trigger, set()).add(spell)
+            if r["Effect"] in AURA_EFFECTS:
+                self.auras.setdefault(spell, set()).add(_int(r.get("EffectAura")))
+
+    def _read_items(self, tables: dict) -> None:
         effect_spell = {_int(r["ID"]): _int(r["SpellID"]) for r in iter_csv(tables["ItemEffect"])}
-        toys = {_int(r["ItemID"]) for r in iter_csv(tables["Toy"])}
+        toys = {_int(r["ItemID"]) for r in iter_csv(tables["Toy"])} if "Toy" in tables else set()
+        kinds = {_int(r["ID"]): (_int(r["ClassID"]), _int(r["SubclassID"]))
+                 for r in iter_csv(tables["Item"])} if "Item" in tables else {}
         for r in iter_csv(tables["ItemXItemEffect"]):  # spell -> {(item, is_toy)}
             spell = effect_spell.get(_int(r["ItemEffectID"]))
             if spell:
                 item = _int(r["ItemID"])
                 self.cast_by.setdefault(spell, set()).add((item, item in toys))
+                if item in kinds and self.spell_names.get(spell) in EATING_NAMES:
+                    self.eating.setdefault(kinds[item], set()).add(item)
+
+    def aura_note(self, spell: int) -> str:
+        return "auras " + ", ".join(str(a) for a in sorted(self.auras.get(spell, ())))
 
     def item_note(self, spell: int) -> str:
         """Who casts `spell`: a toy, an item, or a spell an item casts (one EffectTriggerSpell hop)."""
@@ -399,6 +502,54 @@ def derive_hearthstones(facts: Facts) -> dict:
         raise SystemExit("Hearthstone sentinel gate FAILED: %s not derived. Fix the rules before ruling."
                          % ", ".join(missing))
     return out
+
+
+def _gate(kind: str, sentinels: dict, derived: dict, facts: Facts) -> None:
+    missing = ["%d %s" % (s, n) for s, n in sorted(sentinels.items()) if s not in derived or s not in facts.spell_names]
+    if missing:
+        raise SystemExit("%s sentinel gate FAILED: %s not derived. Fix the rules before ruling."
+                         % (kind, ", ".join(missing)))
+
+
+def derive_buffs(facts: Facts, flavor: str) -> dict:
+    """`{id: [notes]}`: the buff rule of defaults/BuffSeeds.lua's header (a catalog name and an aura
+    effect). Raises SystemExit when one of the flavor's sentinels is not derived."""
+    out = {}
+    for spell, name in facts.spell_names.items():
+        if spell not in facts.auras:
+            continue
+        why = next((w for pat, w in BUFF_PATTERNS if pat.match(name)), None)
+        if why:
+            out[spell] = ["catalog: " + why, facts.aura_note(spell)]
+    _gate("Buff", BUFF_SENTINELS[flavor], out, facts)
+    return out
+
+
+def derive_wellfed(facts: Facts) -> dict:
+    """`{id: [notes]}`: every aura spell named like Well Fed (WELL_FED_NAME)."""
+    out = {spell: ["name: " + name, facts.aura_note(spell)] for spell, name in facts.spell_names.items()
+           if spell in facts.auras and WELL_FED_NAME.match(name)}
+    _gate("Well Fed", WELL_FED_SENTINEL, out, facts)
+    return out
+
+
+def food_counts(facts: Facts) -> list:
+    """`[{class, subclass, items}]`: how many items use an Eat or Drink aura, per item class and
+    subclass, most first (the food rule's evidence)."""
+    rows = [{"class": c, "subclass": sc, "items": len(items)} for (c, sc), items in facts.eating.items()]
+    return sorted(rows, key=lambda r: (-r["items"], r["class"], r["subclass"]))
+
+
+def derive_food(facts: Facts) -> dict:
+    """`{subclass: [notes]}`: the Consumable subclass holding the most eating items, the client's
+    Food & Drink subclass. Raises SystemExit when the build has no eating consumable."""
+    consumable = [r for r in food_counts(facts) if r["class"] == CONSUMABLE_CLASS]
+    if not consumable:
+        raise SystemExit("Food gate FAILED: no Consumable item uses an Eat or Drink aura on this build.")
+    top = consumable[0]
+    total = sum(r["items"] for r in consumable)
+    return {top["subclass"]: ["%d of the %d Consumable items that use %s" % (top["items"], total,
+                                                                             "/".join(EATING_NAMES))]}
 
 
 # ---------------------------------------------------------------------------
@@ -465,6 +616,38 @@ def read_ignore(path: Path, client: str) -> dict:
     return {"lanes": lanes, "names": names}
 
 
+def read_buffs(path: Path, client: str) -> dict:
+    """`{"buffs": [{id, name}], "wellfed": [{id, name}], "food": [{id, name}]}` for one client of
+    NS.BuffSeeds, in file order. A row's name is its comment ("" for a Well Fed row, which has none);
+    the food list is the one `foodSubclass` value."""
+    lines, _nl = split_lines(path.read_bytes().decode("utf-8"))
+    start = next((i for i, line in enumerate(lines) if BUFF_TABLE_OPEN.match(line)), None)
+    if start is None:
+        raise SystemExit("%s: no NS.BuffSeeds table." % path)
+    out, current, inside = {"buffs": [], "wellfed": [], "food": []}, None, None
+    for line in lines[start + 1:]:
+        if line == "}":
+            break
+        opened, listed, food = IGNORE_CLIENT.match(line), BUFF_LIST_OPEN.match(line), FOOD_LINE.match(line)
+        if inside:
+            row = BUFF_ROW.match(line)
+            if row and current == client:
+                out[inside].append({"id": int(row.group(2)), "name": row.group(3) or ""})
+            elif BUFF_LIST_CLOSE.match(line):
+                inside = None
+            elif not row:
+                raise SystemExit("%s: %r is not an `<id>, -- <name>` row." % (path, line))
+        elif opened:
+            current = opened.group(1)
+        elif listed:
+            inside = FILE_LIST[listed.group(1)]
+        elif food and current == client:
+            out["food"].append({"id": int(food.group(2)), "name": ""})
+    if len(out["food"]) != 1:
+        raise SystemExit("%s: NS.BuffSeeds.%s needs one foodSubclass line." % (path, client))
+    return out
+
+
 def ignore_rows(seed: dict) -> list:
     """`[{id, name, lanes}]`: each distinct id of one client's ignore seeds, in first-seen order."""
     rows, seen = [], {}
@@ -499,23 +682,46 @@ def name_flags(facts: Facts, lst: str, shipped: list) -> list:
     return flags
 
 
-def hearth_findings(facts: Facts, derived: dict, shipped: list):
-    """`(candidates, flags)` for the hearthstone list."""
+def derived_findings(facts: Facts, lst: str, derived: dict, shipped: list, note=None):
+    """`(candidates, flags)` for a derived list: every derived id it does not ship, and the unnamed,
+    renamed and unfit flags over what it ships. `note(id)` adds a note to each candidate. The food
+    list's ids are item subclasses, not spells, so it takes the unfit flag alone."""
     ids = {row["id"] for row in shipped}
-    candidates = [{"key": "hearthstones:%d" % s, "list": "hearthstones", "id": s,
-                   "name": facts.spell_names.get(s, ""), "notes": derived[s] + [facts.item_note(s)]}
+    spells = lst != "food"
+    candidates = [{"key": "%s:%d" % (lst, s), "list": lst, "id": s,
+                   "name": facts.spell_names.get(s, "") if spells else "Food & Drink subclass %d" % s,
+                   "notes": derived[s] + ([note(s)] if note else [])}
                   for s in sorted(derived) if s not in ids]
-    flags = name_flags(facts, "hearthstones", shipped)
+    flags = name_flags(facts, lst, shipped) if spells else []
     for row in shipped:
-        if facts.spell_names.get(row["id"]) and row["id"] not in derived:
-            flags.append(_flag("unfit", "hearthstones", row, facts.spell_names[row["id"]]))
+        if (facts.spell_names.get(row["id"]) or not spells) and row["id"] not in derived:
+            flags.append(_flag("unfit", lst, row, facts.spell_names.get(row["id"], "") if spells else ""))
     order = {row["id"]: i for i, row in enumerate(shipped)}
-    flags.sort(key=lambda f: (order[f["id"]], FLAG_KINDS["hearthstones"].index(f["kind"])))
+    flags.sort(key=lambda f: (order[f["id"]], FLAG_KINDS[lst].index(f["kind"])))
     return candidates, flags
 
 
+def hearth_findings(facts: Facts, derived: dict, shipped: list):
+    """`(candidates, flags)` for the hearthstone list."""
+    return derived_findings(facts, "hearthstones", derived, shipped, facts.item_note)
+
+
+def buff_findings(doc: dict, facts: Facts, flavor: str, path: Path) -> None:
+    """Derive the three BuffSeeds lists for `flavor` into `doc` (shipped, derived, candidates, flags)."""
+    shipped = read_buffs(path, FLAVORS[flavor]["client"])
+    derived = {"buffs": derive_buffs(facts, flavor), "wellfed": derive_wellfed(facts), "food": derive_food(facts)}
+    for lst in BUFF_LISTS:
+        candidates, flags = derived_findings(facts, lst, derived[lst], shipped[lst])
+        doc["shipped"][lst] = len(shipped[lst])
+        doc["derived"][lst] = [{"id": s, "name": facts.spell_names.get(s, "") if lst != "food" else "",
+                                "rules": derived[lst][s]} for s in sorted(derived[lst])]
+        doc["candidates"] += candidates
+        doc["flags"] += flags
+    doc["food"] = food_counts(facts)
+
+
 def derive_doc(tables: dict, flavor: str, build: str, date: str, hearth: Path = HEARTH_FILE,
-               ignore: Path = IGNORE_FILE, fdb=None) -> dict:
+               ignore: Path = IGNORE_FILE, fdb=None, buffs: Path = BUFF_FILE) -> dict:
     """The bundle's candidates.json for one flavor. `fdb` ({"db", "sources"}) is the ForeverDB
     evidence, required by a flavor that names it and refused by one that does not."""
     info = FLAVORS[flavor]
@@ -540,6 +746,7 @@ def derive_doc(tables: dict, flavor: str, build: str, date: str, hearth: Path = 
                      "checked": [{"id": r["id"], "file": r["name"], "build": facts.spell_names.get(r["id"], ""),
                                   "lanes": r["lanes"]} for r in rows]}
     doc["flags"] += name_flags(facts, "ignore", rows)
+    buff_findings(doc, facts, flavor, buffs)
     if fdb is not None:
         src = fdb["sources"]
         dummies = derive_dummies(fdb["db"])
@@ -642,6 +849,10 @@ def diff_md(doc: dict) -> str:
     lines += ["- `%s` %s" % (c["key"], c["name"] or "(no name)") for c in doc["candidates"]] or ["None."]
     if "ignore" in doc:
         lines += _ignore_table(doc["ignore"]["checked"])
+    if "food" in doc:
+        lines += ["", "## Food and drink: items that use an Eat or Drink aura", "",
+                  "| ClassID | SubclassID | Items |", "| --- | --- | --- |"]
+        lines += ["| %d | %d | %d |" % (r["class"], r["subclass"], r["items"]) for r in doc["food"]]
     lines += ["", "## Shipped, flagged", ""]
     lines += ["- `%s` %s (file: %s)" % (f["key"], f["name"] or "(no row)", f["comment"] or "-")
               for f in doc["flags"]] or ["None."]
@@ -781,17 +992,85 @@ def apply_ignore(path: Path, client: str, removals: set) -> list:
     return changes
 
 
-def apply_doc(doc: dict, rulings: dict, hearth: Path = HEARTH_FILE, ignore: Path = IGNORE_FILE) -> list:
+def buff_line(indent: str, lst: str, spell: int, name: str) -> str:
+    """A BuffSeeds row: `<id>, -- <name>` for a buff, the bare `<id>,` for a Well Fed aura."""
+    return indent + (str(spell) + ",").ljust(10) + "-- " + name if lst == "buffs" else "%s%d," % (indent, spell)
+
+
+def _buff_list_body(lines: list, at: int, lst: str, inserts: list, removals: set, changes: list, client: str) -> list:
+    """The rows of the list opening at `lines[at]`, with `removals` gone and `inserts` ([(id, name)])
+    placed in ascending order; appends to `changes`."""
+    end = next(i for i in range(at + 1, len(lines)) if not BUFF_ROW.match(lines[i]))
+    if not BUFF_LIST_CLOSE.match(lines[end]):
+        raise SystemExit("%r is not an `<id>, -- <name>` row or a list's closing `},`." % lines[end])
+    rows = []
+    for line in lines[at + 1:end]:
+        spell = int(BUFF_ROW.match(line).group(2))
+        if spell in removals:
+            changes.append("%s %s: -%d" % (lst, client, spell))
+        else:
+            rows.append((spell, line))
+    indent = BUFF_ROW.match(lines[at + 1]).group(1) if at + 1 < end else re.match(r"^\s*", lines[at]).group(0) + "    "
+    present = {spell for spell, _line in rows}
+    for spell, name in sorted(inserts):
+        if spell not in present:
+            pos = next((i for i, (other, _line) in enumerate(rows) if other > spell), len(rows))
+            rows.insert(pos, (spell, buff_line(indent, lst, spell, name)))
+            present.add(spell)
+            changes.append("%s %s: +%d %s" % (lst, client, spell, name))
+    return [line for _s, line in rows], end
+
+
+def apply_buffs(path: Path, client: str, inserts: dict, removals: dict) -> list:
+    """Write one client's accepted buff and Well Fed ids (ascending), its accepted Food & Drink
+    subclass, and its ruled removals into NS.BuffSeeds; returns the change log. Keeps the file's own
+    newline and every other byte; the other client's block is never touched."""
+    if not any(inserts.values()) and not any(removals.values()):
+        return []
+    if removals.get("food") and not inserts.get("food"):
+        raise SystemExit("apply refused: %s needs a Food & Drink subclass; accept the derived one." % client)
+    lines, newline = split_lines(path.read_bytes().decode("utf-8"))
+    changes, out, current, i = [], [], None, 0
+    while i < len(lines):
+        line = lines[i]
+        opened, listed, food = IGNORE_CLIENT.match(line), BUFF_LIST_OPEN.match(line), FOOD_LINE.match(line)
+        current = opened.group(1) if opened else current
+        if listed and current == client:
+            lst = FILE_LIST[listed.group(1)]
+            body, end = _buff_list_body(lines, i, lst, inserts.get(lst, []), removals.get(lst, set()), changes, client)
+            out += [line] + body
+            i = end
+            continue
+        if food and current == client and inserts.get("food"):
+            new = inserts["food"][0][0]
+            if new != int(food.group(2)):
+                changes.append("food %s: %s -> %d" % (client, food.group(2), new))
+                line = "%s%d%s" % (food.group(1), new, food.group(3))
+        out.append(line)
+        i += 1
+    if changes:
+        path.write_bytes(newline.join(out).encode("utf-8"))
+    return changes
+
+
+def apply_doc(doc: dict, rulings: dict, hearth: Path = HEARTH_FILE, ignore: Path = IGNORE_FILE,
+              buffs: Path = BUFF_FILE) -> list:
     unruled = unruled_keys(doc, rulings)
     if unruled:
         raise SystemExit("apply refused: %d key(s) unruled (seeds.py check lists them)." % len(unruled))
     accepted = [c for c in doc["candidates"] if rulings[c["key"]]["ruling"] == "accept"]
-    if any(c["list"] != "hearthstones" for c in accepted):
-        raise SystemExit("apply refused: only hearthstones take an accepted candidate.")
+    if any(c["list"] not in ("hearthstones",) + BUFF_LISTS for c in accepted):
+        raise SystemExit("apply refused: only hearthstones and the buff lists take an accepted candidate.")
     removed = {lst: {f["id"] for f in doc["flags"] if f["list"] == lst and rulings[f["key"]]["ruling"] == "remove"}
-               for lst in ("hearthstones", "ignore")}
-    changes = apply_hearthstones(hearth, [(c["id"], c["name"]) for c in accepted], removed["hearthstones"])
-    return changes + apply_ignore(ignore, FLAVORS[doc["client"]]["client"], removed["ignore"])
+               for lst in ("hearthstones", "ignore") + BUFF_LISTS}
+    picked = {lst: [(c["id"], c["name"]) for c in accepted if c["list"] == lst] for lst in ("hearthstones",) + BUFF_LISTS}
+    client = FLAVORS[doc["client"]]["client"]
+    changes = apply_hearthstones(hearth, picked["hearthstones"], removed["hearthstones"])
+    changes += apply_ignore(ignore, client, removed["ignore"])
+    if "buffs" in doc["shipped"]:
+        changes += apply_buffs(buffs, client, {lst: picked[lst] for lst in BUFF_LISTS},
+                               {lst: removed[lst] for lst in BUFF_LISTS})
+    return changes
 
 
 # ---------------------------------------------------------------------------
@@ -902,7 +1181,7 @@ def cmd_derive(args) -> int:
     build, fdb = _derive_build(args, info, old), _derive_foreverdb(args, info, old)
     log("Build %s (%s)" % (build, args.flavor))
     tables = freeze_tables(args.bundle, build, args.cache_dir, args.replay, info["tables"])
-    doc = derive_doc(tables, args.flavor, build, args.date, args.hearthstones, args.ignore, fdb)
+    doc = derive_doc(tables, args.flavor, build, args.date, args.hearthstones, args.ignore, fdb, args.buffs)
     write_json(args.bundle / "candidates.json", doc)
     write_repo_text(args.bundle / "SOURCES.md",
                     sources_md(args.flavor, build, args.date, args.replay, fdb, args.foreverdb_script))
@@ -958,7 +1237,8 @@ def cmd_report(args) -> int:
 
 def cmd_apply(args) -> int:
     doc = load_doc(args.bundle)
-    changes = apply_doc(doc, load_rulings(_rulings_for(args, doc["client"])), args.hearthstones, args.ignore)
+    changes = apply_doc(doc, load_rulings(_rulings_for(args, doc["client"])), args.hearthstones, args.ignore,
+                        args.buffs)
     for line in changes:
         log("  " + line)
     log("%d change(s)" % len(changes))
@@ -972,6 +1252,7 @@ def parse_args(argv):
                         help="the rulings file (default: tools/seeds/<flavor>_rulings.json)")
     parser.add_argument("--hearthstones", type=Path, default=HEARTH_FILE)
     parser.add_argument("--ignore", type=Path, default=IGNORE_FILE)
+    parser.add_argument("--buffs", type=Path, default=BUFF_FILE)
     parser.add_argument("--cache-dir", type=Path, default=CACHE_DIR)
     sub = parser.add_subparsers(dest="command", required=True)
     status = sub.add_parser("status", help="is there a live build (or ForeverDB tag) newer than the newest bundle?")

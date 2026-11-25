@@ -1,4 +1,280 @@
 {
+  "buffs:1216566": {
+    "reason": "catalog: zone: Silithus; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 79); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1229741": {
+    "reason": "camp: the issue's WoW Forever anchor (Camp Chair and Sharpening Wheel); its client aura is a dummy (4) and the server applies the benefit",
+    "ruling": "accept"
+  },
+  "buffs:1304452": {
+    "reason": "catalog: world: Onyxia's or Nefarian's head; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 99, 124, 135, 290); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304594": {
+    "reason": "catalog: world: Rend's head, Orgrimmar; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 34, 65, 85, 342); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304678": {
+    "reason": "catalog: world: the head turn-in, Stormwind; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 34, 65, 85, 342); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304690": {
+    "reason": "catalog: world: a Songflower, Felwood; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 29, 290); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304751": {
+    "reason": "catalog: zone: the Dire Maul tribute; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 290); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304753": {
+    "reason": "catalog: zone: the Dire Maul tribute; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 137); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304759": {
+    "reason": "catalog: zone: the Dire Maul tribute; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 99, 124, 135); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304767": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 22); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304769": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 79); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304771": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 101); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304772": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304775": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304778": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304780": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:1304782": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:15366": {
+    "reason": "catalog: world: a Songflower, Felwood; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:16609": {
+    "reason": "catalog: world: Rend's head, Orgrimmar; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:22817": {
+    "reason": "catalog: zone: the Dire Maul tribute; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:22818": {
+    "reason": "catalog: zone: the Dire Maul tribute; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:22820": {
+    "reason": "catalog: zone: the Dire Maul tribute; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:22888": {
+    "reason": "catalog: world: Onyxia's or Nefarian's head; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:23735": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23736": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23737": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23738": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23766": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23767": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 101); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23768": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 79); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:23769": {
+    "reason": "catalog: faire: Sayge, Darkmoon Faire; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 22); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:24425": {
+    "reason": "catalog: world: Hakkar's heart, Yojamba Isle; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 31, 137); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:26462": {
+    "reason": "catalog: event: a festival fortune; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 80); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:26522": {
+    "reason": "catalog: event: Lunar Festival; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 34); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:29235": {
+    "reason": "catalog: event: Midsummer Fire Festival; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 29); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:29338": {
+    "reason": "catalog: event: Midsummer Fire Festival; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 52, 57); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:29534": {
+    "reason": "catalog: zone: Silithus; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 79); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:29846": {
+    "reason": "catalog: event: Midsummer Fire Festival; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 52, 57); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:353694": {
+    "reason": "needs owner review: a dummy aura only, a later id whose source the data does not show",
+    "ruling": "reject"
+  },
+  "buffs:355363": {
+    "reason": "catalog: world: Onyxia's or Nefarian's head; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 52, 57, 99, 124); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:355365": {
+    "reason": "catalog: world: Hakkar's heart, Yojamba Isle; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 31, 137); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:355366": {
+    "reason": "catalog: world: Rend's head, Orgrimmar; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 34, 85, 319); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:430352": {
+    "reason": "catalog: world: the Ashenvale battle (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 79, 118); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:430947": {
+    "reason": "catalog: world: Blackfathom Deeps (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 31, 52, 55, 99, 124); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:431111": {
+    "reason": "catalog: world: Blackfathom Deeps (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 31, 52, 55, 99, 124); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:438536": {
+    "reason": "catalog: world: the Sunken Temple (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 57, 135, 140, 319); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:438537": {
+    "reason": "catalog: world: the Sunken Temple (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 57, 135, 140, 319); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:446695": {
+    "reason": "catalog: world: the Sunken Temple (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 137, 290); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:446698": {
+    "reason": "catalog: world: the Sunken Temple (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 137, 290); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:452454": {
+    "reason": "needs owner review: a stat aura (auras 42) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:452456": {
+    "reason": "needs owner review: a stat aura (auras 31) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:452460": {
+    "reason": "needs owner review: a stat aura (auras 42) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:452464": {
+    "reason": "needs owner review: a stat aura (auras 51) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:460939": {
+    "reason": "catalog: world: the head turn-in, Stormwind; the client DB2 carries a dummy aura (4) where the server applies the stats, as for the 1.x world buffs; kept, since the server may send this id (BuffSeeds.lua header)",
+    "ruling": "accept"
+  },
+  "buffs:460940": {
+    "reason": "catalog: world: the head turn-in, Stormwind; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 34, 85, 319); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:467410": {
+    "reason": "needs owner review: a stat aura (auras 13) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:467411": {
+    "reason": "needs owner review: a stat aura (auras 13) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:467412": {
+    "reason": "needs owner review: a stat aura (auras 13) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:467413": {
+    "reason": "needs owner review: a stat aura (auras 13) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:467414": {
+    "reason": "needs owner review: a stat aura (auras 13) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:469208": {
+    "reason": "needs owner review: a stat aura (auras 52, 57) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:469209": {
+    "reason": "needs owner review: a stat aura (auras 13) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:469210": {
+    "reason": "needs owner review: a stat aura (auras 135) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:473399": {
+    "reason": "catalog: world: a Songflower (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 29, 52, 57); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:473403": {
+    "reason": "needs owner review: a stat aura (auras 57, 99, 124, 137) named like a world buff, but the data does not show its source",
+    "ruling": "reject"
+  },
+  "buffs:473441": {
+    "reason": "catalog: world: a Warchief's Blessing twin (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 34, 85, 319); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:473450": {
+    "reason": "catalog: faire: Darkmoon Faire (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 79); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:473476": {
+    "reason": "catalog: world: Zandalar (Season of Discovery); an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 31, 137); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
+  "buffs:8733": {
+    "reason": "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps; an aura that changes the player's stats, damage or healing, from outside the player's kit (auras 13, 29); obtainability on today's realm is not in the DB2; an id that never shows up costs nothing",
+    "ruling": "accept"
+  },
   "dummies:10156": {
     "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
     "ruling": "reject"
@@ -335,8 +611,136 @@
     "reason": "EMPTY BY DECISION (defaults/Dummies.lua header): a Forever dummy row comes only from an in-game measurement, never from a database; ForeverDB evidence is information only",
     "ruling": "reject"
   },
+  "food:5": {
+    "reason": "the food rule: 176 of the 198 Consumable items that use Food/Drink/Refreshment/Food & Drink",
+    "ruling": "accept"
+  },
   "shipped:renamed:ignore:6603": {
     "reason": "the same spell under the client's own name: WoW Forever 1.60.1.71091 names 6603 Attack, Retail names it Auto Attack; the auto-attack swing id is what the lane ignores, so the row stays and the header comment notes the Forever name (comment only)",
     "ruling": "keep"
+  },
+  "shipped:unfit:food:0": {
+    "reason": "the placeholder 0 the first run started from; the food rule derives the subclass it is replaced by",
+    "ruling": "remove"
+  },
+  "wellfed:1225778": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1225779": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1225780": {
+    "reason": "a buff food's aura (Well Fed, auras 13, 29, 135): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1225782": {
+    "reason": "a buff food's aura (Well Fed, auras 13, 29, 99, 135): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1248406": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1248420": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1248421": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1248422": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1248688": {
+    "reason": "a buff food's aura (Well Fed, auras 4, 129): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249519": {
+    "reason": "a buff food's aura (Well Fed, auras 99, 124): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249520": {
+    "reason": "a buff food's aura (Well Fed, auras 13): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249521": {
+    "reason": "a buff food's aura (Well Fed, auras 30): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249523": {
+    "reason": "a buff food's aura (Well Fed, auras 290): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249907": {
+    "reason": "a buff food's aura (Well Fed, auras 30): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249926": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1249927": {
+    "reason": "a buff food's aura (Well Fed, auras 135): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1283082": {
+    "reason": "a buff food's aura (Well Fed, auras 4): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1294007": {
+    "reason": "a buff food's aura (Well Fed, auras 4, 129): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1302064": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:1319310": {
+    "reason": "a buff food's aura (Well Fed, auras 465): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:19705": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:19706": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:19708": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:19709": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:19710": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:19711": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:24799": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:24870": {
+    "reason": "a buff food's aura (Well Fed, auras 29): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:25694": {
+    "reason": "a buff food's aura (Well Fed, auras 24): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
+  },
+  "wellfed:25941": {
+    "reason": "a buff food's aura (Well Fed, auras 24): food counts through it, never through its Eat aura (#13)",
+    "ruling": "accept"
   }
 }

@@ -111,6 +111,9 @@ defaults\Dummies.lua
 # Every hearthstone variant (Race mode). LOAD-BEARING: publishes NS.HEARTHSTONE_SPELLS, which
 # modules\LateIgnore.lua reads at FILE SCOPE.
 defaults\Hearthstones.lua
+# The Used column's buff seeds, Well Fed auras and Food & Drink subclass, per client (#13). LOAD-BEARING:
+# reads NS.Compat at FILE SCOPE and publishes NS.BUFF_SEEDS; nothing reads it at FILE SCOPE.
+defaults\BuffSeeds.lua
 
 # Modules -- conventional order: each reaches the others at CALL time, except as noted.
 # The lanes' cast capture. LOAD-BEARING: captures NS.Secrets and NS.Perf and registers its bus

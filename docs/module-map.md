@@ -61,6 +61,7 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `defaults/Profile.lua` | The AceDB defaults tree, the only place a default is written |
 | `defaults/Dummies.lua` | The measured training dummies' seed, per client, with each dummy's category |
 | `defaults/Hearthstones.lua` | Every hearthstone variant's spell ID, which the late-cast ignore list's 8690 stands for |
+| `defaults/BuffSeeds.lua` | The buffs the Used column lists, the Well Fed auras and the Food & Drink subclass, per client, derived by `tools/seeds/seeds.py` |
 | `modules/LaneCasts.lua` | The lanes' cast capture: one `LANE_PUSH` per shown cast, dedupe and interrupt marks |
 | `modules/LaneLayout.lua` | The lanes' layout math, pure |
 | `modules/LaneRender.lua` | Each lane's frame, ticks, label and pooled icons, and its `OnUpdate` while icons show |

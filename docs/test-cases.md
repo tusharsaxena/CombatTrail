@@ -732,6 +732,14 @@ Total.
 - late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
 - late ignore: Label names a spell, the hearthstones' entry and an unknown one
 
+### test_buff_seeds.lua (5)
+
+- buff seeds: the kit profile's client list is picked once
+- buff seeds: WoW Forever lists Camp Benefits and Might of Stormwind, Retail neither
+- buff seeds: Retail lists its own world buffs
+- buff seeds: each client's Well Fed list holds 19705, and Food & Drink is subclass 5
+- buff seeds: BuffSeedSet returns a fresh set each call, and no id twice in a list
+
 ### test_race.lua (60)
 
 - race: the states, the lengths and the timings are the plan's
@@ -1953,6 +1961,7 @@ Total.
 | test_race_record.lua | 16 |
 | test_race_scoring.lua | 20 |
 | test_late_ignore.lua | 12 |
+| test_buff_seeds.lua | 5 |
 | test_race.lua | 60 |
 | test_race_resume.lua | 26 |
 | test_race_settings.lua | 25 |
@@ -2012,4 +2021,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1650** |
+| **Total** | **1655** |

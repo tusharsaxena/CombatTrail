@@ -1,9 +1,6094 @@
 {
  "build": "12.1.5.70961",
- "candidates": [],
+ "candidates": [
+  {
+   "id": 8733,
+   "key": "buffs:8733",
+   "list": "buffs",
+   "name": "Blessing of Blackfathom",
+   "notes": [
+    "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+    "auras 79, 80"
+   ]
+  },
+  {
+   "id": 15366,
+   "key": "buffs:15366",
+   "list": "buffs",
+   "name": "Songflower Serenade",
+   "notes": [
+    "catalog: world: a Songflower, Felwood",
+    "auras 80, 405"
+   ]
+  },
+  {
+   "id": 16609,
+   "key": "buffs:16609",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 110, 133, 405"
+   ]
+  },
+  {
+   "id": 22817,
+   "key": "buffs:22817",
+   "list": "buffs",
+   "name": "Fengus' Ferocity",
+   "notes": [
+    "catalog: zone: the Dire Maul tribute",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 22818,
+   "key": "buffs:22818",
+   "list": "buffs",
+   "name": "Mol'dar's Moxie",
+   "notes": [
+    "catalog: zone: the Dire Maul tribute",
+    "auras 137"
+   ]
+  },
+  {
+   "id": 22820,
+   "key": "buffs:22820",
+   "list": "buffs",
+   "name": "Slip'kik's Savvy",
+   "notes": [
+    "catalog: zone: the Dire Maul tribute",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 22888,
+   "key": "buffs:22888",
+   "list": "buffs",
+   "name": "Rallying Cry of the Dragonslayer",
+   "notes": [
+    "catalog: world: Onyxia's or Nefarian's head",
+    "auras 52, 80"
+   ]
+  },
+  {
+   "id": 23735,
+   "key": "buffs:23735",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Strength",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 23736,
+   "key": "buffs:23736",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Agility",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 23737,
+   "key": "buffs:23737",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Stamina",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 23738,
+   "key": "buffs:23738",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Versatility",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 471"
+   ]
+  },
+  {
+   "id": 23766,
+   "key": "buffs:23766",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Intelligence",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 23767,
+   "key": "buffs:23767",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Armor",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 101"
+   ]
+  },
+  {
+   "id": 23768,
+   "key": "buffs:23768",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Damage",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 23769,
+   "key": "buffs:23769",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune of Resistance",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 87"
+   ]
+  },
+  {
+   "id": 24425,
+   "key": "buffs:24425",
+   "list": "buffs",
+   "name": "Spirit of Zandalar",
+   "notes": [
+    "catalog: world: Hakkar's heart, Yojamba Isle",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 26462,
+   "key": "buffs:26462",
+   "list": "buffs",
+   "name": "Festival Fortune!",
+   "notes": [
+    "catalog: event: a festival fortune",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 29235,
+   "key": "buffs:29235",
+   "list": "buffs",
+   "name": "Fire Festival Fortitude",
+   "notes": [
+    "catalog: event: Midsummer Fire Festival",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 29338,
+   "key": "buffs:29338",
+   "list": "buffs",
+   "name": "Fire Festival Fury",
+   "notes": [
+    "catalog: event: Midsummer Fire Festival",
+    "auras 52, 57"
+   ]
+  },
+  {
+   "id": 29534,
+   "key": "buffs:29534",
+   "list": "buffs",
+   "name": "Traces of Silithyst",
+   "notes": [
+    "catalog: zone: Silithus",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 29846,
+   "key": "buffs:29846",
+   "list": "buffs",
+   "name": "Fire Festival Fury",
+   "notes": [
+    "catalog: event: Midsummer Fire Festival",
+    "auras 52, 57"
+   ]
+  },
+  {
+   "id": 46352,
+   "key": "buffs:46352",
+   "list": "buffs",
+   "name": "Fire Festival Fury",
+   "notes": [
+    "catalog: event: Midsummer Fire Festival",
+    "auras 52, 57, 284"
+   ]
+  },
+  {
+   "id": 46668,
+   "key": "buffs:46668",
+   "list": "buffs",
+   "name": "WHEE!",
+   "notes": [
+    "catalog: faire: the Darkmoon carousel",
+    "auras 156, 190, 200, 291"
+   ]
+  },
+  {
+   "id": 59641,
+   "key": "buffs:59641",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 20, 79, 133"
+   ]
+  },
+  {
+   "id": 61212,
+   "key": "buffs:61212",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 20, 79, 133"
+   ]
+  },
+  {
+   "id": 64670,
+   "key": "buffs:64670",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 20, 79, 133"
+   ]
+  },
+  {
+   "id": 101115,
+   "key": "buffs:101115",
+   "list": "buffs",
+   "name": "Fire Festival Fury",
+   "notes": [
+    "catalog: event: Midsummer Fire Festival",
+    "auras 15, 42"
+   ]
+  },
+  {
+   "id": 153272,
+   "key": "buffs:153272",
+   "list": "buffs",
+   "name": "Blessing of Blackfathom",
+   "notes": [
+    "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 220351,
+   "key": "buffs:220351",
+   "list": "buffs",
+   "name": "Songflower Serenade",
+   "notes": [
+    "catalog: world: a Songflower, Felwood",
+    "auras 137"
+   ]
+  },
+  {
+   "id": 290058,
+   "key": "buffs:290058",
+   "list": "buffs",
+   "name": "WHEE!",
+   "notes": [
+    "catalog: faire: the Darkmoon carousel",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 405815,
+   "key": "buffs:405815",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 423942,
+   "key": "buffs:423942",
+   "list": "buffs",
+   "name": "WHEE!",
+   "notes": [
+    "catalog: faire: the Darkmoon carousel",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 1225929,
+   "key": "buffs:1225929",
+   "list": "buffs",
+   "name": "Lunar Fortune",
+   "notes": [
+    "catalog: event: Lunar Festival",
+    "auras 133"
+   ]
+  },
+  {
+   "id": 19705,
+   "key": "wellfed:19705",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 19706,
+   "key": "wellfed:19706",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 19708,
+   "key": "wellfed:19708",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 19709,
+   "key": "wellfed:19709",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 19710,
+   "key": "wellfed:19710",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 19711,
+   "key": "wellfed:19711",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 24799,
+   "key": "wellfed:24799",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 24870,
+   "key": "wellfed:24870",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 25694,
+   "key": "wellfed:25694",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 85"
+   ]
+  },
+  {
+   "id": 25941,
+   "key": "wellfed:25941",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 85"
+   ]
+  },
+  {
+   "id": 33254,
+   "key": "wellfed:33254",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 33256,
+   "key": "wellfed:33256",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 33257,
+   "key": "wellfed:33257",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 33259,
+   "key": "wellfed:33259",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 99, 124, 189"
+   ]
+  },
+  {
+   "id": 33261,
+   "key": "wellfed:33261",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 33263,
+   "key": "wellfed:33263",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 135, 189"
+   ]
+  },
+  {
+   "id": 33265,
+   "key": "wellfed:33265",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 85"
+   ]
+  },
+  {
+   "id": 33268,
+   "key": "wellfed:33268",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 135, 189"
+   ]
+  },
+  {
+   "id": 35272,
+   "key": "wellfed:35272",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 42293,
+   "key": "wellfed:42293",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 43764,
+   "key": "wellfed:43764",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 45245,
+   "key": "wellfed:45245",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 45619,
+   "key": "wellfed:45619",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 22"
+   ]
+  },
+  {
+   "id": 46682,
+   "key": "wellfed:46682",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 99"
+   ]
+  },
+  {
+   "id": 46687,
+   "key": "wellfed:46687",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 46899,
+   "key": "wellfed:46899",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 99, 124"
+   ]
+  },
+  {
+   "id": 53284,
+   "key": "wellfed:53284",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57079,
+   "key": "wellfed:57079",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 99, 124"
+   ]
+  },
+  {
+   "id": 57097,
+   "key": "wellfed:57097",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 135"
+   ]
+  },
+  {
+   "id": 57100,
+   "key": "wellfed:57100",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57102,
+   "key": "wellfed:57102",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57107,
+   "key": "wellfed:57107",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57111,
+   "key": "wellfed:57111",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 99, 124"
+   ]
+  },
+  {
+   "id": 57139,
+   "key": "wellfed:57139",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 135"
+   ]
+  },
+  {
+   "id": 57286,
+   "key": "wellfed:57286",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57288,
+   "key": "wellfed:57288",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57291,
+   "key": "wellfed:57291",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57294,
+   "key": "wellfed:57294",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 99, 124, 135"
+   ]
+  },
+  {
+   "id": 57325,
+   "key": "wellfed:57325",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 99, 124"
+   ]
+  },
+  {
+   "id": 57327,
+   "key": "wellfed:57327",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 135"
+   ]
+  },
+  {
+   "id": 57329,
+   "key": "wellfed:57329",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57332,
+   "key": "wellfed:57332",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57334,
+   "key": "wellfed:57334",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57356,
+   "key": "wellfed:57356",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57358,
+   "key": "wellfed:57358",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57360,
+   "key": "wellfed:57360",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57363,
+   "key": "wellfed:57363",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 44"
+   ]
+  },
+  {
+   "id": 57365,
+   "key": "wellfed:57365",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 57367,
+   "key": "wellfed:57367",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 57371,
+   "key": "wellfed:57371",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 57373,
+   "key": "wellfed:57373",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 44"
+   ]
+  },
+  {
+   "id": 57399,
+   "key": "wellfed:57399",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 99, 124, 135"
+   ]
+  },
+  {
+   "id": 58468,
+   "key": "wellfed:58468",
+   "list": "wellfed",
+   "name": "Hugely Well Fed",
+   "notes": [
+    "name: Hugely Well Fed",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 58479,
+   "key": "wellfed:58479",
+   "list": "wellfed",
+   "name": "Nearly Well Fed",
+   "notes": [
+    "name: Nearly Well Fed",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 59230,
+   "key": "wellfed:59230",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 62349,
+   "key": "wellfed:62349",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 64057,
+   "key": "wellfed:64057",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 99, 124"
+   ]
+  },
+  {
+   "id": 65247,
+   "key": "wellfed:65247",
+   "list": "wellfed",
+   "name": "Really Well Fed",
+   "notes": [
+    "name: Really Well Fed",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 65410,
+   "key": "wellfed:65410",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 65412,
+   "key": "wellfed:65412",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 135"
+   ]
+  },
+  {
+   "id": 65414,
+   "key": "wellfed:65414",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 99, 124"
+   ]
+  },
+  {
+   "id": 65415,
+   "key": "wellfed:65415",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 65416,
+   "key": "wellfed:65416",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 66623,
+   "key": "wellfed:66623",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 13, 29, 99, 124, 135"
+   ]
+  },
+  {
+   "id": 87545,
+   "key": "wellfed:87545",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87546,
+   "key": "wellfed:87546",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87547,
+   "key": "wellfed:87547",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87548,
+   "key": "wellfed:87548",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87549,
+   "key": "wellfed:87549",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87550,
+   "key": "wellfed:87550",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87551,
+   "key": "wellfed:87551",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87552,
+   "key": "wellfed:87552",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87554,
+   "key": "wellfed:87554",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87555,
+   "key": "wellfed:87555",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87556,
+   "key": "wellfed:87556",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87557,
+   "key": "wellfed:87557",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87558,
+   "key": "wellfed:87558",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87559,
+   "key": "wellfed:87559",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87560,
+   "key": "wellfed:87560",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87561,
+   "key": "wellfed:87561",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87562,
+   "key": "wellfed:87562",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87563,
+   "key": "wellfed:87563",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87564,
+   "key": "wellfed:87564",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87565,
+   "key": "wellfed:87565",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87634,
+   "key": "wellfed:87634",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87635,
+   "key": "wellfed:87635",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 87697,
+   "key": "wellfed:87697",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 87699,
+   "key": "wellfed:87699",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 99305,
+   "key": "wellfed:99305",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 99478,
+   "key": "wellfed:99478",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 100368,
+   "key": "wellfed:100368",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 100373,
+   "key": "wellfed:100373",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 100375,
+   "key": "wellfed:100375",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 189"
+   ]
+  },
+  {
+   "id": 100377,
+   "key": "wellfed:100377",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104264,
+   "key": "wellfed:104264",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104267,
+   "key": "wellfed:104267",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104271,
+   "key": "wellfed:104271",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104272,
+   "key": "wellfed:104272",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104273,
+   "key": "wellfed:104273",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104274,
+   "key": "wellfed:104274",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104275,
+   "key": "wellfed:104275",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104276,
+   "key": "wellfed:104276",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104277,
+   "key": "wellfed:104277",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104278,
+   "key": "wellfed:104278",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 104279,
+   "key": "wellfed:104279",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 104280,
+   "key": "wellfed:104280",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 104281,
+   "key": "wellfed:104281",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104282,
+   "key": "wellfed:104282",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 104283,
+   "key": "wellfed:104283",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 105226,
+   "key": "wellfed:105226",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 108028,
+   "key": "wellfed:108028",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 108031,
+   "key": "wellfed:108031",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 108032,
+   "key": "wellfed:108032",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 110645,
+   "key": "wellfed:110645",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 114733,
+   "key": "wellfed:114733",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 124151,
+   "key": "wellfed:124151",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124210,
+   "key": "wellfed:124210",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124211,
+   "key": "wellfed:124211",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124212,
+   "key": "wellfed:124212",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124213,
+   "key": "wellfed:124213",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124214,
+   "key": "wellfed:124214",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124215,
+   "key": "wellfed:124215",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124216,
+   "key": "wellfed:124216",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124217,
+   "key": "wellfed:124217",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124218,
+   "key": "wellfed:124218",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124219,
+   "key": "wellfed:124219",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124220,
+   "key": "wellfed:124220",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 124221,
+   "key": "wellfed:124221",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125070,
+   "key": "wellfed:125070",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125071,
+   "key": "wellfed:125071",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125102,
+   "key": "wellfed:125102",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125104,
+   "key": "wellfed:125104",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125106,
+   "key": "wellfed:125106",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125108,
+   "key": "wellfed:125108",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125113,
+   "key": "wellfed:125113",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 125115,
+   "key": "wellfed:125115",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 130342,
+   "key": "wellfed:130342",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130343,
+   "key": "wellfed:130343",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130344,
+   "key": "wellfed:130344",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130345,
+   "key": "wellfed:130345",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130346,
+   "key": "wellfed:130346",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130347,
+   "key": "wellfed:130347",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130348,
+   "key": "wellfed:130348",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130350,
+   "key": "wellfed:130350",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130351,
+   "key": "wellfed:130351",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130352,
+   "key": "wellfed:130352",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130353,
+   "key": "wellfed:130353",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130354,
+   "key": "wellfed:130354",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130355,
+   "key": "wellfed:130355",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 130356,
+   "key": "wellfed:130356",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 131828,
+   "key": "wellfed:131828",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 133428,
+   "key": "wellfed:133428",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 133593,
+   "key": "wellfed:133593",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 133594,
+   "key": "wellfed:133594",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 133595,
+   "key": "wellfed:133595",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 133596,
+   "key": "wellfed:133596",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 134219,
+   "key": "wellfed:134219",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 134506,
+   "key": "wellfed:134506",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 134712,
+   "key": "wellfed:134712",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 134887,
+   "key": "wellfed:134887",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 135076,
+   "key": "wellfed:135076",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 135440,
+   "key": "wellfed:135440",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 140410,
+   "key": "wellfed:140410",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 61, 79, 147"
+   ]
+  },
+  {
+   "id": 145304,
+   "key": "wellfed:145304",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 146804,
+   "key": "wellfed:146804",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 146805,
+   "key": "wellfed:146805",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29, 284"
+   ]
+  },
+  {
+   "id": 146806,
+   "key": "wellfed:146806",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 146807,
+   "key": "wellfed:146807",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 146808,
+   "key": "wellfed:146808",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 146809,
+   "key": "wellfed:146809",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 147312,
+   "key": "wellfed:147312",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 154295,
+   "key": "wellfed:154295",
+   "list": "wellfed",
+   "name": "Very Well Fed",
+   "notes": [
+    "name: Very Well Fed",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 159372,
+   "key": "wellfed:159372",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 160600,
+   "key": "wellfed:160600",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 160722,
+   "key": "wellfed:160722",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 22"
+   ]
+  },
+  {
+   "id": 160724,
+   "key": "wellfed:160724",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160726,
+   "key": "wellfed:160726",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160778,
+   "key": "wellfed:160778",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160793,
+   "key": "wellfed:160793",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160832,
+   "key": "wellfed:160832",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160839,
+   "key": "wellfed:160839",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160883,
+   "key": "wellfed:160883",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 160885,
+   "key": "wellfed:160885",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 22"
+   ]
+  },
+  {
+   "id": 160889,
+   "key": "wellfed:160889",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160893,
+   "key": "wellfed:160893",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160895,
+   "key": "wellfed:160895",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160897,
+   "key": "wellfed:160897",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160900,
+   "key": "wellfed:160900",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 160902,
+   "key": "wellfed:160902",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 165802,
+   "key": "wellfed:165802",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 168349,
+   "key": "wellfed:168349",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 168475,
+   "key": "wellfed:168475",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 174062,
+   "key": "wellfed:174062",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23, 189"
+   ]
+  },
+  {
+   "id": 174077,
+   "key": "wellfed:174077",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23, 189"
+   ]
+  },
+  {
+   "id": 174078,
+   "key": "wellfed:174078",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23, 189"
+   ]
+  },
+  {
+   "id": 174079,
+   "key": "wellfed:174079",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23, 189"
+   ]
+  },
+  {
+   "id": 174080,
+   "key": "wellfed:174080",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23, 189"
+   ]
+  },
+  {
+   "id": 175218,
+   "key": "wellfed:175218",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 175219,
+   "key": "wellfed:175219",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 175220,
+   "key": "wellfed:175220",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 175222,
+   "key": "wellfed:175222",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 175223,
+   "key": "wellfed:175223",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 175784,
+   "key": "wellfed:175784",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 175785,
+   "key": "wellfed:175785",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 175797,
+   "key": "wellfed:175797",
+   "list": "wellfed",
+   "name": "Super Well Fed",
+   "notes": [
+    "name: Super Well Fed",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 177931,
+   "key": "wellfed:177931",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 180745,
+   "key": "wellfed:180745",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 180746,
+   "key": "wellfed:180746",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 180747,
+   "key": "wellfed:180747",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 180748,
+   "key": "wellfed:180748",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 180749,
+   "key": "wellfed:180749",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 180750,
+   "key": "wellfed:180750",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 185736,
+   "key": "wellfed:185736",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 185786,
+   "key": "wellfed:185786",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 471"
+   ]
+  },
+  {
+   "id": 188534,
+   "key": "wellfed:188534",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 192004,
+   "key": "wellfed:192004",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201223,
+   "key": "wellfed:201223",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 201330,
+   "key": "wellfed:201330",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 201332,
+   "key": "wellfed:201332",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 201334,
+   "key": "wellfed:201334",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 201336,
+   "key": "wellfed:201336",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 201350,
+   "key": "wellfed:201350",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 201634,
+   "key": "wellfed:201634",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201635,
+   "key": "wellfed:201635",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201636,
+   "key": "wellfed:201636",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201637,
+   "key": "wellfed:201637",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201638,
+   "key": "wellfed:201638",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201639,
+   "key": "wellfed:201639",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201640,
+   "key": "wellfed:201640",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201641,
+   "key": "wellfed:201641",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 201679,
+   "key": "wellfed:201679",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 201695,
+   "key": "wellfed:201695",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 8"
+   ]
+  },
+  {
+   "id": 207076,
+   "key": "wellfed:207076",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 215607,
+   "key": "wellfed:215607",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 405"
+   ]
+  },
+  {
+   "id": 216343,
+   "key": "wellfed:216343",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 137"
+   ]
+  },
+  {
+   "id": 216353,
+   "key": "wellfed:216353",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 216828,
+   "key": "wellfed:216828",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 225597,
+   "key": "wellfed:225597",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225598,
+   "key": "wellfed:225598",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225599,
+   "key": "wellfed:225599",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225600,
+   "key": "wellfed:225600",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225601,
+   "key": "wellfed:225601",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 225602,
+   "key": "wellfed:225602",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225603,
+   "key": "wellfed:225603",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225604,
+   "key": "wellfed:225604",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225605,
+   "key": "wellfed:225605",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 225606,
+   "key": "wellfed:225606",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 226805,
+   "key": "wellfed:226805",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 226807,
+   "key": "wellfed:226807",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 230061,
+   "key": "wellfed:230061",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 251234,
+   "key": "wellfed:251234",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 89, 191, 406"
+   ]
+  },
+  {
+   "id": 251247,
+   "key": "wellfed:251247",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 251248,
+   "key": "wellfed:251248",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 58, 82, 226"
+   ]
+  },
+  {
+   "id": 257408,
+   "key": "wellfed:257408",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257410,
+   "key": "wellfed:257410",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257413,
+   "key": "wellfed:257413",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257415,
+   "key": "wellfed:257415",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257418,
+   "key": "wellfed:257418",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257420,
+   "key": "wellfed:257420",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257422,
+   "key": "wellfed:257422",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 257424,
+   "key": "wellfed:257424",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 259448,
+   "key": "wellfed:259448",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259449,
+   "key": "wellfed:259449",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259452,
+   "key": "wellfed:259452",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259453,
+   "key": "wellfed:259453",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259454,
+   "key": "wellfed:259454",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259455,
+   "key": "wellfed:259455",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259456,
+   "key": "wellfed:259456",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 259457,
+   "key": "wellfed:259457",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 262571,
+   "key": "wellfed:262571",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 267948,
+   "key": "wellfed:267948",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 267949,
+   "key": "wellfed:267949",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 267950,
+   "key": "wellfed:267950",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 267951,
+   "key": "wellfed:267951",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 272817,
+   "key": "wellfed:272817",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 285719,
+   "key": "wellfed:285719",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 285720,
+   "key": "wellfed:285720",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 285721,
+   "key": "wellfed:285721",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 286171,
+   "key": "wellfed:286171",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 288074,
+   "key": "wellfed:288074",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 288075,
+   "key": "wellfed:288075",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 290467,
+   "key": "wellfed:290467",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 290468,
+   "key": "wellfed:290468",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 290469,
+   "key": "wellfed:290469",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 290726,
+   "key": "wellfed:290726",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 61, 79, 133"
+   ]
+  },
+  {
+   "id": 292884,
+   "key": "wellfed:292884",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 293778,
+   "key": "wellfed:293778",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 294238,
+   "key": "wellfed:294238",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 61, 79, 133"
+   ]
+  },
+  {
+   "id": 294365,
+   "key": "wellfed:294365",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 294439,
+   "key": "wellfed:294439",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 294472,
+   "key": "wellfed:294472",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 294473,
+   "key": "wellfed:294473",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 296178,
+   "key": "wellfed:296178",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 61, 79, 133"
+   ]
+  },
+  {
+   "id": 296455,
+   "key": "wellfed:296455",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 297034,
+   "key": "wellfed:297034",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 297035,
+   "key": "wellfed:297035",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 297037,
+   "key": "wellfed:297037",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 297039,
+   "key": "wellfed:297039",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 297040,
+   "key": "wellfed:297040",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 297116,
+   "key": "wellfed:297116",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 297117,
+   "key": "wellfed:297117",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 297118,
+   "key": "wellfed:297118",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 297119,
+   "key": "wellfed:297119",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 308430,
+   "key": "wellfed:308430",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308434,
+   "key": "wellfed:308434",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308474,
+   "key": "wellfed:308474",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308488,
+   "key": "wellfed:308488",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308504,
+   "key": "wellfed:308504",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308506,
+   "key": "wellfed:308506",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308509,
+   "key": "wellfed:308509",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308514,
+   "key": "wellfed:308514",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 308520,
+   "key": "wellfed:308520",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 308525,
+   "key": "wellfed:308525",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 308629,
+   "key": "wellfed:308629",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 308637,
+   "key": "wellfed:308637",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 316243,
+   "key": "wellfed:316243",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 16, 56"
+   ]
+  },
+  {
+   "id": 316863,
+   "key": "wellfed:316863",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 316870,
+   "key": "wellfed:316870",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 316871,
+   "key": "wellfed:316871",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 319386,
+   "key": "wellfed:319386",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 56, 336"
+   ]
+  },
+  {
+   "id": 320779,
+   "key": "wellfed:320779",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 16, 56"
+   ]
+  },
+  {
+   "id": 321689,
+   "key": "wellfed:321689",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 327701,
+   "key": "wellfed:327701",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327702,
+   "key": "wellfed:327702",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327704,
+   "key": "wellfed:327704",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327705,
+   "key": "wellfed:327705",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327706,
+   "key": "wellfed:327706",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327707,
+   "key": "wellfed:327707",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327708,
+   "key": "wellfed:327708",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327709,
+   "key": "wellfed:327709",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 327714,
+   "key": "wellfed:327714",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 327715,
+   "key": "wellfed:327715",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 327851,
+   "key": "wellfed:327851",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 8"
+   ]
+  },
+  {
+   "id": 327860,
+   "key": "wellfed:327860",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 327877,
+   "key": "wellfed:327877",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 332915,
+   "key": "wellfed:332915",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 340111,
+   "key": "wellfed:340111",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 341449,
+   "key": "wellfed:341449",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 347173,
+   "key": "wellfed:347173",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 347520,
+   "key": "wellfed:347520",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382145,
+   "key": "wellfed:382145",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382146,
+   "key": "wellfed:382146",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382149,
+   "key": "wellfed:382149",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382150,
+   "key": "wellfed:382150",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382152,
+   "key": "wellfed:382152",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382153,
+   "key": "wellfed:382153",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382154,
+   "key": "wellfed:382154",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382155,
+   "key": "wellfed:382155",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382156,
+   "key": "wellfed:382156",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382157,
+   "key": "wellfed:382157",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 382230,
+   "key": "wellfed:382230",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382231,
+   "key": "wellfed:382231",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382232,
+   "key": "wellfed:382232",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382234,
+   "key": "wellfed:382234",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382235,
+   "key": "wellfed:382235",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382236,
+   "key": "wellfed:382236",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382246,
+   "key": "wellfed:382246",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 382247,
+   "key": "wellfed:382247",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 383212,
+   "key": "wellfed:383212",
+   "list": "wellfed",
+   "name": "Regrettably Well Fed",
+   "notes": [
+    "name: Regrettably Well Fed",
+    "auras 58, 82, 226"
+   ]
+  },
+  {
+   "id": 386723,
+   "key": "wellfed:386723",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 171"
+   ]
+  },
+  {
+   "id": 393372,
+   "key": "wellfed:393372",
+   "list": "wellfed",
+   "name": "Nutritiously Well Fed",
+   "notes": [
+    "name: Nutritiously Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 396092,
+   "key": "wellfed:396092",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 398458,
+   "key": "wellfed:398458",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 61, 189"
+   ]
+  },
+  {
+   "id": 406941,
+   "key": "wellfed:406941",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 417336,
+   "key": "wellfed:417336",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 439608,
+   "key": "wellfed:439608",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 442522,
+   "key": "wellfed:442522",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 137"
+   ]
+  },
+  {
+   "id": 451916,
+   "key": "wellfed:451916",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 451917,
+   "key": "wellfed:451917",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 451918,
+   "key": "wellfed:451918",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 451920,
+   "key": "wellfed:451920",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 451921,
+   "key": "wellfed:451921",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 454137,
+   "key": "wellfed:454137",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 454177,
+   "key": "wellfed:454177",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 454178,
+   "key": "wellfed:454178",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 454179,
+   "key": "wellfed:454179",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 454180,
+   "key": "wellfed:454180",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 454188,
+   "key": "wellfed:454188",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 455369,
+   "key": "wellfed:455369",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 456406,
+   "key": "wellfed:456406",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 30, 511"
+   ]
+  },
+  {
+   "id": 456410,
+   "key": "wellfed:456410",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 456961,
+   "key": "wellfed:456961",
+   "list": "wellfed",
+   "name": "Become Well Fed",
+   "notes": [
+    "name: Become Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 457049,
+   "key": "wellfed:457049",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 457284,
+   "key": "wellfed:457284",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461845,
+   "key": "wellfed:461845",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461853,
+   "key": "wellfed:461853",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461854,
+   "key": "wellfed:461854",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461855,
+   "key": "wellfed:461855",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461856,
+   "key": "wellfed:461856",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461857,
+   "key": "wellfed:461857",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461858,
+   "key": "wellfed:461858",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461859,
+   "key": "wellfed:461859",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461860,
+   "key": "wellfed:461860",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461861,
+   "key": "wellfed:461861",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461922,
+   "key": "wellfed:461922",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461924,
+   "key": "wellfed:461924",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461925,
+   "key": "wellfed:461925",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461927,
+   "key": "wellfed:461927",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461937,
+   "key": "wellfed:461937",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461938,
+   "key": "wellfed:461938",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461939,
+   "key": "wellfed:461939",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461940,
+   "key": "wellfed:461940",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461942,
+   "key": "wellfed:461942",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461943,
+   "key": "wellfed:461943",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461944,
+   "key": "wellfed:461944",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461945,
+   "key": "wellfed:461945",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461946,
+   "key": "wellfed:461946",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461947,
+   "key": "wellfed:461947",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461948,
+   "key": "wellfed:461948",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461949,
+   "key": "wellfed:461949",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461957,
+   "key": "wellfed:461957",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461958,
+   "key": "wellfed:461958",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461959,
+   "key": "wellfed:461959",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 461960,
+   "key": "wellfed:461960",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462180,
+   "key": "wellfed:462180",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462181,
+   "key": "wellfed:462181",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462182,
+   "key": "wellfed:462182",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462183,
+   "key": "wellfed:462183",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462184,
+   "key": "wellfed:462184",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462185,
+   "key": "wellfed:462185",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462186,
+   "key": "wellfed:462186",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462187,
+   "key": "wellfed:462187",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462188,
+   "key": "wellfed:462188",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462189,
+   "key": "wellfed:462189",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462190,
+   "key": "wellfed:462190",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462191,
+   "key": "wellfed:462191",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462192,
+   "key": "wellfed:462192",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462193,
+   "key": "wellfed:462193",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462194,
+   "key": "wellfed:462194",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462195,
+   "key": "wellfed:462195",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462196,
+   "key": "wellfed:462196",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462197,
+   "key": "wellfed:462197",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462198,
+   "key": "wellfed:462198",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462199,
+   "key": "wellfed:462199",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462200,
+   "key": "wellfed:462200",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462201,
+   "key": "wellfed:462201",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462202,
+   "key": "wellfed:462202",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462203,
+   "key": "wellfed:462203",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462204,
+   "key": "wellfed:462204",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462205,
+   "key": "wellfed:462205",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462206,
+   "key": "wellfed:462206",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462207,
+   "key": "wellfed:462207",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462208,
+   "key": "wellfed:462208",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462209,
+   "key": "wellfed:462209",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 462210,
+   "key": "wellfed:462210",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 465481,
+   "key": "wellfed:465481",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 61, 79"
+   ]
+  },
+  {
+   "id": 466400,
+   "key": "wellfed:466400",
+   "list": "wellfed",
+   "name": "Well Fed & Inspired",
+   "notes": [
+    "name: Well Fed & Inspired",
+    "auras 171, 405"
+   ]
+  },
+  {
+   "id": 473173,
+   "key": "wellfed:473173",
+   "list": "wellfed",
+   "name": "Greasy Well Fed",
+   "notes": [
+    "name: Greasy Well Fed",
+    "auras 4, 29, 33, 80, 189"
+   ]
+  },
+  {
+   "id": 473181,
+   "key": "wellfed:473181",
+   "list": "wellfed",
+   "name": "Greasy Well Fed",
+   "notes": [
+    "name: Greasy Well Fed",
+    "auras 4, 29, 33, 80, 189"
+   ]
+  },
+  {
+   "id": 473183,
+   "key": "wellfed:473183",
+   "list": "wellfed",
+   "name": "Greasy Well Fed",
+   "notes": [
+    "name: Greasy Well Fed",
+    "auras 4, 29, 33, 80, 189"
+   ]
+  },
+  {
+   "id": 473184,
+   "key": "wellfed:473184",
+   "list": "wellfed",
+   "name": "Greasy Well Fed",
+   "notes": [
+    "name: Greasy Well Fed",
+    "auras 4, 29, 33, 80, 189"
+   ]
+  },
+  {
+   "id": 1219179,
+   "key": "wellfed:1219179",
+   "list": "wellfed",
+   "name": "Become Well Fed",
+   "notes": [
+    "name: Become Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 1219182,
+   "key": "wellfed:1219182",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1219183,
+   "key": "wellfed:1219183",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1219184,
+   "key": "wellfed:1219184",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1219185,
+   "key": "wellfed:1219185",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232076,
+   "key": "wellfed:1232076",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232078,
+   "key": "wellfed:1232078",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232080,
+   "key": "wellfed:1232080",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232082,
+   "key": "wellfed:1232082",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232086,
+   "key": "wellfed:1232086",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232087,
+   "key": "wellfed:1232087",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232089,
+   "key": "wellfed:1232089",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232091,
+   "key": "wellfed:1232091",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232313,
+   "key": "wellfed:1232313",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232316,
+   "key": "wellfed:1232316",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232317,
+   "key": "wellfed:1232317",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232318,
+   "key": "wellfed:1232318",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232320,
+   "key": "wellfed:1232320",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232321,
+   "key": "wellfed:1232321",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232324,
+   "key": "wellfed:1232324",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232325,
+   "key": "wellfed:1232325",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232490,
+   "key": "wellfed:1232490",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232491,
+   "key": "wellfed:1232491",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232492,
+   "key": "wellfed:1232492",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232493,
+   "key": "wellfed:1232493",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232496,
+   "key": "wellfed:1232496",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232498,
+   "key": "wellfed:1232498",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232500,
+   "key": "wellfed:1232500",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232501,
+   "key": "wellfed:1232501",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232582,
+   "key": "wellfed:1232582",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232584,
+   "key": "wellfed:1232584",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1232585,
+   "key": "wellfed:1232585",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233400,
+   "key": "wellfed:1233400",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233401,
+   "key": "wellfed:1233401",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233402,
+   "key": "wellfed:1233402",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233403,
+   "key": "wellfed:1233403",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233404,
+   "key": "wellfed:1233404",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233405,
+   "key": "wellfed:1233405",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233406,
+   "key": "wellfed:1233406",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233407,
+   "key": "wellfed:1233407",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233408,
+   "key": "wellfed:1233408",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233703,
+   "key": "wellfed:1233703",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233704,
+   "key": "wellfed:1233704",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233705,
+   "key": "wellfed:1233705",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233706,
+   "key": "wellfed:1233706",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233707,
+   "key": "wellfed:1233707",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233708,
+   "key": "wellfed:1233708",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233709,
+   "key": "wellfed:1233709",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233710,
+   "key": "wellfed:1233710",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233711,
+   "key": "wellfed:1233711",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233712,
+   "key": "wellfed:1233712",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233713,
+   "key": "wellfed:1233713",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233714,
+   "key": "wellfed:1233714",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233715,
+   "key": "wellfed:1233715",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233716,
+   "key": "wellfed:1233716",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233717,
+   "key": "wellfed:1233717",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233718,
+   "key": "wellfed:1233718",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233719,
+   "key": "wellfed:1233719",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233720,
+   "key": "wellfed:1233720",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233721,
+   "key": "wellfed:1233721",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233722,
+   "key": "wellfed:1233722",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233723,
+   "key": "wellfed:1233723",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233724,
+   "key": "wellfed:1233724",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233725,
+   "key": "wellfed:1233725",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233726,
+   "key": "wellfed:1233726",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233727,
+   "key": "wellfed:1233727",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233728,
+   "key": "wellfed:1233728",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233729,
+   "key": "wellfed:1233729",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233730,
+   "key": "wellfed:1233730",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233731,
+   "key": "wellfed:1233731",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233732,
+   "key": "wellfed:1233732",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1233733,
+   "key": "wellfed:1233733",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1254815,
+   "key": "wellfed:1254815",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 1283372,
+   "key": "wellfed:1283372",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284616,
+   "key": "wellfed:1284616",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284617,
+   "key": "wellfed:1284617",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284618,
+   "key": "wellfed:1284618",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284619,
+   "key": "wellfed:1284619",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284641,
+   "key": "wellfed:1284641",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284642,
+   "key": "wellfed:1284642",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284643,
+   "key": "wellfed:1284643",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284644,
+   "key": "wellfed:1284644",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284647,
+   "key": "wellfed:1284647",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284648,
+   "key": "wellfed:1284648",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284649,
+   "key": "wellfed:1284649",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1284650,
+   "key": "wellfed:1284650",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1285644,
+   "key": "wellfed:1285644",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1294727,
+   "key": "wellfed:1294727",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305150,
+   "key": "wellfed:1305150",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305151,
+   "key": "wellfed:1305151",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305152,
+   "key": "wellfed:1305152",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305153,
+   "key": "wellfed:1305153",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305154,
+   "key": "wellfed:1305154",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305155,
+   "key": "wellfed:1305155",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305156,
+   "key": "wellfed:1305156",
+   "list": "wellfed",
+   "name": "Well Fed",
+   "notes": [
+    "name: Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 1305157,
+   "key": "wellfed:1305157",
+   "list": "wellfed",
+   "name": "Hearty Well Fed",
+   "notes": [
+    "name: Hearty Well Fed",
+    "auras 4, 29, 189"
+   ]
+  },
+  {
+   "id": 5,
+   "key": "food:5",
+   "list": "food",
+   "name": "Food & Drink subclass 5",
+   "notes": [
+    "1514 of the 1558 Consumable items that use Food/Drink/Refreshment/Food & Drink"
+   ]
+  }
+ ],
  "client": "retail",
  "date": "2026-11-25",
  "derived": {
+  "buffs": [
+   {
+    "id": 8733,
+    "name": "Blessing of Blackfathom",
+    "rules": [
+     "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+     "auras 79, 80"
+    ]
+   },
+   {
+    "id": 15366,
+    "name": "Songflower Serenade",
+    "rules": [
+     "catalog: world: a Songflower, Felwood",
+     "auras 80, 405"
+    ]
+   },
+   {
+    "id": 16609,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 110, 133, 405"
+    ]
+   },
+   {
+    "id": 22817,
+    "name": "Fengus' Ferocity",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 22818,
+    "name": "Mol'dar's Moxie",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 22820,
+    "name": "Slip'kik's Savvy",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 22888,
+    "name": "Rallying Cry of the Dragonslayer",
+    "rules": [
+     "catalog: world: Onyxia's or Nefarian's head",
+     "auras 52, 80"
+    ]
+   },
+   {
+    "id": 23735,
+    "name": "Sayge's Dark Fortune of Strength",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23736,
+    "name": "Sayge's Dark Fortune of Agility",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23737,
+    "name": "Sayge's Dark Fortune of Stamina",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23738,
+    "name": "Sayge's Dark Fortune of Versatility",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 471"
+    ]
+   },
+   {
+    "id": 23766,
+    "name": "Sayge's Dark Fortune of Intelligence",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23767,
+    "name": "Sayge's Dark Fortune of Armor",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 101"
+    ]
+   },
+   {
+    "id": 23768,
+    "name": "Sayge's Dark Fortune of Damage",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 23769,
+    "name": "Sayge's Dark Fortune of Resistance",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 87"
+    ]
+   },
+   {
+    "id": 24425,
+    "name": "Spirit of Zandalar",
+    "rules": [
+     "catalog: world: Hakkar's heart, Yojamba Isle",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 26462,
+    "name": "Festival Fortune!",
+    "rules": [
+     "catalog: event: a festival fortune",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 29235,
+    "name": "Fire Festival Fortitude",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 29338,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 29534,
+    "name": "Traces of Silithyst",
+    "rules": [
+     "catalog: zone: Silithus",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 29846,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 46352,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57, 284"
+    ]
+   },
+   {
+    "id": 46668,
+    "name": "WHEE!",
+    "rules": [
+     "catalog: faire: the Darkmoon carousel",
+     "auras 156, 190, 200, 291"
+    ]
+   },
+   {
+    "id": 59641,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 20, 79, 133"
+    ]
+   },
+   {
+    "id": 61212,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 20, 79, 133"
+    ]
+   },
+   {
+    "id": 64670,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 20, 79, 133"
+    ]
+   },
+   {
+    "id": 101115,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 15, 42"
+    ]
+   },
+   {
+    "id": 153272,
+    "name": "Blessing of Blackfathom",
+    "rules": [
+     "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 220351,
+    "name": "Songflower Serenade",
+    "rules": [
+     "catalog: world: a Songflower, Felwood",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 290058,
+    "name": "WHEE!",
+    "rules": [
+     "catalog: faire: the Darkmoon carousel",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 405815,
+    "name": "Sayge's Dark Fortune",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 423942,
+    "name": "WHEE!",
+    "rules": [
+     "catalog: faire: the Darkmoon carousel",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1225929,
+    "name": "Lunar Fortune",
+    "rules": [
+     "catalog: event: Lunar Festival",
+     "auras 133"
+    ]
+   }
+  ],
+  "food": [
+   {
+    "id": 5,
+    "name": "",
+    "rules": [
+     "1514 of the 1558 Consumable items that use Food/Drink/Refreshment/Food & Drink"
+    ]
+   }
+  ],
   "hearthstones": [
    {
     "id": 8690,
@@ -454,6 +6539,4384 @@
      "rule 2: Effect 252, ImplicitTarget 9"
     ]
    }
+  ],
+  "wellfed": [
+   {
+    "id": 19705,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19706,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19708,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19709,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19710,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19711,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 24799,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 24870,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 25694,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 25941,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 33254,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33256,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33257,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33259,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 99, 124, 189"
+    ]
+   },
+   {
+    "id": 33261,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33263,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 135, 189"
+    ]
+   },
+   {
+    "id": 33265,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 85"
+    ]
+   },
+   {
+    "id": 33268,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 135, 189"
+    ]
+   },
+   {
+    "id": 35272,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 42293,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 43764,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 45245,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 45619,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 46682,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 99"
+    ]
+   },
+   {
+    "id": 46687,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 46899,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 99, 124"
+    ]
+   },
+   {
+    "id": 53284,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57079,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 57097,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 57100,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57102,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57107,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57111,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 57139,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 57286,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57288,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57291,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57294,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 57325,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 57327,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 57329,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57332,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57334,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57356,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57358,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57360,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57363,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 44"
+    ]
+   },
+   {
+    "id": 57365,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57367,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 57371,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 57373,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 44"
+    ]
+   },
+   {
+    "id": 57399,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 58468,
+    "name": "Hugely Well Fed",
+    "rules": [
+     "name: Hugely Well Fed",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 58479,
+    "name": "Nearly Well Fed",
+    "rules": [
+     "name: Nearly Well Fed",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 59230,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 62349,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 64057,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 65247,
+    "name": "Really Well Fed",
+    "rules": [
+     "name: Really Well Fed",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 65410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 65412,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 65414,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 65415,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 65416,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 66623,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 87545,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87546,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87547,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87548,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87549,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87550,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87551,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87552,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87554,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87555,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87556,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87557,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87558,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87559,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87560,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87561,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87562,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87563,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87564,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87565,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87634,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87635,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87697,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87699,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 99305,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 99478,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 100368,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 100373,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 100375,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 100377,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104264,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104267,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104271,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104272,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104273,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104274,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104275,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104276,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104277,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104278,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 104279,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 104280,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 104281,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104282,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104283,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 105226,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 108028,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 108031,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 108032,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 110645,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 114733,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 124151,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124210,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124211,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124212,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124213,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124214,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124215,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124216,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124217,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124218,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124219,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124220,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124221,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125070,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125071,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125102,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125104,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125106,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125108,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125113,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125115,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 130342,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130343,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130344,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130345,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130346,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130347,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130348,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130350,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130351,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130352,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130353,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130354,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130355,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130356,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 131828,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 133428,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 133593,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 133594,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 133595,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 133596,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 134219,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 134506,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 134712,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 134887,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 135076,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 135440,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 140410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 147"
+    ]
+   },
+   {
+    "id": 145304,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 146804,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146805,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 284"
+    ]
+   },
+   {
+    "id": 146806,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146807,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 146808,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146809,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 147312,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 154295,
+    "name": "Very Well Fed",
+    "rules": [
+     "name: Very Well Fed",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 159372,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 160600,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 160722,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 160724,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160726,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160778,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160793,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160832,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160839,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160883,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 160885,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 160889,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160893,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160895,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160897,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160900,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160902,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 165802,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 168349,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 168475,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 174062,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174077,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174078,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174079,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174080,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 175218,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175219,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175220,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175222,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175223,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175784,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 175785,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175797,
+    "name": "Super Well Fed",
+    "rules": [
+     "name: Super Well Fed",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 177931,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180745,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180746,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180747,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 180748,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180749,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180750,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 185736,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 185786,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 471"
+    ]
+   },
+   {
+    "id": 188534,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 192004,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201223,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201330,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201332,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201334,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201336,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 201350,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 201634,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201635,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201636,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201637,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201638,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201639,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201640,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201641,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201679,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 201695,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 207076,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 215607,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 405"
+    ]
+   },
+   {
+    "id": 216343,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 216353,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 216828,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 225597,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225598,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225599,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225600,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225601,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 225602,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225603,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225604,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225605,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225606,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 226805,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 226807,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 230061,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 251234,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 89, 191, 406"
+    ]
+   },
+   {
+    "id": 251247,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 251248,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 58, 82, 226"
+    ]
+   },
+   {
+    "id": 257408,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257413,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257415,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257418,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257420,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257422,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257424,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 259448,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259449,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259452,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259453,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259454,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259455,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259456,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259457,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 262571,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 267948,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 267949,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 267950,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 267951,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 272817,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 285719,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 285720,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 285721,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 286171,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 288074,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 288075,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290467,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290468,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290469,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290726,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 133"
+    ]
+   },
+   {
+    "id": 292884,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 293778,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 294238,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 133"
+    ]
+   },
+   {
+    "id": 294365,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 294439,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 294472,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 294473,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 296178,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 133"
+    ]
+   },
+   {
+    "id": 296455,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297034,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297035,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297037,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297039,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297040,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297116,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297117,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297118,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297119,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 308430,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308434,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308474,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308488,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308504,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308506,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308509,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308514,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308520,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 308525,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 308629,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 308637,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 316243,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 16, 56"
+    ]
+   },
+   {
+    "id": 316863,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 316870,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 316871,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 319386,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 56, 336"
+    ]
+   },
+   {
+    "id": 320779,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 16, 56"
+    ]
+   },
+   {
+    "id": 321689,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 327701,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327702,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327704,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327705,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327706,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327707,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327708,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327709,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327714,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 327715,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 327851,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 327860,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 327877,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 332915,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 340111,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 341449,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 347173,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 347520,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382145,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382146,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382149,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382150,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382152,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382153,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382154,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382155,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382156,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382157,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382230,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382231,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382232,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382234,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382235,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382236,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382246,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382247,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 383212,
+    "name": "Regrettably Well Fed",
+    "rules": [
+     "name: Regrettably Well Fed",
+     "auras 58, 82, 226"
+    ]
+   },
+   {
+    "id": 386723,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 171"
+    ]
+   },
+   {
+    "id": 393372,
+    "name": "Nutritiously Well Fed",
+    "rules": [
+     "name: Nutritiously Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 396092,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 398458,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 189"
+    ]
+   },
+   {
+    "id": 406941,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 417336,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 439608,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 442522,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 451916,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451917,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451918,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451920,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451921,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 454137,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454177,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454178,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454179,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454180,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454188,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 455369,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 456406,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 30, 511"
+    ]
+   },
+   {
+    "id": 456410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 456961,
+    "name": "Become Well Fed",
+    "rules": [
+     "name: Become Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 457049,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 457284,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461845,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461853,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461854,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461855,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461856,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461857,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461858,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461859,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461860,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461861,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461922,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461924,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461925,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461927,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461937,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461938,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461939,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461940,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461942,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461943,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461944,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461945,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461946,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461947,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461948,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461949,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461957,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461958,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461959,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461960,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462180,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462181,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462182,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462183,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462184,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462185,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462186,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462187,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462188,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462189,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462190,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462191,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462192,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462193,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462194,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462195,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462196,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462197,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462198,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462199,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462200,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462201,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462202,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462203,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462204,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462205,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462206,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462207,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462208,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462209,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462210,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 465481,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79"
+    ]
+   },
+   {
+    "id": 466400,
+    "name": "Well Fed & Inspired",
+    "rules": [
+     "name: Well Fed & Inspired",
+     "auras 171, 405"
+    ]
+   },
+   {
+    "id": 473173,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 473181,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 473183,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 473184,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 1219179,
+    "name": "Become Well Fed",
+    "rules": [
+     "name: Become Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1219182,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1219183,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1219184,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1219185,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232076,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232078,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232080,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232082,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232086,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232087,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232089,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232091,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232313,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232316,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232317,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232318,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232320,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232321,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232324,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232325,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232490,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232491,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232492,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232493,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232496,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232498,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232500,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232501,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232582,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232584,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232585,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233400,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233401,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233402,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233403,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233404,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233405,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233406,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233407,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233408,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233703,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233704,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233705,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233706,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233707,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233708,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233709,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233710,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233711,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233712,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233713,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233714,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233715,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233716,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233717,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233718,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233719,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233720,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233721,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233722,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233723,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233724,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233725,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233726,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233727,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233728,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233729,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233730,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233731,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233732,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233733,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1254815,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1283372,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284616,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284617,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284618,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284619,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284641,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284642,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284643,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284644,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284647,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284648,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284649,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284650,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1285644,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1294727,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305150,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305151,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305152,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305153,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305154,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305155,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305156,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305157,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   }
   ]
  },
  "flags": [
@@ -464,6 +10927,96 @@
    "kind": "unnamed",
    "list": "hearthstones",
    "name": ""
+  },
+  {
+   "comment": "",
+   "id": 0,
+   "key": "shipped:unfit:food:0",
+   "kind": "unfit",
+   "list": "food",
+   "name": ""
+  }
+ ],
+ "food": [
+  {
+   "class": 0,
+   "items": 1514,
+   "subclass": 5
+  },
+  {
+   "class": 3,
+   "items": 96,
+   "subclass": 10
+  },
+  {
+   "class": 0,
+   "items": 42,
+   "subclass": 8
+  },
+  {
+   "class": 7,
+   "items": 27,
+   "subclass": 8
+  },
+  {
+   "class": 12,
+   "items": 9,
+   "subclass": 0
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 5
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 6
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 7
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 8
+  },
+  {
+   "class": 15,
+   "items": 4,
+   "subclass": 0
+  },
+  {
+   "class": 3,
+   "items": 3,
+   "subclass": 3
+  },
+  {
+   "class": 0,
+   "items": 2,
+   "subclass": 0
+  },
+  {
+   "class": 4,
+   "items": 1,
+   "subclass": 0
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 1
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 3
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 4
   }
  ],
  "ignore": {
@@ -507,8 +11060,11 @@
  },
  "product": "wow",
  "shipped": {
+  "buffs": 0,
+  "food": 1,
   "hearthstones": 59,
-  "ignore": 3
+  "ignore": 3,
+  "wellfed": 0
  },
  "tool": "tools/seeds/seeds.py derive"
 }

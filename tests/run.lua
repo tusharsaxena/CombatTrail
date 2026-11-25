@@ -140,6 +140,7 @@ local SUITES = {
     "test_race_record",
     "test_race_scoring",
     "test_late_ignore",
+    "test_buff_seeds",
     "test_race",
     "test_race_resume",
     "test_race_settings",

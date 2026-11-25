@@ -16,11 +16,12 @@ the run, apart from the hand-written `ANALYSIS.md`.
 | Table | Why | URL |
 | --- | --- | --- |
 | `SpellCategories` | ChargeCategory: hearthstones rule 1, the hearthstone charge category 2309 | <https://wago.tools/db2/SpellCategories/csv?build=12.1.5.70961> |
-| `SpellEffect` | Effect 252 + ImplicitTarget 9: hearthstones rule 2; EffectTriggerSpell: the item-cast note | <https://wago.tools/db2/SpellEffect/csv?build=12.1.5.70961> |
-| `SpellName` | every shipped hearthstone's and ignore seed's name, for the unnamed and renamed flags | <https://wago.tools/db2/SpellName/csv?build=12.1.5.70961> |
-| `ItemEffect` | the spell an item effect casts: the item-cast note on a rule 2 candidate | <https://wago.tools/db2/ItemEffect/csv?build=12.1.5.70961> |
+| `SpellEffect` | Effect 252 + ImplicitTarget 9: hearthstones rule 2; EffectTriggerSpell: the item-cast note; the aura effects: the buff and Well Fed rules | <https://wago.tools/db2/SpellEffect/csv?build=12.1.5.70961> |
+| `SpellName` | every shipped seed's name, for the unnamed and renamed flags; the buff catalog and Well Fed names | <https://wago.tools/db2/SpellName/csv?build=12.1.5.70961> |
+| `ItemEffect` | the spell an item effect casts: the item-cast note on a rule 2 candidate; the food rule | <https://wago.tools/db2/ItemEffect/csv?build=12.1.5.70961> |
 | `ItemXItemEffect` | item effect -> item: which item casts it | <https://wago.tools/db2/ItemXItemEffect/csv?build=12.1.5.70961> |
 | `Toy` | item -> toy: whether the item that casts it is a toy | <https://wago.tools/db2/Toy/csv?build=12.1.5.70961> |
+| `Item` | ClassID and SubclassID: the food rule, the Food & Drink subclass | <https://wago.tools/db2/Item/csv?build=12.1.5.70961> |
 
 The gzipped exports are in `raw/`. Re-derive offline with `--replay`; a new run needs
 network access to wago.tools.
