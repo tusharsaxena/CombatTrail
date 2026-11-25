@@ -238,11 +238,13 @@ NS.defaults = {
         -- docked drawer (open by default, its rows 3-20, 10 by default, opened at each fight's start, its
         -- filter chips shown; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
-        -- their height in pixels, 12-28 (CL-11c2), school colors, row washes, the optional columns: no
-        -- Source or Target, item 3); the
+        -- their height in pixels, 12-28 (CL-11c2), row washes, the optional columns Spell and Info: no
+        -- Source or Target, item 3, and no Amount, the Combat Sequence, CSEQ-1); the
         -- who colors (CL-11c2: "You" in the class color or its own swatch, the hostile and friendly target
         -- in the skin's `ct.log.hostile` / `ct.log.friendly` or their own); and what the live views show
-        -- (each saved category, the auto attacks, the least amount a hit or a heal shows at). Then where
+        -- (each saved category: casts, pet casts, buffs gained and lost on you, debuffs on you, your
+        -- debuffs on your target, deaths; and the auto attacks; no hits, heals or target buffs, CSEQ-1,
+        -- schema step 8). Then where
         -- the log lives (CL-11b2): `home` "docked" in the HUD or "detached" in its own window
         -- (modules/LogWindow.lua), whose keys are `window`: a standalone window at its own `position`
         -- (owner feedback item 11: no attached state, so no side, HUD-height match or pin, schema step 6),
@@ -260,26 +262,24 @@ NS.defaults = {
             },
             view = {
                 sort = "newest", throttle = "instant", throttleMs = 250, timeFormat = "pull",
-                fontSize = 10, rowHeight = 14, schoolColors = true, washes = true,
-                columns = { spell = true, amount = true, info = true },
+                fontSize = 10, rowHeight = 14, washes = true,
+                columns = { spell = true, info = true },
             },
             colors = {
                 you = { r = 1, g = 1, b = 1, a = 1 }, useClassColorYou = true,
                 hostile = { r = 1, g = 0.32, b = 0.32, a = 1 }, hostileFromSkin = true,
                 friendly = { r = 0.56, g = 0.72, b = 1.0, a = 1 }, friendlyFromSkin = true,
             },
-            show = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true, targetBuffs = true,
-                     targetDebuffs = true, hits = true, heals = true, deaths = true, autoAttacks = false,
-                     minAmount = 0 },
+            show = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true, targetDebuffs = true,
+                     deaths = true, autoAttacks = false },
             store = {
                 enabled = true, lines = NS.Constants.LOG.MAX_PER_FIGHT, fights = NS.Constants.LOG.FIGHTS,
                 categories = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true,
-                               targetBuffs = true, targetDebuffs = true, hits = true, heals = true,
-                               deaths = true },
+                               targetDebuffs = true, deaths = true },
             },
             results = {
                 jumpToCast = true,
-                chips = { casts = true, pet = true, buffs = true, debuffs = true, taken = true, heals = true },
+                chips = { casts = true, pet = true, buffs = true, debuffs = true },
             },
         },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view

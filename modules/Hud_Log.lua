@@ -26,8 +26,8 @@ local _, NS = ...
 --                         log.drawer.autoOpen on (the default) each fight's start opens it. Off while
 --                         `log.enabled` is off, whatever it says, and the control is then hidden.
 --   log.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
---                         under its heading (LogTable.NewChips: Casts, Pet, Buffs, Debuffs, Taken,
---                         Heals), the HUD growing by it; on by default (item 9). The chips themselves
+--                         under its heading (LogTable.NewChips: Casts, Pet, Buffs, Debuffs), the
+--                         HUD growing by it; on by default (item 9). The chips themselves
 --                         are the drawer's own, seeded from `log.show.*` (LogTable.Reseeds) and turned
 --                         for this session alone.
 --   log.drawer.rows       the rows shown, 3 to 20 (default 10, owner feedback item 16); the rows past

@@ -191,18 +191,10 @@ end
 
 local WIN_BG, WIN_INNER = NS.SKIN_FALLBACK["win.bg"], NS.SKIN_FALLBACK["win.inner"]
 
---- The same color under every registered Ka0s skin: a meaning hue a skin must not repaint (a spell
---- school's color), still a token so EllesmereUI (no per-skin table) draws its `follow`.
-local function same(c)
-    return perSkin(function() return c end)
-end
 
--- The Combat Log's hues (CombatTrail #11, the spec's board D): the buff green, the debuff orange, the
--- hit red, and the client's own spell school colors.
+-- The Combat Sequence's hues (CombatTrail #11, the spec's board D): the buff green, the debuff orange
+-- and the death red.
 local GREEN, ORANGE = { 0.36, 0.86, 0.46 }, { 1, 0.55, 0.2 }
-local SCHOOL = { physical = { 1, 1, 0, 1 }, holy = { 1, 0.9, 0.5, 1 }, fire = { 1, 0.5, 0, 1 },
-                 nature = { 0.3, 1, 0.3, 1 }, frost = { 0.5, 1, 1, 1 }, shadow = { 0.5, 0.5, 1, 1 },
-                 arcane = { 1, 0.5, 1, 1 } }
 
 NS.SKIN_TOKENS = {
     -- The meaning hues: ahead of your best, a new best and the DPS figure; caution (warnings, a fight
@@ -296,29 +288,21 @@ NS.SKIN_TOKENS = {
     ["ct.modal.inner"]   = { default = opaque(WIN_INNER, WIN_BG), follow = "win.inner", skins = modal("win.inner") },
     ["ct.modal.divider"] = { default = opaque(NS.SKIN_FALLBACK["divider"], WIN_BG), follow = "divider",
                              skins = modal("divider") },
-    -- The Combat Log's table (modules/LogTable.lua): the event tags (the off tags dimmed), the who
-    -- colors past the class and pet ones the HUD already draws (undrawn since the Source and Target
-    -- columns went, owner feedback item 3), and the three row washes (a hit, a debuff you put on, a
-    -- long-cooldown cast). The drawer has no seam (item 18).
+    -- The Combat Sequence's table (modules/LogTable.lua): the event tags (the off tags dimmed; DIES in
+    -- `ct.log.hit`), the who colors past the class and pet ones the HUD already draws (undrawn since the
+    -- Source and Target columns went, owner feedback item 3), and the two row washes (a debuff you put
+    -- on, a long-cooldown cast). The drawer has no seam (item 18). The heal color, the hit wash and the
+    -- seven spell school colors went with the hits and heals (CSEQ-1): LibKa0s stores no per-token
+    -- override (a skin's choice, the font and the texture only), so no stored value names them.
     ["ct.log.buff"]        = { default = rgba(GREEN, 1), follow = "sem.good" },
     ["ct.log.buffOff"]     = { default = rgba(GREEN, 0.55), follow = "text.muted" },
     ["ct.log.debuff"]      = { default = rgba(ORANGE, 1), follow = "sem.warn" },
     ["ct.log.debuffOff"]   = { default = rgba(ORANGE, 0.55), follow = "text.muted" },
     ["ct.log.hit"]         = { default = rgba(RED, 1), follow = "sem.statusBad" },
-    ["ct.log.heal"]        = { default = rgba(GREEN, 1), follow = "sem.good" },
     ["ct.log.hostile"]     = { default = rgba(RED, 1), follow = "sem.statusBad" },
     ["ct.log.friendly"]    = { default = { 0.56, 0.72, 1.0, 1 }, follow = "sem.info" },
-    ["ct.log.wash.hit"]    = { default = rgba(RED, 0.10), follow = "list.hover", skins = wash("sem.statusBad", 0.10) },
     ["ct.log.wash.debuff"] = { default = rgba(ORANGE, 0.10), follow = "list.hover", skins = wash("sem.warn", 0.10) },
     ["ct.log.wash.cd"]     = { default = rgba(GOLD, 0.07), follow = "list.stripe", skins = wash("text.accent", 0.07) },
-    -- The spell schools, the client's combat log colors under every Ka0s skin (a meaning hue).
-    ["ct.school.physical"] = { default = SCHOOL.physical, follow = "text.body", skins = same(SCHOOL.physical) },
-    ["ct.school.holy"]     = { default = SCHOOL.holy, follow = "text.body", skins = same(SCHOOL.holy) },
-    ["ct.school.fire"]     = { default = SCHOOL.fire, follow = "text.body", skins = same(SCHOOL.fire) },
-    ["ct.school.nature"]   = { default = SCHOOL.nature, follow = "text.body", skins = same(SCHOOL.nature) },
-    ["ct.school.frost"]    = { default = SCHOOL.frost, follow = "text.body", skins = same(SCHOOL.frost) },
-    ["ct.school.shadow"]   = { default = SCHOOL.shadow, follow = "text.body", skins = same(SCHOOL.shadow) },
-    ["ct.school.arcane"]   = { default = SCHOOL.arcane, follow = "text.body", skins = same(SCHOOL.arcane) },
 }
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,

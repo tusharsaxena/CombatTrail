@@ -47,7 +47,7 @@ end)
 test("log page: every log.* default but the window's geometry has a control", function()
     local NS = T.load().NS
     local paths = leaves(NS.defaults.profile.log, "log", {})
-    assertTrue(#paths > 55, "the log's leaves: " .. #paths)
+    assertTrue(#paths > 45, "the log's leaves (47 since the Combat Sequence dropped eleven): " .. #paths)
     local missing = {}
     for _, path in ipairs(paths) do
         local row = NS.FindSchemaRow(path)
@@ -271,7 +271,7 @@ test("log page: the page's Defaults puts every log row back and leaves the geome
     local NS = inst.NS
     NS.SetByPath("log.drawer.rows", 15)
     NS.SetByPath("log.view.sort", "oldest")
-    NS.SetByPath("log.store.categories.hits", false)
+    NS.SetByPath("log.store.categories.playerBuffs", false)
     NS.SetByPath("log.colors.hostile", { r = 0, g = 1, b = 0, a = 1 })
     NS.db.profile.log.window.width = 600
     NS.SetByPath("general.locked", true)
@@ -279,7 +279,7 @@ test("log page: the page's Defaults puts every log row back and leaves the geome
     local log, D = NS.db.profile.log, NS.defaults.profile.log
     assertEqual(log.drawer.rows, D.drawer.rows)
     assertEqual(log.view.sort, "newest")
-    assertEqual(log.store.categories.hits, true)
+    assertEqual(log.store.categories.playerBuffs, true)
     assertEqual(log.colors.hostile.g, D.colors.hostile.g)
     assertEqual(log.window.width, 600, "the grip's width is no row's")
     assertEqual(NS.GetSetting("general.locked"), true, "another page's row is not this page's to reset")

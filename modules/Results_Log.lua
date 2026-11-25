@@ -12,12 +12,13 @@ local _, NS = ...
 -- then the table with the Info column, its rows a page of the detail's viewport (ROWS_MIN at the
 -- least); then a hint naming the cast click. A fight with no log keeps the heading and says so.
 --
--- THE CHIPS: Casts, Pet, Buffs, Debuffs, Taken (hits on you) and Heals (on you), each with the count of
--- its lines in the saved log. They filter what is shown, never what is saved. Each fight opens on
--- `log.results.chips` (all on), and a click turns one on or off for the fight shown. A death follows
--- `log.show.deaths` and a hit or a heal under `log.show.minAmount` (a plain amount only) is hidden, as
--- in the live views. A log saved before owner feedback item 10 may hold the fight's PULL and END lines:
--- they are never shown or counted (CombatLog.IsBoundary), and the log on disk is left as it is.
+-- THE CHIPS: Casts, Pet, Buffs (on you) and Debuffs (on you and the ones you put on your target), each
+-- with the count of its lines in the saved log. They filter what is shown, never what is saved. Each
+-- fight opens on `log.results.chips` (all on), and a click turns one on or off for the fight shown. A
+-- death follows `log.show.deaths`, as in the live views. A log saved earlier may hold lines nothing
+-- captures now (the fight's PULL and END, owner feedback item 10; the hits, heals and target buffs, the
+-- Combat Sequence): they are never shown or counted (CombatLog.IsRetired), and the log on disk is left
+-- as it is.
 --
 -- THE TABLE is the live homes' component on a stored list: no feed, no follow. `log.view.sort` decides
 -- the order (newest first by default, the Time header flips it, as everywhere), and the first page is
@@ -37,8 +38,8 @@ local _, NS = ...
 -- A FIGHT SAVED BEFORE THE LOG (CT_SCHEMA 5 and older), or with saving off, has no `log`: the section
 -- says "No log was saved for this fight" and draws nothing else.
 --
--- PLAIN DATA ONLY. A saved line holds plain numbers and "s" for a sealed amount, which LogTable.Cells
--- draws as "sealed". The counts count lines, never amounts.
+-- PLAIN DATA ONLY. A saved line holds plain numbers (an old one's amount, if any, is never read). The
+-- counts count lines.
 
 local ResultsLog = {}
 NS.ResultsLog = ResultsLog
@@ -78,14 +79,15 @@ end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────────
 
---- The chip line `e` falls under, or nil (a retired boundary, a death, an auto attack), and its category.
+--- The chip line `e` falls under, or nil (a retired line, a death, an auto attack), and its category.
 --- @return string|nil chip, string|nil category
 function ResultsLog.ChipOf(e)
     local cat = CL.CategoryOf(e.k, e.u, e.id)
     return cat and CHIP_OF[cat] or nil, cat
 end
 
---- Each chip's count of lines in `log` (a saved log), into `out` (a reused table): lines, never amounts.
+--- Each chip's count of lines in `log` (a saved log), into `out` (a reused table): a retired line has
+--- no chip, so it is never counted.
 --- @return table out  [chip key] = count
 function ResultsLog.Counts(log, out)
     out = out or {}
@@ -105,19 +107,13 @@ function ResultsLog.DefaultChips(out)
     return out
 end
 
---- Whether saved line `e` shows under the chips `chips` and `show` (`log.show`: its deaths and its
---- least amount). A retired boundary never shows.
+--- Whether saved line `e` shows under the chips `chips` and `show` (`log.show`: its deaths). A retired
+--- line never shows.
 --- @return boolean
 function ResultsLog.Accept(e, chips, show)
     local key, cat = ResultsLog.ChipOf(e)
     if cat == "deaths" then return show.deaths ~= false end
-    if not key or chips[key] == false then return false end
-    local min = Secrets.PlainNumber(show.minAmount) or 0
-    if min > 0 and (e.k == K.HIT or e.k == K.HEAL) then
-        local a = Secrets.PlainNumber(e.a)
-        if a and a < min then return false end
-    end
-    return true
+    return key ~= nil and chips[key] ~= false
 end
 
 --- The indices of `log`'s shown lines, in the order the table draws them top down (`sort` "newest":
@@ -153,22 +149,21 @@ function ResultsLog.MaxOffset(n, rows)
 end
 
 --- `ctx` (a reused table) refilled for stored `record`: the time format, the pull's clock time and the
---- color switches.
+--- wash switch.
 function ResultsLog.Context(record, ctx)
     ctx.startT = nil
     ctx.timeFormat = setting("log.view.timeFormat")
     ctx.startClock = Secrets.PlainNumber(record.t)
-    ctx.schoolColors = setting("log.view.schoolColors") ~= false
     ctx.washes = setting("log.view.washes") ~= false
     return LogTable.ReadColors(ctx)
 end
 
---- How many of a saved log's lines are events: a retired boundary is not one.
+--- How many of a saved log's lines are events: a retired line is not one.
 --- @return number
 function ResultsLog.Lines(log)
     local n = 0
     for _, e in ipairs(type(log) == "table" and log or {}) do
-        if type(e) == "table" and not CL.IsBoundary(e) then n = n + 1 end
+        if type(e) == "table" and not CL.IsRetired(e) then n = n + 1 end
     end
     return n
 end

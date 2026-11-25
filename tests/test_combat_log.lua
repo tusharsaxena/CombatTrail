@@ -1,11 +1,13 @@
--- tests/test_combat_log.lua — modules/CombatLog.lua, the Combat Log's capture and store (CombatTrail #11,
--- plan item CL-11a): the casts from the lanes' listener, UNIT_AURA's gains and losses on the player and
--- the target, UNIT_COMBAT's hits and heals on the player (school, critical, glancing, a sealed amount
--- saved as "s"), the player's death and the fight's boundaries; the in-memory ring and its bound; the
--- saved `log` on the record (oldest first, at most `log.store.lines`, the newest kept and the rest
--- counted in `logDropped`, only the categories saved); the events registered only while a fight is
--- open; the record schema's step to CT_SCHEMA 6 (an older fight reads with no log); and the stored size
--- of a log at the cap. Runs under both kit profiles: the capture is the same on Retail and WoW Forever.
+-- tests/test_combat_log.lua — modules/CombatLog.lua, the Combat Sequence's capture and store (CombatTrail
+-- #11, plan item CL-11a; the Combat Sequence, CSEQ-1): the casts from the lanes' listener, UNIT_AURA's
+-- gains and losses on the player and the debuffs the player put on the target, from the update info and
+-- from the DIFF a full update or an update-less UNIT_AURA takes (its line order, an incomplete walk that
+-- logs nothing, secrets never a key), the player's death; no UNIT_COMBAT, no HIT or HEAL, no target buff
+-- (a saved one is retired at read); the in-memory ring and its bound; the saved `log` on the record
+-- (oldest first, at most `log.store.lines`, the newest kept and the rest counted in `logDropped`, only
+-- the categories saved, no amount or school); the events registered only while a fight is open; the
+-- record schema's step to CT_SCHEMA 6 (an older fight reads with no log); and the stored size of a log
+-- at the cap. Runs under both kit profiles: the capture is the same on Retail and WoW Forever.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
@@ -16,16 +18,22 @@ local FIGHT = { damage = 40000, dps = 1000, duration = 40,
 
 local FIREBALL, PYROBLAST, BITE = 133, 11366, 17253
 local INTELLECT, POLY, IGNITE, MARK = 1459, 118, 12654, 1126
+local HASTE, CURSE = 2825, 980
 
 -- A fresh instance on the scripted meter, the auras on each unit scripted by `m.__unitAuras`
--- ([unit][filter] = { aura, ... }), and a receiver for the saved fights.
+-- ([unit][filter] = { aura, ... }; `m.__auraRaise` [unit .. filter] = an index whose read raises), and
+-- a receiver for the saved fights.
 local function fresh(o)
     o = o or {}
     local meter
     local inst = T.load{ mutate = function(m)
         meter = T.mockMeter.install(m)
         m.__unitAuras = { player = { HELPFUL = {}, HARMFUL = {} }, target = { HELPFUL = {}, HARMFUL = {} } }
+        m.__auraReads = {}
+        m.__auraRaise = {}
         m.C_UnitAuras.GetAuraDataByIndex = function(unit, i, filter)
+            m.__auraReads[#m.__auraReads + 1] = unit .. ":" .. filter
+            if m.__auraRaise[unit .. filter] == i then error("sealed read", 0) end
             local byUnit = m.__unitAuras[unit]
             local list = byUnit and byUnit[filter]
             return list and list[i] or nil
@@ -71,9 +79,20 @@ local function aura(inst, t, unit, info)
     inst.mocks.__fire("UNIT_AURA", unit, info)
 end
 
-local function hit(inst, t, action, amount, school, descriptor)
+-- A cast of spell `id` handed in as the lanes' listener does (an ID past every auto attack's).
+local function spellAt(inst, t, id)
     at(inst, t)
-    inst.mocks.__fire("UNIT_COMBAT", "player", action, descriptor or "", amount, school or 1)
+    inst.NS.CombatLog.OnCast("player", id, t, false)
+end
+
+-- The auras a walk reads for `unit`'s `filter`, set whole.
+local function onUnit(inst, unit, filter, list)
+    inst.mocks.__unitAuras[unit][filter] = list
+end
+
+local function buff(inst, id) return { auraInstanceID = inst, spellId = id, isHelpful = true } end
+local function debuff(inst, id, mine)
+    return { auraInstanceID = inst, spellId = id, isHarmful = true, isFromPlayerOrPlayerPet = mine == true }
 end
 
 -- One whole fight from 10 to 10 + len on session 1, with what `during(inst)` does in it. Answers the
@@ -102,6 +121,15 @@ local function kinds(NS, log)
     return table.concat(out, ",")
 end
 
+-- Each line as KIND:id, for the order checks.
+local function lines(NS, log)
+    local name = {}
+    for key, code in pairs(NS.CombatLog.KIND) do name[code] = key end
+    local out = {}
+    for i, e in ipairs(log or {}) do out[i] = name[e.k] .. ":" .. tostring(e.id) end
+    return table.concat(out, ",")
+end
+
 -- The Combat Log frame's registrations: [event] = a row, and `units` [event] = { [unit] = true }.
 local function unitRegs(inst)
     local out, units = {}, {}
@@ -119,10 +147,10 @@ end
 
 -- ── the capture, end to end ─────────────────────────────────────────────────────────────────────
 
-test("combat log: a fight's casts, auras, hits, heals and death are saved with its record, no boundary lines", function()
+test("combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
-    local K, U, F = NS.CombatLog.KIND, NS.CombatLog.UNIT, NS.CombatLog.FLAG
+    local U = NS.CombatLog.UNIT
     local r = fightThrough(inst, meter, saved, 40, function(i)
         cast(i, 12, "player", FIREBALL)
         cast(i, 13.04, "pet", BITE)
@@ -130,8 +158,10 @@ test("combat log: a fight's casts, auras, hits, heals and death are saved with i
                                                  isHarmful = false } } })
         aura(i, 15, "target", { addedAuras = { { auraInstanceID = 8, spellId = IGNITE, isHarmful = true,
                                                  isFromPlayerOrPlayerPet = true } } })
-        hit(i, 16, "WOUND", 1200, 4, "CRITICAL")
-        hit(i, 17, "HEAL", 800, 2)
+        -- red under: UNIT_COMBAT still heard (the Combat Sequence drops the hits and heals taken)
+        at(i, 16)
+        i.mocks.__fire("UNIT_COMBAT", "player", "WOUND", "CRITICAL", 1200, 4)
+        i.mocks.__fire("UNIT_COMBAT", "player", "HEAL", "", 800, 2)
         aura(i, 18, "target", { removedAuraInstanceIDs = { 8 } })
         aura(i, 19, "player", { removedAuraInstanceIDs = { 7 } })
         at(i, 20)
@@ -140,8 +170,7 @@ test("combat log: a fight's casts, auras, hits, heals and death are saved with i
     assertTrue(r ~= nil, "the fight was saved")
     assertEqual(r.schema, 6)
     local log, dropped = NS.CombatLog.Of(r)
-    -- red under: the PULL and END boundary lines captured (owner feedback item 10)
-    assertEqual(kinds(NS, log), "CAST,CAST,BUFF_ON,DEBUFF_ON,HIT,HEAL,DEBUFF_OFF,BUFF_OFF,DIES")
+    assertEqual(kinds(NS, log), "CAST,CAST,BUFF_ON,DEBUFF_ON,DEBUFF_OFF,BUFF_OFF,DIES")
     assertEqual(dropped, 0)
     assertNil(r.logDropped, "nothing dropped: no field")
     assertEqual(log[1].t, 2, "timed from the pull, still 0.0")
@@ -153,20 +182,15 @@ test("combat log: a fight's casts, auras, hits, heals and death are saved with i
     assertEqual(log[3].u, U.player)
     assertEqual(log[4].id, IGNITE)
     assertEqual(log[4].u, U.target)
-    assertEqual(log[5].a, 1200)
-    assertEqual(log[5].s, 4, "the school")
-    assertEqual(log[5].f, F.CRIT)
-    assertEqual(log[6].k, K.HEAL)
-    assertEqual(log[6].a, 800)
-    assertNil(log[6].f)
-    assertEqual(log[7].id, IGNITE, "a loss names the spell its instance was given for")
+    assertEqual(log[5].id, IGNITE, "a loss names the spell its instance was given for")
+    assertNil(NS.CombatLog.OnCombat, "the hits-and-heals handler is gone")
     for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
-        assertTrue(not NS.CombatLog.IsBoundary(NS.CombatLog.Line(n)), "no boundary line in the ring either")
+        assertTrue(not NS.CombatLog.IsRetired(NS.CombatLog.Line(n)), "no retired line in the ring either")
     end
     for _, e in ipairs(log) do
-        for key, v in pairs(e) do
-            assertTrue(type(v) == "number" or v == NS.CombatLog.SEALED, key .. " is a number (or the sealed mark)")
-        end
+        assertNil(e.a, "no amount saved")
+        assertNil(e.s, "no school saved")
+        for key, v in pairs(e) do assertTrue(type(v) == "number", key .. " is a number") end
     end
 end)
 
@@ -190,7 +214,7 @@ test("combat log: a pre-pull cast is kept at a negative time; an auto attack rea
     assertEqual(autos, 1, "the ring holds the swing for a view")
 end)
 
-test("combat log: the target's debuffs are only the player's, and a target change logs nothing", function()
+test("combat log: the target's lines are only the player's debuffs, and a target change logs nothing", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
     local r = fightThrough(inst, meter, saved, 40, function(i)
@@ -198,19 +222,32 @@ test("combat log: the target's debuffs are only the player's, and a target chang
             { auraInstanceID = 21, spellId = 589, isHarmful = true, isFromPlayerOrPlayerPet = false },
             { auraInstanceID = 22, spellId = MARK, isHelpful = true, isHarmful = false },
             { auraInstanceID = 23, spellId = POLY, isHarmful = true, sourceUnit = "pet" } } })
-        i.mocks.__unitAuras.target.HELPFUL = { { auraInstanceID = 30, spellId = 21562, isHelpful = true } }
+        onUnit(i, "target", "HELPFUL", { buff(30, 21562) })
+        onUnit(i, "target", "HARMFUL", { debuff(31, CURSE, true) })
         at(i, 13)
         i.mocks.__fire("PLAYER_TARGET_CHANGED")
-        aura(i, 14, "target", { isFullUpdate = true })
-        aura(i, 15, "target", { removedAuraInstanceIDs = { 30, 22 } })
+        aura(i, 15, "target", { removedAuraInstanceIDs = { 30, 22, 31 } })
         aura(i, 16, "focus", { addedAuras = { { auraInstanceID = 40, spellId = 1, isHelpful = true } } })
     end)
     local log = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "BUFF_ON,DEBUFF_ON,BUFF_OFF",
-        "someone else's debuff and the focus are no line; the new target's buff ends with a loss")
-    assertEqual(log[1].id, MARK)
-    assertEqual(log[2].id, POLY, "the pet's debuff counts as the player's")
-    assertEqual(log[3].id, 21562, "the new target's aura, walked at the change, is known when it goes")
+    -- red under: a target buff (MARK) and its loss as lines (the Combat Sequence keeps no target buff)
+    assertEqual(lines(NS, log), "DEBUFF_ON:" .. POLY .. ",DEBUFF_OFF:" .. CURSE,
+        "someone else's debuff, a target buff and the focus are no line; the new target's debuff ends with a loss")
+end)
+
+test("combat log: the target walk reads HARMFUL alone; the player's both", function()
+    local inst, meter, saved = fresh()
+    fightThrough(inst, meter, saved, 40, function(i)
+        i.mocks.__auraReads = {}
+        at(i, 13)
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        local reads = table.concat(i.mocks.__auraReads, ",")
+        -- red under: a target:HELPFUL read
+        assertEqual(reads, "target:HARMFUL", "one filter on the target")
+        i.mocks.__auraReads = {}
+        aura(i, 14, "player", nil)
+        assertEqual(table.concat(i.mocks.__auraReads, ","), "player:HELPFUL,player:HARMFUL")
+    end)
 end)
 
 test("combat log: an aura on at the start is known when it falls off", function()
@@ -226,9 +263,159 @@ test("combat log: an aura on at the start is known when it falls off", function(
     assertEqual(log[1].id, INTELLECT)
 end)
 
+test("combat log: debuffs on you and your debuffs on your target are gained and lost", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local U = NS.CombatLog.UNIT
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        aura(i, 12, "player", { addedAuras = { debuff(50, CURSE) } })
+        aura(i, 13, "target", { addedAuras = { debuff(51, IGNITE, true) } })
+        aura(i, 14, "player", { removedAuraInstanceIDs = { 50 } })
+        aura(i, 15, "target", { removedAuraInstanceIDs = { 51 } })
+    end)
+    local log = NS.CombatLog.Of(r)
+    assertEqual(kinds(NS, log), "DEBUFF_ON,DEBUFF_ON,DEBUFF_OFF,DEBUFF_OFF")
+    assertEqual(log[3].u, U.player)
+    assertEqual(log[3].id, CURSE)
+    assertEqual(log[4].u, U.target)
+    assertEqual(log[4].id, IGNITE)
+end)
+
+-- ── the diff: a full update, or no update info (WoW Forever) ────────────────────────────────────
+
+test("combat log: a UNIT_AURA with no update info diffs the unit into gains and losses", function()
+    local inst, meter, saved = fresh{ mutate = function(m)
+        m.__unitAuras.player.HELPFUL = { { auraInstanceID = 3, spellId = INTELLECT, isHelpful = true } }
+    end }
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        onUnit(i, "player", "HELPFUL", { buff(3, INTELLECT), buff(4, HASTE) })
+        aura(i, 12, "player", nil)
+        onUnit(i, "player", "HELPFUL", { buff(4, HASTE) })
+        aura(i, 13, "player", nil)
+        onUnit(i, "player", "HELPFUL", {})
+        aura(i, 14, "player", nil)
+        aura(i, 15, "player", nil)
+    end)
+    -- red under: a walk with no line (the Combat Log's full update was silent)
+    assertEqual(lines(NS, NS.CombatLog.Of(r)), "BUFF_ON:" .. HASTE .. ",BUFF_OFF:" .. INTELLECT .. ",BUFF_OFF:" .. HASTE,
+        "the gain, then each loss; a walk that finds nothing new is no line")
+end)
+
+test("combat log: a full update diffs too, on the player and on the same target", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        onUnit(i, "player", "HARMFUL", { debuff(60, CURSE) })
+        aura(i, 12, "player", { isFullUpdate = true })
+        onUnit(i, "target", "HARMFUL", { debuff(61, IGNITE, true), debuff(62, 589, false) })
+        aura(i, 13, "target", { isFullUpdate = true })
+        onUnit(i, "player", "HARMFUL", {})
+        onUnit(i, "target", "HARMFUL", {})
+        aura(i, 14, "player", { isFullUpdate = true })
+        aura(i, 15, "target", { isFullUpdate = true })
+    end)
+    assertEqual(lines(NS, NS.CombatLog.Of(r)),
+        "DEBUFF_ON:" .. CURSE .. ",DEBUFF_ON:" .. IGNITE .. ",DEBUFF_OFF:" .. CURSE .. ",DEBUFF_OFF:" .. IGNITE,
+        "someone else's debuff on the target is never a line")
+end)
+
+test("combat log: the diff's order is fixed: gains in walk order, then losses by instance", function()
+    local inst, meter, saved = fresh{ mutate = function(m)
+        m.__unitAuras.player.HELPFUL = { { auraInstanceID = 9, spellId = 9001, isHelpful = true },
+                                         { auraInstanceID = 2, spellId = 9002, isHelpful = true },
+                                         { auraInstanceID = 5, spellId = 9003, isHelpful = true } }
+    end }
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        onUnit(i, "player", "HELPFUL", { buff(30, 9030), buff(10, 9010) })
+        onUnit(i, "player", "HARMFUL", { debuff(20, 9020) })
+        aura(i, 12, "player", { isFullUpdate = true })
+    end)
+    assertEqual(lines(NS, NS.CombatLog.Of(r)),
+        "BUFF_ON:9030,BUFF_ON:9010,DEBUFF_ON:9020,BUFF_OFF:9002,BUFF_OFF:9003,BUFF_OFF:9001")
+end)
+
+test("combat log: a refresh (updatedAuraInstanceIDs) is no line", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
+        aura(i, 13, "player", { updatedAuraInstanceIDs = { 7 } })
+    end)
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "BUFF_ON")
+end)
+
+-- An incomplete walk: what stops it, then (unless `alone`) a complete one with the same auras. Neither
+-- draws a line.
+local function incomplete(stop, alone)
+    local inst, meter, saved = fresh{ mutate = function(m)
+        m.__unitAuras.player.HELPFUL = { { auraInstanceID = 1, spellId = INTELLECT, isHelpful = true },
+                                         { auraInstanceID = 2, spellId = HASTE, isHelpful = true } }
+    end }
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        stop(i)
+        aura(i, 12, "player", nil)
+        if alone then return end
+        i.mocks.__auraRaise = {}
+        onUnit(i, "player", "HELPFUL", { buff(1, INTELLECT), buff(2, HASTE) })
+        aura(i, 13, "player", nil)
+    end)
+    return inst.NS, r
+end
+
+test("combat log: an incomplete walk writes no line and leaves no false loss or gain after it", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        -- A sealed aura mid-list: HASTE after it is unread.
+        local NS, r = incomplete(function(i)
+            onUnit(i, "player", "HELPFUL", { buff(1, INTELLECT), T.secret({}), buff(2, HASTE) })
+        end)
+        -- red under: BUFF_OFF HASTE (a false loss), then BUFF_ON HASTE (a false gain)
+        assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "a sealed aura: no line, now or after")
+        -- A sealed instance on an accessible aura.
+        NS, r = incomplete(function(i)
+            onUnit(i, "player", "HELPFUL", { buff(1, INTELLECT), { auraInstanceID = T.secret(2), spellId = HASTE } })
+        end)
+        assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "a sealed instance")
+        -- A sealed spell ID.
+        NS, r = incomplete(function(i)
+            onUnit(i, "player", "HELPFUL", { buff(1, INTELLECT), { auraInstanceID = 2, spellId = T.secret(HASTE) } })
+        end)
+        assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "a sealed spell ID")
+    end)
+    restore()
+    if not ok then error(err, 0) end
+    -- A read that raises (WoW Forever's sealed read).
+    local NS, r = incomplete(function(i)
+        i.mocks.__auraRaise = { playerHELPFUL = 2 }
+    end)
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "a raising read")
+    -- AURA_LIMIT reached: the walk never saw the list's end, so the 40 new auras (and the two it no
+    -- longer reached) are no line.
+    NS, r = incomplete(function(i)
+        local many = {}
+        for n = 1, i.NS.CombatLog.AURA_LIMIT do many[n] = buff(100 + n, 5000 + n) end
+        onUnit(i, "player", "HELPFUL", many)
+    end, true)
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "AURA_LIMIT reached: no gain and no loss logged")
+end)
+
+test("combat log: a target change is silent, and a new target is no burst of gains", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        onUnit(i, "target", "HARMFUL", { debuff(70, IGNITE, true), debuff(71, CURSE, true) })
+        at(i, 12)
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        aura(i, 13, "target", { isFullUpdate = true })
+    end)
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "", "walked at the change; the full update after finds nothing new")
+end)
+
 -- ── secrets ─────────────────────────────────────────────────────────────────────────────────────
 
-test("combat log: a sealed aura and a sealed cast are no line; a sealed amount is saved as \"s\"", function()
+test("combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key", function()
     local restore = T.installSecretValue()
     local ok, err = pcall(function()
         local inst, meter, saved = fresh()
@@ -237,24 +424,45 @@ test("combat log: a sealed aura and a sealed cast are no line; a sealed amount i
             aura(i, 12, "player", { addedAuras = { { auraInstanceID = 5, spellId = T.secret(INTELLECT), isHelpful = true },
                                                    { auraInstanceID = T.secret(6), spellId = MARK, isHelpful = true } } })
             aura(i, 13, "player", T.secret({}))
-            cast(i, 14, "player", T.secret(FIREBALL))
-            hit(i, 15, "WOUND", T.secret(900), 1, "GLANCING")
-            hit(i, 16, T.secret("WOUND"), 900)
+            aura(i, 14, "player", { isFullUpdate = T.secret(true) })
+            aura(i, 15, "player", { removedAuraInstanceIDs = { T.secret(5) } })
+            cast(i, 16, "player", T.secret(FIREBALL))
+            cast(i, 17, "player", FIREBALL)
         end)
         local log = NS.CombatLog.Of(r)
-        assertEqual(kinds(NS, log), "HIT", "only the hit, its amount sealed")
-        assertEqual(log[1].a, NS.CombatLog.SEALED)
-        assertEqual(log[1].f, NS.CombatLog.FLAG.GLANCING)
-        local live
+        assertEqual(kinds(NS, log), "CAST", "only the plain cast")
         for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
             local e = NS.CombatLog.Line(n)
-            if e and e.k == NS.CombatLog.KIND.HIT then live = e end
+            for key, v in pairs(e or {}) do assertTrue(not T.isSecret(v), "no secret in the ring's " .. key) end
         end
-        assertTrue(T.isSecret(live.x), "the ring keeps the client's value for display")
-        assertNil(log[1].x, "never saved")
     end)
     restore()
     if not ok then error(err, 0) end
+end)
+
+-- ── the retired lines ───────────────────────────────────────────────────────────────────────────
+
+test("combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown", function()
+    local NS = T.load().NS
+    local CL = NS.CombatLog
+    local K, U = CL.KIND, CL.UNIT
+    -- The numbers never move: saved logs carry them.
+    assertEqual(K.CAST .. K.BUFF_ON .. K.BUFF_OFF .. K.DEBUFF_ON .. K.DEBUFF_OFF .. K.DIES, "123458")
+    assertEqual(K.HIT .. "," .. K.HEAL .. "," .. K.START .. "," .. K.END, "6,7,9,10")
+    assertNil(CL.IsBoundary, "renamed IsRetired")
+    for _, e in ipairs({ { k = K.HIT, u = U.player }, { k = K.HEAL, u = U.player }, { k = K.START }, { k = K.END },
+                         { k = K.BUFF_ON, u = U.target }, { k = K.BUFF_OFF, u = U.target } }) do
+        assertTrue(CL.IsRetired(e), "kind " .. e.k)
+        assertNil(CL.CategoryOf(e.k, e.u, e.id), "no category for kind " .. e.k)
+    end
+    for _, e in ipairs({ { k = K.CAST, u = U.player, id = FIREBALL }, { k = K.BUFF_ON, u = U.player },
+                         { k = K.DEBUFF_OFF, u = U.target }, { k = K.DIES, u = U.player } }) do
+        assertTrue(not CL.IsRetired(e), "kind " .. e.k .. " is live")
+    end
+    assertEqual(table.concat(CL.CATEGORIES, ","), "casts,petCasts,playerBuffs,playerDebuffs,targetDebuffs,deaths")
+    assertNil(CL.SEALED, "no sealed amount mark")
+    assertNil(CL.FLAG.CRIT, "the hits' marks are gone")
+    assertEqual(CL.FLAG.INTERRUPTED, 8, "at its bit")
 end)
 
 -- ── the cap and the categories ──────────────────────────────────────────────────────────────────
@@ -264,13 +472,12 @@ test("combat log: past `log.store.lines` only the newest are kept and the record
     local NS = inst.NS
     NS.db.profile.log.store.lines = 100
     local r = fightThrough(inst, meter, saved, 40, function(i)
-        for n = 1, 250 do hit(i, 11 + n * 0.1, "WOUND", n) end
+        for n = 1, 250 do spellAt(i, 11 + n * 0.1, 100000 + n) end
     end)
     local log, dropped = NS.CombatLog.Of(r)
-    -- red under: a boundary line taking one of the cap's slots (item 10: the cap counts events alone)
     assertEqual(#log, 100)
-    assertEqual(log[#log].a, 250, "the newest kept")
-    assertEqual(log[1].a, 151, "hits 151 to 250")
+    assertEqual(log[#log].id, 100250, "the newest kept")
+    assertEqual(log[1].id, 100151, "casts 151 to 250")
     assertEqual(dropped, 150)
     assertEqual(r.logDropped, 150)
 end)
@@ -288,8 +495,8 @@ test("combat log: heavy unsaved traffic never costs the saved log its lines (eac
             NS.CombatLog.OnCast("player", FIREBALL, t, false)
             NS.CombatLog.OnCast("player", 75, t, false)      -- Auto Shot: in the ring, never saved
             NS.CombatLog.OnCast("player", 75, t, false)
-            hit(i, t, "WOUND", n)                             -- hits: in the ring, not saved here
-            hit(i, t, "WOUND", n)
+            NS.CombatLog.OnCast("pet", BITE, t, false)       -- pet casts: in the ring, not saved here
+            NS.CombatLog.OnCast("pet", BITE, t, false)
         end
     end)
     assertTrue(NS.CombatLog.Seq() > 3 * C.RING, "the ring wrapped several times over")
@@ -312,7 +519,7 @@ test("combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is 
     assertEqual(NS.GetSetting("log.store.lines"), 400)
     NS.db.profile.log.store.lines = 5
     local r = fightThrough(inst, meter, saved, 40, function(i)
-        for n = 1, 150 do hit(i, 11 + n * 0.1, "WOUND", n) end
+        for n = 1, 150 do spellAt(i, 11 + n * 0.1, 100000 + n) end
     end)
     assertEqual(#NS.CombatLog.Of(r), C.MIN_PER_FIGHT, "a stored 5 reads as the least, 100")
 end)
@@ -320,16 +527,16 @@ end)
 test("combat log: a category not saved is no line and not counted as dropped", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
-    NS.db.profile.log.store.categories.hits = false
+    NS.db.profile.log.store.categories.playerBuffs = false
     NS.db.profile.log.store.categories.petCasts = false
     local r = fightThrough(inst, meter, saved, 40, function(i)
-        hit(i, 12, "WOUND", 10)
-        hit(i, 13, "HEAL", 10)
+        aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
+        aura(i, 13, "player", { addedAuras = { debuff(8, CURSE) } })
         cast(i, 14, "pet", BITE)
         cast(i, 15, "player", FIREBALL)
     end)
     local log, dropped = NS.CombatLog.Of(r)
-    assertEqual(kinds(NS, log), "HEAL,CAST")
+    assertEqual(kinds(NS, log), "DEBUFF_ON,CAST")
     assertEqual(dropped, 0)
 end)
 
@@ -337,28 +544,28 @@ test("combat log: saving off keeps no log on the record; the log off registers n
     local inst, meter, saved = fresh()
     local NS = inst.NS
     NS.db.profile.log.store.enabled = false
-    local r = fightThrough(inst, meter, saved, 40, function(i) hit(i, 12, "WOUND", 10) end)
+    local r = fightThrough(inst, meter, saved, 40, function(i) cast(i, 12, "player", FIREBALL) end)
     assertNil(r.log)
     assertNil(NS.CombatLog.Of(r))
     NS.db.profile.log.enabled = false
-    local seq = NS.CombatLog.Seq()
+    local before = NS.CombatLog.Seq()
     local r2 = fightThrough(inst, meter, saved, 40, function(i)
         assertEqual(next(unitRegs(i)), nil, "no registration in the fight")
-        hit(i, 12, "WOUND", 10)
+        aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
     end)
     assertTrue(r2 ~= r, "the second fight was saved")
     assertNil(r2.log)
-    assertEqual(NS.CombatLog.Seq(), seq, "no line was captured")
+    assertEqual(NS.CombatLog.Seq(), before, "no line was captured")
 end)
 
 test("combat log: the settings are frozen at the fight's start", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
     local r = fightThrough(inst, meter, saved, 40, function(i)
-        NS.db.profile.log.store.categories.hits = false
-        hit(i, 12, "WOUND", 10)
+        NS.db.profile.log.store.categories.playerBuffs = false
+        aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
     end)
-    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "HIT")
+    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "BUFF_ON")
 end)
 
 test("combat log: the storage keys have their shipped defaults", function()
@@ -375,19 +582,22 @@ end)
 
 -- ── registration ────────────────────────────────────────────────────────────────────────────────
 
-test("combat log: its events are registered only while a fight is open, for player and target", function()
+test("combat log: its events are registered only while a fight is open: UNIT_AURA, PLAYER_DEAD, the target change", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
     assertNil(NS.CombatLog.EventFrame(), "idle: no frame yet")
     local inFight
     fightThrough(inst, meter, saved, 40, function(i) inFight = unitRegs(i) end)
-    assertTrue(inFight.UNIT_AURA ~= nil and inFight.UNIT_COMBAT ~= nil and inFight.PLAYER_DEAD ~= nil)
+    local names = {}
+    for event in pairs(inFight) do if event ~= "units" then names[#names + 1] = event end end
+    table.sort(names)
+    -- red under: UNIT_COMBAT registered (the hits and heals taken, retired by the Combat Sequence)
+    assertEqual(table.concat(names, ","), "PLAYER_DEAD,PLAYER_TARGET_CHANGED,UNIT_AURA")
     assertTrue(inFight.units.UNIT_AURA.player and inFight.units.UNIT_AURA.target, "UNIT_AURA for player and target")
-    assertTrue(inFight.units.UNIT_COMBAT.player and not inFight.units.UNIT_COMBAT.target, "UNIT_COMBAT for player only")
-    assertNil(inFight.PLAYER_REGEN_ENABLED, "no combat end is heard: it was only the END line (item 10)")
     assertEqual(next(unitRegs(inst)), nil, "the fight ended: nothing registered")
     for _, r in ipairs(inst.mocks.__registrations()) do
         assertTrue(r.event ~= "COMBAT_LOG_EVENT_UNFILTERED", "never the combat log")
+        assertTrue(r.target ~= NS.CombatLog.EventFrame() or r.event ~= "UNIT_COMBAT", "never UNIT_COMBAT")
     end
 end)
 
@@ -397,7 +607,7 @@ test("combat log: a stand-down mid-fight drops every registration and line", fun
     at(inst, 10)
     meter.SetSession(1, FIGHT)
     enter(inst, 10)
-    hit(inst, 11, "WOUND", 5)
+    aura(inst, 11, "player", { addedAuras = { buff(7, INTELLECT) } })
     assertTrue(next(unitRegs(inst)) ~= nil)
     NS.SetByPath("general.enabled", false)
     assertEqual(next(unitRegs(inst)), nil)
@@ -407,21 +617,21 @@ test("combat log: a stand-down mid-fight drops every registration and line", fun
     assertEqual(next(unitRegs(inst)), nil, "the stand-up opens no fight")
 end)
 
-test("combat log: a client that refuses UNIT_COMBAT costs only it, and the diagnosis names it", function()
-    local inst, meter, saved = fresh{ mutate = function(m) m.__badEvents = { UNIT_COMBAT = true } end }
+test("combat log: a client that refuses PLAYER_DEAD costs only it, and the diagnosis names it", function()
+    local inst, meter, saved = fresh{ mutate = function(m) m.__badEvents = { PLAYER_DEAD = true } end }
     local NS = inst.NS
     local regs
     local r = fightThrough(inst, meter, saved, 40, function(i)
         regs = unitRegs(i)
         aura(i, 12, "player", { addedAuras = { { auraInstanceID = 1, spellId = INTELLECT, isHelpful = true } } })
     end)
-    assertNil(regs.UNIT_COMBAT)
+    assertNil(regs.PLAYER_DEAD)
     assertTrue(regs.UNIT_AURA ~= nil)
-    assertEqual(table.concat(NS.CombatLog.Diagnose().refused, ","), "UNIT_COMBAT")
+    assertEqual(table.concat(NS.CombatLog.Diagnose().refused, ","), "PLAYER_DEAD")
     assertEqual(kinds(NS, NS.CombatLog.Of(r)), "BUFF_ON")
 end)
 
-test("combat log: the combatLog perf bucket is reached by its events", function()
+test("combat log: the combatLog perf bucket is reached by its events, the diff too", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
     local noted = 0
@@ -432,11 +642,12 @@ test("combat log: the combatLog perf bucket is reached by its events", function(
     end
     fightThrough(inst, meter, saved, 40, function(i)
         NS.Perf.on = true
-        hit(i, 12, "WOUND", 5)
+        aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
+        aura(i, 13, "player", nil)
         NS.Perf.on = false
     end)
     NS.Perf.Note = note
-    assertEqual(noted, 1)
+    assertEqual(noted, 2)
 end)
 
 -- ── the ring ────────────────────────────────────────────────────────────────────────────────────
@@ -493,7 +704,7 @@ end)
 test("combat log: a fight's log goes with it when retention purges the fight", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
-    local r = fightThrough(inst, meter, saved, 40, function(i) hit(i, 12, "WOUND", 10) end)
+    local r = fightThrough(inst, meter, saved, 40, function(i) cast(i, 12, "player", FIREBALL) end)
     assertTrue(NS.CombatLog.Of(r) ~= nil)
     r.t = os.time() - 30 * 86400
     NS.SetByPath("history.keepBests", false)
@@ -507,11 +718,11 @@ test("combat log: a fight lost or skipped keeps no log waiting", function()
     local NS = inst.NS
     NS.SetByPath("history.minLength", 30)
     local short = { damage = 500, dps = 100, duration = 5, spells = FIGHT.spells, enemies = FIGHT.enemies }
-    fightThrough(inst, meter, saved, 5, function(i) hit(i, 11, "WOUND", 10) end, short)
+    fightThrough(inst, meter, saved, 5, function(i) cast(i, 11, "player", PYROBLAST) end, short)
     assertEqual(#saved, 0, "too short to store")
     assertNil(NS.CombatLog.LiveStart(), "no capture left open")
-    local r = fightThrough(inst, meter, saved, 40, function(i) hit(i, 102, "WOUND", 10) end, nil, 100, 2)
-    assertEqual(kinds(NS, NS.CombatLog.Of(r)), "HIT", "the short fight's lines are not this one's")
+    local r = fightThrough(inst, meter, saved, 40, function(i) cast(i, 102, "player", FIREBALL) end, nil, 100, 2)
+    assertEqual(lines(NS, NS.CombatLog.Of(r)), "CAST:" .. FIREBALL, "the short fight's lines are not this one's")
 end)
 
 -- ── which target ────────────────────────────────────────────────────────────────────────────────
@@ -533,7 +744,8 @@ test("combat log: a target swap mid-fight keeps the earlier rows' target, live a
         i.mocks.__unitNames.target = "Stormwind Guard"
         i.mocks.__hostile = false
         i.mocks.__fire("PLAYER_TARGET_CHANGED")
-        aura(i, 15, "target", { addedAuras = { { auraInstanceID = 9, spellId = MARK, isHelpful = true } } })
+        aura(i, 15, "target", { addedAuras = { { auraInstanceID = 9, spellId = CURSE, isHarmful = true,
+                                                 isFromPlayerOrPlayerPet = true } } })
         at(i, 16)
         i.mocks.__unitNames.target = "Angry Boar"
         i.mocks.__hostile = true
@@ -549,7 +761,7 @@ test("combat log: a target swap mid-fight keeps the earlier rows' target, live a
     local live = {}
     for n = NS.CombatLog.First(), NS.CombatLog.Seq() do
         local e = NS.CombatLog.Line(n)
-        if e and (e.k == K.DEBUFF_ON or e.k == K.BUFF_ON) and e.u == NS.CombatLog.UNIT.target then
+        if e and e.k == K.DEBUFF_ON and e.u == NS.CombatLog.UNIT.target then
             live[#live + 1] = who(NS.CombatLog.Targets(), e.g)
         end
     end
@@ -572,7 +784,8 @@ end)
 -- ── the stored size ─────────────────────────────────────────────────────────────────────────────
 
 --- How many bytes a log at the cap takes in SavedVariables (docs/performance.md, *Stored size*): 400
---- lines, a busy fight's mix (casts, auras with IDs, hits with an amount, school and a mark).
+--- lines, a busy fight's mix (casts, an interrupted one with its mark, auras with IDs on you and the
+--- target). No line carries an amount or a school now (the Combat Sequence).
 local LOG_BYTES_CEILING = 39500
 
 test("combat log: a log at the cap stays under its stored-size ceiling", function()
@@ -584,7 +797,7 @@ test("combat log: a log at the cap stays under its stored-size ceiling", functio
         local m = n % 4
         if m == 0 then log[n] = { t = t, k = K.CAST, id = 1234567, u = U.player }
         elseif m == 1 then log[n] = { t = t, k = K.DEBUFF_ON, id = 1234567, u = U.target, g = 1 }
-        elseif m == 2 then log[n] = { t = t, k = K.HIT, u = U.player, a = 123456, s = 32, f = 1 }
+        elseif m == 2 then log[n] = { t = t, k = K.CAST, id = 1234567, u = U.player, f = 8 }
         else log[n] = { t = t, k = K.BUFF_OFF, id = 1234567, u = U.player } end
     end
     local bytes = NS.Retention.SizeOf({ log = log, logDropped = 600, logTargets = { { name = "Training Dummy" } } })

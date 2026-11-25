@@ -1,51 +1,43 @@
 local _, NS = ...
--- modules/LogTable.lua — the Combat Log's table, its half that draws nothing (CombatTrail #11, plan item
--- CL-11b; the spec's addendum, *The table*): what each cell of a line says and in which color, which
--- lines a view shows, and the feed that walks the ring for a live view (its sort, its follow and pause,
--- its display throttle). The frames are modules/LogTable_View.lua's; the homes are the DPS HUD's docked
--- drawer (modules/Hud_Log.lua), the detached companion (modules/LogWindow.lua) and the Results fight
--- detail's Log section (modules/Results_Log.lua), all three over this one component. Its settings are the
--- Combat Log page's (settings/Log.lua).
+-- modules/LogTable.lua — the Combat Sequence's table, its half that draws nothing (CombatTrail #11, plan
+-- item CL-11b; the spec's addendum, *The table*; the Combat Sequence, CSEQ-1): what each cell of a line
+-- says and in which color, which lines a view shows, and the feed that walks the ring for a live view
+-- (its sort, its follow and pause, its display throttle). The frames are modules/LogTable_View.lua's;
+-- the homes are the DPS HUD's docked section (modules/Hud_Log.lua), the detached companion
+-- (modules/LogWindow.lua) and the Results fight detail's section (modules/Results_Log.lua), all three
+-- over this one component. Its settings are the Combat Sequence page's (settings/Log.lua).
 --
--- THE COLUMNS. Time · Event · Spell/School · Amount, plus Info where the home has room (Columns:
--- `opts.info`), every one centered in its header and its cells. Time and Event always show; the others
--- follow `log.view.columns.*`, and a home too narrow for them drops Info, so Spell/School keeps
--- SPELL_MIN. There is no Source or Target column (owner feedback item 3, 2026-11-25): a line's `u`
--- stays in the data, for the chips (Pet) and the categories, and is never a column.
---   Time          from the pull (seconds, `-` before it for a pre-pull line) or the clock time
---                 (`log.view.timeFormat` "pull" | "clock")
---   Event         CAST, BUFF+, BUFF-, DEBUFF+, DEBUFF-, HIT, HEAL, DIES. The fight's start and end are
---                 no lines (item 10); a saved log's old PULL / END lines are dropped at read time.
---   Spell/School  the spell's icon and name; for a hit the school (the client gives no spell); for a
---                 heal "Healing" in the heal color, naming a school only when the client reports one
---                 other than Physical (item 4: UNIT_COMBAT's HEAL reports school 1, Physical, or nil)
---   Amount        a hit's (red) or a heal's (green, "+") amount; `*` after a critical's plain amount
---   Info          Critical, Glancing, Crushing, Interrupted
+-- THE COLUMNS. Time · Event · Spell, plus Info where the home has room (Columns: `opts.info`), every
+-- one centered in its header and its cells. Time and Event always show; the others follow
+-- `log.view.columns.*`, and a home too narrow for them drops Info, so Spell keeps SPELL_MIN. There is
+-- no Source or Target column (owner feedback item 3, 2026-11-25), and no Amount (the Combat Sequence:
+-- no line carries one): a line's `u` stays in the data, for the chips (Pet) and the categories.
+--   Time   from the pull (seconds, `-` before it for a pre-pull line) or the clock time
+--          (`log.view.timeFormat` "pull" | "clock")
+--   Event  CAST, BUFF+, BUFF-, DEBUFF+, DEBUFF-, DIES. The fight's start and end, the hits and heals
+--          and a target's buffs are no lines; a saved log's old ones are dropped at read time
+--          (CombatLog.IsRetired).
+--   Spell  the spell's icon and name (blank for a death)
+--   Info   Interrupted
 --
--- THE COLORS (the spec's board D), each a skin token (core/SkinSetup.lua's `ct.log.*` and `ct.school.*`)
--- with its Ka0s Default value. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell whose
--- base cooldown is long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash
--- (DEBUFF- dimmed, no wash), HIT a red wash and a red amount, HEAL green with "+" and its "Healing"
--- cell. A hit's school name is in its school's color. COLOR-BLIND SAFETY: every kind differs by its
--- tag's text and its wash as well as its hue, and `log.view.schoolColors` / `log.view.washes` off draw
--- the names in the body text and no wash. WoW's fonts have no bold weight and FRIZQT__ has no star
--- glyph: a critical carries its `*` and the row's larger amount face instead (the view's Cells.big).
--- The who colors (`log.colors.*`, LogTable.ReadColors) are still read into each view's ctx, but with
--- no Source or Target column nothing draws them now.
+-- THE COLORS (the spec's board D), each a skin token (core/SkinSetup.lua's `ct.log.*`) with its Ka0s
+-- Default value. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell whose base cooldown is
+-- long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash (DEBUFF- dimmed, no
+-- wash), DIES red. COLOR-BLIND SAFETY: every kind differs by its tag's text as well as its hue, and
+-- `log.view.washes` off draws no wash. The who colors (`log.colors.*`, LogTable.ReadColors) are still
+-- read into each view's ctx, but with no Source or Target column nothing draws them now.
 --
 -- WHAT IS SHOWN is a view's own `show` table, shaped as `log.show.*`: each category of
--- CombatLog.CategoryOf on or off, the auto attacks (Auto Shot, Shoot: no category) off by default, and
--- a hit or heal under `log.show.minAmount` hidden, judged on a PLAIN amount only. A sealed amount is
--- never compared: it always shows. A retired boundary never shows. What is shown never changes what is
--- captured or saved.
--- THE CHIPS (LogTable.CHIPS: Casts, Pet, Buffs, Debuffs, Taken, Heals, each over the categories it
--- covers) filter a view's lines. The Results Log section's open on `log.results.chips` and count their
--- lines (modules/Results_Log.lua). The live views' (the detached window's strip under its status line,
--- the drawer's under its heading, shown by default and hidden by its filter mark, `log.drawer.chips`)
--- are each view's own `show`, SEEDED from `log.show.*` (the What
--- to show page, so `log.show` is those chips' defaults) when the view is built, when the log is opened,
--- at each FIGHT_STARTED and at a `log.show` write; a click turns every category the chip covers on
--- or off in that view alone for the session (LogTable.ToggleChip), never written to the settings. A
+-- CombatLog.CategoryOf on or off, and the auto attacks (Auto Shot, Shoot: no category) off by default.
+-- A retired line never shows. What is shown never changes what is captured or saved.
+-- THE CHIPS (LogTable.CHIPS: Casts, Pet, Buffs, Debuffs, each over the categories it covers) filter a
+-- view's lines. The Results section's open on `log.results.chips` and count their lines
+-- (modules/Results_Log.lua). The live views' (the detached window's strip under its status line,
+-- the docked section's under its heading, shown by default and hidden by its filter mark,
+-- `log.drawer.chips`) are each view's own `show`, SEEDED from `log.show.*` (the What
+-- to show page, so `log.show` is those chips' defaults) when the view is built, when the section is
+-- opened, at each FIGHT_STARTED and at a `log.show` write; a click turns every category the chip covers
+-- on or off in that view alone for the session (LogTable.ToggleChip), never written to the settings. A
 -- chip is lit while any category it covers shows (LogTable.ChipOn).
 --
 -- THE FEED (a live view over modules/CombatLog.lua's ring). `shown` is the newest sequence number the
@@ -61,10 +53,8 @@ local _, NS = ...
 -- was on (`anchor`) however many come in, until Resume or a scroll back to it. A view's rows are the
 -- `rows` lines counted from its top line (`anchor` or `shown`), `offset` lines in.
 --
--- SECRETS. A sealed amount is in the ring as the client gave it (`x`) and goes through NS.Format.Number
--- to the label alone (FontString display, docs/midnight-quirks.md); a saved one ("s") reads "sealed".
--- Nothing here compares, counts or stores a secret. Spell names and icons come through C_Spell,
--- pcall'd, from the line's plain spell ID.
+-- SECRETS. A line holds plain numbers only. Nothing here compares, counts or stores a secret. Spell
+-- names and icons come through C_Spell, pcall'd, from the line's plain spell ID.
 
 local LogTable = {}
 NS.LogTable = LogTable
@@ -82,47 +72,18 @@ LogTable.MIN_MS, LogTable.MAX_MS = 50, 1000
 
 LogTable.TAG = {
     [K.CAST] = L["CAST"], [K.BUFF_ON] = L["BUFF+"], [K.BUFF_OFF] = L["BUFF-"], [K.DEBUFF_ON] = L["DEBUFF+"],
-    [K.DEBUFF_OFF] = L["DEBUFF-"], [K.HIT] = L["HIT"], [K.HEAL] = L["HEAL"], [K.DIES] = L["DIES"],
+    [K.DEBUFF_OFF] = L["DEBUFF-"], [K.DIES] = L["DIES"],
 }
 -- The tag's color token per kind.
 LogTable.TAG_COLOR = {
     [K.CAST] = "ct.text", [K.BUFF_ON] = "ct.log.buff", [K.BUFF_OFF] = "ct.log.buffOff",
-    [K.DEBUFF_ON] = "ct.log.debuff", [K.DEBUFF_OFF] = "ct.log.debuffOff", [K.HIT] = "ct.log.hit",
-    [K.HEAL] = "ct.log.heal", [K.DIES] = "ct.log.hit",
+    [K.DEBUFF_ON] = "ct.log.debuff", [K.DEBUFF_OFF] = "ct.log.debuffOff", [K.DIES] = "ct.log.hit",
 }
 -- The row wash per kind (a long-cooldown CAST's is decided per spell).
-LogTable.WASH = { [K.HIT] = "ct.log.wash.hit", [K.DEBUFF_ON] = "ct.log.wash.debuff" }
+LogTable.WASH = { [K.DEBUFF_ON] = "ct.log.wash.debuff" }
 LogTable.CD_WASH = "ct.log.wash.cd"
 
---- The schools by their bit, lowest first, each with its token and its words.
-LogTable.SCHOOLS = {
-    { bit = 1, key = "physical", name = L["Physical"] }, { bit = 2, key = "holy", name = L["Holy"] },
-    { bit = 4, key = "fire", name = L["Fire"] }, { bit = 8, key = "nature", name = L["Nature"] },
-    { bit = 16, key = "frost", name = L["Frost"] }, { bit = 32, key = "shadow", name = L["Shadow"] },
-    { bit = 64, key = "arcane", name = L["Arcane"] },
-}
-
---- The school a mask names: its lowest school (its token), and the client's name for the whole mask
---- where it has one (GetSchoolString, plain), else that school's.
---- @return table|nil school, string|nil words
-function LogTable.School(mask)
-    mask = Secrets.PlainNumber(mask)
-    if not mask or mask < 1 then return nil, nil end
-    for _, s in ipairs(LogTable.SCHOOLS) do
-        if math.floor(mask / s.bit) % 2 == 1 then
-            local words = s.name
-            if mask ~= s.bit and type(GetSchoolString) == "function" then
-                local ok, got = pcall(GetSchoolString, mask)
-                words = ok and Secrets.PlainString(got) or words
-            end
-            return s, words
-        end
-    end
-    return nil, nil
-end
-
-local FLAG_WORDS = { { F.CRIT, L["Critical"] }, { F.GLANCING, L["Glancing"] }, { F.CRUSHING, L["Crushing"] },
-                     { F.INTERRUPTED, L["Interrupted"] } }
+local FLAG_WORDS = { { F.INTERRUPTED, L["Interrupted"] } }
 
 --- The Info words for a line's marks ("" for none).
 function LogTable.Info(f)
@@ -133,11 +94,6 @@ function LogTable.Info(f)
         if math.floor(f / pair[1]) % 2 == 1 then out[#out + 1] = pair[2] end
     end
     return table.concat(out, ", ")
-end
-
-local function isCrit(f)
-    f = Secrets.PlainNumber(f)
-    return f ~= nil and f % 2 == 1
 end
 
 --- Seconds as the Time column says them: "12.3", "1:05.3", "-1.2" before the pull.
@@ -184,30 +140,10 @@ end
 
 local OFF = { [K.BUFF_OFF] = true, [K.DEBUFF_OFF] = true }
 
-local PHYSICAL = 1
-
---- A heal's Spell/School words: "Healing", naming the school only when the client reports one other
---- than Physical. UNIT_COMBAT's HEAL gives school 1 (Physical) or nothing for an ordinary heal, which
---- read as "Physical" before (owner feedback item 4): the capture keeps what the client gave, and the
---- view words it.
---- @return string
-function LogTable.HealWords(mask)
-    mask = Secrets.PlainNumber(mask)
-    if not mask or mask == PHYSICAL then return L["Healing"] end
-    local _, words = LogTable.School(mask)
-    return words and L["Healing (%s)"]:format(words) or L["Healing"]
-end
-
--- Spell/School: the spell's icon and name, the school for a hit, "Healing" for a heal.
-local function spell(c, e, ctx)
+-- Spell: the spell's icon and name (blank for a line with no spell, a death).
+local function spell(c, e)
     c.icon, c.spellID, c.spellColor = nil, nil, OFF[e.k] and "ct.dim" or "ct.text"
-    if e.k == K.HEAL then
-        c.spell, c.spellColor = LogTable.HealWords(e.s), "ct.log.heal"
-    elseif e.k == K.HIT then
-        local s, words = LogTable.School(e.s)
-        c.spell = words or ""
-        if s and ctx.schoolColors ~= false then c.spellColor = "ct.school." .. s.key end
-    elseif e.id then
+    if e.id then
         c.spellID = e.id
         c.spell = NS.HudBreakdown.SpellName(e.id)
         c.icon = NS.HudBreakdown.SpellIcon(e.id)
@@ -216,33 +152,14 @@ local function spell(c, e, ctx)
     end
 end
 
--- Amount: a plain amount abbreviated ("+" on a heal, "*" after a critical), a sealed one as the client
--- gave it (the ring's `x`, to the label alone) or "sealed" (a saved one).
-local function amount(c, e)
-    c.amount, c.big = "", false
-    if e.k ~= K.HIT and e.k ~= K.HEAL then return end
-    c.amountColor = e.k == K.HIT and "ct.log.hit" or "ct.log.heal"
-    c.big = isCrit(e.f)
-    local a = Secrets.PlainNumber(e.a)
-    if a then
-        c.amount = (e.k == K.HEAL and "+" or "") .. NS.Format.Number(a) .. (c.big and "*" or "")
-    elseif e.x ~= nil then
-        c.amount = NS.Format.Number(e.x)
-    elseif e.a == CL.SEALED then
-        c.amount = L["sealed"]
-    end
-end
-
 --- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, spell, spellColor, spellID,
---- icon, amount, amountColor, big, info, wash (a token or nil). `ctx`: startT, startClock, timeFormat,
---- schoolColors, washes.
+--- icon, info, wash (a token or nil). `ctx`: startT, startClock, timeFormat, washes.
 --- @return table c
 function LogTable.Cells(e, ctx, c)
     c = c or {}
     c.time = LogTable.Time(e, ctx)
     c.tag, c.tagColor = LogTable.TAG[e.k] or "", LogTable.TAG_COLOR[e.k] or "ct.text"
-    spell(c, e, ctx)
-    amount(c, e)
+    spell(c, e)
     c.info = LogTable.Info(e.f)
     local w = LogTable.WASH[e.k]
     if e.k == K.CAST and LogTable.LongCooldown(e.id) then w = LogTable.CD_WASH end
@@ -252,39 +169,30 @@ end
 
 -- ── what is shown ───────────────────────────────────────────────────────────────────────────────
 
---- Whether line `e` shows under `show` (`log.show`: its categories, autoAttacks and minAmount).
+--- Whether line `e` shows under `show` (`log.show`: its categories and autoAttacks). A retired line
+--- has no category, so it never shows.
 function LogTable.Shows(e, show)
     local cat = CL.CategoryOf(e.k, e.u, e.id)
     if cat == nil then return e.k == K.CAST and show.autoAttacks == true end
-    if show[cat] == false then return false end
-    local min = Secrets.PlainNumber(show.minAmount) or 0
-    if min > 0 and (e.k == K.HIT or e.k == K.HEAL) then
-        local a = Secrets.PlainNumber(e.a)
-        if a and a < min then return false end
-    end
-    return true
+    return show[cat] ~= false
 end
 
 -- ── the chips ───────────────────────────────────────────────────────────────────────────────────
 
 --- The chips, left to right: their key, their label and the saved categories each one covers (the
---- Results Log section's and the live views' alike).
+--- Results section's and the live views' alike).
 LogTable.CHIPS = {
     { key = "casts", label = "Casts", cats = { "casts" } },
     { key = "pet", label = "Pet", cats = { "petCasts" } },
-    { key = "buffs", label = "Buffs", cats = { "playerBuffs", "targetBuffs" } },
+    { key = "buffs", label = "Buffs", cats = { "playerBuffs" } },
     { key = "debuffs", label = "Debuffs", cats = { "playerDebuffs", "targetDebuffs" } },
-    { key = "taken", label = "Taken", cats = { "hits" } },
-    { key = "heals", label = "Heals", cats = { "heals" } },
 }
 --- Each chip's tooltip line (an L key).
 LogTable.CHIP_TIPS = {
     casts = "Your casts.",
     pet = "Your pet's casts.",
-    buffs = "Buffs gained and lost, on you and on your target.",
-    debuffs = "Debuffs on you, and the debuffs you put on your target.",
-    taken = "Hits taken: the damage done to you.",
-    heals = "Heals taken: the healing done to you.",
+    buffs = "Buffs gained and lost on you.",
+    debuffs = "Debuffs on you, and the debuffs you put on your target, gained and lost.",
 }
 LogTable.CHIP_PAD = 14     -- a chip's width past its text's
 LogTable.CHIP_CHAR_W = 5.6 -- the chip label's width per character (estimated: nothing is read back)
@@ -370,13 +278,12 @@ function LogTable.ReadColors(ctx)
 end
 
 --- `ctx` (a reused table) refilled for a live view whose window starts at `startT` (GetTime()): the
---- time format, the clock time of the start and the color switches.
+--- time format, the clock time of the start and the wash switch.
 function LogTable.LiveContext(ctx, startT)
     ctx.startT = startT
     ctx.timeFormat = setting("log.view.timeFormat")
     ctx.startClock = nil
     if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
-    ctx.schoolColors = setting("log.view.schoolColors") ~= false
     ctx.washes = setting("log.view.washes") ~= false
     return LogTable.ReadColors(ctx)
 end

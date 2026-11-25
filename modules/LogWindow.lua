@@ -31,7 +31,7 @@ local _, NS = ...
 -- held only the cheap layout runs (the size, the columns, the visible rows); the release stores the
 -- width and the height and repaints once.
 --
--- THE CHIPS (Casts, Pet, Buffs, Debuffs, Taken, Heals; LogTable.NewChips) stand under the status
+-- THE CHIPS (Casts, Pet, Buffs, Debuffs; LogTable.NewChips) stand under the status
 -- line, wrapped at the window's width: the window's own What to show, seeded from `log.show.*` when it
 -- is built, when the log is opened or moved here, at each FIGHT_STARTED and at a What to show write
 -- (LogTable.Reseeds); a click turns one on or off here alone, for the session, never in the settings.
@@ -49,7 +49,7 @@ local _, NS = ...
 -- `general.` paths. The stand-down hides it and drops the timer and the feed.
 --
 -- SECRETS. Nothing here reads a frame's geometry back but the drag's own anchor (stored plain), and
--- every amount goes to a label through the table's cells (NS.Format.Number), never compared.
+-- the table's lines hold plain numbers only.
 
 local LW = {}
 NS.LogWindow = LW

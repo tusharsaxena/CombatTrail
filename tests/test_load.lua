@@ -100,8 +100,8 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 7 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 7)
+test("load: the settings stamp is 8 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 8)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
@@ -211,9 +211,64 @@ test("load: step 7 carries each profile's lock to the lanes' own, so no lanes un
     assertEqual(rawget(sv.Open.general, "lanesLocked"), nil, "an unlocked one stores nothing")
     assertEqual(rawget(sv.Bare, "general"), nil, "a profile with no lock is left alone")
     assertEqual(sv.Own.general.lanesLocked, false, "a lanes lock already stored is kept")
-    assertEqual(NS.db.global.schemaVersion, 7)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     NS.CarryLanesLock(sv.Locked)
     NS.CarryLanesLock({})
     NS.CarryLanesLock(nil)
     assertEqual(sv.Locked.general.lanesLocked, true, "idempotent")
+end)
+
+-- The keys the Combat Sequence retired (CSEQ-1), as a profile stored them.
+local RETIRED_SEQUENCE = {
+    "view.columns.amount", "view.schoolColors", "show.hits", "show.heals", "show.minAmount", "show.targetBuffs",
+    "store.categories.hits", "store.categories.heals", "store.categories.targetBuffs",
+    "results.chips.taken", "results.chips.heals",
+}
+
+local function at(t, path)
+    for part in path:gmatch("[^.]+") do
+        if type(t) ~= "table" then return nil end
+        t = rawget(t, part)
+    end
+    return t
+end
+
+test("load: step 8 drops the Combat Sequence's retired keys in every profile, and keeps the rest", function()
+    local function stored()
+        return { log = {
+            view = { columns = { amount = false, info = false, spell = true }, schoolColors = false, washes = false },
+            show = { hits = false, heals = true, minAmount = 500, targetBuffs = false, casts = false, deaths = false },
+            store = { categories = { hits = false, heals = false, targetBuffs = true, playerBuffs = false }, lines = 300 },
+            results = { chips = { taken = false, heals = false, buffs = false } },
+        } }
+    end
+    local NS = boot({ global = { schemaVersion = 7 }, profiles = { Default = stored(), Other = stored(), Bare = {} } })
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Other" }) do
+        local log = sv[name].log
+        -- red under: no step 8, or one over the active profile alone
+        for _, path in ipairs(RETIRED_SEQUENCE) do
+            assertEqual(at(log, path), nil, name .. ": log." .. path)
+        end
+        assertEqual(log.view.columns.info, false, name .. ": the Info toggle kept")
+        assertEqual(log.view.washes, false, name .. ": the washes kept")
+        assertEqual(log.show.casts, false, name .. ": a live category kept")
+        assertEqual(log.show.deaths, false, name .. ": the deaths kept")
+        assertEqual(log.store.categories.playerBuffs, false, name .. ": a saved category kept")
+        assertEqual(log.store.lines, 300, name .. ": the lines kept")
+        assertEqual(log.results.chips.buffs, false, name .. ": a chip kept")
+    end
+    assertEqual(rawget(sv.Bare, "log"), nil, "a profile with no log is left alone")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    -- Idempotent, harmless on a fresh profile or one with no log table.
+    NS.DropRetiredSequenceKeys(sv.Default)
+    NS.DropRetiredSequenceKeys({})
+    NS.DropRetiredSequenceKeys({ log = {} })
+    NS.DropRetiredSequenceKeys({ log = { view = {}, show = {}, store = {}, results = {} } })
+    NS.DropRetiredSequenceKeys(nil)
+    assertEqual(sv.Default.log.store.lines, 300, "a second run changes nothing")
+    local fresh = boot(nil)
+    for _, path in ipairs(RETIRED_SEQUENCE) do
+        assertEqual(fresh.GetSetting("log." .. path), nil, "a fresh profile has no log." .. path)
+    end
 end)

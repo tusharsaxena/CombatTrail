@@ -37,7 +37,7 @@ test("diagnostics: the report carries every section of this addon's own", functi
     local lines = report(inst)
     assertTrue(#lines > 0, "no report landed")
     for _, needle in ipairs({
-        "schema stored=7 code=7 fightFormat=6", "profile=", "fights stored=0",
+        "schema stored=8 code=8 fightFormat=6", "profile=", "fights stored=0",
         "lanes player=on pet=on", "cast events=", "fight state=idle",
         "hud state=", "results shown=false", "test active=false mode=none",
     }) do
@@ -49,11 +49,12 @@ end)
 test("diagnostics: the fight section names the Combat Log's capture and the events the client refused", function()
     local inst = T.load()
     assertTrue(has(report(inst), "combat log registered=false refused=none lines=0"), "idle: nothing registered")
-    local bad = T.load{ mutate = function(m) m.__badEvents = { UNIT_COMBAT = true } end }
+    local bad = T.load{ mutate = function(m) m.__badEvents = { PLAYER_DEAD = true } end }
     bad.NS.CombatLog.Begin("diag-fight", 100, nil)
     local lines = report(bad)
     -- No line at the pull now (owner feedback item 10): the begin alone captures nothing.
-    assertTrue(has(lines, "combat log registered=true refused=UNIT_COMBAT lines=0"), dump(lines))
+    assertTrue(has(lines, "combat log registered=true refused=PLAYER_DEAD lines=0"), dump(lines))
+    assertFalse(table.concat(lines, "\n"):find("UNIT_COMBAT", 1, true) ~= nil, "UNIT_COMBAT is never named")
 end)
 
 test("diagnostics: a setting off its default is listed with its default", function()

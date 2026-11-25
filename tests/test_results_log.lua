@@ -5,7 +5,9 @@
 -- column, the chips and their counts, a chip turning its lines off, the sort and the wheel; no Damage
 -- by spell (Overview's Spell breakdown is the one spell list); a click on a CAST row opening the
 -- timeline at that cast (zoomed, the moment in the middle, the focus line), and its switch; and a fight
--- saved before the log saying "No log was saved for this fight". Runs under both kit profiles.
+-- saved before the log saying "No log was saved for this fight"; a saved log's retired lines (the PULL
+-- and END, the hits, heals and target buffs the Combat Sequence dropped, CSEQ-1) never shown or counted.
+-- Runs under both kit profiles.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -14,7 +16,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
 
 local NOW = os.time()
-local FIREBALL, POLY, INTELLECT, BITE, FROSTBOLT = 133, 118, 1459, 17253, 116
+local FIREBALL, POLY, INTELLECT, BITE, FROSTBOLT, MARK = 133, 118, 1459, 17253, 116, 1126
 
 local function fresh()
     local inst = T.load{ mutate = function(m)
@@ -33,9 +35,10 @@ local function pack(NS, list)
     return NS.CastCodec.Encode(casts)
 end
 
--- A saved log (oldest first) as one saved before owner feedback item 10: the pull's line, two casts of
--- yours, the pet's, a buff, a debuff on the target, two hits taken (one small, one sealed), a heal, a
--- death, the end's line. The two boundary lines stay on disk and are dropped at read time.
+-- A saved log (oldest first) as one saved before owner feedback item 10 and the Combat Sequence: the
+-- pull's line, two casts of yours, the pet's, a buff, a debuff on the target, two hits taken (one small,
+-- one sealed), a heal, a buff on the target, the debuff's loss, a death, the end's line. The retired
+-- lines (the boundaries, the hits, the heal and the target buff) stay on disk and are dropped at read.
 local function savedLog(NS)
     local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
     return {
@@ -47,6 +50,8 @@ local function savedLog(NS)
         { t = 4, k = K.HIT, u = U.player, a = 42, s = 1 },
         { t = 5, k = K.HIT, u = U.player, a = "s", s = 4 },
         { t = 6, k = K.HEAL, u = U.player, a = 120, s = 2 },
+        { t = 7, k = K.BUFF_ON, id = MARK, u = U.target },
+        { t = 8, k = K.DEBUFF_OFF, id = POLY, u = U.target },
         { t = 30.5, k = K.CAST, id = FROSTBOLT, u = U.player },
         { t = 40, k = K.DIES, u = U.player },
         { t = 41, k = K.END },
@@ -175,43 +180,43 @@ test("results log: the saved log in the table, newest first, with the Info colum
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
-    -- red under: the old PULL and END lines drawn (owner feedback item 10)
-    assertEqual(events(g), "DIES,CAST,HEAL,HIT,HIT,DEBUFF+,CAST,BUFF+,CAST", "every event, newest at the top")
+    -- red under: the old PULL and END lines drawn (owner feedback item 10), or the HIT, HEAL and target
+    -- BUFF lines the Combat Sequence retired
+    assertEqual(events(g), "DIES,CAST,DEBUFF-,DEBUFF+,CAST,BUFF+,CAST", "every live event, newest at the top")
     local keys = {}
     for _, col in ipairs(g.table.cols) do keys[#keys + 1] = col.key end
-    assertTrue(table.concat(keys, ","):find("info", 1, true) ~= nil, "the Info column: " .. table.concat(keys, ","))
-    local sealed
-    for _, r in ipairs(g.table:Rows()) do
-        if r:IsShown() and r.text.amount:GetText() == "sealed" then sealed = true end
-    end
-    assertTrue(sealed, "a sealed amount reads sealed")
-    assertEqual(g.caption:GetText(), "9 lines", "the boundaries are not counted")
+    assertEqual(table.concat(keys, ","), "time,event,spell,info", "the Info column, and no Amount")
+    for _, r in ipairs(g.table:Rows()) do assertNil(r.text.amount, "no Amount label") end
+    assertEqual(g.caption:GetText(), "7 lines", "the retired lines are not counted")
 end)
 
 test("results log: the caption counts the lines the cap dropped", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a", logDropped = 40 }))
     local _, g = logTab(NS, "a")
-    assertEqual(g.caption:GetText(), "9 lines \194\183 40 not kept")
+    assertEqual(g.caption:GetText(), "7 lines \194\183 40 not kept")
 end)
 
 test("results log: the chips carry their counts and filter what is shown", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
-    local want = { casts = "Casts 2", pet = "Pet 1", buffs = "Buffs 1", debuffs = "Debuffs 1", taken = "Taken 2",
-                   heals = "Heals 1" }
+    -- red under: Taken and Heals chips, or a count that took in the retired lines
+    local want = { casts = "Casts 2", pet = "Pet 1", buffs = "Buffs 1", debuffs = "Debuffs 2" }
+    local chipCount = 0
+    for _ in pairs(g.chips) do chipCount = chipCount + 1 end
+    assertEqual(chipCount, 4, "four chips")
     for key, text in pairs(want) do assertEqual(g.chips[key].label:GetText(), text, key) end
     for key in pairs(want) do assertEqual(g.chips[key].styleName, "primary", key .. " on") end
-    click(g.chips.taken)
-    assertEqual(g.chips.taken.styleName, "normal", "off")
-    assertEqual(events(g), "DIES,CAST,HEAL,DEBUFF+,CAST,BUFF+,CAST", "the hits are hidden")
+    click(g.chips.debuffs)
+    assertEqual(g.chips.debuffs.styleName, "normal", "off")
+    assertEqual(events(g), "DIES,CAST,CAST,BUFF+,CAST", "the debuffs are hidden, both ends")
     click(g.chips.casts)
     click(g.chips.pet)
-    assertEqual(events(g), "DIES,HEAL,DEBUFF+,BUFF+")
-    assertEqual(#NS.CombatLog.Of(NS.Recorder.Get("a")), 11, "a chip, or the read-time filter, never changes what is saved")
-    click(g.chips.taken)
-    assertEqual(events(g), "DIES,HEAL,HIT,HIT,DEBUFF+,BUFF+")
+    assertEqual(events(g), "DIES,BUFF+")
+    assertEqual(#NS.CombatLog.Of(NS.Recorder.Get("a")), 13, "a chip, or the read-time filter, never changes what is saved")
+    click(g.chips.debuffs)
+    assertEqual(events(g), "DIES,DEBUFF-,DEBUFF+,BUFF+")
 end)
 
 test("results log: each fight opens on log.results.chips, the same fight drawn again keeps them", function()
@@ -221,40 +226,47 @@ test("results log: each fight opens on log.results.chips, the same fight drawn a
     local pane, g = logTab(NS, "a")
     assertEqual(g.chips.buffs.styleName, "normal", "the default chips")
     assertTrue(("," .. events(g) .. ","):find(",BUFF+,", 1, true) == nil, "no buff line: " .. events(g))
-    click(g.chips.heals)
+    click(g.chips.debuffs)
     pane:Show(pane.record)
-    assertFalse(g.chipOn.heals, "kept on a redraw of the same fight")
+    assertFalse(g.chipOn.debuffs, "kept on a redraw of the same fight")
     assertTrue(NS.Results.ShowFight("b"))
-    assertTrue(g.chipOn.heals, "another fight opens on the defaults")
+    assertTrue(g.chipOn.debuffs, "another fight opens on the defaults")
     assertFalse(g.chipOn.buffs)
 end)
 
-test("results log: the pure halves: counts, the order, the page, the least amount", function()
+test("results log: the pure halves: counts, the order, the page; retired lines never counted", function()
     local NS = fresh()
     local RL = NS.ResultsLog
     local log = savedLog(NS)
     local c = RL.Counts(log)
     assertEqual(c.casts, 2)
     assertEqual(c.pet, 1)
-    assertEqual(c.taken, 2)
+    assertEqual(c.buffs, 1, "the target's buff is not counted")
+    assertEqual(c.debuffs, 2, "the debuff's gain and its loss")
+    assertNil(c.taken, "no Taken count")
+    assertNil(c.heals, "no Heals count")
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    local retired = { { t = 0, k = K.START }, { t = 1, k = K.HIT, u = U.player, a = 9 },
+                      { t = 2, k = K.HEAL, u = U.player, a = 9 }, { t = 3, k = K.BUFF_ON, id = MARK, u = U.target },
+                      { t = 4, k = K.BUFF_OFF, id = MARK, u = U.target }, { t = 5, k = K.END } }
+    local none = RL.Counts(retired)
+    for _, chip in ipairs(RL.CHIPS) do assertEqual(none[chip.key], 0, chip.key .. " counts none of them") end
+    assertEqual(RL.Lines(retired), 0)
     local chips = RL.DefaultChips({})
     local order = {}
-    assertEqual(RL.Order(log, chips, {}, "oldest", order), 9, "the two old boundary lines left out")
+    assertEqual(RL.Order(log, chips, {}, "oldest", order), 7, "the six retired lines left out")
     assertEqual(order[1], 2, "oldest first: the first event on top, not the pull's line")
     local nNew = RL.Order(log, chips, {}, "newest", order)
-    assertEqual(order[1], 10)
+    assertEqual(order[1], 12)
     local page = {}
     assertEqual(RL.Page(order, nNew, 2, 3, "newest", page), 3)
-    assertEqual(table.concat(page, ","), "8,7,6")
+    assertEqual(table.concat(page, ","), "10,5,4")
     RL.Order(log, chips, {}, "oldest", order)
-    RL.Page(order, 9, 0, 3, "oldest", page)
+    RL.Page(order, 7, 0, 3, "oldest", page)
     assertEqual(table.concat(page, ","), "4,3,2", "handed over newest first, as View:Draw takes them")
-    assertEqual(RL.Order(log, chips, { minAmount = 50 }, "newest", order), 8, "the 42 hit is under the least")
-    local sealedShown
-    for i = 1, 8 do if log[order[i]].a == "s" then sealedShown = true end end
-    assertTrue(sealedShown, "a sealed amount is never compared: it shows")
-    assertEqual(RL.Order(log, chips, { deaths = false }, "newest", order), 8, "deaths follow log.show.deaths")
-    assertEqual(RL.Lines(log), 9, "the events, never the boundaries")
+    assertEqual(RL.Order(log, chips, { minAmount = 50 }, "newest", order), 7, "a stray stored minAmount is never read")
+    assertEqual(RL.Order(log, chips, { deaths = false }, "newest", order), 6, "deaths follow log.show.deaths")
+    assertEqual(RL.Lines(log), 7, "the events, never the retired lines")
     assertEqual(RL.MaxOffset(11, 4), 7)
     assertEqual(RL.MaxOffset(2, 4), 0)
 end)
@@ -265,7 +277,7 @@ test("results log: the Time header flips the sort, oldest first starting at the 
     local _, g = logTab(NS, "a")
     g.table.sorter:GetScript("OnClick")(g.table.sorter)
     assertEqual(NS.GetSetting("log.view.sort"), "oldest")
-    assertEqual(events(g), "CAST,BUFF+,CAST,DEBUFF+,HIT,HIT,HEAL,CAST,DIES")
+    assertEqual(events(g), "CAST,BUFF+,CAST,DEBUFF+,DEBUFF-,CAST,DIES")
 end)
 
 test("results log: the wheel scrolls the list and stays on it", function()
@@ -331,13 +343,13 @@ test("results log: a click on a CAST row opens the timeline at that cast", funct
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     assertTrue(g.hint:IsShown(), "the hint names the click")
-    local castRow, hitRow
+    local castRow, auraRow
     for _, r in ipairs(g.table:Rows()) do
         if r:IsShown() and r.line and r.line.id == FROSTBOLT then castRow = r end
-        if r:IsShown() and r.line and r.line.k == NS.CombatLog.KIND.HIT then hitRow = r end
+        if r:IsShown() and r.line and r.line.k == NS.CombatLog.KIND.DEBUFF_ON then auraRow = r end
     end
-    assertTrue(castRow ~= nil and hitRow ~= nil)
-    hitRow:GetScript("OnMouseUp")(hitRow, "LeftButton")
+    assertTrue(castRow ~= nil and auraRow ~= nil)
+    auraRow:GetScript("OnMouseUp")(auraRow, "LeftButton")
     assertFalse(NS.ResultsTimeline.IsShown(), "only a CAST row jumps")
     castRow:GetScript("OnMouseUp")(castRow, "RightButton")
     assertFalse(NS.ResultsTimeline.IsShown(), "a right click does not")

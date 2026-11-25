@@ -4,8 +4,8 @@ local _, NS = ...
 -- master switch, the log open now, opened at each fight's start, where it lives), Docked drawer (its
 -- filter chips, its rows), Detached window (its rows, its lock, scale and opacity; a standalone
 -- window, owner feedback item 11, so no attach, side, HUD-height match or pin), Order and display (the sort, the display throttle, the rows' text size and height, the
--- time, the columns), What to show (the live views' categories, the auto attacks, the least amount),
--- Colors (school colors, row washes, the who colors), Storage (a log with each fight, the lines kept,
+-- time, the columns), What to show (the live views' categories, the auto attacks),
+-- Colors (row washes, the who colors), Storage (a log with each fight, the lines kept,
 -- the categories saved) and Results (the Log section's chips, the jump to the Timeline). The keys are
 -- modules/CombatLog.lua's, modules/LogTable.lua's, modules/LogTable_View.lua's, modules/Hud_Log.lua's,
 -- modules/LogWindow.lua's and modules/Results_Log.lua's (defaults/Profile.lua).
@@ -78,7 +78,7 @@ local function on(path) return NS.GetSetting(path) ~= false end
 -- Combat Log
 at(TAB.log, L["Combat Log"])
 row("enabled", { type = "bool", label = L["Enable the Combat Log"], startsLine = true,
-    tooltip = L["Record your casts, the buffs and debuffs on you and your target, the hits and heals you take and your death during each fight, and show them in the DPS HUD's Log drawer or its own window. Off, nothing is recorded and the HUD's Log control is hidden."] })
+    tooltip = L["Record your casts, your pet's casts, the buffs you gain and lose, the debuffs on you and your target, and your death during each fight, in order, and show them in the DPS HUD's Log drawer or its own window. Off, nothing is recorded and the HUD's Log control is hidden."] })
 row("drawer.shown", { type = "bool", label = L["Show the Combat Log"],
     tooltip = L["Open the log now, docked in the DPS HUD or in its own window. The HUD's Log control and /ct log toggle it too."] })
 row("drawer.autoOpen", { type = "bool", label = L["Open it when a fight starts"], startsLine = true,
@@ -90,7 +90,7 @@ row("home", { type = "string", label = L["Where the log lives"], values = HOMES,
 -- Docked drawer
 at(TAB.drawer, L["Docked drawer"])
 row("drawer.chips", { type = "bool", label = L["Show the filter chips"], startsLine = true,
-    tooltip = L["Show the Casts, Pet, Buffs, Debuffs, Taken and Heals chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] })
+    tooltip = L["Show the Casts, Pet, Buffs and Debuffs chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] })
 row("drawer.rows", { type = "number", label = L["Rows shown"], min = NS.HudLog.MIN_ROWS, max = NS.HudLog.MAX_ROWS,
     step = 1, startsLine = true,
     tooltip = L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] })
@@ -134,11 +134,9 @@ row("view.timeFormat", { type = "string", label = L["Time"], values = TIMES, val
     tooltip = L["From the pull: seconds since the fight started. Clock time: the time of day."] })
 at(TAB.display, L["Columns"])
 row("view.columns.info", { type = "bool", label = L["Show the Info column"], startsLine = true,
-    tooltip = L["Show Critical, Glancing, Crushing and Interrupted in their own column, where there is room: the detached window and the Results fight detail."] })
-row("view.columns.spell", { type = "bool", label = L["Show the Spell/School column"], startsLine = true,
-    tooltip = L["Show the spell and its icon, the school of a hit, or Healing for a heal. Time and Event always show."] })
-row("view.columns.amount", { type = "bool", label = L["Show the Amount column"],
-    tooltip = L["Show the amount of each hit and heal."] })
+    tooltip = L["Show Interrupted, for a cast that was cut short, in its own column, where there is room: the detached window and the Results fight detail."] })
+row("view.columns.spell", { type = "bool", label = L["Show the Spell column"], startsLine = true,
+    tooltip = L["Show the spell and its icon. Time and Event always show."] })
 
 -- What to show
 at(TAB.show, L["Events"])
@@ -146,33 +144,22 @@ row("show.casts", { type = "bool", label = L["Your casts"], startsLine = true,
     tooltip = L["Show the spells you cast."] })
 row("show.petCasts", { type = "bool", label = L["Your pet's casts"],
     tooltip = L["Show the spells your pet casts."] })
-row("show.playerBuffs", { type = "bool", label = L["Buffs on you"], startsLine = true,
-    tooltip = L["Show the buffs you gain and lose."] })
+row("show.playerBuffs", { type = "bool", label = L["Buffs gained / lost on you"], startsLine = true,
+    tooltip = L["Show the buffs you gain, and when each one ends."] })
 row("show.playerDebuffs", { type = "bool", label = L["Debuffs on you"],
-    tooltip = L["Show the debuffs put on you, and their end."] })
+    tooltip = L["Show the debuffs put on you, and when each one ends."] })
 row("show.targetDebuffs", { type = "bool", label = L["Your debuffs on your target"], startsLine = true,
-    tooltip = L["Show the debuffs you put on your target, and their end."] })
-row("show.targetBuffs", { type = "bool", label = L["Buffs on your target"],
-    tooltip = L["Show the buffs your target gains and loses."] })
-row("show.hits", { type = "bool", label = L["Hits taken"], startsLine = true,
-    tooltip = L["Show the damage done to you."] })
-row("show.heals", { type = "bool", label = L["Heals taken"],
-    tooltip = L["Show the healing done to you."] })
-row("show.deaths", { type = "bool", label = L["Deaths"], startsLine = true,
+    tooltip = L["Show the debuffs you put on your target, and when each one ends."] })
+row("show.deaths", { type = "bool", label = L["Deaths"],
     tooltip = L["Show your death."] })
 at(TAB.show, L["Filters"])
 row("show.autoAttacks", { type = "bool", label = L["Show auto attacks"], startsLine = true,
     tooltip = L["Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved log never keeps them."] })
-row("show.minAmount", { type = "number", label = L["Least amount shown"], min = 0, max = 100000, step = 100,
-    startsLine = true,
-    tooltip = L["Hide hits and heals smaller than this. 0 shows them all. An amount the client keeps secret always shows."] })
 
 -- Colors
 at(TAB.colors, L["Color-blind safety"])
-row("view.schoolColors", { type = "bool", label = L["School colors"], startsLine = true,
-    tooltip = L["Draw a hit's or a heal's school in its own color. Every event also differs by its tag, so the log reads without color."] })
-row("view.washes", { type = "bool", label = L["Row washes"],
-    tooltip = L["Tint the rows of hits taken, debuffs going on and long-cooldown casts. Off, every row has the plain stripe."] })
+row("view.washes", { type = "bool", label = L["Row washes"], startsLine = true,
+    tooltip = L["Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."] })
 at(TAB.colors, L["You"])
 for _, r in ipairs(H.ColorPair({
     prefix = "log.colors.", page = PAGE, group = group, subgroup = subgroup, classColor = { source = "player" },
@@ -205,10 +192,9 @@ row("store.fights", { type = "number", label = L["Fights that keep their log (0 
     tooltip = L["Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."] })
 at(TAB.store, L["Saved"])
 local SAVED = {
-    { "casts", L["Your casts"] }, { "petCasts", L["Your pet's casts"] }, { "playerBuffs", L["Buffs on you"] },
-    { "playerDebuffs", L["Debuffs on you"] }, { "targetDebuffs", L["Your debuffs on your target"] },
-    { "targetBuffs", L["Buffs on your target"] }, { "hits", L["Hits taken"] }, { "heals", L["Heals taken"] },
-    { "deaths", L["Deaths"] },
+    { "casts", L["Your casts"] }, { "petCasts", L["Your pet's casts"] },
+    { "playerBuffs", L["Buffs gained / lost on you"] }, { "playerDebuffs", L["Debuffs on you"] },
+    { "targetDebuffs", L["Your debuffs on your target"] }, { "deaths", L["Deaths"] },
 }
 for i, c in ipairs(SAVED) do
     row("store.categories." .. c[1], { type = "bool", label = c[2], startsLine = i % 2 == 1 or nil,

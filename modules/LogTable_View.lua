@@ -1,16 +1,17 @@
 local _, NS = ...
--- modules/LogTable_View.lua — the Combat Log table's frames (CombatTrail #11, plan item CL-11b): one
--- component every home builds (the DPS HUD's docked drawer, modules/Hud_Log.lua; the detached
--- companion, modules/LogWindow.lua; the Results fight detail's Log section, modules/Results_Log.lua),
--- drawing the cells modules/LogTable.lua works out.
+-- modules/LogTable_View.lua — the Combat Sequence table's frames (CombatTrail #11, plan item CL-11b;
+-- CSEQ-1): one component every home builds (the DPS HUD's docked section, modules/Hud_Log.lua; the
+-- detached companion, modules/LogWindow.lua; the Results fight detail's section,
+-- modules/Results_Log.lua), drawing the cells modules/LogTable.lua works out.
 --
 -- THE SHAPE. A column header (its own row, LogTable.HEAD_H, in the list header's gold; `opts.noHeader`
 -- leaves it out), then `rows` pooled rows LogTable.ROW_H apart. Each row is a stripe, a wash, one label
 -- per column and the spell's icon. The columns are laid by LogTable.Columns from the width the home
--- gives: fixed widths, Spell/School taking the rest, Info dropped while it would be narrower than
--- SPELL_MIN. Laid only when the width or the columns change, never on a paint. EVERY COLUMN IS
--- CENTERED, its header and its cells (owner feedback item 8); Spell/School's icon stands at the
--- column's start and its name is centered in the rest.
+-- gives: fixed widths, Spell taking the rest, Info dropped while it would be narrower than SPELL_MIN.
+-- No Amount column (the Combat Sequence: no line carries one), so the docked least width is Time's,
+-- Event's, SPELL_MIN and two gaps: 162 px at text size 10. Laid only when the width or the columns
+-- change, never on a paint. EVERY COLUMN IS CENTERED, its header and its cells (owner feedback item 8);
+-- Spell's icon stands at the column's start and its name is centered in the rest.
 --
 -- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `log.view.sort`), and
 -- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
@@ -34,8 +35,8 @@ local _, NS = ...
 -- rows, built as wanted and kept. The header keeps its size. Every home's
 -- height is worked out from LogTable.RowH(), so the HUD and both companions follow a change.
 --
--- SECRETS. A sealed amount reaches a label's SetText through NS.Format.Number and nothing else. No
--- geometry is read back: every place is worked out from the row index and the configured sizes.
+-- SECRETS. A line holds plain numbers only. No geometry is read back: every place is worked out from
+-- the row index and the configured sizes.
 
 local LogTable = NS.LogTable
 local L = NS.L
@@ -49,13 +50,12 @@ LogTable.HEAD_H = 14
 LogTable.ICON = 12
 LogTable.COL_GAP = 4
 LogTable.SPELL_MIN = 70
--- Each fixed column's width; Spell/School takes the rest.
-LogTable.WIDTH = { time = 38, event = 46, amount = 50, info = 86 }
-LogTable.ORDER = { "time", "event", "spell", "amount", "info" }
+-- Each fixed column's width; Spell takes the rest.
+LogTable.WIDTH = { time = 38, event = 46, info = 86 }
+LogTable.ORDER = { "time", "event", "spell", "info" }
 -- The optional columns a narrow home drops first.
 LogTable.DROP = { "info" }
-LogTable.HEADS = { time = L["Time"], event = L["Event"], spell = L["Spell/School"], amount = L["Amount"],
-                   info = L["Info"] }
+LogTable.HEADS = { time = L["Time"], event = L["Event"], spell = L["Spell"], info = L["Info"] }
 -- Every column's justification: centered, header and cells (item 8).
 LogTable.JUSTIFY = "CENTER"
 local JUSTIFY = LogTable.JUSTIFY
@@ -86,7 +86,7 @@ function LogTable.IconSize(rowH, scale)
 end
 
 --- The columns for `width`: which show and where, as { { key, x, w }, ... } in ORDER. `want` is
---- `log.view.columns` (spell, amount on unless false); `info` whether the home has an
+--- `log.view.columns` (spell on unless false); `info` whether the home has an
 --- Info column at all; `scale` the text size's factor (default 1), which widens the fixed columns.
 --- Time and Event always show.
 --- @return table
@@ -94,8 +94,7 @@ function LogTable.Columns(width, want, info, scale)
     want = want or {}
     scale = scale or 1
     local function wide(key) return math.floor(LogTable.WIDTH[key] * scale + 0.5) end
-    local on = { time = true, event = true, info = info == true and want.info ~= false }
-    for _, key in ipairs({ "spell", "amount" }) do on[key] = want[key] ~= false end
+    local on = { time = true, event = true, spell = want.spell ~= false, info = info == true and want.info ~= false }
     local function fixed()
         local sum, n = 0, 0
         for _, key in ipairs(LogTable.ORDER) do
@@ -128,8 +127,7 @@ function LogTable.Height(rows, noHeader)
     return (noHeader and 0 or LogTable.HEAD_H) + rows * LogTable.RowH()
 end
 
-local TEXT_FONT, BIG_FONT = Style.FONT.TEXT, Style.FONT.HEADING
-local BIG = (Style.FONT_SIZE[BIG_FONT] or 12) / (Style.FONT_SIZE[TEXT_FONT] or 10)
+local TEXT_FONT = Style.FONT.TEXT
 
 --- A row label at the text size `scale`: the body text at 1, else its copy at the size
 --- (Style.ScaledText). Made at its size, because the skin keeps the size a label had at its first
@@ -223,7 +221,7 @@ local function place(fs, row, col)
     fs:SetWidth(col.w)
 end
 
--- One row's columns laid (and the icon, `icon` px, at Spell/School's start, its name after it).
+-- One row's columns laid (and the icon, `icon` px, at Spell's start, its name after it).
 local function layRow(r, cols, icon)
     for _, fs in pairs(r.text) do fs:Hide() end
     r.icon:SetSize(icon, icon)
@@ -249,7 +247,7 @@ end
 local function layoutKey(width, rows, want, rowH, scale)
     want = want or {}
     local parts = { width, rows, rowH, scale }
-    for _, key in ipairs({ "spell", "amount", "info" }) do parts[#parts + 1] = tostring(want[key]) end
+    for _, key in ipairs({ "spell", "info" }) do parts[#parts + 1] = tostring(want[key]) end
     return table.concat(parts, ":")
 end
 
@@ -313,20 +311,6 @@ function View:Layout(width, rows, want)
     self.frame:SetHeight(LogTable.Height(rows, self.opts.noHeader))
 end
 
--- The amount's face: the larger one for a critical, set again only when it moves.
-local function setBig(r, big)
-    if r.big == big then return end
-    r.big = big
-    local fs, font = r.text.amount, big and BIG_FONT or TEXT_FONT
-    if r.scale == 1 then
-        fs:SetFontObject(font)
-    else
-        fs:SetFontObject(Style.ScaledFont(TEXT_FONT, r.scale * (big and BIG or 1)) or TEXT_FONT)
-        font = TEXT_FONT
-    end
-    Style.Paint(fs, r.amountColor or "ct.text", font, true)
-end
-
 local function fill(r, c, index, line)
     local t = r.text
     t.time:SetText(c.time)
@@ -335,10 +319,6 @@ local function fill(r, c, index, line)
     Style.Paint(t.event, c.tagColor)
     t.spell:SetText(c.spell)
     Style.Paint(t.spell, c.spellColor)
-    r.amountColor = c.amountColor or "ct.text"
-    setBig(r, c.big == true)
-    t.amount:SetText(c.amount)
-    Style.Paint(t.amount, r.amountColor)
     t.info:SetText(c.info)
     Style.Paint(t.info, "ct.dim")
     r.icon:SetTexture(c.icon)

@@ -1,40 +1,47 @@
 local _, NS = ...
--- modules/CombatLog.lua — the Combat Log's capture and store (CombatTrail #11, plan item CL-11a): what
--- the addon may read of a fight, as one line each, into an in-memory ring the log views read, and a
--- compact copy of each fight's lines saved with its record. No view is built here (CL-11b).
+-- modules/CombatLog.lua — the Combat Sequence's capture and store (CombatTrail #11, plan item CL-11a; the
+-- Combat Sequence, CSEQ-1, 2026-11-25): what the addon may read of a fight, as one line each, into an
+-- in-memory ring the views read, and a compact copy of each fight's lines saved with its record. No
+-- view is built here (CL-11b). The file keeps its old name; the player sees "Combat Sequence".
 --
 -- THE SOURCES. Neither client lets an addon read the real combat log: WoW Forever forbids registering
 -- COMBAT_LOG_EVENT_UNFILTERED and Retail 12.x seals it, so it is never registered, on either client.
--- The lines come only from what the addon may read:
+-- So no line carries an amount: the hits and heals the addon could hear were only those TAKEN
+-- (UNIT_COMBAT on `player`), which read as the player's own, so UNIT_COMBAT is never registered either
+-- (the owner's Combat Sequence ruling, 2026-11-25). The lines come only from what the addon may read:
 --   * CASTS: the player's and the pet's, from the lanes' own capture (modules/LaneCasts.lua's
 --     listener, as modules/Casts.lua hears them). No second UNIT_SPELLCAST_* registration. The
 --     auto-repeat swings and shots (Casts.AUTO) reach the ring but are never saved.
---   * AURAS: gained and lost on `player` and on `target`, from UNIT_AURA's update info. A gain is
---     read off the added aura's data; a loss is told by its aura instance, which this file maps to
---     the spell it was given for (gains it heard, and the auras on at the fight's start or at a target
---     change, walked once). On the target only its buffs and the debuffs the player or the pet put on
---     it. A full update is walked again without a line (a target change is not a gain).
---   * HITS AND HEALS ON YOU: UNIT_COMBAT for `player` (WOUND and HEAL), with its school and its
---     critical, glancing or crushing mark. The amount is kept plain when it is plain; a sealed one is
---     saved as "s" (CombatLog.SEALED), never compared, counted or stored as a number.
+--   * AURAS: the buffs and debuffs gained and lost on `player`, and the debuffs the player or the pet
+--     put on `target` (no target buff is a line). A gain is read off the added aura's data; a loss is
+--     told by its aura instance, which this file maps to the spell it was given for (gains it heard,
+--     and the auras on at the capture's registration or at a target change, walked once, silently).
+--     UNIT_AURA's update info (`addedAuras`, `removedAuraInstanceIDs`) gives them where the client
+--     sends it. A FULL UPDATE, or a UNIT_AURA with no usable update info (WoW Forever's, if it sends
+--     none: docs/forever-quirks.md), is a DIFF: the unit is walked into a scratch map and compared with
+--     the current one (an instance only in the scratch map is a gain, one only in the current map a
+--     loss), gains first in walk order, then losses by ascending instance; then the two maps swap.
+--     AN INCOMPLETE WALK LOGS NOTHING (a sealed or unreadable aura, a raising read, AURA_LIMIT reached):
+--     its entries are added to the current map with no line, so neither a false loss nor, on the next
+--     complete diff, a false gain is drawn. A target change walks the new target silently.
 --   * DEATHS: the player's (PLAYER_DEAD). The addon knows no target's death, so none is logged.
--- NO BOUNDARY LINES (owner feedback item 10, 2026-11-25): the fight's start and the combat end are no
--- lines, captured or saved; the pull is still time 0.0. A log saved before then may hold them (kinds
--- START and END, kept in KIND for it alone): every read drops them (CombatLog.IsBoundary).
+-- RETIRED LINES. A log saved before this file's present shape may hold kinds nothing captures now: the
+-- fight's START and END (owner feedback item 10), HIT and HEAL (the Combat Sequence), and a BUFF± on the
+-- target. Every read drops them (CombatLog.IsRetired), and no saved log is rewritten.
 -- Every client event goes through NS.SafeRegisterUnitEvent / NS.SafeRegisterEvent on this file's
 -- own frame, and only while a fight is open and `log.enabled` is on: an event the client refuses
--- costs only itself and is named by CombatLog.Diagnose (UNIT_COMBAT is the one this probes, #11).
+-- costs only itself and is named by CombatLog.Diagnose.
 --
 -- SECRETS. A sealed aura (its table, its spell ID or its instance) ends that aura's handling: its
 -- name or ID is never guessed, and it produces no line. A sealed spell ID on a cast produces no line.
--- A sealed hit or heal amount is kept in the ring as the client gave it (`x`, for a view to hand to
--- a FontString, display only) and saved as "s".
+-- Only plain numbers are compared or used as keys: a map's key is an instance that passed
+-- Secrets.PlainNumber, its value a spell ID that passed it. No secret is compared, counted or stored.
 --
 -- THE RING holds the session's newest NS.Constants.LOG.RING lines, each { n (its sequence number),
--- at (GetTime()), k (CombatLog.KIND), u (CombatLog.UNIT), id?, a?, s?, f?, x?, g? }. Its slots are
--- reused once it is full, so a busy fight allocates nothing per line after the first RING. A view
--- reads it by sequence number (CombatLog.Seq, CombatLog.Line) and redraws when the number moves:
--- appending a line is the whole of "marking it dirty".
+-- at (GetTime()), k (CombatLog.KIND), u (CombatLog.UNIT), id?, f?, g? }. Its slots are reused once it is
+-- full, so a busy fight allocates nothing per line after the first RING. A view reads it by sequence
+-- number (CombatLog.Seq, CombatLog.Line) and redraws when the number moves: appending a line is the
+-- whole of "marking it dirty".
 --
 -- WHICH TARGET. A line on the target (`u` 3) carries `g`, its index into the session's target list
 -- (CombatLog.Targets): each target the capture saw, { name? (plain, nil when the client sealed it),
@@ -53,12 +60,12 @@ local _, NS = ...
 -- `lines` newest saved lines.
 --
 -- THE SAVED LOG (the record's `log`, CT_SCHEMA 6) is an array, oldest first, of
--- { t (seconds from the fight's start, to the tenth), k, id?, u?, a?, s?, f?, g? }: no string but
--- "s", names and icons resolved at display time from the spell ID. At most the frozen `lines`, the
--- newest kept; `logDropped` on the record counts the lines of saved categories that were not kept.
--- `logTargets` on the record is the fight's own target list, { { name?, friendly? }, ... }, which a
--- saved line's `g` indexes. A fight saved before CT_SCHEMA 6, or with saving off, has no `log`, and
--- CombatLog.Of answers nil for it.
+-- { t (seconds from the fight's start, to the tenth), k, id?, u?, f?, g? }: no string, names and icons
+-- resolved at display time from the spell ID. A line saved earlier may still carry `a` (an amount) or
+-- `s` (a school): no view reads them. At most the frozen `lines`, the newest kept; `logDropped` on the
+-- record counts the lines of saved categories that were not kept. `logTargets` on the record is the
+-- fight's own target list, { { name?, friendly? }, ... }, which a saved line's `g` indexes. A fight
+-- saved before CT_SCHEMA 6, or with saving off, has no `log`, and CombatLog.Of answers nil for it.
 
 local CombatLog = {}
 NS.CombatLog = CombatLog
@@ -67,22 +74,21 @@ local Secrets = NS.Secrets
 local Perf = NS.Perf
 local C = NS.Constants.LOG
 
---- The line kinds (`k`). BUFF_ON / BUFF_OFF are BUFF+ and BUFF− in a view. START and END are retired:
---- never captured, kept only so a log saved before item 10 can be read past them (CombatLog.IsBoundary).
+--- The line kinds (`k`). BUFF_ON / BUFF_OFF are BUFF+ and BUFF− in a view. The numbers never move,
+--- because saved logs carry them. HIT, HEAL, START and END are RETIRED: never captured, kept only so a
+--- log saved before can be read past them (CombatLog.IsRetired).
 CombatLog.KIND = { CAST = 1, BUFF_ON = 2, BUFF_OFF = 3, DEBUFF_ON = 4, DEBUFF_OFF = 5, HIT = 6, HEAL = 7,
                    DIES = 8, START = 9, END = 10 }
---- The units (`u`): whose cast, whose aura, who was hit.
+--- The units (`u`): whose cast, whose aura.
 CombatLog.UNIT = { player = 1, pet = 2, target = 3 }
---- The marks (`f`), summed: a critical, a glancing or crushing blow, an interrupted cast.
-CombatLog.FLAG = { CRIT = 1, GLANCING = 2, CRUSHING = 4, INTERRUPTED = 8 }
---- What a sealed amount is saved as.
-CombatLog.SEALED = "s"
+--- The marks (`f`): an interrupted cast. Bits 1, 2 and 4 (the hits' critical, glancing and crushing
+--- marks) are reserved, because saved data may carry them, and never reused.
+CombatLog.FLAG = { INTERRUPTED = 8 }
 --- The categories a fight's log saves (`log.store.categories.<key>`), in the settings' order.
-CombatLog.CATEGORIES = { "casts", "petCasts", "playerBuffs", "playerDebuffs", "targetBuffs", "targetDebuffs",
-                         "hits", "heals", "deaths" }
+CombatLog.CATEGORIES = { "casts", "petCasts", "playerBuffs", "playerDebuffs", "targetDebuffs", "deaths" }
 --- How many closed fights' logs wait for the recorder.
 CombatLog.KEEP_FINISHED = 4
---- The most auras walked per unit and filter when the instance map is (re)built.
+--- The most auras walked per unit and filter: a walk that reaches it is incomplete.
 CombatLog.AURA_LIMIT = 40
 --- The most targets the session's list notes (a guard: one entry per name and reaction).
 CombatLog.TARGET_LIMIT = 500
@@ -102,7 +108,10 @@ local finished = {}     -- [fightID] = { log, dropped }
 local finishedOrder = {}
 local lastEnd = -math.huge
 local viewStart, viewFrom   -- the newest capture begun this session: its start and its pre-pull floor
-local auras = { player = {}, target = {} }   -- [auraInstanceID] = spellID (a debuff's negated)
+local auras = { player = {}, target = {} }   -- the current maps: [auraInstanceID] = spellID (a debuff's negated)
+local spare = { player = {}, target = {} }   -- the diff's scratch maps, swapped with the current ones
+local order, orderN = {}, 0                  -- the last walk's new instances, in walk order (reused)
+local fades = {}                             -- a diff's lost instances, sorted (reused)
 local frame             -- the event frame (nil until a fight first opens one)
 local registered = false
 local refused = {}      -- [event] = true: the client refused it this session
@@ -113,29 +122,31 @@ end
 
 -- ── the categories ──────────────────────────────────────────────────────────────────────────────
 
+-- [kind] = { the player's, the pet's, the target's }: no target buff is a category.
 local CATEGORY = {
-    [K.BUFF_ON] = { "playerBuffs", nil, "targetBuffs" }, [K.BUFF_OFF] = { "playerBuffs", nil, "targetBuffs" },
+    [K.BUFF_ON] = { "playerBuffs" }, [K.BUFF_OFF] = { "playerBuffs" },
     [K.DEBUFF_ON] = { "playerDebuffs", nil, "targetDebuffs" },
     [K.DEBUFF_OFF] = { "playerDebuffs", nil, "targetDebuffs" },
 }
+local RETIRED = { [K.HIT] = true, [K.HEAL] = true, [K.START] = true, [K.END] = true }
 
---- Whether a line is a retired boundary (the PULL or END of a log saved before item 10): every view
---- drops it at read time, and nothing captures one now.
+--- Whether a line is retired: a kind nothing captures now (HIT, HEAL, the PULL and END boundaries), or
+--- a BUFF± on the target, from a log saved before. Every view drops it at read time.
 --- @return boolean
-function CombatLog.IsBoundary(e)
-    local k = type(e) == "table" and e.k or nil
-    return k == K.START or k == K.END
+function CombatLog.IsRetired(e)
+    if type(e) ~= "table" then return false end
+    local k = e.k
+    if RETIRED[k] then return true end
+    return (k == K.BUFF_ON or k == K.BUFF_OFF) and e.u == U.target
 end
 
---- The category a line is saved under, or nil: an auto attack and a retired boundary never (nil).
+--- The category a line is saved under, or nil: an auto attack and a retired line never (nil).
 --- @return string|nil
 function CombatLog.CategoryOf(k, u, id)
     if k == K.CAST then
         if id and NS.Casts and NS.Casts.AUTO[id] then return nil end
         return u == U.pet and "petCasts" or "casts"
     end
-    if k == K.HIT then return "hits" end
-    if k == K.HEAL then return "heals" end
     if k == K.DIES then return "deaths" end
     local by = CATEGORY[k]
     return by and u and by[u] or nil
@@ -154,9 +165,9 @@ local function keep(cap, e)
     local slot = (cap.head - 1) % cap.lines + 1
     local c = cap.keep[slot]
     if c then
-        c.at, c.k, c.u, c.id, c.a, c.s, c.f, c.g = e.at, e.k, e.u, e.id, e.a, e.s, e.f, e.g
+        c.at, c.k, c.u, c.id, c.f, c.g = e.at, e.k, e.u, e.id, e.f, e.g
     else
-        cap.keep[slot] = { at = e.at, k = e.k, u = e.u, id = e.id, a = e.a, s = e.s, f = e.f, g = e.g }
+        cap.keep[slot] = { at = e.at, k = e.k, u = e.u, id = e.id, f = e.f, g = e.g }
     end
 end
 
@@ -183,15 +194,15 @@ end
 
 -- One line into the ring: the slot's table is reused once the ring is full. A line on the target
 -- carries the target now (`g`).
-local function append(at, k, u, id, a, s, f, x)
+local function append(at, k, u, id, f)
     seq = seq + 1
     local g = u == U.target and curTarget or nil
     local slot = (seq - 1) % C.RING + 1
     local e = ring[slot]
     if e then
-        e.n, e.at, e.k, e.u, e.id, e.a, e.s, e.f, e.x, e.g = seq, at, k, u, id, a, s, f, x, g
+        e.n, e.at, e.k, e.u, e.id, e.f, e.g = seq, at, k, u, id, f, g
     else
-        e = { n = seq, at = at, k = k, u = u, id = id, a = a, s = s, f = f, x = x, g = g }
+        e = { n = seq, at = at, k = k, u = u, id = id, f = f, g = g }
         ring[slot] = e
     end
     count(e)
@@ -263,7 +274,7 @@ function CombatLog.OnCast(unit, spellID, t, interrupted)
     local u = (unit == "player" or unit == "pet") and U[unit] or nil
     local id = u and Secrets.PlainNumber(spellID)
     if not id or type(t) ~= "number" then return end
-    append(t, K.CAST, u, id, nil, nil, interrupted == true and F.INTERRUPTED or nil, nil)
+    append(t, K.CAST, u, id, interrupted == true and F.INTERRUPTED or nil)
 end
 
 -- ── the auras ───────────────────────────────────────────────────────────────────────────────────
@@ -271,11 +282,6 @@ end
 local function api(name)
     local ns = C_UnitAuras
     return type(ns) == "table" and ns[name] or nil
-end
-
-local function passResults(ok, ...)
-    if ok then return ... end
-    return nil
 end
 
 -- Whether the player or the pet put this aura on (a target's debuff is logged only then).
@@ -286,8 +292,9 @@ local function fromMe(aura)
 end
 
 -- An aura's instance and map value (its spell ID, negated for a debuff), or nil when anything is
--- sealed, or when it is a target's debuff someone else put on. `harmful` is the walk's filter; an
--- added aura says it itself (isHarmful, else a plain isHelpful of false).
+-- sealed, when it is a buff on the target, or when it is a target's debuff someone else put on.
+-- `harmful` is the walk's filter; an added aura says it itself (isHarmful, else a plain isHelpful of
+-- false).
 local function mapped(unit, aura, harmful)
     if Secrets.IsSealed(aura) or not Secrets.CanAccessTable(aura) then return nil end
     local inst, id = Secrets.PlainNumber(aura.auraInstanceID), Secrets.PlainNumber(aura.spellId)
@@ -295,31 +302,109 @@ local function mapped(unit, aura, harmful)
     if harmful == nil then
         harmful = Secrets.PlainTruth(aura.isHarmful) or Secrets.PlainEquals(aura.isHelpful, false)
     end
-    if harmful and unit == "target" and not fromMe(aura) then return nil end
+    if unit == "target" and not (harmful and fromMe(aura)) then return nil end
     return inst, harmful and -id or id
 end
 
-local FILTERS = { "HELPFUL", "HARMFUL" }
+-- The filters each unit's walk reads: the target's buffs are no line, so its walk reads HARMFUL alone.
+local FILTERS = { player = { "HELPFUL", "HARMFUL" }, target = { "HARMFUL" } }
 
 local function clear(map)
     for key in pairs(map) do map[key] = nil end
 end
 
--- The unit's auras now, into its map, without a line. A raise (WoW Forever's sealed read raises,
--- docs/forever-quirks.md) or a sealed aura ends that filter's walk.
-local function walk(unit)
-    local map, get = auras[unit], api("GetAuraDataByIndex")
-    clear(map)
-    if type(get) ~= "function" then return end
-    for _, filter in ipairs(FILTERS) do
-        local harmful = filter == "HARMFUL"
-        for i = 1, CombatLog.AURA_LIMIT do
-            local aura = passResults(pcall(get, unit, i, filter))
-            if aura == nil or Secrets.IsSealed(aura) or not Secrets.CanAccessTable(aura) then break end
-            local inst, v = mapped(unit, aura, harmful)
-            if inst then map[inst] = v end
+-- Whether a walked aura can be read whole: its table, its instance and its spell ID all plain. One
+-- that cannot ends the walk as incomplete (its absence from the map would read as a loss).
+local function readable(aura)
+    if Secrets.IsSealed(aura) or not Secrets.CanAccessTable(aura) then return false end
+    return not Secrets.IsSealed(aura.auraInstanceID) and not Secrets.IsSealed(aura.spellId)
+end
+
+-- One filter of the unit walked into `map`, each new instance noted in walk order. Answers whether the
+-- walk ran to the list's end (GetAuraDataByIndex answering nil) before AURA_LIMIT; a raise (WoW
+-- Forever's sealed read, docs/forever-quirks.md) or an unreadable aura stops it incomplete.
+local function walkFilter(unit, map, get, filter)
+    local harmful = filter == "HARMFUL"
+    for i = 1, CombatLog.AURA_LIMIT do
+        local ok, aura = pcall(get, unit, i, filter)
+        if not ok then return false end
+        if aura == nil then return true end
+        if not readable(aura) then return false end
+        local inst, v = mapped(unit, aura, harmful)
+        if inst and map[inst] == nil then
+            map[inst] = v
+            orderN = orderN + 1
+            order[orderN] = inst
         end
     end
+    return false
+end
+
+-- The unit's auras now into `map` (emptied first), every filter walked. Answers whether every filter's
+-- walk was complete.
+local function walkInto(unit, map)
+    clear(map)
+    orderN = 0
+    local get = api("GetAuraDataByIndex")
+    if type(get) ~= "function" then return false end
+    local complete = true
+    for _, filter in ipairs(FILTERS[unit]) do
+        if not walkFilter(unit, map, get, filter) then complete = false end
+    end
+    return complete
+end
+
+-- The unit's auras now, into its current map, without a line: the capture's registration and a
+-- target change (a new target is not a burst of gains).
+local function walk(unit)
+    walkInto(unit, auras[unit])
+end
+
+-- The diff's gains: each instance of the new map the current one lacks, in walk order.
+local function diffGains(unit, cur, new, at)
+    local u = U[unit]
+    for i = 1, orderN do
+        local inst = order[i]
+        if cur[inst] == nil then
+            local v = new[inst]
+            append(at, v < 0 and K.DEBUFF_ON or K.BUFF_ON, u, v < 0 and -v or v, nil)
+        end
+    end
+end
+
+-- The diff's losses: each instance of the current map the new one lacks, by ascending instance.
+local function diffFades(unit, cur, new, at)
+    local n = 0
+    for inst in pairs(cur) do
+        if new[inst] == nil then
+            n = n + 1
+            fades[n] = inst
+        end
+    end
+    for i = #fades, n + 1, -1 do fades[i] = nil end
+    if n == 0 then return end
+    table.sort(fades)
+    local u = U[unit]
+    for i = 1, n do
+        local v = cur[fades[i]]
+        append(at, v < 0 and K.DEBUFF_OFF or K.BUFF_OFF, u, v < 0 and -v or v, nil)
+    end
+end
+
+-- A full update, or UNIT_AURA with no usable update info: the unit walked into its scratch map and
+-- compared with the current one, then the two swapped (never reallocated). An incomplete walk draws
+-- no line: its entries join the current map, which keeps the rest.
+local function diff(unit, at)
+    local cur, new = auras[unit], spare[unit]
+    if not walkInto(unit, new) then
+        for inst, v in pairs(new) do cur[inst] = v end
+        clear(new)
+        return
+    end
+    diffGains(unit, cur, new, at)
+    diffFades(unit, cur, new, at)
+    auras[unit], spare[unit] = new, cur
+    clear(cur)
 end
 
 local function added(unit, list, at)
@@ -331,7 +416,7 @@ local function added(unit, list, at)
         local inst, v = mapped(unit, aura)
         if inst and map[inst] == nil then
             map[inst] = v
-            append(at, v < 0 and K.DEBUFF_ON or K.BUFF_ON, u, v < 0 and -v or v, nil, nil, nil, nil)
+            append(at, v < 0 and K.DEBUFF_ON or K.BUFF_ON, u, v < 0 and -v or v, nil)
         end
     end
 end
@@ -346,36 +431,37 @@ local function removed(unit, list, at)
         local v = inst and map[inst]
         if v then
             map[inst] = nil
-            append(at, v < 0 and K.DEBUFF_OFF or K.BUFF_OFF, u, v < 0 and -v or v, nil, nil, nil, nil)
+            append(at, v < 0 and K.DEBUFF_OFF or K.BUFF_OFF, u, v < 0 and -v or v, nil)
         end
     end
 end
 
---- UNIT_AURA for `player` or `target`: its added auras are gains, its removed instances losses; a full
---- update (or no update info) walks the unit again without a line.
+-- Whether a list in the update info is there but cannot be read.
+local function unreadable(list)
+    if list == nil then return false end
+    return Secrets.IsSealed(list) or not Secrets.CanAccessTable(list)
+end
+
+-- Whether UNIT_AURA's update info leaves the unit to be diffed: none at all, a sealed or unreadable
+-- table or list, or a full update (a sealed isFullUpdate is taken as one).
+local function needsDiff(info)
+    if info == nil or Secrets.IsSealed(info) or not Secrets.CanAccessTable(info) then return true end
+    local full = info.isFullUpdate
+    if Secrets.IsSealed(full) or Secrets.PlainTruth(full) then return true end
+    return unreadable(info.addedAuras) or unreadable(info.removedAuraInstanceIDs)
+end
+
+--- UNIT_AURA for `player` or `target`: its added auras are gains, its removed instances losses
+--- (`updatedAuraInstanceIDs`, a refresh, is no line). A full update or no usable update info diffs the
+--- unit while the capture is registered (else walks it silently).
 function CombatLog.OnAura(unit, info, at)
     if unit ~= "player" and unit ~= "target" then return end
-    if Secrets.IsSealed(info) or not Secrets.CanAccessTable(info) or Secrets.PlainTruth(info.isFullUpdate) then
+    if needsDiff(info) then
+        if registered then return diff(unit, at) end
         return walk(unit)
     end
     added(unit, info.addedAuras, at)
     removed(unit, info.removedAuraInstanceIDs, at)
-end
-
--- ── hits and heals ──────────────────────────────────────────────────────────────────────────────
-
-local ACTION = { WOUND = K.HIT, HEAL = K.HEAL }
-local MARK = { CRITICAL = F.CRIT, GLANCING = F.GLANCING, CRUSHING = F.CRUSHING }
-
---- UNIT_COMBAT for `player`: a WOUND is a hit, a HEAL a heal; every other action (a miss, a dodge, an
---- immune) is no line. A sealed action says nothing and is no line.
-function CombatLog.OnCombat(unit, action, descriptor, amount, school, at)
-    if Secrets.PlainString(unit) ~= "player" then return end
-    local k = ACTION[Secrets.PlainString(action) or ""]
-    if not k then return end
-    local a, x = Secrets.PlainNumber(amount), nil
-    if a == nil and Secrets.IsSealed(amount) then a, x = CombatLog.SEALED, amount end
-    append(at, k, U.player, nil, a, Secrets.PlainNumber(school), MARK[Secrets.PlainString(descriptor) or ""], x)
 end
 
 -- ── the events ──────────────────────────────────────────────────────────────────────────────────
@@ -383,10 +469,7 @@ end
 -- Each handler takes `at` (GetTime()) first, then the event's own arguments.
 local HANDLERS = {
     UNIT_AURA = function(at, unit, info) CombatLog.OnAura(Secrets.PlainString(unit), info, at) end,
-    UNIT_COMBAT = function(at, unit, action, descriptor, amount, school)
-        CombatLog.OnCombat(unit, action, descriptor, amount, school, at)
-    end,
-    PLAYER_DEAD = function(at) append(at, K.DIES, U.player, nil, nil, nil, nil, nil) end,
+    PLAYER_DEAD = function(at) append(at, K.DIES, U.player, nil, nil) end,
     PLAYER_TARGET_CHANGED = function()
         curTarget = noteTarget()
         walk("target")
@@ -400,8 +483,8 @@ local function onEvent(_, event, ...)
     if t0 then Perf.Note("combatLog", debugprofilestop() - t0) end
 end
 
--- What is registered, and on which units.
-local UNIT_EVENTS = { { "UNIT_AURA", "player", "target" }, { "UNIT_COMBAT", "player" } }
+-- What is registered, and on which units. Never UNIT_COMBAT, never COMBAT_LOG_EVENT_UNFILTERED.
+local UNIT_EVENTS = { { "UNIT_AURA", "player", "target" } }
 local EVENTS = { "PLAYER_DEAD", "PLAYER_TARGET_CHANGED" }
 
 local function wanted()
@@ -433,6 +516,13 @@ local function register()
     walk("target")
 end
 
+local function clearMaps()
+    for _, unit in ipairs({ "player", "target" }) do
+        clear(auras[unit])
+        clear(spare[unit])
+    end
+end
+
 --- Make the registrations match: the events while a fight's capture is open, else none.
 function CombatLog.Sync()
     local want = wanted()
@@ -440,8 +530,7 @@ function CombatLog.Sync()
     if want then return register() end
     if frame then frame:UnregisterAllEvents() end
     registered, curTarget = false, nil
-    clear(auras.player)
-    clear(auras.target)
+    clearMaps()
 end
 
 --- What the capture registers and what the client refused (`/ct diagnostics`' fight section line).
@@ -526,7 +615,7 @@ end
 
 -- A saved line out of a kept line; `g` re-indexed into the fight's own target list.
 local function saved(e, startT, g)
-    return { t = tenth(e.at - startT), k = e.k, id = e.id, u = e.u, a = e.a, s = e.s, f = e.f, g = g }
+    return { t = tenth(e.at - startT), k = e.k, id = e.id, u = e.u, f = e.f, g = g }
 end
 
 -- A kept line's session target (`g`) in the fight's own list `out`, by `map` [session g] = fight g.
@@ -659,8 +748,7 @@ function CombatLog.Suspend()
     viewStart, viewFrom = nil, nil
     if frame then frame:UnregisterAllEvents() end
     registered = false
-    clear(auras.player)
-    clear(auras.target)
+    clearMaps()
 end
 
 --- The stand-up: rebuilt from the current state (no fight is open after a stand-down).

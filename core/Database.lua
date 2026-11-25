@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 7
+NS.SCHEMA_VERSION = 8
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -129,6 +129,13 @@ local STEPS = {
     -- by surprise. `general.locked` stays: it is still the DPS HUD's and the windows' lock. Idempotent: a
     -- lanes lock already stored is kept, and a profile with no stored lock stores nothing.
     { to = 7, perProfile = true, run = function(_, profile) NS.CarryLanesLock(profile) end },
+    -- 7 -> 8, per profile: the keys the Combat Sequence retired (2026-11-25, CSEQ-1). No line carries an
+    -- amount or a school and no hit, heal or target buff is captured, so the Amount column's toggle
+    -- `log.view.columns.amount`, `log.view.schoolColors`, `log.show.hits`, `.heals`, `.minAmount` and
+    -- `.targetBuffs`, the same three under `log.store.categories`, and the Taken and Heals chips'
+    -- `log.results.chips.taken` and `.heals` go. Nothing is carried across: each served only what was
+    -- removed. Idempotent: a fresh profile stores none of them.
+    { to = 8, perProfile = true, run = function(_, profile) NS.DropRetiredSequenceKeys(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -152,6 +159,24 @@ function NS.DropRetiredWindowKeys(profile)
     local log = profile.log
     local w = type(log) == "table" and log.window
     if type(w) == "table" then w.attached, w.side, w.matchHud, w.pinned = nil, nil, nil, nil end
+end
+
+--- Step 8's body: `profile.log`'s keys the Combat Sequence retired (the Amount column's toggle, school
+--- colors, the hits, heals, target buffs and least amount shown and saved, the Taken and Heals chips)
+--- dropped. A profile with no `log` table is left alone.
+function NS.DropRetiredSequenceKeys(profile)
+    local log = type(profile) == "table" and profile.log
+    if type(log) ~= "table" then return end
+    local view, show, store, results = log.view, log.show, log.store, log.results
+    if type(view) == "table" then
+        view.schoolColors = nil
+        if type(view.columns) == "table" then view.columns.amount = nil end
+    end
+    if type(show) == "table" then show.hits, show.heals, show.minAmount, show.targetBuffs = nil, nil, nil, nil end
+    local cats = type(store) == "table" and store.categories
+    if type(cats) == "table" then cats.hits, cats.heals, cats.targetBuffs = nil, nil, nil end
+    local chips = type(results) == "table" and results.chips
+    if type(chips) == "table" then chips.taken, chips.heals = nil, nil end
 end
 
 --- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where
