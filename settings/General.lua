@@ -79,6 +79,11 @@ local masterRows, masterTail = H.MasterControls({
           label = L["Show DPS HUD in combat"], default = G.hudInCombat,
           tooltip = L["Open the DPS HUD whenever you enter combat. Off, it opens only when you show it."],
           onChange = function(v) NS.OnHudInCombatChanged(v) end },
+        -- The lanes' own lock (owner feedback item 15): Locked above is the DPS HUD's and the windows'.
+        { path = "general.lanesLocked", type = "bool", startsLine = true,
+          label = L["Lock the lanes"], default = G.lanesLocked,
+          tooltip = L["Keep Edit Mode from showing the lanes' move boxes. /ct lanes lock and /ct lanes unlock set it; Locked above leaves the lanes alone."],
+          onChange = function(v) NS.ApplyLanesLocked(v) end },
         { path = "general.debug", type = "bool", sessionOnly = true, default = false,
           label = L["Debug logging"],
           tooltip = L["Write this session's developer log to the debug console. A reload turns it off."] },

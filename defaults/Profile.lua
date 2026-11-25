@@ -131,9 +131,12 @@ NS.defaults = {
         -- Master controls (General > Master controls) and the global font scale (General > Look and
         -- skin). The debug flag is NOT here: it is session-only (NS.State.debug, debug-logging-§5), as
         -- are test mode and the sim. Nor is the minimap button: LibDBIcon's `hide` is global (below).
+        -- `locked` is the DPS HUD's and the windows'; the lanes have their own, `lanesLocked` (owner
+        -- feedback item 15: `/ct lanes lock|unlock`, schema step 7 carried each profile's lock across).
         general = {
             enabled     = true,
             locked      = false,
+            lanesLocked = false,
             hudInCombat = true,
             fontScale   = 1,
         },

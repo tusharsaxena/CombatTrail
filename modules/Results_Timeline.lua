@@ -338,7 +338,7 @@ local function buzzerLine(layer)
     return t
 end
 
--- The focus line (the Results Log tab's click on a cast, CL-11c): one over the Casts strips, one down
+-- The focus line (the Results Log section's click on a cast, CL-11c): one over the Casts strips, one down
 -- the lanes, in gold, at the moment Timeline.FocusAt set, over the grid and under the marks.
 local function focusLine(layer)
     local t = layer:CreateTexture(nil, "ARTWORK")
@@ -784,7 +784,7 @@ local function placeLine(line, t, g, shown)
 end
 
 -- The race's buzzer line at its length (hidden for a fight and on WoW Forever), and the focus line at
--- the cast the Results Log tab jumped to (hidden until one).
+-- the cast the Results Log section jumped to (hidden until one).
 local function placeBuzzer(g, shown)
     placeLine(ui.buzzerLine, ui.buzzer, g, shown)
     placeLine(ui.focusLine, ui.focus, g, shown)
@@ -945,7 +945,7 @@ Timeline.FOCUS_ZOOM = 5
 
 --- Jump an open window to moment `t` of its fight (seconds from the fight's start, the saved log's
 --- time; a race's moves onto its race clock, Data.OnAxis): zoomed in to FOCUS_ZOOM at least (more
---- zoomed stays), the moment in the middle of the view, a gold line at it. The Results Log tab's click
+--- zoomed stays), the moment in the middle of the view, a gold line at it. The Results Log section's click
 --- on a CAST row (CL-11c). Another fight or compare target clears the line.
 --- @return boolean jumped
 function Timeline.FocusAt(t)

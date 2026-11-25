@@ -130,7 +130,7 @@ function NS.AnnounceSettingsChanged(path, value)
 end
 
 -- The paths a write may name with no row (options-ui-§1 route (a)): Master controls' two composed
--- rows, written by host verbs on a load where the composer is hollow; and, on Retail, the race
+-- rows and the lanes' own lock beside them (`/ct lanes`), written by host verbs on a load where the composer is hollow; and, on Retail, the race
 -- call-out's drag-written place, `callout.point`, its named non-setting state (the second answer of
 -- LibKa0s-Callout-1.0's SchemaRows, settings/Race.lua): no control chooses it, so it has no row; the
 -- drag-stop and Reset position write it through NS.SetByPath (modules/Countdown.lua's write route).
@@ -138,7 +138,7 @@ end
 -- controls (the drawer's open, fold and sort, the window's detach, dock, attach and pin) write keys
 -- the Combat Log page has rows for (settings/Log.lua, CL-11c2), so none of them is here.
 NS.CALLOUT_POINT = "callout.point"
-local WRITE_THROUGH = { "general.enabled", "general.locked" }
+local WRITE_THROUGH = { "general.enabled", "general.locked", "general.lanesLocked" }
 if NS.Compat.ForClient({ "retail" }) then WRITE_THROUGH[#WRITE_THROUGH + 1] = NS.CALLOUT_POINT end
 NS.SCHEMA_WRITE_THROUGH = WRITE_THROUGH
 

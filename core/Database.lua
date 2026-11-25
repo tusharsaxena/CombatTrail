@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 6
+NS.SCHEMA_VERSION = 7
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -123,6 +123,12 @@ local STEPS = {
     -- carried across: a HUD that grew is fixed at its bars, and a log window that stood beside the HUD
     -- stands at its own stored place. Idempotent: a fresh profile stores none of them.
     { to = 6, perProfile = true, run = function(_, profile) NS.DropRetiredWindowKeys(profile) end },
+    -- 6 -> 7, per profile: the lanes lock apart (2026-11-25, CLF-3, owner feedback item 15). Until now
+    -- `general.locked` also kept Edit Mode from unlocking the lanes; from here the lanes read their own
+    -- `general.lanesLocked`, so each profile's stored lock is carried across and nobody's lanes unlock
+    -- by surprise. `general.locked` stays: it is still the DPS HUD's and the windows' lock. Idempotent: a
+    -- lanes lock already stored is kept, and a profile with no stored lock stores nothing.
+    { to = 7, perProfile = true, run = function(_, profile) NS.CarryLanesLock(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -146,6 +152,14 @@ function NS.DropRetiredWindowKeys(profile)
     local log = profile.log
     local w = type(log) == "table" and log.window
     if type(w) == "table" then w.attached, w.side, w.matchHud, w.pinned = nil, nil, nil, nil end
+end
+
+--- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where
+--- the profile stores no lanes lock yet. A profile with no `general` table is left alone.
+function NS.CarryLanesLock(profile)
+    local g = type(profile) == "table" and profile.general
+    if type(g) ~= "table" or g.lanesLocked ~= nil then return end
+    if g.locked == true then g.lanesLocked = true end
 end
 
 --- A profile switch, copy or reset replaces the whole profile wholesale: the stored `enabled` can

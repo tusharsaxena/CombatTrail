@@ -17,7 +17,7 @@ default; the file's comments say what each value means.
   `settings/` (General, Lanes, Hud, History, and Race on Retail only) as the TOC loads them, so the load pass is the TOC's own
   settings pass. `NS.SchemaForPage` filters it per page.
 - **The one write seam:** `NS.SetByPath(path, value)` (settings/Schema.lua). The pages, the CLI
-  (`/ct set`), the verbs (`enable`, `lock`, `lane`, `ignore`, `dummy`, `race`) and the launcher all write through it,
+  (`/ct set`), the verbs (`enable`, `lock`, `lane`, `lanes`, `ignore`, `dummy`, `race`) and the launcher all write through it,
   and it sends `SETTINGS_CHANGED`. Reads go through `NS.GetSetting(path)`.
 
 ## The profile tree
@@ -25,7 +25,8 @@ default; the file's comments say what each value means.
 | Key | Default | Page |
 |---|---|---|
 | `general.enabled` | `true` | General → Master controls |
-| `general.locked` | `false` | General → Master controls |
+| `general.locked` | `false`: the DPS HUD's and the windows' lock (`/ct lock`, `/ct unlock`); never the lanes' since step 7 | General → Master controls |
+| `general.lanesLocked` | `false`: the lanes' own lock (owner feedback item 15, `/ct lanes lock\|unlock\|toggle`): on, Edit Mode does not show their move boxes. Step 7 carried each profile's `general.locked` across | General → Master controls |
 | `general.hudInCombat` | `true` | General → Master controls |
 | `general.fontScale` | `1` | General → Look and skin |
 | `lanes.player.*`, `lanes.pet.*` | one block per lane, `lane()` in `defaults/Profile.lua` | Lanes (all seven tabs) |
@@ -69,12 +70,12 @@ default; the file's comments say what each value means.
 | `log.window.position`, `log.window.width`, `log.window.height` | `{ point = "CENTER", relPoint = "CENTER", x = -360, y = 0 }`, `460` (`LW.MIN_WIDTH` 320 to `MAX_WIDTH` 900), `0` (0: the rows' height): the free-standing window's place and its size, written raw by its drag and its grip's release; no row (named state, below) | none (the window's drag and grip) |
 | `log.view.sort`, `throttle`, `throttleMs`, `fontSize`, `rowHeight`, `timeFormat` | `"newest"` (`"oldest"`; the Time header's click flips it), `"instant"` (`"every"`, `"batch"`), `250` (50-1000), `10` (8-16 points; `LogTable.FONT_BASE`, GameFontHighlightSmall's), `14` (12-28 px; `LogTable.ROW_H`), `"pull"` (`"clock"`): the table in all three homes (modules/LogTable.lua, modules/LogTable_View.lua): its sort, the live views' display throttle (it delays the display only; the capture and the store never wait), the rows' text size and height (CL-11c2: every home's height follows `LogTable.RowH()`, the fixed columns and the icon widen with the text), and the time from the pull or the clock | Combat Log → Order and display |
 | `log.view.columns.*` | `spell`, `amount`, `info` all `true`: the optional columns (Time and Event always show; Info only where a home has room: the detached window and the Results detail). There is no Source or Target column (owner feedback item 3): step 5 drops `source` and `target` | Combat Log → Order and display |
-| `log.show.*` | one `true` per category of `CombatLog.CATEGORIES`, `autoAttacks = false`, `minAmount = 0`: what the live views show, the defaults their chips seed from (`LogTable.Reseeds`: a chip's click is the view's own, for the session, never stored) (the Results Log tab's chips filter by these categories' chips, and read `deaths` and `minAmount`); a sealed amount is never compared, so it always shows | Combat Log → What to show |
+| `log.show.*` | one `true` per category of `CombatLog.CATEGORIES`, `autoAttacks = false`, `minAmount = 0`: what the live views show, the defaults their chips seed from (`LogTable.Reseeds`: a chip's click is the view's own, for the session, never stored) (the Results Log section's chips filter by these categories' chips, and read `deaths` and `minAmount`); a sealed amount is never compared, so it always shows | Combat Log → What to show |
 | `log.view.schoolColors`, `log.view.washes` | `true`, `true`: a school's name in its color and the rows' washes; off, every kind still differs by its tag | Combat Log → Colors |
 | `log.colors.you`, `useClassColorYou`, `hostile`, `hostileFromSkin`, `friendly`, `friendlyFromSkin` | white, `true`, `{ r = 1, g = 0.32, b = 0.32 }`, `true`, `{ r = 0.56, g = 0.72, b = 1.0 }`, `true` (CL-11c2): "You" in the player's class color, else its swatch; the target in the skin's `ct.log.hostile` / `ct.log.friendly`, else its swatch (the swatches carry the tokens' Ka0s Default values; `LogTable.ReadColors`) | Combat Log → Colors |
 | `log.store.enabled`, `log.store.lines`, `log.store.categories.*` | `true`; `NS.Constants.LOG.MAX_PER_FIGHT` (400; 100 to 1000, `MIN_PER_FIGHT` to `MAX_LINES`); one `true` per category in `CombatLog.CATEGORIES` (`casts`, `petCasts`, `playerBuffs`, `playerDebuffs`, `targetBuffs`, `targetDebuffs`, `hits`, `heals`, `deaths`): whether a fight's record keeps its log, how many lines (the newest), and which kinds of line it keeps, apart from what any view shows. Each fight freezes them at its start | Combat Log → Storage |
 | `log.store.fights` | `NS.Constants.LOG.FIGHTS` (100; 0 to `MAX_FIGHTS` 500, 0 keeps every log): how many stored fights keep their saved log, the newest carrying one; each purge run (modules/Retention.lua: login, daily, `/ct purge`) strips `log`, `logDropped` and `logTargets` from every older one, best-holding fights included, the fight itself kept | Combat Log → Storage |
-| `log.results.jumpToCast`, `log.results.chips.*` | `true`; one `true` per chip of `ResultsLog.CHIPS` (`casts`, `pet`, `buffs`, `debuffs`, `taken`, `heals`): the Results fight detail's Log tab (modules/Results_Log.lua, CL-11c), whether a click on a CAST row opens the ability timeline at that cast, and the chips each fight opens on (a click on a chip turns it for the fight shown, never stored) | Combat Log → Results |
+| `log.results.jumpToCast`, `log.results.chips.*` | `true`; one `true` per chip of `ResultsLog.CHIPS` (`casts`, `pet`, `buffs`, `debuffs`, `taken`, `heals`): the Results fight detail's Log section (modules/Results_Log.lua, CL-11c), whether a click on a CAST row opens the ability timeline at that cast, and the chips each fight opens on (a click on a chip turns it for the fight shown, never stored) | Combat Log → Results |
 | `skin.*` | `source = "ka0s"`, `skin = NS.DEFAULT_SKIN` (per client), scope, font, texture, `outline = "hud"`, `pickerSeen = false` | General → Look and skin |
 
 The debug flag, test mode and the sim are session-only (`NS.State`), never stored.
@@ -181,6 +182,13 @@ a step that returned; a step marked `perProfile` runs once for every stored prof
 | 1 | 0 → 1 | Nothing: the first release's shape |
 | 2 | 1 → 2 | Empties the fight store, its order, the loadouts and the gear sets (`global.fights`, `fightOrder`, `loadouts`, `gearSets`): the v0.2 record shape, CT_SCHEMA 2. Every other account-wide key is kept |
 | 3 | 2 → 3 | Per profile (`perProfile`, every stored profile, the active one and the rest): the race call-out at LibKa0s-Callout-1.0 3.4 (callout plan row C11). A stored `callout.glow` choice is rewritten by the library's own `Callout:MigrateGlow` (`"off"` → `glow = false`; `"soft"` → on at 35% and 2 px; `"strong"` → on at 70% and 5 px, each intensity or thickness only where no valid one is stored; the old choice named no color, offset or swatch, so none is stored and a migrated profile reads the current defaults for them: since LibKa0s v1.102.0, *Glow color* ticked in the black swatch, now at Combat Trail's 1, 1 (SD-CT-DEF), where v1.100.0 drew each word's kind color at 0, 0; the owner's defaults, so no further step), after an intensity or thickness equal to its default beside the old string is cleared as AceDB's copy (savedvariables-§1: compare to the default, never test for the key; those keys are new with the boolean, so no player set one under the old choice). `callout.texts` and `callout.muted` are dropped: their rows are gone, and the instance would still read a stored own word or mute, so leaving them would keep a preference with no row (architecture-§5). A stored `callout.voice` is kept; an unset one reads the new default, Arena John. AceDB stores no value equal to its default, so a profile on the old default `female` (Kathleen), whether chosen or not, has no stored voice and moves to Arena John (savedvariables-§1: the step cannot tell that choice from no choice). Idempotent: a profile with no `callout` table, or a migrated one, passes unchanged. Without the library the glow string stays and only the two tables are dropped |
+
+Step 7 (6 → 7, per profile, `NS.CarryLanesLock`, the owner's Combat Log feedback, 2026-11-25, CLF-3)
+gives the lanes their own lock (item 15). Until then `general.locked` also kept Edit Mode from unlocking
+the lanes; from here they read `general.lanesLocked`, so a profile that stores `general.locked = true`
+gets `general.lanesLocked = true` and its lanes stay locked. `general.locked` is kept: it is still the
+DPS HUD's and the windows' lock. Idempotent: a lanes lock already stored is kept, and a profile with no
+stored lock stores nothing.
 
 Step 6 (5 → 6, per profile, `NS.DropRetiredWindowKeys`, the owner's Combat Log feedback, 2026-11-25, CLF-2)
 drops the keys of two retired states: `hud.sizeMode` and `hud.grow` (the HUD's auto-grow; the HUD is one

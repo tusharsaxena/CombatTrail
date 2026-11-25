@@ -17,7 +17,7 @@ local function text(M) return table.concat(M.__printed(), "\n") end
 -- Spec §8's verbs, plus the reserved ones the standard owes every addon (slash-commands-§2).
 local SPEC_VERBS = {
     "help", "results", "hud", "unlock", "lock", "test", "sim", "lane", "ignore", "set", "get", "reset",
-    "purge", "debug", "diagnostics", "probe", "dummy",
+    "purge", "debug", "diagnostics", "probe", "dummy", "lanes",
 }
 local RESERVED = { "config", "skin", "enable", "disable", "list", "resetall", "perf", "version" }
 
@@ -157,6 +157,44 @@ test("slash: lock and unlock write general.locked", function()
     assertEqual(NS.GetSetting("general.locked"), true)
     NS.Slash:OnSlash("unlock")
     assertEqual(NS.GetSetting("general.locked"), false)
+end)
+
+-- Owner feedback item 15: the lanes lock apart from the HUD and the windows.
+test("slash: lock and unlock leave the lanes alone; lanes lock|unlock|toggle move them alone", function()
+    local inst = T.load()
+    local NS, A = inst.NS, inst.NS.LaneAnchor
+    NS.Slash:OnSlash("unlock")
+    -- red under: /ct unlock reached the lanes
+    assertFalse(A.IsUnlocked(), "/ct unlock does not unlock the lanes")
+    NS.Slash:OnSlash("lanes unlock")
+    assertTrue(A.IsUnlocked(), "/ct lanes unlock does, from a stored value that did not move")
+    assertEqual(NS.GetSetting("general.lanesLocked"), false)
+    NS.Slash:OnSlash("lock")
+    assertTrue(A.IsUnlocked(), "/ct lock leaves them unlocked")
+    assertEqual(NS.GetSetting("general.locked"), true, "the HUD locked")
+    NS.Slash:OnSlash("lanes lock")
+    assertFalse(A.IsUnlocked())
+    assertEqual(NS.GetSetting("general.lanesLocked"), true, "their own key")
+    assertEqual(NS.GetSetting("general.locked"), true, "the HUD's lock untouched")
+    NS.Slash:OnSlash("lanes toggle")
+    assertTrue(A.IsUnlocked(), "toggle: locked lanes unlock")
+    assertEqual(NS.GetSetting("general.lanesLocked"), false)
+    NS.Slash:OnSlash("lanes toggle")
+    assertFalse(A.IsUnlocked(), "toggle: unlocked lanes lock")
+    inst.mocks.__resetPrinted()
+    NS.Slash:OnSlash("lanes sideways")
+    assertTrue(anyLine(inst.mocks, "Usage: /ct lanes lock|unlock|toggle"), "a bad word: the usage line")
+    assertTrue(NS.FindSchemaRow("general.lanesLocked") ~= nil, "a settings row of its own")
+end)
+
+test("slash: the help says lock is the HUD's and the windows' and lanes is the lanes'", function()
+    local inst = T.load()
+    inst.mocks.__resetPrinted()
+    inst.NS.Slash:OnSlash("help")
+    local out = text(inst.mocks)
+    assertTrue(out:find("Lock the DPS HUD and the windows in place", 1, true) ~= nil, out)
+    assertTrue(out:find("/ct lanes", 1, true) ~= nil)
+    assertTrue(out:find("Lock the lanes and", 1, true) == nil, "no lock line names the lanes")
 end)
 
 test("slash: test turns test mode on and off", function()

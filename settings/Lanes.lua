@@ -535,7 +535,7 @@ end
 -- The General tab: the lane's rows, then its acts (options-ui-§14's General escape).
 local UNLOCK_ROW = {
     type = "bool", page = PAGE, group = TAB.general, subgroup = L["Lane"], label = L["Unlock the lanes"],
-    tooltip = L["Show the lanes' move boxes so you can drag them, as /ct unlock does. Both lanes unlock together."],
+    tooltip = L["Show the lanes' move boxes so you can drag them, as /ct lanes unlock does. Both lanes unlock together."],
     get = function() return NS.LaneAnchor ~= nil and NS.LaneAnchor.IsUnlocked() end,
     set = function(on) if NS.LaneAnchor then NS.LaneAnchor.SetUnlocked(on and true or false) end end,
 }

@@ -6,7 +6,7 @@ local _, NS = ...
 -- window, owner feedback item 11, so no attach, side, HUD-height match or pin), Order and display (the sort, the display throttle, the rows' text size and height, the
 -- time, the columns), What to show (the live views' categories, the auto attacks, the least amount),
 -- Colors (school colors, row washes, the who colors), Storage (a log with each fight, the lines kept,
--- the categories saved) and Results (the Log tab's chips, the jump to the Timeline). The keys are
+-- the categories saved) and Results (the Log section's chips, the jump to the Timeline). The keys are
 -- modules/CombatLog.lua's, modules/LogTable.lua's, modules/LogTable_View.lua's, modules/Hud_Log.lua's,
 -- modules/LogWindow.lua's and modules/Results_Log.lua's (defaults/Profile.lua).
 --
@@ -14,7 +14,7 @@ local _, NS = ...
 -- geometry, which only its drag and its grip choose (written raw, as the Race window's own place is).
 --
 -- WRITES: every row writes through the seam (NS.SetByPath), whose SETTINGS_CHANGED on a `log.` path
--- the drawer (a HUD refresh), the detached window (a relayout) and the Results Log tab (a redraw)
+-- the drawer (a HUD refresh), the detached window (a relayout) and the Results Log section (a redraw)
 -- answer, so no row carries an onChange. A fight freezes its Storage settings at its start, so a
 -- change there takes hold from the next fight (CombatLog's capture).
 
@@ -196,7 +196,7 @@ row("colors.friendlyFromSkin", { type = "bool", label = L["Use the skin's color"
 -- Storage
 at(TAB.store, L["Storage"])
 row("store.enabled", { type = "bool", label = L["Save a log with each fight"], startsLine = true,
-    tooltip = L["Keep each stored fight's Combat Log, for the Log tab of its Results detail. Takes hold from the next fight."] })
+    tooltip = L["Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."] })
 row("store.lines", { type = "number", label = L["Lines kept per fight"], min = LOG.MIN_PER_FIGHT, max = LOG.MAX_LINES,
     step = 50, startsLine = true,
     tooltip = L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] })
@@ -216,13 +216,13 @@ for i, c in ipairs(SAVED) do
 end
 
 -- Results
-at(TAB.results, L["Log tab"])
+at(TAB.results, L["Log section"])
 row("results.jumpToCast", { type = "bool", label = L["Jump to the Timeline on clicking a cast"], startsLine = true,
-    tooltip = L["A click on a CAST row on a fight's Log tab opens the ability timeline at that cast."] })
+    tooltip = L["A click on a CAST row on a fight's Log section opens the ability timeline at that cast."] })
 at(TAB.results, L["Chips each fight opens on"])
 for i, chip in ipairs(NS.ResultsLog.CHIPS) do
     row("results.chips." .. chip.key, { type = "bool", label = L[chip.label], startsLine = i % 2 == 1 or nil,
-        tooltip = L["Turn this chip on when a fight's Log tab opens. A click on the chip still turns it on or off for the fight shown."] })
+        tooltip = L["Turn this chip on when a fight's Log section opens. A click on the chip still turns it on or off for the fight shown."] })
 end
 
 -- One running order, so a composed block (which numbers its own rows) sorts where it is declared.

@@ -133,8 +133,13 @@ L["Performance capture; try /ct perf help"] = "Performance capture; try /ct perf
 L["Print the addon version"] = "Print the addon version"
 L["Open the Results window, with your fight history"] = "Open the Results window, with your fight history"
 L["The DPS HUD: /ct hud show or hide"] = "The DPS HUD: /ct hud show or hide"
-L["Lock the lanes and the DPS HUD in place"] = "Lock the lanes and the DPS HUD in place"
-L["Unlock the lanes and the DPS HUD to move them"] = "Unlock the lanes and the DPS HUD to move them"
+L["Lock the DPS HUD and the windows in place"] = "Lock the DPS HUD and the windows in place"
+L["Unlock the DPS HUD and the windows to move them"] = "Unlock the DPS HUD and the windows to move them"
+L["Lock or unlock the lanes alone: /ct lanes lock|unlock|toggle"] = "Lock or unlock the lanes alone: /ct lanes lock|unlock|toggle"
+L["Usage: /ct lanes lock|unlock|toggle"] = "Usage: /ct lanes lock|unlock|toggle"
+L["Lock the lanes"] = "Lock the lanes"
+L["Keep Edit Mode from showing the lanes' move boxes. /ct lanes lock and /ct lanes unlock set it; Locked above leaves the lanes alone."] =
+    "Keep Edit Mode from showing the lanes' move boxes. /ct lanes lock and /ct lanes unlock set it; Locked above leaves the lanes alone."
 L["Test mode: sample data in the lanes, the HUD and the Results window"] =
     "Test mode: sample data in the lanes, the HUD and the Results window"
 L["Sim mode: a made-up fight played in real time"] = "Sim mode: a made-up fight played in real time"
@@ -345,8 +350,8 @@ L["Usage: /ct lane player|pet on|off"] = "Usage: /ct lane player|pet on|off"
 L["The %s is on."] = "The %s is on."
 L["The %s is off."] = "The %s is off."
 L["Unlock the lanes"] = "Unlock the lanes"
-L["Show the lanes' move boxes so you can drag them, as /ct unlock does. Both lanes unlock together."] =
-    "Show the lanes' move boxes so you can drag them, as /ct unlock does. Both lanes unlock together."
+L["Show the lanes' move boxes so you can drag them, as /ct lanes unlock does. Both lanes unlock together."] =
+    "Show the lanes' move boxes so you can drag them, as /ct lanes unlock does. Both lanes unlock together."
 L["Copy from %s"] = "Copy from %s"
 L["Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."] =
     "Give this lane every setting of the other lane, except where it sits, its label text, its switch and its ignore list."
@@ -1286,14 +1291,9 @@ L["Following the newest line"] = "Following the newest line"
 L["Paused"] = "Paused"
 L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"] = "The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"
 
--- The Results fight detail's tabs and its Log tab (CombatTrail #11, CL-11c; modules/Results_Detail.lua,
+-- The Results fight detail's Log section (CombatTrail #11, CL-11c; owner feedback item 19;
 -- modules/Results_Log.lua)
-L["Overview"] = "Overview"
 L["Log"] = "Log"
-L["The fight's figures, chart, spells, gear, usage and note."] = "The fight's figures, chart, spells, gear, usage and note."
-L["Every cast of the fight along its length, in its own window."] = "Every cast of the fight along its length, in its own window."
-L["The fight's saved Combat Log, with its damage by spell."] = "The fight's saved Combat Log, with its damage by spell."
-L["This fight has no casts to draw."] = "This fight has no casts to draw."
 L["Buffs"] = "Buffs"
 L["Debuffs"] = "Debuffs"
 L["Taken"] = "Taken"
@@ -1307,7 +1307,6 @@ L["Heals taken: the healing done to you."] = "Heals taken: the healing done to y
 L["Click to show or hide them."] = "Click to show or hide them."
 L["Click to show or hide them in this view."] = "Click to show or hide them in this view."
 L["Show or hide the Combat Log's filter chips"] = "Show or hide the Combat Log's filter chips"
-L["Damage by spell"] = "Damage by spell"
 L["Click a CAST row to see it on the Timeline."] = "Click a CAST row to see it on the Timeline."
 L["No log was saved for this fight"] = "No log was saved for this fight"
 L["No lines match the chips."] = "No lines match the chips."
@@ -1437,8 +1436,8 @@ L["The color of a target you cannot attack. Not read while Use the skin's color 
 L["Draw a friendly target in the skin's own color. The swatch is not read while this is on."] =
     "Draw a friendly target in the skin's own color. The swatch is not read while this is on."
 L["Save a log with each fight"] = "Save a log with each fight"
-L["Keep each stored fight's Combat Log, for the Log tab of its Results detail. Takes hold from the next fight."] =
-    "Keep each stored fight's Combat Log, for the Log tab of its Results detail. Takes hold from the next fight."
+L["Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."] =
+    "Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."
 L["Lines kept per fight"] = "Lines kept per fight"
 L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] =
     "The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."
@@ -1447,12 +1446,12 @@ L["Only the newest stored fights keep their saved log; an older fight stays in t
     "Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."
 L["Save these lines with each fight. Separate from What to show, which only filters the live views."] =
     "Save these lines with each fight. Separate from What to show, which only filters the live views."
-L["Log tab"] = "Log tab"
+L["Log section"] = "Log section"
 L["Jump to the Timeline on clicking a cast"] = "Jump to the Timeline on clicking a cast"
-L["A click on a CAST row on a fight's Log tab opens the ability timeline at that cast."] =
-    "A click on a CAST row on a fight's Log tab opens the ability timeline at that cast."
+L["A click on a CAST row on a fight's Log section opens the ability timeline at that cast."] =
+    "A click on a CAST row on a fight's Log section opens the ability timeline at that cast."
 L["Chips each fight opens on"] = "Chips each fight opens on"
-L["Turn this chip on when a fight's Log tab opens. A click on the chip still turns it on or off for the fight shown."] =
-    "Turn this chip on when a fight's Log tab opens. A click on the chip still turns it on or off for the fight shown."
+L["Turn this chip on when a fight's Log section opens. A click on the chip still turns it on or off for the fight shown."] =
+    "Turn this chip on when a fight's Log section opens. A click on the chip still turns it on or off for the fight shown."
 L["Restore every Combat Log setting on this profile to its addon default."] =
     "Restore every Combat Log setting on this profile to its addon default."

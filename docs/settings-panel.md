@@ -12,7 +12,7 @@ page on the current profile. Every row is a schema row (`settings/*.lua` through
 | General | The master switches (enable, lock, debug console, minimap button, test mode, sim mode, the HUD in combat), the skin and its overrides, and the key bindings |
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
-| Combat Log | The log of your casts, auras, hits and heals taken and death (CombatTrail #11): on or off, open now and at each fight's start, docked in the DPS HUD or in its own window; the drawer's filter chips and rows; the window's rows, place, pin, lock, scale and opacity; the sort, the display throttle, the text size, the row height, the time and the columns; what the live views show; the colors; what each fight saves; the Results Log tab's chips |
+| Combat Log | The log of your casts, auras, hits and heals taken and death (CombatTrail #11): on or off, open now and at each fight's start, docked in the DPS HUD or in its own window; the drawer's filter chips and rows; the window's rows, place, pin, lock, scale and opacity; the sort, the display throttle, the text size, the row height, the time and the columns; what the live views show; the colors; what each fight saves; the Results Log section's chips |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
 | Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock (how often it redraws is the DPS HUD page's *HUD refresh rate*), the countdown and the buzzer, the center call-out's look and voice (its one Callout tab: a preview, then Look and Sound), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
@@ -39,6 +39,7 @@ Tabs: *Master controls*, *Look and skin*, *Keybindings* (settings/General.lua).
 | Test mode | `general.testMode` |
 | Sim mode | `general.simMode` |
 | Show DPS HUD in combat | `general.hudInCombat` |
+| Lock the lanes | `general.lanesLocked` |
 | Debug logging | `general.debug` |
 
 ### Look and skin
@@ -365,7 +366,7 @@ have no texture row and always draw the skin's (AF-CT-TEX).
 Tabs: *Combat Log*, *Docked drawer*, *Detached window*, *Order and display*, *What to show*, *Colors*,
 *Storage*, *Results* (settings/Log.lua, `NS.LOG_TAB_ORDER`; CombatTrail #11, CL-11c2). Every row writes
 through `NS.SetByPath`, and its SETTINGS_CHANGED redraws whichever home is up: the DPS HUD's drawer (the
-HUD grows or shrinks with it), the detached window, and the Results fight detail's Log tab. The log's
+HUD grows or shrinks with it), the detached window, and the Results fight detail's Log section. The log's
 own controls write the same rows: the HUD's Log control and `/ct log` (*Show the Combat Log*), the
 drawer's chevron (*Folded to one line*), its detach mark and the window's dock mark (*Where the log
 lives*), the window's attach mark (*Attach beside the DPS HUD*), `/ct log pin|unpin` (*Stay up while the
@@ -407,7 +408,7 @@ standalone (owner feedback item 11): it has no attach, side, HUD-height or pin r
 *N (ms)* is drawn disabled while *Show new rows* is Instant. The throttle delays only what the drawer and
 the window show; every event is still captured and saved. *Text size* runs 8 to 16 points (10, the body
 text's own) and widens the fixed columns and the icon with it; *Row height (px)* runs 12 to 28 (14), and
-the drawer, the window and the Results Log tab all take their heights from it.
+the drawer, the window and the Results Log section all take their heights from it.
 
 | Row | Key |
 |---|---|

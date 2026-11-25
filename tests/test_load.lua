@@ -100,8 +100,8 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 6 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 6)
+test("load: the settings stamp is 7 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 7)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
@@ -190,9 +190,30 @@ test("load: step 6 drops the HUD's auto-grow and the log window's attached state
         assertEqual(w.width, 500, name .. ": its width kept")
         assertEqual(w.position.x, 10, name .. ": its own place kept")
     end
-    assertEqual(NS.db.global.schemaVersion, 6)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     NS.DropRetiredWindowKeys(sv.Default)
     NS.DropRetiredWindowKeys({})
     NS.DropRetiredWindowKeys({ log = {} })
     assertEqual(sv.Default.hud.bars, 7)
+end)
+
+test("load: step 7 carries each profile's lock to the lanes' own, so no lanes unlock by surprise", function()
+    local NS = boot({ global = { schemaVersion = 6 }, profiles = {
+        Locked = { general = { locked = true } },
+        Open = { general = { locked = false } },
+        Bare = { hud = { bars = 6 } },
+        Own = { general = { locked = true, lanesLocked = false } },
+    } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: no step, or one over the active profile alone
+    assertEqual(sv.Locked.general.lanesLocked, true, "a locked profile keeps its lanes locked")
+    assertEqual(sv.Locked.general.locked, true, "and keeps its HUD lock")
+    assertEqual(rawget(sv.Open.general, "lanesLocked"), nil, "an unlocked one stores nothing")
+    assertEqual(rawget(sv.Bare, "general"), nil, "a profile with no lock is left alone")
+    assertEqual(sv.Own.general.lanesLocked, false, "a lanes lock already stored is kept")
+    assertEqual(NS.db.global.schemaVersion, 7)
+    NS.CarryLanesLock(sv.Locked)
+    NS.CarryLanesLock({})
+    NS.CarryLanesLock(nil)
+    assertEqual(sv.Locked.general.lanesLocked, true, "idempotent")
 end)

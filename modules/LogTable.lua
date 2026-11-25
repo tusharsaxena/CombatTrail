@@ -4,7 +4,7 @@ local _, NS = ...
 -- lines a view shows, and the feed that walks the ring for a live view (its sort, its follow and pause,
 -- its display throttle). The frames are modules/LogTable_View.lua's; the homes are the DPS HUD's docked
 -- drawer (modules/Hud_Log.lua), the detached companion (modules/LogWindow.lua) and the Results fight
--- detail's Log tab (modules/Results_Log.lua), all three over this one component. Its settings are the
+-- detail's Log section (modules/Results_Log.lua), all three over this one component. Its settings are the
 -- Combat Log page's (settings/Log.lua).
 --
 -- THE COLUMNS. Time · Event · Spell/School · Amount, plus Info where the home has room (Columns:
@@ -39,7 +39,7 @@ local _, NS = ...
 -- never compared: it always shows. A retired boundary never shows. What is shown never changes what is
 -- captured or saved.
 -- THE CHIPS (LogTable.CHIPS: Casts, Pet, Buffs, Debuffs, Taken, Heals, each over the categories it
--- covers) filter a view's lines. The Results Log tab's open on `log.results.chips` and count their
+-- covers) filter a view's lines. The Results Log section's open on `log.results.chips` and count their
 -- lines (modules/Results_Log.lua). The live views' (the detached window's strip under its status line,
 -- the drawer's under its heading, shown by default and hidden by its filter mark, `log.drawer.chips`)
 -- are each view's own `show`, SEEDED from `log.show.*` (the What
@@ -268,7 +268,7 @@ end
 -- ── the chips ───────────────────────────────────────────────────────────────────────────────────
 
 --- The chips, left to right: their key, their label and the saved categories each one covers (the
---- Results Log tab's and the live views' alike).
+--- Results Log section's and the live views' alike).
 LogTable.CHIPS = {
     { key = "casts", label = "Casts", cats = { "casts" } },
     { key = "pet", label = "Pet", cats = { "petCasts" } },

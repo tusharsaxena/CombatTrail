@@ -1,7 +1,7 @@
 local _, NS = ...
 -- modules/LogTable_View.lua — the Combat Log table's frames (CombatTrail #11, plan item CL-11b): one
 -- component every home builds (the DPS HUD's docked drawer, modules/Hud_Log.lua; the detached
--- companion, modules/LogWindow.lua; the Results fight detail's Log tab, modules/Results_Log.lua),
+-- companion, modules/LogWindow.lua; the Results fight detail's Log section, modules/Results_Log.lua),
 -- drawing the cells modules/LogTable.lua works out.
 --
 -- THE SHAPE. A column header (its own row, LogTable.HEAD_H, in the list header's gold; `opts.noHeader`
@@ -18,7 +18,7 @@ local _, NS = ...
 -- THE SCROLL INDICATOR (owner feedback item 6) is Spell breakdown's (modules/Hud_States.lua): a thin
 -- track (`ct.scroll.track`) and thumb (`ct.scroll.thumb`) in the gutter right of the rows, shown while
 -- lines lie past them, the thumb as long as the share in view and as far down as the page
--- (View:SetScroll; DrawFeed sets it for a live home, the Results Log tab from its own page).
+-- (View:SetScroll; DrawFeed sets it for a live home, the Results Log section from its own page).
 --
 -- A PAINT (View:Draw) is handed the rows' lines, newest first, and the view puts them in the sort's
 -- order: newest first top down, or oldest first with the newest at the bottom. A label is painted only
@@ -149,7 +149,7 @@ local function rowEnter(row)
     Style.PlaceBody(GameTooltip, row)
 end
 
--- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Log tab's
+-- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Log section's
 -- jump to the Timeline). A live home passes none and its clicks do nothing.
 local function rowUp(row, button)
     local view = row.view
@@ -451,7 +451,7 @@ function View:Rows() return self.rows end
 -- ── the live chips (CL-REV) ─────────────────────────────────────────────────────────────────────
 -- A strip of LogTable.CHIPS on a live home (the detached window under its status line, the drawer
 -- behind its filter mark): one button per chip, lit ("primary") while LogTable.ChipOn, laid left to
--- right and wrapped at the width it is given. The Results Log tab builds its own (with counts).
+-- right and wrapped at the width it is given. The Results Log section builds its own (with counts).
 
 LogTable.CHIP_H, LogTable.CHIP_GAP = 18, 4
 

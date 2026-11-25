@@ -124,8 +124,8 @@ Every non-vendored file the addon ships, in TOC load order, with its one job (do
 | `modules/Results_Usage.lua` | The detail's Usage list and its edit, and the list's Used icons |
 | `modules/Results_Targets.lua` | The detail's Targets list: each enemy your damage reached and how much it took (issue #6) |
 | `modules/Results_RaceDetail.lua` | A race's detail: the Timing strip and the Flags box, its score and race DPS, the late-cast right-click (Retail; Race mode plan D1) |
-| `modules/Results_Log.lua` | The detail's Log tab: the fight's saved log in the shared table, the chips with their counts, the Damage by spell panel in the HUD's spell rows, a CAST row's click that jumps the Timeline to it (#11, CL-11c) |
-| `modules/Results_Detail.lua` | One fight in full, under its Overview, Timeline and Log tabs |
+| `modules/Results_Log.lua` | The detail's Log section, a folding section under Targets (owner feedback item 19): the fight's saved log in the shared table, the chips with their counts, a CAST row's click that jumps the Timeline to it (#11, CL-11c). No Damage by spell panel (item 20) |
+| `modules/Results_Detail.lua` | One fight in full, one scrolling page of folding sections with no tabs (owner feedback item 19); the Timeline through the footer's button |
 | `modules/Share.lua` | The one-line chat summary of a fight or a race, and the race's own lines on the arm and at its result |
 | `modules/Results_TimelineData.lua` | The ability timeline's pure half |
 | `modules/Results_Timeline.lua` | The ability timeline window |

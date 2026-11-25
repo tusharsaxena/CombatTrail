@@ -62,22 +62,24 @@ local function parts(d)
         loadout = { d.lo.title, d.lo.talents, d.lo.titleHover },
         usage = { d.usage.title, d.usage.items[1], d.usage.titleHover },
         targets = { d.targets.title, d.targets.rows[1].name, d.targets.titleHover },
+        log = { d.log.title, d.log.frame, d.log.titleHover },
         note = { w.noteTitle, w.note, w.noteHover },
     }
 end
 
 -- The sections a fight's detail draws, in order: a race's Timing and Flags are tests/test_results_races.lua's
 -- (a fight has neither heading nor arrow).
-local FIGHT = { "chart", "spells", "loadout", "usage", "targets", "note" }
+local FIGHT = { "chart", "spells", "loadout", "usage", "targets", "log", "note" }
 
 -- The heading under each section's (the one its fold moves up), the last section's none.
-local NEXT = { chart = "spells", spells = "loadout", loadout = "usage", usage = "targets", targets = "note" }
+local NEXT = { chart = "spells", spells = "loadout", loadout = "usage", usage = "targets", targets = "log",
+               log = "note" }
 
 test("sections: every heading has an arrow, open (chevron-down) by default, its text after it", function()
     local NS = fresh()
     local D = NS.ResultsDetail
     local d = open(NS)
-    assertEqual(table.concat(D.SECTIONS, ","), "chart,timing,spells,loadout,usage,targets,flags,note")
+    assertEqual(table.concat(D.SECTIONS, ","), "chart,timing,spells,loadout,usage,targets,log,flags,note")
     assertEqual(D.ARROW, 14)
     assertEqual(D.INDENT, D.ARROW + 2)
     local p = parts(d)
@@ -109,6 +111,8 @@ test("sections: the arrow folds a section, hides its body, stores it, and moves 
         loadout = L.LINE_H + 4 + L.BUTTON_H + 8,
         usage = U.ROW_H + 8,
         targets = 2 * NS.ResultsTargets.ROW_H + 8,
+        -- A fight saved with no log: its one line saying so (modules/Results_Log.lua).
+        log = NS.ResultsLog.HINT_H + 8,
     }
     for _, key in ipairs(FIGHT) do
         local nextKey = NEXT[key]
