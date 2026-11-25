@@ -48,7 +48,7 @@ A feature a client cannot have is **absent** there: no row, no menu entry, no fi
 | Mythic+ (the keystone level on the board key, the recording filter) | present | absent |
 | Vehicles and pet battles (lane visibility's "Hide when" rows and their events) | present | absent |
 | Training dummies (Identity's dummy content) | the measured seed in `defaults/Dummies.lua`, plus the player's own list (`modules/Dummies.lua`, History > Training dummies, `/ct dummy`) | no seed, empty by decision until one is measured; the player's own list works as on Retail |
-| Ignore seeds (`defaults/IgnoreSeeds.lua`) | its own list, picked once | its own list (the same IDs today) |
+| Ignore and buff seeds (`defaults/IgnoreSeeds.lua`; `defaults/BuffSeeds.lua`: the Used column's buffs, the Well Fed auras, the Food & Drink subclass) | its own lists, picked once; the buff lists derived from the Retail build | its own lists, picked once (the same ignore IDs today); the buff lists derived from the WoW Forever build, Camp Benefits and Might of Stormwind among them |
 | Default skin | Ka0s Default | WoW Forever |
 | Recording filters' default minimum length (`history.minLength`) | 30 s | 15 s (Race mode spec §3) |
 | Spec in Results (the column's second icon, the dropdown, the Spec grouping, the bests' board, the Share line) | the specialization | the predominant talent tree (most points, a tie to the first) stands in, worded "talent tree" (v0.2 plan A4, D5 and D11); none with no points or no talent API, so the class icon never shows twice |
@@ -171,6 +171,7 @@ AD-86-CT):
   |---|---|---|
   | DPS HUD | Results, Race (Retail), Lock, Settings, Close | the launcher's registered opener (`NS.OpenSettings`); the HUD (MEDIUM) stays up |
   | Race window (Retail) | Lock, Attach, Settings, Close | its own opener, the Race mode page (`Act.settings`); it stays up |
+  | Combat Log window ("Combat Trail · Log") | Dock, Attach, Settings, Close | its own opener, the Combat Log page (`Act.settings`, modules/LogWindow.lua); it stays up |
   | Results | the view toggle, Settings, Close | the registered opener; the window (HIGH) stays beside the panel |
   | Compare, gear view, timeline | Close | none: each is a companion of the Results window (`companion = true`, FB-CTR-02, standalone-windows v2.119.0): it opens only from the Results detail, shows its fight and keeps no position |
 
@@ -193,28 +194,27 @@ Load order is the TOC's: libraries, the locale, `core/` in dependency order, `de
 scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
-  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, CalloutSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
-  LauncherSetup, CombatTrail, Database.
-- **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones; enUS, enUS_Race, enUS_Insights.
+  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, CalloutSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup, LauncherSetup,
+  CombatTrail, Database.
+- **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones, BuffSeeds; enUS, enUS_Race, enUS_Insights.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
-- **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, Usage, Stats, Loadouts,
+- **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, CombatLog, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
 - **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, RaceClock, AutoArm, RaceVerb.
-- **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
+- **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, LogTable, LogTable_View, Hud_Log, LogWindow, Hud.
 - **Race window (Retail):** RaceWindow_Best, RaceWindow_Board, RaceWindow_States, RaceWindow, Countdown (the center call-out,
-  through the CalloutSetup seam); and BestToast (the
-  new-best toast, a fight's on both clients, a race's on Retail).
+  through the CalloutSetup seam); and BestToast (the new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Races, Results_Loadout,
-  Results_Usage, Results_Targets, Results_RaceDetail, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
+  Results_Usage, Results_Targets, Results_RaceDetail, Results_Log, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
   Results_Gear, Results_Compare, Results_InsightsData, Results_Insights, Results.
 - **Preview and support:** MockRotations, MockFights, MockRaces and RaceSample (Retail), Preview, SimRace
   (Retail), Sim, Diagnostics.
-- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, History, Race (the Race mode page, Retail), Profiles.
+- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, Log (Combat Log), History, Race (Race mode, Retail), Profiles.
 
 ## Settings Schema
 
 The profile tree is `defaults/Profile.lua` (the only place a default is written): `general`,
-`lanes.player` / `lanes.pet`, `hud`, `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
+`lanes.player` / `lanes.pet`, `hud`, `log` (the Combat Log), `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
 `toast` and `skin`, plus `callout` (Retail), seeded by `settings/Race.lua` from the call-out's schema
 rows. The global tree holds the fight store (`fights`, `fightOrder`), the interned talent loadouts
 (`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the dummy captures
@@ -277,7 +277,7 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   `SETTINGS_CHANGED`; while a race runs, one AceTimer waits until a second before
   the countdown's window, and the call-out's own OnUpdate runs from then to the buzzer and through
   STOP's hold, never longer. The stand-down cancels the timer and suspends the call-out.
-- **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges.
+- **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges. **Combat Log (CombatLog):** in a fight, `UNIT_AURA`, `UNIT_COMBAT`, `PLAYER_DEAD`, `PLAYER_REGEN_ENABLED`, `PLAYER_TARGET_CHANGED`.
 - **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
   `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an
   AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one
@@ -363,7 +363,7 @@ Out of scope, named once as directories: `docs/superpowers/`, `docs/audits/`, `d
 | `test-cases.md` | The generated case inventory (authoritative pass count) |
 | `performance.md` | The addon performance page |
 | `automated-tests/README.md` | What the automated-test record is and how to produce it |
-| `validate-seeds.md` | The seed-validation contract (`/dev-copilot:validate-seeds`): the hearthstone, ignore-seed and dummy lists per client, the tool and its rulings |
+| `validate-seeds.md` | The seed-validation contract (`/dev-copilot:validate-seeds`): the hearthstone, ignore-seed, dummy and buff lists per client, the tool and its rulings |
 | `automated-tests/RESULTS.md` | One row per run; generated by the runner, never hand-edited apart from the watch list's `Disposition` column |
 
 ### Addon-specific (documentation-§3, Tier 3)

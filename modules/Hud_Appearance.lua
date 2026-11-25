@@ -354,6 +354,7 @@ function Appearance.Changed()
     Appearance.stamp = Appearance.stamp + 1
     if NS.Hud and NS.Hud.Refresh then NS.Hud.Refresh() end
     if NS.RaceWindow and NS.RaceWindow.IsShown() then NS.RaceWindow.Refresh() end
+    if NS.LogWindow and NS.LogWindow.IsShown() then NS.LogWindow.Refresh() end
     if NS.Results and NS.Results.Restyle then NS.Results.Restyle() end
 end
 

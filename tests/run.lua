@@ -81,6 +81,7 @@ end
 ---   opts.init      false = load the files only (no OnInitialize)
 ---   opts.enable    false = initialize but do not enable
 ---   opts.loginPicker  true = the profile has not seen the skin picker, so the login fuse shows it
+---   opts.logDrawer    true = the Combat Log drawer opens at each fight's start (the shipped default)
 local function loadInstance(opts)
     opts = opts or {}
     local mocks = mockmod.build()
@@ -94,6 +95,10 @@ local function loadInstance(opts)
     if opts.init ~= false then
         local AceAddon = mocks.LibStub("AceAddon-3.0")
         AceAddon:InitializeAddon(NS)                 -- OnInitialize: DB, migrations, latch
+        -- The suites start from a player who turned the Combat Log drawer's auto-open off, so a fight
+        -- leaves the DPS HUD at the height its own suites pin (modules/Hud_Log.lua); `logDrawer` keeps
+        -- the shipped default for the drawer's suite.
+        if not opts.logDrawer and NS.db then NS.db.profile.log.drawer.autoOpen = false end
         if opts.enable ~= false then
             -- The login fuse shows the skin picker (the account's one-time skin notice, else the
             -- first-run picker on an unseen profile), and the picker shown with the HUD hidden turns
@@ -130,6 +135,7 @@ local SUITES = {
     "test_dummies",
     "test_cast_codec",
     "test_casts",
+    "test_combat_log",
     "test_usage",
     "test_stats",
     "test_loadouts",
@@ -140,6 +146,7 @@ local SUITES = {
     "test_race_record",
     "test_race_scoring",
     "test_late_ignore",
+    "test_buff_seeds",
     "test_race",
     "test_race_resume",
     "test_race_settings",
@@ -161,9 +168,14 @@ local SUITES = {
     "test_hud_layout",
     "test_hud_sizing",
     "test_hud_race_button",
+    "test_log_table",
+    "test_log_window",
+    "test_log_page",
     "test_sizing",
     "test_results_table",
     "test_results_detail",
+    "test_results_log",
+    "test_target_level",
     "test_results_sections",
     "test_results_races",
     "test_insights_data",
@@ -178,6 +190,7 @@ local SUITES = {
     "test_tooltip_place",
     "test_window_chrome",
     "test_usage_edit",
+    "test_usage_buffs",
     "test_history_page",
     "test_preview",
     "test_sim",

@@ -171,7 +171,7 @@ test("usage: the candidates are the on-use gear, then every bag consumable by it
     assertEqual(list[4].kind, "flask")
     assertNil(Usage.Build(nil, {}, {}))
     local rec = Usage.Build(snapOf(), {}, nil)
-    assertEqual(rec.v, 1)
+    assertEqual(rec.v, 2)
     assertFalse(rec.edited)
     assertEqual(#rec.candidates, 4)
 end)

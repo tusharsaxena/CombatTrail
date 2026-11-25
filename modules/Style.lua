@@ -263,7 +263,7 @@ Style.CONTROL_ART = NS.HEADER.ART
 -- { left, top, right, bottom }, measured off the vendored art (alpha above 0).
 Style.ART_GRID = 64
 Style.ART_BOX = {
-    chart = { 0, 0, 64, 56 }, close = { 0, 0, 63, 63 }, flag = { 0, 0, 64, 64 }, lock = { 8, 0, 56, 56 },
+    chart = { 0, 0, 64, 56 }, chat = { 0, 0, 64, 56 }, close = { 0, 0, 63, 63 }, flag = { 0, 0, 64, 64 }, lock = { 8, 0, 56, 56 },
     unlock = { 8, 0, 56, 64 }, move = { 0, 0, 56, 56 }, settings = { 0, 0, 64, 64 },
     ["chevron-left"] = { 8, 0, 52, 64 }, ["chevron-right"] = { 8, 0, 52, 64 },
     ["chevron-up"] = { 0, 8, 64, 52 }, ["chevron-down"] = { 0, 8, 64, 52 },
@@ -431,6 +431,16 @@ local function scaledFont(font, scale)
         end
     end
     return scaledFonts[key] or nil
+end
+
+--- The named copy of `font` at `scale` times its Style.FONT_SIZE height, or nil where the client has
+--- no CreateFont or the font has no size here: for a surface that sets a label's face again at its own
+--- size (the Combat Log's rows, modules/LogTable_View.lua, `log.view.fontSize`).
+--- @param font string  a Style.FONT value that Style.FONT_SIZE names
+--- @param scale number
+--- @return string|nil
+function Style.ScaledFont(font, scale)
+    return scaledFont(font, scale)
 end
 
 --- Style.Text at `scale` times `font`'s height (Style.FONT_SIZE): the same role and color, so the skin

@@ -20,6 +20,7 @@ taken only while `Perf.on` is set, so an idle harness costs one boolean test.
 | `race` | every race event: both regen edges, `PLAYER_DEAD`, the meter's session updates and the player's casts (modules/RaceWatchers.lua) | only while a race runs or waits for its read (Retail) |
 | `autoArm` | auto-show's and auto-arm's target, nameplate and `PLAYER_ENTERING_WORLD` events (modules/AutoArm.lua) | only while either rule is on, Race mode on (Retail); nameplates churn in a city |
 | `casts` | each cast the fight record keeps (modules/Casts.lua), inside `laneCast` | every cast, in combat |
+| `combatLog` | every aura, hit, heal, death and combat end the Combat Log hears (modules/CombatLog.lua's frame); its casts come in through `laneCast` and are not bracketed again | every `UNIT_AURA` on the player and the target and every `UNIT_COMBAT` on the player, only while a fight is open |
 | `slices` | the damage chart's once-a-step read (modules/Slices.lua), holding `meter` | every 2 s in combat |
 | `hud` | the HUD's read and redraw on each beat (modules/Hud.lua: its own beat, or the race beat's call), holding `meter` | `hud.refreshRate` times a second (4, 5, 10 or 20, default 10) while the HUD is up on a live fight; no read in the settle |
 | `raceWindow` | the Race window's redraw on each race beat and its idle events (modules/RaceWindow.lua); it reads no meter | `hud.refreshRate` times a second (default 10), only while the window is shown and a race runs or waits for its read (Retail) |
@@ -65,6 +66,19 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
 - The equipment recon walks the gear once per burst of `PLAYER_EQUIPMENT_CHANGED` /
   `UNIT_INVENTORY_CHANGED` (one coalesced 0.5 s timer), never per event and never per fight: the pull
   takes the current set's key.
+- The Combat Log (#11) does constant work per event: one line into its ring, whose slots are reused
+  once it is full (`NS.Constants.LOG.RING`, 2000 lines), so a busy fight allocates nothing per line
+  after the first 2000 of the session (`tests/perf.lua` pins 0 bytes per event). Its events are
+  registered only while a fight is open. A loss is a lookup in the unit's aura-instance map; the
+  map is walked again only at the fight's start, a target change and a full update. The fight's
+  saved lines are built once, out of combat, when the record is.
+- The Combat Log's live views (the DPS HUD's drawer, the detached window) repaint on one AceTimer each
+  at `NS.Constants.LOG.REPAINT` (0.1 s), only while shown, and a tick with nothing new paints nothing
+  (`logPaintIdle`, 0 bytes). The Combat Log page's *Show new rows* throttle (`log.view.throttle`) only
+  spaces out what those ticks reveal; the capture and the store never wait on it. The rows' text size
+  and height (`log.view.fontSize`, `log.view.rowHeight`) are read at layout, which runs only when the
+  width, the rows, the columns or one of those two change, never on a paint: a new text size sets each
+  pooled label's face once (a named font object per size, made once and kept).
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
 - When the HUD's beat and a slices boundary tick land in one frame they share one `Meter.ReadLive` of
@@ -79,8 +93,37 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
 want measured, `/ct perf finish`, then copy the report and the JSON dump from the console. The
 in-game captures and their write-ups live in [`perf-analysis/README.md`](perf-analysis/README.md).
 
+## Stored size
+
+A fight's saved Combat Log (the record's `log`, CT_SCHEMA 6) is the one part of a record whose size
+grows with the fight. Measured with `Retention.SizeOf` (the client's SavedVariables layout) on
+2026-11-25 (CL-REV, after each target line gained its `g` and the record its `logTargets`): a log at
+the default cap of 400 lines, a busy fight's mix of casts, auras and hits with an amount, a school
+and a mark, takes about 38.4 KB, about 96 bytes a line (36.9 KB before `g`, at CL-11a).
+`tests/test_combat_log.lua` holds it under 39,500 bytes. A fight shorter than the cap takes less in
+proportion (an in-game figure for a typical pull is still owed), and the lines kept per fight (100 to
+1000) and the categories saved are the player's to lower.
+
+**The total is bounded by `log.store.fights`** (100 by default, 0 to 500; modules/Retention.lua). Age
+(`history.days`) and the cap (`history.maxFights`, 500) alone did not bound it: a best-holding fight
+is kept for ever with its log, so 500 fights at the cap would have been about 19 MB of SavedVariables,
+a real cost at load, logout and `/reload`. Each purge run (login, daily, `/ct purge`) now strips the
+log from every stored fight but the newest 100 carrying one, so the worst case at the defaults is 100
+logs at the cap, about 3.8 MB, plus the fights a session stores before the next run (each up to 38 KB).
+A player who wants every log back sets it to 0. The History tab's size (`Retention.EstimateBytes`)
+counts the logs.
+
 ## Offline
 
-There is no `tests/perf.lua` yet, so the automated-test runner records the `perf` suite as a skip
-(automated-tests-§3); a skip is not evaluated at the tag. The offline runs, when they exist, live in
+`tests/perf.lua` (performance-§9) is outside the green gate: `lua tests/perf.lua`, and the vendored
+runner's `perf` suite. It drives the Combat Log's handlers inside an open fight, as the client calls
+them: a hit (`logHit`), an aura gained and lost (`logAura`), a cast from the lanes' listener
+(`logCast`) and a busy fight's beat of all of them (`busyFight`), the first two with capture off and
+on, then the drawer's repaint after a busy beat (`logPaint`) and with nothing new (`logPaintIdle`),
+and the drawer's place at a HUD beat that moved nothing (`logPlaceIdle`: `HudLog.Place`, which the HUD's
+render calls on every live beat, compares its last place field by field and allocates nothing; CL-REV,
+0.2 bytes per iteration, under an 8-byte ceiling).
+Every capture scenario measured 0 bytes per iteration once the ring is full (2026-11-25, Lua 5.1.5),
+and its ceilings sit just above that; `logPaint` measured 9,520 bytes per iteration, all of it the kit's
+widget mock, under a 10,240 ceiling (re-run 2026-11-25 after CL-11c2's sizes: unchanged). The recorded runs live in
 [`automated-tests/README.md`](automated-tests/README.md)'s bundles.

@@ -75,7 +75,7 @@ end
 
 function CELL.target(record)
     local i = ident(record)
-    local lines = { Fights().TargetName(record) }
+    local lines = { Fights().TargetLabel(record, true) }
     if i.encounterID and i.targetName and i.targetName ~= i.encounterName then
         lines[#lines + 1] = L["Primary target: %s"]:format(i.targetName)
     end

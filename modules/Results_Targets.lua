@@ -63,6 +63,18 @@ function ResultsTargets.Rows(record)
     return rows
 end
 
+--- A row's name: the primary target's row (its name the identity's `targetName`) carries the fight's
+--- level, as the Encounter or target column does (Fights.WithLevel, issue #12); every other enemy's
+--- level is not stored, so it reads its name alone.
+--- @return string
+function ResultsTargets.Label(record, row)
+    local i = type(record) == "table" and type(record.identity) == "table" and record.identity or {}
+    if type(i.targetName) == "string" and row.name == i.targetName then
+        return NS.ResultsFights.WithLevel(row.name, record, true)
+    end
+    return row.name
+end
+
 --- A row's three right-hand cells: the amount, its DPS ("42 DPS", "" without the fight's length)
 --- and its share ("63.8%").
 --- @return string amount, string dps, string share
@@ -107,7 +119,7 @@ function ResultsTargets.Fill(p)
     for i, data in ipairs(x.list) do
         x.rows[i] = x.rows[i] or newRow(p)
         local row, amount, dps, share = x.rows[i], ResultsTargets.Cells(data)
-        row.name:SetText(data.name)
+        row.name:SetText(ResultsTargets.Label(p.record, data))
         row.amount:SetText(amount)
         row.dps:SetText(dps)
         row.share:SetText(share)

@@ -14,31 +14,44 @@ local _, NS = ...
 --                   time unknown. A fight parked while the next one starts has its end counts taken
 --                   then (`fight.usageAfter`), so the next fight's potion is never the parked one's.
 -- An aura at the start whose spell is a bag consumable's (a flask, a phial) was used before the pull;
--- the Well Fed aura is food, found by its spell ID (Usage.WELL_FED_SPELLS) or by the client's own name
--- for it (the name of Usage.WELL_FED_SPELL, so it matches in every client language; the English word
--- only when the client cannot name that spell). No weapon enchant is listed, and the item-cooldown compare is not used (a
--- shared cooldown made DPS Race's probe's false positive). DPS Race's early-cast give-back is gone: the
--- snapshot is taken at the fight's start, so a potion drunk before it is already out of the counts.
+-- the Well Fed aura is food, found by its spell ID (Usage.WELL_FED_SPELLS: the active client's
+-- wellFed seed, defaults/BuffSeeds.lua) or by the client's own name for it (the name of
+-- Usage.WELL_FED_SPELL, so it matches in every client language; the English word only when the client
+-- cannot name that spell); an aura in the active client's buffs seed (Usage.BUFF_SPELLS: world, camp,
+-- zone, shrine, faire and event buffs, CombatTrail #13) is listed under its spell ID. No weapon enchant
+-- is listed, and the item-cooldown compare is not used (a shared cooldown made DPS Race's probe's false
+-- positive). DPS Race's early-cast give-back is gone: the snapshot is taken at the fight's start, so a
+-- potion drunk before it is already out of the counts.
+--
+-- PLAIN FOOD AND DRINK ARE NEVER LISTED (#13's owner comment of 2026-11-17): a Consumable of the
+-- client's Food & Drink subclass (the seed's foodSubclass), or one whose use spell is an Eat or Drink
+-- aura (its name is the client's name for one of Usage.EATING_SPELLS: holiday and quest foods filed
+-- under Other), is left out of detection and of the candidates, whatever the signal (the start aura,
+-- a pre-pull cast, a bag-count drop). Buff food and stat drinks are listed only through Well Fed.
 --
 -- SECRETS. The snapshot is read at combat entry, so a value may come back secret (an aura in combat):
 -- every client value passes through NS.Secrets on its way in, a sealed aura ends the aura walk, and a
 -- bag stack that cannot be read makes the after counts unknown (no bag detection), never a false drop.
 -- Each client function is read bare at CALL time and pcall'd.
 --
--- THE RECORD (Usage.ForFight): { v = 1, used = { { itemID?, kind, slot?, times?, n, src } }, candidates
--- = { { itemID, kind, slot? } }, edited = bool }, src "cast", "bag", "buff" or "manual" (a tick the
--- player added). Detection (Usage.Detect) is pure over the snapshot, the casts and the after counts.
+-- THE RECORD (Usage.ForFight, v 2): { v = 2, used = { { itemID?, spellID?, kind, slot?, times?, n, src }
+-- }, candidates = { { itemID?, spellID?, kind, slot? } }, edited = bool }, src "cast", "bag", "buff" or
+-- "manual" (a tick the player added). An entry is item-keyed (itemID), spell-keyed (spellID, kind
+-- "buff": a seeded buff on at the start, v 2), or neither (food, kind "food": Well Fed). A v 1 record
+-- (CT_SCHEMA 4 and older) has no spell-keyed entry and reads as it is; its Food & Drink item entries are
+-- never shown (Usage.Shown). Detection (Usage.Detect) is pure over the snapshot, the casts and the
+-- after counts.
 --
 -- THE PLAYER'S EDIT (Usage.SetUsed, plan Task 4.4, from the Results detail's Usage Edit): the ticks
 -- replace the used list, a detected entry keeping its times and source, and the record is marked
 -- edited. A stored fight changes in the store (FIGHTS_CHANGED); a sample fight (test mode, the sim)
 -- in memory only, as its note does (Results_Source.Touched).
 --
--- THE HIDDEN ITEMS ("never show", spec §7): item IDs the player never wants listed, written whole
--- through the schema seam at Usage.HIDDEN_PATH as one plain string ("12345,67890"; the History page's
--- Usage tab, plan Task 4.5, and the detail's right-click in the edit). Account-wide, like the fight
--- store it filters. Detection still records a hidden item, so taking it off the list brings it back
--- on every fight that used it.
+-- THE HIDDEN ITEMS AND SPELLS ("never show", spec §7): item IDs (Usage.HIDDEN_PATH) and buff spell IDs
+-- (Usage.HIDDEN_SPELLS_PATH, beside them) the player never wants listed, each written whole through the
+-- schema seam as one plain string ("12345,67890"; the History page's Usage tab, plan Task 4.5, and the
+-- detail's right-click in the edit). Account-wide, like the fight store they filter. Detection still
+-- records a hidden one, so taking it off the list brings it back on every fight that used it.
 
 local Usage = {}
 NS.Usage = Usage
@@ -46,12 +59,13 @@ NS.Usage = Usage
 local Secrets = NS.Secrets
 local L = NS.L
 
--- The record's own format.
-Usage.VERSION = 1
+-- The record's own format: 2 adds the spell-keyed buff entry (CombatTrail #13, CT_SCHEMA 5).
+Usage.VERSION = 2
 -- Every kind an entry may carry.
-Usage.KINDS = { gear = true, potion = true, flask = true, food = true, other = true }
--- The hidden items' setting (global: the fight store it filters is).
+Usage.KINDS = { gear = true, potion = true, flask = true, food = true, buff = true, other = true }
+-- The hidden items' and the hidden buffs' settings (global: the fight store they filter is).
 Usage.HIDDEN_PATH = "global.usage.hidden"
+Usage.HIDDEN_SPELLS_PATH = "global.usage.hiddenSpells"
 -- The equipment slots a use is looked for in: every one, the tabard included (a use tabard exists).
 Usage.SLOTS = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19 }
 -- The bags read: the backpack, the four bags and the reagent bag.
@@ -61,11 +75,22 @@ Usage.KIND_BY_SUBCLASS = { [1] = "potion", [2] = "flask", [3] = "flask", [5] = "
 -- How many helpful auras a snapshot's walk reads at most.
 local AURA_LIMIT = 255
 -- Well Fed: the spell whose name is the client's word for the buff, and the buff spell IDs known to
--- be it. The same on both clients (clients-§5: one list, picked once); unverified in game.
+-- be it, the active client's wellFed seed (defaults/BuffSeeds.lua, picked once there: clients-§5).
 Usage.WELL_FED_SPELL = 19705
-Usage.WELL_FED_SPELLS = { [19705] = true }
+Usage.WELL_FED_SPELLS = NS.BuffSeedSet("wellFed")
+Usage.WELL_FED_SPELLS[Usage.WELL_FED_SPELL] = true
+-- The buffs listed under their spell ID, the active client's buffs seed.
+Usage.BUFF_SPELLS = NS.BuffSeedSet("buffs")
+-- The client's Food & Drink subclass (Consumable, item class 0): never listed by its own aura, cast or
+-- count.
+Usage.FOOD_SUBCLASS = NS.BUFF_SEEDS.foodSubclass
+-- Spells whose name is the client's word for an Eat or Drink aura: Food 433, Drink 430, Refreshment
+-- 44166 (Retail) and 167152 (WoW Forever), Food & Drink 170906 (Retail), from each client's SpellName in
+-- the 2026-11-25 seed research. One list for both clients: an id a client cannot name adds no word.
+Usage.EATING_SPELLS = { 433, 430, 44166, 167152, 170906 }
 
 local fedName   -- the client's name for Well Fed, once read plain (false: the client cannot name it)
+local eatingNames   -- { [name] = true }: the client's words for an Eat or Drink aura, once read plain
 
 -- A secret answer (the read in combat) is never kept: the next look asks again.
 local function wellFedName()
@@ -81,15 +106,43 @@ local function wellFedName()
     return fedName or L["Well Fed"]
 end
 
+-- The client's names for an Eat or Drink aura, and whether every one was read (false: a secret answer
+-- left a word out). A secret answer is never kept: the next look asks again.
+local function eatingWords()
+    if eatingNames then return eatingNames, true end
+    local out, whole = {}, true
+    for _, id in ipairs(Usage.EATING_SPELLS) do
+        local ok, v = pcall(NS.Compat.SpellName, id)
+        local plain = ok and Secrets.PlainString(v) or nil
+        if plain then out[plain] = true elseif Secrets.IsSealed(v) then whole = false end
+    end
+    if whole then eatingNames = out end
+    return out, whole
+end
+
+-- Whether a use spell is an Eat or Drink aura, by the client's name for it, and whether that answer is
+-- sure: false when its name, or one of the eating words, came back secret (CL-REV: an unsure "no" is
+-- never cached, so the item is asked again at the next snapshot).
+local function isEating(spellID)
+    local ok, v = pcall(NS.Compat.SpellName, spellID)
+    local name = ok and Secrets.PlainString(v) or nil
+    if name == nil then return false, not (ok and Secrets.IsSealed(v)) end
+    local words, whole = eatingWords()
+    if words[name] then return true, true end
+    return false, whole
+end
+
 -- Whether a start aura is Well Fed: by its plain spell ID, else by name.
 local function isWellFed(aura)
     if aura.spellID and Usage.WELL_FED_SPELLS[aura.spellID] then return true end
     return aura.name ~= nil and aura.name == wellFedName()
 end
 
--- What each item is, asked once per session ({ [itemID] = { subclass, spellID } | false }): an item's
--- class and use spell do not change. Only a definite answer is kept (a consumable whose use spell the
--- client has not loaded yet is asked again next time).
+-- What each item is, asked once per session ({ [itemID] = { subclass, spellID, eats } | false }): an
+-- item's class and use spell do not change. Only a definite answer is kept: a consumable whose use spell
+-- the client has not loaded yet, whose subclass came back secret, or whose Eat or Drink answer was not
+-- sure (a secret spell name) is asked again next time, so a plain food first seen under sealing is
+-- still known as food at the next snapshot (CL-REV).
 local items = {}
 
 local lastFight   -- the last fight that started, until it ends (its end counts at the next start)
@@ -144,8 +197,11 @@ local function consumable(itemID)
     end
     local spellID = itemSpell(itemID)
     if not spellID then return false end
-    items[itemID] = { subclass = Secrets.PlainNumber(subclass) or 0, spellID = spellID }
-    return items[itemID]
+    local plainSub = Secrets.PlainNumber(subclass)
+    local eats, sure = isEating(spellID)
+    local entry = { subclass = plainSub or 0, spellID = spellID, eats = eats }
+    if plainSub ~= nil and sure then items[itemID] = entry end
+    return entry
 end
 
 -- Every stack in the bags as (itemID, count), through `fn`; answers false when a stack could not be
@@ -181,7 +237,7 @@ local function snapshotBags()
         if not c then return end
         local b = bags[itemID]
         if not b then
-            b = { count = 0, subclass = c.subclass, spellID = c.spellID }
+            b = { count = 0, subclass = c.subclass, spellID = c.spellID, eats = c.eats or nil }
             bags[itemID] = b
         end
         b.count = b.count + count
@@ -201,7 +257,7 @@ end
 
 --- What the player could use and has on, now. Held in memory, never stored.
 --- @return table snap  { gear = { { slot, itemID, spellID } }, bags = { [itemID] = { count, subclass,
----                     spellID } }, auras = { { spellID?, name? } } }
+---                     spellID, eats? } }, auras = { { spellID?, name? } } }
 function Usage.Snapshot()
     return { gear = snapshotGear(), bags = snapshotBags(), auras = snapshotAuras() }
 end
@@ -281,18 +337,30 @@ local function detectBags(snap, after, used)
     end
 end
 
--- The auras at the start: a consumable's own buff (a flask), and Well Fed (food, no item).
+-- A seeded buff on at the start: listed under its spell ID.
+local function buffEntry(spellID)
+    return { spellID = spellID, kind = "buff", n = 1, src = "buff" }
+end
+
+-- The auras at the start: a consumable's own buff (a flask), Well Fed (food, no item), and a seeded
+-- buff (no item, under its spell ID), each buff once.
 local function detectAuras(snap, used, list)
-    local bagBy, fed = bagsBySpell(snap.bags), false
+    local bagBy, fed, buffs = bagsBySpell(snap.bags), false, {}
     for _, aura in ipairs(snap.auras) do
-        local found = aura.spellID and bagBy[aura.spellID]
+        local id = aura.spellID
+        local found = id and bagBy[id]
         local itemID = found and found[1]
-        if itemID and not used[itemID] then
-            used[itemID] = { itemID = itemID, kind = Usage.KindOf(snap.bags[itemID].subclass), n = 1, src = "buff" }
-            list[#list + 1] = used[itemID]
-        elseif not fed and isWellFed(aura) then
+        if itemID then
+            if not used[itemID] then
+                used[itemID] = { itemID = itemID, kind = Usage.KindOf(snap.bags[itemID].subclass), n = 1, src = "buff" }
+                list[#list + 1] = used[itemID]
+            end
+        elseif isWellFed(aura) then
+            if not fed then list[#list + 1] = { kind = "food", n = 1, src = "buff" } end
             fed = true
-            list[#list + 1] = { kind = "food", n = 1, src = "buff" }
+        elseif id and Usage.BUFF_SPELLS[id] and not buffs[id] then
+            buffs[id] = true
+            list[#list + 1] = buffEntry(id)
         end
     end
 end
@@ -314,10 +382,28 @@ local function ordered(snap, used, extra)
     return list
 end
 
+--- Whether a bag consumable is plain food or drink (never listed): of the client's Food & Drink
+--- subclass, or with an Eat or Drink aura for its use spell. Pure over the snapshot's entry.
+--- @param b table  { subclass, eats? }
+function Usage.IsPlainFood(b)
+    return type(b) == "table" and (b.eats == true or (b.subclass ~= nil and b.subclass == Usage.FOOD_SUBCLASS))
+end
+
+-- The snapshot with its plain food and drink left out of the bags: nothing it does is a use.
+local function withoutFood(snap)
+    local bags = {}
+    for itemID, b in pairs(snap.bags or {}) do
+        if not Usage.IsPlainFood(b) then bags[itemID] = b end
+    end
+    return { gear = snap.gear or {}, bags = bags, auras = snap.auras or {} }
+end
+
 --- What was used, detected from the start's snapshot, the fight's casts (modules/Casts.lua's list)
---- and the bag counts at its end (nil when unreadable: no bag detection).
---- @return table used  { { itemID?, kind, slot?, times?, n, src }, ... }
+--- and the bag counts at its end (nil when unreadable: no bag detection). Plain food and drink are
+--- never listed.
+--- @return table used  { { itemID?, spellID?, kind, slot?, times?, n, src }, ... }
 function Usage.Detect(snap, casts, after)
+    snap = withoutFood(snap)
     local used, extra = {}, {}
     detectCasts(snap, castTimes(snap, casts, after), used)
     detectBags(snap, after, used)
@@ -326,9 +412,10 @@ function Usage.Detect(snap, casts, after)
 end
 
 --- Every on-use gear item (slot order) and every bag consumable with a use spell (item order) at the
---- start.
+--- start, plain food and drink left out.
 --- @return table candidates  { { itemID, kind, slot? }, ... }
 function Usage.Candidates(snap)
+    snap = withoutFood(snap)
     local out = {}
     for _, g in ipairs(snap.gear) do out[#out + 1] = { itemID = g.itemID, kind = "gear", slot = g.slot } end
     for _, itemID in ipairs(sortedKeys(snap.bags)) do
@@ -380,13 +467,14 @@ end
 
 -- ── the player's edit ───────────────────────────────────────────────────────────────────────────
 
--- Whether a detected entry is the one a tick names: by item, else food by kind; in each case in the
--- tick's slot when it names one (a pair of one trinket shares one item ID), so an entry with no slot or
--- another never answers it.
+-- Whether a detected entry is the one a tick names: by item, by spell (a buff), else food by kind; in
+-- each case in the tick's slot when it names one (a pair of one trinket shares one item ID), so an
+-- entry with no slot or another never answers it.
 local function same(e, tick)
     if tick.slot ~= nil and e.slot ~= tick.slot then return false end
     if tick.itemID then return e.itemID == tick.itemID end
-    return e.itemID == nil and e.kind == tick.kind
+    if tick.spellID then return e.itemID == nil and e.spellID == tick.spellID end
+    return e.itemID == nil and e.spellID == nil and e.kind == tick.kind
 end
 
 -- The first entry of `list` the tick names that `taken` has not had yet; marks it taken.
@@ -400,23 +488,23 @@ local function find(list, tick, taken)
     return nil
 end
 
--- What a ticked-again entry with no item had been detected as: only detection lists food.
-local RETICKED = { food = "buff" }
+-- What a ticked-again entry with no item had been detected as: only detection lists food and buffs.
+local RETICKED = { food = "buff", buff = "buff" }
 
 -- A ticked entry nothing detected: used once, no time.
 local function fresh(tick)
     local src = tick.itemID == nil and RETICKED[tick.kind] or "manual"
-    return { itemID = tick.itemID, kind = tick.kind, slot = tick.slot, n = 1, src = src }
+    return { itemID = tick.itemID, spellID = tick.spellID, kind = tick.kind, slot = tick.slot, n = 1, src = src }
 end
 
--- An unticked food (no item) has no candidate to stand for it: it joins the candidates, so its row
--- stays in the list and can be ticked again.
+-- An unticked food or buff (no item) has no candidate to stand for it: it joins the candidates, so its
+-- row stays in the list and can be ticked again.
 local function keepRows(u, taken)
     if type(u.candidates) ~= "table" then u.candidates = {} end
     for i, e in ipairs(type(u.used) == "table" and u.used or {}) do
         if not taken[i] and type(e) == "table" and e.itemID == nil and RETICKED[e.kind]
                 and not find(u.candidates, e, {}) then
-            u.candidates[#u.candidates + 1] = { kind = e.kind, slot = e.slot }
+            u.candidates[#u.candidates + 1] = { spellID = e.spellID, kind = e.kind, slot = e.slot }
         end
     end
 end
@@ -425,17 +513,18 @@ end
 local function clean(tick)
     if type(tick) ~= "table" then return nil end
     local kind = Secrets.PlainString(tick.kind)
-    return { itemID = Secrets.PlainNumber(tick.itemID), slot = Secrets.PlainNumber(tick.slot),
-             kind = Usage.KINDS[kind] and kind or "other" }
+    local itemID = Secrets.PlainNumber(tick.itemID)
+    return { itemID = itemID, spellID = not itemID and Secrets.PlainNumber(tick.spellID) or nil,
+             slot = Secrets.PlainNumber(tick.slot), kind = Usage.KINDS[kind] and kind or "other" }
 end
 
 --- Replace a fight's used list with the player's ticks: an entry already detected keeps its times and
 --- source (each detected entry answers one tick, matched by item and by slot); a newly ticked one is
---- "manual", used once, no time, except food ticked again, which keeps what it was detected as. An
---- unticked food joins the candidates, so its row stays. Marks the record edited and announces the
+--- "manual", used once, no time, except food or a buff ticked again, which keeps what it was detected
+--- as. An unticked food or buff joins the candidates, so its row stays. Marks the record edited and announces the
 --- change: FIGHTS_CHANGED for a stored fight, the sample's own redraw for a sample one.
 --- @param record table
---- @param list table  { { itemID?, kind, slot? }, ... }
+--- @param list table  { { itemID?, spellID?, kind, slot? }, ... }
 --- @return boolean stored
 function Usage.SetUsed(record, list)
     local u = type(record) == "table" and record.usage
@@ -476,37 +565,58 @@ function Usage.ParseHidden(text)
     return ids
 end
 
--- The parsed list of the last stored text, so a redraw parses it once.
-local hiddenText, hiddenList, hiddenSet
+-- The parsed list of each path's last stored text, so a redraw parses it once:
+-- { [path] = { text, list, set } }.
+local hiddenCache = {}
 
-local function readHidden()
-    local text = NS.GetSetting(Usage.HIDDEN_PATH)
-    if text ~= hiddenText or not hiddenList then
-        hiddenText, hiddenList, hiddenSet = text, Usage.ParseHidden(text) or {}, {}
-        for _, id in ipairs(hiddenList) do hiddenSet[id] = true end
+local function readHidden(path)
+    local text, c = NS.GetSetting(path), hiddenCache[path]
+    if not c or text ~= c.text then
+        c = { text = text, list = Usage.ParseHidden(text) or {}, set = {} }
+        for _, id in ipairs(c.list) do c.set[id] = true end
+        hiddenCache[path] = c
     end
-    return hiddenList, hiddenSet
+    return c.list, c.set
+end
+
+local function copyOf(list)
+    local out = {}
+    for i, id in ipairs(list) do out[i] = id end
+    return out
 end
 
 --- The hidden items' IDs, ascending. A copy.
 function Usage.HiddenList()
-    local out = {}
-    for i, id in ipairs((readHidden())) do out[i] = id end
-    return out
+    return copyOf((readHidden(Usage.HIDDEN_PATH)))
 end
 
 --- The hidden items as a set, { [itemID] = true }. Read only.
 function Usage.HiddenSet()
-    local _, set = readHidden()
+    local _, set = readHidden(Usage.HIDDEN_PATH)
     return set
 end
 
---- Whether a used entry or a candidate is listed: never a hidden item, never an enchant entry.
+--- The hidden buffs' spell IDs, ascending. A copy.
+function Usage.HiddenSpellList()
+    return copyOf((readHidden(Usage.HIDDEN_SPELLS_PATH)))
+end
+
+--- The hidden buffs as a set, { [spellID] = true }. Read only.
+function Usage.HiddenSpellSet()
+    local _, set = readHidden(Usage.HIDDEN_SPELLS_PATH)
+    return set
+end
+
+--- Whether a used entry or a candidate is listed: never a hidden item or buff, never an enchant
+--- entry, and never a Food & Drink item (kind "food" with an item: only a v 1 record holds one, the
+--- Eat aura or count of a food; food is listed through Well Fed alone).
 --- @param e table
 --- @param hidden table|nil  Usage.HiddenSet() (read now when nil)
-function Usage.Shown(e, hidden)
+--- @param hiddenSpells table|nil  Usage.HiddenSpellSet() (read now when nil)
+function Usage.Shown(e, hidden, hiddenSpells)
     if type(e) ~= "table" or e.kind == "enchant" then return false end
-    return not (e.itemID and (hidden or Usage.HiddenSet())[e.itemID])
+    if e.itemID then return e.kind ~= "food" and not (hidden or Usage.HiddenSet())[e.itemID] end
+    return not (e.spellID and (hiddenSpells or Usage.HiddenSpellSet())[e.spellID])
 end
 
 --- The stored text for `ids`: ascending, comma-separated ("201,6948"). Sorts `ids` in place.
@@ -523,37 +633,71 @@ function Usage.NormalizeHidden(text)
     return ids and Usage.JoinHidden(ids) or nil
 end
 
-local function writeHidden(ids)
-    return NS.SetByPath(Usage.HIDDEN_PATH, Usage.JoinHidden(ids))
+-- Add a positive whole id to the list at `path`, written whole through the seam.
+local function hideAt(path, id)
+    id = Secrets.PlainNumber(id)
+    if not id or id < 1 or id % 1 ~= 0 then return false end
+    local list, set = readHidden(path)
+    if set[id] then return false end
+    local ids = copyOf(list)
+    ids[#ids + 1] = id
+    return NS.SetByPath(path, Usage.JoinHidden(ids)) and true or false
+end
+
+-- Take an id off the list at `path`.
+local function unhideAt(path, id)
+    local list, set = readHidden(path)
+    if not set[id] then return false end
+    local ids = {}
+    for _, x in ipairs(list) do
+        if x ~= id then ids[#ids + 1] = x end
+    end
+    return NS.SetByPath(path, Usage.JoinHidden(ids)) and true or false
 end
 
 --- Hide an item everywhere the usage is shown (the setting, written whole through the seam).
 --- @return boolean changed
 function Usage.Hide(itemID)
-    itemID = Secrets.PlainNumber(itemID)
-    if not itemID or itemID < 1 or itemID % 1 ~= 0 or Usage.HiddenSet()[itemID] then return false end
-    local ids = Usage.HiddenList()
-    ids[#ids + 1] = itemID
-    return writeHidden(ids) and true or false
+    return hideAt(Usage.HIDDEN_PATH, itemID)
 end
 
 --- Show a hidden item again.
 --- @return boolean changed
 function Usage.Unhide(itemID)
-    if not Usage.HiddenSet()[itemID] then return false end
-    local ids = {}
-    for _, id in ipairs(Usage.HiddenList()) do
-        if id ~= itemID then ids[#ids + 1] = id end
-    end
-    return writeHidden(ids) and true or false
+    return unhideAt(Usage.HIDDEN_PATH, itemID)
 end
 
--- Append each entry's item ID in `entries` to `out`, once.
-local function appendItemIDs(entries, out, seen)
+--- Hide a buff (by its spell ID) everywhere the usage is shown, beside the hidden items.
+--- @return boolean changed
+function Usage.HideSpell(spellID)
+    return hideAt(Usage.HIDDEN_SPELLS_PATH, spellID)
+end
+
+--- Show a hidden buff again.
+--- @return boolean changed
+function Usage.UnhideSpell(spellID)
+    return unhideAt(Usage.HIDDEN_SPELLS_PATH, spellID)
+end
+
+-- Append each entry's `key` (itemID or spellID) in `entries` to `out`, once.
+local function appendIDs(entries, key, out, seen)
     for _, e in ipairs(type(entries) == "table" and entries or {}) do
-        local id = type(e) == "table" and e.itemID
+        local id = type(e) == "table" and e[key]
         if type(id) == "number" and not seen[id] then seen[id], out[#out + 1] = true, id end
     end
+end
+
+-- Every `key` the stored fights list (used or a candidate), each once, newest fight first.
+local function knownIDs(key)
+    local out, seen = {}, {}
+    for _, record in ipairs(NS.Recorder.List()) do
+        local u = type(record.usage) == "table" and record.usage or nil
+        if u then
+            appendIDs(u.used, key, out, seen)
+            appendIDs(u.candidates, key, out, seen)
+        end
+    end
+    return out
 end
 
 --- Every item the stored fights list (used or a candidate), each once, newest fight first: the names
@@ -561,15 +705,13 @@ end
 --- search).
 --- @return table ids
 function Usage.KnownItems()
-    local out, seen = {}, {}
-    for _, record in ipairs(NS.Recorder.List()) do
-        local u = type(record.usage) == "table" and record.usage or nil
-        if u then
-            appendItemIDs(u.used, out, seen)
-            appendItemIDs(u.candidates, out, seen)
-        end
-    end
-    return out
+    return knownIDs("itemID")
+end
+
+--- Every buff the stored fights list, each once, newest fight first (the History page's buff list).
+--- @return table ids
+function Usage.KnownSpells()
+    return knownIDs("spellID")
 end
 
 local busTarget = NS.NewBusTarget()

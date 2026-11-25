@@ -836,8 +836,12 @@ end
 
 -- The sim window (`/ct sim`'s step panel, modules/Sim.lua) docks beside this window while it is up
 -- and beside the DPS HUD otherwise, so each show and hide of the frame docks a shown one again.
--- modules/Sim.lua loads after this file, so it is reached at call time.
+-- modules/Sim.lua loads after this file, so it is reached at call time. The detached Combat Log
+-- window (modules/LogWindow.lua, CL-11b2) stands beyond this window when both are attached on one
+-- side, so it docks again too, and the two never overlap.
 local function redockSim()
+    local LW = NS.LogWindow
+    if LW and LW.Redock then LW.Redock() end
     local Sim = NS.Sim
     if Sim and Sim.Redock then Sim.Redock() end
 end

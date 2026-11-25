@@ -312,10 +312,12 @@ test("lane casts: both lanes on registers the cast events for player and pet onl
     end
 end)
 
--- The fight record's listener (modules/Casts.lua) keeps both units registered whatever the lanes
--- show; these cases measure the lanes' own share with it taken off.
+-- The fight record's listeners (modules/Casts.lua, and the Combat Log's, modules/CombatLog.lua) keep
+-- both units registered whatever the lanes show; these cases measure the lanes' own share with them
+-- taken off.
 local function lanesOnly(inst)
     inst.NS.LaneCasts.Unlisten("casts")
+    inst.NS.LaneCasts.Unlisten("log")
     return inst
 end
 

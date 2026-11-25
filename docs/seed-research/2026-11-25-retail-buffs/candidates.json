@@ -1,0 +1,8596 @@
+{
+ "build": "12.1.5.70961",
+ "candidates": [
+  {
+   "id": 46668,
+   "key": "buffs:46668",
+   "list": "buffs",
+   "name": "WHEE!",
+   "notes": [
+    "catalog: faire: the Darkmoon carousel",
+    "auras 156, 190, 200, 291"
+   ]
+  },
+  {
+   "id": 59641,
+   "key": "buffs:59641",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 20, 79, 133"
+   ]
+  },
+  {
+   "id": 61212,
+   "key": "buffs:61212",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 20, 79, 133"
+   ]
+  },
+  {
+   "id": 64670,
+   "key": "buffs:64670",
+   "list": "buffs",
+   "name": "Warchief's Blessing",
+   "notes": [
+    "catalog: world: Rend's head, Orgrimmar",
+    "auras 20, 79, 133"
+   ]
+  },
+  {
+   "id": 101115,
+   "key": "buffs:101115",
+   "list": "buffs",
+   "name": "Fire Festival Fury",
+   "notes": [
+    "catalog: event: Midsummer Fire Festival",
+    "auras 15, 42"
+   ]
+  },
+  {
+   "id": 290058,
+   "key": "buffs:290058",
+   "list": "buffs",
+   "name": "WHEE!",
+   "notes": [
+    "catalog: faire: the Darkmoon carousel",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 405815,
+   "key": "buffs:405815",
+   "list": "buffs",
+   "name": "Sayge's Dark Fortune",
+   "notes": [
+    "catalog: faire: Sayge, Darkmoon Faire",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 423942,
+   "key": "buffs:423942",
+   "list": "buffs",
+   "name": "WHEE!",
+   "notes": [
+    "catalog: faire: the Darkmoon carousel",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 6114,
+   "key": "wellfed:6114",
+   "list": "wellfed",
+   "name": "Raptor Punch",
+   "notes": [
+    "food: item 5342 applies",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 6411,
+   "key": "wellfed:6411",
+   "list": "wellfed",
+   "name": "Scorpid Poison",
+   "notes": [
+    "food: item 5473 triggers",
+    "auras 3"
+   ]
+  },
+  {
+   "id": 15852,
+   "key": "wellfed:15852",
+   "list": "wellfed",
+   "name": "Dragonbreath Chili",
+   "notes": [
+    "food: item 12217 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 18125,
+   "key": "wellfed:18125",
+   "list": "wellfed",
+   "name": "Blessed Sunfruit",
+   "notes": [
+    "food: item 13810 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 18191,
+   "key": "wellfed:18191",
+   "list": "wellfed",
+   "name": "Increased Stamina",
+   "notes": [
+    "food: item 13927 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 18192,
+   "key": "wellfed:18192",
+   "list": "wellfed",
+   "name": "Increased Agility",
+   "notes": [
+    "food: item 13928 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 18193,
+   "key": "wellfed:18193",
+   "list": "wellfed",
+   "name": "Increased Versatility",
+   "notes": [
+    "food: item 24539 triggers",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 18194,
+   "key": "wellfed:18194",
+   "list": "wellfed",
+   "name": "Mana Regeneration",
+   "notes": [
+    "food: item 13931 triggers",
+    "auras 85"
+   ]
+  },
+  {
+   "id": 18222,
+   "key": "wellfed:18222",
+   "list": "wellfed",
+   "name": "Health Regeneration",
+   "notes": [
+    "food: item 13932 triggers",
+    "auras 8"
+   ]
+  },
+  {
+   "id": 22730,
+   "key": "wellfed:22730",
+   "list": "wellfed",
+   "name": "Increased Intellect",
+   "notes": [
+    "food: item 18254 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25661,
+   "key": "wellfed:25661",
+   "list": "wellfed",
+   "name": "Increased Stamina",
+   "notes": [
+    "food: item 21023 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 25703,
+   "key": "wellfed:25703",
+   "list": "wellfed",
+   "name": "Brain Food",
+   "notes": [
+    "food: item 21072 triggers",
+    "auras 23, 85"
+   ]
+  },
+  {
+   "id": 25889,
+   "key": "wellfed:25889",
+   "list": "wellfed",
+   "name": "Brain Food",
+   "notes": [
+    "food: item 21217 triggers",
+    "auras 23, 85"
+   ]
+  },
+  {
+   "id": 26390,
+   "key": "wellfed:26390",
+   "list": "wellfed",
+   "name": "Glowy (NoColor)",
+   "notes": [
+    "food: item 21721 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 29055,
+   "key": "wellfed:29055",
+   "list": "wellfed",
+   "name": "Refreshing Red Apple",
+   "notes": [
+    "food: item 23172 applies",
+    "auras 20, 21"
+   ]
+  },
+  {
+   "id": 33774,
+   "key": "wellfed:33774",
+   "list": "wellfed",
+   "name": "Underspore Pod",
+   "notes": [
+    "food: item 28112 triggers",
+    "auras 85"
+   ]
+  },
+  {
+   "id": 42207,
+   "key": "wellfed:42207",
+   "list": "wellfed",
+   "name": "Enriched Terocone Juice",
+   "notes": [
+    "food: item 32722 triggers",
+    "auras 84"
+   ]
+  },
+  {
+   "id": 42312,
+   "key": "wellfed:42312",
+   "list": "wellfed",
+   "name": "Brain Food",
+   "notes": [
+    "food: item 33053 triggers",
+    "auras 85"
+   ]
+  },
+  {
+   "id": 43722,
+   "key": "wellfed:43722",
+   "list": "wellfed",
+   "name": "Enlightened",
+   "notes": [
+    "food: item 33825 triggers",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 43730,
+   "key": "wellfed:43730",
+   "list": "wellfed",
+   "name": "Electrified",
+   "notes": [
+    "food: item 33866 applies",
+    "auras 23, 42"
+   ]
+  },
+  {
+   "id": 43771,
+   "key": "wellfed:43771",
+   "list": "wellfed",
+   "name": "Pet Treat",
+   "notes": [
+    "food: item 43005 applies",
+    "auras 8"
+   ]
+  },
+  {
+   "id": 43776,
+   "key": "wellfed:43776",
+   "list": "wellfed",
+   "name": "Very Happy",
+   "notes": [
+    "food: item 33924 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 45694,
+   "key": "wellfed:45694",
+   "list": "wellfed",
+   "name": "Captain Rumsey's Lager",
+   "notes": [
+    "food: item 34832 applies",
+    "auras 30"
+   ]
+  },
+  {
+   "id": 46926,
+   "key": "wellfed:46926",
+   "list": "wellfed",
+   "name": "Breath Freeze!",
+   "notes": [
+    "food: item 35720 triggers",
+    "auras 23"
+   ]
+  },
+  {
+   "id": 50986,
+   "key": "wellfed:50986",
+   "list": "wellfed",
+   "name": "Sulfuron Slammer",
+   "notes": [
+    "food: item 38466 applies",
+    "auras 3"
+   ]
+  },
+  {
+   "id": 57388,
+   "key": "wellfed:57388",
+   "list": "wellfed",
+   "name": "Critter Bite",
+   "notes": [
+    "food: item 43004 applies",
+    "auras 25, 177"
+   ]
+  },
+  {
+   "id": 58468,
+   "key": "wellfed:58468",
+   "list": "wellfed",
+   "name": "Hugely Well Fed",
+   "notes": [
+    "name: Hugely Well Fed",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 58479,
+   "key": "wellfed:58479",
+   "list": "wellfed",
+   "name": "Nearly Well Fed",
+   "notes": [
+    "name: Nearly Well Fed",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 58496,
+   "key": "wellfed:58496",
+   "list": "wellfed",
+   "name": "Sad",
+   "notes": [
+    "food: item 43488 applies",
+    "auras 0, 4"
+   ]
+  },
+  {
+   "id": 58502,
+   "key": "wellfed:58502",
+   "list": "wellfed",
+   "name": "Scared",
+   "notes": [
+    "food: item 43492 applies",
+    "auras 0, 4"
+   ]
+  },
+  {
+   "id": 60122,
+   "key": "wellfed:60122",
+   "list": "wellfed",
+   "name": "Baby Spice",
+   "notes": [
+    "food: item 44228 applies",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 65247,
+   "key": "wellfed:65247",
+   "list": "wellfed",
+   "name": "Really Well Fed",
+   "notes": [
+    "name: Really Well Fed",
+    "food: item 33874 applies",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 100367,
+   "key": "wellfed:100367",
+   "list": "wellfed",
+   "name": "Bountiful Drink",
+   "notes": [
+    "food: item 70924 triggers, item 70925 triggers, item 70926 triggers, item 70927 triggers",
+    "auras 85, 226"
+   ]
+  },
+  {
+   "id": 105225,
+   "key": "wellfed:105225",
+   "list": "wellfed",
+   "name": "Delusional",
+   "notes": [
+    "food: item 75038 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 105234,
+   "key": "wellfed:105234",
+   "list": "wellfed",
+   "name": "Pounding Headache",
+   "notes": [
+    "food: item 75037 triggers",
+    "auras 3"
+   ]
+  },
+  {
+   "id": 111840,
+   "key": "wellfed:111840",
+   "list": "wellfed",
+   "name": "Healthy",
+   "notes": [
+    "food: item 79320 triggers",
+    "auras 4, 29"
+   ]
+  },
+  {
+   "id": 111841,
+   "key": "wellfed:111841",
+   "list": "wellfed",
+   "name": "Refreshing Drink",
+   "notes": [
+    "food: item 79320 triggers",
+    "auras 85, 226"
+   ]
+  },
+  {
+   "id": 114470,
+   "key": "wellfed:114470",
+   "list": "wellfed",
+   "name": "Sudsy",
+   "notes": [
+    "food: item 88530 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 115037,
+   "key": "wellfed:115037",
+   "list": "wellfed",
+   "name": "Ling-Ting's Herbal Journey",
+   "notes": [
+    "food: item 80313 applies",
+    "auras 326"
+   ]
+  },
+  {
+   "id": 125686,
+   "key": "wellfed:125686",
+   "list": "wellfed",
+   "name": "Banana Infused Rum",
+   "notes": [
+    "food: item 86432 applies",
+    "auras 12, 56"
+   ]
+  },
+  {
+   "id": 126144,
+   "key": "wellfed:126144",
+   "list": "wellfed",
+   "name": "Four Senses Brew",
+   "notes": [
+    "food: item 87264 applies",
+    "auras 260"
+   ]
+  },
+  {
+   "id": 127770,
+   "key": "wellfed:127770",
+   "list": "wellfed",
+   "name": "Keenbean Kafa Boost",
+   "notes": [
+    "food: item 88382 applies, item 103645 applies, item 103646 applies, item 103647 applies",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 127881,
+   "key": "wellfed:127881",
+   "list": "wellfed",
+   "name": "Squirmy Feeling",
+   "notes": [
+    "food: item 88388 triggers, item 140343 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 128290,
+   "key": "wellfed:128290",
+   "list": "wellfed",
+   "name": "Wicked Wikket",
+   "notes": [
+    "food: item 88492 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 128307,
+   "key": "wellfed:128307",
+   "list": "wellfed",
+   "name": "Bubbling Beverage",
+   "notes": [
+    "food: item 88530 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 128308,
+   "key": "wellfed:128308",
+   "list": "wellfed",
+   "name": "Sparkling Water",
+   "notes": [
+    "food: item 88529 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 128312,
+   "key": "wellfed:128312",
+   "list": "wellfed",
+   "name": "Sparkling Water",
+   "notes": [
+    "food: item 88529 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 135451,
+   "key": "wellfed:135451",
+   "list": "wellfed",
+   "name": "You Stink!",
+   "notes": [
+    "food: item 98121 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 142271,
+   "key": "wellfed:142271",
+   "list": "wellfed",
+   "name": "Barrens Toughness",
+   "notes": [
+    "food: item 98111 triggers",
+    "auras 87"
+   ]
+  },
+  {
+   "id": 142280,
+   "key": "wellfed:142280",
+   "list": "wellfed",
+   "name": "Barrens Swiftness",
+   "notes": [
+    "food: item 98116 triggers",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 142286,
+   "key": "wellfed:142286",
+   "list": "wellfed",
+   "name": "Scorpion's Lethality",
+   "notes": [
+    "food: item 98118 triggers",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 145635,
+   "key": "wellfed:145635",
+   "list": "wellfed",
+   "name": "Increased Stamina",
+   "notes": [
+    "food: item 13934 triggers, item 24008 triggers, item 24009 triggers, item 28501 triggers",
+    "auras 29"
+   ]
+  },
+  {
+   "id": 147055,
+   "key": "wellfed:147055",
+   "list": "wellfed",
+   "name": "Singing Crystal",
+   "notes": [
+    "food: item 103641 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 147226,
+   "key": "wellfed:147226",
+   "list": "wellfed",
+   "name": "Book of the Ages",
+   "notes": [
+    "food: item 103642 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 147476,
+   "key": "wellfed:147476",
+   "list": "wellfed",
+   "name": "Dew of Eternal Morning",
+   "notes": [
+    "food: item 103643 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 148247,
+   "key": "wellfed:148247",
+   "list": "wellfed",
+   "name": "Queasiness",
+   "notes": [
+    "food: item 104196 triggers",
+    "auras 20, 21, 61, 304"
+   ]
+  },
+  {
+   "id": 148999,
+   "key": "wellfed:148999",
+   "list": "wellfed",
+   "name": "Funky Monkey Brew",
+   "notes": [
+    "food: item 105711 triggers",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 154295,
+   "key": "wellfed:154295",
+   "list": "wellfed",
+   "name": "Very Well Fed",
+   "notes": [
+    "name: Very Well Fed",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 161495,
+   "key": "wellfed:161495",
+   "list": "wellfed",
+   "name": "Star Root Tuber",
+   "notes": [
+    "food: item 111842 applies",
+    "auras 87"
+   ]
+  },
+  {
+   "id": 169356,
+   "key": "wellfed:169356",
+   "list": "wellfed",
+   "name": "Pure Songflower Serenade",
+   "notes": [
+    "food: item 114982 applies",
+    "auras 137"
+   ]
+  },
+  {
+   "id": 170937,
+   "key": "wellfed:170937",
+   "list": "wellfed",
+   "name": "Saberon Cat-Sip",
+   "notes": [
+    "food: item 119157 applies",
+    "auras 233"
+   ]
+  },
+  {
+   "id": 174063,
+   "key": "wellfed:174063",
+   "list": "wellfed",
+   "name": "Path of Cenarius",
+   "notes": [
+    "food: item 118273 triggers, item 118274 triggers, item 118275 triggers, item 118276 triggers (and 1 more)",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 174613,
+   "key": "wellfed:174613",
+   "list": "wellfed",
+   "name": "Blind Palefish",
+   "notes": [
+    "food: item 118424 triggers",
+    "auras 31, 56"
+   ]
+  },
+  {
+   "id": 175797,
+   "key": "wellfed:175797",
+   "list": "wellfed",
+   "name": "Super Well Fed",
+   "notes": [
+    "name: Super Well Fed",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 176049,
+   "key": "wellfed:176049",
+   "list": "wellfed",
+   "name": "Miner's Coffee",
+   "notes": [
+    "food: item 118897 applies",
+    "auras 129"
+   ]
+  },
+  {
+   "id": 176057,
+   "key": "wellfed:176057",
+   "list": "wellfed",
+   "name": "Grob's Fancy Brew",
+   "notes": [
+    "food: item 118900 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 179201,
+   "key": "wellfed:179201",
+   "list": "wellfed",
+   "name": "Pinchwhistle \"Nitro Fuel\"",
+   "notes": [
+    "food: item 120959 triggers",
+    "auras 89"
+   ]
+  },
+  {
+   "id": 185703,
+   "key": "wellfed:185703",
+   "list": "wellfed",
+   "name": "Lemon Herb Filet",
+   "notes": [
+    "food: item 126934 applies",
+    "auras 20, 21, 23"
+   ]
+  },
+  {
+   "id": 192475,
+   "key": "wellfed:192475",
+   "list": "wellfed",
+   "name": "Rotten Flank",
+   "notes": [
+    "food: item 128875 applies",
+    "auras 133"
+   ]
+  },
+  {
+   "id": 196001,
+   "key": "wellfed:196001",
+   "list": "wellfed",
+   "name": "True Rogue",
+   "notes": [
+    "food: item 130259 triggers",
+    "auras 31, 56"
+   ]
+  },
+  {
+   "id": 201314,
+   "key": "wellfed:201314",
+   "list": "wellfed",
+   "name": "Dignified",
+   "notes": [
+    "food: item 49602 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 203443,
+   "key": "wellfed:203443",
+   "list": "wellfed",
+   "name": "Mammoth Milk",
+   "notes": [
+    "food: item 133983 applies",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 217846,
+   "key": "wellfed:217846",
+   "list": "wellfed",
+   "name": "Food Poisoning",
+   "notes": [
+    "food: item 138966 applies",
+    "auras 21"
+   ]
+  },
+  {
+   "id": 223602,
+   "key": "wellfed:223602",
+   "list": "wellfed",
+   "name": "Dreamberries",
+   "notes": [
+    "food: item 140352 applies",
+    "auras 20, 21"
+   ]
+  },
+  {
+   "id": 236821,
+   "key": "wellfed:236821",
+   "list": "wellfed",
+   "name": "Sargeras Sangria",
+   "notes": [
+    "food: item 144411 triggers",
+    "auras 56, 60"
+   ]
+  },
+  {
+   "id": 258258,
+   "key": "wellfed:258258",
+   "list": "wellfed",
+   "name": "Quillbomb",
+   "notes": [
+    "food: item 155820 triggers",
+    "auras 12"
+   ]
+  },
+  {
+   "id": 261620,
+   "key": "wellfed:261620",
+   "list": "wellfed",
+   "name": "Honey Buzzed",
+   "notes": [
+    "food: item 156835 applies",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 270372,
+   "key": "wellfed:270372",
+   "list": "wellfed",
+   "name": "Pineapple Pizza",
+   "notes": [
+    "food: item 160092 applies",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 274375,
+   "key": "wellfed:274375",
+   "list": "wellfed",
+   "name": "Marie's Fresh Baked Cookies",
+   "notes": [
+    "food: item 162117 triggers",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 276024,
+   "key": "wellfed:276024",
+   "list": "wellfed",
+   "name": "Violet Truffle",
+   "notes": [
+    "food: item 162011 applies",
+    "auras 244"
+   ]
+  },
+  {
+   "id": 276040,
+   "key": "wellfed:276040",
+   "list": "wellfed",
+   "name": "Decadence",
+   "notes": [
+    "food: item 162010 triggers",
+    "auras 33"
+   ]
+  },
+  {
+   "id": 276041,
+   "key": "wellfed:276041",
+   "list": "wellfed",
+   "name": "Delicious Truffle",
+   "notes": [
+    "food: item 162010 applies",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 276214,
+   "key": "wellfed:276214",
+   "list": "wellfed",
+   "name": "Marie's Fresh Baked Cookies",
+   "notes": [
+    "food: item 162117 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 279882,
+   "key": "wellfed:279882",
+   "list": "wellfed",
+   "name": "Torga's Swiftness",
+   "notes": [
+    "food: item 163707 applies",
+    "auras 33, 312"
+   ]
+  },
+  {
+   "id": 280271,
+   "key": "wellfed:280271",
+   "list": "wellfed",
+   "name": "Hexwurst",
+   "notes": [
+    "food: item 163781 triggers",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 295402,
+   "key": "wellfed:295402",
+   "list": "wellfed",
+   "name": "Unagi Skewer",
+   "notes": [
+    "food: item 169280 applies",
+    "auras 43"
+   ]
+  },
+  {
+   "id": 303628,
+   "key": "wellfed:303628",
+   "list": "wellfed",
+   "name": "Bioluminescent Ocean Punch",
+   "notes": [
+    "food: item 169949 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 306426,
+   "key": "wellfed:306426",
+   "list": "wellfed",
+   "name": "Ethereal Candy",
+   "notes": [
+    "food: item 171195 applies",
+    "auras 260"
+   ]
+  },
+  {
+   "id": 306453,
+   "key": "wellfed:306453",
+   "list": "wellfed",
+   "name": "Sugar Rush",
+   "notes": [
+    "food: item 171196 applies",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 371541,
+   "key": "wellfed:371541",
+   "list": "wellfed",
+   "name": "Suspiciously Fuzzy Drink",
+   "notes": [
+    "food: item 191917 applies",
+    "auras 21, 226"
+   ]
+  },
+  {
+   "id": 371546,
+   "key": "wellfed:371546",
+   "list": "wellfed",
+   "name": "Suspiciously Fuzzy Drink",
+   "notes": [
+    "food: item 191918 applies",
+    "auras 21, 226"
+   ]
+  },
+  {
+   "id": 371547,
+   "key": "wellfed:371547",
+   "list": "wellfed",
+   "name": "Suspiciously Fuzzy Drink",
+   "notes": [
+    "food: item 191919 applies",
+    "auras 21, 226"
+   ]
+  },
+  {
+   "id": 382761,
+   "key": "wellfed:382761",
+   "list": "wellfed",
+   "name": "Blubbery Muffin",
+   "notes": [
+    "food: item 197767 applies, item 198832 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 383212,
+   "key": "wellfed:383212",
+   "list": "wellfed",
+   "name": "Regrettably Well Fed",
+   "notes": [
+    "name: Regrettably Well Fed",
+    "food: item 197772 triggers",
+    "auras 58, 82, 226"
+   ]
+  },
+  {
+   "id": 391589,
+   "key": "wellfed:391589",
+   "list": "wellfed",
+   "name": "Coal-Fired Rib Rack",
+   "notes": [
+    "food: item 200888 applies",
+    "auras 80, 495"
+   ]
+  },
+  {
+   "id": 391590,
+   "key": "wellfed:391590",
+   "list": "wellfed",
+   "name": "Charred Porter",
+   "notes": [
+    "food: item 200887 applies",
+    "auras 80, 495"
+   ]
+  },
+  {
+   "id": 391596,
+   "key": "wellfed:391596",
+   "list": "wellfed",
+   "name": "Cinna-Cinderbloom Tea",
+   "notes": [
+    "food: item 200885 applies",
+    "auras 129, 495"
+   ]
+  },
+  {
+   "id": 391603,
+   "key": "wellfed:391603",
+   "list": "wellfed",
+   "name": "Aruunem Berrytart",
+   "notes": [
+    "food: item 200759 applies",
+    "auras 87, 495"
+   ]
+  },
+  {
+   "id": 391615,
+   "key": "wellfed:391615",
+   "list": "wellfed",
+   "name": "Stonetalon Bloom Skewer",
+   "notes": [
+    "food: item 200890 applies",
+    "auras 379, 495"
+   ]
+  },
+  {
+   "id": 391619,
+   "key": "wellfed:391619",
+   "list": "wellfed",
+   "name": "Dragonfruit Punch",
+   "notes": [
+    "food: item 200892 applies",
+    "auras 105, 409, 495"
+   ]
+  },
+  {
+   "id": 391620,
+   "key": "wellfed:391620",
+   "list": "wellfed",
+   "name": "Azsunian Poached Lobster",
+   "notes": [
+    "food: item 200893 applies",
+    "auras 80, 495"
+   ]
+  },
+  {
+   "id": 391624,
+   "key": "wellfed:391624",
+   "list": "wellfed",
+   "name": "Rare Vintage Arcwine",
+   "notes": [
+    "food: item 200894 applies",
+    "auras 163, 495"
+   ]
+  },
+  {
+   "id": 391626,
+   "key": "wellfed:391626",
+   "list": "wellfed",
+   "name": "Captain's Caramelized Catfish",
+   "notes": [
+    "food: item 200896 applies",
+    "auras 466, 495"
+   ]
+  },
+  {
+   "id": 391628,
+   "key": "wellfed:391628",
+   "list": "wellfed",
+   "name": "Mantis Shrimp Cocktail",
+   "notes": [
+    "food: item 200898 applies",
+    "auras 82, 495"
+   ]
+  },
+  {
+   "id": 391641,
+   "key": "wellfed:391641",
+   "list": "wellfed",
+   "name": "Seared Sea Mist Noodles",
+   "notes": [
+    "food: item 200899 applies",
+    "auras 193, 495"
+   ]
+  },
+  {
+   "id": 391643,
+   "key": "wellfed:391643",
+   "list": "wellfed",
+   "name": "Fried Emperor Wraps",
+   "notes": [
+    "food: item 200900 applies",
+    "auras 318, 495"
+   ]
+  },
+  {
+   "id": 391657,
+   "key": "wellfed:391657",
+   "list": "wellfed",
+   "name": "Ravenberry Panacotta Delight",
+   "notes": [
+    "food: item 200902 applies",
+    "auras 166, 495"
+   ]
+  },
+  {
+   "id": 391664,
+   "key": "wellfed:391664",
+   "list": "wellfed",
+   "name": "Moira's Choice Espresso",
+   "notes": [
+    "food: item 200903 applies",
+    "auras 9, 495"
+   ]
+  },
+  {
+   "id": 392439,
+   "key": "wellfed:392439",
+   "list": "wellfed",
+   "name": "Duckling",
+   "notes": [
+    "food: item 200862 triggers",
+    "auras 56, 293"
+   ]
+  },
+  {
+   "id": 392441,
+   "key": "wellfed:392441",
+   "list": "wellfed",
+   "name": "Duckling",
+   "notes": [
+    "food: item 200862 triggers",
+    "auras 56, 293"
+   ]
+  },
+  {
+   "id": 392721,
+   "key": "wellfed:392721",
+   "list": "wellfed",
+   "name": "Dragon Fruit Energy",
+   "notes": [
+    "food: item 200953 applies",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 392749,
+   "key": "wellfed:392749",
+   "list": "wellfed",
+   "name": "Wild Truffle",
+   "notes": [
+    "food: item 200966 applies",
+    "auras 61, 133, 147, 485"
+   ]
+  },
+  {
+   "id": 393372,
+   "key": "wellfed:393372",
+   "list": "wellfed",
+   "name": "Nutritiously Well Fed",
+   "notes": [
+    "name: Nutritiously Well Fed",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 393455,
+   "key": "wellfed:393455",
+   "list": "wellfed",
+   "name": "Emerald Dreamtime",
+   "notes": [
+    "food: item 201327 applies",
+    "auras 12, 260"
+   ]
+  },
+  {
+   "id": 394174,
+   "key": "wellfed:394174",
+   "list": "wellfed",
+   "name": "Bivigosa's Blood Sausage",
+   "notes": [
+    "food: item 201090 applies",
+    "auras 133, 166"
+   ]
+  },
+  {
+   "id": 394185,
+   "key": "wellfed:394185",
+   "list": "wellfed",
+   "name": "Craft Creche Crowler",
+   "notes": [
+    "food: item 201089 triggers",
+    "auras 23, 105, 409"
+   ]
+  },
+  {
+   "id": 394196,
+   "key": "wellfed:394196",
+   "list": "wellfed",
+   "name": "Craft Creche Crowler",
+   "notes": [
+    "food: item 201089 triggers",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 396184,
+   "key": "wellfed:396184",
+   "list": "wellfed",
+   "name": "Fully Ruby Feasted",
+   "notes": [
+    "food: item 200759 triggers, item 200885 triggers, item 200887 triggers, item 200888 triggers (and 10 more)",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 396381,
+   "key": "wellfed:396381",
+   "list": "wellfed",
+   "name": "Slippery Salmon",
+   "notes": [
+    "food: item 202033 applies",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 396407,
+   "key": "wellfed:396407",
+   "list": "wellfed",
+   "name": "Slippery Speed",
+   "notes": [
+    "food: item 202033 triggers, item 202063 triggers, item 202108 triggers",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 396621,
+   "key": "wellfed:396621",
+   "list": "wellfed",
+   "name": "Flopping Tilapia",
+   "notes": [
+    "food: item 202063 applies",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 397012,
+   "key": "wellfed:397012",
+   "list": "wellfed",
+   "name": "Bouncing Bass",
+   "notes": [
+    "food: item 202108 applies",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 404578,
+   "key": "wellfed:404578",
+   "list": "wellfed",
+   "name": "Questionable Jerky",
+   "notes": [
+    "food: item 204342 applies",
+    "auras 12"
+   ]
+  },
+  {
+   "id": 405351,
+   "key": "wellfed:405351",
+   "list": "wellfed",
+   "name": "Emerald Infusion",
+   "notes": [
+    "food: item 206140 applies",
+    "auras 20"
+   ]
+  },
+  {
+   "id": 405420,
+   "key": "wellfed:405420",
+   "list": "wellfed",
+   "name": "Crimson Infusion",
+   "notes": [
+    "food: item 206139 applies",
+    "auras 79, 89"
+   ]
+  },
+  {
+   "id": 405444,
+   "key": "wellfed:405444",
+   "list": "wellfed",
+   "name": "Temporal Infusion",
+   "notes": [
+    "food: item 206143 applies",
+    "auras 31, 133"
+   ]
+  },
+  {
+   "id": 405449,
+   "key": "wellfed:405449",
+   "list": "wellfed",
+   "name": "Prismatic Infusion",
+   "notes": [
+    "food: item 206141 applies",
+    "auras 290"
+   ]
+  },
+  {
+   "id": 405452,
+   "key": "wellfed:405452",
+   "list": "wellfed",
+   "name": "Primordial Infusion",
+   "notes": [
+    "food: item 206144 applies",
+    "auras 33, 61, 87"
+   ]
+  },
+  {
+   "id": 405454,
+   "key": "wellfed:405454",
+   "list": "wellfed",
+   "name": "Stone Infusion",
+   "notes": [
+    "food: item 206142 applies",
+    "auras 33, 101"
+   ]
+  },
+  {
+   "id": 407013,
+   "key": "wellfed:407013",
+   "list": "wellfed",
+   "name": "Not Edible",
+   "notes": [
+    "food: item 205684 triggers",
+    "auras 89"
+   ]
+  },
+  {
+   "id": 407063,
+   "key": "wellfed:407063",
+   "list": "wellfed",
+   "name": "Rocks on the Rocks",
+   "notes": [
+    "food: item 204845 applies, item 204846 applies",
+    "auras 56, 239"
+   ]
+  },
+  {
+   "id": 410276,
+   "key": "wellfed:410276",
+   "list": "wellfed",
+   "name": "Agonizing Pain",
+   "notes": [
+    "food: item 205684 triggers",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 419536,
+   "key": "wellfed:419536",
+   "list": "wellfed",
+   "name": "Taste of Infinitea",
+   "notes": [
+    "food: item 208448 triggers",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 422075,
+   "key": "wellfed:422075",
+   "list": "wellfed",
+   "name": "Sugarfree Firewater Sorbet",
+   "notes": [
+    "food: item 209019 applies",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 422840,
+   "key": "wellfed:422840",
+   "list": "wellfed",
+   "name": "Healthy Mushroom",
+   "notes": [
+    "food: item 209433 applies",
+    "auras 137"
+   ]
+  },
+  {
+   "id": 422842,
+   "key": "wellfed:422842",
+   "list": "wellfed",
+   "name": "Mastery Mushroom",
+   "notes": [
+    "food: item 209434 applies",
+    "auras 318"
+   ]
+  },
+  {
+   "id": 422843,
+   "key": "wellfed:422843",
+   "list": "wellfed",
+   "name": "Hasty  Mushroom",
+   "notes": [
+    "food: item 209435 applies",
+    "auras 193"
+   ]
+  },
+  {
+   "id": 423074,
+   "key": "wellfed:423074",
+   "list": "wellfed",
+   "name": "Shimmering Crystal",
+   "notes": [
+    "food: item 209605 applies",
+    "auras 137, 193, 318"
+   ]
+  },
+  {
+   "id": 439413,
+   "key": "wellfed:439413",
+   "list": "wellfed",
+   "name": "Dauntless Courage",
+   "notes": [
+    "food: item 217342 applies",
+    "auras 290"
+   ]
+  },
+  {
+   "id": 450770,
+   "key": "wellfed:450770",
+   "list": "wellfed",
+   "name": "Survivalist's Biscuit",
+   "notes": [
+    "food: item 224009 applies",
+    "auras 20, 226"
+   ]
+  },
+  {
+   "id": 450774,
+   "key": "wellfed:450774",
+   "list": "wellfed",
+   "name": "Survivalist's Purified Water",
+   "notes": [
+    "food: item 224010 applies",
+    "auras 21, 226"
+   ]
+  },
+  {
+   "id": 450902,
+   "key": "wellfed:450902",
+   "list": "wellfed",
+   "name": "Electric Shock",
+   "notes": [
+    "food: item 224048 applies",
+    "auras 33"
+   ]
+  },
+  {
+   "id": 450903,
+   "key": "wellfed:450903",
+   "list": "wellfed",
+   "name": "Voracious Residue",
+   "notes": [
+    "food: item 224042 applies",
+    "auras 79"
+   ]
+  },
+  {
+   "id": 450904,
+   "key": "wellfed:450904",
+   "list": "wellfed",
+   "name": "Famished Residue",
+   "notes": [
+    "food: item 224043 applies",
+    "auras 471"
+   ]
+  },
+  {
+   "id": 450905,
+   "key": "wellfed:450905",
+   "list": "wellfed",
+   "name": "Devouring Residue",
+   "notes": [
+    "food: item 224044 applies",
+    "auras 87"
+   ]
+  },
+  {
+   "id": 450906,
+   "key": "wellfed:450906",
+   "list": "wellfed",
+   "name": "Kelp Grasp",
+   "notes": [
+    "food: item 224045 applies",
+    "auras 270, 455"
+   ]
+  },
+  {
+   "id": 450907,
+   "key": "wellfed:450907",
+   "list": "wellfed",
+   "name": "Sand Tornado",
+   "notes": [
+    "food: item 224046 applies",
+    "auras 33, 405"
+   ]
+  },
+  {
+   "id": 450909,
+   "key": "wellfed:450909",
+   "list": "wellfed",
+   "name": "Holy Brigade",
+   "notes": [
+    "food: item 224041 triggers",
+    "auras 33"
+   ]
+  },
+  {
+   "id": 454497,
+   "key": "wellfed:454497",
+   "list": "wellfed",
+   "name": "Twilight-Spiced Grouper",
+   "notes": [
+    "food: item 212492 triggers",
+    "auras 31, 104"
+   ]
+  },
+  {
+   "id": 455290,
+   "key": "wellfed:455290",
+   "list": "wellfed",
+   "name": "Sweet Eclipse",
+   "notes": [
+    "food: item 212491 triggers",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 455325,
+   "key": "wellfed:455325",
+   "list": "wellfed",
+   "name": "Darkstem Stew",
+   "notes": [
+    "food: item 215448 triggers",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 456363,
+   "key": "wellfed:456363",
+   "list": "wellfed",
+   "name": "Melted Candlebar",
+   "notes": [
+    "food: item 222749 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 456413,
+   "key": "wellfed:456413",
+   "list": "wellfed",
+   "name": "Rockslide Shake",
+   "notes": [
+    "food: item 222747 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 456576,
+   "key": "wellfed:456576",
+   "list": "wellfed",
+   "name": "Protein Slurp",
+   "notes": [
+    "food: item 223967 applies",
+    "auras 61"
+   ]
+  },
+  {
+   "id": 456577,
+   "key": "wellfed:456577",
+   "list": "wellfed",
+   "name": "Sticky Sweet Treat",
+   "notes": [
+    "food: item 222748 applies",
+    "auras 56"
+   ]
+  },
+  {
+   "id": 456578,
+   "key": "wellfed:456578",
+   "list": "wellfed",
+   "name": "Azj-Kahet Special",
+   "notes": [
+    "food: item 223971 applies",
+    "auras 31"
+   ]
+  },
+  {
+   "id": 456961,
+   "key": "wellfed:456961",
+   "list": "wellfed",
+   "name": "Become Well Fed",
+   "notes": [
+    "name: Become Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 462148,
+   "key": "wellfed:462148",
+   "list": "wellfed",
+   "name": "Pep-In-Your-Step",
+   "notes": [
+    "food: item 222745 triggers",
+    "auras 104, 189"
+   ]
+  },
+  {
+   "id": 466400,
+   "key": "wellfed:466400",
+   "list": "wellfed",
+   "name": "Well Fed & Inspired",
+   "notes": [
+    "name: Well Fed & Inspired",
+    "auras 171, 405"
+   ]
+  },
+  {
+   "id": 1214555,
+   "key": "wellfed:1214555",
+   "list": "wellfed",
+   "name": "Omega Oyster Outbreak",
+   "notes": [
+    "food: item 234618 applies",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 1214575,
+   "key": "wellfed:1214575",
+   "list": "wellfed",
+   "name": "Kaja Classic Original Taste",
+   "notes": [
+    "food: item 234620 applies",
+    "auras 80, 405"
+   ]
+  },
+  {
+   "id": 1216159,
+   "key": "wellfed:1216159",
+   "list": "wellfed",
+   "name": "Well Hydrated",
+   "notes": [
+    "food: item 235230 triggers",
+    "auras 129"
+   ]
+  },
+  {
+   "id": 1219179,
+   "key": "wellfed:1219179",
+   "list": "wellfed",
+   "name": "Become Well Fed",
+   "notes": [
+    "name: Become Well Fed",
+    "auras 4"
+   ]
+  },
+  {
+   "id": 1239149,
+   "key": "wellfed:1239149",
+   "list": "wellfed",
+   "name": "Satiated",
+   "notes": [
+    "food: item 245573 applies",
+    "auras 189"
+   ]
+  },
+  {
+   "id": 1248409,
+   "key": "wellfed:1248409",
+   "list": "wellfed",
+   "name": "Kaja Classic Original Taste",
+   "notes": [
+    "food: item 249028 applies",
+    "auras 80, 405"
+   ]
+  },
+  {
+   "id": 1248415,
+   "key": "wellfed:1248415",
+   "list": "wellfed",
+   "name": "Omega Oyster Outbreak",
+   "notes": [
+    "food: item 249030 applies",
+    "auras 80"
+   ]
+  },
+  {
+   "id": 1263074,
+   "key": "wellfed:1263074",
+   "list": "wellfed",
+   "name": "Amani Extract",
+   "notes": [
+    "food: item 263974 applies",
+    "auras 8"
+   ]
+  },
+  {
+   "id": 1271918,
+   "key": "wellfed:1271918",
+   "list": "wellfed",
+   "name": "Sanctified Touch",
+   "notes": [
+    "food: item 264391 applies",
+    "auras 42"
+   ]
+  },
+  {
+   "id": 1280336,
+   "key": "wellfed:1280336",
+   "list": "wellfed",
+   "name": "Hydrating",
+   "notes": [
+    "food: item 267381 applies",
+    "auras 23, 88, 110"
+   ]
+  },
+  {
+   "id": 1280337,
+   "key": "wellfed:1280337",
+   "list": "wellfed",
+   "name": "Hydrated",
+   "notes": [
+    "food: item 267381 triggers",
+    "auras 129"
+   ]
+  },
+  {
+   "id": 1292077,
+   "key": "wellfed:1292077",
+   "list": "wellfed",
+   "name": "Vial of Intrepid Lemonade",
+   "notes": [
+    "food: item 273307 applies",
+    "auras 171"
+   ]
+  },
+  {
+   "id": 1308719,
+   "key": "wellfed:1308719",
+   "list": "wellfed",
+   "name": "Well Resting",
+   "notes": [
+    "food: item 280422 triggers",
+    "auras 226"
+   ]
+  }
+ ],
+ "client": "retail",
+ "date": "2026-11-25",
+ "derived": {
+  "buffs": [
+   {
+    "id": 8733,
+    "name": "Blessing of Blackfathom",
+    "rules": [
+     "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+     "auras 79, 80"
+    ]
+   },
+   {
+    "id": 15366,
+    "name": "Songflower Serenade",
+    "rules": [
+     "catalog: world: a Songflower, Felwood",
+     "auras 80, 405"
+    ]
+   },
+   {
+    "id": 16609,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 110, 133, 405"
+    ]
+   },
+   {
+    "id": 22817,
+    "name": "Fengus' Ferocity",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 22818,
+    "name": "Mol'dar's Moxie",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 22820,
+    "name": "Slip'kik's Savvy",
+    "rules": [
+     "catalog: zone: the Dire Maul tribute",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 22888,
+    "name": "Rallying Cry of the Dragonslayer",
+    "rules": [
+     "catalog: world: Onyxia's or Nefarian's head",
+     "auras 52, 80"
+    ]
+   },
+   {
+    "id": 23735,
+    "name": "Sayge's Dark Fortune of Strength",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23736,
+    "name": "Sayge's Dark Fortune of Agility",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23737,
+    "name": "Sayge's Dark Fortune of Stamina",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23738,
+    "name": "Sayge's Dark Fortune of Versatility",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 471"
+    ]
+   },
+   {
+    "id": 23766,
+    "name": "Sayge's Dark Fortune of Intelligence",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 23767,
+    "name": "Sayge's Dark Fortune of Armor",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 101"
+    ]
+   },
+   {
+    "id": 23768,
+    "name": "Sayge's Dark Fortune of Damage",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 23769,
+    "name": "Sayge's Dark Fortune of Resistance",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 87"
+    ]
+   },
+   {
+    "id": 24425,
+    "name": "Spirit of Zandalar",
+    "rules": [
+     "catalog: world: Hakkar's heart, Yojamba Isle",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 26462,
+    "name": "Festival Fortune!",
+    "rules": [
+     "catalog: event: a festival fortune",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 29235,
+    "name": "Fire Festival Fortitude",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 29338,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 29534,
+    "name": "Traces of Silithyst",
+    "rules": [
+     "catalog: zone: Silithus",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 29846,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57"
+    ]
+   },
+   {
+    "id": 46352,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 52, 57, 284"
+    ]
+   },
+   {
+    "id": 46668,
+    "name": "WHEE!",
+    "rules": [
+     "catalog: faire: the Darkmoon carousel",
+     "auras 156, 190, 200, 291"
+    ]
+   },
+   {
+    "id": 59641,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 20, 79, 133"
+    ]
+   },
+   {
+    "id": 61212,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 20, 79, 133"
+    ]
+   },
+   {
+    "id": 64670,
+    "name": "Warchief's Blessing",
+    "rules": [
+     "catalog: world: Rend's head, Orgrimmar",
+     "auras 20, 79, 133"
+    ]
+   },
+   {
+    "id": 101115,
+    "name": "Fire Festival Fury",
+    "rules": [
+     "catalog: event: Midsummer Fire Festival",
+     "auras 15, 42"
+    ]
+   },
+   {
+    "id": 153272,
+    "name": "Blessing of Blackfathom",
+    "rules": [
+     "catalog: shrine: the Altar of the Deeps, Blackfathom Deeps",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 220351,
+    "name": "Songflower Serenade",
+    "rules": [
+     "catalog: world: a Songflower, Felwood",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 290058,
+    "name": "WHEE!",
+    "rules": [
+     "catalog: faire: the Darkmoon carousel",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 405815,
+    "name": "Sayge's Dark Fortune",
+    "rules": [
+     "catalog: faire: Sayge, Darkmoon Faire",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 423942,
+    "name": "WHEE!",
+    "rules": [
+     "catalog: faire: the Darkmoon carousel",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1225929,
+    "name": "Lunar Fortune",
+    "rules": [
+     "catalog: event: Lunar Festival",
+     "auras 133"
+    ]
+   }
+  ],
+  "food": [
+   {
+    "id": 5,
+    "name": "",
+    "rules": [
+     "1514 of the 1558 Consumable items that use Food/Drink/Refreshment/Food & Drink"
+    ]
+   }
+  ],
+  "hearthstones": [
+   {
+    "id": 8690,
+    "name": "Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 39937,
+    "name": "There's No Place Like Home",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 48129,
+    "name": "Scroll of Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 54403,
+    "name": "Scourgestone",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 60320,
+    "name": "Scroll of Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 60321,
+    "name": "Scroll of Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 75136,
+    "name": "Ethereal Portal",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 94719,
+    "name": "The Innkeeper's Daughter",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 136508,
+    "name": "Dark Portal",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 171253,
+    "name": "Garrison Hearthstone",
+    "rules": [
+     "rule 3: by id"
+    ]
+   },
+   {
+    "id": 191329,
+    "name": "Hearthstone",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 222695,
+    "name": "Dalaran Hearthstone",
+    "rules": [
+     "rule 3: by id"
+    ]
+   },
+   {
+    "id": 231504,
+    "name": "Town Portal",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 231505,
+    "name": "Town Portal",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 278244,
+    "name": "Greatfather Winter's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 278559,
+    "name": "Headless Horseman's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 279066,
+    "name": "Weary Spirit Binding Return",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 279741,
+    "name": "Scroll of Luxurious Recall",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 285362,
+    "name": "Lunar Elder's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 285424,
+    "name": "Peddlefeet's Lovely Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 286031,
+    "name": "Noble Gardener's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 286331,
+    "name": "Fire Eater's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 286353,
+    "name": "Brewfest Reveler's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 298068,
+    "name": "Holographic Digitalization Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 300047,
+    "name": "Mountebank's Colorful Cloak",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 308742,
+    "name": "Eternal Traveler's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 326064,
+    "name": "Ardenweald Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 340200,
+    "name": "Necrolord Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 342122,
+    "name": "Venthyr Sinstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 345393,
+    "name": "Kyrian Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 350944,
+    "name": "Town Portal",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 363799,
+    "name": "Dominated Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 366945,
+    "name": "Enlightened Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 367013,
+    "name": "Broker Translocation Matrix",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 375357,
+    "name": "Timewalker's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 391042,
+    "name": "Ohn'ir Windsage's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 401802,
+    "name": "Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 412555,
+    "name": "Path of the Naaru",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 420418,
+    "name": "Deepdweller's Earthen Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 422284,
+    "name": "Hearthstone of the Flame",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 431644,
+    "name": "Stone of the Hearth",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 438606,
+    "name": "Draenic Hologem",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 463481,
+    "name": "Notorious Thread's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1217281,
+    "name": "Redeployment Module",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1220729,
+    "name": "Explosive Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1240219,
+    "name": "P.O.S.T. Master's Express Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1242509,
+    "name": "Cosmic Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1250878,
+    "name": "Timerunner's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1254117,
+    "name": "Lightforged Phase Beacon",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1261979,
+    "name": "Lightcalled Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1270583,
+    "name": "Naaru's Enfold",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1270814,
+    "name": "Preyseeker's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1273401,
+    "name": "Corewarden's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1286909,
+    "name": "Mycomancer's Hearthspore",
+    "rules": [
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1299014,
+    "name": "Mycomancer's Hearthspore",
+    "rules": [
+     "rule 1: ChargeCategory 2309"
+    ]
+   },
+   {
+    "id": 1299513,
+    "name": "Lightveil Hearth Beacon",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1310234,
+    "name": "Hiveborne Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   },
+   {
+    "id": 1311934,
+    "name": "Shadeweaver's Hearthstone",
+    "rules": [
+     "rule 1: ChargeCategory 2309",
+     "rule 2: Effect 252, ImplicitTarget 9"
+    ]
+   }
+  ],
+  "wellfed": [
+   {
+    "id": 6114,
+    "name": "Raptor Punch",
+    "rules": [
+     "food: item 5342 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 6411,
+    "name": "Scorpid Poison",
+    "rules": [
+     "food: item 5473 triggers",
+     "auras 3"
+    ]
+   },
+   {
+    "id": 15852,
+    "name": "Dragonbreath Chili",
+    "rules": [
+     "food: item 12217 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 18125,
+    "name": "Blessed Sunfruit",
+    "rules": [
+     "food: item 13810 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 18191,
+    "name": "Increased Stamina",
+    "rules": [
+     "food: item 13927 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 18192,
+    "name": "Increased Agility",
+    "rules": [
+     "food: item 13928 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 18193,
+    "name": "Increased Versatility",
+    "rules": [
+     "food: item 24539 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 18194,
+    "name": "Mana Regeneration",
+    "rules": [
+     "food: item 13931 triggers",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 18222,
+    "name": "Health Regeneration",
+    "rules": [
+     "food: item 13932 triggers",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 19705,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 2680 triggers, item 2888 triggers, item 5472 triggers, item 5474 triggers (and 15 more)",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 19706,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 724 triggers, item 2683 triggers, item 2684 triggers, item 2687 triggers (and 10 more)",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19708,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 1017 triggers, item 1082 triggers, item 3663 triggers, item 3664 triggers (and 9 more)",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19709,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 3728 triggers, item 3729 triggers, item 4457 triggers, item 6038 triggers (and 9 more)",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19710,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 12215 triggers, item 12216 triggers, item 12218 triggers, item 16971 triggers (and 4 more)",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 19711,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 24540 triggers, item 29293 triggers, item 33024 triggers, item 210821 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 22730,
+    "name": "Increased Intellect",
+    "rules": [
+     "food: item 18254 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 24799,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 20452 triggers, item 29292 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 24870,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 25661,
+    "name": "Increased Stamina",
+    "rules": [
+     "food: item 21023 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 25694,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 25703,
+    "name": "Brain Food",
+    "rules": [
+     "food: item 21072 triggers",
+     "auras 23, 85"
+    ]
+   },
+   {
+    "id": 25889,
+    "name": "Brain Food",
+    "rules": [
+     "food: item 21217 triggers",
+     "auras 23, 85"
+    ]
+   },
+   {
+    "id": 25941,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 26390,
+    "name": "Glowy (NoColor)",
+    "rules": [
+     "food: item 21721 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 29055,
+    "name": "Refreshing Red Apple",
+    "rules": [
+     "food: item 23172 applies",
+     "auras 20, 21"
+    ]
+   },
+   {
+    "id": 33254,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27651 triggers, item 27662 triggers, item 30155 triggers, item 33025 triggers (and 1 more)",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33256,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27658 triggers, item 30359 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33257,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27667 triggers, item 33052 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33259,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27655 triggers",
+     "auras 99, 124, 189"
+    ]
+   },
+   {
+    "id": 33261,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27659 triggers, item 27664 triggers, item 30358 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 33263,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27657 triggers, item 27665 triggers, item 30361 triggers, item 31673 triggers",
+     "auras 13, 135, 189"
+    ]
+   },
+   {
+    "id": 33265,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27663 triggers",
+     "auras 29, 85"
+    ]
+   },
+   {
+    "id": 33268,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27666 triggers, item 30357 triggers",
+     "auras 13, 135, 189"
+    ]
+   },
+   {
+    "id": 33774,
+    "name": "Underspore Pod",
+    "rules": [
+     "food: item 28112 triggers",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 35272,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 27660 triggers, item 31672 triggers, item 33026 triggers, item 34410 triggers (and 1 more)",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 42207,
+    "name": "Enriched Terocone Juice",
+    "rules": [
+     "food: item 32722 triggers",
+     "auras 84"
+    ]
+   },
+   {
+    "id": 42293,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 32721 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 42312,
+    "name": "Brain Food",
+    "rules": [
+     "food: item 33053 triggers",
+     "auras 85"
+    ]
+   },
+   {
+    "id": 43722,
+    "name": "Enlightened",
+    "rules": [
+     "food: item 33825 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 43730,
+    "name": "Electrified",
+    "rules": [
+     "food: item 33866 applies",
+     "auras 23, 42"
+    ]
+   },
+   {
+    "id": 43764,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 33872 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 43771,
+    "name": "Pet Treat",
+    "rules": [
+     "food: item 43005 applies",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 43776,
+    "name": "Very Happy",
+    "rules": [
+     "food: item 33924 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 45245,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34411 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 45619,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 45694,
+    "name": "Captain Rumsey's Lager",
+    "rules": [
+     "food: item 34832 applies",
+     "auras 30"
+    ]
+   },
+   {
+    "id": 46682,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 99"
+    ]
+   },
+   {
+    "id": 46687,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 35565 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 46899,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 35563 triggers",
+     "auras 99, 124"
+    ]
+   },
+   {
+    "id": 46926,
+    "name": "Breath Freeze!",
+    "rules": [
+     "food: item 35720 triggers",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 50986,
+    "name": "Sulfuron Slammer",
+    "rules": [
+     "food: item 38466 applies",
+     "auras 3"
+    ]
+   },
+   {
+    "id": 53284,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42779 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57079,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34762 triggers",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 57097,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34763 triggers",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 57100,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34764 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57102,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42942 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57107,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34765 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57111,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34748 triggers",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 57139,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34749 triggers",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 57286,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34750 triggers, item 39691 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57288,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34125 triggers, item 34751 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57291,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34752 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57294,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 43268 triggers",
+     "auras 13, 29, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 57325,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34754 triggers, item 34766 triggers",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 57327,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34755 triggers, item 34767 triggers",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 57329,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34756 triggers, item 34768 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57332,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34757 triggers, item 34769 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57334,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 34758 triggers, item 42993 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57356,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42994 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57358,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42995 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57360,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42996 triggers, item 44953 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57363,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42997 triggers",
+     "auras 44"
+    ]
+   },
+   {
+    "id": 57365,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42998 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 57367,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 42999 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 57371,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 43000 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 57373,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 43001 triggers",
+     "auras 44"
+    ]
+   },
+   {
+    "id": 57388,
+    "name": "Critter Bite",
+    "rules": [
+     "food: item 43004 applies",
+     "auras 25, 177"
+    ]
+   },
+   {
+    "id": 57399,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 58468,
+    "name": "Hugely Well Fed",
+    "rules": [
+     "name: Hugely Well Fed",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 58479,
+    "name": "Nearly Well Fed",
+    "rules": [
+     "name: Nearly Well Fed",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 58496,
+    "name": "Sad",
+    "rules": [
+     "food: item 43488 applies",
+     "auras 0, 4"
+    ]
+   },
+   {
+    "id": 58502,
+    "name": "Scared",
+    "rules": [
+     "food: item 43492 applies",
+     "auras 0, 4"
+    ]
+   },
+   {
+    "id": 59230,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 60122,
+    "name": "Baby Spice",
+    "rules": [
+     "food: item 44228 applies",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 62349,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 64057,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 33004 triggers",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 65247,
+    "name": "Really Well Fed",
+    "rules": [
+     "name: Really Well Fed",
+     "food: item 33874 applies",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 65410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 44839 triggers, item 116406 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 65412,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 116405 triggers",
+     "auras 13, 29, 135"
+    ]
+   },
+   {
+    "id": 65414,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 116407 triggers",
+     "auras 29, 99, 124"
+    ]
+   },
+   {
+    "id": 65415,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 65416,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 66623,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 13, 29, 99, 124, 135"
+    ]
+   },
+   {
+    "id": 87545,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62670 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87546,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62669 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87547,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62671 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87548,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62666 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87549,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62663 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87550,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62662 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87551,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62661 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87552,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62665 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87554,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62667 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87555,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62668 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87556,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62659 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87557,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62658 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87558,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62660 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87559,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62656 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87560,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62653 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87561,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62652 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87562,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62651 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87563,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62655 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87564,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62657 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87565,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87634,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62654 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87635,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 62664 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 87697,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 87699,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 99305,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 99478,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 100367,
+    "name": "Bountiful Drink",
+    "rules": [
+     "food: item 70924 triggers, item 70925 triggers, item 70926 triggers, item 70927 triggers",
+     "auras 85, 226"
+    ]
+   },
+   {
+    "id": 100368,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 70924 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 100373,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 70925 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 100375,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 70926 triggers",
+     "auras 29, 189"
+    ]
+   },
+   {
+    "id": 100377,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 70927 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104264,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74644 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104267,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74642 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104271,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74645 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104272,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74646 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104273,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74643 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104274,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74647 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104275,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74648 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104276,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74649 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104277,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74650 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104278,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74651 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 104279,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74652 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 104280,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74653 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 104281,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74654 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104282,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74655 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 104283,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 74656 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 105225,
+    "name": "Delusional",
+    "rules": [
+     "food: item 75038 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 105226,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 105234,
+    "name": "Pounding Headache",
+    "rules": [
+     "food: item 75037 triggers",
+     "auras 3"
+    ]
+   },
+   {
+    "id": 108028,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 77264 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 108031,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 77273 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 108032,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 77272 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 110645,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 21254 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 111840,
+    "name": "Healthy",
+    "rules": [
+     "food: item 79320 triggers",
+     "auras 4, 29"
+    ]
+   },
+   {
+    "id": 111841,
+    "name": "Refreshing Drink",
+    "rules": [
+     "food: item 79320 triggers",
+     "auras 85, 226"
+    ]
+   },
+   {
+    "id": 114470,
+    "name": "Sudsy",
+    "rules": [
+     "food: item 88530 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 114733,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 115037,
+    "name": "Ling-Ting's Herbal Journey",
+    "rules": [
+     "food: item 80313 applies",
+     "auras 326"
+    ]
+   },
+   {
+    "id": 124151,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124210,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124211,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124212,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124213,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 81406 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124214,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124215,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124216,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 104343 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124217,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 104341 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124218,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 104342 triggers, item 104344 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124219,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 81414 triggers, item 94535 triggers, item 98127 triggers, item 105721 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124220,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 104340 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 124221,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125070,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125071,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 104339 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125102,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125104,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125106,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 86070 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125108,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 86069 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125113,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 86073 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125115,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 86074 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 125686,
+    "name": "Banana Infused Rum",
+    "rules": [
+     "food: item 86432 applies",
+     "auras 12, 56"
+    ]
+   },
+   {
+    "id": 126144,
+    "name": "Four Senses Brew",
+    "rules": [
+     "food: item 87264 applies",
+     "auras 260"
+    ]
+   },
+   {
+    "id": 127770,
+    "name": "Keenbean Kafa Boost",
+    "rules": [
+     "food: item 88382 applies, item 103645 applies, item 103646 applies, item 103647 applies",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 127881,
+    "name": "Squirmy Feeling",
+    "rules": [
+     "food: item 88388 triggers, item 140343 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 128290,
+    "name": "Wicked Wikket",
+    "rules": [
+     "food: item 88492 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 128307,
+    "name": "Bubbling Beverage",
+    "rules": [
+     "food: item 88530 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 128308,
+    "name": "Sparkling Water",
+    "rules": [
+     "food: item 88529 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 128312,
+    "name": "Sparkling Water",
+    "rules": [
+     "food: item 88529 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 130342,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89595 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130343,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89596 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130344,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89597 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130345,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89598 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130346,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89599 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130347,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89600 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130348,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89601 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130350,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89588 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130351,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89589 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130352,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89590 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130353,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89591 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130354,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89592 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130355,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89593 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 130356,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 89594 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 131828,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 90457 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 133428,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 133593,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 133594,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 133595,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 133596,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 134219,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 134506,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 134712,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 134887,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 135076,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 135440,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 135451,
+    "name": "You Stink!",
+    "rules": [
+     "food: item 98121 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 140410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 147"
+    ]
+   },
+   {
+    "id": 142271,
+    "name": "Barrens Toughness",
+    "rules": [
+     "food: item 98111 triggers",
+     "auras 87"
+    ]
+   },
+   {
+    "id": 142280,
+    "name": "Barrens Swiftness",
+    "rules": [
+     "food: item 98116 triggers",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 142286,
+    "name": "Scorpion's Lethality",
+    "rules": [
+     "food: item 98118 triggers",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 145304,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 145635,
+    "name": "Increased Stamina",
+    "rules": [
+     "food: item 13934 triggers, item 24008 triggers, item 24009 triggers, item 28501 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146804,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 101750 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146805,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 101746 triggers",
+     "auras 29, 284"
+    ]
+   },
+   {
+    "id": 146806,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 101748 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146807,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 101747 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 146808,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 101749 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 146809,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 101745 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 147055,
+    "name": "Singing Crystal",
+    "rules": [
+     "food: item 103641 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 147226,
+    "name": "Book of the Ages",
+    "rules": [
+     "food: item 103642 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 147312,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 147476,
+    "name": "Dew of Eternal Morning",
+    "rules": [
+     "food: item 103643 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 148247,
+    "name": "Queasiness",
+    "rules": [
+     "food: item 104196 triggers",
+     "auras 20, 21, 61, 304"
+    ]
+   },
+   {
+    "id": 148999,
+    "name": "Funky Monkey Brew",
+    "rules": [
+     "food: item 105711 triggers",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 154295,
+    "name": "Very Well Fed",
+    "rules": [
+     "name: Very Well Fed",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 159372,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 160600,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111431 triggers, item 111439 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 160722,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111432 triggers, item 111440 triggers",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 160724,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111433 triggers, item 111441 triggers, item 118272 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160726,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111434 triggers, item 111442 triggers, item 118270 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160778,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111435 triggers, item 111443 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160793,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111436 triggers, item 111444 triggers, item 118268 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160832,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111437 triggers, item 111445 triggers, item 118269 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160839,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111438 triggers, item 111446 triggers, item 118271 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160883,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111447 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 160885,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111448 triggers",
+     "auras 22"
+    ]
+   },
+   {
+    "id": 160889,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111449 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160893,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111450 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160895,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111451 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160897,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111452 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160900,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111453 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 160902,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 111454 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 161495,
+    "name": "Star Root Tuber",
+    "rules": [
+     "food: item 111842 applies",
+     "auras 87"
+    ]
+   },
+   {
+    "id": 165802,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 168349,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 114238 applies",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 168475,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 169356,
+    "name": "Pure Songflower Serenade",
+    "rules": [
+     "food: item 114982 applies",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 170937,
+    "name": "Saberon Cat-Sip",
+    "rules": [
+     "food: item 119157 applies",
+     "auras 233"
+    ]
+   },
+   {
+    "id": 174062,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 118275 applies",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174063,
+    "name": "Path of Cenarius",
+    "rules": [
+     "food: item 118273 triggers, item 118274 triggers, item 118275 triggers, item 118276 triggers (and 1 more)",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 174077,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 118274 applies",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174078,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 118277 applies",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174079,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 118273 applies",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174080,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 118276 applies",
+     "auras 23, 189"
+    ]
+   },
+   {
+    "id": 174613,
+    "name": "Blind Palefish",
+    "rules": [
+     "food: item 118424 triggers",
+     "auras 31, 56"
+    ]
+   },
+   {
+    "id": 175218,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175219,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175220,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175222,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175223,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175784,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 44837 triggers, item 116408 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 175785,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 44836 triggers, item 116409 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 175797,
+    "name": "Super Well Fed",
+    "rules": [
+     "name: Super Well Fed",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 176049,
+    "name": "Miner's Coffee",
+    "rules": [
+     "food: item 118897 applies",
+     "auras 129"
+    ]
+   },
+   {
+    "id": 176057,
+    "name": "Grob's Fancy Brew",
+    "rules": [
+     "food: item 118900 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 177931,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 120168 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 179201,
+    "name": "Pinchwhistle \"Nitro Fuel\"",
+    "rules": [
+     "food: item 120959 triggers",
+     "auras 89"
+    ]
+   },
+   {
+    "id": 180745,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 122345 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180746,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 122346 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180747,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 122347 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 180748,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 122348 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180749,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 122344 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 180750,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 122343 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 185703,
+    "name": "Lemon Herb Filet",
+    "rules": [
+     "food: item 126934 applies",
+     "auras 20, 21, 23"
+    ]
+   },
+   {
+    "id": 185736,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 126934 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 185786,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 471"
+    ]
+   },
+   {
+    "id": 188534,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 192004,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 192475,
+    "name": "Rotten Flank",
+    "rules": [
+     "food: item 128875 applies",
+     "auras 133"
+    ]
+   },
+   {
+    "id": 196001,
+    "name": "True Rogue",
+    "rules": [
+     "food: item 130259 triggers",
+     "auras 31, 56"
+    ]
+   },
+   {
+    "id": 201223,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133557 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201314,
+    "name": "Dignified",
+    "rules": [
+     "food: item 49602 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 201330,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133561 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201332,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133562 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201334,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133563 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 201336,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133564 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 201350,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133576 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 201634,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201635,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201636,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201637,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201638,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201639,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201640,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201641,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 201679,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 201695,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 129179 triggers, item 133577 triggers",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 203443,
+    "name": "Mammoth Milk",
+    "rules": [
+     "food: item 133983 applies",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 207076,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 215607,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 405"
+    ]
+   },
+   {
+    "id": 216343,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 216353,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 216828,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 217846,
+    "name": "Food Poisoning",
+    "rules": [
+     "food: item 138966 applies",
+     "auras 21"
+    ]
+   },
+   {
+    "id": 223602,
+    "name": "Dreamberries",
+    "rules": [
+     "food: item 140352 applies",
+     "auras 20, 21"
+    ]
+   },
+   {
+    "id": 225597,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133565 triggers, item 143634 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225598,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133566 triggers, item 143635 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225599,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133567 triggers, item 143633 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225600,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133568 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225601,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133569 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 225602,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133570 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225603,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133571 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225604,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133572 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225605,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133573 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 225606,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 133574 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 226805,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 44838 triggers, item 210841 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 226807,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 44840 triggers, item 210842 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 230061,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 142334 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 236821,
+    "name": "Sargeras Sangria",
+    "rules": [
+     "food: item 144411 triggers",
+     "auras 56, 60"
+    ]
+   },
+   {
+    "id": 251234,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 89, 191, 406"
+    ]
+   },
+   {
+    "id": 251247,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 251248,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 58, 82, 226"
+    ]
+   },
+   {
+    "id": 257408,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154881 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154882 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257413,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154883 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257415,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154884 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257418,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154887 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257420,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154888 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257422,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154885 triggers, item 163081 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 257424,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 154886 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 258258,
+    "name": "Quillbomb",
+    "rules": [
+     "food: item 155820 triggers",
+     "auras 12"
+    ]
+   },
+   {
+    "id": 259448,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259449,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259452,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259453,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259454,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259455,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259456,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 259457,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 261620,
+    "name": "Honey Buzzed",
+    "rules": [
+     "food: item 156835 applies",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 262571,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 267948,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 159723 applies, item 163988 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 267949,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 159724 applies, item 163989 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 267950,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 159726 applies, item 163990 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 267951,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 159727 applies, item 163991 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 270372,
+    "name": "Pineapple Pizza",
+    "rules": [
+     "food: item 160092 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 272817,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 152698 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 274375,
+    "name": "Marie's Fresh Baked Cookies",
+    "rules": [
+     "food: item 162117 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 276024,
+    "name": "Violet Truffle",
+    "rules": [
+     "food: item 162011 applies",
+     "auras 244"
+    ]
+   },
+   {
+    "id": 276040,
+    "name": "Decadence",
+    "rules": [
+     "food: item 162010 triggers",
+     "auras 33"
+    ]
+   },
+   {
+    "id": 276041,
+    "name": "Delicious Truffle",
+    "rules": [
+     "food: item 162010 applies",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 276214,
+    "name": "Marie's Fresh Baked Cookies",
+    "rules": [
+     "food: item 162117 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 279882,
+    "name": "Torga's Swiftness",
+    "rules": [
+     "food: item 163707 applies",
+     "auras 33, 312"
+    ]
+   },
+   {
+    "id": 280271,
+    "name": "Hexwurst",
+    "rules": [
+     "food: item 163781 triggers",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 285719,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 285720,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 285721,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 286171,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 165755 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 288074,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 166343 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 288075,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 166344 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290467,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290468,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290469,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 290726,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 133"
+    ]
+   },
+   {
+    "id": 292884,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 293778,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 294238,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 133"
+    ]
+   },
+   {
+    "id": 294365,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 167832 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 294439,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 294472,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 294473,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 295402,
+    "name": "Unagi Skewer",
+    "rules": [
+     "food: item 169280 applies",
+     "auras 43"
+    ]
+   },
+   {
+    "id": 296178,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79, 133"
+    ]
+   },
+   {
+    "id": 296455,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 168232 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297034,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 168313 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297035,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 168311 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297037,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 168314 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297039,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 168310 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 297040,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 168312 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297116,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297117,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297118,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 297119,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 303628,
+    "name": "Bioluminescent Ocean Punch",
+    "rules": [
+     "food: item 169949 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 306426,
+    "name": "Ethereal Candy",
+    "rules": [
+     "food: item 171195 applies",
+     "auras 260"
+    ]
+   },
+   {
+    "id": 306453,
+    "name": "Sugar Rush",
+    "rules": [
+     "food: item 171196 applies",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 308430,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172040 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308434,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172041 triggers, item 182592 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308474,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172044 triggers, item 181619 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308488,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172045 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308504,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172048 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308506,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172049 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308509,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172050 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308514,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172051 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 308520,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172068 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 308525,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172069 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 308629,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 308637,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172062 triggers",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 316243,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 16, 56"
+    ]
+   },
+   {
+    "id": 316863,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 174349 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 316870,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 174352 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 316871,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 174350 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 319386,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 56, 336"
+    ]
+   },
+   {
+    "id": 320779,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 16, 56"
+    ]
+   },
+   {
+    "id": 321689,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 174348 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 327701,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327702,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327704,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327705,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327706,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327707,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 190953 applies",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327708,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327709,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 327714,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 327715,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 327851,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172061 triggers, item 182737 triggers",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 327860,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 327877,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 332915,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 172063 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 340111,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 23"
+    ]
+   },
+   {
+    "id": 341449,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 347173,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 184682 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 347520,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 371541,
+    "name": "Suspiciously Fuzzy Drink",
+    "rules": [
+     "food: item 191917 applies",
+     "auras 21, 226"
+    ]
+   },
+   {
+    "id": 371546,
+    "name": "Suspiciously Fuzzy Drink",
+    "rules": [
+     "food: item 191918 applies",
+     "auras 21, 226"
+    ]
+   },
+   {
+    "id": 371547,
+    "name": "Suspiciously Fuzzy Drink",
+    "rules": [
+     "food: item 191919 applies",
+     "auras 21, 226"
+    ]
+   },
+   {
+    "id": 382145,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197778 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382146,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197779 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382149,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197780 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382150,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197781 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382152,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197782 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382153,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197783 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382154,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197784 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382155,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197785 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382156,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197786 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382157,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197787 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 382230,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197774 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382231,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197775 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382232,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197776 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382234,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197788 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382235,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197789 triggers, item 222740 triggers, item 222742 triggers, item 222743 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382236,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197790 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382246,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197777 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382247,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197791 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 382761,
+    "name": "Blubbery Muffin",
+    "rules": [
+     "food: item 197767 applies, item 198832 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 383212,
+    "name": "Regrettably Well Fed",
+    "rules": [
+     "name: Regrettably Well Fed",
+     "food: item 197772 triggers",
+     "auras 58, 82, 226"
+    ]
+   },
+   {
+    "id": 386723,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 171"
+    ]
+   },
+   {
+    "id": 391589,
+    "name": "Coal-Fired Rib Rack",
+    "rules": [
+     "food: item 200888 applies",
+     "auras 80, 495"
+    ]
+   },
+   {
+    "id": 391590,
+    "name": "Charred Porter",
+    "rules": [
+     "food: item 200887 applies",
+     "auras 80, 495"
+    ]
+   },
+   {
+    "id": 391596,
+    "name": "Cinna-Cinderbloom Tea",
+    "rules": [
+     "food: item 200885 applies",
+     "auras 129, 495"
+    ]
+   },
+   {
+    "id": 391603,
+    "name": "Aruunem Berrytart",
+    "rules": [
+     "food: item 200759 applies",
+     "auras 87, 495"
+    ]
+   },
+   {
+    "id": 391615,
+    "name": "Stonetalon Bloom Skewer",
+    "rules": [
+     "food: item 200890 applies",
+     "auras 379, 495"
+    ]
+   },
+   {
+    "id": 391619,
+    "name": "Dragonfruit Punch",
+    "rules": [
+     "food: item 200892 applies",
+     "auras 105, 409, 495"
+    ]
+   },
+   {
+    "id": 391620,
+    "name": "Azsunian Poached Lobster",
+    "rules": [
+     "food: item 200893 applies",
+     "auras 80, 495"
+    ]
+   },
+   {
+    "id": 391624,
+    "name": "Rare Vintage Arcwine",
+    "rules": [
+     "food: item 200894 applies",
+     "auras 163, 495"
+    ]
+   },
+   {
+    "id": 391626,
+    "name": "Captain's Caramelized Catfish",
+    "rules": [
+     "food: item 200896 applies",
+     "auras 466, 495"
+    ]
+   },
+   {
+    "id": 391628,
+    "name": "Mantis Shrimp Cocktail",
+    "rules": [
+     "food: item 200898 applies",
+     "auras 82, 495"
+    ]
+   },
+   {
+    "id": 391641,
+    "name": "Seared Sea Mist Noodles",
+    "rules": [
+     "food: item 200899 applies",
+     "auras 193, 495"
+    ]
+   },
+   {
+    "id": 391643,
+    "name": "Fried Emperor Wraps",
+    "rules": [
+     "food: item 200900 applies",
+     "auras 318, 495"
+    ]
+   },
+   {
+    "id": 391657,
+    "name": "Ravenberry Panacotta Delight",
+    "rules": [
+     "food: item 200902 applies",
+     "auras 166, 495"
+    ]
+   },
+   {
+    "id": 391664,
+    "name": "Moira's Choice Espresso",
+    "rules": [
+     "food: item 200903 applies",
+     "auras 9, 495"
+    ]
+   },
+   {
+    "id": 392439,
+    "name": "Duckling",
+    "rules": [
+     "food: item 200862 triggers",
+     "auras 56, 293"
+    ]
+   },
+   {
+    "id": 392441,
+    "name": "Duckling",
+    "rules": [
+     "food: item 200862 triggers",
+     "auras 56, 293"
+    ]
+   },
+   {
+    "id": 392721,
+    "name": "Dragon Fruit Energy",
+    "rules": [
+     "food: item 200953 applies",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 392749,
+    "name": "Wild Truffle",
+    "rules": [
+     "food: item 200966 applies",
+     "auras 61, 133, 147, 485"
+    ]
+   },
+   {
+    "id": 393372,
+    "name": "Nutritiously Well Fed",
+    "rules": [
+     "name: Nutritiously Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 393455,
+    "name": "Emerald Dreamtime",
+    "rules": [
+     "food: item 201327 applies",
+     "auras 12, 260"
+    ]
+   },
+   {
+    "id": 394174,
+    "name": "Bivigosa's Blood Sausage",
+    "rules": [
+     "food: item 201090 applies",
+     "auras 133, 166"
+    ]
+   },
+   {
+    "id": 394185,
+    "name": "Craft Creche Crowler",
+    "rules": [
+     "food: item 201089 triggers",
+     "auras 23, 105, 409"
+    ]
+   },
+   {
+    "id": 394196,
+    "name": "Craft Creche Crowler",
+    "rules": [
+     "food: item 201089 triggers",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 396092,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 197792 triggers, item 204072 triggers",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 396184,
+    "name": "Fully Ruby Feasted",
+    "rules": [
+     "food: item 200759 triggers, item 200885 triggers, item 200887 triggers, item 200888 triggers (and 10 more)",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 396381,
+    "name": "Slippery Salmon",
+    "rules": [
+     "food: item 202033 applies",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 396407,
+    "name": "Slippery Speed",
+    "rules": [
+     "food: item 202033 triggers, item 202063 triggers, item 202108 triggers",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 396621,
+    "name": "Flopping Tilapia",
+    "rules": [
+     "food: item 202063 applies",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 397012,
+    "name": "Bouncing Bass",
+    "rules": [
+     "food: item 202108 applies",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 398458,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 202290 triggers",
+     "auras 61, 189"
+    ]
+   },
+   {
+    "id": 404578,
+    "name": "Questionable Jerky",
+    "rules": [
+     "food: item 204342 applies",
+     "auras 12"
+    ]
+   },
+   {
+    "id": 405351,
+    "name": "Emerald Infusion",
+    "rules": [
+     "food: item 206140 applies",
+     "auras 20"
+    ]
+   },
+   {
+    "id": 405420,
+    "name": "Crimson Infusion",
+    "rules": [
+     "food: item 206139 applies",
+     "auras 79, 89"
+    ]
+   },
+   {
+    "id": 405444,
+    "name": "Temporal Infusion",
+    "rules": [
+     "food: item 206143 applies",
+     "auras 31, 133"
+    ]
+   },
+   {
+    "id": 405449,
+    "name": "Prismatic Infusion",
+    "rules": [
+     "food: item 206141 applies",
+     "auras 290"
+    ]
+   },
+   {
+    "id": 405452,
+    "name": "Primordial Infusion",
+    "rules": [
+     "food: item 206144 applies",
+     "auras 33, 61, 87"
+    ]
+   },
+   {
+    "id": 405454,
+    "name": "Stone Infusion",
+    "rules": [
+     "food: item 206142 applies",
+     "auras 33, 101"
+    ]
+   },
+   {
+    "id": 406941,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 407013,
+    "name": "Not Edible",
+    "rules": [
+     "food: item 205684 triggers",
+     "auras 89"
+    ]
+   },
+   {
+    "id": 407063,
+    "name": "Rocks on the Rocks",
+    "rules": [
+     "food: item 204845 applies, item 204846 applies",
+     "auras 56, 239"
+    ]
+   },
+   {
+    "id": 410276,
+    "name": "Agonizing Pain",
+    "rules": [
+     "food: item 205684 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 417336,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 419536,
+    "name": "Taste of Infinitea",
+    "rules": [
+     "food: item 208448 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 422075,
+    "name": "Sugarfree Firewater Sorbet",
+    "rules": [
+     "food: item 209019 applies",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 422840,
+    "name": "Healthy Mushroom",
+    "rules": [
+     "food: item 209433 applies",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 422842,
+    "name": "Mastery Mushroom",
+    "rules": [
+     "food: item 209434 applies",
+     "auras 318"
+    ]
+   },
+   {
+    "id": 422843,
+    "name": "Hasty  Mushroom",
+    "rules": [
+     "food: item 209435 applies",
+     "auras 193"
+    ]
+   },
+   {
+    "id": 423074,
+    "name": "Shimmering Crystal",
+    "rules": [
+     "food: item 209605 applies",
+     "auras 137, 193, 318"
+    ]
+   },
+   {
+    "id": 439413,
+    "name": "Dauntless Courage",
+    "rules": [
+     "food: item 217342 applies",
+     "auras 290"
+    ]
+   },
+   {
+    "id": 439608,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 442522,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 137"
+    ]
+   },
+   {
+    "id": 450770,
+    "name": "Survivalist's Biscuit",
+    "rules": [
+     "food: item 224009 applies",
+     "auras 20, 226"
+    ]
+   },
+   {
+    "id": 450774,
+    "name": "Survivalist's Purified Water",
+    "rules": [
+     "food: item 224010 applies",
+     "auras 21, 226"
+    ]
+   },
+   {
+    "id": 450902,
+    "name": "Electric Shock",
+    "rules": [
+     "food: item 224048 applies",
+     "auras 33"
+    ]
+   },
+   {
+    "id": 450903,
+    "name": "Voracious Residue",
+    "rules": [
+     "food: item 224042 applies",
+     "auras 79"
+    ]
+   },
+   {
+    "id": 450904,
+    "name": "Famished Residue",
+    "rules": [
+     "food: item 224043 applies",
+     "auras 471"
+    ]
+   },
+   {
+    "id": 450905,
+    "name": "Devouring Residue",
+    "rules": [
+     "food: item 224044 applies",
+     "auras 87"
+    ]
+   },
+   {
+    "id": 450906,
+    "name": "Kelp Grasp",
+    "rules": [
+     "food: item 224045 applies",
+     "auras 270, 455"
+    ]
+   },
+   {
+    "id": 450907,
+    "name": "Sand Tornado",
+    "rules": [
+     "food: item 224046 applies",
+     "auras 33, 405"
+    ]
+   },
+   {
+    "id": 450909,
+    "name": "Holy Brigade",
+    "rules": [
+     "food: item 224041 triggers",
+     "auras 33"
+    ]
+   },
+   {
+    "id": 451916,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451917,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451918,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451920,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 451921,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 454137,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454177,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454178,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454179,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454180,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 454188,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 29"
+    ]
+   },
+   {
+    "id": 454497,
+    "name": "Twilight-Spiced Grouper",
+    "rules": [
+     "food: item 212492 triggers",
+     "auras 31, 104"
+    ]
+   },
+   {
+    "id": 455290,
+    "name": "Sweet Eclipse",
+    "rules": [
+     "food: item 212491 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 455325,
+    "name": "Darkstem Stew",
+    "rules": [
+     "food: item 215448 triggers",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 455369,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 225592 triggers",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 456363,
+    "name": "Melted Candlebar",
+    "rules": [
+     "food: item 222749 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 456406,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 225855 triggers",
+     "auras 30, 511"
+    ]
+   },
+   {
+    "id": 456410,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "food: item 223966 triggers, item 233118 triggers",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 456413,
+    "name": "Rockslide Shake",
+    "rules": [
+     "food: item 222747 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 456576,
+    "name": "Protein Slurp",
+    "rules": [
+     "food: item 223967 applies",
+     "auras 61"
+    ]
+   },
+   {
+    "id": 456577,
+    "name": "Sticky Sweet Treat",
+    "rules": [
+     "food: item 222748 applies",
+     "auras 56"
+    ]
+   },
+   {
+    "id": 456578,
+    "name": "Azj-Kahet Special",
+    "rules": [
+     "food: item 223971 applies",
+     "auras 31"
+    ]
+   },
+   {
+    "id": 456961,
+    "name": "Become Well Fed",
+    "rules": [
+     "name: Become Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 457049,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 457284,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461845,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461853,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461854,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461855,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461856,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461857,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461858,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461859,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461860,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461861,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461922,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461924,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461925,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461927,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461937,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461938,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461939,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461940,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461942,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461943,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461944,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461945,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461946,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461947,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461948,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461949,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461957,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461958,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461959,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 461960,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462148,
+    "name": "Pep-In-Your-Step",
+    "rules": [
+     "food: item 222745 triggers",
+     "auras 104, 189"
+    ]
+   },
+   {
+    "id": 462180,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462181,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462182,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462183,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462184,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462185,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462186,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462187,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462188,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462189,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462190,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462191,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462192,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462193,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462194,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462195,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462196,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462197,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462198,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462199,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462200,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462201,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462202,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462203,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462204,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462205,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462206,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462207,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462208,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462209,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 462210,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 465481,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 61, 79"
+    ]
+   },
+   {
+    "id": 466400,
+    "name": "Well Fed & Inspired",
+    "rules": [
+     "name: Well Fed & Inspired",
+     "auras 171, 405"
+    ]
+   },
+   {
+    "id": 473173,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 473181,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 473183,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 473184,
+    "name": "Greasy Well Fed",
+    "rules": [
+     "name: Greasy Well Fed",
+     "auras 4, 29, 33, 80, 189"
+    ]
+   },
+   {
+    "id": 1214555,
+    "name": "Omega Oyster Outbreak",
+    "rules": [
+     "food: item 234618 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 1214575,
+    "name": "Kaja Classic Original Taste",
+    "rules": [
+     "food: item 234620 applies",
+     "auras 80, 405"
+    ]
+   },
+   {
+    "id": 1216159,
+    "name": "Well Hydrated",
+    "rules": [
+     "food: item 235230 triggers",
+     "auras 129"
+    ]
+   },
+   {
+    "id": 1219179,
+    "name": "Become Well Fed",
+    "rules": [
+     "name: Become Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1219182,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1219183,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1219184,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1219185,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232076,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232078,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232080,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232082,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232086,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232087,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232089,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232091,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232313,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232316,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232317,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232318,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232320,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232321,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232324,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232325,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232490,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232491,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232492,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232493,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232496,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232498,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232500,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232501,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232582,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232584,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1232585,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233400,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233401,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233402,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233403,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233404,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233405,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233406,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233407,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233408,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233703,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233704,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233705,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233706,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233707,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233708,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233709,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233710,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233711,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233712,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233713,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233714,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233715,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233716,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233717,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233718,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233719,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233720,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233721,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233722,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233723,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233724,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233725,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233726,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233727,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233728,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233729,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233730,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233731,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233732,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1233733,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1239149,
+    "name": "Satiated",
+    "rules": [
+     "food: item 245573 applies",
+     "auras 189"
+    ]
+   },
+   {
+    "id": 1248409,
+    "name": "Kaja Classic Original Taste",
+    "rules": [
+     "food: item 249028 applies",
+     "auras 80, 405"
+    ]
+   },
+   {
+    "id": 1248415,
+    "name": "Omega Oyster Outbreak",
+    "rules": [
+     "food: item 249030 applies",
+     "auras 80"
+    ]
+   },
+   {
+    "id": 1254815,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4"
+    ]
+   },
+   {
+    "id": 1263074,
+    "name": "Amani Extract",
+    "rules": [
+     "food: item 263974 applies",
+     "auras 8"
+    ]
+   },
+   {
+    "id": 1271918,
+    "name": "Sanctified Touch",
+    "rules": [
+     "food: item 264391 applies",
+     "auras 42"
+    ]
+   },
+   {
+    "id": 1280336,
+    "name": "Hydrating",
+    "rules": [
+     "food: item 267381 applies",
+     "auras 23, 88, 110"
+    ]
+   },
+   {
+    "id": 1280337,
+    "name": "Hydrated",
+    "rules": [
+     "food: item 267381 triggers",
+     "auras 129"
+    ]
+   },
+   {
+    "id": 1283372,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284616,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284617,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284618,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284619,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284641,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284642,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284643,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284644,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284647,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284648,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284649,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1284650,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1285644,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1292077,
+    "name": "Vial of Intrepid Lemonade",
+    "rules": [
+     "food: item 273307 applies",
+     "auras 171"
+    ]
+   },
+   {
+    "id": 1294727,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305150,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305151,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305152,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305153,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305154,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305155,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305156,
+    "name": "Well Fed",
+    "rules": [
+     "name: Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1305157,
+    "name": "Hearty Well Fed",
+    "rules": [
+     "name: Hearty Well Fed",
+     "auras 4, 29, 189"
+    ]
+   },
+   {
+    "id": 1308719,
+    "name": "Well Resting",
+    "rules": [
+     "food: item 280422 triggers",
+     "auras 226"
+    ]
+   }
+  ]
+ },
+ "flags": [
+  {
+   "comment": "Wood-Cursed Hearthstone",
+   "id": 1310840,
+   "key": "shipped:unnamed:hearthstones:1310840",
+   "kind": "unnamed",
+   "list": "hearthstones",
+   "name": ""
+  }
+ ],
+ "food": [
+  {
+   "class": 0,
+   "items": 1514,
+   "subclass": 5
+  },
+  {
+   "class": 3,
+   "items": 96,
+   "subclass": 10
+  },
+  {
+   "class": 0,
+   "items": 42,
+   "subclass": 8
+  },
+  {
+   "class": 7,
+   "items": 27,
+   "subclass": 8
+  },
+  {
+   "class": 12,
+   "items": 9,
+   "subclass": 0
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 5
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 6
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 7
+  },
+  {
+   "class": 3,
+   "items": 7,
+   "subclass": 8
+  },
+  {
+   "class": 15,
+   "items": 4,
+   "subclass": 0
+  },
+  {
+   "class": 3,
+   "items": 3,
+   "subclass": 3
+  },
+  {
+   "class": 0,
+   "items": 2,
+   "subclass": 0
+  },
+  {
+   "class": 4,
+   "items": 1,
+   "subclass": 0
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 1
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 3
+  },
+  {
+   "class": 15,
+   "items": 1,
+   "subclass": 4
+  }
+ ],
+ "ignore": {
+  "checked": [
+   {
+    "build": "Auto Attack",
+    "file": "Auto Attack",
+    "id": 6603,
+    "lanes": [
+     "player",
+     "pet"
+    ]
+   },
+   {
+    "build": "Auto Shot",
+    "file": "Auto Shot",
+    "id": 75,
+    "lanes": [
+     "player"
+    ]
+   },
+   {
+    "build": "Shoot",
+    "file": "Shoot",
+    "id": 5019,
+    "lanes": [
+     "player"
+    ]
+   }
+  ],
+  "lanes": {
+   "pet": [
+    6603
+   ],
+   "player": [
+    6603,
+    75,
+    5019
+   ]
+  }
+ },
+ "product": "wow",
+ "shipped": {
+  "buffs": 25,
+  "food": 1,
+  "hearthstones": 59,
+  "ignore": 3,
+  "wellfed": 537
+ },
+ "tool": "tools/seeds/seeds.py derive"
+}

@@ -10,7 +10,7 @@ local function out(line) NS.Print(line) end
 
 local cli   -- built at the bottom, once NS.COMMANDS exists; handlers reach it at CALL time
 local doEnabled, doDebug, doPerf, doSetVerb
-local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy, doRace
+local doResults, doHud, doLock, doTest, doSim, doPurge, doProbe, doLane, doIgnore, doDummy, doRace, doLog
 
 -- Race mode's verb is Retail's (clients-§4): declared on its triple, which the library gates, and
 -- gated the same way on the library-absent stub and NS.RunVerb below.
@@ -60,6 +60,8 @@ NS.COMMANDS = {
     { "results",     L["Open the Results window, with your fight history"],
                                                                    feature(function(rest) doResults(rest) end) },
     { "hud",         L["The DPS HUD: /ct hud show or hide"],      feature(function(rest) doHud(rest) end) },
+    { "log",         L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"],
+                                                                   feature(function(rest) doLog(rest) end) },
     { "lock",        L["Lock the lanes and the DPS HUD in place"], feature(function() doLock(true) end) },
     { "unlock",      L["Unlock the lanes and the DPS HUD to move them"],
                                                                    feature(function() doLock(false) end) },
@@ -268,7 +270,7 @@ local function delegate(owner)
 end
 doResults, doHud, doLane = delegate("Results"), delegate("Hud"), delegate("Lanes")
 doIgnore, doPurge, doProbe = delegate("LaneIgnore"), delegate("Retention"), delegate("Probe")
-doDummy = delegate("Dummies")
+doDummy, doLog = delegate("Dummies"), delegate("HudLog")
 
 --- `race <word>`: while stood down only `race ignore` answers; every other word is the hold's one line
 --- (the disabled line, or the capture's under the `perf` hold alone), as a feature verb's (ruling X10).

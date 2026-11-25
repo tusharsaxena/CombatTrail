@@ -74,12 +74,21 @@ local function fight(out)
     out:add("Diag", "fight state=%s id=%s session=%s meter=%s chart fights=%s", NS.Fight.State(),
         cur and cur.id, cur and cur.sessionID, (NS.Meter.IsAvailable()), NS.Slices.Held())
     out:add("Diag", "probe armed=%s", NS.Probe.IsArmed())
+    -- The Combat Log's capture (#11): whether its events are registered now (only while a fight is
+    -- open), the events the client refused this session (the assumed UNIT_COMBAT quirk's readout,
+    -- docs/midnight-quirks.md and docs/forever-quirks.md) and the lines heard this session.
+    local log = NS.CombatLog.Diagnose()
+    out:add("Diag", "combat log registered=%s refused=%s lines=%s", log.registered,
+        #log.refused > 0 and table.concat(log.refused, ",") or "none", log.lines)
 end
 
 local function windows(out)
     if down(out) then return end
     local hud = NS.Hud.Diagnose()
     out:add("Diag", "hud state=%s body=%s pinned=%s locked=%s", hud.state, hud.body, hud.pinned, hud.locked)
+    local lw = NS.LogWindow.Diagnose()
+    out:add("Diag", "log home=%s window shown=%s attached=%s side=%s pinned=%s ticking=%s", NS.HudLog.Home(),
+        lw.shown, lw.attached, lw.side, lw.pinned, lw.ticking)
     local results = NS.Results.Diagnose()
     out:add("Diag", "results shown=%s rows=%s selected=%s detail=%s", results.shown, results.rows,
         results.selected, results.detailOpen)

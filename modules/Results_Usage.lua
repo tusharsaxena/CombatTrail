@@ -18,12 +18,16 @@ local _, NS = ...
 -- (Usage.Hide). A sample fight (test mode, the sim) changes in memory only, as its note does. A fight
 -- with no usage record says *Not recorded*.
 --
--- WHAT IS NEVER LISTED (Usage.Shown): a hidden item (the "never show" list), and an enchant entry. A
--- hidden item the fight used stays in its record: a save keeps it (Edits), so showing it again brings
--- it back.
+-- WHAT IS NEVER LISTED (Usage.Shown): a hidden item or buff (the "never show" lists), an enchant
+-- entry, and a v 1 record's Food & Drink item. A hidden one the fight used stays in its record: a save
+-- keeps it (Edits), so showing it again brings it back.
+--
+-- BUFFS (CombatTrail #13, usage v 2): a spell-keyed entry ({ spellID, kind "buff" }) is a seeded buff
+-- on at the pull. It shows the spell's icon and name, has no candidate (an unticked one joins the
+-- candidates, as food does) and is hidden by spell ID (Usage.HideSpell).
 --
 -- PLAIN DATA ONLY: the stored record.usage (modules/Usage.lua: { v, used, candidates, edited }).
--- Item names and icons are the client's item data, read at call time and pcall'd. Rows are laid out
+-- Item and spell names and icons are the client's data, read at call time and pcall'd. Rows are laid out
 -- from the constants here, never from a size read back; Record, Entries, Rows, UsedRows, Ticks,
 -- Edits, Changed, Carry, Clock, Detail and Line are pure over the record and the hidden list.
 
@@ -63,9 +67,9 @@ end
 function ResultsUsage.Entries(record)
     local u = ResultsUsage.Record(record)
     if not u then return nil end
-    local hidden, gear, rest = NS.Usage.HiddenSet(), {}, {}
+    local hidden, spells, gear, rest = NS.Usage.HiddenSet(), NS.Usage.HiddenSpellSet(), {}, {}
     for _, e in ipairs(u.used) do
-        if NS.Usage.Shown(e, hidden) then
+        if NS.Usage.Shown(e, hidden, spells) then
             local into = e.kind == "gear" and gear or rest
             into[#into + 1] = e
         end
@@ -114,13 +118,14 @@ function ResultsUsage.Line(name, detail)
 end
 
 -- Whether used entry `e` is the one candidate `c` stands for: by its item (a gear candidate also by
--- its slot, when the entry has one); a candidate with no item (food the player unticked, kept by
--- Usage.SetUsed) by its kind.
+-- its slot, when the entry has one); a candidate with no item (food or a buff the player unticked,
+-- kept by Usage.SetUsed) by its spell, else by its kind.
 local function stands(c, e)
     if c.itemID ~= nil then
         return e.itemID == c.itemID and (c.kind ~= "gear" or e.slot == nil or e.slot == c.slot)
     end
-    return e.itemID == nil and e.kind == c.kind
+    if c.spellID ~= nil then return e.itemID == nil and e.spellID == c.spellID end
+    return e.itemID == nil and e.spellID == nil and e.kind == c.kind
 end
 
 -- The used entry a candidate stands for: the first not yet matched. Answers it and its index.
@@ -132,7 +137,7 @@ local function matchOf(used, c, matched)
 end
 
 local function rowOf(src, e)
-    return { itemID = src.itemID, kind = src.kind, slot = src.slot, entry = e }
+    return { itemID = src.itemID, spellID = src.spellID, kind = src.kind, slot = src.slot, entry = e }
 end
 
 -- Every row the record holds: one per candidate (in its stored order), each with the used entry it
@@ -153,15 +158,15 @@ local function allRows(u)
     return rows
 end
 
---- The edit's rows: every candidate and every used entry no candidate stands for (food), each with
---- the used entry it stands for, hidden items and enchant entries left out. nil when not recorded.
---- @return table|nil rows  { { itemID?, kind, slot?, entry? }, ... }
+--- The edit's rows: every candidate and every used entry no candidate stands for (food, buffs), each
+--- with the used entry it stands for, hidden ones and enchant entries left out. nil when not recorded.
+--- @return table|nil rows  { { itemID?, spellID?, kind, slot?, entry? }, ... }
 function ResultsUsage.Rows(record)
     local u = ResultsUsage.Record(record)
     if not u then return nil end
-    local hidden, out = NS.Usage.HiddenSet(), {}
+    local hidden, spells, out = NS.Usage.HiddenSet(), NS.Usage.HiddenSpellSet(), {}
     for _, row in ipairs(allRows(u)) do
-        if NS.Usage.Shown(row, hidden) then out[#out + 1] = row end
+        if NS.Usage.Shown(row, hidden, spells) then out[#out + 1] = row end
     end
     return out
 end
@@ -179,19 +184,19 @@ end
 function ResultsUsage.Ticks(rows, state)
     local out = {}
     for i, row in ipairs(rows or {}) do
-        if state[i] then out[#out + 1] = { itemID = row.itemID, kind = row.kind, slot = row.slot } end
+        if state[i] then out[#out + 1] = { itemID = row.itemID, spellID = row.spellID, kind = row.kind, slot = row.slot } end
     end
     return out
 end
 
 --- What a save writes: the ticks, then one for each used entry the edit does not list (a hidden item
---- the fight used), so hiding an item never drops it from the record.
+--- or buff the fight used), so hiding one never drops it from the record.
 function ResultsUsage.Edits(record, rows, state)
     local out, u = ResultsUsage.Ticks(rows, state), ResultsUsage.Record(record)
-    local hidden = NS.Usage.HiddenSet()
+    local hidden, spells = NS.Usage.HiddenSet(), NS.Usage.HiddenSpellSet()
     for _, e in ipairs(u and u.used or {}) do
-        if type(e) == "table" and e.kind ~= "enchant" and not NS.Usage.Shown(e, hidden) then
-            out[#out + 1] = { itemID = e.itemID, kind = e.kind, slot = e.slot }
+        if type(e) == "table" and e.kind ~= "enchant" and not NS.Usage.Shown(e, hidden, spells) then
+            out[#out + 1] = { itemID = e.itemID, spellID = e.spellID, kind = e.kind, slot = e.slot }
         end
     end
     return out
@@ -205,8 +210,9 @@ function ResultsUsage.Changed(rows, state)
     return false
 end
 
--- A row's identity across two drawings of the same fight: its item and slot, or its kind.
+-- A row's identity across two drawings of the same fight: its item and slot, its spell, or its kind.
 local function rowKey(row)
+    if row.itemID == nil and row.spellID ~= nil then return "s" .. tostring(row.spellID) end
     return tostring(row.itemID or row.kind) .. ":" .. tostring(row.slot)
 end
 
@@ -237,11 +243,14 @@ local function itemApi(name)
     return type(C_Item) == "table" and C_Item[name] or nil
 end
 
---- An entry's (or a row's) name: its item's, or "Well Fed" for food with no item.
+--- An entry's (or a row's) name: its item's, its buff spell's, or "Well Fed" for food with no item.
 function ResultsUsage.Name(e)
     if type(e) ~= "table" then return "?" end
     if e.itemID then
         return NS.Secrets.PlainString(ask(itemApi("GetItemNameByID"), e.itemID)) or L["Item %d"]:format(e.itemID)
+    end
+    if e.spellID then
+        return NS.Secrets.PlainString(ask(NS.Compat.SpellName, e.spellID)) or L["Spell %d"]:format(e.spellID)
     end
     if e.kind == "food" then return L["Well Fed"] end
     return "?"
@@ -251,6 +260,7 @@ end
 function ResultsUsage.Icon(e)
     if type(e) ~= "table" then return ResultsUsage.UNKNOWN_ICON end
     if e.itemID then return ask(itemApi("GetItemIconByID"), e.itemID) or ResultsUsage.UNKNOWN_ICON end
+    if e.spellID then return ask(NS.Compat.SpellTexture, e.spellID) or ResultsUsage.UNKNOWN_ICON end
     if e.kind == "food" then return ResultsUsage.FOOD_ICON end
     return ResultsUsage.UNKNOWN_ICON
 end
@@ -272,32 +282,41 @@ end
 
 -- ── the section ─────────────────────────────────────────────────────────────────────────────────
 
--- A row's hover: the client's own item tooltip with the row's detail after it (and, in the edit, how
--- to hide an item), or the name alone; beside the Results window, level with the row (a body element:
+-- A row's hover: the client's own item or spell tooltip with the row's detail after it (and, in the
+-- edit, how to hide it), or the name alone; beside the Results window, level with the row (a body element:
 -- Style.PlaceBody, LibKa0s#92).
 local function rowTip(p, row)
     local tt, data = GameTooltip, row.data
     if not (tt and data) then return end
     Style.OwnTip(tt, row)
-    local shown = data.itemID and tt.SetItemByID and pcall(tt.SetItemByID, tt, data.itemID)
+    local shown
+    if data.itemID then
+        shown = tt.SetItemByID and pcall(tt.SetItemByID, tt, data.itemID)
+    elseif data.spellID then
+        shown = tt.SetSpellByID and pcall(tt.SetSpellByID, tt, data.spellID)
+    end
     if not shown then tt:SetText(ResultsUsage.Name(data), Style.Rgb("gtip.value")) end
     if row.detailText and row.detailText ~= "" then tt:AddLine(row.detailText, Style.Rgb("gtip.muted")) end
     if p.usage.editing and data.itemID then
         tt:AddLine(L["Right-click: never show this item."], Style.Rgb("gtip.muted"))
+    elseif p.usage.editing and data.spellID then
+        tt:AddLine(L["Right-click: never show this buff."], Style.Rgb("gtip.muted"))
     end
     tt:Show()
     Style.PlaceBody(tt, row)
 end
 
---- An item row's right-click while editing: a menu with *Never show <item>* (Usage.Hide; the window
---- redraws from SETTINGS_CHANGED, the ticks not saved yet kept).
+--- An item or buff row's right-click while editing: a menu with *Never show <name>* (Usage.Hide, or
+--- Usage.HideSpell for a buff; the window redraws from SETTINGS_CHANGED, the ticks not saved yet kept).
 --- @return boolean opened
 function ResultsUsage.RowMenu(p, row)
     local data = row and row.data
-    if not (p.usage.editing and data and data.itemID and NS.CanOpenMenu()) then return false end
-    local itemID, name = data.itemID, ResultsUsage.Name(data)
+    if not (p.usage.editing and data and (data.itemID or data.spellID) and NS.CanOpenMenu()) then return false end
+    local itemID, spellID, name = data.itemID, data.spellID, ResultsUsage.Name(data)
     NS.OpenMenu(row, function(root)
-        root:CreateButton(L["Never show %s"]:format(name), function() NS.Usage.Hide(itemID) end)
+        root:CreateButton(L["Never show %s"]:format(name), function()
+            if itemID then NS.Usage.Hide(itemID) else NS.Usage.HideSpell(spellID) end
+        end)
     end)
     return true
 end

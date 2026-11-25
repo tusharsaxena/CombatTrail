@@ -19,7 +19,7 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 4 and the fight record's format is 4
+- load: the settings stamp is 4 and the fight record's format is 6
 - load: a schema 1 store loads empty at version 4, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
@@ -547,6 +547,29 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
+### test_combat_log.lua (20)
+
+- combat log: a fight's casts, auras, hits, heals and boundaries are saved with its record
+- combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
+- combat log: the target's debuffs are only the player's, and a target change logs nothing
+- combat log: an aura on at the start is known when it falls off
+- combat log: a sealed aura and a sealed cast are no line; a sealed amount is saved as "s"
+- combat log: past `log.store.lines` only the newest are kept and the record counts the rest
+- combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is held to its range
+- combat log: a category not saved is no line and not counted as dropped
+- combat log: saving off keeps no log on the record; the log off registers nothing
+- combat log: the settings are frozen at the fight's start
+- combat log: the storage keys have their shipped defaults
+- combat log: its events are registered only while a fight is open, for player and target
+- combat log: a stand-down mid-fight drops every registration and line
+- combat log: a client that refuses UNIT_COMBAT costs only it, and the diagnosis names it
+- combat log: the combatLog perf bucket is reached by its events
+- combat log: the ring holds at most C.LOG.RING lines and reuses its slots
+- combat log: a CT_SCHEMA 5 record reads with no log and still opens in the Results
+- combat log: a fight's log goes with it when retention purges the fight
+- combat log: a fight lost or skipped keeps no log waiting
+- combat log: a log at the cap stays under its stored-size ceiling
+
 ### test_usage.lua (11)
 
 - usage: the snapshot reads the on-use slots, the bag consumables and the auras
@@ -732,6 +755,14 @@ Total.
 - late ignore: the menu offers each counted spell once, the undo for each ignored one, nothing for a sealed cast
 - late ignore: Label names a spell, the hearthstones' entry and an unknown one
 
+### test_buff_seeds.lua (5)
+
+- buff seeds: the kit profile's client list is picked once
+- buff seeds: WoW Forever lists Camp Benefits and Might of Stormwind, Retail neither
+- buff seeds: Retail lists its own world buffs
+- buff seeds: each client's Well Fed list holds 19705, and Food & Drink is subclass 5
+- buff seeds: BuffSeedSet returns a fresh set each call, and no id twice in a list
+
 ### test_race.lua (60)
 
 - race: the states, the lengths and the timings are the plan's
@@ -911,7 +942,7 @@ Total.
 - autoshow window: the player's open in a session closes on walking away and opens on coming back
 - autoshow window: a window the player opened before the session stays theirs
 
-### test_race_window.lua (51)
+### test_race_window.lua (54)
 
 - race window: absent on WoW Forever, with nothing of it loaded
 - race window: present on Retail, with its frame name and its hooks
@@ -949,6 +980,9 @@ Total.
 - race window: attached with the HUD hidden it stands where the HUD would
 - race window: a HUD that drew once, hidden, is placed again for the window beside it
 - race window: docked LEFT or RIGHT it takes the DPS HUD's height
+- race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing
+- race window: the log detached, the HUD drops the drawer and the Race window follows it, armed and racing
+- race window: the detached log on the Race window's side stands beyond it, and back beside the HUD when it goes
 - race window: the matched height follows the HUD's resizes, its parts, the grip and the scale
 - race window: a HUD shorter than the window's minimum leaves the minimum
 - race window: TOP, BOTTOM, detached or the row off keep the window's own height
@@ -1264,7 +1298,7 @@ Total.
 
 - hud race button: absent on WoW Forever
 - hud race button: built and shown on Retail with Race mode on, the plain flag
-- hud race button: Results, Race, Lock, Settings, Close left to right; off, the strip closes up
+- hud race button: Results, Log, Race, Lock, Settings, Close left to right; off, the strip closes up
 - hud race button: hidden with the title bar
 - hud race button: a click toggles the Race window as /ct race toggle does
 - hud race button: lit only under the pointer, never for the Race window being open
@@ -1293,6 +1327,66 @@ Total.
 - w29 D2: no fade while the race holds the HUD; the race's idle edge starts it, and both go
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
+
+### test_log_table.lua (22)
+
+- log table: a cast is yours in your class color, a pet's in the HUD's pet color
+- log table: a long-cooldown cast wears the gold wash; washes off takes it away
+- log table: buffs green (off dimmed), a debuff you put on orange with its wash, on the target
+- log table: a hit on you is red with its school and Info; a heal green with a plus
+- log table: a sealed amount goes to the label as given, a saved one reads sealed
+- log table: the time column from the pull, past a minute and before it, or the clock
+- log table: the boundaries are muted rows with their words
+- log table: a multi-school mask takes its lowest school's color
+- log table: the categories, the auto attacks and the least amount decide what shows
+- log table feed: instant reveals every line, newest first; a scroll pauses and Resume follows
+- log table feed: every N ms shows at most one line each N ms; batch shows them together
+- log table feed: the display throttle never drops a line from the saved log
+- log table columns: a narrow home drops Source first; a wide one with Info shows them all
+- hud log: the title bar's Log control opens the drawer and the HUD grows by its height
+- hud log: the rows setting, 3 to 20, sizes the drawer
+- hud log: the drawer paints the newest fight's lines, newest at the top, and the Time header flips it
+- hud log: the wheel pauses it, Resume follows again
+- hud log: folded it is one line with the newest event, and the HUD shrinks to it
+- hud log: it hides and stops with the HUD, and comes back with it
+- hud log: a fight's start opens it when auto-open is on (the shipped default)
+- hud log: /ct log toggles it and opens the HUD with it
+- hud log: with the Combat Log off there is no control and no drawer
+
+### test_log_window.lua (14)
+
+- log window: the drawer's detach mark moves the log into its own window, and the HUD gives the drawer's height back
+- log window: the dock mark sends it back to the HUD, still open
+- log window: wider than the drawer, with the Info column
+- log window: it follows the HUD, hidden and back with it, unless pinned
+- log window: Escape and its close mark close the log; the HUD's hide does not
+- log window: attached LEFT beside the HUD by default, at the HUD's scale and height
+- log window: its rows fill the height it has
+- log window: with fill off its rows are the rows setting, and the window is as tall as they are
+- log window: standing on its own it takes its saved place and scale; the attach mark lets it go
+- log window: a grip drag lays out cheaply and repaints nothing until its release, then stores the size
+- log window: it paints the newest fight's lines with their Info; the wheel pauses it, Resume follows
+- log window: /ct log detach and dock move it; the HUD's Log control opens and closes it
+- log window: with the Combat Log off it never shows
+- log window: on WoW Forever there is no Race window, and it stands beside the HUD the same way
+
+### test_log_page.lua (15)
+
+- log page: eight tabs, Combat Log first and Results last
+- log page: every log.* default but the window's geometry has a control
+- log page: every row's default is the profile's (defaults/Profile.lua is the only source)
+- log page: no log.* key is left on the write-through list; the log's own controls write rows
+- log page: the value checks refuse what the log cannot draw
+- log page: the dependent rows gray out on what they need, and no color row ever does
+- log page: every tab renders without printing
+- log page: the row height sizes the drawer, the HUD grows with it, and each row takes it
+- log page: the text size sets the rows' face, widens the fixed columns and the icon
+- log page: the detached window's rows follow the row height
+- log page: You takes its own swatch once Use class color is off; the targets theirs off the skin
+- log page: You is a ColorPair with its class companion on; the targets are a palette, no class
+- log page: the detached window's gear opens the settings on this page
+- log page: /ct set reaches a log path
+- log page: the page's Defaults puts every log row back and leaves the geometry
 
 ### test_sizing.lua (7)
 
@@ -1372,6 +1466,42 @@ Total.
 - detail: the Targets section lists each enemy with its amount and share
 - detail: a fight with no targets (an older record) has no Targets section
 - detail: Targets rows skip a malformed entry and share out of what is listed
+
+### test_results_log.lua (18)
+
+- results log: the detail has Overview, Timeline and Log tabs, Overview by default
+- results log: the Log tab replaces the Overview, and the tab shown stays from fight to fight
+- results log: the Timeline tab opens the timeline window and keeps the tab shown
+- results log: the Timeline tab is grayed and does nothing for a fight with no casts
+- results log: the saved log in the table, newest first, with the Info column
+- results log: the caption counts the lines the cap dropped
+- results log: the chips carry their counts and filter what is shown
+- results log: each fight opens on log.results.chips, the same fight drawn again keeps them
+- results log: the pure halves: counts, the order, the page, the least amount
+- results log: the Time header flips the sort, oldest first starting at the pull
+- results log: the wheel scrolls the list and stays on it
+- results log: Damage by spell draws the record's breakdown in the HUD's rows and order
+- results log: the panel stands beside the table on a wide tab and under it on a narrow one
+- results log: a click on a CAST row opens the timeline at that cast
+- results log: log.results.jumpToCast off, a cast row's click does nothing
+- results log: the timeline's focus math keeps the view on the axis
+- results log: a fight saved before the log says No log was saved for this fight
+- results log: a Combat Log setting redraws a shown Log tab
+
+### test_target_level.lua (12)
+
+- target level (retail): a level reads "<name> (L<level>)"
+- target level (retail): a skull reads "(L??)", red where colored
+- target level (retail): no level shows the name alone, never (Lnil)
+- target level (retail): a boss keeps the suffix (owner, 2026-11-25)
+- target level (forever): a level reads "<name> (L<level>)"
+- target level (forever): a skull reads "(L??)", red where colored
+- target level (forever): no level shows the name alone, never (Lnil)
+- target level (forever): a boss keeps the suffix (owner, 2026-11-25)
+- target level: the column sorts by name, then level (none, low to high, a skull last)
+- target level: the cell's tooltip, the board label and the Insights tab read the same
+- target level: the detail's meta reads "<name> · level <n>"
+- target level: the Targets section's primary row carries the level, the others their name
 
 ### test_results_sections.lua (5)
 
@@ -1555,7 +1685,7 @@ Total.
 - title bar: the compare's close, its one control
 - title bar: the gear view's close, its one control
 - title bar: the ability timeline's close, its one control
-- header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up
+- header strip: the DPS HUD reads Results, Log, Race, Lock, Settings, Close; Race off, it closes up
 - header strip: the HUD's settings mark opens the settings panel and leaves the HUD up
 - header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)
 - header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel
@@ -1602,6 +1732,24 @@ Total.
 - usage edit: save persists
 - usage edit: never-show list hides
 - usage edit: a sample fight changes in memory only
+
+### test_usage_buffs.lua (15)
+
+- usage buffs: the active client's seeded buffs at the start are listed under their spell IDs
+- usage buffs: the other client's buffs are not listed
+- usage buffs: a sealed aura ends the walk, and a buff after it never produces an entry
+- usage buffs: plain food eaten at the pull lists nothing (aura up, a pre-pull cast, count dropped)
+- usage buffs: Well Fed lists the food once, never its Eat aura
+- usage buffs: a potion is still listed as before
+- usage buffs: an Other consumable whose use spell is an Eat or Drink aura is plain food too
+- usage buffs: buff food under another name lists the food once (Dirge's Increased Stamina)
+- usage buffs: an item first read under sealing is asked again, so plain food stays unlisted
+- usage buffs: the section and the Used column show a buff with its spell's icon and name
+- usage buffs: the edit unticks a buff, keeps its row, and ticks it back as detected
+- usage buffs: never show hides a buff by its spell ID, stored beside the hidden items
+- usage buffs: the hidden buffs row validates and normalizes like the hidden items
+- usage buffs: Compare matches a buff across two fights by its spell
+- usage buffs: a CT_SCHEMA 4 record's v 1 usage still renders, its plain food left out
 
 ### test_history_page.lua (17)
 
@@ -1928,6 +2076,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
+| test_combat_log.lua | 20 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -1938,12 +2087,13 @@ Total.
 | test_race_record.lua | 16 |
 | test_race_scoring.lua | 20 |
 | test_late_ignore.lua | 12 |
+| test_buff_seeds.lua | 5 |
 | test_race.lua | 60 |
 | test_race_resume.lua | 26 |
 | test_race_settings.lua | 25 |
 | test_report_verbs.lua | 12 |
 | test_autoarm.lua | 41 |
-| test_race_window.lua | 51 |
+| test_race_window.lua | 54 |
 | test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
@@ -1959,9 +2109,14 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_hud_race_button.lua | 31 |
+| test_log_table.lua | 22 |
+| test_log_window.lua | 14 |
+| test_log_page.lua | 15 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
+| test_results_log.lua | 18 |
+| test_target_level.lua | 12 |
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 27 |
 | test_insights_data.lua | 14 |
@@ -1976,6 +2131,7 @@ Total.
 | test_tooltip_place.lua | 14 |
 | test_window_chrome.lua | 13 |
 | test_usage_edit.lua | 4 |
+| test_usage_buffs.lua | 15 |
 | test_history_page.lua | 17 |
 | test_preview.lua | 7 |
 | test_sim.lua | 14 |
@@ -1996,4 +2152,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1638** |
+| **Total** | **1762** |

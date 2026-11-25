@@ -134,7 +134,9 @@ end
 -- call-out's drag-written place, `callout.point`, its named non-setting state (the second answer of
 -- LibKa0s-Callout-1.0's SchemaRows, settings/Race.lua): no control chooses it, so it has no row; the
 -- drag-stop and Reset position write it through NS.SetByPath (modules/Countdown.lua's write route).
--- Read once, here at :New, so it is named here, not taken from the instance.
+-- Read once, here at :New, so it is named here, not taken from the instance. The Combat Log's own
+-- controls (the drawer's open, fold and sort, the window's detach, dock, attach and pin) write keys
+-- the Combat Log page has rows for (settings/Log.lua, CL-11c2), so none of them is here.
 NS.CALLOUT_POINT = "callout.point"
 local WRITE_THROUGH = { "general.enabled", "general.locked" }
 if NS.Compat.ForClient({ "retail" }) then WRITE_THROUGH[#WRITE_THROUGH + 1] = NS.CALLOUT_POINT end
@@ -208,8 +210,9 @@ function NS.SchemaForPage(pageKey, filter)
 end
 
 -- The page keys a row may name: the sub-pages, in their panel order (settings/General.lua first,
--- settings/Profiles.lua last); `race` is the Race mode page, Retail's alone (settings/Race.lua).
-local VALID_PAGES = { general = true, lanes = true, hud = true, history = true, race = true, profiles = true }
+-- settings/Profiles.lua last); `log` is the Combat Log page (settings/Log.lua); `race` is the Race mode
+-- page, Retail's alone (settings/Race.lua).
+local VALID_PAGES = { general = true, lanes = true, hud = true, log = true, history = true, race = true, profiles = true }
 
 -- The Minimap row declares no stored `shown`: it answers no root here, and its stored key
 -- (`global.minimap.hide`) is checked against the defaults by the suite instead (architecture-§5).

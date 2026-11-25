@@ -40,7 +40,9 @@ local _, NS = ...
 -- packed string), cooldowns ({ [spellID] = ms }, the timeline's),
 -- gearSet (Loadouts' equipment set key), stats, loadout (Loadouts' key), usage, targets? (CT_SCHEMA
 -- 3: Recorder.Targets, the enemies your damage reached), race? (CT_SCHEMA 4: RaceRecord.Plain's race
--- part), note?, client, build, version, status = "final" }.
+-- part; usage v 2 from CT_SCHEMA 5), log?, logDropped? and logTargets? (CT_SCHEMA 6:
+-- modules/CombatLog.lua's saved lines, how many were not kept and the targets its lines name), note?,
+-- client, build, version, status = "final" }.
 
 local Recorder = {}
 NS.Recorder = Recorder
@@ -51,7 +53,13 @@ local L = NS.L
 --- The fight record's format version (spec §5). Distinct from NS.SCHEMA_VERSION, the settings'.
 -- 3 (issue #6) adds the optional `targets`; a CT_SCHEMA 2 record reads the same, with no targets.
 -- 4 (Race mode) adds the optional `race`; an older record reads the same, as a fight (no migration).
-Recorder.CT_SCHEMA = 4
+-- 5 (CombatTrail #13) moves `usage` to its v 2, which adds the spell-keyed buff entry
+-- ({ spellID, kind = "buff" }); an older record's v 1 usage reads as it is (no step).
+-- 6 (CombatTrail #11) adds the optional `log` (the Combat Log's saved lines, CombatLog.Of),
+-- `logDropped` (how many were not kept, only when some were) and `logTargets` (the targets its lines
+-- name, by each line's `g`, only when it names any); an older record reads the same, with no log (no
+-- step, no rewrite).
+Recorder.CT_SCHEMA = 6
 --- The most targets a record keeps (the highest).
 Recorder.TARGETS_MAX = 10
 --- The longest note a record keeps.
@@ -59,7 +67,8 @@ Recorder.NOTE_MAX = 200
 
 -- An id is time() .. "-" .. a four-digit random; a clash with a stored fight is redrawn this often.
 local ID_ATTEMPTS = 32
--- How deep plainCopy walks (a record is four levels deep at most; this is a guard, not a shape).
+-- How deep plainCopy walks (a record is four levels deep at most, a log line three; this is a guard,
+-- not a shape).
 local MAX_DEPTH = 8
 
 local function debug(fmt, ...)
@@ -316,6 +325,15 @@ local function castsOf(fight)
     return NS.CastCodec.Encode(casts), cooldowns, usage
 end
 
+-- The fight's Combat Log (modules/CombatLog.lua): its saved lines, how many were not kept (nil when
+-- none were) and the targets its lines name (nil when none), or nothing when it saved none.
+local function logOf(fight)
+    local log, dropped, targets = nil, nil, nil
+    if NS.CombatLog then log, dropped, targets = NS.CombatLog.Finish(fight.id) end
+    if type(targets) == "table" and #targets == 0 then targets = nil end
+    return log, (dropped and dropped > 0) and dropped or nil, targets
+end
+
 -- The talents' key (stored now, once) and the gear set's (interned at the pull, modules/Loadouts.lua).
 local function loadoutOf(fight)
     local lo = type(fight.loadout) == "table" and fight.loadout or {}
@@ -330,13 +348,14 @@ end
 
 --- The record for a fight that ended "final" and passed the filters (`identity` and `duration`
 --- already resolved; `enemies`, enemiesOf's list, for the targets). Takes the fight's casts
---- (Casts.Finish) and stores its talents (Loadouts.Store).
+--- (Casts.Finish) and its Combat Log (CombatLog.Finish), and stores its talents (Loadouts.Store).
 --- @return table record  plain throughout
 function Recorder.Build(fight, final, identity, duration, enemies)
     local merged = final.merged or {}
     local total = Secrets.PlainNumber(merged.total) or 0
     local casts, cooldowns, usage = castsOf(fight)
     local gearSet, loadout = loadoutOf(fight)
+    local log, logDropped, logTargets = logOf(fight)
     local raw = {
         schema = Recorder.CT_SCHEMA, t = startEpoch(fight), duration = duration,
         who = type(fight.snapshot) == "table" and fight.snapshot.who or nil,
@@ -347,6 +366,7 @@ function Recorder.Build(fight, final, identity, duration, enemies)
         spells = spellsOf(merged), casts = casts, cooldowns = cooldowns, gearSet = gearSet,
         stats = NS.Stats.Fill(plainCopy(fight.stats, 0)), loadout = loadout, usage = usage,
         targets = Recorder.Targets(enemies), race = NS.RaceRecord.Plain(fight.race),
+        log = log, logDropped = logDropped, logTargets = logTargets,
         client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version, status = "final",
     }
     local record = plainCopy(raw, 0)
@@ -362,6 +382,7 @@ end
 local function skip(fight, reason)
     debug("fight %s not stored: %s", tostring(type(fight) == "table" and fight.id), reason)
     if type(fight) == "table" and NS.Casts and NS.Casts.Drop then NS.Casts.Drop(fight.id) end
+    if type(fight) == "table" and NS.CombatLog then NS.CombatLog.Drop(fight.id) end
     NS.SendBus(NS.MSG.FIGHT_SKIPPED, fight, reason)
 end
 

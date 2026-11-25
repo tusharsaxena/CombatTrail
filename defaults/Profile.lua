@@ -227,6 +227,60 @@ NS.defaults = {
             minLength = NS.Compat.ForClient({ "forever" }) and 15 or 30, bossesOnly = false, content = content(),
             days = 7, keepBests = true, maxFights = 500,
         },
+        -- The Combat Log (CombatTrail #11, modules/CombatLog.lua): whether it captures at all, and what a
+        -- fight's record keeps of it: a log with each fight, the lines kept (the newest; NS.Constants.LOG
+        -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each fight
+        -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
+        -- modules/LogTable.lua; their rows are the Combat Log page's, settings/Log.lua, CL-11c2): the HUD's
+        -- docked drawer (open, folded, its rows 3-20, opened at each fight's start, the folded line showing
+        -- the newest event); the table (the sort, the display throttle "instant" | "every" | "batch" and
+        -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
+        -- their height in pixels, 12-28 (CL-11c2), school colors, row washes, the optional columns); the
+        -- who colors (CL-11c2: "You" in the class color or its own swatch, the hostile and friendly target
+        -- in the skin's `ct.log.hostile` / `ct.log.friendly` or their own); and what the live views show
+        -- (each saved category, the auto attacks, the least amount a hit or a heal shows at). Then where
+        -- the log lives (CL-11b2): `home` "docked" in the HUD or "detached" in its own window
+        -- (modules/LogWindow.lua), whose keys are `window`: attached beside the HUD on `side` (LEFT, the
+        -- Race window's default being RIGHT, so the two stand on either side of the HUD; RIGHT, TOP,
+        -- BOTTOM) or at its own `position`, its height the HUD's beside it (`matchHud`, LEFT or RIGHT), its
+        -- rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least) set by
+        -- its grip, `pinned` (up while the HUD is hidden), `locked`, its `scale` while it stands on its own
+        -- and its `alpha` (0.1-1). Then the Results fight detail's Log tab (CL-11c,
+        -- modules/Results_Log.lua): the chips each fight opens on, and whether a click on a CAST row jumps
+        -- the ability timeline to that cast.
+        log = {
+            enabled = true,
+            home = "docked",
+            drawer = { shown = false, collapsed = false, rows = 8, autoOpen = true, strip = true },
+            window = {
+                attached = true, side = "LEFT", matchHud = true, fill = true, rows = 12, width = 460, height = 0,
+                pinned = false, locked = false, scale = 1, alpha = 1,
+                position = { point = "CENTER", relPoint = "CENTER", x = -360, y = 0 },
+            },
+            view = {
+                sort = "newest", throttle = "instant", throttleMs = 250, timeFormat = "pull",
+                fontSize = 10, rowHeight = 14, schoolColors = true, washes = true,
+                columns = { source = true, target = true, spell = true, amount = true, info = true },
+            },
+            colors = {
+                you = { r = 1, g = 1, b = 1, a = 1 }, useClassColorYou = true,
+                hostile = { r = 1, g = 0.32, b = 0.32, a = 1 }, hostileFromSkin = true,
+                friendly = { r = 0.56, g = 0.72, b = 1.0, a = 1 }, friendlyFromSkin = true,
+            },
+            show = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true, targetBuffs = true,
+                     targetDebuffs = true, hits = true, heals = true, deaths = true, autoAttacks = false,
+                     minAmount = 0 },
+            store = {
+                enabled = true, lines = NS.Constants.LOG.MAX_PER_FIGHT, fights = NS.Constants.LOG.FIGHTS,
+                categories = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true,
+                               targetBuffs = true, targetDebuffs = true, hits = true, heals = true,
+                               deaths = true },
+            },
+            results = {
+                jumpToCast = true,
+                chips = { casts = true, pet = true, buffs = true, debuffs = true, taken = true, heals = true },
+            },
+        },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view
         -- (the filters, the grouping and the sort Save view stores; "current" is the logged-in
         -- character, `days` 0 is all time), where the window stands, its list's width and its height,
@@ -320,7 +374,7 @@ NS.defaults = {
         fightOrder = {},
         -- The items the Results detail's Usage never lists (modules/Usage.lua, spec §7's "never show"
         -- list): item IDs, comma-separated. Global, as the fight store it filters is.
-        usage = { hidden = "" },
+        usage = { hidden = "", hiddenSpells = "" },
         -- What the game said about each creature `/ct dummy` captured, by creature ID
         -- (modules/Dummies.lua): data, not a setting. Global, as a creature is the same on every
         -- profile.

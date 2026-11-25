@@ -83,8 +83,8 @@ test("race record: a complete race is saved however short", function()
     assertEqual(r.race.restartGap, 6)
     assertEqual(r.status, "final", "the record's own status stays final")
     assertEqual(r.duration, 10, "the fight's own duration stays in the record")
-    assertEqual(NS.Recorder.CT_SCHEMA, 4)
-    assertEqual(r.schema, 4)
+    assertEqual(NS.Recorder.CT_SCHEMA, 6)
+    assertEqual(r.schema, 6)
 end)
 
 test("race record: an incomplete race is saved too, with its endedAt", function()
@@ -298,7 +298,7 @@ test("database: schema 3 records load unchanged under 4", function()
     assertFalse(NS.RaceRecord.IsRace(r))
     assertEqual(NS.RaceRecord.Dps(r), 100)
     assertEqual(#NS.Recorder.List(), 1)
-    local later = { schema = 5, id = "f-5", t = os.time(), status = "final" }
+    local later = { schema = NS.Recorder.CT_SCHEMA + 1, id = "f-5", t = os.time(), status = "final" }
     NS.db.global.fights[later.id] = later
     assertNil(NS.Recorder.Get("f-5"), "a record from a later format is still left alone")
 end)

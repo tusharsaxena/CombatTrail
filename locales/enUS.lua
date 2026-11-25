@@ -838,6 +838,7 @@ L["Talents for %s: %s. Click the link to see the tree."] =
     "Talents for %s: %s. Click the link to see the tree."
 L["this fight"] = "this fight"
 L["Item %d"] = "Item %d"
+L["Spell %d"] = "Spell %d"
 L["Gear and Talents"] = "Gear and Talents"
 L["Gear view"] = "Gear view"
 L["Gear not recorded"] = "Gear not recorded"
@@ -865,6 +866,7 @@ L["Tick what the fight really used: an item the detection missed, or one it got 
 L["Nothing used"] = "Nothing used"
 L["pet %s"] = "pet %s"
 L["level %s"] = "level %s"
+L["(L%s)"] = "(L%s)"
 L["Leads by"] = "Leads by"
 L["Personal best"] = "Personal best"
 L["Meter DPS"] = "Meter DPS"
@@ -1037,11 +1039,15 @@ L["vs %s"] = "vs %s"
 
 -- The Usage edit and its "never show" list (modules/Results_Usage.lua, modules/Usage.lua, settings/History.lua)
 L["Right-click: never show this item."] = "Right-click: never show this item."
+L["Right-click: never show this buff."] = "Right-click: never show this buff."
 L["Never show %s"] = "Never show %s"
 L["Keep these ticks as what the fight used."] = "Keep these ticks as what the fight used."
 L["Nothing to list: no on-use item or consumable was found at the start."] =
     "Nothing to list: no on-use item or consumable was found at the start."
 L["Hidden items"] = "Hidden items"
+L["Hidden buffs"] = "Hidden buffs"
+L["Account-wide: shared by every profile. Buff spell IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that had one still records it, so taking it off the list brings it back."] =
+    "Account-wide: shared by every profile. Buff spell IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that had one still records it, so taking it off the list brings it back."
 L["Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."] =
     "Account-wide: shared by every profile. Item IDs, comma-separated, that the Results window's Usage never lists, on any fight. A fight that used one still records it, so taking it off the list brings it back."
 
@@ -1101,9 +1107,15 @@ L["Every fight is tracked live on the DPS HUD. A fight is stored only when it pa
 L["Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."] =
     "Items the Results window's Usage never lists, on any fight. Right-click an item in a fight's Usage edit to add it here."
 L["Hide an item"] = "Hide an item"
+L["Hide a buff"] = "Hide a buff"
+L["Buffs the Results window's Usage never lists, on any fight. Right-click a buff in a fight's Usage edit to add it here."] =
+    "Buffs the Results window's Usage never lists, on any fight. Right-click a buff in a fight's Usage edit to add it here."
+L["A spell ID, a shift-clicked spell link, or the name of a buff a fight listed."] =
+    "A spell ID, a shift-clicked spell link, or the name of a buff a fight listed."
 L["An item ID, a shift-clicked item link, or the name of an item a fight listed."] =
     "An item ID, a shift-clicked item link, or the name of an item a fight listed."
 L["No item is hidden."] = "No item is hidden."
+L["No buff is hidden."] = "No buff is hidden."
 -- The Training dummies tab (settings/History.lua, race plan Task A2)
 L["Your training dummies"] = "Your training dummies"
 L["The creatures this profile counts as training dummies, and any built-in it switches off: id:category entries and -id, comma-separated. A fight on one is stored as a Training dummies fight."] =
@@ -1239,3 +1251,244 @@ L["%s DPS, %s better than previous best (%s)"] = "%s DPS, %s better than previou
 L["Default"] = "Default"
 L["Training Dummy"] = "Training Dummy"
 L["incomplete"] = "incomplete"
+
+-- The Combat Log's table and the DPS HUD's drawer (CombatTrail #11; modules/LogTable.lua,
+-- modules/LogTable_View.lua, modules/Hud_Log.lua, `/ct log`)
+L["CAST"] = "CAST"
+L["BUFF+"] = "BUFF+"
+L["BUFF-"] = "BUFF-"
+L["DEBUFF+"] = "DEBUFF+"
+L["DEBUFF-"] = "DEBUFF-"
+L["HIT"] = "HIT"
+L["HEAL"] = "HEAL"
+L["DIES"] = "DIES"
+L["PULL"] = "PULL"
+L["END"] = "END"
+L["Physical"] = "Physical"
+L["Holy"] = "Holy"
+L["Fire"] = "Fire"
+L["Nature"] = "Nature"
+L["Frost"] = "Frost"
+L["Shadow"] = "Shadow"
+L["Arcane"] = "Arcane"
+L["Critical"] = "Critical"
+L["Glancing"] = "Glancing"
+L["Crushing"] = "Crushing"
+L["Interrupted"] = "Interrupted"
+L["Fight started"] = "Fight started"
+L["sealed"] = "sealed"
+L["Time"] = "Time"
+L["Event"] = "Event"
+L["Source"] = "Source"
+L["Spell/School"] = "Spell/School"
+L["Amount"] = "Amount"
+L["Info"] = "Info"
+L["Combat Log"] = "Combat Log"
+L["Fold the Combat Log to one line"] = "Fold the Combat Log to one line"
+L["Unfold the Combat Log"] = "Unfold the Combat Log"
+L["Resume"] = "Resume"
+L["Follow the newest line again."] = "Follow the newest line again."
+L["%d shown"] = "%d shown"
+L["No events yet."] = "No events yet."
+L["The Combat Log is off (log.enabled)."] = "The Combat Log is off (log.enabled)."
+L["Usage: /ct log show, hide, toggle, fold, unfold, detach, dock, pin or unpin"] = "Usage: /ct log show, hide, toggle, fold, unfold, detach, dock, pin or unpin"
+L["Detach the Combat Log into its own window"] = "Detach the Combat Log into its own window"
+L["Combat Trail \194\183 Log"] = "Combat Trail \194\183 Log"
+L["Dock the Combat Log back in the DPS HUD"] = "Dock the Combat Log back in the DPS HUD"
+L["Attach the log beside the DPS HUD, or let it stand on its own"] = "Attach the log beside the DPS HUD, or let it stand on its own"
+L["Combat Log settings"] = "Combat Log settings"
+L["Following the newest line"] = "Following the newest line"
+L["Paused"] = "Paused"
+L["Pinned: stays up while the DPS HUD is hidden"] = "Pinned: stays up while the DPS HUD is hidden"
+L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"] = "The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"
+
+-- The Results fight detail's tabs and its Log tab (CombatTrail #11, CL-11c; modules/Results_Detail.lua,
+-- modules/Results_Log.lua)
+L["Overview"] = "Overview"
+L["Log"] = "Log"
+L["The fight's figures, chart, spells, gear, usage and note."] = "The fight's figures, chart, spells, gear, usage and note."
+L["Every cast of the fight along its length, in its own window."] = "Every cast of the fight along its length, in its own window."
+L["The fight's saved Combat Log, with its damage by spell."] = "The fight's saved Combat Log, with its damage by spell."
+L["This fight has no casts to draw."] = "This fight has no casts to draw."
+L["Buffs"] = "Buffs"
+L["Debuffs"] = "Debuffs"
+L["Taken"] = "Taken"
+L["Heals"] = "Heals"
+L["Your casts."] = "Your casts."
+L["Your pet's casts."] = "Your pet's casts."
+L["Buffs gained and lost, on you and on your target."] = "Buffs gained and lost, on you and on your target."
+L["Debuffs on you, and the debuffs you put on your target."] = "Debuffs on you, and the debuffs you put on your target."
+L["Hits taken: the damage done to you."] = "Hits taken: the damage done to you."
+L["Heals taken: the healing done to you."] = "Heals taken: the healing done to you."
+L["Click to show or hide them."] = "Click to show or hide them."
+L["Click to show or hide them in this view."] = "Click to show or hide them in this view."
+L["Show or hide the Combat Log's filter chips"] = "Show or hide the Combat Log's filter chips"
+L["Damage by spell"] = "Damage by spell"
+L["Click a CAST row to see it on the Timeline."] = "Click a CAST row to see it on the Timeline."
+L["No log was saved for this fight"] = "No log was saved for this fight"
+L["No lines match the chips."] = "No lines match the chips."
+L["%d lines"] = "%d lines"
+L["%d not kept"] = "%d not kept"
+
+-- The Combat Log page (CombatTrail #11, CL-11c2; settings/Log.lua): its tabs, its value lists, its rows
+-- and their tooltips.
+L["Docked drawer"] = "Docked drawer"
+L["Detached window"] = "Detached window"
+L["Order and display"] = "Order and display"
+L["What to show"] = "What to show"
+L["Colors"] = "Colors"
+L["Storage"] = "Storage"
+L["Docked in the DPS HUD"] = "Docked in the DPS HUD"
+L["In its own window"] = "In its own window"
+L["Newest first"] = "Newest first"
+L["Oldest first"] = "Oldest first"
+L["Instant"] = "Instant"
+L["At most one row every N ms"] = "At most one row every N ms"
+L["In batches every N ms"] = "In batches every N ms"
+L["From the pull"] = "From the pull"
+L["Clock time"] = "Clock time"
+L["Enable the Combat Log"] = "Enable the Combat Log"
+L["Record your casts, the buffs and debuffs on you and your target, the hits and heals you take and your death during each fight, and show them in the DPS HUD's Log drawer or its own window. Off, nothing is recorded and the HUD's Log control is hidden."] =
+    "Record your casts, the buffs and debuffs on you and your target, the hits and heals you take and your death during each fight, and show them in the DPS HUD's Log drawer or its own window. Off, nothing is recorded and the HUD's Log control is hidden."
+L["Show the Combat Log"] = "Show the Combat Log"
+L["Open the log now, docked in the DPS HUD or in its own window. The HUD's Log control and /ct log toggle it too."] =
+    "Open the log now, docked in the DPS HUD or in its own window. The HUD's Log control and /ct log toggle it too."
+L["Open it when a fight starts"] = "Open it when a fight starts"
+L["Open the log at the start of each fight, even if you closed it during the last one."] =
+    "Open the log at the start of each fight, even if you closed it during the last one."
+L["Where it lives"] = "Where it lives"
+L["Where the log lives"] = "Where the log lives"
+L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."] =
+    "Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."
+L["Folded to one line"] = "Folded to one line"
+L["Fold the drawer to its header and one line. The chevron in the drawer's header folds and unfolds it too."] =
+    "Fold the drawer to its header and one line. The chevron in the drawer's header folds and unfolds it too."
+L["The folded line shows the newest event"] = "The folded line shows the newest event"
+L["While the drawer is folded, show the newest event under its header. Off, the folded drawer is its header alone."] =
+    "While the drawer is folded, show the newest event under its header. Off, the folded drawer is its header alone."
+L["Rows shown"] = "Rows shown"
+L["How many events the unfolded drawer shows at a time. The DPS HUD grows by the drawer's height."] =
+    "How many events the unfolded drawer shows at a time. The DPS HUD grows by the drawer's height."
+L["Rows"] = "Rows"
+L["Fill the window with rows"] = "Fill the window with rows"
+L["Show as many events as the window's height holds. Off, the window shows Rows shown and is as tall as they need."] =
+    "Show as many events as the window's height holds. Off, the window shows Rows shown and is as tall as they need."
+L["How many events the window shows at a time. Needs Fill the window with rows off."] =
+    "How many events the window shows at a time. Needs Fill the window with rows off."
+L["Place"] = "Place"
+L["Attach beside the DPS HUD"] = "Attach beside the DPS HUD"
+L["Stand the window flush beside the DPS HUD, moving with it. Off, it stands where you drag it. Its title bar's attach mark switches it too."] =
+    "Stand the window flush beside the DPS HUD, moving with it. Off, it stands where you drag it. Its title bar's attach mark switches it too."
+L["Which side of the DPS HUD the attached window stands on. On the same side as the Race window, it stands beyond the Race window, so the two never overlap. Needs Attach beside the DPS HUD."] =
+    "Which side of the DPS HUD the attached window stands on. On the same side as the Race window, it stands beyond the Race window, so the two never overlap. Needs Attach beside the DPS HUD."
+L["Attached on the left or the right, take the DPS HUD's height, its drawer and its fold included. Off, the window keeps its own height."] =
+    "Attached on the left or the right, take the DPS HUD's height, its drawer and its fold included. Off, the window keeps its own height."
+L["Stay up while the HUD is hidden"] = "Stay up while the HUD is hidden"
+L["Keep the window up when the DPS HUD hides or fades. Off, it shows and hides with the HUD, as the Race window does."] =
+    "Keep the window up when the DPS HUD hides or fades. Off, it shows and hides with the HUD, as the Race window does."
+L["Lock the window"] = "Lock the window"
+L["Stop the window from being dragged or resized. General > Master controls' Lock frame locks it too."] =
+    "Stop the window from being dragged or resized. General > Master controls' Lock frame locks it too."
+L["Look"] = "Look"
+L["The size of the window standing on its own. Attached, it takes the DPS HUD's scale."] =
+    "The size of the window standing on its own. Attached, it takes the DPS HUD's scale."
+L["Window opacity"] = "Window opacity"
+L["How opaque the window is, its background and its text together, over the DPS HUD's own opacity."] =
+    "How opaque the window is, its background and its text together, over the DPS HUD's own opacity."
+L["Order"] = "Order"
+L["Sort order"] = "Sort order"
+L["Newest first puts the newest event at the top; oldest first puts it at the bottom. A click on the Time header flips it. Either way the log keeps the newest event in view until you scroll away."] =
+    "Newest first puts the newest event at the top; oldest first puts it at the bottom. A click on the Time header flips it. Either way the log keeps the newest event in view until you scroll away."
+L["Show new rows"] = "Show new rows"
+L["How fast new events appear in the drawer and the window. Instant shows each at the next repaint; at most one row every N ms lets them in one at a time; in batches shows every waiting event together, every N ms. This only slows the display: every event is still recorded and saved."] =
+    "How fast new events appear in the drawer and the window. Instant shows each at the next repaint; at most one row every N ms lets them in one at a time; in batches shows every waiting event together, every N ms. This only slows the display: every event is still recorded and saved."
+L["N (ms)"] = "N (ms)"
+L["The milliseconds between new rows, or between batches. Needs Show new rows other than Instant."] =
+    "The milliseconds between new rows, or between batches. Needs Show new rows other than Instant."
+L["Text size"] = "Text size"
+L["The size of the events' text, in points. Larger text widens the columns."] =
+    "The size of the events' text, in points. Larger text widens the columns."
+L["The height of each event's row, in pixels. Taller rows make the drawer and the window taller."] =
+    "The height of each event's row, in pixels. Taller rows make the drawer and the window taller."
+L["From the pull: seconds since the fight started. Clock time: the time of day."] =
+    "From the pull: seconds since the fight started. Clock time: the time of day."
+L["Show the Info column"] = "Show the Info column"
+L["Show Critical, Glancing, Crushing and Interrupted in their own column, where there is room: the detached window and the Results fight detail."] =
+    "Show Critical, Glancing, Crushing and Interrupted in their own column, where there is room: the detached window and the Results fight detail."
+L["Show the Source column"] = "Show the Source column"
+L["Show who did it. Time and Event always show. A narrow log drops Source first."] =
+    "Show who did it. Time and Event always show. A narrow log drops Source first."
+L["Show the Target column"] = "Show the Target column"
+L["Show who it landed on. A narrow log drops Target after Source."] =
+    "Show who it landed on. A narrow log drops Target after Source."
+L["Show the Spell/School column"] = "Show the Spell/School column"
+L["Show the spell and its icon, or the school of a hit or a heal."] =
+    "Show the spell and its icon, or the school of a hit or a heal."
+L["Show the Amount column"] = "Show the Amount column"
+L["Show the amount of each hit and heal."] = "Show the amount of each hit and heal."
+L["Events"] = "Events"
+L["Your casts"] = "Your casts"
+L["Show the spells you cast."] = "Show the spells you cast."
+L["Your pet's casts"] = "Your pet's casts"
+L["Show the spells your pet casts."] = "Show the spells your pet casts."
+L["Buffs on you"] = "Buffs on you"
+L["Show the buffs you gain and lose."] = "Show the buffs you gain and lose."
+L["Debuffs on you"] = "Debuffs on you"
+L["Show the debuffs put on you, and their end."] = "Show the debuffs put on you, and their end."
+L["Your debuffs on your target"] = "Your debuffs on your target"
+L["Show the debuffs you put on your target, and their end."] =
+    "Show the debuffs you put on your target, and their end."
+L["Buffs on your target"] = "Buffs on your target"
+L["Show the buffs your target gains and loses."] = "Show the buffs your target gains and loses."
+L["Hits taken"] = "Hits taken"
+L["Show the damage done to you."] = "Show the damage done to you."
+L["Heals taken"] = "Heals taken"
+L["Show the healing done to you."] = "Show the healing done to you."
+L["Deaths"] = "Deaths"
+L["Show your death."] = "Show your death."
+L["Filters"] = "Filters"
+L["Show auto attacks"] = "Show auto attacks"
+L["Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved log never keeps them."] =
+    "Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved log never keeps them."
+L["Least amount shown"] = "Least amount shown"
+L["Hide hits and heals smaller than this. 0 shows them all. An amount the client keeps secret always shows."] =
+    "Hide hits and heals smaller than this. 0 shows them all. An amount the client keeps secret always shows."
+L["Color-blind safety"] = "Color-blind safety"
+L["School colors"] = "School colors"
+L["Draw a hit's or a heal's school in its own color. Every event also differs by its tag, so the log reads without color."] =
+    "Draw a hit's or a heal's school in its own color. Every event also differs by its tag, so the log reads without color."
+L["Row washes"] = "Row washes"
+L["Tint the rows of hits taken, debuffs going on and long-cooldown casts. Off, every row has the plain stripe."] =
+    "Tint the rows of hits taken, debuffs going on and long-cooldown casts. Off, every row has the plain stripe."
+L["Your color"] = "Your color"
+L["The color \"You\" is drawn in, in Source and Target."] = "The color \"You\" is drawn in, in Source and Target."
+L["Hostile target color"] = "Hostile target color"
+L["The color of a target you can attack. Not read while Use the skin's color is on."] =
+    "The color of a target you can attack. Not read while Use the skin's color is on."
+L["Draw a hostile target in the skin's own color. The swatch is not read while this is on."] =
+    "Draw a hostile target in the skin's own color. The swatch is not read while this is on."
+L["Friendly target color"] = "Friendly target color"
+L["The color of a target you cannot attack. Not read while Use the skin's color is on."] =
+    "The color of a target you cannot attack. Not read while Use the skin's color is on."
+L["Draw a friendly target in the skin's own color. The swatch is not read while this is on."] =
+    "Draw a friendly target in the skin's own color. The swatch is not read while this is on."
+L["Save a log with each fight"] = "Save a log with each fight"
+L["Keep each stored fight's Combat Log, for the Log tab of its Results detail. Takes hold from the next fight."] =
+    "Keep each stored fight's Combat Log, for the Log tab of its Results detail. Takes hold from the next fight."
+L["Lines kept per fight"] = "Lines kept per fight"
+L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] =
+    "The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."
+L["Fights that keep their log (0 = all)"] = "Fights that keep their log (0 = all)"
+L["Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."] =
+    "Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."
+L["Save these lines with each fight. Separate from What to show, which only filters the live views."] =
+    "Save these lines with each fight. Separate from What to show, which only filters the live views."
+L["Log tab"] = "Log tab"
+L["Jump to the Timeline on clicking a cast"] = "Jump to the Timeline on clicking a cast"
+L["A click on a CAST row on a fight's Log tab opens the ability timeline at that cast."] =
+    "A click on a CAST row on a fight's Log tab opens the ability timeline at that cast."
+L["Chips each fight opens on"] = "Chips each fight opens on"
+L["Turn this chip on when a fight's Log tab opens. A click on the chip still turns it on or off for the fight shown."] =
+    "Turn this chip on when a fight's Log tab opens. A click on the chip still turns it on or off for the fight shown."
+L["Restore every Combat Log setting on this profile to its addon default."] =
+    "Restore every Combat Log setting on this profile to its addon default."

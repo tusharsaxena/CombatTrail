@@ -887,6 +887,97 @@ test("race window: docked LEFT or RIGHT it takes the DPS HUD's height", function
     assertEqual(RW.View().height, win.h - chromeOf(S), "the body's room is the matched height's")
 end)
 
+-- The Combat Log drawer (CombatTrail #11, CL-11b) makes the HUD taller: docked beside it the Race window
+-- takes the HUD's whole height, drawer included, and follows its fold, armed and racing alike.
+test("race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local RW, NS = W(S), S.NS
+    RW.Attach("RIGHT")
+    local base = hud.h
+    assertTrue(NS.SetByPath("log.drawer.shown", true))
+    assertEqual(hud.h, base + NS.HudLog.Height(), "the HUD grew by the drawer")
+    assertEqual(win.h, hud.h, "the Race window beside it takes the whole height")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", true))
+    assertTrue(hud.h < base + NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(8), "folded: shorter")
+    assertEqual(win.h, hud.h, "folded: it follows")
+    assertTrue(F.arm(S, 30))
+    assertEqual(win.h, hud.h, "armed, folded")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", false))
+    assertEqual(win.h, hud.h, "armed, unfolded")
+    local start = F.pull(S)
+    F.run(S, start + 0.5)
+    assertTrue(NS.Race.State() ~= "idle", "racing")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", true))
+    assertEqual(win.h, hud.h, "racing, folded")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", false))
+    assertEqual(win.h, hud.h, "racing, unfolded")
+    assertTrue(NS.SetByPath("log.drawer.shown", false))
+    assertEqual(win.h, hud.h, "racing, closed")
+end)
+
+-- The log detached (CL-11b2): the HUD gives the drawer's height back and the Race window follows it,
+-- armed and racing, and the log's window stands on the HUD's other side; docked again, both grow back.
+test("race window: the log detached, the HUD drops the drawer and the Race window follows it, armed and racing", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local RW, NS = W(S), S.NS
+    RW.Attach("RIGHT")
+    local base = hud.h
+    assertTrue(NS.SetByPath("log.drawer.shown", true))
+    local docked = hud.h
+    assertTrue(docked > base, "the drawer docked: a taller HUD")
+    assertTrue(F.arm(S, 30))
+    assertTrue(NS.SetByPath("log.home", "detached"))
+    assertEqual(hud.h, base, "armed, detached: the HUD back to its height")
+    assertEqual(win.h, hud.h, "armed, detached: the Race window follows it")
+    local LW = NS.LogWindow
+    assertTrue(LW.Visible(), "the log's own window is up")
+    assertEqual(LW.DockSide(), "LEFT", "on the HUD's other side")
+    assertTrue(LW.Anchor()[2] == NS.Hud.Frame(), "beside the HUD, not over the Race window")
+    local start = F.pull(S)
+    F.run(S, start + 0.5)
+    assertTrue(NS.Race.State() ~= "idle", "racing")
+    assertEqual(win.h, hud.h, "racing, detached")
+    assertTrue(NS.SetByPath("log.home", "docked"))
+    assertEqual(hud.h, docked, "racing, docked again: the drawer is back")
+    assertEqual(win.h, hud.h, "racing, docked: the Race window takes the whole height")
+    assertFalse(LW.Visible())
+end)
+
+-- Two companions on one side (CL-11b2): the log's window stands beyond the Race window, never over it,
+-- and goes back beside the HUD when the Race window hides or moves to the other side.
+test("race window: the detached log on the Race window's side stands beyond it, and back beside the HUD when it goes", function()
+    if forever() then return end
+    local S = sized()
+    local RW, NS = W(S), S.NS
+    RW.Attach("RIGHT")
+    assertTrue(NS.SetByPath("log.drawer.shown", true))
+    assertTrue(NS.SetByPath("log.home", "detached"))
+    local LW = NS.LogWindow
+    NS.db.profile.log.window.side = "RIGHT"
+    NS.AnnounceSettingsChanged("log.window.side", "RIGHT")
+    local a = LW.Anchor()
+    assertTrue(a[2] == RW.Frame(), "beyond the Race window")
+    assertEqual(a[1], "TOPLEFT")
+    assertEqual(a[3], "TOPRIGHT", "flush against its outer edge")
+    RW.Hide()
+    assertTrue(LW.Anchor()[2] == NS.Hud.Frame(), "the Race window hidden: beside the HUD")
+    RW.Show()
+    assertTrue(LW.Anchor()[2] == RW.Frame(), "back beyond it when it shows")
+    RW.Attach("LEFT")
+    assertTrue(LW.Anchor()[2] == NS.Hud.Frame(), "the Race window moved to the left: the log beside the HUD")
+    RW.Detach()
+    assertTrue(LW.Anchor()[2] == NS.Hud.Frame(), "a Race window on its own takes no side")
+    -- Armed and racing change nothing of it.
+    RW.Attach("RIGHT")
+    assertTrue(F.arm(S, 30))
+    assertTrue(LW.Anchor()[2] == RW.Frame(), "armed")
+    local start = F.pull(S)
+    F.run(S, start + 0.5)
+    assertTrue(LW.Anchor()[2] == RW.Frame(), "racing")
+end)
+
 test("race window: the matched height follows the HUD's resizes, its parts, the grip and the scale", function()
     if forever() then return end
     local S, hud, win = sized()

@@ -48,21 +48,21 @@ test("hud race button: built and shown on Retail with Race mode on, the plain fl
     assertEqual(ui.race.tip, "Race window")
 end)
 
-test("hud race button: Results, Race, Lock, Settings, Close left to right; off, the strip closes up", function()
+test("hud race button: Results, Log, Race, Lock, Settings, Close left to right; off, the strip closes up", function()
     if forever() then return end
     local S, ui = fresh()
     local right = ui.header.right
-    assertEqual(#right, 5)
-    local want = { ui.close, ui.settings, ui.lock, ui.race, ui.results }
+    assertEqual(#right, 6)
+    local want = { ui.close, ui.settings, ui.lock, ui.race, ui.log, ui.results }
     for i, b in ipairs(want) do assertTrue(right[i] == b, "slot " .. i .. " outermost first") end
     assertTrue(S.NS.SetByPath("race.enabled", false))
     assertFalse(ui.race:IsShown(), "hidden with Race mode off")
     right = ui.header.right
-    assertEqual(#right, 4, "the strip closed up")
-    assertTrue(right[4] == ui.results, "Results takes the Race control's place")
+    assertEqual(#right, 5, "the strip closed up")
+    assertTrue(right[4] == ui.log and right[5] == ui.results, "the Log control takes the Race control's place")
     assertTrue(S.NS.SetByPath("race.enabled", true))
     assertTrue(ui.race:IsShown(), "back with Race mode on")
-    assertEqual(#ui.header.right, 5)
+    assertEqual(#ui.header.right, 6)
 end)
 
 test("hud race button: hidden with the title bar", function()

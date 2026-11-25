@@ -23,6 +23,9 @@ read_globals = {
     "InCombatLockdown", "UnitAffectingCombat",
     -- units: the pet's presence and name (modules/LaneCasts.lua), and the GUIDs `/ct probe` asks the meter by
     "UnitExists", "UnitName", "UnitGUID",
+    -- the Combat Log table (modules/LogTable.lua, modules/Hud_Log.lua): the target's reaction, a
+    -- multi-school mask's name, and the clock time a line was seen at
+    "UnitCanAttack", "GetSchoolString", "date",
     -- the lanes' visibility context (modules/LaneVisibility.lua)
     "IsMounted", "IsResting", "IsInInstance",
     -- Blizzard's Edit Mode callbacks, which show the lanes' edit overlay (modules/LaneAnchor.lua)
@@ -93,6 +96,8 @@ files["modules/Style.lua"] = { read_globals = { "CreateFont" } }
 
 -- What a fight used, and the gear, talents and stats it was fought with (each read pcall'd at CALL
 -- time, so a client without one leaves the field absent).
+-- The Combat Log reads the auras on the player and the target (modules/CombatLog.lua).
+files["modules/CombatLog.lua"] = { read_globals = { "C_UnitAuras" } }
 files["modules/Usage.lua"] = {
     read_globals = { "C_Item", "C_Container", "C_UnitAuras", "GetInventoryItemID" },
 }

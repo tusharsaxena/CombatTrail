@@ -298,21 +298,21 @@ end
 
 local function click(b) b:GetScript("OnClick")(b, "LeftButton") end
 
-test("header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up", function()
+test("header strip: the DPS HUD reads Results, Log, Race, Lock, Settings, Close; Race off, it closes up", function()
     local S, NS = fresh()
     local seen = watchHeaders(NS)
     NS.Hud.Show()
     local ui = NS.Hud.__ui()
     if retail() then
-        checkStrip(S, seen, ui.frame, { order = { "results", "race", "lock", "settings", "close" },
-            right = { ui.close, ui.settings, ui.lock, ui.race, ui.results } }, "HUD")
+        checkStrip(S, seen, ui.frame, { order = { "results", "log", "race", "lock", "settings", "close" },
+            right = { ui.close, ui.settings, ui.lock, ui.race, ui.log, ui.results } }, "HUD")
         assertTrue(NS.SetByPath("race.enabled", false))
     else
         assertTrue(ui.race == nil, "no Race mark on WoW Forever")
     end
-    checkStrip(S, seen, ui.frame, { order = retail() and { "results", "race", "lock", "settings", "close" }
-            or { "results", "lock", "settings", "close" },
-        right = { ui.close, ui.settings, ui.lock, ui.results } }, "HUD without Race")
+    checkStrip(S, seen, ui.frame, { order = retail() and { "results", "log", "race", "lock", "settings", "close" }
+            or { "results", "log", "lock", "settings", "close" },
+        right = { ui.close, ui.settings, ui.lock, ui.log, ui.results } }, "HUD without Race")
 end)
 
 test("header strip: the HUD's settings mark opens the settings panel and leaves the HUD up", function()

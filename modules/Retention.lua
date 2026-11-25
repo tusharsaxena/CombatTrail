@@ -8,6 +8,13 @@ local _, NS = ...
 -- with the store (newest first, no id without its record), and sweeps the talent loadouts and the
 -- equipment sets no fight refers to any more (modules/Loadouts.lua). FIGHTS_CHANGED fires once when anything was removed.
 --
+-- THE LOGS' BOUND (CombatTrail #11). A fight's saved Combat Log is the one part of a record that grows
+-- with the fight (docs/performance.md, *Stored size*), and a best-holding fight is kept for ever, so
+-- after the age and the cap each run strips the log (`log`, `logDropped`, `logTargets`) from every
+-- stored fight but the newest `log.store.fights` that carry one (100; 0 keeps every log). The fight
+-- itself stays: its Log tab then says no log was saved. Between runs the fights stored this session
+-- add theirs, so the bound holds from the next run.
+--
 -- A record written by a later version (modules/Recorder.lua's Recorder.Known) is never removed and
 -- never listed.
 --
@@ -48,6 +55,24 @@ local function wholeOr0(v)
 end
 
 -- ── the purge ───────────────────────────────────────────────────────────────────────────────────
+
+-- The newest `log.store.fights` (0: all) of `records` (newest first) that carry a log keep it; every
+-- older one's log goes. Answers how many logs went.
+local function byLogs(records)
+    local keep = wholeOr0(NS.GetSetting and NS.GetSetting("log.store.fights"))
+    if keep == 0 then return 0 end
+    local seen, stripped = 0, 0
+    for _, r in ipairs(records) do
+        if type(r.log) == "table" then
+            seen = seen + 1
+            if seen > keep then
+                r.log, r.logDropped, r.logTargets = nil, nil, nil
+                stripped = stripped + 1
+            end
+        end
+    end
+    return stripped
+end
 
 local function newerFirst(a, b)
     local ta, tb = a.t or 0, b.t or 0
@@ -116,6 +141,7 @@ function Retention.Purge(now)
     local aged, cut
     records, aged = byAge(records, holding, now, fights)
     records, cut = byCap(records, holding, fights)
+    local stripped = byLogs(records)
     local order = {}
     for i, r in ipairs(records) do order[i] = r.id end
     g.fightOrder = order
@@ -124,8 +150,9 @@ function Retention.Purge(now)
         debug("purged %d fight(s): %d by age, %d over the cap", removed, aged, cut)
         if NS.Loadouts and NS.Loadouts.Sweep then NS.Loadouts.Sweep(fights) end
         if NS.Bests then NS.Bests.Invalidate() end
-        NS.SendBus(NS.MSG.FIGHTS_CHANGED)
     end
+    if stripped > 0 then debug("stripped the log from %d older fight(s)", stripped) end
+    if removed > 0 or stripped > 0 then NS.SendBus(NS.MSG.FIGHTS_CHANGED) end
     return removed
 end
 

@@ -338,6 +338,17 @@ local function buzzerLine(layer)
     return t
 end
 
+-- The focus line (the Results Log tab's click on a cast, CL-11c): one over the Casts strips, one down
+-- the lanes, in gold, at the moment Timeline.FocusAt set, over the grid and under the marks.
+local function focusLine(layer)
+    local t = layer:CreateTexture(nil, "ARTWORK")
+    local c = Style.GOLD
+    t:SetColorTexture(c[1], c[2], c[3], 1)
+    t:SetWidth(NS.HudChart.LINE_W)
+    t:Hide()
+    return t
+end
+
 local function buildAxis(f)
     ui.axisClip, ui.axisLayer = clipLayer(f)
     buildBar(f)
@@ -345,6 +356,7 @@ local function buildAxis(f)
     ui.axisPool, ui.castsAxisPool = NS.Pool.New(), NS.Pool.New()
     ui.gridPool, ui.laneGridPool = NS.Pool.New(), NS.Pool.New()
     ui.buzzerLine = { casts = buzzerLine(ui.castsLayer), lanes = buzzerLine(ui.marks) }
+    ui.focusLine = { casts = focusLine(ui.castsLayer), lanes = focusLine(ui.marks) }
 end
 
 local function buildBody(f)
@@ -755,9 +767,8 @@ local function placeAxes(g, shown)
     end
 end
 
--- The race's buzzer line at its length on this geometry; hidden for a fight and on WoW Forever.
-local function placeBuzzer(g, shown)
-    local line, t = ui.buzzerLine, ui.buzzer
+-- A line (the buzzer's or the focus's) at moment `t` on this geometry, hidden without one.
+local function placeLine(line, t, g, shown)
     local on = shown and type(t) == "number"
     line.casts:SetShown(on)
     line.lanes:SetShown(on)
@@ -770,6 +781,13 @@ local function placeBuzzer(g, shown)
     line.lanes:ClearAllPoints()
     line.lanes:SetPoint("TOPLEFT", ui.marks, "TOPLEFT", x, 0)
     line.lanes:SetPoint("BOTTOMLEFT", ui.marks, "BOTTOMLEFT", x, 0)
+end
+
+-- The race's buzzer line at its length (hidden for a fight and on WoW Forever), and the focus line at
+-- the cast the Results Log tab jumped to (hidden until one).
+local function placeBuzzer(g, shown)
+    placeLine(ui.buzzerLine, ui.buzzer, g, shown)
+    placeLine(ui.focusLine, ui.focus, g, shown)
 end
 
 local function layoutRows(g)
@@ -863,7 +881,7 @@ end
 -- Another fight or compare target: back to 1x, from 0:00 (the same pair redrawn keeps the view).
 local function followZoom(record, other)
     local key, otherKey = record and record.id, other and other.id
-    if ui.recordKey ~= key or ui.otherKey ~= otherKey then ui.zoomI, ui.pos = 1, 0 end
+    if ui.recordKey ~= key or ui.otherKey ~= otherKey then ui.zoomI, ui.pos, ui.focus = 1, 0, nil end
     ui.recordKey, ui.otherKey = key, otherKey
 end
 
@@ -920,6 +938,31 @@ function Timeline.Open(p)
     NS.Results.SetCovered(true)
     draw()
     return true
+end
+
+--- The zoom step a jump to a cast zooms in to at least (4x).
+Timeline.FOCUS_ZOOM = 5
+
+--- Jump an open window to moment `t` of its fight (seconds from the fight's start, the saved log's
+--- time; a race's moves onto its race clock, Data.OnAxis): zoomed in to FOCUS_ZOOM at least (more
+--- zoomed stays), the moment in the middle of the view, a gold line at it. The Results Log tab's click
+--- on a CAST row (CL-11c). Another fight or compare target clears the line.
+--- @return boolean jumped
+function Timeline.FocusAt(t)
+    if not (Timeline.IsShown() and ui.record) then return false end
+    local at = D.OnAxis(ui.record, t)
+    if at == nil then return false end
+    ui.focus = at
+    ui.zoomI = math.max(ui.zoomI or 1, Timeline.FOCUS_ZOOM)
+    ui.pos = D.FocusPos(at, ui.span or 1, D.ZoomAt(ui.zoomI))
+    layout()
+    debug("focus %.1f s", at)
+    return true
+end
+
+--- The moment the focus line marks, or nil.
+function Timeline.Focus()
+    return ui and ui.focus or nil
 end
 
 --- Close the window (its close control, the Results window closing): the Results window's cover goes.
