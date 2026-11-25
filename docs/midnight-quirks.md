@@ -309,16 +309,21 @@ to one: Best by now's bar stands on the body's content frame and each checkpoint
 *Source:* this repo, `modules/RaceWindow_Board.lua` and `modules/RaceWindow.lua` headers (race window
 redesign plan W13, and the mini pace bars of 2026-11-13).
 
-**`UNIT_COMBAT`'s amounts and `UNIT_AURA`'s aura data in combat are assumed sealed, not yet probed.**
+**`UNIT_AURA`'s aura data in combat is assumed sealed at times, not yet probed.**
 *Client:* Retail (12.1.5). *Measured:* not measured; assumed, until the owner probes it (CombatTrail
-#11, plan item CL-11a, 2026-11-25). The Combat Log registers `UNIT_COMBAT` for `player` and
-`UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while a fight is open.
-The assumption is that both are delivered, and that in combat a hit's amount, and an aura's spell ID or
-instance, may arrive secret. *Cost:* a sealed aura is no line, so a fully sealed fight logs no aura.
-A sealed amount is saved as `"s"`, and the in-memory ring keeps the client's value for a FontString
-alone. A refused `UNIT_COMBAT` costs only the hits and heals. *Do:* never compare, count or store a
-sealed amount as a number, and never guess a sealed aura's name or ID. After a fight, `/ct diagnostics`
-prints the capture's own line in its fight section, `combat log registered=… refused=… lines=…`
-(`CombatLog.Diagnose`: `refused=UNIT_COMBAT` is this quirk's refusal, `refused=none` its delivery),
-and lists any refused event under *rejected events*, and the smoke rows for #11 (SM-CT-LG3 first, docs/smoke-tests.md) record what the log showed; until then this entry stays assumed.
-*Source:* this repo, `modules/CombatLog.lua`.
+#11, plan item CL-11a, 2026-11-25; rewritten for the Combat Sequence, CSEQ-1 and CSEQ-3). The Combat
+Sequence registers `UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while
+a fight is open. It no longer registers `UNIT_COMBAT`: the hit and heal rows it fed, and their amounts,
+went (CSEQ-1), so no amount is read, sealed or not. The assumption is that `UNIT_AURA` is delivered, and
+that in combat an aura's spell ID or instance may arrive secret, and an occasional full update
+(`isFullUpdate`) arrives in place of `addedAuras` and `removedAuraInstanceIDs`. *Cost:* a sealed aura is
+no line, so a fully sealed fight logs no aura. A full update, or sealed or unreadable update info, is
+diffed: the unit is walked into a scratch map and set against its map, so gains and fades still show;
+before CSEQ-1 such an update was walked with no line. A sealed aura table, instance or spell ID makes
+the walk incomplete, and an incomplete walk writes no line. *Do:* never compare, count, store or key a
+table on a sealed instance or spell ID (only values that passed `Secrets.PlainNumber` enter the maps),
+and never guess a sealed aura's name or ID. After a fight, `/ct diagnostics` prints the capture's own
+line in its fight section, `combat sequence registered=… refused=… lines=…` (`CombatLog.Diagnose`;
+`refused=none` is its delivery, and `UNIT_COMBAT` is never named), and lists any refused event under
+*rejected events*, and the smoke rows (SM-CT-SQ2 first, docs/smoke-tests.md) record what the sequence
+showed; until then this entry stays assumed. *Source:* this repo, `modules/CombatLog.lua`.

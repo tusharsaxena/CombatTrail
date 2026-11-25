@@ -96,7 +96,7 @@ macro too.
 - Nothing secret is persisted. A record's fields come from the after-combat plain read; a field that
   came back secret is left absent. The in-combat damage curve (`modules/Slices.lua`) lives in memory
   for the session only.
-- `COMBAT_LOG_EVENT_UNFILTERED` is never registered: it is protected for addons on both clients.
+- `COMBAT_LOG_EVENT_UNFILTERED` is never registered (protected for addons on both clients), nor is `UNIT_COMBAT` (CSEQ-1).
 - No geometry is read back off a frame that has displayed a meter value: every layout is worked out
   from configuration and plain counts. The one exception is the DPS HUD's shell frame, which never
   displays a value itself: its anchor (`GetPoint`), `GetLeft` and `GetTop` (to re-anchor it on its top
@@ -171,7 +171,7 @@ AD-86-CT):
   |---|---|---|
   | DPS HUD | Results, Race (Retail), Lock, Settings, Close | the launcher's registered opener (`NS.OpenSettings`); the HUD (MEDIUM) stays up |
   | Race window (Retail) | Lock, Attach, Settings, Close | its own opener, the Race mode page (`Act.settings`); it stays up |
-  | Combat Log window ("Combat Trail · Log") | Dock, Settings, Close (the Attach mark went with the attached state, owner feedback item 11) | its own opener, the Combat Log page (`Act.settings`, modules/LogWindow.lua); it stays up |
+  | Combat Sequence window ("Combat Trail · Combat Sequence") | Dock, Settings, Close (the Attach mark went with the attached state, owner feedback item 11) | its own opener, the Combat Sequence page (`Act.settings`, modules/LogWindow.lua); it stays up |
   | Results | the view toggle, Settings, Close | the registered opener; the window (HIGH) stays beside the panel |
   | Compare, gear view, timeline | Close | none: each is a companion of the Results window (`companion = true`, FB-CTR-02, standalone-windows v2.119.0): it opens only from the Results detail, shows its fight and keeps no position |
 
@@ -209,12 +209,12 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   Results_Gear, Results_Compare, Results_InsightsData, Results_Insights, Results.
 - **Preview and support:** MockRotations, MockFights, MockRaces and RaceSample (Retail), Preview, SimRace
   (Retail), Sim, Diagnostics.
-- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, Log (Combat Log), History, Race (Race mode, Retail), Profiles.
+- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, Log (the Combat Sequence page, key `sequence`), History, Race (Race mode, Retail), Profiles.
 
 ## Settings Schema
 
 The profile tree is `defaults/Profile.lua` (the only place a default is written): `general`,
-`lanes.player` / `lanes.pet`, `hud`, `log` (the Combat Log), `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
+`lanes.player` / `lanes.pet`, `hud`, `sequence` (the Combat Sequence; `log` until schema step 9), `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
 `toast` and `skin`, plus `callout` (Retail), seeded by `settings/Race.lua` from the call-out's schema
 rows. The global tree holds the fight store (`fights`, `fightOrder`), the interned talent loadouts
 (`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the dummy captures
@@ -248,7 +248,7 @@ first hit, so `Race.Resume` (OnEnable and the stand-up) carries it on after a `/
 
 `/ct` and `/combattrail` reach one LibKa0s-Slash-1.0 dispatcher over the ordered `NS.COMMANDS` in
 `settings/Slash.lua`: the thirteen reserved verbs plus `skin`, then the feature verbs `results`,
-`hud`, `log`, `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `lanes`, `ignore` and `dummy`, and `race` on
+`hud`, `sequence` (`/ct log` is its alias), `lock`, `unlock`, `test`, `sim`, `purge`, `probe`, `lane`, `lanes`, `ignore` and `dummy`, and `race` on
 Retail only (declared `clients = { "retail" }`). Feature verbs refuse while stood down; `lane`,
 `ignore` and `dummy` stay live, and `race` stays live for its `ignore` word alone (ruling X10). The list read-outs (`ignore list`, `dummy show`, `race ignore show`) and the `probe` report are reports on the library's `D:Report` (LibKa0s#79): the debug console, ungated, with one chat pointer ([`debug.md`](debug.md), *Reports*). The full table and the dispatch rules are in
 [`slash-dispatch.md`](slash-dispatch.md).
@@ -277,7 +277,7 @@ enable and at each stand-up; the stand-down drops all of them (core/LifecycleSet
   `SETTINGS_CHANGED`; while a race runs, one AceTimer waits until a second before
   the countdown's window, and the call-out's own OnUpdate runs from then to the buzzer and through
   STOP's hold, never longer. The stand-down cancels the timer and suspends the call-out.
-- **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges. **Combat Log (CombatLog):** in a fight, `UNIT_AURA`, `UNIT_COMBAT`, `PLAYER_DEAD`, `PLAYER_TARGET_CHANGED`; `PLAYER_REGEN_ENABLED` went with the END line (owner feedback item 10), and the pull is time 0.0 with no PULL line.
+- **Probe:** nothing until armed; then `UNIT_SPELLCAST_SUCCEEDED` and both regen edges. **Combat Sequence (CombatLog):** in a fight, `UNIT_AURA` (player and target), `PLAYER_DEAD`, `PLAYER_TARGET_CHANGED`; never `UNIT_COMBAT` (the hit and heal rows went, CSEQ-1); `PLAYER_REGEN_ENABLED` went with the END line (owner feedback item 10), and the pull is time 0.0 with no PULL line.
 - **Equipment recon (Loadouts):** `PLAYER_ENTERING_WORLD`, `PLAYER_EQUIPMENT_CHANGED` and
   `UNIT_INVENTORY_CHANGED` for `player` while standing, each asking for one coalesced recon on an
   AceTimer (`Loadouts.RECON_DELAY`, 0.5 s), so a set swap interns one set; the stand-up asks for one

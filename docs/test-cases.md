@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_load.lua (16)
+### test_load.lua (19)
 
 - load: NS is the AceAddon object named CombatTrail
 - load: the identity constants
@@ -19,13 +19,16 @@ Total.
 - load: NS.Compat.ForClient keeps a declared feature on its clients only
 - load: NS.Print tags its line with the chat prefix
 - load: the library-absent load still loads and initializes
-- load: the settings stamp is 7 and the fight record's format is 6
+- load: the settings stamp is 9 and the fight record's format is 6
 - load: a schema 1 store loads empty at the current version, keeping the account's other state
 - load: a store already at version 2 keeps its fights
 - load: a fresh install runs step 2 harmlessly
 - load: step 5 drops the Combat Log's retired keys in every profile, and keeps the rest
 - load: step 6 drops the HUD's auto-grow and the log window's attached state in every profile
 - load: step 7 carries each profile's lock to the lanes' own, so no lanes unlock by surprise
+- load: step 8 drops the Combat Sequence's retired keys in every profile, and keeps the rest
+- load: step 9 moves each profile's log to sequence, and its Results fold with it
+- load: a profile at schema 5 runs steps 6 to 9 in order and ends with no log
 
 ### test_loadorder.lua (5)
 
@@ -63,7 +66,7 @@ Total.
 - settings: Reset all settings puts every general row back
 - settings: library absent, the pages register nothing and the switch still writes
 
-### test_slash.lua (21)
+### test_slash.lua (24)
 
 - slash: help lists every verb spec §8 names
 - slash: help lists every COMMANDS verb this client has, in order
@@ -77,6 +80,9 @@ Total.
 - slash: lock and unlock write general.locked
 - slash: lock and unlock leave the lanes alone; lanes lock|unlock|toggle move them alone
 - slash: the help says lock is the HUD's and the windows' and lanes is the lanes'
+- slash: /ct sequence and /ct log reach the one handler, for every sub-verb
+- slash: help lists sequence, naming /ct log in its line, and no log row of its own
+- slash: with the Combat Sequence off, the verb says so
 - slash: test turns test mode on and off
 - slash: `debug on`/`off` flip the session flag; bare `debug` toggles only the window
 - slash: `resetall` asks first, through the one popup
@@ -552,13 +558,22 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (22)
+### test_combat_log.lua (31)
 
-- combat log: a fight's casts, auras, hits, heals and death are saved with its record, no boundary lines
+- combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
-- combat log: the target's debuffs are only the player's, and a target change logs nothing
+- combat log: the target's lines are only the player's debuffs, and a target change logs nothing
+- combat log: the target walk reads HARMFUL alone; the player's both
 - combat log: an aura on at the start is known when it falls off
-- combat log: a sealed aura and a sealed cast are no line; a sealed amount is saved as "s"
+- combat log: debuffs on you and your debuffs on your target are gained and lost
+- combat log: a UNIT_AURA with no update info diffs the unit into gains and losses
+- combat log: a full update diffs too, on the player and on the same target
+- combat log: the diff's order is fixed: gains in walk order, then losses by instance
+- combat log: a refresh (updatedAuraInstanceIDs) is no line
+- combat log: an incomplete walk writes no line and leaves no false loss or gain after it
+- combat log: a target change is silent, and a new target is no burst of gains
+- combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key
+- combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown
 - combat log: past `log.store.lines` only the newest are kept and the record counts the rest
 - combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)
 - combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is held to its range
@@ -566,10 +581,10 @@ Total.
 - combat log: saving off keeps no log on the record; the log off registers nothing
 - combat log: the settings are frozen at the fight's start
 - combat log: the storage keys have their shipped defaults
-- combat log: its events are registered only while a fight is open, for player and target
+- combat log: its events are registered only while a fight is open: UNIT_AURA, PLAYER_DEAD, the target change
 - combat log: a stand-down mid-fight drops every registration and line
-- combat log: a client that refuses UNIT_COMBAT costs only it, and the diagnosis names it
-- combat log: the combatLog perf bucket is reached by its events
+- combat log: a client that refuses PLAYER_DEAD costs only it, and the diagnosis names it
+- combat log: the combatLog perf bucket is reached by its events, the diff too
 - combat log: the ring holds at most C.LOG.RING lines and reuses its slots
 - combat log: a CT_SCHEMA 5 record reads with no log and still opens in the Results
 - combat log: a fight's log goes with it when retention purges the fight
@@ -1349,24 +1364,23 @@ Total.
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
 
-### test_log_table.lua (29)
+### test_log_table.lua (28)
 
 - log table: a cast is a plain row with its spell, and no cell names a source or a target
 - log table: a long-cooldown cast wears the gold wash; washes off takes it away
 - log table: buffs green (off dimmed), a debuff you put on orange with its wash, on the target
-- log table: a hit on you is red with its school and Info; a heal green with a plus, reading Healing
-- log table: a sealed amount goes to the label as given, a saved one reads sealed
+- log table: a death is red with a blank spell; Info reads Interrupted and nothing else
+- log table: the six tags and their colors; a wash only on DEBUFF+ and a long-cooldown CAST
 - log table: the time column from the pull, past a minute and before it, or the clock
-- log table: a heal reads Healing, never Physical (item 4)
-- log table: an old boundary line draws no tag and never shows (item 10)
-- log table: a multi-school mask takes its lowest school's color
-- log table: the categories, the auto attacks and the least amount decide what shows
+- log table: an old saved HIT, HEAL, boundary or target BUFF line draws no tag and never shows
+- log table: the categories and the auto attacks decide what shows; no amount test
+- log table: the chips are four, in order, with their categories and tips
 - log table feed: instant reveals every line, newest first; a scroll pauses and Resume follows
 - log table feed: the view's count moves on with the ring and always equals a full walk
 - log table feed: every N ms shows at most one line each N ms; batch shows them together
 - log table feed: the display throttle never drops a line from the saved log
 - log table feed: each pull clears the live view to the new fight, keeping its pre-pull floor
-- log table columns: Time, Event, Spell/School, Amount and Info where there is room; no Source or Target
+- log table columns: Time, Event, Spell and Info where there is room; no Source, Target or Amount
 - log table columns: every column is centered, its header and its cells, in every home (item 8)
 - hud log: the title bar's Log control opens the drawer and the HUD grows by its height
 - hud log: the rows setting, 3 to 20, sizes the drawer
@@ -1378,10 +1392,10 @@ Total.
 - hud log: the drawer is a section like Spell breakdown: its heading, its count and marks, no seam (items 17, 18)
 - hud log: it hides and stops with the HUD, and comes back with it
 - hud log: a fight's start opens it when auto-open is on (the shipped default)
-- hud log: /ct log toggles it and opens the HUD with it
+- hud log: /ct sequence toggles it and opens the HUD with it
 - hud log: with the Combat Log off there is no control and no drawer
 
-### test_log_window.lua (16)
+### test_log_window.lua (17)
 
 - log window: the drawer's detach mark moves the log into its own window, and the HUD gives the drawer's height back
 - log window: the dock mark sends it back to the HUD, still open
@@ -1389,6 +1403,7 @@ Total.
 - log window: a standalone window, up whether or not the HUD is; no pin verb
 - log window: Escape and its close mark close the log; the HUD's hide does not
 - log window: at its own place, scale and height by default, never beside the HUD
+- log window: Master controls' Reset position puts it back at its shipped place; /ct lock locks it
 - log window: its rows fill the height it has
 - log window: with fill off its rows are the rows setting, and the window is as tall as they are
 - log window: a grip drag lays out cheaply and repaints nothing until its release, then stores the size
@@ -1396,14 +1411,16 @@ Total.
 - log window: its rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)
 - log window: its chips filter what it shows, for the session, seeded from What to show
 - log window: the chips take their room above the table, wrapping when narrow
-- log window: /ct log detach and dock move it; the HUD's Log control opens and closes it
+- log window: /ct sequence detach and dock move it; the HUD's Log control opens and closes it
 - log window: with the Combat Log off it never shows
 - log window: on WoW Forever there is no Race window, and it stands at its own place the same way
 
-### test_log_page.lua (15)
+### test_log_page.lua (17)
 
-- log page: eight tabs, Combat Log first and Results last
-- log page: every log.* default but the window's geometry has a control
+- log page: eight tabs, Combat Sequence first and Results last
+- log page: the page key is sequence, under the Combat Sequence title and its own panel name
+- log page: no row for a key the Combat Sequence retired, and the six categories' labels
+- log page: every sequence.* default but the window's geometry has a control
 - log page: every row's default is the profile's (defaults/Profile.lua is the only source)
 - log page: no log.* key is left on the write-through list; the log's own controls write rows
 - log page: the value checks refuse what the log cannot draw
@@ -1415,7 +1432,7 @@ Total.
 - log page: the who colors are still read into a view's context, and no cell draws them now
 - log page: You is a ColorPair with its class companion on; the targets are a palette, no class
 - log page: the detached window's gear opens the settings on this page
-- log page: /ct set reaches a log path
+- log page: /ct set reaches a sequence path
 - log page: the page's Defaults puts every log row back and leaves the geometry
 
 ### test_sizing.lua (7)
@@ -1500,14 +1517,14 @@ Total.
 ### test_results_log.lua (18)
 
 - results log: the detail has no tab strip, only the one scrolling page
-- results log: Log is a folding section under Targets, open by default
+- results log: Combat Sequence is a folding section under Targets, open by default
 - results log: the footer's Timeline button opens the timeline, grayed with no casts
 - results log: no Damage by spell, Overview's Spell breakdown the one spell list (owner feedback item 20)
 - results log: the saved log in the table, newest first, with the Info column
 - results log: the caption counts the lines the cap dropped
 - results log: the chips carry their counts and filter what is shown
 - results log: each fight opens on log.results.chips, the same fight drawn again keeps them
-- results log: the pure halves: counts, the order, the page, the least amount
+- results log: the pure halves: counts, the order, the page; retired lines never counted
 - results log: the Time header flips the sort, oldest first starting at the first event
 - results log: the wheel scrolls the list and stays on it
 - results log: the rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)
@@ -1515,7 +1532,7 @@ Total.
 - results log: a click on a CAST row opens the timeline at that cast
 - results log: log.results.jumpToCast off, a cast row's click does nothing
 - results log: the timeline's focus math keeps the view on the axis
-- results log: a fight saved before the log says No log was saved for this fight
+- results log: a fight saved before the log says No combat sequence was saved for this fight
 - results log: a Combat Log setting redraws an open Log section
 
 ### test_target_level.lua (12)
@@ -1900,7 +1917,7 @@ Total.
 ### test_diagnostics.lua (10)
 
 - diagnostics: the report carries every section of this addon's own
-- diagnostics: the fight section names the Combat Log's capture and the events the client refused
+- diagnostics: the fight section names the Combat Sequence's capture and the events the client refused
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
 - diagnostics: Retail's race section names the race, the pending races, the boards and its windows
@@ -2088,11 +2105,11 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_load.lua | 16 |
+| test_load.lua | 19 |
 | test_loadorder.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
-| test_slash.lua | 21 |
+| test_slash.lua | 24 |
 | test_lane_casts.lua | 33 |
 | test_lane_layout.lua | 13 |
 | test_lane_render.lua | 41 |
@@ -2107,7 +2124,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 22 |
+| test_combat_log.lua | 31 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2141,9 +2158,9 @@ Total.
 | test_hud_sizing.lua | 17 |
 | test_hud_static.lua | 12 |
 | test_hud_race_button.lua | 31 |
-| test_log_table.lua | 29 |
-| test_log_window.lua | 16 |
-| test_log_page.lua | 15 |
+| test_log_table.lua | 28 |
+| test_log_window.lua | 17 |
+| test_log_page.lua | 17 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
@@ -2184,4 +2201,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1790** |
+| **Total** | **1807** |

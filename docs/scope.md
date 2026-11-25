@@ -15,6 +15,10 @@ the spec (`superpowers/specs/2026-11-10-combat-trail-design.md`, §1 and §2).
   spells, casts, gear, stats, talents and usage; the Results window lists, filters, groups and
   compares them, with an ability timeline and a gear view. Fights are purged after a number of days,
   except those that hold a best.
+- **The Combat Sequence.** The order of what the player did and what happened to their buffs and
+  debuffs in a fight: their casts and their pet's, the buffs gained and lost on them, the debuffs on
+  them and on their target, and their death, with no amounts. Docked in the HUD or in its own window,
+  and saved with each fight (`/ct sequence`; `/ct log` is its alias).
 - **Race mode (Retail).** Arm a timed run on a training dummy (`/ct race arm [length]`): the Race
   window's clock, best and checkpoints, a center countdown with a spoken voice and STOP at the buzzer,
   and a race board of its own in the history.
@@ -26,6 +30,7 @@ the spec (`superpowers/specs/2026-11-10-combat-trail-design.md`, §1 and §2).
 | Not done | Why |
 |---|---|
 | Read the combat log | `COMBAT_LOG_EVENT_UNFILTERED` is protected for addons on both clients; every number comes from `C_DamageMeter` |
+| Per-hit damage or healing in the Combat Sequence | No event an addon may hear gives the player's own hits with their amounts (`COMBAT_LOG_EVENT_UNFILTERED` is protected); `UNIT_COMBAT` reports only what the player takes, so its hit and heal rows went (CSEQ-1) |
 | Live percentages, sorting, or a live "ahead by" number on the HUD | In combat the meter's values are secret: an addon may copy them into a widget but not do arithmetic or comparisons on them |
 | Keep a stored fight's damage chart past the session | The chart's samples are secret in combat and are never persisted |
 | Lanes for target, focus or party members | v0.1.0 has the Player and Pet lanes only; more lanes are issue #1 |
