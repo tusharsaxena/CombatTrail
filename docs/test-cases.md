@@ -1373,6 +1373,21 @@ Total.
 - detail: a fight with no targets (an older record) has no Targets section
 - detail: Targets rows skip a malformed entry and share out of what is listed
 
+### test_target_level.lua (12)
+
+- target level (retail): a level reads "<name> (L<level>)"
+- target level (retail): a skull reads "(L??)", red where colored
+- target level (retail): no level shows the name alone, never (Lnil)
+- target level (retail): a boss keeps the suffix (owner, 2026-11-25)
+- target level (forever): a level reads "<name> (L<level>)"
+- target level (forever): a skull reads "(L??)", red where colored
+- target level (forever): no level shows the name alone, never (Lnil)
+- target level (forever): a boss keeps the suffix (owner, 2026-11-25)
+- target level: the column sorts by name, then level (none, low to high, a skull last)
+- target level: the cell's tooltip, the board label and the Insights tab read the same
+- target level: the detail's meta reads "<name> · level <n>"
+- target level: the Targets section's primary row carries the level, the others their name
+
 ### test_results_sections.lua (5)
 
 - sections: every heading has an arrow, open (chevron-down) by default, its text after it
@@ -1962,6 +1977,7 @@ Total.
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
+| test_target_level.lua | 12 |
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 27 |
 | test_insights_data.lua | 14 |
@@ -1996,4 +2012,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1638** |
+| **Total** | **1650** |

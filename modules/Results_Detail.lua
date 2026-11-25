@@ -103,13 +103,6 @@ local function placeOf(record, i)
     return nil
 end
 
--- The target's level as the meta line shows it: "level 72", "level ??" for a skull, nil for none.
-local function levelText(i)
-    local lv = i.targetLevel
-    if type(lv) ~= "number" then return nil end
-    return L["level %s"]:format(lv < 0 and "??" or ("%d"):format(lv))
-end
-
 --- The header's meta (spec §7, v0.2 plan Task A2), three lines in DPS Race's shape:
 ---   1. where and who: "<realm> · ilvl 721.4 · The Voidspire" (the zone and subzone in the open world);
 ---   2. what: "Vorasius · level 72 · Heroic · Mythic+ 12 · 4:12 · pet <pet name>";
@@ -123,7 +116,7 @@ function Detail.Meta(record)
     local where = joinParts({ w.realm, ilvl, placeOf(record, i) }, 3)
     -- A race (Retail) names its dummy kind and its race time in place of the fight's length.
     local kind, raceTime = NS.ResultsRaces.MetaParts(record)
-    local what = joinParts({ Fights().TargetName(record), kind or levelText(i), i.difficultyName, Fights().TierText(record),
+    local what = joinParts({ Fights().TargetName(record), kind or Fights().LevelWords(record), i.difficultyName, Fights().TierText(record),
                              raceTime or NS.Format.Length(record.duration), w.petName and L["pet %s"]:format(w.petName) }, 6)
     local stamp = joinParts({ Tbl().Date(record.t, "%d %b %Y %H:%M"),
                               record.build and L["build %s"]:format(tostring(record.build)),

@@ -122,6 +122,77 @@ function Fights.TargetName(record)
     return i.targetName or L["Unknown target"]
 end
 
+-- ── the target's level (issue #12) ──────────────────────────────────────────────────────────────
+-- ONE FORMATTER for every place a fight's target is named with its level: the Encounter or target
+-- cell and its tooltip, the board label (the Board grouping's headers and the Insights tabs), the
+-- fight detail's meta line and the Targets section's primary row. The level is the identity's
+-- `targetLevel` (modules/Identity.lua: the combat-entry snapshot's UnitLevel, plain or absent; -1 a
+-- skull). It is always shown, on a boss too (owner, 2026-11-25); a fight with none (an older record,
+-- an unknown target) shows the name alone, never "(Lnil)" or an empty suffix.
+
+Fights.SKULL = "??"
+
+--- The fight's target level: a whole number of 1 or more, -1 for a skull (any level below 0, the
+--- client's convention on both clients), or nil for none (absent, not a number, or 0).
+--- @return number|nil
+function Fights.TargetLevel(record)
+    local lv = ident(record).targetLevel
+    if type(lv) ~= "number" or lv ~= lv then return nil end
+    if lv < 0 then return -1 end
+    if lv < 1 or lv == math.huge then return nil end
+    return math.floor(lv)
+end
+
+--- The level as text: "29", "??" for a skull, nil for none.
+--- @return string|nil
+function Fights.LevelText(record)
+    local lv = Fights.TargetLevel(record)
+    if lv == nil then return nil end
+    return lv < 0 and Fights.SKULL or ("%d"):format(lv)
+end
+
+--- The level suffix: "(L29)", "(L??)" for a skull (in the client's skull red when `colored`), or nil.
+--- @param colored boolean|nil  tint a skull's suffix (an inline escape: never in a sort key)
+--- @return string|nil
+function Fights.LevelSuffix(record, colored)
+    local text = Fights.LevelText(record)
+    if text == nil then return nil end
+    local suffix = L["(L%s)"]:format(text)
+    if colored and text == Fights.SKULL then return Fights.Colored(suffix, Tbl.COLORS.red) end
+    return suffix
+end
+
+--- `name` with the fight's level suffix: "Bluegill Raider (L29)", the name alone with no level.
+--- @param name string
+--- @return string
+function Fights.WithLevel(name, record, colored)
+    local suffix = Fights.LevelSuffix(record, colored)
+    if suffix == nil then return name end
+    return name .. " " .. suffix
+end
+
+--- The fight's target name with its level (Fights.TargetName, Fights.WithLevel).
+--- @return string
+function Fights.TargetLabel(record, colored)
+    return Fights.WithLevel(Fights.TargetName(record), record, colored)
+end
+
+--- The level as the detail's meta line words it: "level 29", "level ??" for a skull, nil for none.
+--- @return string|nil
+function Fights.LevelWords(record)
+    local text = Fights.LevelText(record)
+    return text and L["level %s"]:format(text) or nil
+end
+
+--- The Encounter or target column's sort key: the name (case folded), then the level (none first,
+--- then low to high, a skull above every number).
+--- @return string
+function Fights.TargetSort(record)
+    local lv = Fights.TargetLevel(record)
+    local rank = lv == nil and 0 or (lv < 0 and 9999 or math.min(lv, 9998))
+    return ("%s\1%04d"):format(Fights.TargetName(record):lower(), rank)
+end
+
 --- The difficulty a fight was at (0 for none: the open world).
 function Fights.DifficultyOf(record)
     local d = ident(record).difficultyID
@@ -138,9 +209,10 @@ function Fights.TierText(record)
     return nil
 end
 
---- "<target> · <difficulty> · <tier>": a board's name (the Board group header).
+--- "<target> (L<level>) · <difficulty> · <tier>": a board's name (the Board group header and the
+--- Insights tabs). Uncolored: it is also the group's sort rank.
 function Fights.BoardLabel(record)
-    local parts = { Fights.TargetName(record) }
+    local parts = { Fights.TargetLabel(record) }
     local d = ident(record).difficultyName
     if type(d) == "string" and d ~= "" then parts[#parts + 1] = d end
     parts[#parts + 1] = Fights.TierText(record)
@@ -647,10 +719,11 @@ local function lengthOf(record)
     return Races().Seconds(record) or record.duration
 end
 
--- The target cell: what the fight was against, "+N" after it for the others that took damage; a race
+-- The target cell: what the fight was against and its level (a skull's in red, Fights.LevelSuffix),
+-- "+N" after it for the others that took damage; a race
 -- (Retail) leads it with its length and flag chips (Races.Chips).
 local function targetText(record)
-    local name, others = Fights.TargetName(record), ident(record).otherTargets
+    local name, others = Fights.TargetLabel(record, true), ident(record).otherTargets
     if type(others) == "number" and others > 0 then name = L["%s +%d"]:format(name, others) end
     return name, C.text
 end
@@ -729,7 +802,7 @@ function Fights.Columns(view)
           sort = function(r) return who(r).ilvl end,
           text = function(r) return Tbl.Ilvl(who(r).ilvl) end },
         { key = "target", label = L["Encounter or target"], flex = true, min = Fights.TARGET_W, desc = false,
-          sort = function(r) return Fights.TargetName(r):lower() end,
+          sort = Fights.TargetSort,
           text = targetText, chips = function(r) return Races().Chips(r) end },
         { key = "content", label = L["Content"], width = Fights.CONTENT_W, kind = "badge", desc = false,
           sort = function(r) return CONTENT_RANK[ident(r).content] or 99 end,
