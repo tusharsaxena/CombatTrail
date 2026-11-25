@@ -318,5 +318,5 @@ instance, may arrive secret. *Cost:* a sealed aura is no line, so a fully sealed
 A sealed amount is saved as `"s"`, and the in-memory ring keeps the client's value for a FontString
 alone. A refused `UNIT_COMBAT` costs only the hits and heals. *Do:* never compare, count or store a
 sealed amount as a number, and never guess a sealed aura's name or ID. After a fight, `/ct diagnostics`
-lists any refused event under *rejected events*, and the smoke rows for #11 record what the log showed.
+lists any refused event under *rejected events*, and the smoke rows for #11 (SM-CT-LG3 first, docs/smoke-tests.md) record what the log showed; until then this entry stays assumed.
 *Source:* this repo, `modules/CombatLog.lua`.

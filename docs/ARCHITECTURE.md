@@ -171,6 +171,7 @@ AD-86-CT):
   |---|---|---|
   | DPS HUD | Results, Race (Retail), Lock, Settings, Close | the launcher's registered opener (`NS.OpenSettings`); the HUD (MEDIUM) stays up |
   | Race window (Retail) | Lock, Attach, Settings, Close | its own opener, the Race mode page (`Act.settings`); it stays up |
+  | Combat Log window ("Combat Trail · Log") | Dock, Attach, Settings, Close | its own opener, the Combat Log page (`Act.settings`, modules/LogWindow.lua); it stays up |
   | Results | the view toggle, Settings, Close | the registered opener; the window (HIGH) stays beside the panel |
   | Compare, gear view, timeline | Close | none: each is a companion of the Results window (`companion = true`, FB-CTR-02, standalone-windows v2.119.0): it opens only from the Results detail, shows its fight and keeps no position |
 
@@ -193,8 +194,8 @@ Load order is the TOC's: libraries, the locale, `core/` in dependency order, `de
 scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 
 - **Core:** Namespace, MediaSetup, Constants, State, EnvSetup, CoreSetup, SkinSetup, Compat,
-  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, CalloutSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup,
-  LauncherSetup, CombatTrail, Database.
+  SimSetup, Secrets, Bus, PoolSetup, WidgetsSetup, ToastSetup, CalloutSetup, ChartsSetup, LifecycleSetup, PerfSetup, DebugLogSetup, LauncherSetup,
+  CombatTrail, Database.
 - **Defaults and locale:** IgnoreSeeds, Profile, Dummies, Hearthstones, BuffSeeds; enUS, enUS_Race, enUS_Insights.
 - **Lanes:** LaneCasts, LaneLayout, LaneRender, LaneAnchor, LaneVisibility, LaneIgnore.
 - **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, CombatLog, Usage, Stats, Loadouts,
@@ -202,19 +203,18 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 - **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, RaceClock, AutoArm, RaceVerb.
 - **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, LogTable, LogTable_View, Hud_Log, LogWindow, Hud.
 - **Race window (Retail):** RaceWindow_Best, RaceWindow_Board, RaceWindow_States, RaceWindow, Countdown (the center call-out,
-  through the CalloutSetup seam); and BestToast (the
-  new-best toast, a fight's on both clients, a race's on Retail).
+  through the CalloutSetup seam); and BestToast (the new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Races, Results_Loadout,
   Results_Usage, Results_Targets, Results_RaceDetail, Results_Log, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
   Results_Gear, Results_Compare, Results_InsightsData, Results_Insights, Results.
 - **Preview and support:** MockRotations, MockFights, MockRaces and RaceSample (Retail), Preview, SimRace
   (Retail), Sim, Diagnostics.
-- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, History, Race (the Race mode page, Retail), Profiles.
+- **Settings:** Schema, Slash, OptionsSetup, General, Lanes, Hud, Log (Combat Log), History, Race (Race mode, Retail), Profiles.
 
 ## Settings Schema
 
 The profile tree is `defaults/Profile.lua` (the only place a default is written): `general`,
-`lanes.player` / `lanes.pet`, `hud`, `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
+`lanes.player` / `lanes.pet`, `hud`, `log` (the Combat Log), `history`, `results`, `dummies`, `race`, `raceWindow` (Retail),
 `toast` and `skin`, plus `callout` (Retail), seeded by `settings/Race.lua` from the call-out's schema
 rows. The global tree holds the fight store (`fights`, `fightOrder`), the interned talent loadouts
 (`loadouts`) and equipment sets (`gearSets`), the Usage hidden list, the dummy captures

@@ -22,9 +22,9 @@ local _, NS = ...
 --                         dock control sends it back. `log.drawer.shown` is the log's one open, in either
 --                         home: detached, the HUD reserves nothing and this drawer stays hidden.
 -- `log.drawer.shown`, `log.drawer.collapsed`, `log.view.sort` and `log.home` are written by the
--- controls through NS.SetByPath, as named non-setting state (settings/Schema.lua's write-through list)
--- until the Combat Log page (CL-11c) gives them their rows. Every write's SETTINGS_CHANGED on a `log.`
--- path redraws a shown HUD (Hud.Refresh), which re-insets its content and re-places the drawer.
+-- controls through NS.SetByPath, onto their Combat Log page rows (settings/Log.lua, CL-11c2). Every
+-- write's SETTINGS_CHANGED on a `log.` path redraws a shown HUD (Hud.Refresh), which re-insets its
+-- content and re-places the drawer.
 --
 -- THE PAINT. Nothing here runs on a client event. While the drawer is shown on a shown HUD, one
 -- repeating AceTimer at NS.Constants.LOG.REPAINT (0.1 s) moves the feed (LogTable.Advance, by the

@@ -19,6 +19,15 @@ local _, NS = ...
 -- when its color moved (Style.Paint keeps the last role), so a repaint of the same rows calls nothing
 -- but SetText. A hovered row with a spell shows the client's spell tooltip (Style.PlaceBody).
 --
+-- THE SIZES (CL-11c2, the Combat Log page's Order and display tab). `log.view.rowHeight` is the rows'
+-- height in pixels (ROW_H_MIN to ROW_H_MAX; ROW_H, 14, by default) and `log.view.fontSize` their text
+-- size in points (FONT_MIN to FONT_MAX; FONT_BASE, 10, by default: GameFontHighlightSmall's own). A
+-- size other than 10 draws the rows in a named copy of the body font at that size (Style.ScaledText),
+-- the fixed columns widened by the same factor and the icon too, up to the row's height. A label keeps
+-- the size it was made at (the skin records it at the first paint), so each size has its own pool of
+-- rows, built as wanted and kept. The header keeps its size. Every home's
+-- height is worked out from LogTable.RowH(), so the HUD and both companions follow a change.
+--
 -- SECRETS. A sealed amount reaches a label's SetText through NS.Format.Number and nothing else. No
 -- geometry is read back: every place is worked out from the row index and the configured sizes.
 
@@ -27,6 +36,9 @@ local L = NS.L
 local Style = NS.Style
 
 LogTable.ROW_H = 14
+LogTable.ROW_H_MIN, LogTable.ROW_H_MAX = 12, 28
+LogTable.FONT_BASE = 10
+LogTable.FONT_MIN, LogTable.FONT_MAX = 8, 16
 LogTable.HEAD_H = 14
 LogTable.ICON = 12
 LogTable.COL_GAP = 4
@@ -40,12 +52,40 @@ LogTable.HEADS = { time = L["Time"], event = L["Event"], source = L["Source"], t
                    spell = L["Spell/School"], amount = L["Amount"], info = L["Info"] }
 local JUSTIFY = { amount = "RIGHT" }
 
+local function setting(path)
+    return NS.GetSetting and NS.GetSetting(path)
+end
+
+local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
+
+--- The rows' height in pixels: `log.view.rowHeight`, whole and in range.
+--- @return number
+function LogTable.RowH()
+    local v = NS.Secrets.PlainNumber(setting("log.view.rowHeight")) or LogTable.ROW_H
+    return clamp(math.floor(v + 0.5), LogTable.ROW_H_MIN, LogTable.ROW_H_MAX)
+end
+
+--- The rows' text size as a factor of FONT_BASE: `log.view.fontSize`, whole and in range, over 10.
+--- @return number
+function LogTable.FontScale()
+    local v = NS.Secrets.PlainNumber(setting("log.view.fontSize")) or LogTable.FONT_BASE
+    return clamp(math.floor(v + 0.5), LogTable.FONT_MIN, LogTable.FONT_MAX) / LogTable.FONT_BASE
+end
+
+--- The spell icon's size at `rowH` and `scale`: ICON scaled, never taller than the row.
+function LogTable.IconSize(rowH, scale)
+    return math.max(1, math.min((rowH or LogTable.ROW_H) - 2, math.floor(LogTable.ICON * (scale or 1) + 0.5)))
+end
+
 --- The columns for `width`: which show and where, as { { key, x, w }, ... } in ORDER. `want` is
 --- `log.view.columns` (source, target, spell, amount on unless false); `info` whether the home has an
---- Info column at all. Time and Event always show.
+--- Info column at all; `scale` the text size's factor (default 1), which widens the fixed columns.
+--- Time and Event always show.
 --- @return table
-function LogTable.Columns(width, want, info)
+function LogTable.Columns(width, want, info, scale)
     want = want or {}
+    scale = scale or 1
+    local function wide(key) return math.floor(LogTable.WIDTH[key] * scale + 0.5) end
     local on = { time = true, event = true, info = info == true and want.info ~= false }
     for _, key in ipairs({ "source", "target", "spell", "amount" }) do on[key] = want[key] ~= false end
     local function fixed()
@@ -53,7 +93,7 @@ function LogTable.Columns(width, want, info)
         for _, key in ipairs(LogTable.ORDER) do
             if on[key] then
                 n = n + 1
-                if key ~= "spell" then sum = sum + LogTable.WIDTH[key] end
+                if key ~= "spell" then sum = sum + wide(key) end
             end
         end
         return sum + math.max(0, n - 1) * LogTable.COL_GAP
@@ -64,7 +104,7 @@ function LogTable.Columns(width, want, info)
     local out, x, spellW = {}, 0, math.max(LogTable.SPELL_MIN, width - fixed())
     for _, key in ipairs(LogTable.ORDER) do
         if on[key] then
-            local w = key == "spell" and spellW or LogTable.WIDTH[key]
+            local w = key == "spell" and spellW or wide(key)
             out[#out + 1] = { key = key, x = x, w = w }
             x = x + w + LogTable.COL_GAP
         end
@@ -75,9 +115,20 @@ end
 local View = {}
 View.__index = View
 
---- The table's height with `rows` rows (its header too, unless `noHeader`).
+--- The table's height with `rows` rows (its header too, unless `noHeader`), at LogTable.RowH().
 function LogTable.Height(rows, noHeader)
-    return (noHeader and 0 or LogTable.HEAD_H) + rows * LogTable.ROW_H
+    return (noHeader and 0 or LogTable.HEAD_H) + rows * LogTable.RowH()
+end
+
+local TEXT_FONT, BIG_FONT = Style.FONT.TEXT, Style.FONT.HEADING
+local BIG = (Style.FONT_SIZE[BIG_FONT] or 12) / (Style.FONT_SIZE[TEXT_FONT] or 10)
+
+--- A row label at the text size `scale`: the body text at 1, else its copy at the size
+--- (Style.ScaledText). Made at its size, because the skin keeps the size a label had at its first
+--- paint (LibKa0s-Skin's font record), so a label is never resized after it: a new size is a new pool.
+local function rowText(r, scale, justify)
+    if scale == 1 then return Style.Text(r, TEXT_FONT, "ct.text", justify) end
+    return Style.ScaledText(r, TEXT_FONT, scale, "ct.text", justify)
 end
 
 local function hideTip() if GameTooltip then GameTooltip:Hide() end end
@@ -112,7 +163,8 @@ local function newRow(self)
     r.icon:SetSize(LogTable.ICON, LogTable.ICON)
     Style.CropIcon(r.icon)
     r.text = {}
-    for _, key in ipairs(LogTable.ORDER) do r.text[key] = Style.Text(r, Style.FONT.TEXT, "ct.text", JUSTIFY[key]) end
+    r.scale = self.scale or 1
+    for _, key in ipairs(LogTable.ORDER) do r.text[key] = rowText(r, r.scale, JUSTIFY[key]) end
     r:EnableMouse(true)
     r:SetScript("OnEnter", rowEnter)
     r:SetScript("OnLeave", hideTip)
@@ -124,7 +176,8 @@ end
 --- onClick(line) (a left click on a row, with the line it shows).
 --- @return table view
 function LogTable.New(parent, opts)
-    local self = setmetatable({ opts = opts or {}, rows = {}, seqs = {}, cells = {}, cols = {} }, View)
+    local self = setmetatable({ opts = opts or {}, rows = {}, seqs = {}, cells = {}, cols = {}, scale = 1, pools = {},
+                                rowH = LogTable.ROW_H }, View)
     local f = CreateFrame("Frame", nil, parent)
     self.frame = f
     if f.EnableMouseWheel then f:EnableMouseWheel(true) end
@@ -162,9 +215,10 @@ local function place(fs, row, col)
     fs:SetWidth(col.w)
 end
 
--- One row's columns laid (and the icon at Spell/School's start, its name after it).
-local function layRow(r, cols)
+-- One row's columns laid (and the icon, `icon` px, at Spell/School's start, its name after it).
+local function layRow(r, cols, icon)
     for _, fs in pairs(r.text) do fs:Hide() end
+    r.icon:SetSize(icon, icon)
     for _, col in ipairs(cols) do
         local fs = r.text[col.key]
         fs:Show()
@@ -172,8 +226,8 @@ local function layRow(r, cols)
             r.icon:ClearAllPoints()
             r.icon:SetPoint("LEFT", r, "LEFT", col.x, 0)
             fs:ClearAllPoints()
-            fs:SetPoint("LEFT", r, "LEFT", col.x + LogTable.ICON + 2, 0)
-            fs:SetWidth(math.max(1, col.w - LogTable.ICON - 2))
+            fs:SetPoint("LEFT", r, "LEFT", col.x + icon + 2, 0)
+            fs:SetWidth(math.max(1, col.w - icon - 2))
         else
             place(fs, r, col)
         end
@@ -182,10 +236,11 @@ local function layRow(r, cols)
     for _, col in ipairs(cols) do if col.key == "spell" then r.hasSpell = true end end
 end
 
--- What a layout depends on, as one string: the width, the rows and each column switch.
-local function layoutKey(width, rows, want)
+-- What a layout depends on, as one string: the width, the rows, the row height, the text size and
+-- each column switch.
+local function layoutKey(width, rows, want, rowH, scale)
     want = want or {}
-    local parts = { width, rows }
+    local parts = { width, rows, rowH, scale }
     for _, key in ipairs({ "source", "target", "spell", "amount", "info" }) do parts[#parts + 1] = tostring(want[key]) end
     return table.concat(parts, ":")
 end
@@ -212,12 +267,12 @@ function View:layRows(rows)
         local r = self.rows[i]
         if i <= rows then
             if not r then r = newRow(self); self.rows[i] = r end
-            local y = -(top + (i - 1) * LogTable.ROW_H)
+            local y = -(top + (i - 1) * self.rowH)
             r:ClearAllPoints()
             r:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, y)
             r:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", 0, y)
-            r:SetHeight(LogTable.ROW_H)
-            layRow(r, self.cols)
+            r:SetHeight(self.rowH)
+            layRow(r, self.cols, LogTable.IconSize(self.rowH, self.scale))
         elseif r then
             r:Hide()
         end
@@ -226,12 +281,25 @@ function View:layRows(rows)
     self.empty:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 2, -(top + 1))
 end
 
---- Lay the table at `width` with `rows` rows and the columns `want` asks for (`log.view.columns`).
+-- A new text size: the rows built at the old one hidden and kept as that size's pool, and this
+-- size's pool (built as rows are wanted) taken up. A size changes only from the settings.
+function View:refont(scale)
+    if self.scale == scale then return end
+    for _, r in ipairs(self.rows) do r:Hide() end
+    self.pools[self.scale] = self.rows
+    self.rows = self.pools[scale] or {}
+    self.scale = scale
+end
+
+--- Lay the table at `width` with `rows` rows and the columns `want` asks for (`log.view.columns`), at
+--- the configured row height and text size (LogTable.RowH, LogTable.FontScale).
 function View:Layout(width, rows, want)
-    local key = layoutKey(width, rows, want)
+    local rowH, scale = LogTable.RowH(), LogTable.FontScale()
+    local key = layoutKey(width, rows, want, rowH, scale)
     if self.laid == key then return end
-    self.laid, self.nRows = key, rows
-    self.cols = LogTable.Columns(width, want, self.opts.info)
+    self.laid, self.nRows, self.rowH = key, rows, rowH
+    self:refont(scale)
+    self.cols = LogTable.Columns(width, want, self.opts.info, scale)
     self:layHead()
     self:layRows(rows)
     self.frame:SetHeight(LogTable.Height(rows, self.opts.noHeader))
@@ -241,9 +309,13 @@ end
 local function setBig(r, big)
     if r.big == big then return end
     r.big = big
-    local fs = r.text.amount
-    local font = big and Style.FONT.HEADING or Style.FONT.TEXT
-    fs:SetFontObject(font)
+    local fs, font = r.text.amount, big and BIG_FONT or TEXT_FONT
+    if r.scale == 1 then
+        fs:SetFontObject(font)
+    else
+        fs:SetFontObject(Style.ScaledFont(TEXT_FONT, r.scale * (big and BIG or 1)) or TEXT_FONT)
+        font = TEXT_FONT
+    end
     Style.Paint(fs, r.amountColor or "ct.text", font, true)
 end
 

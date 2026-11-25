@@ -16,14 +16,14 @@ test("settings: the pages register in the panel's order, General first and Profi
     local order = {}
     for _, ctx in ipairs(inst.NS.Helpers.__pages()) do order[#order + 1] = ctx.pageKey or ctx.key end
     -- Race mode is Retail's page (clients-§4, tests/test_race_settings.lua): absent on WoW Forever.
-    local want = inst.NS.Compat.IsForever() and "general,lanes,hud,history,profiles"
-        or "general,lanes,hud,history,race,profiles"
+    local want = inst.NS.Compat.IsForever() and "general,lanes,hud,log,history,profiles"
+        or "general,lanes,hud,log,history,race,profiles"
     assertEqual(table.concat(order, ","), want)
 end)
 
 test("settings: every page is a subcategory under its player-facing name", function()
     local M = T.load().mocks
-    for _, name in ipairs({ "General", "Lanes", "DPS HUD", "History", "Profiles" }) do
+    for _, name in ipairs({ "General", "Lanes", "DPS HUD", "Combat Log", "History", "Profiles" }) do
         assertTrue(M.__subcategories[name] ~= nil, name .. " is not registered")
     end
 end)
@@ -32,7 +32,7 @@ test("settings: every page renders without printing", function()
     local inst = T.load()
     local M = inst.mocks
     M.__resetPrinted()
-    for _, name in ipairs({ "General", "Lanes", "DPS HUD", "History", "Profiles" }) do
+    for _, name in ipairs({ "General", "Lanes", "DPS HUD", "Combat Log", "History", "Profiles" }) do
         M.__subcategories[name]:__fire("OnShow")
     end
     assertEqual(#M.__printed(), 0, "a render printed: " .. tostring(M.__printed()[1]))

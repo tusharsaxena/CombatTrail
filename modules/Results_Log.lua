@@ -177,7 +177,7 @@ function ResultsLog.Context(record, ctx)
     ctx.targetFriendly = false
     ctx.schoolColors = setting("log.view.schoolColors") ~= false
     ctx.washes = setting("log.view.washes") ~= false
-    return ctx
+    return LogTable.ReadColors(ctx)
 end
 
 --- The title line's right-hand caption: "212 lines" and, when the cap dropped some, "40 not kept".
@@ -377,7 +377,7 @@ function ResultsLog.Layout(p, x, top, cw, h)
     g.hint:SetShown(jump)
     local below = (beside and 0 or underHeight(g)) + (jump and ResultsLog.HINT_H or 0)
     local room = h + y - below
-    g.rows = math.max(1, math.floor((room - LogTable.HEAD_H) / LogTable.ROW_H))
+    g.rows = math.max(1, math.floor((room - LogTable.HEAD_H) / LogTable.RowH()))
     g.table.frame:ClearAllPoints()
     g.table.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 0, y)
     g.table.frame:SetWidth(tableW)

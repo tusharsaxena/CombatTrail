@@ -1370,6 +1370,24 @@ Total.
 - log window: with the Combat Log off it never shows
 - log window: on WoW Forever there is no Race window, and it stands beside the HUD the same way
 
+### test_log_page.lua (15)
+
+- log page: eight tabs, Combat Log first and Results last
+- log page: every log.* default but the window's geometry has a control
+- log page: every row's default is the profile's (defaults/Profile.lua is the only source)
+- log page: no log.* key is left on the write-through list; the log's own controls write rows
+- log page: the value checks refuse what the log cannot draw
+- log page: the dependent rows gray out on what they need, and no color row ever does
+- log page: every tab renders without printing
+- log page: the row height sizes the drawer, the HUD grows with it, and each row takes it
+- log page: the text size sets the rows' face, widens the fixed columns and the icon
+- log page: the detached window's rows follow the row height
+- log page: You takes its own swatch once Use class color is off; the targets theirs off the skin
+- log page: You is a ColorPair with its class companion on; the targets are a palette, no class
+- log page: the detached window's gear opens the settings on this page
+- log page: /ct set reaches a log path
+- log page: the page's Defaults puts every log row back and leaves the geometry
+
 ### test_sizing.lua (7)
 
 - sizing: a size change the grip did not start redraws at once
@@ -2093,6 +2111,7 @@ Total.
 | test_hud_race_button.lua | 31 |
 | test_log_table.lua | 22 |
 | test_log_window.lua | 14 |
+| test_log_page.lua | 15 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
@@ -2133,4 +2152,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1747** |
+| **Total** | **1762** |

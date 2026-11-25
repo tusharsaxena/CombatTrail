@@ -319,5 +319,5 @@ The assumption is that both events exist on Forever, as its client globals list
 works. Missing update info means aura gains and losses are not logged: each update is a full walk and
 writes no line. A raise from the aura reader (§3's `GetBuffDataByIndex` entry) ends that walk. *Do:*
 after a fight, `/ct diagnostics` lists any refused event under *rejected events*. The smoke rows for
-#11 record what the log showed, and this entry becomes a measured one or is corrected. *Source:* this
+#11 (SM-CT-LG3 first, docs/smoke-tests.md) record what the log showed, and this entry becomes a measured one or is corrected. *Source:* this
 repo, `modules/CombatLog.lua`.

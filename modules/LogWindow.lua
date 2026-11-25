@@ -172,11 +172,11 @@ end
 --- The window's least height: its chrome and MIN_ROWS rows.
 --- @return number
 function LW.MinHeight()
-    return chrome() + LW.MIN_ROWS * LogTable.ROW_H
+    return chrome() + LW.MIN_ROWS * LogTable.RowH()
 end
 
 -- The height of `rows` rows with the chrome.
-local function heightFor(rows) return chrome() + rows * LogTable.ROW_H end
+local function heightFor(rows) return chrome() + rows * LogTable.RowH() end
 
 --- The height the window has now: the HUD's (matched), else the grip's while it is held, else
 --- `log.window.height` with `fill` on (0: the rows setting's), else the rows setting's; never less than
@@ -205,7 +205,7 @@ end
 --- fit and never fewer than MIN_ROWS.
 --- @return number
 function LW.Rows(h)
-    local fit = math.max(LW.MIN_ROWS, math.floor(((h or LW.WindowHeight()) - chrome()) / LogTable.ROW_H))
+    local fit = math.max(LW.MIN_ROWS, math.floor(((h or LW.WindowHeight()) - chrome()) / LogTable.RowH()))
     if fill() then return fit end
     return math.min(LW.RowsSetting(), fit)
 end
@@ -250,7 +250,8 @@ local function buildHeader(f)
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Combat Trail \194\183 Log"])
     local hb = NS.MakeHeader(f, {
-        close = function() Act.close() end, settingsTip = L["Combat Log settings"],
+        close = function() Act.close() end, settings = function() Act.settings() end,
+        settingsTip = L["Combat Log settings"],
         extras = {
             { key = "dock", icon = "arrow-left", glyph = "D", tip = L["Dock the Combat Log back in the DPS HUD"],
               onClick = function() Act.dock() end },
@@ -558,6 +559,13 @@ function Act.close()
 end
 
 function Act.dock() NS.HudLog.SetHome("docked") end
+
+--- The gear: the settings panel on its Combat Log page (settings/Log.lua).
+function Act.settings()
+    local H = NS.Helpers
+    if H and type(H.OpenOptionsPanel) == "function" then return H.OpenOptionsPanel("log") end
+    return NS.OpenSettings()
+end
 
 --- Attach it beside the HUD, or let it stand where it stands now.
 function Act.attach()

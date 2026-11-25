@@ -52,7 +52,7 @@ test("race mode: the page, its rows and the verb are present on Retail, each dec
     if forever() then return end
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
-    assertEqual(pageKeys(NS), "general,lanes,hud,history,race,profiles")
+    assertEqual(pageKeys(NS), "general,lanes,hud,log,history,race,profiles")
     assertTrue(M.__subcategories["Race mode"] ~= nil, "the Race mode page is registered")
     for _, r in ipairs(ROWS) do
         local row = NS.FindSchemaRow(r[1])
@@ -74,7 +74,7 @@ test("race mode: every control and verb is absent on WoW Forever", function()
     if not forever() then return end
     local inst = T.load()
     local NS, M = inst.NS, inst.mocks
-    assertEqual(pageKeys(NS), "general,lanes,hud,history,profiles")
+    assertEqual(pageKeys(NS), "general,lanes,hud,log,history,profiles")
     assertNil(M.__subcategories["Race mode"], "no Race mode page")
     for _, r in ipairs(ROWS) do assertNil(NS.FindSchemaRow(r[1]), r[1] .. " on WoW Forever") end
     for _, row in ipairs(NS.Schema) do

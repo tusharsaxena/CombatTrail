@@ -3,8 +3,9 @@ local _, NS = ...
 -- CL-11b; the spec's addendum, *The table*): what each cell of a line says and in which color, which
 -- lines a view shows, and the feed that walks the ring for a live view (its sort, its follow and pause,
 -- its display throttle). The frames are modules/LogTable_View.lua's; the homes are the DPS HUD's docked
--- drawer (modules/Hud_Log.lua) now, and the detached companion and the Results fight detail later
--- (CL-11b2, CL-11c), all three over this one component.
+-- drawer (modules/Hud_Log.lua), the detached companion (modules/LogWindow.lua) and the Results fight
+-- detail's Log tab (modules/Results_Log.lua), all three over this one component. Its settings are the
+-- Combat Log page's (settings/Log.lua).
 --
 -- THE COLUMNS. Time · Event · Source · Target · Spell/School · Amount, plus Info where the home has
 -- room (Columns: `opts.info`). Time and Event always show; the others follow `log.view.columns.*`, and
@@ -29,7 +30,10 @@ local _, NS = ...
 -- (DEBUFF- dimmed, no wash), HIT a red wash and a red amount, HEAL green with "+". A school name is in
 -- its school's color. COLOR-BLIND SAFETY: every kind differs by its tag's text and its wash as well as
 -- its hue, and `log.view.schoolColors` / `log.view.washes` off draw the names in the body text and no
--- wash. WoW's fonts have no bold weight and FRIZQT__ has no star glyph: "You" carries its class color
+-- wash. THE WHO COLORS can be the player's own (CL-11c2, the Combat Log page's Colors tab): "You"
+-- takes `log.colors.you` once `log.colors.useClassColorYou` is off, and the target `log.colors.hostile`
+-- / `log.colors.friendly` once its `...FromSkin` companion is off (LogTable.ReadColors, into each
+-- view's ctx). WoW's fonts have no bold weight and FRIZQT__ has no star glyph: "You" carries its class color
 -- and a critical its `*` and the row's larger amount face instead (the view's Cells.big).
 --
 -- WHAT IS SHOWN is `log.show.*` (the What to show chips' defaults): each category of
@@ -177,7 +181,8 @@ end
 -- The who colors, refilled on each read (a class color or the pet's swatch, never a copy of either).
 local youHue, petHue = {}, {}
 
-local function you()
+local function you(ctx)
+    if ctx.youColor then return L["You"], ctx.youColor end
     local r, g, b = NS.ClassColor("player")
     if r == nil then return L["You"], "ct.text" end
     youHue[1], youHue[2], youHue[3] = r, g, b
@@ -191,7 +196,8 @@ local function pet(ctx)
 end
 
 local function target(ctx)
-    return ctx.targetName or L["Target"], ctx.targetFriendly and "ct.log.friendly" or "ct.log.hostile"
+    if ctx.targetFriendly then return ctx.targetName or L["Target"], ctx.friendlyColor or "ct.log.friendly" end
+    return ctx.targetName or L["Target"], ctx.hostileColor or "ct.log.hostile"
 end
 
 local DASH = LogTable.DASH
@@ -203,12 +209,12 @@ local function who(c, e, ctx)
     if k == K.START or k == K.END then
         c.source, c.target = "", ""
     elseif k == K.CAST then
-        if u == U.pet then c.source, c.sourceColor = pet(ctx) else c.source, c.sourceColor = you() end
+        if u == U.pet then c.source, c.sourceColor = pet(ctx) else c.source, c.sourceColor = you(ctx) end
     elseif u == U.target then
         c.target, c.targetColor = target(ctx)
-        if k == K.DEBUFF_ON or k == K.DEBUFF_OFF then c.source, c.sourceColor = you() end
+        if k == K.DEBUFF_ON or k == K.DEBUFF_OFF then c.source, c.sourceColor = you(ctx) end
     else
-        c.target, c.targetColor = you()
+        c.target, c.targetColor = you(ctx)
     end
 end
 
@@ -252,7 +258,8 @@ end
 
 --- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, source, sourceColor, target,
 --- targetColor, spell, spellColor, spellID, icon, amount, amountColor, big, info, wash (a token or nil).
---- `ctx`: startT, startClock, timeFormat, targetName, targetFriendly, petName, schoolColors, washes.
+--- `ctx`: startT, startClock, timeFormat, targetName, targetFriendly, petName, schoolColors, washes, and
+--- the player's own who colors (youColor, hostileColor, friendlyColor: nil follows the default).
 --- @return table c
 function LogTable.Cells(e, ctx, c)
     c = c or {}
@@ -304,6 +311,27 @@ function LogTable.ReadShow(show)
     return show
 end
 
+-- A stored swatch `{ r, g, b }` into `hue` (a reused array), or nil when there is none.
+local function swatch(path, hue)
+    local c = setting(path)
+    if type(c) ~= "table" then return nil end
+    hue[1], hue[2], hue[3] = tonumber(c.r) or 1, tonumber(c.g) or 1, tonumber(c.b) or 1
+    return hue
+end
+
+local ownYou, ownHostile, ownFriendly = {}, {}, {}
+
+--- `ctx`'s who colors refilled from `log.colors`: "You" in its own swatch while Use class color is off,
+--- the hostile and friendly target in theirs while Use the skin's color is off; nil keeps the default
+--- (the class color, the skin's `ct.log.hostile` and `ct.log.friendly`).
+function LogTable.ReadColors(ctx)
+    ctx.youColor = setting("log.colors.useClassColorYou") == false and swatch("log.colors.you", ownYou) or nil
+    ctx.hostileColor = setting("log.colors.hostileFromSkin") == false and swatch("log.colors.hostile", ownHostile) or nil
+    ctx.friendlyColor = setting("log.colors.friendlyFromSkin") == false
+        and swatch("log.colors.friendly", ownFriendly) or nil
+    return ctx
+end
+
 local function unitName(unit)
     if type(UnitExists) == "function" and not Secrets.PlainTruth(UnitExists(unit)) then return nil end
     local ok, name = pcall(UnitName, unit)
@@ -323,7 +351,7 @@ function LogTable.LiveContext(ctx, startT)
     ctx.targetFriendly = type(UnitCanAttack) == "function" and ok and Secrets.PlainEquals(hostile, false) or false
     ctx.schoolColors = setting("log.view.schoolColors") ~= false
     ctx.washes = setting("log.view.washes") ~= false
-    return ctx
+    return LogTable.ReadColors(ctx)
 end
 
 -- ── the feed ────────────────────────────────────────────────────────────────────────────────────

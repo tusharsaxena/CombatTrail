@@ -433,6 +433,16 @@ local function scaledFont(font, scale)
     return scaledFonts[key] or nil
 end
 
+--- The named copy of `font` at `scale` times its Style.FONT_SIZE height, or nil where the client has
+--- no CreateFont or the font has no size here: for a surface that sets a label's face again at its own
+--- size (the Combat Log's rows, modules/LogTable_View.lua, `log.view.fontSize`).
+--- @param font string  a Style.FONT value that Style.FONT_SIZE names
+--- @param scale number
+--- @return string|nil
+function Style.ScaledFont(font, scale)
+    return scaledFont(font, scale)
+end
+
 --- Style.Text at `scale` times `font`'s height (Style.FONT_SIZE): the same role and color, so the skin
 --- paints it as it paints Style.Text, keeping the scale. Used where a whole surface is drawn larger:
 --- the new-best toast (ported from DPS Race @f8078c7, its Style.ScaledText).

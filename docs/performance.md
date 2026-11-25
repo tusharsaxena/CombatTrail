@@ -72,6 +72,13 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   registered only while a fight is open. A loss is a lookup in the unit's aura-instance map; the
   map is walked again only at the fight's start, a target change and a full update. The fight's
   saved lines are built once, out of combat, when the record is.
+- The Combat Log's live views (the DPS HUD's drawer, the detached window) repaint on one AceTimer each
+  at `NS.Constants.LOG.REPAINT` (0.1 s), only while shown, and a tick with nothing new paints nothing
+  (`logPaintIdle`, 0 bytes). The Combat Log page's *Show new rows* throttle (`log.view.throttle`) only
+  spaces out what those ticks reveal; the capture and the store never wait on it. The rows' text size
+  and height (`log.view.fontSize`, `log.view.rowHeight`) are read at layout, which runs only when the
+  width, the rows, the columns or one of those two change, never on a paint: a new text size sets each
+  pooled label's face once (a named font object per size, made once and kept).
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
 - When the HUD's beat and a slices boundary tick land in one frame they share one `Meter.ReadLive` of
@@ -105,6 +112,8 @@ so the worst case at the defaults is 500 fights at the cap, about 18 MB. The His
 runner's `perf` suite. It drives the Combat Log's handlers inside an open fight, as the client calls
 them: a hit (`logHit`), an aura gained and lost (`logAura`), a cast from the lanes' listener
 (`logCast`) and a busy fight's beat of all of them (`busyFight`), the first two with capture off and
-on. Every scenario measured 0 bytes per iteration once the ring is full (2026-11-25, Lua 5.1.5), and
-its ceilings sit just above that. The recorded runs live in
+on, then the drawer's repaint after a busy beat (`logPaint`) and with nothing new (`logPaintIdle`).
+Every capture scenario measured 0 bytes per iteration once the ring is full (2026-11-25, Lua 5.1.5),
+and its ceilings sit just above that; `logPaint` measured 9,520 bytes per iteration, all of it the kit's
+widget mock, under a 10,240 ceiling (re-run 2026-11-25 after CL-11c2's sizes: unchanged). The recorded runs live in
 [`automated-tests/README.md`](automated-tests/README.md)'s bundles.

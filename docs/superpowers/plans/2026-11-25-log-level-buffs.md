@@ -87,6 +87,19 @@
   option): it opens the window as the footer's Timeline button does, and the tab shown stays as it was.
   `log.results.jumpToCast` and `log.results.chips.*` have defaults and no rows until CL-11c2.
 
+- **CL-11c2: the Combat Log page.** `settings/Log.lua`, eight tabs (Combat Log, Docked drawer,
+  Detached window, Order and display, What to show, Colors, Storage, Results) with a row for every
+  `log.*` key but the detached window's drag-and-grip geometry (`log.window.position`, `width`,
+  `height`, written raw as the Race window's place is). Every `log.*` key is off the write-through list.
+  New keys: `log.view.fontSize` (8-16 points, 10) and `log.view.rowHeight` (12-28 px, 14), read at
+  layout by `modules/LogTable_View.lua` (each text size its own pool of rows, because the skin keeps the
+  size a label had at its first paint), and `log.colors.*`: "You" a ColorPair with Use class color on
+  (the log shipped "You" in the class color, options-ui-§17's "unless the addon already ships it on"),
+  the hostile and friendly target colors a reaction palette with no class companion (§17's exemption),
+  each with Use the skin's color on. The detached window's gear opens the page. Hide auto attacks is the
+  existing `log.show.autoAttacks`, drawn as *Show auto attacks* (off), and the window's "background
+  opacity" is `log.window.alpha`, the whole window's opacity, drawn as *Window opacity*.
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.
