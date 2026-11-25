@@ -5,7 +5,7 @@
 -- column, the chips and their counts, a chip turning its lines off, the sort and the wheel; no Damage
 -- by spell (Overview's Spell breakdown is the one spell list); a click on a CAST row opening the
 -- timeline at that cast (zoomed, the moment in the middle, the focus line), and its switch; and a fight
--- saved before the log saying "No log was saved for this fight"; a saved log's retired lines (the PULL
+-- saved before the log saying "No combat sequence was saved for this fight"; a saved log's retired lines (the PULL
 -- and END, the hits, heals and target buffs the Combat Sequence dropped, CSEQ-1) never shown or counted.
 -- Runs under both kit profiles.
 
@@ -118,28 +118,30 @@ test("results log: the detail has no tab strip, only the one scrolling page", fu
     assertTrue(pane.scrollFrame:IsShown(), "the page")
 end)
 
-test("results log: Log is a folding section under Targets, open by default", function()
+test("results log: Combat Sequence is a folding section under Targets, open by default", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local pane, g = logTab(NS, "a")
     local D = NS.ResultsDetail
     local order = table.concat(D.SECTIONS, ",")
-    assertTrue(order:find("targets,log", 1, true) ~= nil, "after Targets: " .. order)
-    assertEqual(g.title:GetText(), "Log")
+    assertTrue(order:find("targets,sequence", 1, true) ~= nil, "after Targets: " .. order)
+    assertEqual(g.title:GetText(), "Combat Sequence")
     assertEqual(g.title:GetParent(), pane.content, "in the scrolling page")
     assertEqual(g.title:GetFont(), pane.targets.title:GetFont(), "the sections' gold heading")
     assertTrue(top(g.title) < top(pane.targets.title), "under Targets")
     assertEqual(top(g.title), top(pane.targets.title) - NS.Style.SECTION_H - NS.ResultsTargets.ROW_H - 8
         - NS.Style.SECTION_GAP, "the section after Targets' one row")
-    local arrow = pane.heads.log
+    local arrow = pane.heads.sequence
     assertTrue(arrow:IsShown())
     assertEqual(arrow.iconName, "chevron-down", "open")
-    assertFalse(D.IsCollapsed("log"), "open by default")
+    assertFalse(D.IsCollapsed("sequence"), "open by default")
     assertTrue(g.frame:IsShown(), "its body")
     assertTrue(g.table.frame:IsShown(), "the table")
     for _, b in pairs(g.chips) do assertTrue(b:IsShown(), "the chips") end
     click(arrow)
-    assertTrue(D.IsCollapsed("log"), "the fold is stored")
+    assertTrue(D.IsCollapsed("sequence"), "the fold is stored")
+    assertEqual(rawget(NS.db.profile.results.collapsedSections, "sequence"), true, "under the key sequence")
+    assertNil(rawget(NS.db.profile.results.collapsedSections, "log"), "never the old key")
     assertFalse(g.frame:IsShown(), "folded: the heading alone")
     assertEqual(arrow.iconName, "chevron-right")
     click(arrow)
@@ -221,7 +223,7 @@ end)
 
 test("results log: each fight opens on log.results.chips, the same fight drawn again keeps them", function()
     local NS = fresh()
-    NS.db.profile.log.results.chips.buffs = false
+    NS.db.profile.sequence.results.chips.buffs = false
     save(NS, rec(NS, { id = "a" }), rec(NS, { id = "b" }))
     local pane, g = logTab(NS, "a")
     assertEqual(g.chips.buffs.styleName, "normal", "the default chips")
@@ -276,7 +278,7 @@ test("results log: the Time header flips the sort, oldest first starting at the 
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     g.table.sorter:GetScript("OnClick")(g.table.sorter)
-    assertEqual(NS.GetSetting("log.view.sort"), "oldest")
+    assertEqual(NS.GetSetting("sequence.view.sort"), "oldest")
     assertEqual(events(g), "CAST,BUFF+,CAST,DEBUFF+,DEBUFF-,CAST,DIES")
 end)
 
@@ -367,7 +369,7 @@ end)
 
 test("results log: log.results.jumpToCast off, a cast row's click does nothing", function()
     local NS = fresh()
-    NS.db.profile.log.results.jumpToCast = false
+    NS.db.profile.sequence.results.jumpToCast = false
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     assertFalse(g.hint:IsShown())
@@ -389,12 +391,12 @@ test("results log: the timeline's focus math keeps the view on the axis", functi
     assertNil(D.OnAxis({}, nil))
 end)
 
-test("results log: a fight saved before the log says No log was saved for this fight", function()
+test("results log: a fight saved before the log says No combat sequence was saved for this fight", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "old", noLog = true }))
     local _, g = logTab(NS, "old")
     assertTrue(g.none:IsShown())
-    assertEqual(g.none:GetText(), "No log was saved for this fight")
+    assertEqual(g.none:GetText(), "No combat sequence was saved for this fight")
     assertFalse(g.table.frame:IsShown(), "no table")
     for _, b in pairs(g.chips) do assertFalse(b:IsShown(), "no chips") end
     assertFalse(g.hint:IsShown())
@@ -404,6 +406,6 @@ test("results log: a Combat Log setting redraws an open Log section", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
-    NS.SetByPath("log.view.sort", "oldest")
+    NS.SetByPath("sequence.view.sort", "oldest")
     assertEqual(events(g):sub(1, 4), "CAST", "the write-through sort redrew it")
 end)

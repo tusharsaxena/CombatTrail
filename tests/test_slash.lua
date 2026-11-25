@@ -197,6 +197,54 @@ test("slash: the help says lock is the HUD's and the windows' and lanes is the l
     assertTrue(out:find("Lock the lanes and", 1, true) == nil, "no lock line names the lanes")
 end)
 
+-- The Combat Sequence's verb (CSEQ-2), and `/ct log`, its name until then, an alias of it.
+test("slash: /ct sequence and /ct log reach the one handler, for every sub-verb", function()
+    for _, name in ipairs({ "sequence", "log" }) do
+        local inst = T.load()
+        local NS, M = inst.NS, inst.mocks
+        NS.Slash:OnSlash(name .. " hide")
+        assertFalse(NS.GetSetting("sequence.drawer.shown"), name .. " hide")
+        NS.Slash:OnSlash(name .. " show")
+        assertTrue(NS.GetSetting("sequence.drawer.shown"), name .. " show")
+        assertTrue(NS.Hud.IsShown(), name .. " show opens the HUD with it")
+        NS.Slash:OnSlash(name .. " toggle")
+        assertFalse(NS.GetSetting("sequence.drawer.shown"), name .. " toggle")
+        NS.Slash:OnSlash(name)
+        assertTrue(NS.GetSetting("sequence.drawer.shown"), name .. " alone toggles")
+        NS.Slash:OnSlash(name .. " detach")
+        assertEqual(NS.GetSetting("sequence.home"), "detached", name .. " detach")
+        NS.Slash:OnSlash(name .. " dock")
+        assertEqual(NS.GetSetting("sequence.home"), "docked", name .. " dock")
+        M.__resetPrinted()
+        NS.Slash:OnSlash(name .. " sideways")
+        assertTrue(anyLine(M, "Usage: /ct sequence show, hide, toggle, detach or dock"), name .. ": " .. text(M))
+        assertFalse(anyLine(M, "unknown command"), name .. " is a verb")
+    end
+end)
+
+test("slash: help lists sequence, naming /ct log in its line, and no log row of its own", function()
+    local inst = T.load()
+    inst.mocks.__resetPrinted()
+    inst.NS.Slash:OnSlash("help")
+    local out = text(inst.mocks)
+    assertTrue(out:find("/ct sequence", 1, true) ~= nil, out)
+    assertTrue(out:find("The Combat Sequence, in the DPS HUD or its own window", 1, true) ~= nil)
+    local _, logs = out:gsub("/ct log", "")
+    local _, notes = out:gsub("%(/ct log also works%)", "")
+    assertEqual(notes, 1, "the sequence line names the alias")
+    assertEqual(logs, notes, "no help row of its own for log")
+    for _, row in ipairs(inst.NS.COMMANDS) do assertTrue(row[1] ~= "log", "no log verb in COMMANDS") end
+end)
+
+test("slash: with the Combat Sequence off, the verb says so", function()
+    local inst = T.load()
+    local NS, M = inst.NS, inst.mocks
+    NS.SetByPath("sequence.enabled", false)
+    M.__resetPrinted()
+    NS.Slash:OnSlash("sequence show")
+    assertTrue(anyLine(M, "The Combat Sequence is off (sequence.enabled)."), text(M))
+end)
+
 test("slash: test turns test mode on and off", function()
     local inst = T.load()
     local NS = inst.NS

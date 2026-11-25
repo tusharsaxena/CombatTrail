@@ -837,7 +837,7 @@ end
 
 -- The sim window (`/ct sim`'s step panel, modules/Sim.lua) docks beside this window while it is up
 -- and beside the DPS HUD otherwise, so each show and hide of the frame docks a shown one again.
--- modules/Sim.lua loads after this file, so it is reached at call time. The detached Combat Log is a
+-- modules/Sim.lua loads after this file, so it is reached at call time. The detached Combat Sequence is a
 -- standalone window (owner feedback item 11): nothing here moves it.
 local function redockSim()
     local Sim = NS.Sim

@@ -8,11 +8,11 @@ local _, NS = ...
 -- with the store (newest first, no id without its record), and sweeps the talent loadouts and the
 -- equipment sets no fight refers to any more (modules/Loadouts.lua). FIGHTS_CHANGED fires once when anything was removed.
 --
--- THE LOGS' BOUND (CombatTrail #11). A fight's saved Combat Log is the one part of a record that grows
+-- THE LOGS' BOUND (CombatTrail #11). A fight's saved Combat Sequence is the one part of a record that grows
 -- with the fight (docs/performance.md, *Stored size*), and a best-holding fight is kept for ever, so
 -- after the age and the cap each run strips the log (`log`, `logDropped`, `logTargets`) from every
--- stored fight but the newest `log.store.fights` that carry one (100; 0 keeps every log). The fight
--- itself stays: its Log section then says no log was saved. Between runs the fights stored this session
+-- stored fight but the newest `sequence.store.fights` that carry one (100; 0 keeps every log). The fight
+-- itself stays: its Combat Sequence section then says no log was saved. Between runs the fights stored this session
 -- add theirs, so the bound holds from the next run.
 --
 -- A record written by a later version (modules/Recorder.lua's Recorder.Known) is never removed and
@@ -56,10 +56,10 @@ end
 
 -- ── the purge ───────────────────────────────────────────────────────────────────────────────────
 
--- The newest `log.store.fights` (0: all) of `records` (newest first) that carry a log keep it; every
+-- The newest `sequence.store.fights` (0: all) of `records` (newest first) that carry a log keep it; every
 -- older one's log goes. Answers how many logs went.
 local function byLogs(records)
-    local keep = wholeOr0(NS.GetSetting and NS.GetSetting("log.store.fights"))
+    local keep = wholeOr0(NS.GetSetting and NS.GetSetting("sequence.store.fights"))
     if keep == 0 then return 0 end
     local seen, stripped = 0, 0
     for _, r in ipairs(records) do

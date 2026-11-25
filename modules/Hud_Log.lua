@@ -1,5 +1,5 @@
 local _, NS = ...
--- modules/Hud_Log.lua — the Combat Log docked in the DPS HUD (CombatTrail #11, plan item CL-11b; the
+-- modules/Hud_Log.lua — the Combat Sequence docked in the DPS HUD (CombatTrail #11, plan item CL-11b; the
 -- spec's addendum, home A): a drawer under the spell rows, at the HUD's width, in its skin, over the
 -- shared table (modules/LogTable.lua and LogTable_View.lua) and the capture's ring (modules/CombatLog.lua).
 --
@@ -8,39 +8,39 @@ local _, NS = ...
 -- feedback item 12): the HUD reserves the drawer's sections under the content (Hud.lua's
 -- contentBottom adds HudLog.Height(), worked out from the configuration alone), so the height moves
 -- only when the log opens or closes, a rows setting changes or the HUD's grip is dragged (whose extra
--- height goes to the drawer's rows while it is open: HudLog.SetDragRows while held, `log.drawer.rows`
+-- height goes to the drawer's rows while it is open: HudLog.SetDragRows while held, `sequence.drawer.rows`
 -- on release), and the Race window docked beside it takes the whole height (Hud.Height,
 -- RaceWindow.OnHudResized).
 --
 -- A SECTION LIKE SPELL BREAKDOWN (owner feedback items 17 and 18, 2026-11-25): HudLog.GAP (the HUD's
 -- HEAD_GAP) of clear space, then its heading on the HUD's section line (Hud_States' SECTION_H): the
--- gold "Combat Log" in FONT.SECTION at the left, the dim count ("8 shown") right-aligned on the
+-- gold "Combat Sequence" in FONT.SECTION at the left, the dim count ("8 shown") right-aligned on the
 -- heading's bottom edge, then its two marks (the filter eye and the detach arrow) at the right edge,
 -- tinted and lit as the window's title-bar marks are (Style.NewStrip, Style.AddToStrip: the skin's
 -- `icon.tint` at rest, `text.link` under the pointer, the same 18 px slot and 12 px art). No separator
 -- or seam above it, and no fold: the title bar's Log mark alone opens and closes the log (item 14).
 --
 -- ITS STATE, each saved in the profile:
---   log.drawer.shown      the title bar's log control (the list mark) and `/ct log` toggle it (on by
+--   sequence.drawer.shown      the title bar's log control (the list mark) and `/ct sequence` toggle it (on by
 --                         default, owner feedback item 1); with
---                         log.drawer.autoOpen on (the default) each fight's start opens it. Off while
---                         `log.enabled` is off, whatever it says, and the control is then hidden.
---   log.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
+--                         sequence.drawer.autoOpen on (the default) each fight's start opens it. Off while
+--                         `sequence.enabled` is off, whatever it says, and the control is then hidden.
+--   sequence.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
 --                         under its heading (LogTable.NewChips: Casts, Pet, Buffs, Debuffs), the
 --                         HUD growing by it; on by default (item 9). The chips themselves
---                         are the drawer's own, seeded from `log.show.*` (LogTable.Reseeds) and turned
+--                         are the drawer's own, seeded from `sequence.show.*` (LogTable.Reseeds) and turned
 --                         for this session alone.
---   log.drawer.rows       the rows shown, 3 to 20 (default 10, owner feedback item 16); the rows past
+--   sequence.drawer.rows       the rows shown, 3 to 20 (default 10, owner feedback item 16); the rows past
 --                         them scroll with the wheel, the Spell breakdown's indicator in the gutter
 --                         (item 6, LogTable's View:SetScroll).
---   log.view.sort         newest first (default) or oldest first: the Time header's click flips it.
---   log.home              "docked" (the default) or "detached": the header's detach control (the export
+--   sequence.view.sort         newest first (default) or oldest first: the Time header's click flips it.
+--   sequence.home              "docked" (the default) or "detached": the header's detach control (the export
 --                         mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
---                         dock control sends it back. `log.drawer.shown` is the log's one open, in either
+--                         dock control sends it back. `sequence.drawer.shown` is the log's one open, in either
 --                         home: detached, the HUD reserves nothing and this drawer stays hidden.
--- `log.drawer.shown`, `log.drawer.chips`, `log.view.sort` and `log.home` are written by the controls
--- through NS.SetByPath, onto their Combat Log page rows (settings/Log.lua, CL-11c2). Every write's
--- SETTINGS_CHANGED on a `log.` path redraws a shown HUD (Hud.Refresh), which re-insets its content and
+-- `sequence.drawer.shown`, `sequence.drawer.chips`, `sequence.view.sort` and `sequence.home` are written by the controls
+-- through NS.SetByPath, onto their Combat Sequence page rows (settings/Log.lua, CL-11c2). Every write's
+-- SETTINGS_CHANGED on a `sequence.` path redraws a shown HUD (Hud.Refresh), which re-insets its content and
 -- re-places the drawer.
 --
 -- THE PAINT. Nothing here runs on a client event. While the drawer is shown on a shown HUD, one
@@ -67,7 +67,7 @@ HudLog.MIN_ROWS, HudLog.MAX_ROWS = 3, 20
 local d                   -- the built drawer
 local dragRows            -- the rows the HUD's grip holds while it is dragged (HudLog.SetDragRows)
 local feed                -- the live feed (LogTable.NewFeed)
-local show = {}           -- the drawer's own What to show, seeded from `log.show`
+local show = {}           -- the drawer's own What to show, seeded from `sequence.show`
 local seeded = false
 local timer
 local dirty = true
@@ -79,20 +79,20 @@ end
 
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
 
---- Whether the Combat Log is on at all (`log.enabled`).
+--- Whether the Combat Sequence is on at all (`sequence.enabled`).
 function HudLog.Enabled()
-    return setting("log.enabled") ~= false
+    return setting("sequence.enabled") ~= false
 end
 
 --- Where the log lives: "docked" in the HUD (the default) or "detached" in its own window.
 --- @return string
 function HudLog.Home()
-    return setting("log.home") == "detached" and "detached" or "docked"
+    return setting("sequence.home") == "detached" and "detached" or "docked"
 end
 
---- Whether the log is wanted open in either home (the Combat Log on, `log.drawer.shown`).
+--- Whether the log is wanted open in either home (the Combat Sequence on, `sequence.drawer.shown`).
 function HudLog.Open()
-    return HudLog.Enabled() and setting("log.drawer.shown") == true
+    return HudLog.Enabled() and setting("sequence.drawer.shown") == true
 end
 
 --- Whether the drawer is wanted open: the log open and docked.
@@ -100,9 +100,9 @@ function HudLog.Wanted()
     return HudLog.Open() and HudLog.Home() == "docked"
 end
 
---- The rows `log.drawer.rows` asks for, whole and in range.
+--- The rows `sequence.drawer.rows` asks for, whole and in range.
 function HudLog.RowsSetting()
-    local v = Secrets.PlainNumber(setting("log.drawer.rows")) or HudLog.MIN_ROWS
+    local v = Secrets.PlainNumber(setting("sequence.drawer.rows")) or HudLog.MIN_ROWS
     return clamp(math.floor(v), HudLog.MIN_ROWS, HudLog.MAX_ROWS)
 end
 
@@ -130,9 +130,9 @@ local function drawerWidth()
     return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 366
 end
 
---- Whether the chips row shows (`log.drawer.chips`, on by default; the header's filter mark).
+--- Whether the chips row shows (`sequence.drawer.chips`, on by default; the header's filter mark).
 function HudLog.ChipsShown()
-    return setting("log.drawer.chips") ~= false
+    return setting("sequence.drawer.chips") ~= false
 end
 
 -- The chips row's height, its gap under it included; 0 while it is not shown.
@@ -162,7 +162,7 @@ local function write(path, value)
 end
 
 local function onSort()
-    write("log.view.sort", LogTable.SortOf() == "newest" and "oldest" or "newest")
+    write("sequence.view.sort", LogTable.SortOf() == "newest" and "oldest" or "newest")
 end
 
 local function onScroll(away)
@@ -176,7 +176,7 @@ local function build(parent)
     local f = CreateFrame("Frame", nil, parent)
     d = { frame = f, hud = parent, marks = Style.NewStrip() }
     d.title = Style.Text(f, Style.FONT.SECTION)
-    d.title:SetText(L["Combat Log"])
+    d.title:SetText(L["Combat Sequence"])
     d.resume = Style.Button(f, L["Resume"], function()
         if feed then LogTable.Resume(feed) end
         dirty = true
@@ -187,9 +187,9 @@ local function build(parent)
     d.resume.tip = { L["Resume"], L["Follow the newest line again."] }
     d.resume:Hide()
     d.filter = Style.AddToStrip(d.marks, Style.ControlButton(f, "eye", "F",
-        L["Show or hide the Combat Log's filter chips"], function() HudLog.ToggleChipsRow() end, "body"))
+        L["Show or hide the Combat Sequence's filter chips"], function() HudLog.ToggleChipsRow() end, "body"))
     d.detach = Style.AddToStrip(d.marks, Style.ControlButton(f, "export", ">",
-        L["Detach the Combat Log into its own window"], function() HudLog.SetHome("detached") end, "body"))
+        L["Detach the Combat Sequence into its own window"], function() HudLog.SetHome("detached") end, "body"))
     d.count = Style.Text(f, Style.FONT.CAPTION, nil, "RIGHT")
     d.chips = LogTable.NewChips(f, function(key) HudLog.ToggleChip(key) end)
     d.table = LogTable.New(f, { onSort = onSort, onScroll = onScroll })
@@ -225,7 +225,7 @@ local function layTables(w)
     d.table.frame:ClearAllPoints()
     d.table.frame:SetPoint("TOPLEFT", d.frame, "TOPLEFT", 0, tableTop)
     d.table.frame:SetPoint("TOPRIGHT", d.frame, "TOPRIGHT", 0, tableTop)
-    d.table:Layout(w, HudLog.Rows(), setting("log.view.columns"))
+    d.table:Layout(w, HudLog.Rows(), setting("sequence.view.columns"))
 end
 
 --- Place the drawer on the HUD's window `hud` (the HUD's draw calls it): `pad` in from each side, its
@@ -263,7 +263,7 @@ local function accept(e)
     return LogTable.Shows(e, show)
 end
 
--- The drawer's chips from `log.show` again (built, opened, a fight's start, a What to show write).
+-- The drawer's chips from `sequence.show` again (built, opened, a fight's start, a What to show write).
 local function seed()
     LogTable.ReadShow(show)
     seeded = true
@@ -284,7 +284,7 @@ function HudLog.Paint()
     if not (d and d.frame:IsShown()) then return end
     if not feed then feed = LogTable.NewFeed() end
     if not seeded then seed() end
-    local moved = LogTable.Advance(feed, GetTime(), setting("log.view.throttle"), setting("log.view.throttleMs"), accept)
+    local moved = LogTable.Advance(feed, GetTime(), setting("sequence.view.throttle"), setting("sequence.view.throttleMs"), accept)
     if not (moved or dirty) then return end
     dirty = false
     local startT, from = CL.Window()
@@ -328,15 +328,15 @@ function HudLog.Ticking() return timer ~= nil end
 --- player's open; the detached window is a standalone window and opens alone.
 function HudLog.SetShown(on)
     if on == nil then on = not HudLog.Open() end
-    if on and not HudLog.Enabled() then return NS.Print(L["The Combat Log is off (log.enabled)."]) end
-    write("log.drawer.shown", on == true)
+    if on and not HudLog.Enabled() then return NS.Print(L["The Combat Sequence is off (sequence.enabled)."]) end
+    write("sequence.drawer.shown", on == true)
     if on and HudLog.Home() == "docked" and NS.Hud and not NS.Hud.IsShown() then NS.Hud.Show() end
 end
 
---- Show or hide the drawer's chips row (the header's filter mark, `log.drawer.chips`): its write
+--- Show or hide the drawer's chips row (the header's filter mark, `sequence.drawer.chips`): its write
 --- redraws the HUD to its new height.
 function HudLog.ToggleChipsRow()
-    write("log.drawer.chips", not HudLog.ChipsShown())
+    write("sequence.drawer.chips", not HudLog.ChipsShown())
 end
 
 --- Turn chip `key` on or off in the drawer alone (never in the settings), and repaint.
@@ -353,11 +353,11 @@ end
 function HudLog.__show() return show end
 
 --- Move the log to `home`, "docked" or "detached" (the drawer's detach mark, the window's dock mark,
---- `/ct log detach|dock`). The log stays open across the move.
+--- `/ct sequence detach|dock`). The log stays open across the move.
 function HudLog.SetHome(home)
     home = home == "detached" and "detached" or "docked"
     if home == HudLog.Home() then return end
-    write("log.home", home)
+    write("sequence.home", home)
 end
 
 local VERBS = {
@@ -369,15 +369,15 @@ local VERBS = {
     dock = function() HudLog.SetHome("docked") end,
 }
 
---- `/ct log [show|hide|toggle|detach|dock]` (no pin: the detached window is standalone, item 11).
+--- `/ct sequence [show|hide|toggle|detach|dock]` (no pin: the detached window is standalone, item 11).
 function HudLog.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word]
     if fn then return fn() end
-    NS.Print(L["Usage: /ct log show, hide, toggle, detach or dock"])
+    NS.Print(L["Usage: /ct sequence show, hide, toggle, detach or dock"])
 end
 
---- The title bar's log control: shown while the Combat Log is on (the HUD lays its strip by it).
+--- The title bar's log control: shown while the Combat Sequence is on (the HUD lays its strip by it).
 function HudLog.ControlShown()
     return HudLog.Enabled()
 end
@@ -402,14 +402,14 @@ if bus then
         -- A new fight: the feed follows again from its first line, and the drawer opens when asked.
         if feed then LogTable.Resume(feed) end
         dirty, seeded = true, false
-        if HudLog.Enabled() and setting("log.drawer.autoOpen") ~= false and setting("log.drawer.shown") ~= true then
-            write("log.drawer.shown", true)
+        if HudLog.Enabled() and setting("sequence.drawer.autoOpen") ~= false and setting("sequence.drawer.shown") ~= true then
+            write("sequence.drawer.shown", true)
         end
     end)
     bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
-        if type(path) ~= "string" or not (path:find("^log%.") or path == "profile") then return end
+        if type(path) ~= "string" or not (path:find("^sequence%.") or path == "profile") then return end
         if LogTable.Reseeds(path) then seeded = false end
-        if not path:find("^log%.") then return end
+        if not path:find("^sequence%.") then return end
         dirty = true
         if d then d.stamp = (d.stamp or 0) + 1 end
         if NS.Hud and NS.Hud.IsShown and NS.Hud.IsShown() then NS.Hud.Refresh() end

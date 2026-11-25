@@ -230,11 +230,12 @@ NS.defaults = {
             minLength = NS.Compat.ForClient({ "forever" }) and 15 or 30, bossesOnly = false, content = content(),
             days = 7, keepBests = true, maxFights = 500,
         },
-        -- The Combat Log (CombatTrail #11, modules/CombatLog.lua): whether it captures at all, and what a
-        -- fight's record keeps of it: a log with each fight, the lines kept (the newest; NS.Constants.LOG
+        -- The Combat Sequence (CombatTrail #11, modules/CombatLog.lua; the Combat Log until CSEQ-2, whose
+        -- schema step 9 moved the stored `log` here): whether it captures at all, and what a
+        -- fight's record keeps of it: a sequence with each fight, the lines kept (the newest; NS.Constants.LOG
         -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each fight
         -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
-        -- modules/LogTable.lua; their rows are the Combat Log page's, settings/Log.lua, CL-11c2): the HUD's
+        -- modules/LogTable.lua; their rows are the Combat Sequence page's, settings/Log.lua, CL-11c2): the HUD's
         -- docked drawer (open by default, its rows 3-20, 10 by default, opened at each fight's start, its
         -- filter chips shown; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
@@ -245,14 +246,14 @@ NS.defaults = {
         -- (each saved category: casts, pet casts, buffs gained and lost on you, debuffs on you, your
         -- debuffs on your target, deaths; and the auto attacks; no hits, heals or target buffs, CSEQ-1,
         -- schema step 8). Then where
-        -- the log lives (CL-11b2): `home` "docked" in the HUD or "detached" in its own window
+        -- the sequence lives (CL-11b2): `home` "docked" in the HUD or "detached" in its own window
         -- (modules/LogWindow.lua), whose keys are `window`: a standalone window at its own `position`
         -- (owner feedback item 11: no attached state, so no side, HUD-height match or pin, schema step 6),
         -- its rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least)
-        -- set by its grip, `locked`, its `scale` and its `alpha` (0.1-1). Then the Results fight detail's Log section (CL-11c,
+        -- set by its grip, `locked`, its `scale` and its `alpha` (0.1-1). Then the Results fight detail's Combat Sequence section (CL-11c,
         -- modules/Results_Log.lua): the chips each fight opens on, and whether a click on a CAST row jumps
         -- the ability timeline to that cast.
-        log = {
+        sequence = {
             enabled = true,
             home = "docked",
             drawer = { shown = true, rows = 10, autoOpen = true, chips = true },

@@ -448,8 +448,8 @@ L["Show spell rows"] = "Show spell rows"
 L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] =
     "Show your spells and your pet's, one row each, in the order the damage meter gives them."
 L["Spell bars"] = "Spell bars"
-L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Log is closed or detached, the log's rows while it is docked open."] =
-    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Log is closed or detached, the log's rows while it is docked open."
+L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."] =
+    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."
 L["HUD width (px)"] = "HUD width (px)"
 L["How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."] =
     "How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."
@@ -1247,8 +1247,8 @@ L["Default"] = "Default"
 L["Training Dummy"] = "Training Dummy"
 L["incomplete"] = "incomplete"
 
--- The Combat Log's table and the DPS HUD's drawer (CombatTrail #11; modules/LogTable.lua,
--- modules/LogTable_View.lua, modules/Hud_Log.lua, `/ct log`)
+-- The Combat Sequence's table and the DPS HUD's drawer (CombatTrail #11; modules/LogTable.lua,
+-- modules/LogTable_View.lua, modules/Hud_Log.lua, `/ct sequence`)
 L["CAST"] = "CAST"
 L["BUFF+"] = "BUFF+"
 L["BUFF-"] = "BUFF-"
@@ -1259,24 +1259,23 @@ L["Interrupted"] = "Interrupted"
 L["Time"] = "Time"
 L["Event"] = "Event"
 L["Info"] = "Info"
-L["Combat Log"] = "Combat Log"
+L["Combat Sequence"] = "Combat Sequence"
 L["Resume"] = "Resume"
 L["Follow the newest line again."] = "Follow the newest line again."
 L["%d shown"] = "%d shown"
 L["No events yet."] = "No events yet."
-L["The Combat Log is off (log.enabled)."] = "The Combat Log is off (log.enabled)."
-L["Usage: /ct log show, hide, toggle, detach or dock"] = "Usage: /ct log show, hide, toggle, detach or dock"
-L["Detach the Combat Log into its own window"] = "Detach the Combat Log into its own window"
-L["Combat Trail \194\183 Log"] = "Combat Trail \194\183 Log"
-L["Dock the Combat Log back in the DPS HUD"] = "Dock the Combat Log back in the DPS HUD"
-L["Combat Log settings"] = "Combat Log settings"
+L["The Combat Sequence is off (sequence.enabled)."] = "The Combat Sequence is off (sequence.enabled)."
+L["Usage: /ct sequence show, hide, toggle, detach or dock"] = "Usage: /ct sequence show, hide, toggle, detach or dock"
+L["Detach the Combat Sequence into its own window"] = "Detach the Combat Sequence into its own window"
+L["Combat Trail \194\183 Combat Sequence"] = "Combat Trail \194\183 Combat Sequence"
+L["Dock the Combat Sequence back in the DPS HUD"] = "Dock the Combat Sequence back in the DPS HUD"
+L["Combat Sequence settings"] = "Combat Sequence settings"
 L["Following the newest line"] = "Following the newest line"
 L["Paused"] = "Paused"
-L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"] = "The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"
+L["The Combat Sequence, in the DPS HUD or its own window: /ct sequence toggles it, detach and dock move it (/ct log also works)"] = "The Combat Sequence, in the DPS HUD or its own window: /ct sequence toggles it, detach and dock move it (/ct log also works)"
 
--- The Results fight detail's Log section (CombatTrail #11, CL-11c; owner feedback item 19;
+-- The Results fight detail's Combat Sequence section (CombatTrail #11, CL-11c; owner feedback item 19;
 -- modules/Results_Log.lua)
-L["Log"] = "Log"
 L["Buffs"] = "Buffs"
 L["Debuffs"] = "Debuffs"
 L["Your casts."] = "Your casts."
@@ -1286,14 +1285,14 @@ L["Debuffs on you, and the debuffs you put on your target, gained and lost."] =
     "Debuffs on you, and the debuffs you put on your target, gained and lost."
 L["Click to show or hide them."] = "Click to show or hide them."
 L["Click to show or hide them in this view."] = "Click to show or hide them in this view."
-L["Show or hide the Combat Log's filter chips"] = "Show or hide the Combat Log's filter chips"
+L["Show or hide the Combat Sequence's filter chips"] = "Show or hide the Combat Sequence's filter chips"
 L["Click a CAST row to see it on the Timeline."] = "Click a CAST row to see it on the Timeline."
-L["No log was saved for this fight"] = "No log was saved for this fight"
+L["No combat sequence was saved for this fight"] = "No combat sequence was saved for this fight"
 L["No lines match the chips."] = "No lines match the chips."
 L["%d lines"] = "%d lines"
 L["%d not kept"] = "%d not kept"
 
--- The Combat Log page (CombatTrail #11, CL-11c2; settings/Log.lua): its tabs, its value lists, its rows
+-- The Combat Sequence page (CombatTrail #11, CL-11c2; settings/Log.lua): its tabs, its value lists, its rows
 -- and their tooltips.
 L["Docked drawer"] = "Docked drawer"
 L["Detached window"] = "Detached window"
@@ -1310,17 +1309,17 @@ L["At most one row every N ms"] = "At most one row every N ms"
 L["In batches every N ms"] = "In batches every N ms"
 L["From the pull"] = "From the pull"
 L["Clock time"] = "Clock time"
-L["Enable the Combat Log"] = "Enable the Combat Log"
-L["Record your casts, your pet's casts, the buffs you gain and lose, the debuffs on you and your target, and your death during each fight, in order, and show them in the DPS HUD's Log drawer or its own window. Off, nothing is recorded and the HUD's Log control is hidden."] =
-    "Record your casts, your pet's casts, the buffs you gain and lose, the debuffs on you and your target, and your death during each fight, in order, and show them in the DPS HUD's Log drawer or its own window. Off, nothing is recorded and the HUD's Log control is hidden."
-L["Show the Combat Log"] = "Show the Combat Log"
-L["Open the log now, docked in the DPS HUD or in its own window. The HUD's Log control and /ct log toggle it too."] =
-    "Open the log now, docked in the DPS HUD or in its own window. The HUD's Log control and /ct log toggle it too."
+L["Enable the Combat Sequence"] = "Enable the Combat Sequence"
+L["Record your casts, your pet's casts, the buffs you gain and lose, the debuffs on you and your target, and your death during each fight, in order, and show them in the DPS HUD's Combat Sequence section or its own window. Off, nothing is recorded and the HUD's Combat Sequence control is hidden."] =
+    "Record your casts, your pet's casts, the buffs you gain and lose, the debuffs on you and your target, and your death during each fight, in order, and show them in the DPS HUD's Combat Sequence section or its own window. Off, nothing is recorded and the HUD's Combat Sequence control is hidden."
+L["Show the Combat Sequence"] = "Show the Combat Sequence"
+L["Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."] =
+    "Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."
 L["Open it when a fight starts"] = "Open it when a fight starts"
-L["Open the log at the start of each fight, even if you closed it during the last one."] =
-    "Open the log at the start of each fight, even if you closed it during the last one."
+L["Open the Combat Sequence at the start of each fight, even if you closed it during the last one."] =
+    "Open the Combat Sequence at the start of each fight, even if you closed it during the last one."
 L["Where it lives"] = "Where it lives"
-L["Where the log lives"] = "Where the log lives"
+L["Where the Combat Sequence lives"] = "Where the Combat Sequence lives"
 L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."] =
     "Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."
 L["Show the filter chips"] = "Show the filter chips"
@@ -1346,8 +1345,8 @@ L["How opaque the window is, its background and its text together, over the DPS 
     "How opaque the window is, its background and its text together, over the DPS HUD's own opacity."
 L["Order"] = "Order"
 L["Sort order"] = "Sort order"
-L["Newest first puts the newest event at the top; oldest first puts it at the bottom. A click on the Time header flips it. Either way the log keeps the newest event in view until you scroll away."] =
-    "Newest first puts the newest event at the top; oldest first puts it at the bottom. A click on the Time header flips it. Either way the log keeps the newest event in view until you scroll away."
+L["Newest first puts the newest event at the top; oldest first puts it at the bottom. A click on the Time header flips it. Either way the sequence keeps the newest event in view until you scroll away."] =
+    "Newest first puts the newest event at the top; oldest first puts it at the bottom. A click on the Time header flips it. Either way the sequence keeps the newest event in view until you scroll away."
 L["Show new rows"] = "Show new rows"
 L["How fast new events appear in the drawer and the window. Instant shows each at the next repaint; at most one row every N ms lets them in one at a time; in batches shows every waiting event together, every N ms. This only slows the display: every event is still recorded and saved."] =
     "How fast new events appear in the drawer and the window. Instant shows each at the next repaint; at most one row every N ms lets them in one at a time; in batches shows every waiting event together, every N ms. This only slows the display: every event is still recorded and saved."
@@ -1383,41 +1382,41 @@ L["Deaths"] = "Deaths"
 L["Show your death."] = "Show your death."
 L["Filters"] = "Filters"
 L["Show auto attacks"] = "Show auto attacks"
-L["Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved log never keeps them."] =
-    "Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved log never keeps them."
+L["Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved sequence never keeps them."] =
+    "Show Auto Shot and Shoot among your casts. Off, they are hidden. A fight's saved sequence never keeps them."
 L["Color-blind safety"] = "Color-blind safety"
 L["Row washes"] = "Row washes"
 L["Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."] =
     "Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."
 L["Your color"] = "Your color"
-L["The color kept for \"You\". No part of the log draws it now."] = "The color kept for \"You\". No part of the log draws it now."
+L["The color kept for \"You\". No part of the Combat Sequence draws it now."] = "The color kept for \"You\". No part of the Combat Sequence draws it now."
 L["Hostile target color"] = "Hostile target color"
-L["The color kept for a target you can attack. No part of the log draws it now."] =
-    "The color kept for a target you can attack. No part of the log draws it now."
+L["The color kept for a target you can attack. No part of the Combat Sequence draws it now."] =
+    "The color kept for a target you can attack. No part of the Combat Sequence draws it now."
 L["Take the hostile target color from the skin. The swatch is not read while this is on."] =
     "Take the hostile target color from the skin. The swatch is not read while this is on."
 L["Friendly target color"] = "Friendly target color"
-L["The color kept for a target you cannot attack. No part of the log draws it now."] =
-    "The color kept for a target you cannot attack. No part of the log draws it now."
+L["The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."] =
+    "The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."
 L["Take the friendly target color from the skin. The swatch is not read while this is on."] =
     "Take the friendly target color from the skin. The swatch is not read while this is on."
-L["Save a log with each fight"] = "Save a log with each fight"
-L["Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."] =
-    "Keep each stored fight's Combat Log, for the Log section of its Results detail. Takes hold from the next fight."
+L["Save a sequence with each fight"] = "Save a sequence with each fight"
+L["Keep each stored fight's Combat Sequence, for the Combat Sequence section of its Results detail. Takes hold from the next fight."] =
+    "Keep each stored fight's Combat Sequence, for the Combat Sequence section of its Results detail. Takes hold from the next fight."
 L["Lines kept per fight"] = "Lines kept per fight"
-L["The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."] =
-    "The most lines a fight's saved log keeps, the newest. More lines make the saved history larger."
-L["Fights that keep their log (0 = all)"] = "Fights that keep their log (0 = all)"
-L["Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."] =
-    "Only the newest stored fights keep their saved log; an older fight stays in the history without it. 0 keeps every fight's log. Applied when the history is next tidied: at login, once a day, or with /ct purge."
+L["The most lines a fight's saved sequence keeps, the newest. More lines make the saved history larger."] =
+    "The most lines a fight's saved sequence keeps, the newest. More lines make the saved history larger."
+L["Fights that keep their sequence (0 = all)"] = "Fights that keep their sequence (0 = all)"
+L["Only the newest stored fights keep their saved sequence; an older fight stays in the history without it. 0 keeps every fight's sequence. Applied when the history is next tidied: at login, once a day, or with /ct purge."] =
+    "Only the newest stored fights keep their saved sequence; an older fight stays in the history without it. 0 keeps every fight's sequence. Applied when the history is next tidied: at login, once a day, or with /ct purge."
 L["Save these lines with each fight. Separate from What to show, which only filters the live views."] =
     "Save these lines with each fight. Separate from What to show, which only filters the live views."
-L["Log section"] = "Log section"
+L["Combat Sequence section"] = "Combat Sequence section"
 L["Jump to the Timeline on clicking a cast"] = "Jump to the Timeline on clicking a cast"
-L["A click on a CAST row on a fight's Log section opens the ability timeline at that cast."] =
-    "A click on a CAST row on a fight's Log section opens the ability timeline at that cast."
+L["A click on a CAST row in a fight's Combat Sequence section opens the ability timeline at that cast."] =
+    "A click on a CAST row in a fight's Combat Sequence section opens the ability timeline at that cast."
 L["Chips each fight opens on"] = "Chips each fight opens on"
-L["Turn this chip on when a fight's Log section opens. A click on the chip still turns it on or off for the fight shown."] =
-    "Turn this chip on when a fight's Log section opens. A click on the chip still turns it on or off for the fight shown."
-L["Restore every Combat Log setting on this profile to its addon default."] =
-    "Restore every Combat Log setting on this profile to its addon default."
+L["Turn this chip on when a fight's Combat Sequence section opens. A click on the chip still turns it on or off for the fight shown."] =
+    "Turn this chip on when a fight's Combat Sequence section opens. A click on the chip still turns it on or off for the fight shown."
+L["Restore every Combat Sequence setting on this profile to its addon default."] =
+    "Restore every Combat Sequence setting on this profile to its addon default."

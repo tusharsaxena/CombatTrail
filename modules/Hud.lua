@@ -67,8 +67,8 @@ local _, NS = ...
 --
 -- THE TITLE BAR, left to right: Results, Log, Race, Lock, Settings, Close (LibKa0s#86 order). The Race control
 -- (Retail only, the flag) shows while Race mode is on, the strip closing up without it;
--- its click is `/ct race toggle` (NS.SetRaceWindowShown). The Log control (Phosphor's list-bullets mark, item 13, while
--- `log.enabled`) opens and closes the Combat Log drawer under the spell rows (modules/Hud_Log.lua,
+-- its click is `/ct race toggle` (NS.SetRaceWindowShown). The Combat Sequence control (Phosphor's list-bullets mark, item 13, while
+-- `sequence.enabled`) opens and closes the Combat Sequence drawer under the spell rows (modules/Hud_Log.lua,
 -- CombatTrail #11), whose height the content's bottom inset reserves. Like every title-bar control it rests in the
 -- skin's `icon.tint` and takes `text.link` only under the pointer (smoke round 1, SR-L3), with its
 -- tooltip above it: it carries no light for the Race window being open.
@@ -125,13 +125,13 @@ local _, NS = ...
 -- ONE WINDOW, ONE STATIC HEIGHT (owner feedback item 12, 2026-11-25; v0.2 Task B3's fixed mode, the
 -- auto-grow `hud.sizeMode` and its `hud.grow` retired by schema step 6). The HUD and the docked log
 -- are one frame, top down: the title bar, the clock and target, the boxes, one reserved status line
--- (the over card's chips, kept while empty), Damage profile, Spell breakdown, the Combat Log
+-- (the over card's chips, kept while empty), Damage profile, Spell breakdown, the Combat Sequence
 -- (modules/Hud_Log.lua) and the footer. Hud.FixedHeight() is their sum (HudStates.FixedStack for
 -- `hud.bars` rows, HudLog.HeightFor its rows), worked out from the configuration alone, so nothing a
 -- fight holds or does moves it: only the log opening or closing, a rows setting, or the grip. The
 -- library's grip (modules/Sizing.lua), hidden while locked, sizes it: while it is held the sections
 -- lay out at the dragged size, and the release stores `hud.width` (MIN_WIDTH-MAX_WIDTH) and the whole
--- rows the height holds, the log's (`log.drawer.rows`) while the log is docked open, else the spell
+-- rows the height holds, the log's (`sequence.drawer.rows`) while the log is docked open, else the spell
 -- rows' (`hud.bars`, MIN_BARS-MAX_BARS), and the window snaps to them. Spells past the rows scroll
 -- with the wheel (modules/Hud_States.lua). The top left holds because the stored anchor is on it: a
 -- drag of the title bar or the grip, and any Refresh that finds the stored point off the top edge (a
@@ -491,7 +491,7 @@ end
 local Act = {}
 Hud.Act = Act
 
--- The controls on the band, outermost first: Close, Settings, Lock, the Race control and the Log control
+-- The controls on the band, outermost first: Close, Settings, Lock, the Race control and the Combat Sequence control
 -- while each shows, Results (W.HeaderButtons' order, extras . settings . close). Laid again when either
 -- comes or goes, so the strip closes up.
 local function layoutHeader(withRace, withLog)
@@ -511,7 +511,7 @@ local function buildHeader(f)
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Combat Trail"])
     local extras = { { key = "results", icon = "chart", glyph = "R", tip = L["Results"], onClick = function() Act.results() end },
-                     { key = "log", icon = "ph:list-bullets", glyph = "L", tip = L["Combat Log"], onClick = function() Act.log() end } }
+                     { key = "log", icon = "ph:list-bullets", glyph = "L", tip = L["Combat Sequence"], onClick = function() Act.log() end } }
     if NS.Compat.ForClient({ "retail" }) then
         extras[#extras + 1] = { key = "race", icon = "flag", glyph = "F", tip = L["Race window"], onClick = function() Act.race() end }
     end
@@ -549,7 +549,7 @@ local function tellHeight()
     if W and W.OnHudResized then W.OnHudResized() end
 end
 
--- The Race control (Retail) while Race mode is on and the Log control while the Combat Log is, each
+-- The Race control (Retail) while Race mode is on and the Combat Sequence control while the Combat Sequence is, each
 -- shown with the title bar, the strip laid again when either changes.
 local function applyRace()
     local b, bar = ui.race, setting("hud.window.titleBar") ~= false
@@ -851,7 +851,7 @@ function resized(w, h)
     NS.HudLog.SetDragRows(nil)
     placeAfterDrag()
     if w then NS.SetByPath("hud.width", clamp(math.floor(w + 0.5), Hud.MIN_WIDTH, Hud.MAX_WIDTH)) end
-    if h and logTakes() then NS.SetByPath("log.drawer.rows", logRowsFor(h))
+    if h and logTakes() then NS.SetByPath("sequence.drawer.rows", logRowsFor(h))
     elseif h and (setting("hud.layout") or {}).spells ~= false then NS.SetByPath("hud.bars", barsFor(h)) end
     if Hud.IsShown() then Hud.Refresh() end
 end
@@ -1413,7 +1413,7 @@ end
 
 function Act.lock() return NS.ToggleLock() end
 
---- The Log control: the Combat Log drawer opened or closed (`/ct log`).
+--- The Combat Sequence control: the Combat Sequence drawer opened or closed (`/ct sequence`).
 function Act.log() return NS.HudLog.SetShown() end
 
 --- The Race control: `/ct race toggle`, the player's open or close of the Race window.

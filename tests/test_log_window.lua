@@ -1,4 +1,4 @@
--- tests/test_log_window.lua — the Combat Log's detached window, "Combat Trail · Log" (CombatTrail #11,
+-- tests/test_log_window.lua — the Combat Sequence's detached window, "Combat Trail · Combat Sequence" (CombatTrail #11,
 -- plan item CL-11b2; the spec's addendum, home B): the drawer's detach mark and the window's dock mark
 -- moving the log between its homes with the log kept open, the HUD giving the drawer's height back;
 -- the window wider, with the Info column; TWO STATES ONLY (owner feedback item 11): a standalone
@@ -65,8 +65,8 @@ test("log window: the drawer's detach mark moves the log into its own window, an
     local d = NS.HudLog.__ui()
     assertEqual(d.detach.iconName, "export", "the drawer's header carries the detach mark")
     click(d.detach)
-    assertEqual(NS.GetSetting("log.home"), "detached", "saved detached")
-    assertTrue(NS.GetSetting("log.drawer.shown"), "still open")
+    assertEqual(NS.GetSetting("sequence.home"), "detached", "saved detached")
+    assertTrue(NS.GetSetting("sequence.drawer.shown"), "still open")
     assertTrue(NS.LogWindow.Visible(), "the window is up")
     assertFalse(d.frame:IsShown(), "the drawer is gone from the HUD")
     assertEqual(NS.HudLog.Height(), 0)
@@ -74,7 +74,10 @@ test("log window: the drawer's detach mark moves the log into its own window, an
     assertFalse(NS.HudLog.Ticking(), "the drawer's timer stopped")
     assertTrue(NS.LogWindow.Ticking(), "the window's own runs")
     local ui = NS.LogWindow.__ui()
-    assertEqual(ui.frame.title:GetText(), "Combat Trail \194\183 Log")
+    assertEqual(ui.frame.title:GetText(), "Combat Trail \194\183 Combat Sequence")
+    local function tipOf(b) return type(b.tip) == "table" and b.tip[1] or b.tip end
+    assertEqual(tipOf(ui.dock), "Dock the Combat Sequence back in the DPS HUD")
+    assertEqual(tipOf(ui.settings), "Combat Sequence settings")
 end)
 
 test("log window: the dock mark sends it back to the HUD, still open", function()
@@ -83,11 +86,11 @@ test("log window: the dock mark sends it back to the HUD, still open", function(
     assertEqual(ui.dock.iconName, "arrow-left")
     assertTrue(ui.settings ~= nil, "it keeps a saved place, so it is no companion: it carries the settings mark")
     click(ui.dock)
-    assertEqual(NS.GetSetting("log.home"), "docked")
+    assertEqual(NS.GetSetting("sequence.home"), "docked")
     assertFalse(NS.LogWindow.Visible(), "the window went")
     assertFalse(NS.LogWindow.Ticking())
     assertTrue(NS.HudLog.__ui().frame:IsShown(), "the drawer is back under the spell rows")
-    assertTrue(NS.GetSetting("log.drawer.shown"))
+    assertTrue(NS.GetSetting("sequence.drawer.shown"))
 end)
 
 test("log window: wider than the drawer, with the Info column", function()
@@ -116,12 +119,12 @@ test("log window: a standalone window, up whether or not the HUD is; no pin verb
     assertFalse(NS.Hud.IsShown(), "and the HUD stays hidden: opening it detached opens it alone")
     local printed = {}
     inst.mocks.print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
-    NS.Slash:OnSlash("log pin")
-    assertEqual(NS.GetSetting("log.window.pinned"), nil, "no pin key")
+    NS.Slash:OnSlash("sequence pin")
+    assertEqual(NS.GetSetting("sequence.window.pinned"), nil, "no pin key")
     assertTrue(LW.Visible())
     for _, key in ipairs({ "attached", "side", "matchHud", "pinned" }) do
-        assertEqual(NS.FindSchemaRow("log.window." .. key), nil, "no row for log.window." .. key)
-        assertEqual(NS.defaults.profile.log.window[key], nil, "no default for log.window." .. key)
+        assertEqual(NS.FindSchemaRow("sequence.window." .. key), nil, "no row for log.window." .. key)
+        assertEqual(NS.defaults.profile.sequence.window[key], nil, "no default for log.window." .. key)
     end
 end)
 
@@ -137,16 +140,16 @@ test("log window: Escape and its close mark close the log; the HUD's hide does n
         return self
     end)
     ui.frame:Hide()
-    assertFalse(NS.GetSetting("log.drawer.shown"), "Escape: the player closed the log")
+    assertFalse(NS.GetSetting("sequence.drawer.shown"), "Escape: the player closed the log")
     assertFalse(NS.LogWindow.Visible())
     NS.HudLog.SetShown(true)
     assertTrue(NS.LogWindow.Visible(), "the Log control opens it again, still detached")
     click(ui.close)
-    assertFalse(NS.GetSetting("log.drawer.shown"), "its close mark closes the log")
+    assertFalse(NS.GetSetting("sequence.drawer.shown"), "its close mark closes the log")
     NS.HudLog.SetShown(true)
     NS.Hud.Hide()
     assertTrue(NS.LogWindow.Visible(), "the HUD's hide is not a close of the log")
-    assertTrue(NS.GetSetting("log.drawer.shown"), "a hide with the HUD leaves the log open")
+    assertTrue(NS.GetSetting("sequence.drawer.shown"), "a hide with the HUD leaves the log open")
 end)
 
 test("log window: at its own place, scale and height by default, never beside the HUD", function()
@@ -154,7 +157,7 @@ test("log window: at its own place, scale and height by default, never beside th
     local ui = detached(NS)
     local LW = NS.LogWindow
     local a = LW.Anchor()
-    local d = NS.defaults.profile.log.window.position
+    local d = NS.defaults.profile.sequence.window.position
     assertTrue(a[2] == inst.mocks.UIParent, "at its own place on the screen")
     assertEqual(a[1], d.point)
     assertEqual(a[4], d.x)
@@ -163,14 +166,14 @@ test("log window: at its own place, scale and height by default, never beside th
     assertEqual(LW.Redock, nil, "nothing docks it")
     assertEqual(ui.attach, nil, "no attach mark")
     local g = inst.geom[LW.FRAME_NAME]
-    NS.db.profile.log.window.scale = 1.25
-    NS.AnnounceSettingsChanged("log.window.scale", 1.25)
+    NS.db.profile.sequence.window.scale = 1.25
+    NS.AnnounceSettingsChanged("sequence.window.scale", 1.25)
     assertEqual(g.scale, 1.25, "its own scale")
     local h = g.h
     assertEqual(h, LW.WindowHeight(), "its own height")
     assertTrue(NS.SetByPath("hud.bars", 12))
     assertEqual(g.h, h, "the HUD's height never moves it")
-    NS.db.profile.log.window.position = { point = "TOPLEFT", relPoint = "BOTTOMLEFT", x = 30, y = 600 }
+    NS.db.profile.sequence.window.position = { point = "TOPLEFT", relPoint = "BOTTOMLEFT", x = 30, y = 600 }
     LW.Refresh()
     assertEqual(LW.Anchor()[1], "TOPLEFT")
     assertEqual(LW.Anchor()[5], 600, "the stored place")
@@ -179,12 +182,12 @@ end)
 test("log window: Master controls' Reset position puts it back at its shipped place; /ct lock locks it", function()
     local _, NS = fresh()
     detached(NS)
-    local LW, d = NS.LogWindow, NS.defaults.profile.log.window.position
-    NS.db.profile.log.window.position = { point = "TOPLEFT", relPoint = "BOTTOMLEFT", x = 30, y = 600 }
+    local LW, d = NS.LogWindow, NS.defaults.profile.sequence.window.position
+    NS.db.profile.sequence.window.position = { point = "TOPLEFT", relPoint = "BOTTOMLEFT", x = 30, y = 600 }
     LW.Refresh()
     assertEqual(LW.Anchor()[1], "TOPLEFT")
     NS.ResetPositions()
-    local p = NS.db.profile.log.window.position
+    local p = NS.db.profile.sequence.window.position
     assertEqual(p.point, d.point)
     assertEqual(p.x, d.x)
     assertEqual(p.y, d.y)
@@ -212,15 +215,15 @@ test("log window: with fill off its rows are the rows setting, and the window is
     local inst, NS = fresh()
     detached(NS)
     local LW = NS.LogWindow
-    NS.db.profile.log.window.fill = false
-    NS.db.profile.log.window.rows = 6
-    NS.AnnounceSettingsChanged("log.window.rows", 6)
+    NS.db.profile.sequence.window.fill = false
+    NS.db.profile.sequence.window.rows = 6
+    NS.AnnounceSettingsChanged("sequence.window.rows", 6)
     local ui = LW.__ui()
     assertEqual(ui.table.nRows, 6)
     assertEqual(LW.Rows(), 6)
     local g = inst.geom[LW.FRAME_NAME]
     assertEqual(g.h, LW.MinHeight() + 3 * NS.LogTable.ROW_H, "the chrome and six rows")
-    NS.db.profile.log.window.rows = 99
+    NS.db.profile.sequence.window.rows = 99
     assertEqual(LW.RowsSetting(), LW.MAX_ROWS, "held to the most")
 end)
 
@@ -240,13 +243,13 @@ test("log window: a grip drag lays out cheaply and repaints nothing until its re
     end
     assertEqual(draws.n, 0, "nothing repainted while the grip is held")
     assertEqual(ui.table.nRows, LW.Rows(460), "the visible rows follow the drag")
-    assertTrue(NS.db.profile.log.window.width == 460, "nothing stored while the grip is held")
+    assertTrue(NS.db.profile.sequence.window.width == 460, "nothing stored while the grip is held")
     rawset(f, "GetWidth", function() return 660 end)
     rawset(f, "GetHeight", function() return 460 end)
     grip:__fire("OnMouseUp")
     assertTrue(draws.n >= 1, "repainted at the release")
-    assertEqual(NS.db.profile.log.window.width, 660, "the width stored on release")
-    assertEqual(NS.db.profile.log.window.height, 460, "and the height")
+    assertEqual(NS.db.profile.sequence.window.width, 660, "the width stored on release")
+    assertEqual(NS.db.profile.sequence.window.height, 460, "and the height")
     assertEqual(inst.geom[LW.FRAME_NAME].w, 660)
     assertEqual(inst.geom[LW.FRAME_NAME].h, 460)
 end)
@@ -310,17 +313,17 @@ test("log window: its chips filter what it shows, for the session, seeded from W
     click(b.debuffs)
     assertEqual(b.debuffs.styleName, "normal", "off")
     assertEqual(rows[1].text.event:GetText(), "CAST", "the debuff is hidden at once")
-    assertTrue(NS.GetSetting("log.show.playerDebuffs"), "never written to the settings")
+    assertTrue(NS.GetSetting("sequence.show.playerDebuffs"), "never written to the settings")
     assertTrue(NS.HudLog.__show().playerDebuffs ~= false, "the drawer's own chips untouched")
     NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f2", startT = 102 })
     NS.LogWindow.Paint()
     assertEqual(b.debuffs.styleName, "primary", "a new fight seeds the chips from log.show again")
-    NS.SetByPath("log.show.casts", false)
+    NS.SetByPath("sequence.show.casts", false)
     NS.LogWindow.Paint()
     assertEqual(b.casts.styleName, "normal", "a What to show write seeds them too")
     click(b.casts)
     assertTrue(NS.LogWindow.__show().casts, "a click turns the chip back on for this window")
-    assertEqual(NS.GetSetting("log.show.casts"), false, "the default stays as written")
+    assertEqual(NS.GetSetting("sequence.show.casts"), false, "the default stays as written")
 end)
 
 test("log window: the chips take their room above the table, wrapping when narrow", function()
@@ -339,17 +342,17 @@ test("log window: the chips take their room above the table, wrapping when narro
     assertTrue(lt.ChipLines(150) > 1, "a narrow width wraps them")
 end)
 
-test("log window: /ct log detach and dock move it; the HUD's Log control opens and closes it", function()
+test("log window: /ct sequence detach and dock move it; the HUD's Log control opens and closes it", function()
     local _, NS = fresh()
-    NS.Slash:OnSlash("log")
-    NS.Slash:OnSlash("log detach")
+    NS.Slash:OnSlash("sequence")
+    NS.Slash:OnSlash("sequence detach")
     assertTrue(NS.LogWindow.Visible())
     local hud = NS.Hud.__ui()
     click(hud.log)
     assertFalse(NS.LogWindow.Visible(), "the Log control closes it")
     click(hud.log)
     assertTrue(NS.LogWindow.Visible(), "and opens it")
-    NS.Slash:OnSlash("log dock")
+    NS.Slash:OnSlash("sequence dock")
     assertFalse(NS.LogWindow.Visible())
     assertTrue(NS.HudLog.__ui().frame:IsShown())
 end)
@@ -357,8 +360,8 @@ end)
 test("log window: with the Combat Log off it never shows", function()
     local _, NS = fresh()
     detached(NS)
-    NS.db.profile.log.enabled = false
-    NS.AnnounceSettingsChanged("log.enabled", false)
+    NS.db.profile.sequence.enabled = false
+    NS.AnnounceSettingsChanged("sequence.enabled", false)
     assertFalse(NS.LogWindow.Visible())
     assertFalse(NS.LogWindow.Ticking())
 end)

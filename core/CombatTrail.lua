@@ -93,7 +93,7 @@ end
 -- The modules with a frame the player places: each is reached at CALL time and joins in the task
 -- that builds it (the lanes, the DPS HUD and the Results window, plan milestones 1, 3 and 4; the
 -- Race window, race plan Task C1, Retail only; the new-best toast, Task C2, whose Reset position clears
--- the place its sample was dragged to; the detached Combat Log window, whose lock already reads
+-- the place its sample was dragged to; the detached Combat Sequence window, whose lock already reads
 -- `general.locked` in its own Refresh, so it carries ResetPosition alone). A module carries
 -- `SetLocked(locked)` and `ResetPosition()`; eachPlaced skips a method a module does not carry.
 -- The lanes lock apart (owner feedback item 15): `general.locked` skips them, and their own

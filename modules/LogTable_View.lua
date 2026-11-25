@@ -13,21 +13,21 @@ local _, NS = ...
 -- change, never on a paint. EVERY COLUMN IS CENTERED, its header and its cells (owner feedback item 8);
 -- Spell's icon stands at the column's start and its name is centered in the rest.
 --
--- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `log.view.sort`), and
+-- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `sequence.view.sort`), and
 -- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
 -- home's `opts.onScroll(away)`: lines away from the newest, by the sort's direction, one line a notch.
 -- THE SCROLL INDICATOR (owner feedback item 6) is Spell breakdown's (modules/Hud_States.lua): a thin
 -- track (`ct.scroll.track`) and thumb (`ct.scroll.thumb`) in the gutter right of the rows, shown while
 -- lines lie past them, the thumb as long as the share in view and as far down as the page
--- (View:SetScroll; DrawFeed sets it for a live home, the Results Log section from its own page).
+-- (View:SetScroll; DrawFeed sets it for a live home, the Results Combat Sequence section from its own page).
 --
 -- A PAINT (View:Draw) is handed the rows' lines, newest first, and the view puts them in the sort's
 -- order: newest first top down, or oldest first with the newest at the bottom. A label is painted only
 -- when its color moved (Style.Paint keeps the last role), so a repaint of the same rows calls nothing
 -- but SetText. A hovered row with a spell shows the client's spell tooltip (Style.PlaceBody).
 --
--- THE SIZES (CL-11c2, the Combat Log page's Order and display tab). `log.view.rowHeight` is the rows'
--- height in pixels (ROW_H_MIN to ROW_H_MAX; ROW_H, 14, by default) and `log.view.fontSize` their text
+-- THE SIZES (CL-11c2, the Combat Sequence page's Order and display tab). `sequence.view.rowHeight` is the rows'
+-- height in pixels (ROW_H_MIN to ROW_H_MAX; ROW_H, 14, by default) and `sequence.view.fontSize` their text
 -- size in points (FONT_MIN to FONT_MAX; FONT_BASE, 10, by default: GameFontHighlightSmall's own). A
 -- size other than 10 draws the rows in a named copy of the body font at that size (Style.ScaledText),
 -- the fixed columns widened by the same factor and the icon too, up to the row's height. A label keeps
@@ -66,17 +66,17 @@ end
 
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
 
---- The rows' height in pixels: `log.view.rowHeight`, whole and in range.
+--- The rows' height in pixels: `sequence.view.rowHeight`, whole and in range.
 --- @return number
 function LogTable.RowH()
-    local v = NS.Secrets.PlainNumber(setting("log.view.rowHeight")) or LogTable.ROW_H
+    local v = NS.Secrets.PlainNumber(setting("sequence.view.rowHeight")) or LogTable.ROW_H
     return clamp(math.floor(v + 0.5), LogTable.ROW_H_MIN, LogTable.ROW_H_MAX)
 end
 
---- The rows' text size as a factor of FONT_BASE: `log.view.fontSize`, whole and in range, over 10.
+--- The rows' text size as a factor of FONT_BASE: `sequence.view.fontSize`, whole and in range, over 10.
 --- @return number
 function LogTable.FontScale()
-    local v = NS.Secrets.PlainNumber(setting("log.view.fontSize")) or LogTable.FONT_BASE
+    local v = NS.Secrets.PlainNumber(setting("sequence.view.fontSize")) or LogTable.FONT_BASE
     return clamp(math.floor(v + 0.5), LogTable.FONT_MIN, LogTable.FONT_MAX) / LogTable.FONT_BASE
 end
 
@@ -86,7 +86,7 @@ function LogTable.IconSize(rowH, scale)
 end
 
 --- The columns for `width`: which show and where, as { { key, x, w }, ... } in ORDER. `want` is
---- `log.view.columns` (spell on unless false); `info` whether the home has an
+--- `sequence.view.columns` (spell on unless false); `info` whether the home has an
 --- Info column at all; `scale` the text size's factor (default 1), which widens the fixed columns.
 --- Time and Event always show.
 --- @return table
@@ -147,7 +147,7 @@ local function rowEnter(row)
     Style.PlaceBody(GameTooltip, row)
 end
 
--- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Log section's
+-- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Combat Sequence section's
 -- jump to the Timeline). A live home passes none and its clicks do nothing.
 local function rowUp(row, button)
     local view = row.view
@@ -297,7 +297,7 @@ function View:refont(scale)
     self.scale = scale
 end
 
---- Lay the table at `width` with `rows` rows and the columns `want` asks for (`log.view.columns`), at
+--- Lay the table at `width` with `rows` rows and the columns `want` asks for (`sequence.view.columns`), at
 --- the configured row height and text size (LogTable.RowH, LogTable.FontScale).
 function View:Layout(width, rows, want)
     local rowH, scale = LogTable.RowH(), LogTable.FontScale()
@@ -431,7 +431,7 @@ function View:Rows() return self.rows end
 -- ── the live chips (CL-REV) ─────────────────────────────────────────────────────────────────────
 -- A strip of LogTable.CHIPS on a live home (the detached window under its status line, the drawer
 -- behind its filter mark): one button per chip, lit ("primary") while LogTable.ChipOn, laid left to
--- right and wrapped at the width it is given. The Results Log section builds its own (with counts).
+-- right and wrapped at the width it is given. The Results Combat Sequence section builds its own (with counts).
 
 LogTable.CHIP_H, LogTable.CHIP_GAP = 18, 4
 

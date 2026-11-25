@@ -9,11 +9,11 @@ local _, NS = ...
 --
 -- THE COLUMNS. Time · Event · Spell, plus Info where the home has room (Columns: `opts.info`), every
 -- one centered in its header and its cells. Time and Event always show; the others follow
--- `log.view.columns.*`, and a home too narrow for them drops Info, so Spell keeps SPELL_MIN. There is
+-- `sequence.view.columns.*`, and a home too narrow for them drops Info, so Spell keeps SPELL_MIN. There is
 -- no Source or Target column (owner feedback item 3, 2026-11-25), and no Amount (the Combat Sequence:
 -- no line carries one): a line's `u` stays in the data, for the chips (Pet) and the categories.
 --   Time   from the pull (seconds, `-` before it for a pre-pull line) or the clock time
---          (`log.view.timeFormat` "pull" | "clock")
+--          (`sequence.view.timeFormat` "pull" | "clock")
 --   Event  CAST, BUFF+, BUFF-, DEBUFF+, DEBUFF-, DIES. The fight's start and end, the hits and heals
 --          and a target's buffs are no lines; a saved log's old ones are dropped at read time
 --          (CombatLog.IsRetired).
@@ -24,31 +24,31 @@ local _, NS = ...
 -- Default value. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell whose base cooldown is
 -- long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash (DEBUFF- dimmed, no
 -- wash), DIES red. COLOR-BLIND SAFETY: every kind differs by its tag's text as well as its hue, and
--- `log.view.washes` off draws no wash. The who colors (`log.colors.*`, LogTable.ReadColors) are still
+-- `sequence.view.washes` off draws no wash. The who colors (`sequence.colors.*`, LogTable.ReadColors) are still
 -- read into each view's ctx, but with no Source or Target column nothing draws them now.
 --
--- WHAT IS SHOWN is a view's own `show` table, shaped as `log.show.*`: each category of
+-- WHAT IS SHOWN is a view's own `show` table, shaped as `sequence.show.*`: each category of
 -- CombatLog.CategoryOf on or off, and the auto attacks (Auto Shot, Shoot: no category) off by default.
 -- A retired line never shows. What is shown never changes what is captured or saved.
 -- THE CHIPS (LogTable.CHIPS: Casts, Pet, Buffs, Debuffs, each over the categories it covers) filter a
--- view's lines. The Results section's open on `log.results.chips` and count their lines
+-- view's lines. The Results section's open on `sequence.results.chips` and count their lines
 -- (modules/Results_Log.lua). The live views' (the detached window's strip under its status line,
 -- the docked section's under its heading, shown by default and hidden by its filter mark,
--- `log.drawer.chips`) are each view's own `show`, SEEDED from `log.show.*` (the What
--- to show page, so `log.show` is those chips' defaults) when the view is built, when the section is
--- opened, at each FIGHT_STARTED and at a `log.show` write; a click turns every category the chip covers
+-- `sequence.drawer.chips`) are each view's own `show`, SEEDED from `sequence.show.*` (the What
+-- to show page, so `sequence.show` is those chips' defaults) when the view is built, when the section is
+-- opened, at each FIGHT_STARTED and at a `sequence.show` write; a click turns every category the chip covers
 -- on or off in that view alone for the session (LogTable.ToggleChip), never written to the settings. A
 -- chip is lit while any category it covers shows (LogTable.ChipOn).
 --
 -- THE FEED (a live view over modules/CombatLog.lua's ring). `shown` is the newest sequence number the
 -- view has revealed; each repaint tick (NS.Constants.LOG.REPAINT, the view's own timer) moves it toward
--- CombatLog.Seq() by `log.view.throttle`:
+-- CombatLog.Seq() by `sequence.view.throttle`:
 --   "instant"   every line at the next tick
---   "every"     at most one shown line every `log.view.throttleMs` ms (50-1000), a hidden line free
---   "batch"     every queued line together, once every `log.view.throttleMs` ms
+--   "every"     at most one shown line every `sequence.view.throttleMs` ms (50-1000), a hidden line free
+--   "batch"     every queued line together, once every `sequence.view.throttleMs` ms
 -- THE THROTTLE ONLY DELAYS THE DISPLAY: the capture and the store never wait on it and drop nothing,
 -- and a queue the throttle could not drain before the ring moved past it is skipped to the ring's
--- oldest line. FOLLOW: the view keeps the newest line in view, at the top (`log.view.sort` "newest",
+-- oldest line. FOLLOW: the view keeps the newest line in view, at the top (`sequence.view.sort` "newest",
 -- the default) or the bottom ("oldest"). Scrolling away from it PAUSES: the view holds at the line it
 -- was on (`anchor`) however many come in, until Resume or a scroll back to it. A view's rows are the
 -- `rows` lines counted from its top line (`anchor` or `shown`), `offset` lines in.
@@ -169,7 +169,7 @@ end
 
 -- ── what is shown ───────────────────────────────────────────────────────────────────────────────
 
---- Whether line `e` shows under `show` (`log.show`: its categories and autoAttacks). A retired line
+--- Whether line `e` shows under `show` (`sequence.show`: its categories and autoAttacks). A retired line
 --- has no category, so it never shows.
 function LogTable.Shows(e, show)
     local cat = CL.CategoryOf(e.k, e.u, e.id)
@@ -227,12 +227,12 @@ function LogTable.ToggleChip(show, key)
     return on
 end
 
---- Whether a write to `path` re-seeds a live view's chips: the log opened (`log.drawer.shown`), moved
---- (`log.home`), What to show (`log.show.*`) or the profile.
+--- Whether a write to `path` re-seeds a live view's chips: the log opened (`sequence.drawer.shown`), moved
+--- (`sequence.home`), What to show (`sequence.show.*`) or the profile.
 --- @return boolean
 function LogTable.Reseeds(path)
-    return path == "log.drawer.shown" or path == "log.home" or path == "profile" or path == "log.show"
-        or path:find("^log%.show%.") ~= nil
+    return path == "sequence.drawer.shown" or path == "sequence.home" or path == "profile" or path == "sequence.show"
+        or path:find("^sequence%.show%.") ~= nil
 end
 
 -- ── the live homes' shared reads (the docked drawer and the detached window) ───────────────────
@@ -241,16 +241,16 @@ local function setting(path)
     return NS.GetSetting and NS.GetSetting(path)
 end
 
---- The sort a live view draws in: `log.view.sort`, "newest" (the default) or "oldest".
+--- The sort a live view draws in: `sequence.view.sort`, "newest" (the default) or "oldest".
 function LogTable.SortOf()
-    local s = setting("log.view.sort")
+    local s = setting("sequence.view.sort")
     return LogTable.SORTS[s] and s or "newest"
 end
 
---- `show` (a reused table) refilled from `log.show`, the What to show page: a live view's chips'
+--- `show` (a reused table) refilled from `sequence.show`, the What to show page: a live view's chips'
 --- seed.
 function LogTable.ReadShow(show)
-    local s = setting("log.show")
+    local s = setting("sequence.show")
     for k in pairs(show) do show[k] = nil end
     if type(s) == "table" then for k, v in pairs(s) do show[k] = v end end
     return show
@@ -266,14 +266,14 @@ end
 
 local ownYou, ownHostile, ownFriendly = {}, {}, {}
 
---- `ctx`'s who colors refilled from `log.colors`: "You" in its own swatch while Use class color is off,
+--- `ctx`'s who colors refilled from `sequence.colors`: "You" in its own swatch while Use class color is off,
 --- the hostile and friendly target in theirs while Use the skin's color is off; nil keeps the default
 --- (the class color, the skin's `ct.log.hostile` and `ct.log.friendly`).
 function LogTable.ReadColors(ctx)
-    ctx.youColor = setting("log.colors.useClassColorYou") == false and swatch("log.colors.you", ownYou) or nil
-    ctx.hostileColor = setting("log.colors.hostileFromSkin") == false and swatch("log.colors.hostile", ownHostile) or nil
-    ctx.friendlyColor = setting("log.colors.friendlyFromSkin") == false
-        and swatch("log.colors.friendly", ownFriendly) or nil
+    ctx.youColor = setting("sequence.colors.useClassColorYou") == false and swatch("sequence.colors.you", ownYou) or nil
+    ctx.hostileColor = setting("sequence.colors.hostileFromSkin") == false and swatch("sequence.colors.hostile", ownHostile) or nil
+    ctx.friendlyColor = setting("sequence.colors.friendlyFromSkin") == false
+        and swatch("sequence.colors.friendly", ownFriendly) or nil
     return ctx
 end
 
@@ -281,10 +281,10 @@ end
 --- time format, the clock time of the start and the wash switch.
 function LogTable.LiveContext(ctx, startT)
     ctx.startT = startT
-    ctx.timeFormat = setting("log.view.timeFormat")
+    ctx.timeFormat = setting("sequence.view.timeFormat")
     ctx.startClock = nil
     if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
-    ctx.washes = setting("log.view.washes") ~= false
+    ctx.washes = setting("sequence.view.washes") ~= false
     return LogTable.ReadColors(ctx)
 end
 

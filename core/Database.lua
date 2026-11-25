@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 8
+NS.SCHEMA_VERSION = 9
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -136,6 +136,12 @@ local STEPS = {
     -- `log.results.chips.taken` and `.heals` go. Nothing is carried across: each served only what was
     -- removed. Idempotent: a fresh profile stores none of them.
     { to = 8, perProfile = true, run = function(_, profile) NS.DropRetiredSequenceKeys(profile) end },
+    -- 8 -> 9, per profile: the Combat Log is the Combat Sequence everywhere (2026-11-25, CSEQ-2), its
+    -- keys included: the stored `log` table moves to `sequence` (a deep merge, a key already stored
+    -- under `sequence` winning, unless it equals its default: AceDB's copy into the active profile), and the Results fold `results.collapsedSections.log` moves to `.sequence`
+    -- the same way. Steps 5, 6 and 8 run before it, on `log`, so nothing retired is carried across.
+    -- Idempotent: a second run finds no `log`, and a profile with neither is left alone.
+    { to = 9, perProfile = true, run = function(_, profile) NS.MoveLogToSequence(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -177,6 +183,42 @@ function NS.DropRetiredSequenceKeys(profile)
     if type(cats) == "table" then cats.hits, cats.heals, cats.targetBuffs = nil, nil, nil end
     local chips = type(results) == "table" and results.chips
     if type(chips) == "table" then chips.taken, chips.heals = nil, nil end
+end
+
+-- `from`'s keys copied into `into`, tables merged key by key. A value `into` already holds wins, unless
+-- it equals its default in `dflt`: that is AceDB's copy into the active profile (savedvariables-§1, as
+-- clearCopiedGlowDefaults above reads it), never a choice, so the moved value takes its place.
+local function mergeInto(into, from, dflt)
+    for k, v in pairs(from) do
+        local have = rawget(into, k)
+        local d = type(dflt) == "table" and dflt[k] or nil
+        if have == nil then
+            into[k] = v
+        elseif type(have) == "table" then
+            if type(v) == "table" then mergeInto(have, v, d) end
+        elseif d ~= nil and have == d then
+            into[k] = v
+        end
+    end
+end
+
+--- Step 9's body: `profile.log` moved to `profile.sequence` (deep merged, a key stored under
+--- `sequence` winning unless it is only the default's copy), then cleared, and the Results fold `results.collapsedSections.log` moved to
+--- `.sequence` the same way. A profile with neither `log` nor that fold is left alone.
+function NS.MoveLogToSequence(profile)
+    if type(profile) ~= "table" then return end
+    local log = rawget(profile, "log")
+    if type(log) == "table" then
+        local seq = rawget(profile, "sequence")
+        local D = NS.defaults and NS.defaults.profile and NS.defaults.profile.sequence
+        if type(seq) == "table" then mergeInto(seq, log, D) else profile.sequence = log end
+    end
+    profile.log = nil
+    local results = rawget(profile, "results")
+    local folds = type(results) == "table" and rawget(results, "collapsedSections")
+    if type(folds) ~= "table" or rawget(folds, "log") == nil then return end
+    if rawget(folds, "sequence") == nil then folds.sequence = folds.log end
+    folds.log = nil
 end
 
 --- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where

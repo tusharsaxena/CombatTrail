@@ -100,8 +100,8 @@ local function loadInstance(opts)
         -- own suites pin (modules/Hud_Log.lua); `logDrawer` keeps the shipped defaults for the drawer's
         -- suites.
         if not opts.logDrawer and NS.db then
-            NS.db.profile.log.drawer.autoOpen = false
-            NS.db.profile.log.drawer.shown = false
+            NS.db.profile.sequence.drawer.autoOpen = false
+            NS.db.profile.sequence.drawer.shown = false
         end
         if opts.enable ~= false then
             -- The login fuse shows the skin picker (the account's one-time skin notice, else the

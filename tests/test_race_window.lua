@@ -896,24 +896,24 @@ test("race window: the matched height takes the Combat Log drawer, open, chips h
     local RW, NS = W(S), S.NS
     RW.Attach("RIGHT")
     local base = hud.h
-    assertTrue(NS.SetByPath("log.drawer.shown", true))
+    assertTrue(NS.SetByPath("sequence.drawer.shown", true))
     assertEqual(hud.h, base + NS.HudLog.Height(), "the HUD grew by the drawer")
     assertEqual(win.h, hud.h, "the Race window beside it takes the whole height")
-    assertTrue(NS.SetByPath("log.drawer.chips", false))
+    assertTrue(NS.SetByPath("sequence.drawer.chips", false))
     assertEqual(hud.h, base + NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(NS.HudLog.Rows()), "chips hidden: shorter")
     assertEqual(win.h, hud.h, "chips hidden: it follows")
     assertTrue(F.arm(S, 30))
     assertEqual(win.h, hud.h, "armed, chips hidden")
-    assertTrue(NS.SetByPath("log.drawer.chips", true))
+    assertTrue(NS.SetByPath("sequence.drawer.chips", true))
     assertEqual(win.h, hud.h, "armed, chips shown")
     local start = F.pull(S)
     F.run(S, start + 0.5)
     assertTrue(NS.Race.State() ~= "idle", "racing")
-    assertTrue(NS.SetByPath("log.drawer.chips", false))
+    assertTrue(NS.SetByPath("sequence.drawer.chips", false))
     assertEqual(win.h, hud.h, "racing, chips hidden")
-    assertTrue(NS.SetByPath("log.drawer.chips", true))
+    assertTrue(NS.SetByPath("sequence.drawer.chips", true))
     assertEqual(win.h, hud.h, "racing, chips shown")
-    assertTrue(NS.SetByPath("log.drawer.shown", false))
+    assertTrue(NS.SetByPath("sequence.drawer.shown", false))
     assertEqual(win.h, hud.h, "racing, closed")
 end)
 
@@ -926,11 +926,11 @@ test("race window: the log detached, the HUD drops the drawer and the Race windo
     local RW, NS = W(S), S.NS
     RW.Attach("RIGHT")
     local base = hud.h
-    assertTrue(NS.SetByPath("log.drawer.shown", true))
+    assertTrue(NS.SetByPath("sequence.drawer.shown", true))
     local docked = hud.h
     assertTrue(docked > base, "the drawer docked: a taller HUD")
     assertTrue(F.arm(S, 30))
-    assertTrue(NS.SetByPath("log.home", "detached"))
+    assertTrue(NS.SetByPath("sequence.home", "detached"))
     assertEqual(hud.h, base, "armed, detached: the HUD back to its height")
     assertEqual(win.h, hud.h, "armed, detached: the Race window follows it")
     local LW = NS.LogWindow
@@ -940,7 +940,7 @@ test("race window: the log detached, the HUD drops the drawer and the Race windo
     F.run(S, start + 0.5)
     assertTrue(NS.Race.State() ~= "idle", "racing")
     assertEqual(win.h, hud.h, "racing, detached")
-    assertTrue(NS.SetByPath("log.home", "docked"))
+    assertTrue(NS.SetByPath("sequence.home", "docked"))
     assertEqual(hud.h, docked, "racing, docked again: the drawer is back")
     assertEqual(win.h, hud.h, "racing, docked: the Race window takes the whole height")
     assertFalse(LW.Visible())
@@ -953,8 +953,8 @@ test("race window: the detached log stands at its own place whatever the Race wi
     local S = sized()
     local RW, NS = W(S), S.NS
     RW.Attach("RIGHT")
-    assertTrue(NS.SetByPath("log.drawer.shown", true))
-    assertTrue(NS.SetByPath("log.home", "detached"))
+    assertTrue(NS.SetByPath("sequence.drawer.shown", true))
+    assertTrue(NS.SetByPath("sequence.home", "detached"))
     local LW = NS.LogWindow
     local function own() return LW.Anchor()[2] == S.M.UIParent end
     assertTrue(own(), "at its own place")

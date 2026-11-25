@@ -55,7 +55,7 @@ local L = NS.L
 -- 4 (Race mode) adds the optional `race`; an older record reads the same, as a fight (no migration).
 -- 5 (CombatTrail #13) moves `usage` to its v 2, which adds the spell-keyed buff entry
 -- ({ spellID, kind = "buff" }); an older record's v 1 usage reads as it is (no step).
--- 6 (CombatTrail #11) adds the optional `log` (the Combat Log's saved lines, CombatLog.Of),
+-- 6 (CombatTrail #11) adds the optional `log` (the Combat Sequence's saved lines, CombatLog.Of),
 -- `logDropped` (how many were not kept, only when some were) and `logTargets` (the targets its lines
 -- name, by each line's `g`, only when it names any); an older record reads the same, with no log (no
 -- step, no rewrite).
@@ -325,7 +325,7 @@ local function castsOf(fight)
     return NS.CastCodec.Encode(casts), cooldowns, usage
 end
 
--- The fight's Combat Log (modules/CombatLog.lua): its saved lines, how many were not kept (nil when
+-- The fight's Combat Sequence (modules/CombatLog.lua): its saved lines, how many were not kept (nil when
 -- none were) and the targets its lines name (nil when none), or nothing when it saved none.
 local function logOf(fight)
     local log, dropped, targets = nil, nil, nil
@@ -348,7 +348,7 @@ end
 
 --- The record for a fight that ended "final" and passed the filters (`identity` and `duration`
 --- already resolved; `enemies`, enemiesOf's list, for the targets). Takes the fight's casts
---- (Casts.Finish) and its Combat Log (CombatLog.Finish), and stores its talents (Loadouts.Store).
+--- (Casts.Finish) and its Combat Sequence (CombatLog.Finish), and stores its talents (Loadouts.Store).
 --- @return table record  plain throughout
 function Recorder.Build(fight, final, identity, duration, enemies)
     local merged = final.merged or {}

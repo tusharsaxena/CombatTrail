@@ -56,7 +56,7 @@ end
 test("retention: only the newest log.store.fights fights keep their log, bests included", function()
     local NS = fresh()
     local R = NS.Recorder
-    assertEqual(NS.GetSetting("log.store.fights"), NS.Constants.LOG.FIGHTS, "100 by default")
+    assertEqual(NS.GetSetting("sequence.store.fights"), NS.Constants.LOG.FIGHTS, "100 by default")
     local function logged(o)
         local r = rec(o)
         r.log, r.logDropped, r.logTargets = { { t = 0, k = 9 }, { t = 1, k = 6, u = 1, a = 5 } }, 3, { { name = "Boar" } }
@@ -68,7 +68,7 @@ test("retention: only the newest log.store.fights fights keep their log, bests i
     local newer = logged({ t = NOW - 1 * DAY })
     local newest = logged({ t = NOW - 0.5 * DAY })
     for _, r in ipairs({ oldBest, older, bare, newer, newest }) do R.Save(r) end
-    NS.SetByPath("log.store.fights", 2)
+    NS.SetByPath("sequence.store.fights", 2)
     local heard = heardChanged(NS)
     assertEqual(NS.Retention.Purge(NOW), 0, "no fight removed: only logs")
     assertEqual(heard.n, 1, "FIGHTS_CHANGED once: the stored size moved")
@@ -86,7 +86,7 @@ test("retention: only the newest log.store.fights fights keep their log, bests i
     assertNil(NS.CombatLog.Of(fights[oldBest.id]), "a best-holding fight's log goes too")
     assertEqual(NS.Retention.Purge(NOW), 0)
     assertEqual(heard.n, 1, "nothing more to strip: no message")
-    NS.SetByPath("log.store.fights", 0)
+    NS.SetByPath("sequence.store.fights", 0)
     local again = logged({ t = NOW - 4 * DAY, boardKey = "c:8:0" })
     R.Save(again)
     NS.Retention.Purge(NOW)

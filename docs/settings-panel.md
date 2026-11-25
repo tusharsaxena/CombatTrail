@@ -226,7 +226,7 @@ Layout's size rows: the window has one static height (owner feedback item 12), t
 layout shows, Spell bars rows, and the docked log's rows while it is open; nothing a fight does moves
 it. The Window size row (Fixed or Auto-grow, `hud.sizeMode`) and Grow (`hud.grow`) are retired with
 schema step 6. Spell bars runs 1 to 15, default 5. The HUD's bottom-right grip sets the width and the
-rows: the log's (`log.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
+rows: the log's (`sequence.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
 scroll with the mouse wheel. The Spell rows tab's old "Spell rows shown" row (`hud.spells.rows`) is
 retired into Spell bars.
 
@@ -376,24 +376,24 @@ Results fight detail's Log section. The log's own controls write the same rows: 
 detach mark and the window's dock mark (*Where the log lives*), and a click on the Time header (*Sort
 order*). The drawer has no fold (item 14) and the window no attach or pin (item 11): their rows and
 keys went with schema steps 5 and 6. The detached window's place and size are
-its drag's and its grip's (`log.window.position`, `width`, `height`), with no row, so the page's
+its drag's and its grip's (`sequence.window.position`, `width`, `height`), with no row, so the page's
 Defaults leaves them where they are. The window's gear opens this page.
 
 ### Combat Log (tab)
 
 | Row | Key |
 |---|---|
-| Enable the Combat Log | `log.enabled` |
-| Show the Combat Log | `log.drawer.shown` |
-| Open it when a fight starts | `log.drawer.autoOpen` |
-| Where the log lives (Docked in the DPS HUD, In its own window) | `log.home` |
+| Enable the Combat Log | `sequence.enabled` |
+| Show the Combat Log | `sequence.drawer.shown` |
+| Open it when a fight starts | `sequence.drawer.autoOpen` |
+| Where the log lives (Docked in the DPS HUD, In its own window) | `sequence.home` |
 
 ### Docked drawer
 
 | Row | Key |
 |---|---|
-| Show the filter chips | `log.drawer.chips` |
-| Rows shown (3 to 20) | `log.drawer.rows` |
+| Show the filter chips | `sequence.drawer.chips` |
+| Rows shown (3 to 20) | `sequence.drawer.rows` |
 
 ### Detached window
 
@@ -402,11 +402,11 @@ standalone (owner feedback item 11): it has no attach, side, HUD-height or pin r
 
 | Row | Key |
 |---|---|
-| Fill the window with rows | `log.window.fill` |
-| Rows shown (3 to 40) | `log.window.rows` |
-| Lock the window | `log.window.locked` |
-| Window scale | `log.window.scale` |
-| Window opacity | `log.window.alpha` |
+| Fill the window with rows | `sequence.window.fill` |
+| Rows shown (3 to 40) | `sequence.window.rows` |
+| Lock the window | `sequence.window.locked` |
+| Window scale | `sequence.window.scale` |
+| Window opacity | `sequence.window.alpha` |
 
 ### Order and display
 
@@ -417,15 +417,15 @@ the drawer, the window and the Results Log section all take their heights from i
 
 | Row | Key |
 |---|---|
-| Sort order (Newest first, Oldest first) | `log.view.sort` |
-| Show new rows (Instant, At most one row every N ms, In batches every N ms) | `log.view.throttle` |
-| N (ms) | `log.view.throttleMs` |
-| Text size | `log.view.fontSize` |
-| Row height (px) | `log.view.rowHeight` |
-| Time (From the pull, Clock time) | `log.view.timeFormat` |
-| Show the Info column | `log.view.columns.info` |
-| Show the Spell/School column | `log.view.columns.spell` |
-| Show the Amount column | `log.view.columns.amount` |
+| Sort order (Newest first, Oldest first) | `sequence.view.sort` |
+| Show new rows (Instant, At most one row every N ms, In batches every N ms) | `sequence.view.throttle` |
+| N (ms) | `sequence.view.throttleMs` |
+| Text size | `sequence.view.fontSize` |
+| Row height (px) | `sequence.view.rowHeight` |
+| Time (From the pull, Clock time) | `sequence.view.timeFormat` |
+| Show the Info column | `sequence.view.columns.info` |
+| Show the Spell/School column | `sequence.view.columns.spell` |
+| Show the Amount column | `sequence.view.columns.amount` |
 
 ### What to show
 
@@ -439,17 +439,17 @@ hides it.
 
 | Row | Key |
 |---|---|
-| Your casts | `log.show.casts` |
-| Your pet's casts | `log.show.petCasts` |
-| Buffs on you | `log.show.playerBuffs` |
-| Debuffs on you | `log.show.playerDebuffs` |
-| Your debuffs on your target | `log.show.targetDebuffs` |
-| Buffs on your target | `log.show.targetBuffs` |
-| Hits taken | `log.show.hits` |
-| Heals taken | `log.show.heals` |
-| Deaths | `log.show.deaths` |
-| Show auto attacks | `log.show.autoAttacks` |
-| Least amount shown | `log.show.minAmount` |
+| Your casts | `sequence.show.casts` |
+| Your pet's casts | `sequence.show.petCasts` |
+| Buffs on you | `sequence.show.playerBuffs` |
+| Debuffs on you | `sequence.show.playerDebuffs` |
+| Your debuffs on your target | `sequence.show.targetDebuffs` |
+| Buffs on your target | `sequence.show.targetBuffs` |
+| Hits taken | `sequence.show.hits` |
+| Heals taken | `sequence.show.heals` |
+| Deaths | `sequence.show.deaths` |
+| Show auto attacks | `sequence.show.autoAttacks` |
+| Least amount shown | `sequence.show.minAmount` |
 
 ### Colors
 
@@ -463,14 +463,14 @@ rules whether they go (with a schema step) or come back on another cell.
 
 | Row | Key |
 |---|---|
-| School colors | `log.view.schoolColors` |
-| Row washes | `log.view.washes` |
-| Your color | `log.colors.you` |
-| Use class color | `log.colors.useClassColorYou` |
-| Hostile target color | `log.colors.hostile` |
-| Use the skin's color (hostile) | `log.colors.hostileFromSkin` |
-| Friendly target color | `log.colors.friendly` |
-| Use the skin's color (friendly) | `log.colors.friendlyFromSkin` |
+| School colors | `sequence.view.schoolColors` |
+| Row washes | `sequence.view.washes` |
+| Your color | `sequence.colors.you` |
+| Use class color | `sequence.colors.useClassColorYou` |
+| Hostile target color | `sequence.colors.hostile` |
+| Use the skin's color (hostile) | `sequence.colors.hostileFromSkin` |
+| Friendly target color | `sequence.colors.friendly` |
+| Use the skin's color (friendly) | `sequence.colors.friendlyFromSkin` |
 
 ### Storage
 
@@ -480,30 +480,30 @@ their log* is the store's own bound instead (modules/Retention.lua): each purge 
 
 | Row | Key |
 |---|---|
-| Save a log with each fight | `log.store.enabled` |
-| Lines kept per fight (100 to 1000) | `log.store.lines` |
-| Fights that keep their log (0 = all; 0 to 500) | `log.store.fights` |
-| Your casts | `log.store.categories.casts` |
-| Your pet's casts | `log.store.categories.petCasts` |
-| Buffs on you | `log.store.categories.playerBuffs` |
-| Debuffs on you | `log.store.categories.playerDebuffs` |
-| Your debuffs on your target | `log.store.categories.targetDebuffs` |
-| Buffs on your target | `log.store.categories.targetBuffs` |
-| Hits taken | `log.store.categories.hits` |
-| Heals taken | `log.store.categories.heals` |
-| Deaths | `log.store.categories.deaths` |
+| Save a log with each fight | `sequence.store.enabled` |
+| Lines kept per fight (100 to 1000) | `sequence.store.lines` |
+| Fights that keep their log (0 = all; 0 to 500) | `sequence.store.fights` |
+| Your casts | `sequence.store.categories.casts` |
+| Your pet's casts | `sequence.store.categories.petCasts` |
+| Buffs on you | `sequence.store.categories.playerBuffs` |
+| Debuffs on you | `sequence.store.categories.playerDebuffs` |
+| Your debuffs on your target | `sequence.store.categories.targetDebuffs` |
+| Buffs on your target | `sequence.store.categories.targetBuffs` |
+| Hits taken | `sequence.store.categories.hits` |
+| Heals taken | `sequence.store.categories.heals` |
+| Deaths | `sequence.store.categories.deaths` |
 
 ### Results
 
 | Row | Key |
 |---|---|
-| Jump to the Timeline on clicking a cast | `log.results.jumpToCast` |
-| Casts | `log.results.chips.casts` |
-| Pet | `log.results.chips.pet` |
-| Buffs | `log.results.chips.buffs` |
-| Debuffs | `log.results.chips.debuffs` |
-| Taken | `log.results.chips.taken` |
-| Heals | `log.results.chips.heals` |
+| Jump to the Timeline on clicking a cast | `sequence.results.jumpToCast` |
+| Casts | `sequence.results.chips.casts` |
+| Pet | `sequence.results.chips.pet` |
+| Buffs | `sequence.results.chips.buffs` |
+| Debuffs | `sequence.results.chips.debuffs` |
+| Taken | `sequence.results.chips.taken` |
+| Heals | `sequence.results.chips.heals` |
 
 ## History
 

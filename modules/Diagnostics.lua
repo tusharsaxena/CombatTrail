@@ -79,7 +79,7 @@ local function fight(out)
     -- PLAYER_TARGET_CHANGED; never UNIT_COMBAT; docs/midnight-quirks.md and docs/forever-quirks.md) and
     -- the lines heard this session.
     local log = NS.CombatLog.Diagnose()
-    out:add("Diag", "combat log registered=%s refused=%s lines=%s", log.registered,
+    out:add("Diag", "combat sequence registered=%s refused=%s lines=%s", log.registered,
         #log.refused > 0 and table.concat(log.refused, ",") or "none", log.lines)
 end
 

@@ -470,7 +470,7 @@ end)
 test("combat log: past `log.store.lines` only the newest are kept and the record counts the rest", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
-    NS.db.profile.log.store.lines = 100
+    NS.db.profile.sequence.store.lines = 100
     local r = fightThrough(inst, meter, saved, 40, function(i)
         for n = 1, 250 do spellAt(i, 11 + n * 0.1, 100000 + n) end
     end)
@@ -486,8 +486,8 @@ test("combat log: heavy unsaved traffic never costs the saved log its lines (eac
     local inst, meter, saved = fresh()
     local NS = inst.NS
     local C = NS.Constants.LOG
-    NS.db.profile.log.store.lines = C.MAX_LINES
-    for _, key in ipairs(NS.CombatLog.CATEGORIES) do NS.db.profile.log.store.categories[key] = key == "casts" end
+    NS.db.profile.sequence.store.lines = C.MAX_LINES
+    for _, key in ipairs(NS.CombatLog.CATEGORIES) do NS.db.profile.sequence.store.categories[key] = key == "casts" end
     local r = fightThrough(inst, meter, saved, 40, function(i)
         for n = 1, 1500 do
             local t = 11 + n * 0.01
@@ -516,8 +516,8 @@ test("combat log: the default keeps C.LOG.MAX_PER_FIGHT lines, and a setting is 
     local NS = inst.NS
     local C = NS.Constants.LOG
     assertEqual(C.MAX_PER_FIGHT, 400)
-    assertEqual(NS.GetSetting("log.store.lines"), 400)
-    NS.db.profile.log.store.lines = 5
+    assertEqual(NS.GetSetting("sequence.store.lines"), 400)
+    NS.db.profile.sequence.store.lines = 5
     local r = fightThrough(inst, meter, saved, 40, function(i)
         for n = 1, 150 do spellAt(i, 11 + n * 0.1, 100000 + n) end
     end)
@@ -527,8 +527,8 @@ end)
 test("combat log: a category not saved is no line and not counted as dropped", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
-    NS.db.profile.log.store.categories.playerBuffs = false
-    NS.db.profile.log.store.categories.petCasts = false
+    NS.db.profile.sequence.store.categories.playerBuffs = false
+    NS.db.profile.sequence.store.categories.petCasts = false
     local r = fightThrough(inst, meter, saved, 40, function(i)
         aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
         aura(i, 13, "player", { addedAuras = { debuff(8, CURSE) } })
@@ -543,11 +543,11 @@ end)
 test("combat log: saving off keeps no log on the record; the log off registers nothing", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
-    NS.db.profile.log.store.enabled = false
+    NS.db.profile.sequence.store.enabled = false
     local r = fightThrough(inst, meter, saved, 40, function(i) cast(i, 12, "player", FIREBALL) end)
     assertNil(r.log)
     assertNil(NS.CombatLog.Of(r))
-    NS.db.profile.log.enabled = false
+    NS.db.profile.sequence.enabled = false
     local before = NS.CombatLog.Seq()
     local r2 = fightThrough(inst, meter, saved, 40, function(i)
         assertEqual(next(unitRegs(i)), nil, "no registration in the fight")
@@ -562,7 +562,7 @@ test("combat log: the settings are frozen at the fight's start", function()
     local inst, meter, saved = fresh()
     local NS = inst.NS
     local r = fightThrough(inst, meter, saved, 40, function(i)
-        NS.db.profile.log.store.categories.playerBuffs = false
+        NS.db.profile.sequence.store.categories.playerBuffs = false
         aura(i, 12, "player", { addedAuras = { buff(7, INTELLECT) } })
     end)
     assertEqual(kinds(NS, NS.CombatLog.Of(r)), "BUFF_ON")
@@ -570,13 +570,13 @@ end)
 
 test("combat log: the storage keys have their shipped defaults", function()
     local NS = T.load().NS
-    assertTrue(NS.GetSetting("log.enabled"))
-    assertTrue(NS.GetSetting("log.store.enabled"))
+    assertTrue(NS.GetSetting("sequence.enabled"))
+    assertTrue(NS.GetSetting("sequence.store.enabled"))
     for _, key in ipairs(NS.CombatLog.CATEGORIES) do
-        assertEqual(NS.defaults.profile.log.store.categories[key], true, key .. " saved by default")
+        assertEqual(NS.defaults.profile.sequence.store.categories[key], true, key .. " saved by default")
     end
     local n = 0
-    for _ in pairs(NS.defaults.profile.log.store.categories) do n = n + 1 end
+    for _ in pairs(NS.defaults.profile.sequence.store.categories) do n = n + 1 end
     assertEqual(n, #NS.CombatLog.CATEGORIES, "one key per category")
 end)
 

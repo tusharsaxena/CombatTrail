@@ -60,7 +60,9 @@ NS.COMMANDS = {
     { "results",     L["Open the Results window, with your fight history"],
                                                                    feature(function(rest) doResults(rest) end) },
     { "hud",         L["The DPS HUD: /ct hud show or hide"],      feature(function(rest) doHud(rest) end) },
-    { "log",         L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"],
+    -- The Combat Sequence (CSEQ-2): `/ct log`, its name until then, still reaches it through the
+    -- descriptor's `aliases` (slash-commands-§2's legacy spelling), so help lists `sequence` alone.
+    { "sequence",    L["The Combat Sequence, in the DPS HUD or its own window: /ct sequence toggles it, detach and dock move it (/ct log also works)"],
                                                                    feature(function(rest) doLog(rest) end) },
     -- `lock`/`unlock` are the DPS HUD's and the windows'; the lanes lock apart (owner feedback item 15).
     { "lock",        L["Lock the DPS HUD and the windows in place"], feature(function() doLock(true) end) },
@@ -200,7 +202,7 @@ cli = SlashLib:New({
     slash        = NS.SLASH_CMD,
     slashAliases = { "/" .. NS.SLASH_LONG },
     commands     = NS.COMMANDS,                       -- passed IN, never owned by the library
-    aliases      = { options = "config" },
+    aliases      = { options = "config", log = "sequence" },
     -- The disabled gate: every verb not on the library's live list answers the one refusal line
     -- while the `disabled` hold is taken (slash-commands-§2, §7). Not IsStoodDown: the `perf` hold
     -- alone must not print the disabled line.

@@ -29,7 +29,7 @@ local _, NS = ...
 -- fight's START and END (owner feedback item 10), HIT and HEAL (the Combat Sequence), and a BUFF± on the
 -- target. Every read drops them (CombatLog.IsRetired), and no saved log is rewritten.
 -- Every client event goes through NS.SafeRegisterUnitEvent / NS.SafeRegisterEvent on this file's
--- own frame, and only while a fight is open and `log.enabled` is on: an event the client refuses
+-- own frame, and only while a fight is open and `sequence.enabled` is on: an event the client refuses
 -- costs only itself and is named by CombatLog.Diagnose.
 --
 -- SECRETS. A sealed aura (its table, its spell ID or its instance) ends that aura's handling: its
@@ -84,7 +84,7 @@ CombatLog.UNIT = { player = 1, pet = 2, target = 3 }
 --- The marks (`f`): an interrupted cast. Bits 1, 2 and 4 (the hits' critical, glancing and crushing
 --- marks) are reserved, because saved data may carry them, and never reused.
 CombatLog.FLAG = { INTERRUPTED = 8 }
---- The categories a fight's log saves (`log.store.categories.<key>`), in the settings' order.
+--- The categories a fight's log saves (`sequence.store.categories.<key>`), in the settings' order.
 CombatLog.CATEGORIES = { "casts", "petCasts", "playerBuffs", "playerDebuffs", "targetDebuffs", "deaths" }
 --- How many closed fights' logs wait for the recorder.
 CombatLog.KEEP_FINISHED = 4
@@ -550,7 +550,7 @@ end
 -- ── a fight's capture ───────────────────────────────────────────────────────────────────────────
 
 local function setting(path)
-    return NS.GetSetting and NS.GetSetting("log." .. path)
+    return NS.GetSetting and NS.GetSetting("sequence." .. path)
 end
 
 -- The lines a fight keeps: the setting, whole and inside its range.
@@ -593,7 +593,7 @@ local function countPrepull(cap)
 end
 
 --- A fight started at `startT` (GetTime()): its lines are held from the pre-pull on, and the events
---- registered. Nothing happens while `log.enabled` is off.
+--- registered. Nothing happens while `sequence.enabled` is off.
 --- @param fightID string
 --- @param startT number
 --- @param fight table|nil  the fight table, read again at the end for when it stopped
