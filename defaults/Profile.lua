@@ -230,9 +230,24 @@ NS.defaults = {
         -- The Combat Log (CombatTrail #11, modules/CombatLog.lua): whether it captures at all, and what
         -- a fight's record keeps of it: a log with each fight, the lines kept (the newest; NS.Constants.LOG
         -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each
-        -- fight freezes these at its start. The view's own keys arrive with its settings page (CL-11c).
+        -- fight freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
+        -- modules/LogTable.lua; their rows arrive with the Combat Log page, CL-11c): the HUD's docked
+        -- drawer (open, folded, its rows 3-20, opened at each fight's start, the folded line showing the
+        -- newest event); the table (the sort, the display throttle "instant" | "every" | "batch" and its
+        -- ms, 50-1000, the time from the pull or the clock, school colors, row washes, the optional
+        -- columns); and what the live views show (each saved category, the auto attacks, the least
+        -- amount a hit or a heal shows at).
         log = {
             enabled = true,
+            drawer = { shown = false, collapsed = false, rows = 8, autoOpen = true, strip = true },
+            view = {
+                sort = "newest", throttle = "instant", throttleMs = 250, timeFormat = "pull",
+                schoolColors = true, washes = true,
+                columns = { source = true, target = true, spell = true, amount = true, info = true },
+            },
+            show = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true, targetBuffs = true,
+                     targetDebuffs = true, hits = true, heals = true, deaths = true, autoAttacks = false,
+                     minAmount = 0 },
             store = {
                 enabled = true, lines = NS.Constants.LOG.MAX_PER_FIGHT,
                 categories = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true,

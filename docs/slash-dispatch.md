@@ -56,6 +56,7 @@ this page must agree with it (`tests/test_docs.lua` checks that every verb is he
 | `version` | none | yes | the dispatcher's `CliVersion` |
 | `results` | `show`, `hide`, `toggle`, or nothing; `insights` (the Insights tab, `Results.ShowTab`); `races` on Retail (the list on the Races filter, `Results.ShowRaces`) | no | `Results.OnVerb` |
 | `hud` | `show`, `hide`, `toggle`, `pin`, `unpin`. `hide`, and `toggle` when it closes, take an open Race window with the HUD, each counting as the player's close (`Hud.HideWithRace`); `show` and `toggle`'s open open the HUD, and a Race window still wanted with it (one that hid with the HUD, W29); near a dummy `toggle`'s open opens the Race window too | no | `Hud.OnVerb` |
+| `log` | `show`, `hide`, `toggle` or nothing (toggles), `fold`, `unfold`: the Combat Log drawer in the DPS HUD (`log.drawer.shown`, `log.drawer.collapsed`); opening it opens the HUD too | no | `HudLog.OnVerb` |
 | `lock` | none | no | writes `general.locked` true; `NS.ApplyLocked` |
 | `unlock` | none | no | writes `general.locked` false; the lanes' edit overlay and the HUD's drag |
 | `test` | none; on Retail `race [armed\|running\|result]` (test mode holding a sample race in that state, running when none; Race mode off refuses it in one line) | no | `NS.ToggleTestMode`; `NS.TestRace` (modules/Preview.lua) |

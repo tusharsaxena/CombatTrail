@@ -81,6 +81,7 @@ local captures = {}     -- [fightID] = { fight, startT, from, store, lines, cats
 local finished = {}     -- [fightID] = { log, dropped }
 local finishedOrder = {}
 local lastEnd = -math.huge
+local viewStart, viewFrom   -- the newest capture begun this session: its start and its pre-pull floor
 local auras = { player = {}, target = {} }   -- [auraInstanceID] = spellID (a debuff's negated)
 local frame             -- the event frame (nil until a fight first opens one)
 local registered = false
@@ -423,6 +424,7 @@ function CombatLog.Begin(fightID, startT, fight)
                   lines = linesKept(), cats = categories(), n = 0 }
     countPrepull(cap)
     captures[fightID] = cap
+    if viewStart == nil or startT >= viewStart then viewStart, viewFrom = startT, cap.from end
     append(startT, K.START, nil, nil, nil, nil, nil, nil)
     CombatLog.Sync()
 end
@@ -519,6 +521,15 @@ function CombatLog.LiveStart()
     return newest
 end
 
+--- The fight a live view shows (modules/Hud_Log.lua, plan item CL-11b): the newest capture begun this
+--- session, open or closed, as its start and the first moment its lines are held from (its pre-pull
+--- floor), both GetTime() seconds. A view draws the ring's lines from `from` on, timed from `startT`.
+--- nil before any fight, and after a stand-down.
+--- @return number|nil startT, number|nil from
+function CombatLog.Window()
+    return viewStart, viewFrom
+end
+
 -- ── a stored fight's log ────────────────────────────────────────────────────────────────────────
 
 --- A stored record's log, or nil (a fight saved before CT_SCHEMA 6, or with saving off), and how many
@@ -542,6 +553,7 @@ end
 function CombatLog.Suspend()
     captures, finished, finishedOrder = {}, {}, {}
     ring, seq, lastEnd = {}, 0, -math.huge
+    viewStart, viewFrom = nil, nil
     if frame then frame:UnregisterAllEvents() end
     registered = false
     clear(auras.player)

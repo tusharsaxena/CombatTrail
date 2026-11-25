@@ -45,6 +45,23 @@
   arrive with CL-11c, so until then `NS.SetByPath` refuses them. CL-11a also adds `tests/perf.lua`, the
   first offline scenario runner, which CL-11b's repaint can extend.
 
+- **CL-11b split (CL-11b, CL-11b2).** CL-11b builds the shared table component
+  (`modules/LogTable.lua`, `modules/LogTable_View.lua`) and the DPS HUD's docked drawer
+  (`modules/Hud_Log.lua`): the Log control on the HUD title bar, the drawer under the spell rows
+  with its accent seam, the fold to a one-line strip with the newest event, 3 to 20 rows (8),
+  the newest-first sort flipped from the Time header, follow, pause and Resume, the display
+  throttle, `/ct log`, and the Race window's matched height following the drawer. **CL-11b2**
+  builds the detached companion window (dock and detach, HUD-follow unless pinned, its own rows,
+  the Info column) and the default layout that keeps it and the Race window apart.
+- **CL-11b: three drawer keys are write-through for now.** `log.drawer.shown`,
+  `log.drawer.collapsed` and `log.view.sort` are written by the drawer's own controls, so they are
+  in `settings/Schema.lua`'s write-through list until CL-11c gives them rows; CL-11c takes them off
+  that list when it does. Every other `log.drawer.*`, `log.view.*` and `log.show.*` key has its
+  default in `defaults/Profile.lua` and no row yet.
+- **CL-11b: the suites start with the drawer's auto-open off.** `tests/run.lua` turns
+  `log.drawer.autoOpen` off on each instance, so a fight leaves the HUD at the height its own
+  suites pin; `T.load{ logDrawer = true }` keeps the shipped default (`tests/test_log_table.lua`).
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.

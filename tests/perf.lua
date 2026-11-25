@@ -17,6 +17,9 @@
 --   logAura    one UNIT_AURA gain and the matching loss on the target (two lines)
 --   logCast    one cast handed in by the lanes' listener (inside laneCast, so no bracket of its own)
 --   busyFight  a busy fight's beat: two casts, two hits, a heal and an aura gained and lost
+--   logPaint      (CL-11b) the DPS HUD's docked Combat Log drawer open: a busy beat, then one repaint
+--                 tick (modules/Hud_Log.lua's HudLog.Paint), eight rows painted
+--   logPaintIdle  one repaint tick with nothing new: no paint at all
 -- logHit and logAura are each measured with capture OFF and ON: the pair is the zero-overhead
 -- evidence performance-§2 asks for (capture off may allocate nothing over capture on, and capture on
 -- no more than one note's PAIR_SLACK over off).
@@ -24,6 +27,9 @@
 -- CEILINGS. Measured 2026-11-25 on Lua 5.1.5 (CL-11a): every scenario 0 bytes per iteration once the
 -- ring is full, its lines' tables reused. A ceiling sits a little above the measured figure; raise
 -- one only by re-measuring and saying why: a rise is the finding.
+-- logPaint, measured 2026-11-25 (CL-11b): 9,520 bytes per iteration, all of it the kit's widget
+-- recorder (48 bytes for each SetText and SetVertexColor a row's paint makes, measured on its own);
+-- the cells, the time and amount strings and the labels' paint allocate 0 once warm. logPaintIdle: 0.
 
 local root = (arg and arg[0] and arg[0]:match("^(.*)/tests/perf%.lua$")) or "."
 package.path = root .. "/tests/?.lua;" .. package.path
@@ -42,12 +48,14 @@ local BYTE_CEILING = {
     logAuraCaptureOff = 8, logAuraCaptureOn = 8,
     logCast = 8,
     busyFight = 16,
+    logPaint = 10240, logPaintIdle = 8,
 }
 local NOTES_PER_ITER = {
     logHitCaptureOff = 0, logHitCaptureOn = 1,
     logAuraCaptureOff = 0, logAuraCaptureOn = 2,
     logCast = 0,
     busyFight = 0,
+    logPaint = 0, logPaintIdle = 0,
 }
 local PAIRS = { logHitCaptureOff = "logHitCaptureOn", logAuraCaptureOff = "logAuraCaptureOn" }
 local PAIR_SLACK = 64
@@ -197,6 +205,17 @@ pair("logAura", logAura)
 NS.Perf.on = false
 measure("logCast", N, logCast)
 measure("busyFight", N, busyFight)
+-- The DPS HUD's docked drawer open (CL-11b, modules/Hud_Log.lua): one repaint tick after a busy beat
+-- (seven new lines, eight rows painted), and one with nothing new, which repaints nothing at all.
+NS.Hud.Show()
+NS.HudLog.SetShown(true)
+local drawer = NS.HudLog.__ui()
+check(drawer ~= nil and drawer.frame:IsShown(), "the drawer is not up: the paint scenarios would measure nothing")
+measure("logPaint", N, function()
+    busyFight()
+    NS.HudLog.Paint()
+end)
+measure("logPaintIdle", N, function() NS.HudLog.Paint() end)
 check(CL.Seq() > before, "no line was appended: the scenarios measured nothing")
 check(CL.__ringCount() == NS.Constants.LOG.RING, "the ring is not full: the steady state was never reached")
 NS.Perf.Note = realNote

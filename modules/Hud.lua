@@ -65,9 +65,11 @@ local _, NS = ...
 -- fight live on it, not opened or pinned by the player since. A HUD the player closed (Hud.Closes)
 -- keeps both windows shut for the session.
 --
--- THE TITLE BAR, left to right: Results, Race, Lock, Settings, Close (LibKa0s#86 order). The Race control
+-- THE TITLE BAR, left to right: Results, Log, Race, Lock, Settings, Close (LibKa0s#86 order). The Race control
 -- (Retail only, the flag) shows while Race mode is on, the strip closing up without it;
--- its click is `/ct race toggle` (NS.SetRaceWindowShown). Like every title-bar control it rests in the
+-- its click is `/ct race toggle` (NS.SetRaceWindowShown). The Log control (the chat mark, while
+-- `log.enabled`) opens and closes the Combat Log drawer under the spell rows (modules/Hud_Log.lua,
+-- CombatTrail #11), whose height the content's bottom inset reserves. Like every title-bar control it rests in the
 -- skin's `icon.tint` and takes `text.link` only under the pointer (smoke round 1, SR-L3), with its
 -- tooltip above it: it carries no light for the Race window being open.
 --
@@ -365,7 +367,8 @@ local function stripHeight()
     return strip and strip:BodyOffset() or 0
 end
 local function contentTop() return (setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD) + stripHeight() end
-local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
+local function footInset() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
+local function contentBottom() return footInset() + NS.HudLog.Height() end
 
 -- ── the size (v0.2 Task B3) ──────────────────────────────────────────────────────────────────
 
@@ -483,13 +486,15 @@ end
 local Act = {}
 Hud.Act = Act
 
--- The controls on the band, outermost first: Close, Settings, Lock, the Race control while it shows,
--- Results (W.HeaderButtons' order, extras . settings . close). Laid again when the Race control comes
--- or goes, so the strip closes up.
-local function layoutHeader(withRace)
-    local right = { ui.close, ui.settings, ui.lock, ui.results }
-    if withRace then right = { ui.close, ui.settings, ui.lock, ui.race, ui.results } end
-    ui.header = { right = right, withRace = withRace == true }
+-- The controls on the band, outermost first: Close, Settings, Lock, the Race control and the Log control
+-- while each shows, Results (W.HeaderButtons' order, extras . settings . close). Laid again when either
+-- comes or goes, so the strip closes up.
+local function layoutHeader(withRace, withLog)
+    local right = { ui.close, ui.settings, ui.lock }
+    if withRace then right[#right + 1] = ui.race end
+    if withLog then right[#right + 1] = ui.log end
+    right[#right + 1] = ui.results
+    ui.header = { right = right, withRace = withRace == true, withLog = withLog == true }
     NS.Style.Header(ui.frame, { title = ui.frame.title, align = "LEFT", drag = ui.drag, right = right, n = #right })
 end
 
@@ -500,14 +505,15 @@ local function buildHeader(f)
     local Style = NS.Style
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Combat Trail"])
-    local extras = { { key = "results", icon = "chart", glyph = "R", tip = L["Results"], onClick = function() Act.results() end } }
+    local extras = { { key = "results", icon = "chart", glyph = "R", tip = L["Results"], onClick = function() Act.results() end },
+                     { key = "log", icon = "chat", glyph = "L", tip = L["Combat Log"], onClick = function() Act.log() end } }
     if NS.Compat.ForClient({ "retail" }) then
         extras[#extras + 1] = { key = "race", icon = "flag", glyph = "F", tip = L["Race window"], onClick = function() Act.race() end }
     end
     extras[#extras + 1] = { key = "lock", icon = "unlock", glyph = "U", tip = L["Lock or unlock the HUD"], onClick = function() Act.lock() end }
     local hb = NS.MakeHeader(f, { close = function() Act.close() end, settingsTip = L["Settings"], extras = extras })
     ui.close, ui.settings = hb.close, hb.settings
-    ui.results, ui.race, ui.lock = hb.extras.results, hb.extras.race, hb.extras.lock
+    ui.results, ui.race, ui.lock, ui.log = hb.extras.results, hb.extras.race, hb.extras.lock, hb.extras.log
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -517,7 +523,7 @@ local function buildHeader(f)
         placeAfterDrag()
     end)
     ui.drag = drag
-    layoutHeader(false)
+    layoutHeader(false, NS.HudLog.ControlShown())
 end
 
 -- The footer is the library's (NS.MakeFooter: W.Footer, its hairline and its two muted lines); the
@@ -538,14 +544,14 @@ local function tellHeight()
     if W and W.OnHudResized then W.OnHudResized() end
 end
 
--- The Race control (Retail): shown with the title bar while Race mode is on, the strip laid again
--- when that changes.
+-- The Race control (Retail) while Race mode is on and the Log control while the Combat Log is, each
+-- shown with the title bar, the strip laid again when either changes.
 local function applyRace()
-    local b = ui.race
-    if not b then return end
-    local on = NS.RaceMode.On()
-    if ui.header.withRace ~= on then layoutHeader(on) end
-    b:SetShown(on and setting("hud.window.titleBar") ~= false)
+    local b, bar = ui.race, setting("hud.window.titleBar") ~= false
+    local on, log = b ~= nil and NS.RaceMode.On() == true, NS.HudLog.ControlShown()
+    if ui.header.withRace ~= on or ui.header.withLog ~= log then layoutHeader(on, log) end
+    if b then b:SetShown(on and bar) end
+    ui.log:SetShown(log and bar)
 end
 
 -- Every size change: the grip's size, in range, that a drag lays out from (plain numbers only).
@@ -640,9 +646,9 @@ end
 -- The window's configured look (modules/Hud_Appearance.lua), once per Appearance stamp: the title
 -- bar and its title, the footer, the content's insets, the background, border, strata and opacity.
 local function applyWindow()
-    local A = NS.HudAppearance
-    if ui.stamp == A.stamp then return end
-    ui.stamp = A.stamp
+    local A, logH = NS.HudAppearance, NS.HudLog.Height()
+    if ui.stamp == A.stamp and ui.logH == logH then return end
+    ui.stamp, ui.logH = A.stamp, logH
     local f = ui.frame
     local bar, foot = A.On("hud.window.titleBar"), A.On("hud.window.footer")
     for _, part in ipairs({ ui.close, ui.lock, ui.settings, ui.results, ui.drag, NS.Style.Band(f) }) do
@@ -823,6 +829,7 @@ function render()
         ui.frame:SetSize(width(), ui.height)
     end
     footer(v)
+    NS.HudLog.Place(ui.frame, PAD, footInset() - NS.HudLog.GAP, (sizing() and ui.dragW or width()) - 2 * PAD)
     tellHeight()
     return v
 end
@@ -890,6 +897,7 @@ function Hud.Refresh()
     if not Hud.IsShown() then
         hideWindow()
         Hud.SyncBeat()
+        NS.HudLog.Sync()
         return syncRace(false)
     end
     ensureWindow()
@@ -903,6 +911,7 @@ function Hud.Refresh()
     -- onto it once the window is placed and sized (a no-op while it already sits on the edge).
     normalizeAnchor(false)
     Hud.SyncBeat()
+    NS.HudLog.Sync()
     syncRace(false)
 end
 
@@ -1396,6 +1405,9 @@ function Act.close()
 end
 
 function Act.lock() return NS.ToggleLock() end
+
+--- The Log control: the Combat Log drawer opened or closed (`/ct log`).
+function Act.log() return NS.HudLog.SetShown() end
 
 --- The Race control: `/ct race toggle`, the player's open or close of the Race window.
 function Act.race() return NS.SetRaceWindowShown("toggle") end

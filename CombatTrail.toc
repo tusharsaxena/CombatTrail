@@ -224,9 +224,17 @@ modules\Hud_Breakdown.lua
 modules\Hud_Chart.lua
 # The HUD's bodies: capture NS.Style and NS.Secrets at FILE SCOPE.
 modules\Hud_States.lua
+# The Combat Log's table (CombatTrail #11): its cells, filter and feed, then its frames. LOAD-BEARING:
+# modules\LogTable.lua captures NS.CombatLog's KIND, UNIT and FLAG and NS.L at FILE SCOPE, so it follows
+# modules\CombatLog.lua; modules\LogTable_View.lua extends NS.LogTable and captures NS.Style there.
+# The HUD's docked drawer: captures NS.LogTable, NS.CombatLog and NS.Style and builds its bus receiver
+# at FILE SCOPE; reaches NS.Hud at CALL time only.
+modules\LogTable.lua
+modules\LogTable_View.lua
+modules\Hud_Log.lua
 # LOAD-BEARING: builds its bus receiver (FIGHT_* / SETTINGS_CHANGED) at FILE SCOPE through core\Bus.lua
-# and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.Meter, NS.Identity, NS.Bests,
-# NS.Recorder and NS.db at CALL time only.
+# and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.HudLog, NS.Meter, NS.Identity,
+# NS.Bests, NS.Recorder and NS.db at CALL time only.
 modules\Hud.lua
 # The Race window (Race mode, race plan Task C1; Retail only: each file returns at once on WoW Forever).
 # Its Your best card, the board's figures and its six bodies, then the shell. LOAD-BEARING:

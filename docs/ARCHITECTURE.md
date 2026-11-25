@@ -200,7 +200,7 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
 - **Fights:** Meter, ProbeCurve, Probe, Dummies, Identity, Fight, Watchers, CastCodec, Casts, CombatLog, Usage, Stats, Loadouts,
   Filters, RaceRecord, Bests, Recorder, Retention, Slices.
 - **Race mode (Retail):** RaceTimeline, LateIgnore, RaceScoring, Race, RaceWatchers, RaceClock, AutoArm, RaceVerb.
-- **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, Hud.
+- **HUD:** Format, Style, Hud_Appearance, Hud_Tips, Hud_Best, Hud_Breakdown, Hud_Chart, Hud_States, LogTable, LogTable_View, Hud_Log, Hud.
 - **Race window (Retail):** RaceWindow_Best, RaceWindow_Board, RaceWindow_States, RaceWindow, Countdown (the center call-out,
   through the CalloutSetup seam); and BestToast (the
   new-best toast, a fight's on both clients, a race's on Retail).

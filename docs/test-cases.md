@@ -942,7 +942,7 @@ Total.
 - autoshow window: the player's open in a session closes on walking away and opens on coming back
 - autoshow window: a window the player opened before the session stays theirs
 
-### test_race_window.lua (51)
+### test_race_window.lua (52)
 
 - race window: absent on WoW Forever, with nothing of it loaded
 - race window: present on Retail, with its frame name and its hooks
@@ -980,6 +980,7 @@ Total.
 - race window: attached with the HUD hidden it stands where the HUD would
 - race window: a HUD that drew once, hidden, is placed again for the window beside it
 - race window: docked LEFT or RIGHT it takes the DPS HUD's height
+- race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing
 - race window: the matched height follows the HUD's resizes, its parts, the grip and the scale
 - race window: a HUD shorter than the window's minimum leaves the minimum
 - race window: TOP, BOTTOM, detached or the row off keep the window's own height
@@ -1295,7 +1296,7 @@ Total.
 
 - hud race button: absent on WoW Forever
 - hud race button: built and shown on Retail with Race mode on, the plain flag
-- hud race button: Results, Race, Lock, Settings, Close left to right; off, the strip closes up
+- hud race button: Results, Log, Race, Lock, Settings, Close left to right; off, the strip closes up
 - hud race button: hidden with the title bar
 - hud race button: a click toggles the Race window as /ct race toggle does
 - hud race button: lit only under the pointer, never for the Race window being open
@@ -1324,6 +1325,31 @@ Total.
 - w29 D2: no fade while the race holds the HUD; the race's idle edge starts it, and both go
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
+
+### test_log_table.lua (22)
+
+- log table: a cast is yours in your class color, a pet's in the HUD's pet color
+- log table: a long-cooldown cast wears the gold wash; washes off takes it away
+- log table: buffs green (off dimmed), a debuff you put on orange with its wash, on the target
+- log table: a hit on you is red with its school and Info; a heal green with a plus
+- log table: a sealed amount goes to the label as given, a saved one reads sealed
+- log table: the time column from the pull, past a minute and before it, or the clock
+- log table: the boundaries are muted rows with their words
+- log table: a multi-school mask takes its lowest school's color
+- log table: the categories, the auto attacks and the least amount decide what shows
+- log table feed: instant reveals every line, newest first; a scroll pauses and Resume follows
+- log table feed: every N ms shows at most one line each N ms; batch shows them together
+- log table feed: the display throttle never drops a line from the saved log
+- log table columns: a narrow home drops Source first; a wide one with Info shows them all
+- hud log: the title bar's Log control opens the drawer and the HUD grows by its height
+- hud log: the rows setting, 3 to 20, sizes the drawer
+- hud log: the drawer paints the newest fight's lines, newest at the top, and the Time header flips it
+- hud log: the wheel pauses it, Resume follows again
+- hud log: folded it is one line with the newest event, and the HUD shrinks to it
+- hud log: it hides and stops with the HUD, and comes back with it
+- hud log: a fight's start opens it when auto-open is on (the shipped default)
+- hud log: /ct log toggles it and opens the HUD with it
+- hud log: with the Combat Log off there is no control and no drawer
 
 ### test_sizing.lua (7)
 
@@ -1601,7 +1627,7 @@ Total.
 - title bar: the compare's close, its one control
 - title bar: the gear view's close, its one control
 - title bar: the ability timeline's close, its one control
-- header strip: the DPS HUD reads Results, Race, Lock, Settings, Close; Race off, it closes up
+- header strip: the DPS HUD reads Results, Log, Race, Lock, Settings, Close; Race off, it closes up
 - header strip: the HUD's settings mark opens the settings panel and leaves the HUD up
 - header strip: the Race window reads Lock, Attach, Settings, Close; settings opens Race mode (Retail)
 - header strip: the Results window reads the view toggle, Settings, Close; settings opens the panel
@@ -2009,7 +2035,7 @@ Total.
 | test_race_settings.lua | 25 |
 | test_report_verbs.lua | 12 |
 | test_autoarm.lua | 41 |
-| test_race_window.lua | 51 |
+| test_race_window.lua | 52 |
 | test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
@@ -2025,6 +2051,7 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 19 |
 | test_hud_race_button.lua | 31 |
+| test_log_table.lua | 22 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
@@ -2064,4 +2091,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1690** |
+| **Total** | **1713** |

@@ -887,6 +887,35 @@ test("race window: docked LEFT or RIGHT it takes the DPS HUD's height", function
     assertEqual(RW.View().height, win.h - chromeOf(S), "the body's room is the matched height's")
 end)
 
+-- The Combat Log drawer (CombatTrail #11, CL-11b) makes the HUD taller: docked beside it the Race window
+-- takes the HUD's whole height, drawer included, and follows its fold, armed and racing alike.
+test("race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing", function()
+    if forever() then return end
+    local S, hud, win = sized()
+    local RW, NS = W(S), S.NS
+    RW.Attach("RIGHT")
+    local base = hud.h
+    assertTrue(NS.SetByPath("log.drawer.shown", true))
+    assertEqual(hud.h, base + NS.HudLog.Height(), "the HUD grew by the drawer")
+    assertEqual(win.h, hud.h, "the Race window beside it takes the whole height")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", true))
+    assertTrue(hud.h < base + NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(8), "folded: shorter")
+    assertEqual(win.h, hud.h, "folded: it follows")
+    assertTrue(F.arm(S, 30))
+    assertEqual(win.h, hud.h, "armed, folded")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", false))
+    assertEqual(win.h, hud.h, "armed, unfolded")
+    local start = F.pull(S)
+    F.run(S, start + 0.5)
+    assertTrue(NS.Race.State() ~= "idle", "racing")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", true))
+    assertEqual(win.h, hud.h, "racing, folded")
+    assertTrue(NS.SetByPath("log.drawer.collapsed", false))
+    assertEqual(win.h, hud.h, "racing, unfolded")
+    assertTrue(NS.SetByPath("log.drawer.shown", false))
+    assertEqual(win.h, hud.h, "racing, closed")
+end)
+
 test("race window: the matched height follows the HUD's resizes, its parts, the grip and the scale", function()
     if forever() then return end
     local S, hud, win = sized()
