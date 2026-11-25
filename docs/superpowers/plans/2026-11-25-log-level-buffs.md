@@ -75,6 +75,18 @@
   (RaceWindow's redockSim tells it each time the Race window shows, hides or moves), and the sim
   panel docks beside the outermost window on the right.
 
+- **CL-11c split (CL-11c, CL-11c2).** CL-11c builds home C: the Results fight detail's Overview,
+  Timeline and Log tabs (`modules/Results_Detail.lua`), the Log tab (`modules/Results_Log.lua`: the
+  saved log in the shared table with the Info column, the chips with their counts, Damage by spell in
+  the HUD's spell rows, a CAST row's click opening the timeline at that cast through
+  `Timeline.FocusAt`), and "No log was saved for this fight" for an older fight. **CL-11c2** builds the
+  Combat Log settings page with every row of the addendum, takes the write-through keys off that list,
+  and finishes the docs (settings-panel.md, the log's smoke rows beyond the Results tabs) and the full
+  gate.
+- **CL-11c: the Timeline keeps its window.** The Timeline tab is its way in (the addendum's second
+  option): it opens the window as the footer's Timeline button does, and the tab shown stays as it was.
+  `log.results.jumpToCast` and `log.results.chips.*` have defaults and no rows until CL-11c2.
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.

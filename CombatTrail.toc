@@ -282,6 +282,9 @@ modules\Results_Loadout.lua
 modules\Results_Usage.lua
 modules\Results_Targets.lua
 modules\Results_RaceDetail.lua
+# The detail's Log tab (CL-11c): captures NS.Style, NS.LogTable and NS.CombatLog at FILE SCOPE;
+# reaches NS.ResultsFights, NS.Recorder, NS.HudBreakdown and NS.ResultsTimelineData at CALL time only.
+modules\Results_Log.lua
 modules\Results_Detail.lua
 modules\Share.lua
 modules\Results_TimelineData.lua

@@ -1449,6 +1449,27 @@ Total.
 - detail: a fight with no targets (an older record) has no Targets section
 - detail: Targets rows skip a malformed entry and share out of what is listed
 
+### test_results_log.lua (18)
+
+- results log: the detail has Overview, Timeline and Log tabs, Overview by default
+- results log: the Log tab replaces the Overview, and the tab shown stays from fight to fight
+- results log: the Timeline tab opens the timeline window and keeps the tab shown
+- results log: the Timeline tab is grayed and does nothing for a fight with no casts
+- results log: the saved log in the table, newest first, with the Info column
+- results log: the caption counts the lines the cap dropped
+- results log: the chips carry their counts and filter what is shown
+- results log: each fight opens on log.results.chips, the same fight drawn again keeps them
+- results log: the pure halves: counts, the order, the page, the least amount
+- results log: the Time header flips the sort, oldest first starting at the pull
+- results log: the wheel scrolls the list and stays on it
+- results log: Damage by spell draws the record's breakdown in the HUD's rows and order
+- results log: the panel stands beside the table on a wide tab and under it on a narrow one
+- results log: a click on a CAST row opens the timeline at that cast
+- results log: log.results.jumpToCast off, a cast row's click does nothing
+- results log: the timeline's focus math keeps the view on the axis
+- results log: a fight saved before the log says No log was saved for this fight
+- results log: a Combat Log setting redraws a shown Log tab
+
 ### test_target_level.lua (12)
 
 - target level (retail): a level reads "<name> (L<level>)"
@@ -2075,6 +2096,7 @@ Total.
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
+| test_results_log.lua | 18 |
 | test_target_level.lua | 12 |
 | test_results_sections.lua | 5 |
 | test_results_races.lua | 27 |
@@ -2111,4 +2133,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1729** |
+| **Total** | **1747** |

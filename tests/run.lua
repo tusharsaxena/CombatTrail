@@ -173,6 +173,7 @@ local SUITES = {
     "test_sizing",
     "test_results_table",
     "test_results_detail",
+    "test_results_log",
     "test_target_level",
     "test_results_sections",
     "test_results_races",

@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/LogTable_View.lua — the Combat Log table's frames (CombatTrail #11, plan item CL-11b): one
--- component every home builds (the DPS HUD's docked drawer, modules/Hud_Log.lua, now; the detached
--- companion and the Results fight detail later), drawing the cells modules/LogTable.lua works out.
+-- component every home builds (the DPS HUD's docked drawer, modules/Hud_Log.lua; the detached
+-- companion, modules/LogWindow.lua; the Results fight detail's Log tab, modules/Results_Log.lua),
+-- drawing the cells modules/LogTable.lua works out.
 --
 -- THE SHAPE. A column header (its own row, LogTable.HEAD_H, in the list header's gold; `opts.noHeader`
 -- leaves it out), then `rows` pooled rows LogTable.ROW_H apart. Each row is a stripe, a wash, one label
@@ -89,8 +90,17 @@ local function rowEnter(row)
     Style.PlaceBody(GameTooltip, row)
 end
 
+-- A left click on a row: the home's `opts.onClick(line)` with the line it shows (the Results Log tab's
+-- jump to the Timeline). A live home passes none and its clicks do nothing.
+local function rowUp(row, button)
+    local view = row.view
+    if button == "RightButton" or row.line == nil or not view.opts.onClick then return end
+    view.opts.onClick(row.line)
+end
+
 local function newRow(self)
     local r = CreateFrame("Frame", nil, self.frame)
+    r.view = self
     r.stripe = r:CreateTexture(nil, "BACKGROUND")
     r.stripe:SetTexture(Style.WHITE)
     r.stripe:SetAllPoints(r)
@@ -106,10 +116,12 @@ local function newRow(self)
     r:EnableMouse(true)
     r:SetScript("OnEnter", rowEnter)
     r:SetScript("OnLeave", hideTip)
+    r:SetScript("OnMouseUp", rowUp)
     return r
 end
 
---- A table on `parent`. `opts`: info (the home has an Info column), noHeader, onSort(), onScroll(away).
+--- A table on `parent`. `opts`: info (the home has an Info column), noHeader, onSort(), onScroll(away),
+--- onClick(line) (a left click on a row, with the line it shows).
 --- @return table view
 function LogTable.New(parent, opts)
     local self = setmetatable({ opts = opts or {}, rows = {}, seqs = {}, cells = {}, cols = {} }, View)
@@ -235,7 +247,7 @@ local function setBig(r, big)
     Style.Paint(fs, r.amountColor or "ct.text", font, true)
 end
 
-local function fill(r, c, index)
+local function fill(r, c, index, line)
     local t = r.text
     t.time:SetText(c.time)
     Style.Paint(t.time, "ct.dim")
@@ -256,6 +268,7 @@ local function fill(r, c, index)
     r.icon:SetTexture(c.icon)
     r.icon:SetShown(r.hasSpell and c.icon ~= nil)
     r.spellID = c.spellID
+    r.line = line
     Style.Stripe(r.stripe, index)
     if c.wash then
         Style.Vertex(r.wash, c.wash)
@@ -274,9 +287,9 @@ function View:Draw(seqs, n, lineOf, ctx, emptyText)
         local r = self.rows[i]
         local e = i <= n and lineOf(seqs[oldest and (n - i + 1) or i]) or nil
         if e then
-            fill(r, LogTable.Cells(e, ctx, self.cells), i)
+            fill(r, LogTable.Cells(e, ctx, self.cells), i, e)
         else
-            r.spellID = nil
+            r.spellID, r.line = nil, nil
             r:Hide()
         end
     end

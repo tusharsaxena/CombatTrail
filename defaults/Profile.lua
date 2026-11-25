@@ -242,7 +242,9 @@ NS.defaults = {
         -- either side of the HUD; RIGHT, TOP, BOTTOM) or at its own `position`, its height the HUD's
         -- beside it (`matchHud`, LEFT or RIGHT), its rows filling its height (`fill`) or `rows` (3-40),
         -- its `width` and `height` (0: its least) set by its grip, `pinned` (up while the HUD is
-        -- hidden), `locked`, its `scale` while it stands on its own and its `alpha` (0.1-1).
+        -- hidden), `locked`, its `scale` while it stands on its own and its `alpha` (0.1-1). Then the
+        -- Results fight detail's Log tab (CL-11c, modules/Results_Log.lua): the chips each fight opens
+        -- on, and whether a click on a CAST row jumps the ability timeline to that cast.
         log = {
             enabled = true,
             home = "docked",
@@ -265,6 +267,10 @@ NS.defaults = {
                 categories = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true,
                                targetBuffs = true, targetDebuffs = true, hits = true, heals = true,
                                deaths = true },
+            },
+            results = {
+                jumpToCast = true,
+                chips = { casts = true, pet = true, buffs = true, debuffs = true, taken = true, heals = true },
             },
         },
         -- The Results window (spec §7; modules/Results.lua, modules/Results_Fights.lua): the saved view

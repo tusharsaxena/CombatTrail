@@ -205,7 +205,7 @@ scope. The full file-by-file table is [`module-map.md`](module-map.md). By area:
   through the CalloutSetup seam); and BestToast (the
   new-best toast, a fight's on both clients, a race's on Retail).
 - **Results:** Sizing, Results_Source, Results_Table, Results_Tips, Results_Fights, Results_Races, Results_Loadout,
-  Results_Usage, Results_Targets, Results_RaceDetail, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
+  Results_Usage, Results_Targets, Results_RaceDetail, Results_Log, Results_Detail, Share, Results_TimelineData, Results_Timeline, Results_TimelineMarks,
   Results_Gear, Results_Compare, Results_InsightsData, Results_Insights, Results.
 - **Preview and support:** MockRotations, MockFights, MockRaces and RaceSample (Retail), Preview, SimRace
   (Retail), Sim, Diagnostics.

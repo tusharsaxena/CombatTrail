@@ -86,6 +86,17 @@ function Data.Decode(record)
     return clock and NS.RaceRecord.OnClock(casts, clock.shift) or casts
 end
 
+--- A moment `t` of the fight (seconds from its start, as its saved log times a line) on the axis the
+--- window draws it on: a race's on its race clock (Decode's shift), a fight's as it is; nil without a
+--- plain time (the Results Log tab's jump to a cast, CL-11c).
+--- @return number|nil
+function Data.OnAxis(record, t)
+    if type(t) ~= "number" then return nil end
+    local clock = type(record) == "table" and clockOf(record) or nil
+    if clock and type(clock.shift) == "number" then return t - clock.shift end
+    return t
+end
+
 --- Whether a fight has casts to draw (the detail's Timeline button is live only then).
 function Data.Has(record)
     return #Data.Decode(record) > 0
@@ -267,6 +278,15 @@ end
 function Data.Rezoom(pos, from, to, at)
     at = tonumber(at) or 0.5
     return Data.ClampPos((tonumber(pos) or 0) + at / from - at / to, to)
+end
+
+--- The left edge that sets moment `t` of an axis `span` long in the middle of the view at `zoom`,
+--- clamped to the axis (a moment near either end stands off the middle, the view kept on the axis).
+function Data.FocusPos(t, span, zoom)
+    span, zoom = tonumber(span) or 0, tonumber(zoom) or 1
+    if span <= 0 or zoom <= 0 then return 0 end
+    local at = math.max(0, math.min(span, tonumber(t) or 0)) / span
+    return Data.ClampPos(at - 0.5 / zoom, zoom)
 end
 
 --- How far across a view `laneW` wide, its left edge at `laneLeft`, the point `x` is (0 to 1), or nil

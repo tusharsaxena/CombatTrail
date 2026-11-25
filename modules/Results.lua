@@ -287,6 +287,11 @@ local function buildDetail()
             local TL = NS.ResultsTimeline
             if TL and type(TL.Open) == "function" then TL.Open(p) end
         end,
+        -- The Log tab's click on a cast (CL-11c): the timeline opened on the fight, at that cast.
+        timelineAt = function(p, t)
+            local TL = NS.ResultsTimeline
+            if TL and type(TL.Open) == "function" and TL.Open(p) then TL.FocusAt(t) end
+        end,
         compare = function(p)
             local CMP = NS.ResultsCompare
             if CMP and type(CMP.Open) == "function" then CMP.Open(p) end
@@ -1115,6 +1120,11 @@ local function onProfile()
     if windowShown() then render() end
 end
 
+-- A Combat Log setting (the sort, the colors, the columns, what is shown): a shown Log tab redraws.
+local function onLogSetting(path)
+    if type(path) == "string" and path:sub(1, 4) == "log." and windowShown() then ui.detail:RefreshLog() end
+end
+
 local function onSettings(path)
     if path == "profile" and ui then return onProfile() end
     if path == "history.days" and windowShown() then footer() end
@@ -1139,7 +1149,10 @@ do
     if bus then
         bus:RegisterMessage(NS.MSG.FIGHT_SAVED, onStoreChanged)
         bus:RegisterMessage(NS.MSG.FIGHTS_CHANGED, onStoreChanged)
-        bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path) onSettings(path) end)
+        bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
+            onSettings(path)
+            onLogSetting(path)
+        end)
         -- Hide is legal in combat: the frame is non-secure (the header's note).
         bus:RegisterMessage(NS.MSG.COMBAT_ENTERED, function()
             if Results.wanted and NS.GetSetting("results.closeInCombat") then Results.Hide() end
