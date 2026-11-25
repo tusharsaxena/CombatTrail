@@ -4,9 +4,13 @@ local _, NS = ...
 -- shared table (modules/LogTable.lua and LogTable_View.lua) and the capture's ring (modules/CombatLog.lua).
 --
 -- PART OF THE HUD. The drawer is a child of the HUD's window: it hides and fades with it and never
--- shows while the HUD is hidden. The HUD reserves its height under the content (Hud.lua's
--- contentBottom adds HudLog.Height()), so the window grows by it in either size mode and the Race
--- window docked beside it takes the whole height (Hud.Height, RaceWindow.OnHudResized).
+-- shows while the HUD is hidden. The HUD and the drawer are one window of one static height (owner
+-- feedback item 12): the HUD reserves the drawer's sections under the content (Hud.lua's
+-- contentBottom adds HudLog.Height(), worked out from the configuration alone), so the height moves
+-- only when the log opens or closes, a rows setting changes or the HUD's grip is dragged (whose extra
+-- height goes to the drawer's rows while it is open: HudLog.SetDragRows while held, `log.drawer.rows`
+-- on release), and the Race window docked beside it takes the whole height (Hud.Height,
+-- RaceWindow.OnHudResized).
 --
 -- A SECTION LIKE SPELL BREAKDOWN (owner feedback items 17 and 18, 2026-11-25): HudLog.GAP (the HUD's
 -- HEAD_GAP) of clear space, then its heading on the HUD's section line (Hud_States' SECTION_H): the
@@ -17,7 +21,8 @@ local _, NS = ...
 -- or seam above it, and no fold: the title bar's Log mark alone opens and closes the log (item 14).
 --
 -- ITS STATE, each saved in the profile:
---   log.drawer.shown      the title bar's log control (the list mark) and `/ct log` toggle it; with
+--   log.drawer.shown      the title bar's log control (the list mark) and `/ct log` toggle it (on by
+--                         default, owner feedback item 1); with
 --                         log.drawer.autoOpen on (the default) each fight's start opens it. Off while
 --                         `log.enabled` is off, whatever it says, and the control is then hidden.
 --   log.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
@@ -25,7 +30,9 @@ local _, NS = ...
 --                         Heals), the HUD growing by it; on by default (item 9). The chips themselves
 --                         are the drawer's own, seeded from `log.show.*` (LogTable.Reseeds) and turned
 --                         for this session alone.
---   log.drawer.rows       the rows shown, 3 to 20 (default 8).
+--   log.drawer.rows       the rows shown, 3 to 20 (default 10, owner feedback item 16); the rows past
+--                         them scroll with the wheel, the Spell breakdown's indicator in the gutter
+--                         (item 6, LogTable's View:SetScroll).
 --   log.view.sort         newest first (default) or oldest first: the Time header's click flips it.
 --   log.home              "docked" (the default) or "detached": the header's detach control (the export
 --                         mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
@@ -58,6 +65,7 @@ HudLog.GAP = States.HEAD_GAP       -- the clear space over the heading: the HUD'
 HudLog.MIN_ROWS, HudLog.MAX_ROWS = 3, 20
 
 local d                   -- the built drawer
+local dragRows            -- the rows the HUD's grip holds while it is dragged (HudLog.SetDragRows)
 local feed                -- the live feed (LogTable.NewFeed)
 local show = {}           -- the drawer's own What to show, seeded from `log.show`
 local seeded = false
@@ -92,16 +100,34 @@ function HudLog.Wanted()
     return HudLog.Open() and HudLog.Home() == "docked"
 end
 
---- The rows shown, whole and in range.
-function HudLog.Rows()
-    local v = Secrets.PlainNumber(setting("log.drawer.rows")) or 8
+--- The rows `log.drawer.rows` asks for, whole and in range.
+function HudLog.RowsSetting()
+    local v = Secrets.PlainNumber(setting("log.drawer.rows")) or HudLog.MIN_ROWS
     return clamp(math.floor(v), HudLog.MIN_ROWS, HudLog.MAX_ROWS)
+end
+
+--- The rows shown: the HUD grip's while it is dragged, else the rows setting's.
+function HudLog.Rows()
+    return dragRows or HudLog.RowsSetting()
+end
+
+--- The HUD's grip, dragged with the drawer open, hands the rows its height holds (nil: the drag ended).
+--- @param n number|nil
+function HudLog.SetDragRows(n)
+    dragRows = n and clamp(math.floor(n), HudLog.MIN_ROWS, HudLog.MAX_ROWS) or nil
+end
+
+--- The whole rows `h` pixels of table rows hold, in range.
+--- @param h number
+--- @return number
+function HudLog.RowsFit(h)
+    return clamp(math.floor((tonumber(h) or 0) / LogTable.RowH()), HudLog.MIN_ROWS, HudLog.MAX_ROWS)
 end
 
 -- The drawer's width (the HUD's, less its insets): its chips wrap at it.
 local function drawerWidth()
     local H = NS.Hud
-    return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 236
+    return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 366
 end
 
 --- Whether the chips row shows (`log.drawer.chips`, on by default; the header's filter mark).
@@ -115,18 +141,19 @@ local function chipsHeight()
     return LogTable.ChipsHeight(drawerWidth()) + LogTable.CHIP_GAP
 end
 
--- The table's height under the heading: the chips row (when shown), its column header and its rows.
-local function tableHeight()
-    return chipsHeight() + LogTable.Height(HudLog.Rows())
+--- The height the HUD reserves for a drawer of `rows` rows, the clear space over its heading, the
+--- heading, the chips row (when shown), the column header and the rows; 0 while it is not wanted.
+--- Worked out from the configuration alone, never measured.
+--- @param rows number
+--- @return number
+function HudLog.HeightFor(rows)
+    if not HudLog.Wanted() then return 0 end
+    return HudLog.GAP + HudLog.HEAD_H + chipsHeight() + LogTable.Height(rows)
 end
 
---- The height the HUD reserves for the drawer, the clear space over its heading included; 0 while it
---- is not wanted. Worked out from the configuration alone, never measured.
+--- The height the HUD reserves for the drawer at HudLog.Rows().
 --- @return number
-function HudLog.Height()
-    if not HudLog.Wanted() then return 0 end
-    return HudLog.GAP + HudLog.HEAD_H + tableHeight()
-end
+function HudLog.Height() return HudLog.HeightFor(HudLog.Rows()) end
 
 -- ── the drawer ──────────────────────────────────────────────────────────────────────────────────
 
@@ -240,6 +267,7 @@ end
 local function seed()
     LogTable.ReadShow(show)
     seeded = true
+    LogTable.Refilter(feed)
     if d then LogTable.PaintChips(d.chips, show) end
 end
 
@@ -276,8 +304,8 @@ local function tick()
 end
 
 --- The repaint timer on while the drawer shows on a shown HUD, else off. The HUD's every Refresh
---- calls this on both its paths, so it also tells the detached window the HUD may have hidden or come
---- back (LogWindow.FollowHud, the way the Race window follows it).
+--- calls this on both its paths, so it also lets the detached window settle (LogWindow.Settle: the
+--- login and a stand-up bring it up; it never follows the HUD, owner feedback item 11).
 function HudLog.Sync()
     local want = onScreen()
     local addon = NS.addon
@@ -288,7 +316,7 @@ function HudLog.Sync()
         timer = addon:ScheduleRepeatingTimer(tick, NS.Constants.LOG.REPAINT)
     end
     local W = NS.LogWindow
-    if W and W.FollowHud then W.FollowHud() end
+    if W and W.Settle then W.Settle() end
 end
 
 --- Whether the repaint timer runs (the suites).
@@ -296,13 +324,13 @@ function HudLog.Ticking() return timer ~= nil end
 
 -- ── the ways in ─────────────────────────────────────────────────────────────────────────────────
 
---- Open or close the log in its home (`on` nil: toggle). Opening it opens the HUD too, as the
---- player's open (a detached window follows the HUD unless pinned).
+--- Open or close the log in its home (`on` nil: toggle). Opening it docked opens the HUD too, as the
+--- player's open; the detached window is a standalone window and opens alone.
 function HudLog.SetShown(on)
     if on == nil then on = not HudLog.Open() end
     if on and not HudLog.Enabled() then return NS.Print(L["The Combat Log is off (log.enabled)."]) end
     write("log.drawer.shown", on == true)
-    if on and NS.Hud and not NS.Hud.IsShown() then NS.Hud.Show() end
+    if on and HudLog.Home() == "docked" and NS.Hud and not NS.Hud.IsShown() then NS.Hud.Show() end
 end
 
 --- Show or hide the drawer's chips row (the header's filter mark, `log.drawer.chips`): its write
@@ -315,6 +343,7 @@ end
 function HudLog.ToggleChip(key)
     if not seeded then seed() end
     LogTable.ToggleChip(show, key)
+    LogTable.Refilter(feed)
     if d then LogTable.PaintChips(d.chips, show) end
     dirty = true
     HudLog.Paint()
@@ -331,11 +360,6 @@ function HudLog.SetHome(home)
     write("log.home", home)
 end
 
--- Pin or unpin the detached window (`log.window.pinned`: it stays up while the HUD is hidden).
-local function pin(on)
-    write("log.window.pinned", on)
-end
-
 local VERBS = {
     [""] = function() HudLog.SetShown() end,
     toggle = function() HudLog.SetShown() end,
@@ -343,16 +367,14 @@ local VERBS = {
     hide = function() HudLog.SetShown(false) end,
     detach = function() HudLog.SetHome("detached") end,
     dock = function() HudLog.SetHome("docked") end,
-    pin = function() pin(true) end,
-    unpin = function() pin(false) end,
 }
 
---- `/ct log [show|hide|toggle|detach|dock|pin|unpin]`.
+--- `/ct log [show|hide|toggle|detach|dock]` (no pin: the detached window is standalone, item 11).
 function HudLog.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word]
     if fn then return fn() end
-    NS.Print(L["Usage: /ct log show, hide, toggle, detach, dock, pin or unpin"])
+    NS.Print(L["Usage: /ct log show, hide, toggle, detach or dock"])
 end
 
 --- The title bar's log control: shown while the Combat Log is on (the HUD lays its strip by it).

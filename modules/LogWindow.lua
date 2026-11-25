@@ -10,32 +10,26 @@ local _, NS = ...
 -- open is one switch in either home, `log.drawer.shown` (the HUD's Log control, `/ct log`, the
 -- auto-open at a fight's start), so a move keeps it open. Detached, the HUD reserves no drawer height.
 --
--- IT FOLLOWS THE HUD (RaceWindow.FollowHud's rule): up only while the HUD is up, unless pinned
--- (`log.window.pinned`, `/ct log pin|unpin`). The HUD's every Refresh ends in HudLog.Sync, which calls
--- LW.FollowHud, so a HUD that hides for any reason takes this window with it; that is not the player
--- closing it, and it comes back with the HUD. The player's close (its close mark, Escape) closes the
--- log (`log.drawer.shown` off), as the drawer's Log control does.
+-- TWO STATES, NO THIRD (owner feedback item 11, 2026-11-25). Docked, the log is the HUD's drawer;
+-- detached, it is this STANDALONE window: up while the log is open and detached, whether or not the
+-- HUD is up, at its own saved place and size. The attached state (beside the HUD, following it, its
+-- pin, side and HUD-height match) is retired with its keys (schema step 6), its attach mark and
+-- `/ct log pin|unpin`, so nothing here stands beside the HUD or the Race window, and neither of them
+-- moves it. The HUD's Refresh ends in HudLog.Sync, which calls LW.Settle: a comparison that brings
+-- the frame in line with the decision (the login, a stand-up), never a follow. The player's close
+-- (its close mark, Escape) closes the log (`log.drawer.shown` off), as the drawer's Log control does.
 --
--- WHERE IT STANDS. Attached (`log.window.attached`, on by default) it stands flush beside the HUD on
--- `log.window.side`: LEFT by default, since the Race window's default is RIGHT, so out of the box the
--- three read Log | HUD | Race and nothing overlaps (the owner's two-companion rule). The side is the
--- player's to change (RIGHT, TOP, BOTTOM). Put on the same side as an attached, visible Race window,
--- it stands beyond the Race window instead of beside the HUD, so the two still never overlap; the
--- Race window tells it each time it shows, hides or moves (LW.Redock, from RaceWindow's redockSim), and
--- a `raceWindow.*` write re-docks it too. Attached, it takes the HUD's scale (`hud.scale`), as the Race
--- window does, so docked heights line up. Its attach mark (move) lets it stand on its own: at
--- `log.window.position`, dragged by its title bar (never while locked or attached), at its own
--- `log.window.scale`.
+-- WHERE IT STANDS: at `log.window.position`, dragged by its title bar (never while locked), at its
+-- own `log.window.scale`.
 --
 -- ITS SIZE. Its width is `log.window.width` (MIN_WIDTH to MAX_WIDTH; 460 by default, room for every
--- column with Info). Attached LEFT or RIGHT with `log.window.matchHud` on (the default) its height is
--- the HUD's (Hud.Height(): the drawer is not in it while the log is detached), followed each time the
--- HUD draws; else `log.window.height`, set by the grip (0: the height of `log.window.rows` rows). With
--- `log.window.fill` on (the default) the rows fill the height the window has; off, the rows are
--- `log.window.rows` (3-40) and the window is as tall as they are, or the HUD's height holds as many
--- of them as fit. THE GRIP (modules/Sizing.lua, standalone-windows *Resizing*): while it is held only
--- the cheap layout runs (the size, the columns, the visible rows); the release stores the width and
--- the height (the height only when it is not the HUD's) and repaints once.
+-- column with Info); its height `log.window.height`, set by the grip (0: the height of
+-- `log.window.rows` rows). With `log.window.fill` on (the default) the rows fill the height the window
+-- has; off, the rows are `log.window.rows` (3-40) and the window is as tall as they are. The rows past
+-- them scroll with the wheel, the Spell breakdown's indicator in the gutter (owner feedback item 6,
+-- LogTable's View:SetScroll). THE GRIP (modules/Sizing.lua, standalone-windows *Resizing*): while it is
+-- held only the cheap layout runs (the size, the columns, the visible rows); the release stores the
+-- width and the height and repaints once.
 --
 -- THE CHIPS (Casts, Pet, Buffs, Debuffs, Taken, Heals; LogTable.NewChips) stand under the status
 -- line, wrapped at the window's width: the window's own What to show, seeded from `log.show.*` when it
@@ -43,7 +37,7 @@ local _, NS = ...
 -- (LogTable.Reseeds); a click turns one on or off here alone, for the session, never in the settings.
 --
 -- THE LOOK is the DPS HUD's, as the Race window's is: the same shell (NS.ApplySkin, the title band,
--- NS.MakeHeader's marks: Dock, Attach, Settings, Close; the library footer) and the HUD's `hud.window.*`
+-- NS.MakeHeader's marks: Dock, Settings, Close; the library footer) and the HUD's `hud.window.*`
 -- blocks, restyled once per Appearance stamp; its own opacity, `log.window.alpha`, over the HUD's.
 -- It keeps a saved position, so it is not a companion in the standard's sense (standalone-windows,
 -- *A companion window carries no settings mark*): it carries the settings mark.
@@ -51,8 +45,8 @@ local _, NS = ...
 -- WHAT RUNS. Nothing on a client event. While it is on screen one repeating AceTimer at
 -- NS.Constants.LOG.REPAINT (0.1 s) moves its own feed (LogTable.Advance, by the display throttle) and
 -- repaints only when the feed, the pause or a setting moved; it stops the moment the window hides. Its
--- bus receivers: FIGHT_STARTED (the feed follows again) and SETTINGS_CHANGED on `log.`, `raceWindow.`
--- and `hud.` paths. The stand-down hides it and drops the timer and the feed.
+-- bus receivers: FIGHT_STARTED (the feed follows again) and SETTINGS_CHANGED on `log.`, `hud.` and
+-- `general.` paths. The stand-down hides it and drops the timer and the feed.
 --
 -- SECRETS. Nothing here reads a frame's geometry back but the drag's own anchor (stored plain), and
 -- every amount goes to a label through the table's cells (NS.Format.Number), never compared.
@@ -71,18 +65,6 @@ LW.MIN_WIDTH, LW.MAX_WIDTH = 320, 900
 LW.MAX_HEIGHT = 1000
 LW.MIN_ROWS, LW.MAX_ROWS = 3, 40
 LW.LINE_H = 18          -- the status line over the table: Following or Paused, and Resume
-LW.DOCK_GAP = 0         -- flush beside what it docks to, as the Race window is
-LW.SIDES = { "LEFT", "RIGHT", "TOP", "BOTTOM" }
-
--- Each side: the window's point, the point it takes on the frame it stands beside.
-local DOCK = {
-    LEFT   = { "TOPRIGHT", "TOPLEFT" },
-    RIGHT  = { "TOPLEFT", "TOPRIGHT" },
-    TOP    = { "BOTTOMLEFT", "TOPLEFT" },
-    BOTTOM = { "TOPLEFT", "BOTTOMLEFT" },
-}
--- The dock mark's arrow while it stands free points back toward the HUD from its side.
-local ATTACH_ICON = { LEFT = "chevron-right", RIGHT = "chevron-left", TOP = "chevron-down", BOTTOM = "chevron-up" }
 
 local HEADER_H, PAD = Style.TITLE_BAR_H, 12
 
@@ -100,17 +82,8 @@ local function setting(path) return NS.GetSetting and NS.GetSetting(path) end
 local function write(path, value) if NS.SetByPath then NS.SetByPath(path, value) end end
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
 local function isDown() return NS.IsStoodDown ~= nil and NS.IsStoodDown() end
-local function hudShown() return NS.Hud ~= nil and NS.Hud.IsShown() == true end
 local function windowShown() return ui ~= nil and ui.frame:IsShown() == true end
 local function accept(e) return LogTable.Shows(e, show) end
-
-local function attached() return setting("log.window.attached") ~= false end
-local function pinned() return setting("log.window.pinned") == true end
-
-local function side()
-    local s = setting("log.window.side")
-    return DOCK[s] and s or "LEFT"
-end
 
 -- The stored geometry the drag and the grip write (geometry only they determine, architecture-§5),
 -- in the profile's own table.
@@ -128,13 +101,6 @@ local function sizing()
     return ui ~= nil and ui.dragW ~= nil and NS.Sizing.IsSizing(ui.frame)
 end
 
--- Whether the height is the HUD's: attached LEFT or RIGHT with `log.window.matchHud` on.
-local function matched()
-    if not attached() or setting("log.window.matchHud") == false then return false end
-    local s = side()
-    return s == "LEFT" or s == "RIGHT"
-end
-
 local function fill() return setting("log.window.fill") ~= false end
 
 -- ── the decision ────────────────────────────────────────────────────────────────────────────────
@@ -145,9 +111,9 @@ function LW.Wanted()
     return H ~= nil and H.Open() and H.Home() == "detached"
 end
 
---- Whether the window decides to be up: wanted, the addon standing, and the HUD up unless pinned.
+--- Whether the window decides to be up: wanted and the addon standing (the HUD's state is not asked).
 function LW.IsShown()
-    return LW.Wanted() and not isDown() and (pinned() or hudShown())
+    return LW.Wanted() and not isDown()
 end
 
 --- Whether the frame is on screen now.
@@ -155,9 +121,6 @@ function LW.Visible() return windowShown() end
 
 --- The window's frame, or nil before its first show builds it.
 function LW.Frame() return ui and ui.frame or nil end
-
---- The side of the HUD it stands on while attached, or nil while it stands on its own.
-function LW.DockSide() return attached() and side() or nil end
 
 -- ── the size ────────────────────────────────────────────────────────────────────────────────────
 
@@ -190,16 +153,11 @@ end
 -- The height of `rows` rows with the chrome.
 local function heightFor(rows) return chrome() + rows * LogTable.RowH() end
 
---- The height the window has now: the HUD's (matched), else the grip's while it is held, else
---- `log.window.height` with `fill` on (0: the rows setting's), else the rows setting's; never less than
---- its least.
+--- The height the window has now: the grip's while it is held, else `log.window.height` with `fill`
+--- on (0: the rows setting's), else the rows setting's; never less than its least.
 --- @return number
 function LW.WindowHeight()
     local least = LW.MinHeight()
-    if matched() then
-        local h = NS.Hud and NS.Hud.Height and Secrets.PlainNumber(NS.Hud.Height())
-        return h and math.max(least, h) or heightFor(LW.RowsSetting())
-    end
     if sizing() and ui.dragH and fill() then return ui.dragH end
     local stored = Secrets.PlainNumber(setting("log.window.height")) or 0
     if not fill() or stored <= 0 then return heightFor(LW.RowsSetting()) end
@@ -227,7 +185,7 @@ end
 local Act = {}
 LW.Act = Act
 
-local function canDrag() return not locked and not attached() end
+local function canDrag() return not locked end
 
 -- The place the drag left the frame (the client's anchor), stored plain.
 local function savePosition()
@@ -247,7 +205,7 @@ local function edgeOf(f, name)
     return ok and Secrets.PlainNumber(v) or nil
 end
 
--- The window's place where it stands now, as its own place (its attach mark letting it go).
+-- The window's place where it stands now, as its own place (the grip's release keeps its top left).
 local function keepWhereItStands()
     local w = store()
     if not (w and ui) then return end
@@ -267,22 +225,20 @@ local function buildHeader(f)
         extras = {
             { key = "dock", icon = "arrow-left", glyph = "D", tip = L["Dock the Combat Log back in the DPS HUD"],
               onClick = function() Act.dock() end },
-            { key = "attach", icon = "move", glyph = "A", tip = L["Attach the log beside the DPS HUD, or let it stand on its own"],
-              onClick = function() Act.attach() end },
         },
     })
-    ui.close, ui.settings, ui.dock, ui.attach = hb.close, hb.settings, hb.extras.dock, hb.extras.attach
+    ui.close, ui.settings, ui.dock = hb.close, hb.settings, hb.extras.dock
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
     drag:SetScript("OnDragStart", function() if canDrag() then f:StartMoving() end end)
     drag:SetScript("OnDragStop", function()
         f:StopMovingOrSizing()
-        if not attached() then savePosition() end
+        savePosition()
     end)
     ui.drag = drag
     Style.Header(f, { title = f.title, align = "LEFT", drag = drag,
-        right = { ui.close, ui.settings, ui.attach, ui.dock }, n = 4 })
+        right = { ui.close, ui.settings, ui.dock }, n = 3 })
 end
 
 local function onSort()
@@ -352,7 +308,7 @@ local function applyWindow()
     ui.stamp = A.stamp
     local f = ui.frame
     local bar, foot = A.On("hud.window.titleBar"), A.On("hud.window.footer")
-    for _, part in ipairs({ ui.close, ui.settings, ui.dock, ui.attach, ui.drag, Style.Band(f) }) do
+    for _, part in ipairs({ ui.close, ui.settings, ui.dock, ui.drag, Style.Band(f) }) do
         if part then part:SetShown(bar) end
     end
     f.title:SetShown(bar and A.On("hud.window.title"))
@@ -363,41 +319,20 @@ local function applyWindow()
     A.ApplyWindow(f)
 end
 
--- What it stands beside while attached: an attached, visible Race window on its side (it stands beyond
--- that window, so the two never overlap), else the HUD's window (Hud.Dock: placed even while hidden).
-local function besideFrame()
-    local RW = NS.RaceWindow
-    if RW and RW.Visible and RW.Visible() and RW.DockSide() == side() then return RW.Frame() end
-    return NS.Hud.Dock()
-end
-
+-- Its own place and scale (it stands beside nothing: owner feedback item 11).
 local function applyPlacement()
     local f = ui.frame
-    if attached() then
-        local d = DOCK[side()]
-        anchor = { d[1], besideFrame(), d[2], 0, 0 }
-        f:SetScale(Secrets.PlainNumber(setting("hud.scale")) or 1)
-    else
-        local p = (store() or {}).position or {}
-        anchor = { p.point or "CENTER", UIParent, p.relPoint or p.point or "CENTER",
-                   Secrets.PlainNumber(p.x) or 0, Secrets.PlainNumber(p.y) or 0 }
-        f:SetScale(clamp(Secrets.PlainNumber(setting("log.window.scale")) or 1, 0.5, 2))
-    end
+    local p = (store() or {}).position or {}
+    anchor = { p.point or "CENTER", UIParent, p.relPoint or p.point or "CENTER",
+               Secrets.PlainNumber(p.x) or 0, Secrets.PlainNumber(p.y) or 0 }
+    f:SetScale(clamp(Secrets.PlainNumber(setting("log.window.scale")) or 1, 0.5, 2))
     f:ClearAllPoints()
     f:SetPoint(anchor[1], anchor[2], anchor[3], anchor[4], anchor[5])
     f:SetAlpha(clamp(Secrets.PlainNumber(setting("log.window.alpha")) or 1, 0.1, 1))
 end
 
--- The attach mark's icon, set only when it changes.
-local function applyControls()
-    local key = attached() and "move" or ATTACH_ICON[side()]
-    if ui.attachIcon == key then return end
-    ui.attachIcon = key
-    Style.SetControlIcon(ui.attach, key, "A")
-end
-
--- The grip shown while unlocked, and its bounds: matched to the HUD's height, or with `fill` off, the
--- width alone (the height is not the grip's); else both, from the least size.
+-- The grip shown while unlocked, and its bounds: with `fill` off, the width alone (the height is the
+-- rows'); else both, from the least size.
 local function applyGrip()
     local f = ui.frame
     if f.resizeGrip then f.resizeGrip:SetShown(not locked) end
@@ -406,7 +341,7 @@ local function applyGrip()
         if ui.foot.SetGrip then ui.foot:SetGrip(not locked) end
     end
     if type(f.SetResizeBounds) ~= "function" then return end
-    if matched() or not fill() then
+    if not fill() then
         local h = LW.WindowHeight()
         f:SetResizeBounds(LW.MIN_WIDTH, h, LW.MAX_WIDTH, h)
     else
@@ -419,7 +354,6 @@ end
 function layout()
     local w, h = LW.Width(), LW.WindowHeight()
     if not sizing() then ui.frame:SetSize(w, h) end
-    ui.laidH = h
     LogTable.LayChips(ui.chips, ui.content, 0, -LW.LINE_H, w - 2 * PAD)
     local top = -(LW.LINE_H + chipsRoom())
     ui.table.frame:ClearAllPoints()
@@ -444,15 +378,15 @@ function trackSize(w, h)
 end
 
 -- The grip's release (or a hide while it was held): the width stored, and the height unless it is
--- the HUD's or the rows'; a free window keeps its top left where the drag left it; then the redraw.
+-- the rows'; the window keeps its top left where the drag left it; then the redraw.
 function resized(w, h)
     w = Secrets.PlainNumber(w) or ui.dragW
     h = Secrets.PlainNumber(h) or ui.dragH
     ui.dragW, ui.dragH = nil, nil
     local s = store()
-    if not attached() then keepWhereItStands() end
+    keepWhereItStands()
     if s and w then s.width = clamp(math.floor(w + 0.5), LW.MIN_WIDTH, LW.MAX_WIDTH) end
-    if s and h and fill() and not matched() then s.height = clamp(math.floor(h + 0.5), 0, LW.MAX_HEIGHT) end
+    if s and h and fill() then s.height = clamp(math.floor(h + 0.5), 0, LW.MAX_HEIGHT) end
     if LW.IsShown() then LW.Refresh() end
 end
 
@@ -462,6 +396,7 @@ end
 local function seed()
     LogTable.ReadShow(show)
     seeded = true
+    LogTable.Refilter(feed)
     if ui then LogTable.PaintChips(ui.chips, show) end
 end
 
@@ -469,6 +404,7 @@ end
 function LW.ToggleChip(key)
     if not seeded then seed() end
     LogTable.ToggleChip(show, key)
+    LogTable.Refilter(feed)
     if ui then LogTable.PaintChips(ui.chips, show) end
     dirty = true
     LW.Paint()
@@ -492,7 +428,6 @@ function LW.Paint()
     ui.resume:SetShown(paused)
     ui.status:SetText(paused and L["Paused"] or L["Following the newest line"])
     ui.footLeft:SetText(n > 0 and L["%d shown"]:format(n) or "")
-    ui.footRight:SetText(pinned() and L["Pinned: stays up while the DPS HUD is hidden"] or "")
 end
 
 local function onScreen()
@@ -521,13 +456,6 @@ function LW.Ticking() return timer ~= nil end
 
 -- ── showing and hiding ──────────────────────────────────────────────────────────────────────────
 
--- The sim window docks beside the outermost window on the HUD's right, so each show and hide of this
--- one docks a shown sim panel again (modules/Sim.lua, reached at call time).
-local function redockSim()
-    local Sim = NS.Sim
-    if Sim and Sim.Redock then Sim.Redock() end
-end
-
 local function hideWindow()
     if windowShown() then
         hiding = true
@@ -542,20 +470,17 @@ function onHide()
     if hiding or (ui and ui.frame:IsShown()) then return end
     LW.Sync()
     if LW.Wanted() and not isDown() then write("log.drawer.shown", false) end
-    redockSim()
 end
 
 --- Re-decide and redraw. The one place the frame follows the decision. Never calls the HUD's Refresh.
 function LW.Refresh()
     locked = setting("general.locked") == true or setting("log.window.locked") == true
-    local was = windowShown()
     if not LW.IsShown() then
         hideWindow()
     else
         ensureWindow()
         applyWindow()
         applyPlacement()
-        applyControls()
         layout()
         applyGrip()
         if not windowShown() then ui.frame:Show() end
@@ -563,24 +488,12 @@ function LW.Refresh()
         LW.Paint()
     end
     LW.Sync()
-    if windowShown() ~= was then redockSim() end
 end
 
---- The HUD drew, hid or came back (HudLog.Sync, at the end of each of its Refreshes and draws): the
---- frame re-decides when it disagrees with the decision, and a window matched to the HUD's height
---- lays out again when that height moved. A comparison otherwise.
-function LW.FollowHud()
+--- HudLog.Sync, at the end of each of the HUD's Refreshes and draws (the login, a stand-up): the frame
+--- re-decides when it disagrees with the decision. A comparison otherwise; it never follows the HUD.
+function LW.Settle()
     if LW.IsShown() ~= windowShown() then return LW.Refresh() end
-    if windowShown() and matched() and not sizing() and ui.laidH ~= LW.WindowHeight() then
-        layout()
-        applyGrip()
-        dirty = true
-    end
-end
-
---- Stand beside what it should again (the Race window showed, hid or moved; a side changed).
-function LW.Redock()
-    if windowShown() then applyPlacement() end
 end
 
 --- The place applied last: { point, relativeTo, relPoint, x, y } (the suites read it), or nil.
@@ -602,17 +515,6 @@ function Act.settings()
     return NS.OpenSettings()
 end
 
---- Attach it beside the HUD, or let it stand where it stands now.
-function Act.attach()
-    if attached() then
-        if windowShown() then keepWhereItStands() end
-        write("log.window.attached", false)
-    else
-        write("log.window.attached", true)
-    end
-    LW.Refresh()
-end
-
 --- The stand-down: the timer goes (CancelAllTimers took it), the feed starts over, the frame hides.
 function LW.Suspend()
     timer, feed, dirty, seeded = nil, nil, true, false
@@ -624,8 +526,7 @@ function LW.Resume() LW.Refresh() end
 
 --- What the window is doing, for the diagnostics report.
 function LW.Diagnose()
-    return { shown = LW.IsShown(), attached = attached(), side = side(), pinned = pinned(), matched = matched(),
-             width = LW.Width(), height = LW.WindowHeight(), ticking = timer ~= nil }
+    return { shown = LW.IsShown(), width = LW.Width(), height = LW.WindowHeight(), ticking = timer ~= nil }
 end
 
 --- The built window (the suites; nil until first shown).
@@ -650,6 +551,5 @@ if bus then
             if ui then ui.table.laid = nil end
             return LW.Refresh()
         end
-        if path:find("^raceWindow%.") then LW.Redock() end
     end)
 end

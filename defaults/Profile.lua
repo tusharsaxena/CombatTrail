@@ -158,9 +158,9 @@ NS.defaults = {
         -- keeps the card up), whether the pointer holds it, whether it opens only inside an instance, what
         -- the pace compares against ("best" on the same board, the "last" fight there, or "none"), the pace
         -- bar's range (plan Task 3.2), whether the fight-over card shows and whether it says why a fight was
-        -- not saved. Layout: its width, its scale, its size mode (v0.2 Task B3: "fixed", the height derived
-        -- from `bars` spell rows and set by the grip, or "auto", growing with the rows up to `bars` and then
-        -- scrolling, toward `grow` "down" or "up"), and one switch per part of the stack (the clock, the
+        -- not saved. Layout: its width (390, the owner's own; feedback item 2), its scale, its `bars` spell
+        -- rows (the window is one static height, feedback item 12: the auto-grow `sizeMode` and its `grow`
+        -- edge are retired, schema step 6), and one switch per part of the stack (the clock, the
         -- target line, the Damage and DPS boxes, the pace bar, the damage chart and the spell rows). Its
         -- place: a point on UIParent, written by the title bar's drag (the mockup's top right).
         -- The look (plan Task 3.2, modules/Hud_Appearance.lua), one block per mockup tab, each in the
@@ -180,7 +180,7 @@ NS.defaults = {
         hud = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
-            width = 260, scale = 1, sizeMode = "fixed", bars = 5, grow = "down",
+            width = 390, scale = 1, bars = 5,
             -- Both windows' live refreshes a second (modules/Hud.lua's beat, the race beat): 4, 5, 10 or 20.
             refreshRate = 10,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
@@ -232,8 +232,8 @@ NS.defaults = {
         -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each fight
         -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
         -- modules/LogTable.lua; their rows are the Combat Log page's, settings/Log.lua, CL-11c2): the HUD's
-        -- docked drawer (open, its rows 3-20, opened at each fight's start, its filter chips shown; owner
-        -- feedback items 9 and 14: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
+        -- docked drawer (open by default, its rows 3-20, 10 by default, opened at each fight's start, its
+        -- filter chips shown; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
         -- their height in pixels, 12-28 (CL-11c2), school colors, row washes, the optional columns: no
         -- Source or Target, item 3); the
@@ -241,21 +241,18 @@ NS.defaults = {
         -- in the skin's `ct.log.hostile` / `ct.log.friendly` or their own); and what the live views show
         -- (each saved category, the auto attacks, the least amount a hit or a heal shows at). Then where
         -- the log lives (CL-11b2): `home` "docked" in the HUD or "detached" in its own window
-        -- (modules/LogWindow.lua), whose keys are `window`: attached beside the HUD on `side` (LEFT, the
-        -- Race window's default being RIGHT, so the two stand on either side of the HUD; RIGHT, TOP,
-        -- BOTTOM) or at its own `position`, its height the HUD's beside it (`matchHud`, LEFT or RIGHT), its
-        -- rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least) set by
-        -- its grip, `pinned` (up while the HUD is hidden), `locked`, its `scale` while it stands on its own
-        -- and its `alpha` (0.1-1). Then the Results fight detail's Log tab (CL-11c,
+        -- (modules/LogWindow.lua), whose keys are `window`: a standalone window at its own `position`
+        -- (owner feedback item 11: no attached state, so no side, HUD-height match or pin, schema step 6),
+        -- its rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least)
+        -- set by its grip, `locked`, its `scale` and its `alpha` (0.1-1). Then the Results fight detail's Log tab (CL-11c,
         -- modules/Results_Log.lua): the chips each fight opens on, and whether a click on a CAST row jumps
         -- the ability timeline to that cast.
         log = {
             enabled = true,
             home = "docked",
-            drawer = { shown = false, rows = 8, autoOpen = true, chips = true },
+            drawer = { shown = true, rows = 10, autoOpen = true, chips = true },
             window = {
-                attached = true, side = "LEFT", matchHud = true, fill = true, rows = 12, width = 460, height = 0,
-                pinned = false, locked = false, scale = 1, alpha = 1,
+                fill = true, rows = 12, width = 460, height = 0, locked = false, scale = 1, alpha = 1,
                 position = { point = "CENTER", relPoint = "CENTER", x = -360, y = 0 },
             },
             view = {

@@ -17,6 +17,7 @@ local FIGHT = { damage = 40000, dps = 1000, duration = 40,
 
 local HEAD_GAP, SECTION_H, PACE_LINE, GAP = 6, 22, 12 + 4, 8
 local PLOT_H, RESERVE, AXIS_H = 80, 13, 12
+local STATUS = 18 + GAP   -- the reserved status line: one chip line and its gap (owner feedback item 12)
 
 -- `region`'s y offset (its first anchor's), down from the body's top.
 local function y(region) return region.__points[1][5] end
@@ -95,19 +96,21 @@ test("hud layout: the live body stacks the top, Damage profile, the pace bar, th
     local body = H.body(Hud, "live")
     assertTrue(body.paceShown == true and body.chartShown == true)
     redraw(Hud, body)
-    assertEqual(body.stackTop, 52 + 18 + 46 + GAP, "the clock's 40 + 12, the target line, the boxes, the gap")
+    assertEqual(body.stackTop, 52 + 18 + 46 + GAP + STATUS,
+        "the clock's 40 + 12, the target line, the boxes, the gap, the empty status line")
     assertStack(inst, body)
     assertEqual(body.parts.chart.note.__text, "vs best pace")
 end)
 
-test("hud layout: the fight-over card stacks the same under its chips", function()
+test("hud layout: the fight-over card stacks the same, its chips in the reserved status line", function()
     local inst, _, Hud = paced()
     H.finish(inst, 100, 40)
     assertEqual(Hud.State(), "over")
     local body = H.body(Hud, "over")
     assertTrue(body.paceShown == true and body.chartShown == true)
     redraw(Hud, body)
-    assertEqual(body.stackTop, 52 + 18 + 46 + GAP + body.w.chips:Height(), "under the chips")
+    assertEqual(body.w.chips:Height(), STATUS, "one line of chips")
+    assertEqual(body.stackTop, 52 + 18 + 46 + GAP + STATUS, "under the chips, where the live body is")
     assertStack(inst, body)
 end)
 
@@ -148,12 +151,12 @@ end)
 
 -- ── the sizes ───────────────────────────────────────────────────────────────────────────────────
 
-test("hud layout: the defaults are DPS Race's sizes", function()
+test("hud layout: the defaults are DPS Race's sizes, 390 wide (the owner's)", function()
     local inst = H.fresh()
     local NS = inst.NS
     local d = NS.defaults.profile.hud
-    assertEqual(d.width, 260)
-    assertEqual(NS.Hud.MIN_WIDTH, 260)
+    assertEqual(d.width, 390, "owner feedback item 2")
+    assertEqual(NS.Hud.MIN_WIDTH, 260, "DPS Race's least")
     assertEqual(d.clock.fontFromSkin, true, "the clock in the skin's HUD face, as DPS Race's")
     assertEqual(d.clock.fontSize, 26, "DPS Race's stored clock size (the composed slider tops out at 32)")
     assertEqual(d.clock.fontFlags, "", "no outline (the owner, 2026-11-23, over U-14)")
@@ -166,17 +169,15 @@ test("hud layout: the defaults are DPS Race's sizes", function()
     assertEqual(NS.HudChart.PACE_H, 12)
 end)
 
-test("hud layout: the window is 260 wide on DPS Race's insets, its height the stack's", function()
+test("hud layout: the window is 390 wide on DPS Race's insets, its height the stack's", function()
     local inst, _, Hud = paced()
-    -- An auto-grow window is the stack's height (a fixed one is tests/test_hud_sizing.lua's).
-    H.setHud(inst, "sizeMode", "auto")
     local NS = inst.NS
     local f, ui = Hud.Frame(), Hud.__ui()
     local body = H.body(Hud, "live")
     track(f)
     track(ui.content)
     redraw(Hud, body)
-    assertEqual(f.__w, 260)
+    assertEqual(f.__w, 390)
     local headerH, footerH = NS.Style.TITLE_BAR_H, NS.FOOTER_HEIGHT   -- the library's footer, 24 (AD-89-CT)
     local tl, br = ui.content.__points[1], ui.content.__points[2]
     assertEqual(tl[1], "TOPLEFT")
@@ -185,10 +186,13 @@ test("hud layout: the window is 260 wide on DPS Race's insets, its height the st
     assertEqual(br[1], "BOTTOMRIGHT")
     assertEqual(br[4], -12)
     assertEqual(br[5], footerH + 8, "the content's bottom: the footer + 8")
-    assertEqual(Hud.View().width, 260 - 24, "the bodies' width: 236")
-    assertEqual(f.__h, headerH + 10 + body.height + footerH + 8)
+    assertEqual(Hud.View().width, 390 - 24, "the bodies' width: 366")
     local rows = body.parts.spells.list:Rows()
     local drawn = #rows
+    -- Two spells in five bars' room and no pet: the one height keeps the three empty rows and the
+    -- boxes' pet row (owner feedback item 12).
+    local empty = NS.HudBreakdown.Height(5) - NS.HudBreakdown.Height(drawn) + 14
+    assertEqual(f.__h, headerH + 10 + body.height + empty + footerH + 8)
     local profile = HEAD_GAP + SECTION_H + PACE_LINE + PLOT_H + RESERVE + 2 + AXIS_H + GAP
     local spells = HEAD_GAP + SECTION_H + NS.HudBreakdown.Height(drawn) + GAP
     assertEqual(body.height, body.stackTop + profile + spells, "the stack, part by part")

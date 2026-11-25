@@ -1,12 +1,11 @@
 -- tests/test_log_window.lua — the Combat Log's detached window, "Combat Trail · Log" (CombatTrail #11,
 -- plan item CL-11b2; the spec's addendum, home B): the drawer's detach mark and the window's dock mark
 -- moving the log between its homes with the log kept open, the HUD giving the drawer's height back;
--- the window wider, with the Info column; following the HUD, hidden and back with it, unless pinned;
--- the player's close (Escape, the close mark) closing the log, the HUD's hide not; attached LEFT
--- beside the HUD by default, at the HUD's height with its rows filling it; standing free at its own
--- place, scale and stored size; the grip's drag repainting nothing until its release; the rows setting
--- with fill off; the live feed with its pause and Resume; `/ct log detach|dock|pin|unpin`. The Race
--- window's side of it (Retail) is in tests/test_race_window.lua. Runs under both kit profiles.
+-- the window wider, with the Info column; TWO STATES ONLY (owner feedback item 11): a standalone
+-- window, up whether or not the HUD is, at its own place, scale and stored size, with no attach mark,
+-- side, HUD-height match or pin; the player's close (Escape, the close mark) closing the log; the
+-- grip's drag repainting nothing until its release; the rows setting with fill off; the live feed
+-- with its pause, Resume and scroll indicator; `/ct log detach|dock`. Runs under both kit profiles.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -102,23 +101,27 @@ test("log window: wider than the drawer, with the Info column", function()
     assertTrue(not columns(NS.HudLog.__ui().table).info, "the drawer never does")
 end)
 
-test("log window: it follows the HUD, hidden and back with it, unless pinned", function()
-    local _, NS = fresh()
+test("log window: a standalone window, up whether or not the HUD is; no pin verb", function()
+    local inst, NS = fresh()
     detached(NS)
     local LW = NS.LogWindow
     NS.Hud.Hide()
-    assertFalse(LW.Visible(), "hidden with the HUD")
-    assertFalse(LW.Ticking(), "and its timer stopped")
-    assertTrue(LW.Wanted(), "still wanted: hiding with the HUD is not the player's close")
-    NS.Hud.Show()
-    assertTrue(LW.Visible(), "back with the HUD")
+    assertTrue(LW.Visible(), "the HUD's hide leaves it up")
+    assertTrue(LW.Ticking(), "and painting")
+    NS.HudLog.SetShown(false)
+    assertFalse(LW.Visible())
+    NS.HudLog.SetShown(true)
+    assertTrue(LW.Visible(), "opened with the HUD hidden")
+    assertFalse(NS.Hud.IsShown(), "and the HUD stays hidden: opening it detached opens it alone")
+    local printed = {}
+    inst.mocks.print = function(...) printed[#printed + 1] = table.concat({ ... }, " ") end
     NS.Slash:OnSlash("log pin")
-    assertTrue(NS.GetSetting("log.window.pinned"))
-    NS.Hud.Hide()
-    assertTrue(LW.Visible(), "pinned: it stays up while the HUD is hidden")
-    assertTrue(LW.Ticking())
-    NS.Slash:OnSlash("log unpin")
-    assertFalse(LW.Visible(), "unpinned with the HUD hidden: it goes")
+    assertEqual(NS.GetSetting("log.window.pinned"), nil, "no pin key")
+    assertTrue(LW.Visible())
+    for _, key in ipairs({ "attached", "side", "matchHud", "pinned" }) do
+        assertEqual(NS.FindSchemaRow("log.window." .. key), nil, "no row for log.window." .. key)
+        assertEqual(NS.defaults.profile.log.window[key], nil, "no default for log.window." .. key)
+    end
 end)
 
 test("log window: Escape and its close mark close the log; the HUD's hide does not", function()
@@ -141,25 +144,35 @@ test("log window: Escape and its close mark close the log; the HUD's hide does n
     assertFalse(NS.GetSetting("log.drawer.shown"), "its close mark closes the log")
     NS.HudLog.SetShown(true)
     NS.Hud.Hide()
-    assertFalse(NS.LogWindow.Visible(), "hidden with the HUD")
+    assertTrue(NS.LogWindow.Visible(), "the HUD's hide is not a close of the log")
     assertTrue(NS.GetSetting("log.drawer.shown"), "a hide with the HUD leaves the log open")
 end)
 
-test("log window: attached LEFT beside the HUD by default, at the HUD's scale and height", function()
+test("log window: at its own place, scale and height by default, never beside the HUD", function()
     local inst, NS = fresh()
-    detached(NS)
-    local a = NS.LogWindow.Anchor()
-    assertEqual(NS.LogWindow.DockSide(), "LEFT", "left by default: the Race window's default is right")
-    assertEqual(a[1], "TOPRIGHT")
-    assertTrue(a[2] == NS.Hud.Frame(), "beside the HUD's window")
-    assertEqual(a[3], "TOPLEFT")
-    local g, hud = inst.geom[NS.LogWindow.FRAME_NAME], inst.geom[NS.Hud.FRAME_NAME]
-    assertEqual(g.h, NS.Hud.Height(), "the HUD's height")
-    assertEqual(g.h, hud.h)
-    assertEqual(g.scale, NS.GetSetting("hud.scale") or 1, "the HUD's scale")
-    -- The HUD grows: the window follows the next time the HUD draws.
+    local ui = detached(NS)
+    local LW = NS.LogWindow
+    local a = LW.Anchor()
+    local d = NS.defaults.profile.log.window.position
+    assertTrue(a[2] == inst.mocks.UIParent, "at its own place on the screen")
+    assertEqual(a[1], d.point)
+    assertEqual(a[4], d.x)
+    assertEqual(a[5], d.y)
+    assertEqual(LW.DockSide, nil, "no side")
+    assertEqual(LW.Redock, nil, "nothing docks it")
+    assertEqual(ui.attach, nil, "no attach mark")
+    local g = inst.geom[LW.FRAME_NAME]
+    NS.db.profile.log.window.scale = 1.25
+    NS.AnnounceSettingsChanged("log.window.scale", 1.25)
+    assertEqual(g.scale, 1.25, "its own scale")
+    local h = g.h
+    assertEqual(h, LW.WindowHeight(), "its own height")
     assertTrue(NS.SetByPath("hud.bars", 12))
-    assertEqual(g.h, hud.h, "it follows the HUD's height")
+    assertEqual(g.h, h, "the HUD's height never moves it")
+    NS.db.profile.log.window.position = { point = "TOPLEFT", relPoint = "BOTTOMLEFT", x = 30, y = 600 }
+    LW.Refresh()
+    assertEqual(LW.Anchor()[1], "TOPLEFT")
+    assertEqual(LW.Anchor()[5], 600, "the stored place")
 end)
 
 test("log window: its rows fill the height it has", function()
@@ -169,14 +182,13 @@ test("log window: its rows fill the height it has", function()
     local h = LW.WindowHeight()
     local chrome = LW.MinHeight() - LW.MIN_ROWS * LT.ROW_H
     assertEqual(ui.table.nRows, math.floor((h - chrome) / LT.ROW_H), "as many rows as fit")
-    assertTrue(ui.table.nRows > LW.MIN_ROWS, "the HUD's height holds more than the least")
+    assertTrue(ui.table.nRows > LW.MIN_ROWS, "its own height holds more than the least")
 end)
 
 test("log window: with fill off its rows are the rows setting, and the window is as tall as they are", function()
     local inst, NS = fresh()
     detached(NS)
     local LW = NS.LogWindow
-    NS.db.profile.log.window.attached = false
     NS.db.profile.log.window.fill = false
     NS.db.profile.log.window.rows = 6
     NS.AnnounceSettingsChanged("log.window.rows", 6)
@@ -189,28 +201,10 @@ test("log window: with fill off its rows are the rows setting, and the window is
     assertEqual(LW.RowsSetting(), LW.MAX_ROWS, "held to the most")
 end)
 
-test("log window: standing on its own it takes its saved place and scale; the attach mark lets it go", function()
-    local inst, NS = fresh()
-    local ui = detached(NS)
-    local LW = NS.LogWindow
-    NS.db.profile.log.window.scale = 1.25
-    click(ui.attach)
-    assertFalse(NS.GetSetting("log.window.attached"), "standing on its own")
-    local a = LW.Anchor()
-    assertTrue(a[2] == inst.mocks.UIParent, "at its own place")
-    assertEqual(inst.geom[LW.FRAME_NAME].scale, 1.25, "at its own scale")
-    assertTrue(ui.attach.iconName ~= "move", "the mark now points back toward the HUD")
-    click(ui.attach)
-    assertTrue(NS.GetSetting("log.window.attached"))
-    assertTrue(LW.Anchor()[2] == NS.Hud.Frame(), "beside the HUD again")
-end)
-
 test("log window: a grip drag lays out cheaply and repaints nothing until its release, then stores the size", function()
     local inst, NS = fresh()
     local ui = detached(NS)
     local LW, M = NS.LogWindow, inst.mocks
-    NS.db.profile.log.window.attached = false
-    NS.AnnounceSettingsChanged("log.window.attached", false)
     local draws = { n = 0 }
     local orig = ui.table.Draw
     rawset(ui.table, "Draw", function(...) draws.n = draws.n + 1; return orig(...) end)
@@ -253,6 +247,25 @@ test("log window: it paints the newest fight's lines with their Info; the wheel 
     click(ui.resume)
     assertFalse(NS.LogTable.Paused(NS.LogWindow.__feed()))
     assertFalse(ui.resume:IsShown())
+end)
+
+test("log window: its rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)", function()
+    local inst, NS = fresh()
+    local ui = detached(NS)
+    NS.CombatLog.Begin("f1", 100)
+    for i = 1, 80 do NS.CombatLog.OnCast("player", FIREBALL, 100 + i * 0.01) end
+    inst.mocks.__now = 102
+    NS.LogWindow.Paint()
+    local view, S = ui.table, NS.HudStates
+    local rows = view.nRows
+    assertTrue(rows < 80, "a page shorter than the lines")
+    assertTrue(view.scroll.on and view.thumb:IsShown(), "shown")
+    assertEqual(view.scroll.thumbH, math.max(S.THUMB_MIN, math.floor(rows * NS.LogTable.RowH() * rows / 80 + 0.5)))
+    assertEqual(view.scroll.x, NS.LogWindow.Width() - 24 + S.THUMB_GAP, "in the gutter right of the rows")
+    assertEqual(view.scroll.dy, 0)
+    view.frame:GetScript("OnMouseWheel")(view.frame, -1)
+    assertEqual(NS.LogWindow.__feed().offset, 1, "one line a notch")
+    assertTrue(view.scroll.dy > 0, "the thumb moved down")
 end)
 
 test("log window: its chips filter what it shows, for the session, seeded from What to show", function()
@@ -326,13 +339,10 @@ test("log window: with the Combat Log off it never shows", function()
     assertFalse(NS.LogWindow.Ticking())
 end)
 
-test("log window: on WoW Forever there is no Race window, and it stands beside the HUD the same way", function()
+test("log window: on WoW Forever there is no Race window, and it stands at its own place the same way", function()
     if not T.NS.Compat.IsForever() then return end
-    local _, NS = fresh()
+    local inst, NS = fresh()
     detached(NS)
     assertTrue(NS.RaceWindow == nil)
-    NS.db.profile.log.window.side = "RIGHT"
-    NS.AnnounceSettingsChanged("log.window.side", "RIGHT")
-    assertTrue(NS.LogWindow.Anchor()[2] == NS.Hud.Frame())
-    assertEqual(NS.LogWindow.Anchor()[1], "TOPLEFT")
+    assertTrue(NS.LogWindow.Anchor()[2] == inst.mocks.UIParent)
 end)

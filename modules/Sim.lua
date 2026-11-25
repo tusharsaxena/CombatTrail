@@ -296,10 +296,6 @@ end
 
 local function dockFrame()
     local hud = NS.Hud.Frame()
-    -- The detached Combat Log attached on the HUD's right stands outermost there (beyond the Race
-    -- window when that is on the right too): the panel docks beside it.
-    local LW = NS.LogWindow
-    if LW and LW.Visible() and LW.DockSide() == "RIGHT" then return LW.Frame() end
     local RW = NS.RaceWindow
     if not (RW and RW.Visible()) then return hud end
     local rw, s = RW.Frame(), RW.DockSide()

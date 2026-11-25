@@ -442,22 +442,12 @@ L["Show your damage over the fight as columns, with the pace as a line and your 
 L["Show spell rows"] = "Show spell rows"
 L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] =
     "Show your spells and your pet's, one row each, in the order the damage meter gives them."
-L["Window size"] = "Window size"
-L["Fixed: drag the corner to set the bars"] = "Fixed: drag the corner to set the bars"
-L["Auto-grow with the rows"] = "Auto-grow with the rows"
-L["Fixed: the HUD keeps one height, room for Spell bars rows, and dragging its bottom-right corner sets the width and the bars. Auto-grow: it grows with the spell rows up to Spell bars, then scrolls. Either way the mouse wheel scrolls through spells past the rows."] =
-    "Fixed: the HUD keeps one height, room for Spell bars rows, and dragging its bottom-right corner sets the width and the bars. Auto-grow: it grows with the spell rows up to Spell bars, then scrolls. Either way the mouse wheel scrolls through spells past the rows."
 L["Spell bars"] = "Spell bars"
-L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel."] =
-    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel."
-L["Grow"] = "Grow"
-L["Down: the top stays put"] = "Down: the top stays put"
-L["Up: the bottom stays put"] = "Up: the bottom stays put"
-L["Which way an Auto-grow HUD grows as rows arrive: down keeps its top in place, up keeps its bottom. Needs Window size Auto-grow."] =
-    "Which way an Auto-grow HUD grows as rows arrive: down keeps its top in place, up keeps its bottom. Needs Window size Auto-grow."
+L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Log is closed or detached, the log's rows while it is docked open."] =
+    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Log is closed or detached, the log's rows while it is docked open."
 L["HUD width (px)"] = "HUD width (px)"
-L["How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."] =
-    "How wide the HUD is, in pixels. Dragging the corner of a Fixed HUD sets it too."
+L["How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."] =
+    "How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."
 L["HUD scale"] = "HUD scale"
 L["The size of the whole HUD, its text included."] = "The size of the whole HUD, its text included."
 L["Refresh"] = "Refresh"
@@ -1287,15 +1277,13 @@ L["Follow the newest line again."] = "Follow the newest line again."
 L["%d shown"] = "%d shown"
 L["No events yet."] = "No events yet."
 L["The Combat Log is off (log.enabled)."] = "The Combat Log is off (log.enabled)."
-L["Usage: /ct log show, hide, toggle, detach, dock, pin or unpin"] = "Usage: /ct log show, hide, toggle, detach, dock, pin or unpin"
+L["Usage: /ct log show, hide, toggle, detach or dock"] = "Usage: /ct log show, hide, toggle, detach or dock"
 L["Detach the Combat Log into its own window"] = "Detach the Combat Log into its own window"
 L["Combat Trail \194\183 Log"] = "Combat Trail \194\183 Log"
 L["Dock the Combat Log back in the DPS HUD"] = "Dock the Combat Log back in the DPS HUD"
-L["Attach the log beside the DPS HUD, or let it stand on its own"] = "Attach the log beside the DPS HUD, or let it stand on its own"
 L["Combat Log settings"] = "Combat Log settings"
 L["Following the newest line"] = "Following the newest line"
 L["Paused"] = "Paused"
-L["Pinned: stays up while the DPS HUD is hidden"] = "Pinned: stays up while the DPS HUD is hidden"
 L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"] = "The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"
 
 -- The Results fight detail's tabs and its Log tab (CombatTrail #11, CL-11c; modules/Results_Detail.lua,
@@ -1360,8 +1348,8 @@ L["Show the filter chips"] = "Show the filter chips"
 L["Show the Casts, Pet, Buffs, Debuffs, Taken and Heals chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] =
     "Show the Casts, Pet, Buffs, Debuffs, Taken and Heals chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."
 L["Rows shown"] = "Rows shown"
-L["How many events the drawer shows at a time. The DPS HUD grows by the drawer's height."] =
-    "How many events the drawer shows at a time. The DPS HUD grows by the drawer's height."
+L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] =
+    "How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."
 L["Rows"] = "Rows"
 L["Fill the window with rows"] = "Fill the window with rows"
 L["Show as many events as the window's height holds. Off, the window shows Rows shown and is as tall as they need."] =
@@ -1369,22 +1357,11 @@ L["Show as many events as the window's height holds. Off, the window shows Rows 
 L["How many events the window shows at a time. Needs Fill the window with rows off."] =
     "How many events the window shows at a time. Needs Fill the window with rows off."
 L["Place"] = "Place"
-L["Attach beside the DPS HUD"] = "Attach beside the DPS HUD"
-L["Stand the window flush beside the DPS HUD, moving with it. Off, it stands where you drag it. Its title bar's attach mark switches it too."] =
-    "Stand the window flush beside the DPS HUD, moving with it. Off, it stands where you drag it. Its title bar's attach mark switches it too."
-L["Which side of the DPS HUD the attached window stands on. On the same side as the Race window, it stands beyond the Race window, so the two never overlap. Needs Attach beside the DPS HUD."] =
-    "Which side of the DPS HUD the attached window stands on. On the same side as the Race window, it stands beyond the Race window, so the two never overlap. Needs Attach beside the DPS HUD."
-L["Attached on the left or the right, take the DPS HUD's height, its drawer and its fold included. Off, the window keeps its own height."] =
-    "Attached on the left or the right, take the DPS HUD's height, its drawer and its fold included. Off, the window keeps its own height."
-L["Stay up while the HUD is hidden"] = "Stay up while the HUD is hidden"
-L["Keep the window up when the DPS HUD hides or fades. Off, it shows and hides with the HUD, as the Race window does."] =
-    "Keep the window up when the DPS HUD hides or fades. Off, it shows and hides with the HUD, as the Race window does."
 L["Lock the window"] = "Lock the window"
 L["Stop the window from being dragged or resized. General > Master controls' Lock frame locks it too."] =
     "Stop the window from being dragged or resized. General > Master controls' Lock frame locks it too."
 L["Look"] = "Look"
-L["The size of the window standing on its own. Attached, it takes the DPS HUD's scale."] =
-    "The size of the window standing on its own. Attached, it takes the DPS HUD's scale."
+L["The size of the window, its text included."] = "The size of the window, its text included."
 L["Window opacity"] = "Window opacity"
 L["How opaque the window is, its background and its text together, over the DPS HUD's own opacity."] =
     "How opaque the window is, its background and its text together, over the DPS HUD's own opacity."

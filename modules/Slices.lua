@@ -26,8 +26,11 @@ local _, NS = ...
 -- THE READS. FIGHT_STARTED opens the fight's store and FIGHT_TICK (4 Hz, combat only) reads
 -- Meter.ReadLive once per step, never more often: the tick only reads when a boundary is due. A merged
 -- fight reads its newest session. FIGHT_ENDED "final" closes the store, which waits for the record
--- (Recorder sets fight.recordID, so Slices.Get answers a record id too); "lost" and FIGHT_SKIPPED
--- forget it. Slices.KEEP closed fights are held, the oldest let go first.
+-- (Recorder sets fight.recordID, so Slices.Get answers a record id too); "lost" forgets it. Slices.KEEP
+-- closed fights are held, the oldest let go first. FIGHT_SKIPPED holds the skipped fight's store
+-- apart, outside KEEP, until the next skip (Slices.HoldSkipped): the DPS HUD's fight-over card still
+-- draws its chart (owner feedback item 7, 2026-11-25: forgetting it here left the card with the pace
+-- bar alone), and it never takes a slot from a stored fight's chart.
 --
 -- IN MEMORY ONLY, NEVER STORED. A value captured in combat stays secret, and the client writes a
 -- secret to SavedVariables as nil, so a fight recorded before the last /reload or login has no chart
@@ -54,6 +57,7 @@ local EPS = 1e-6
 local store = {}     -- [fight id] = { step, values, pet, count, filled, next, expected, open, fight }
 local closed = {}    -- closed fight ids, oldest first
 local alias = {}     -- [record id] = fight id, filled on the first lookup
+local skipped        -- the one skipped fight's id whose store is held for its card (HoldSkipped)
 
 -- ── the plain math ──────────────────────────────────────────────────────────────────────────────
 
@@ -280,6 +284,7 @@ end
 function Slices.Forget(id)
     if id == nil or store[id] == nil then return end
     store[id] = nil
+    if skipped == id then skipped = nil end
     forgetAlias(id)
     for i = #closed, 1, -1 do
         if closed[i] == id then table.remove(closed, i) end
@@ -294,6 +299,21 @@ function Slices.Close(fightID)
     rec.open = false
     closed[#closed + 1] = fightID
     while #closed > Slices.KEEP do Slices.Forget(closed[1]) end
+end
+
+--- A fight the recording filters skipped (FIGHT_SKIPPED, before or after its FIGHT_ENDED): its store
+--- closes and is held apart from KEEP, so the DPS HUD's card still draws its chart; the skipped store
+--- held before it is let go. It has no record, so nothing else ever draws it.
+--- @param fightID any
+function Slices.HoldSkipped(fightID)
+    local rec = fightID ~= nil and store[fightID]
+    if not rec then return end
+    if skipped ~= nil and skipped ~= fightID then Slices.Forget(skipped) end
+    rec.open = false
+    for i = #closed, 1, -1 do
+        if closed[i] == fightID then table.remove(closed, i) end
+    end
+    skipped = fightID
 end
 
 -- The highest step index a store's values hold, and how many hold a value (only `~= nil` is asked).
@@ -345,7 +365,7 @@ end
 
 --- Drop every store (the suites).
 function Slices.Reset()
-    store, closed, alias = {}, {}, {}
+    store, closed, alias, skipped = {}, {}, {}, nil
 end
 
 --- The stand-down: a fight still open is dropped without a message (modules/Fight.lua's Suspend), so
@@ -405,9 +425,9 @@ if busTarget then
         if type(fight) ~= "table" then return end
         if reason == "final" then Slices.Close(fight.id) else Slices.Forget(fight.id) end
     end)
-    -- A fight the recording filters skip has no record to draw (modules/Recorder.lua drops its cast
-    -- list the same way), so it never takes a KEEP slot from a stored fight's chart.
+    -- A fight the recording filters skip has no record to draw, so it never takes a KEEP slot from a
+    -- stored fight's chart; its store is held apart for the card on screen until the next skip.
     busTarget:RegisterMessage(NS.MSG.FIGHT_SKIPPED, function(_, fight)
-        if type(fight) == "table" then Slices.Forget(fight.id) end
+        if type(fight) == "table" then Slices.HoldSkipped(fight.id) end
     end)
 end

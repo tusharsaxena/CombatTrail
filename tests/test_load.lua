@@ -100,8 +100,8 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 5 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 5)
+test("load: the settings stamp is 6 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 6)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
@@ -161,9 +161,38 @@ test("load: step 5 drops the Combat Log's retired keys in every profile, and kee
         assertEqual(log.drawer.rows, 12, name .. ": the rows kept")
         assertEqual(log.view.columns.info, false, name .. ": the Info toggle kept")
     end
-    assertEqual(NS.db.global.schemaVersion, 5)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     -- Idempotent, and harmless on a profile with no log table.
     NS.DropRetiredLogKeys(sv.Default)
     NS.DropRetiredLogKeys({})
     assertEqual(sv.Default.log.drawer.rows, 12)
+end)
+
+test("load: step 6 drops the HUD's auto-grow and the log window's attached state in every profile", function()
+    local function stored()
+        return { hud = { sizeMode = "auto", grow = "up", bars = 7, width = 390 },
+                 log = { window = { attached = true, side = "RIGHT", matchHud = false, pinned = true, rows = 20,
+                                    width = 500, position = { point = "TOPLEFT", x = 10, y = 20 } } } }
+    end
+    local NS = boot({ global = { schemaVersion = 5 }, profiles = { Default = stored(), Other = stored() } })
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Other" }) do
+        local hud, w = sv[name].hud, sv[name].log.window
+        -- red under: no step, or one over the active profile alone
+        assertEqual(rawget(hud, "sizeMode"), nil, name .. ": the size mode")
+        assertEqual(rawget(hud, "grow"), nil, name .. ": the grow edge")
+        for _, key in ipairs({ "attached", "side", "matchHud", "pinned" }) do
+            assertEqual(rawget(w, key), nil, name .. ": log.window." .. key)
+        end
+        assertEqual(hud.bars, 7, name .. ": the bars kept")
+        assertEqual(hud.width, 390, name .. ": the width kept")
+        assertEqual(w.rows, 20, name .. ": the window's rows kept")
+        assertEqual(w.width, 500, name .. ": its width kept")
+        assertEqual(w.position.x, 10, name .. ": its own place kept")
+    end
+    assertEqual(NS.db.global.schemaVersion, 6)
+    NS.DropRetiredWindowKeys(sv.Default)
+    NS.DropRetiredWindowKeys({})
+    NS.DropRetiredWindowKeys({ log = {} })
+    assertEqual(sv.Default.hud.bars, 7)
 end)

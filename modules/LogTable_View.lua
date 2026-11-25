@@ -14,7 +14,11 @@ local _, NS = ...
 --
 -- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `log.view.sort`), and
 -- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
--- home's `opts.onScroll(away)`: lines away from the newest, by the sort's direction.
+-- home's `opts.onScroll(away)`: lines away from the newest, by the sort's direction, one line a notch.
+-- THE SCROLL INDICATOR (owner feedback item 6) is Spell breakdown's (modules/Hud_States.lua): a thin
+-- track (`ct.scroll.track`) and thumb (`ct.scroll.thumb`) in the gutter right of the rows, shown while
+-- lines lie past them, the thumb as long as the share in view and as far down as the page
+-- (View:SetScroll; DrawFeed sets it for a live home, the Results Log tab from its own page).
 --
 -- A PAINT (View:Draw) is handed the rows' lines, newest first, and the view puts them in the sort's
 -- order: newest first top down, or oldest first with the newest at the bottom. A label is painted only
@@ -301,7 +305,7 @@ function View:Layout(width, rows, want)
     local rowH, scale = LogTable.RowH(), LogTable.FontScale()
     local key = layoutKey(width, rows, want, rowH, scale)
     if self.laid == key then return end
-    self.laid, self.nRows, self.rowH = key, rows, rowH
+    self.laid, self.nRows, self.rowH, self.width = key, rows, rowH, width
     self:refont(scale)
     self.cols = LogTable.Columns(width, want, self.opts.info, scale)
     self:layHead()
@@ -372,20 +376,66 @@ end
 
 --- A live home's page: up to the laid rows' lines of `feed` (LogTable.Collect, none older than `from`,
 --- each `accept`ed), backed up to a full page when scrolled past the oldest (still paused), drawn in
---- `sort`'s order with `ctx`. With no window (`from` nil) the empty text alone. Answers how many.
+--- `sort`'s order with `ctx`, the scroll indicator set from the page. With no window (`from` nil) the
+--- empty text alone. Answers how many.
 --- @return number
 function View:DrawFeed(feed, from, accept, ctx, sort, emptyText)
-    local rows, n = self.nRows or 0, 0
+    local rows, n, total = self.nRows or 0, 0, 0
     if from then
         n = LogTable.Collect(feed, rows, from, accept, self.seqs)
         if n < rows and feed.offset > 0 then
             feed.offset = math.max(0, feed.offset - (rows - n))
             n = LogTable.Collect(feed, rows, from, accept, self.seqs)
         end
+        total = LogTable.Count(feed, from, accept)
     end
     self:SetSort(sort)
     self:Draw(self.seqs, n, NS.CombatLog.Line, ctx, emptyText)
+    -- The page's place from the top of the list: newest first, the offset itself; oldest first (the
+    -- newest at the bottom), the rest of the way.
+    local most = math.max(0, total - rows)
+    self:SetScroll(total, rows, sort == "oldest" and (most - math.min(feed.offset, most)) or feed.offset)
     return n
+end
+
+-- The indicator's track and thumb, built on its first want.
+local function scrollParts(self)
+    if self.track then return end
+    self.track = self.frame:CreateTexture(nil, "ARTWORK")
+    Style.Fill(self.track, "ct.scroll.track")
+    self.thumb = self.frame:CreateTexture(nil, "OVERLAY")
+    Style.Fill(self.thumb, "ct.scroll.thumb")
+    self.scroll = {}   -- what the indicator shows (the suites read it)
+end
+
+--- The scroll indicator for `total` lines, `visible` of them in view, the page `top` lines down from
+--- the list's top: shown while lines lie past the rows, in the gutter right of them (Spell
+--- breakdown's look: HudStates.THUMB_W wide, THUMB_GAP clear of the rows, never shorter than
+--- THUMB_MIN). Plain counts and configured sizes only.
+function View:SetScroll(total, visible, top)
+    local S = NS.HudStates
+    scrollParts(self)
+    total, visible = tonumber(total) or 0, tonumber(visible) or 0
+    local most, h = total - visible, (self.nRows or 0) * self.rowH
+    local on, sc = most > 0 and h > 0 and self.width ~= nil, self.scroll
+    if sc.on ~= on then
+        self.track:SetShown(on)
+        self.thumb:SetShown(on)
+        sc.on = on
+    end
+    if not on then return end
+    local thumbH = math.max(S.THUMB_MIN, math.floor(h * visible / total + 0.5))
+    local dy = math.floor((h - thumbH) * math.max(0, math.min(most, top or 0)) / most + 0.5)
+    local x, y = self.width + S.THUMB_GAP, -(self.opts.noHeader and 0 or LogTable.HEAD_H)
+    -- A paint that moved nothing places nothing (the live homes paint at every tick that moved).
+    if sc.thumbH == thumbH and sc.dy == dy and sc.h == h and sc.x == x then return end
+    self.track:ClearAllPoints()
+    self.track:SetPoint("TOPLEFT", self.frame, "TOPLEFT", x, y)
+    self.track:SetSize(S.THUMB_W, h)
+    self.thumb:ClearAllPoints()
+    self.thumb:SetPoint("TOPLEFT", self.frame, "TOPLEFT", x, y - dy)
+    self.thumb:SetSize(S.THUMB_W, thumbH)
+    sc.thumbH, sc.dy, sc.h, sc.x = thumbH, dy, h, x
 end
 
 --- The wheel: lines away from the newest, by the sort's direction (newest first: down is away).

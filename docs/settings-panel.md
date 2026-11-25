@@ -249,9 +249,7 @@ row (`hud.spells.rows`) is retired into Spell bars.
 | Show pace bar | `hud.layout.pace` |
 | Show damage chart | `hud.layout.chart` |
 | Show spell rows | `hud.layout.spells` |
-| Window size | `hud.sizeMode` |
 | Spell bars | `hud.bars` |
-| Grow (Auto-grow only) | `hud.grow` |
 | HUD width (px) | `hud.width` |
 | HUD scale | `hud.scale` |
 
@@ -393,18 +391,13 @@ Defaults leaves them where they are. The window's gear opens this page.
 
 ### Detached window
 
-*Rows shown* is drawn disabled while *Fill the window with rows* is on, and *Side of the DPS HUD* and
-*Match the DPS HUD's height* while *Attach beside the DPS HUD* is off (`disabledIf`). Attached, the
-window takes the DPS HUD's scale, so *Window scale* is read standing free.
+*Rows shown* is drawn disabled while *Fill the window with rows* is on (`disabledIf`). The window is
+standalone (owner feedback item 11): it has no attach, side, HUD-height or pin rows (schema step 6).
 
 | Row | Key |
 |---|---|
 | Fill the window with rows | `log.window.fill` |
 | Rows shown (3 to 40) | `log.window.rows` |
-| Attach beside the DPS HUD | `log.window.attached` |
-| Side of the DPS HUD (Left, Right, Top, Bottom) | `log.window.side` |
-| Match the DPS HUD's height | `log.window.matchHud` |
-| Stay up while the HUD is hidden | `log.window.pinned` |
 | Lock the window | `log.window.locked` |
 | Window scale | `log.window.scale` |
 | Window opacity | `log.window.alpha` |

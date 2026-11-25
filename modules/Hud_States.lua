@@ -8,22 +8,24 @@ local _, NS = ...
 -- no late-cast flags, no buttons in the bodies (the title bar's controls are the HUD's acts).
 --
 -- THE STACK, top down, each part switched by its `hud.layout.*` key: the clock, the target line, the
--- Damage and DPS boxes, on the over card the chips, then the "Damage profile" section (its heading,
+-- Damage and DPS boxes, then ONE RESERVED STATUS LINE (States.STATUS_H, owner feedback item 12: the
+-- over card's chips, "Saved" or "Not saved: ..." and a New best, and kept empty on the live body, so
+-- the card's chips never push Damage profile down), then the "Damage profile" section (its heading,
 -- the pace bar directly under it when there is a fight to pace against, then the damage chart,
 -- modules/Hud_Chart.lua) and the "Spell breakdown" section (modules/Hud_Breakdown.lua). The look is
 -- DPS Race's (v0.2 Task B2): each heading in FONT.SECTION on Style.SECTION_H with HEAD_GAP of clear
 -- space over it, the pace bar on its PACE_H line under the profile heading, and the clock at DPS
 -- Race's single-clock size (ClockSize).
 -- Every position is a constant offset worked out from the parts shown and the configured sizes
--- (modules/Hud_Appearance.lua); Update answers the stack's height (body.height), which the shell
--- sizes an auto-grow window from. No body reads the size or position of anything that has displayed
+-- (modules/Hud_Appearance.lua); Update answers the stack's height (body.height), which the suites
+-- check against the window's one height. No body reads the size or position of anything that has displayed
 -- a meter value; the chips measure their own text (GetStringWidth on a label that only ever holds
 -- plain copy), never a value.
 --
 -- THE ROWS' WINDOW (v0.2 Task B3, plan decision D9). The view carries `bars` (`hud.bars`, or the
--- grip's count while it is dragged) and, in fixed mode, `fitH`: the content's height. The rows shown
--- are `bars`, fewer when fitH leaves no room for them (the over card's chips), and the wheel scrolls
--- the rest in both modes: the offset is clamped to the spells past the window, and the heading's
+-- grip's count while it is dragged) and `fitH`: the content's height. The rows shown are `bars`,
+-- fewer when fitH leaves no room for them (over card chips that wrap past the status line), and the
+-- wheel scrolls the rest: the offset is clamped to the spells past the window, and the heading's
 -- note counts them ("1-5 of 12") beside a thin indicator in the gutter. States.FixedStack is the
 -- stack a fixed window reserves, from the configuration alone: every part its layout switch shows,
 -- the boxes' pet row and the pace line included whether or not this fight has them, so a pet that
@@ -79,11 +81,16 @@ local PACE_GAP = 4
 -- The clock draws its stored size scaled as DPS Race's single clock does (BIG / CLOCK_PAIR, 40 / 26):
 -- the composed Font size row tops out at 32, so the stored 26 is what draws DPS Race's 40.
 local CLOCK_SCALE = 40 / 26
--- The bodies' width when the shell hands none: the default 260 less PAD on both sides.
-local WIDTH = 236
+-- The bodies' width when the shell hands none: the default 390 less PAD on both sides.
+local WIDTH = 366
 -- The scroll indicator in the gutter right of the rows: its width, its gap from them, its shortest thumb.
 local THUMB_W, THUMB_GAP, THUMB_MIN = 2, 4, 6
+-- Shared with the Combat Log's table (modules/LogTable_View.lua, owner feedback item 6): the same indicator.
+States.THUMB_W, States.THUMB_GAP, States.THUMB_MIN = THUMB_W, THUMB_GAP, THUMB_MIN
 States.GAP = GAP
+-- The reserved status line under the boxes: one line of chips and the GAP under it (Chips:Height's one line).
+local STATUS_H = CHIP_HEIGHT + GAP
+States.STATUS_H = STATUS_H
 States.HEAD_GAP, States.PACE_GAP, States.SECTION_H = HEAD_GAP, PACE_GAP, SECTION_H
 
 --- The size the clock draws at for a stored `hud.clock.fontSize`, whole points.
@@ -537,19 +544,21 @@ local function placeExtras(body, v, y)
     return y
 end
 
--- The top a fixed window reserves: the clock, the target line and the boxes with the pet's row.
+-- The top the window reserves: the clock, the target line, the boxes with the pet's row and the
+-- status line.
 local function reservedTop(layout)
     local clockH, kpiH = States.TopSizes()
-    local y = 0
+    local y = STATUS_H
     if layout.clock ~= false then y = y + clockH end
     if layout.target ~= false then y = y + TARGET_H end
     if layout.figures ~= false then y = y + kpiH + KPI_CAPTION_H + GAP end
     return y
 end
 
---- The stack a fixed window reserves for `bars` rows, from the configuration alone (the shell adds
---- its chrome): every part `layout` shows, the boxes' pet row always, the pace line whenever the
---- layout shows it and the HUD paces (`paceable`), and the spell section's heading over `bars` rows.
+--- The stack the window reserves for `bars` rows, from the configuration alone (the shell adds its
+--- chrome and the docked log): every part `layout` shows, the boxes' pet row and the status line
+--- always, the pace line whenever the layout shows it and the HUD paces (`paceable`), and the spell
+--- section's heading over `bars` rows.
 --- The live body with a pet, a pace and at least `bars` spells fills it exactly.
 --- @param layout table|nil  `hud.layout`
 --- @param bars number
@@ -580,7 +589,7 @@ function Builders.live(parent)
     function body.Update(self, v)
         setPetRow(self.w.damage, v.hasPet)
         setPetRow(self.w.dps, v.hasPet)
-        local y = placeTop(self, v)
+        local y = placeTop(self, v) + STATUS_H   -- the status line, empty while the fight is live
         self:SetClock(v.clock)
         self.w.target:SetText(v.targetLine or "")
         self:SetLive(v.live)
@@ -634,7 +643,7 @@ function Builders.over(parent)
         overFigures(w, v)
         w.chips.width = v.width or w.chips.width
         w.chips:Set(States.OverChips(v), -y)
-        self.height = placeExtras(self, v, y + w.chips:Height())
+        self.height = placeExtras(self, v, y + math.max(STATUS_H, w.chips:Height()))
     end
     return body
 end

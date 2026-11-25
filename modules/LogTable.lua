@@ -433,14 +433,18 @@ function LogTable.Advance(feed, now, mode, ms, accept)
     return feed.shown ~= was
 end
 
+--- The feed's top line: `anchor` while paused, else `shown`.
+local function feedTop(feed)
+    return math.min(feed.anchor or feed.shown, feed.shown)
+end
+
 --- The view's lines: up to `rows` sequence numbers into `out` (newest first), from the feed's top line
 --- (`anchor` while paused, else `shown`) down, `offset` shown lines in, none older than `from`
 --- (GetTime()). Answers how many, and whether any shown line lies past them (older).
 --- @return number n, boolean more
 function LogTable.Collect(feed, rows, from, accept, out)
     local n, skip = 0, feed.offset
-    local top = math.min(feed.anchor or feed.shown, feed.shown)
-    for seq = top, CL.First(), -1 do
+    for seq = feedTop(feed), CL.First(), -1 do
         local e = CL.Line(seq)
         if not e or (from and e.at < from) then break end
         if accept(e) then
@@ -454,6 +458,42 @@ function LogTable.Collect(feed, rows, from, accept, out)
     end
     for i = n + 1, #out do out[i] = nil end
     return n, false
+end
+
+local RING = NS.Constants.LOG.RING
+
+--- How many lines the view holds, from the window's floor `from` up to the feed's top line, each
+--- `accept`ed: the scroll indicator's length (owner feedback item 6). KEPT ON THE FEED, never walked
+--- whole on a paint: `feed.count` moves on by the lines that arrived since the last count, and
+--- `feed.acc[slot]` remembers whether each counted line was accepted, so a line the ring lets go is
+--- taken off again. A new floor (each pull, CombatLog.Window), a top that went back (the ring
+--- emptied) or a new filter (LogTable.Refilter: a chip, a What to show write) counts again from the
+--- floor. Plain counts only; the `acc` slots are reused once the ring has been round.
+--- @return number
+function LogTable.Count(feed, from, accept)
+    local first, top, acc = CL.First(), feedTop(feed), feed.acc
+    if not acc then acc = {}; feed.acc = acc end
+    if feed.cTop == nil or feed.cFrom ~= from or top < feed.cTop then
+        feed.cFrom, feed.count, feed.cLow, feed.cTop = from, 0, first, first - 1
+    end
+    -- The lines the ring let go since the last count (their slots still hold their marks).
+    for seq = feed.cLow, math.min(first - 1, feed.cTop) do
+        if acc[(seq - 1) % RING + 1] then feed.count = feed.count - 1 end
+    end
+    feed.cLow = math.max(feed.cLow, first)
+    for seq = math.max(feed.cTop + 1, first), top do
+        local e = CL.Line(seq)
+        local on = e ~= nil and (from == nil or e.at >= from) and accept(e) == true
+        acc[(seq - 1) % RING + 1] = on
+        if on then feed.count = feed.count + 1 end
+    end
+    feed.cTop = top
+    return feed.count
+end
+
+--- The home's filter changed (its chips, a What to show write): the next LogTable.Count counts again.
+function LogTable.Refilter(feed)
+    if feed then feed.cTop = nil end
 end
 
 --- Scroll the view `away` lines from the newest (negative: toward it). Away from it pauses at the line

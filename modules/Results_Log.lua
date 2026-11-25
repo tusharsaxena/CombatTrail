@@ -20,7 +20,9 @@ local _, NS = ...
 --
 -- THE TABLE is the live homes' component on a stored list: no feed, no follow. `log.view.sort` decides
 -- the order (newest first by default, the Time header flips it, as everywhere), and the first page is
--- the top of that order. The wheel moves SCROLL lines at a time. The cells' context is the record's:
+-- the top of that order. The wheel moves SCROLL lines at a time, and the rows carry Spell breakdown's
+-- scroll indicator in the gutter right of them (owner feedback item 6; the table narrows by the
+-- gutter, GUTTER). The cells' context is the record's:
 -- the pull's clock time (`record.t`). There is no Source or Target column (owner feedback item 3), so
 -- `record.logTargets` is kept on the record and not drawn.
 --
@@ -60,7 +62,8 @@ ResultsLog.SIDE_MIN = 560    -- the least tab width that sets the panel beside t
 ResultsLog.UNDER_ROWS = 4    -- the panel's most rows under the table
 ResultsLog.PANEL_HEAD = 18
 ResultsLog.HINT_H = 14
-ResultsLog.SCROLL = 3        -- lines a wheel notch moves
+ResultsLog.GUTTER = NS.HudStates.THUMB_GAP + NS.HudStates.THUMB_W   -- the scroll indicator's room
+ResultsLog.SCROLL = 1        -- lines a wheel notch moves: Spell breakdown's one (owner feedback item 6)
 
 --- The chips, left to right: their key, their label and the saved categories each one covers (the
 --- shared table's, LogTable.CHIPS, which the live views' chips use too).
@@ -363,7 +366,7 @@ function ResultsLog.Layout(p, x, top, cw, h)
     if not has then return end
     local y = layChips(g, -ResultsLog.TITLE_H - 2, cw)
     local beside = ResultsLog.Beside(cw) and #g.spellList > 0
-    local tableW = beside and (cw - ResultsLog.SIDE_W - ResultsLog.GAP) or cw
+    local tableW = (beside and (cw - ResultsLog.SIDE_W - ResultsLog.GAP) or cw) - ResultsLog.GUTTER
     g.beside, g.tableW = beside, tableW
     local jump = canJump(p)
     g.hint:SetShown(jump)
@@ -394,6 +397,7 @@ function ResultsLog.Draw(p)
     local n = ResultsLog.Page(g.order, g.n, g.offset, g.rows, g.sort, g.seqs)
     g.table:SetSort(g.sort)
     g.table:Draw(g.seqs, n, g.lineOf, g.ctx, L["No lines match the chips."])
+    g.table:SetScroll(g.n, g.rows, g.offset)
 end
 
 --- Hide the tab (another tab shown, or no fight).

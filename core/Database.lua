@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 5
+NS.SCHEMA_VERSION = 6
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -116,6 +116,13 @@ local STEPS = {
     -- `log.drawer.strip` go. Nothing is carried across: each served only what was removed. Idempotent:
     -- a fresh profile stores none of them.
     { to = 5, perProfile = true, run = function(_, profile) NS.DropRetiredLogKeys(profile) end },
+    -- 5 -> 6, per profile: the keys of the HUD's and the log window's retired states (2026-11-25,
+    -- CLF-2). The HUD is one window of one static height (owner feedback item 12), so the auto-grow
+    -- `hud.sizeMode` and its `hud.grow` edge go; the detached log is a standalone window (item 11), so
+    -- the attached state's `log.window.attached`, `.side`, `.matchHud` and `.pinned` go. Nothing is
+    -- carried across: a HUD that grew is fixed at its bars, and a log window that stood beside the HUD
+    -- stands at its own stored place. Idempotent: a fresh profile stores none of them.
+    { to = 6, perProfile = true, run = function(_, profile) NS.DropRetiredWindowKeys(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -128,6 +135,17 @@ function NS.DropRetiredLogKeys(profile)
     local cols = type(view) == "table" and view.columns
     if type(cols) == "table" then cols.source, cols.target = nil, nil end
     if type(log.drawer) == "table" then log.drawer.collapsed, log.drawer.strip = nil, nil end
+end
+
+--- Step 6's body: the HUD's `sizeMode` and `grow`, and the log window's `attached`, `side`, `matchHud`
+--- and `pinned`, dropped. A profile with neither table is left alone.
+function NS.DropRetiredWindowKeys(profile)
+    if type(profile) ~= "table" then return end
+    local hud = profile.hud
+    if type(hud) == "table" then hud.sizeMode, hud.grow = nil, nil end
+    local log = profile.log
+    local w = type(log) == "table" and log.window
+    if type(w) == "table" then w.attached, w.side, w.matchHud, w.pinned = nil, nil, nil, nil end
 end
 
 --- A profile switch, copy or reset replaces the whole profile wholesale: the stored `enabled` can

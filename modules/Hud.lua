@@ -99,8 +99,8 @@ local _, NS = ...
 -- (no timer API). The footer says the rate ("live · 10 Hz").
 --
 -- THE RACE WINDOW BESIDE IT (Task W4) takes its height when docked LEFT or RIGHT (`raceWindow.matchHud`):
--- every redraw that leaves the window at a new height (Hud.Height: the fixed or grown height, the
--- grip's while it is held) tells it (RaceWindow.OnHudResized).
+-- every redraw that leaves the window at a new height (Hud.Height: the one static height, the grip's
+-- while it is held) tells it (RaceWindow.OnHudResized).
 --
 -- NO DECISION FROM A METER VALUE. The live figures are opaque handles copied into labels
 -- (modules/Hud_States.lua); every decision here comes from GetTime(), the fight's plain stamps, the
@@ -122,23 +122,21 @@ local _, NS = ...
 -- by Master controls' Reset position. Built on first show, or by Hud.Dock for an attached Race window
 -- (placed and sized where it would stand, still hidden).
 --
--- ITS SIZE (v0.2 Task B3, plan decisions D2 and D9) is `hud.sizeMode`'s:
---   "fixed" (default)  the height is Hud.FixedHeight(): the chrome plus HudStates.FixedStack, the stack
---                      every configured part takes with `hud.bars` spell rows, worked out from the
---                      configuration alone, so the window is the same whatever the fight holds. The
---                      library's grip (modules/Sizing.lua) sizes it, shown only in this mode and not
---                      while locked: while it is held the bodies lay out at the dragged size with as
---                      many rows as fit, and the release stores `hud.width` (MIN_WIDTH-MAX_WIDTH) and
---                      `hud.bars`, the whole rows the height holds (MIN_BARS-MAX_BARS), and the window
---                      snaps to them.
---   "auto"             the height is the body's stack, growing with the rows up to `hud.bars`;
---                      `hud.grow` picks the edge that stays put ("down": the top, "up": the bottom).
--- In both, spells past the rows scroll with the wheel (modules/Hud_States.lua). The edge holds because
--- the stored anchor is on it: a drag of the title bar or the grip, a change of the mode or the edge,
--- and any Refresh that finds the stored point off the edge (an edge chosen before the window was
--- built, a profile switch) re-anchor the window (normalizeAnchor) to TOPLEFT ("down", and fixed mode,
--- whose grip keeps the top left) or BOTTOMLEFT ("up") on UIParent's BOTTOMLEFT, from the shell
--- frame's own edges.
+-- ONE WINDOW, ONE STATIC HEIGHT (owner feedback item 12, 2026-11-25; v0.2 Task B3's fixed mode, the
+-- auto-grow `hud.sizeMode` and its `hud.grow` retired by schema step 6). The HUD and the docked log
+-- are one frame, top down: the title bar, the clock and target, the boxes, one reserved status line
+-- (the over card's chips, kept while empty), Damage profile, Spell breakdown, the Combat Log
+-- (modules/Hud_Log.lua) and the footer. Hud.FixedHeight() is their sum (HudStates.FixedStack for
+-- `hud.bars` rows, HudLog.HeightFor its rows), worked out from the configuration alone, so nothing a
+-- fight holds or does moves it: only the log opening or closing, a rows setting, or the grip. The
+-- library's grip (modules/Sizing.lua), hidden while locked, sizes it: while it is held the sections
+-- lay out at the dragged size, and the release stores `hud.width` (MIN_WIDTH-MAX_WIDTH) and the whole
+-- rows the height holds, the log's (`log.drawer.rows`) while the log is docked open, else the spell
+-- rows' (`hud.bars`, MIN_BARS-MAX_BARS), and the window snaps to them. Spells past the rows scroll
+-- with the wheel (modules/Hud_States.lua). The top left holds because the stored anchor is on it: a
+-- drag of the title bar or the grip, and any Refresh that finds the stored point off the top edge (a
+-- profile switch), re-anchor the window (normalizeAnchor) to TOPLEFT on UIParent's BOTTOMLEFT, from
+-- the shell frame's own edges, so the log's open and close grow and shrink it downward.
 --
 -- A SAMPLE FIGHT (test mode and the sim, modules/Preview.lua and modules/Sim.lua) comes to the same
 -- receivers, handed over directly rather than on the bus, flagged `sample`. Its live and cast reads
@@ -159,7 +157,7 @@ Hud.STATE = { HIDDEN = "hidden", LIVE = "live", OVER = "over", NO_BEST = "noBest
 -- Seconds between two reads of the fight's casts for the chart's cooldown icons.
 Hud.CAST_READ = 1
 Hud.FRAME_NAME = "CombatTrailHud"
-Hud.MIN_WIDTH = 260   -- DPS Race's, and the default `hud.width` (v0.2 Task B2)
+Hud.MIN_WIDTH = 260   -- DPS Race's (v0.2 Task B2); `hud.width` defaults to 390 (owner feedback item 2)
 Hud.MAX_WIDTH = 600   -- the width row's and the grip's
 Hud.MIN_BARS, Hud.MAX_BARS = 1, 15   -- the spell rows `hud.bars` holds (v0.2 Task B3)
 -- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade (and
@@ -373,9 +371,7 @@ local function contentTop() return (setting("hud.window.titleBar") ~= false and 
 local function footInset() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
 local function contentBottom() return footInset() + NS.HudLog.Height() end
 
--- ── the size (v0.2 Task B3) ──────────────────────────────────────────────────────────────────
-
-local function fixedMode() return setting("hud.sizeMode") ~= "auto" end
+-- ── the size (owner feedback item 12) ─────────────────────────────────────────────────────────
 
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
 
@@ -384,25 +380,37 @@ local function bars()
     return clamp(math.floor(tonumber(setting("hud.bars")) or Hud.MIN_BARS), Hud.MIN_BARS, Hud.MAX_BARS)
 end
 
--- The edge that stays put: "up" (the bottom) only for an auto-grow window told to grow up.
-local function growEdge()
-    return (not fixedMode() and setting("hud.grow") == "up") and "up" or "down"
-end
-
 local function chromeHeight() return contentTop() + contentBottom() end
 
--- A fixed window's height for `n` spell rows: the chrome and the stack the configuration reserves.
-local function fixedHeightFor(n)
-    return chromeHeight() + NS.HudStates.FixedStack(setting("hud.layout"), n, setting("hud.paceAgainst") ~= "none")
+-- The window's height for `n` spell rows and `r` log rows: the title bar's and the footer's insets,
+-- the stack the configuration reserves and the docked log's sections (0 while it is not docked open).
+local function heightFor(n, r)
+    return contentTop() + footInset() + NS.HudLog.HeightFor(r)
+        + NS.HudStates.FixedStack(setting("hud.layout"), n, setting("hud.paceAgainst") ~= "none")
 end
 
---- The fixed window's height for `hud.bars` rows (the window's height in fixed mode).
+--- The window's one height: `hud.bars` spell rows and the docked log's rows (the grip's while held).
 --- @return number
-function Hud.FixedHeight() return fixedHeightFor(bars()) end
+function Hud.FixedHeight() return heightFor(bars(), NS.HudLog.Rows()) end
 
--- The whole bars a fixed window `h` high holds, in range.
+-- The whole bars a window `h` high holds, in range, the log's rows kept.
 local function barsFor(h)
-    return clamp(NS.HudBreakdown.Capacity(h - fixedHeightFor(0)), Hud.MIN_BARS, Hud.MAX_BARS)
+    return clamp(NS.HudBreakdown.Capacity(h - heightFor(0, NS.HudLog.RowsSetting())), Hud.MIN_BARS, Hud.MAX_BARS)
+end
+
+-- The whole log rows a window `h` high holds, in range, the bars kept.
+local function logRowsFor(h)
+    return NS.HudLog.RowsFit(h - heightFor(bars(), 0))
+end
+
+-- Whether the grip's height goes to the log's rows (the log docked open) rather than the bars.
+local function logTakes() return NS.HudLog.Wanted() end
+
+-- The grip's least and most heights: the log's MIN_ROWS to MAX_ROWS while it takes the height, else
+-- MIN_BARS to MAX_BARS spell rows, of the stack configured now.
+local function heightBounds()
+    if logTakes() then return heightFor(bars(), NS.HudLog.MIN_ROWS), heightFor(bars(), NS.HudLog.MAX_ROWS) end
+    return heightFor(Hud.MIN_BARS, 0), heightFor(Hud.MAX_BARS, 0)
 end
 
 -- Whether the grip is being dragged now and has handed on a size.
@@ -410,10 +418,9 @@ local function sizing()
     return ui ~= nil and ui.dragH ~= nil and NS.Sizing.IsSizing(ui.frame)
 end
 
-local function canResize() return not locked and fixedMode() end
+local function canResize() return not locked end
 
--- The grip shown while it may size the window (fixed mode, not locked), and its bounds: MIN_BARS to
--- MAX_BARS rows of the stack configured now.
+-- The grip shown while it may size the window (not locked), and its bounds (heightBounds).
 local function applyGrip()
     local f, on = ui.frame, canResize()
     if f.resizeGrip then f.resizeGrip:SetShown(on) end
@@ -423,7 +430,8 @@ local function applyGrip()
         ui.foot:SetGrip(on)
     end
     if type(f.SetResizeBounds) == "function" then
-        f:SetResizeBounds(Hud.MIN_WIDTH, fixedHeightFor(Hud.MIN_BARS), Hud.MAX_WIDTH, fixedHeightFor(Hud.MAX_BARS))
+        local lo, hi = heightBounds()
+        f:SetResizeBounds(Hud.MIN_WIDTH, lo, Hud.MAX_WIDTH, hi)
     end
 end
 
@@ -457,30 +465,24 @@ local function edgeOf(f, name)
     return ok and Secrets.PlainNumber(v) or nil
 end
 
--- Whether an anchor `point` sits on the grow edge: TOP* for "down", BOTTOM* for "up".
-local function onEdge(point, edge)
-    return type(point) == "string" and point:find(edge == "up" and "^BOTTOM" or "^TOP") ~= nil
-end
-
---- Re-anchor the window on its grow edge where it stands: TOPLEFT (or BOTTOMLEFT for "up") on
---- UIParent's BOTTOMLEFT at the frame's own left and top (bottom) edge, stored in `hud.position`.
---- Unless `force` (after a drag, whose anchor is the client's), a stored point already on the edge
---- is kept. Answers whether it re-anchored (false where the frame cannot say where it is).
+--- Re-anchor the window on its top edge where it stands: TOPLEFT on UIParent's BOTTOMLEFT at the
+--- frame's own left and top edges, stored in `hud.position`. Unless `force` (after a drag, whose
+--- anchor is the client's), a stored point already on the top edge (TOP*) is kept. Answers whether it
+--- re-anchored (false where the frame cannot say where it is).
 local function normalizeAnchor(force)
     local p = position()
     if not (p and ui) then return false end
-    local edge = growEdge()
-    if not force and onEdge(p.point, edge) then return false end
+    if not force and type(p.point) == "string" and p.point:find("^TOP") then return false end
     local f = ui.frame
-    local left, y = edgeOf(f, "GetLeft"), edgeOf(f, edge == "up" and "GetBottom" or "GetTop")
+    local left, y = edgeOf(f, "GetLeft"), edgeOf(f, "GetTop")
     if not (left and y) then return false end
-    p.point, p.relPoint = edge == "up" and "BOTTOMLEFT" or "TOPLEFT", "BOTTOMLEFT"
+    p.point, p.relPoint = "TOPLEFT", "BOTTOMLEFT"
     p.x, p.y = math.floor(left + 0.5), math.floor(y + 0.5)
     applyPlacement()
     return true
 end
 
--- After a drag (the title bar's or the grip's): the place stored on the grow edge, else as the
+-- After a drag (the title bar's or the grip's): the place stored on the top edge, else as the
 -- client left it.
 local function placeAfterDrag()
     if not normalizeAnchor(true) then savePosition() end
@@ -557,11 +559,13 @@ local function applyRace()
     ui.log:SetShown(log and bar)
 end
 
--- Every size change: the grip's size, in range, that a drag lays out from (plain numbers only).
+-- Every size change: the grip's size, in range, that a drag lays out from (plain numbers only), and
+-- the log's rows it holds while the log takes the height.
 local function trackSize(w, h)
     w, h = Secrets.PlainNumber(w), Secrets.PlainNumber(h)
     if w then ui.dragW = clamp(w, Hud.MIN_WIDTH, Hud.MAX_WIDTH) end
-    if h then ui.dragH = clamp(h, fixedHeightFor(Hud.MIN_BARS), fixedHeightFor(Hud.MAX_BARS)) end
+    if h then ui.dragH = clamp(h, heightBounds()) end
+    NS.HudLog.SetDragRows(ui.dragH and logTakes() and logRowsFor(ui.dragH) or nil)
 end
 
 local function hookPointer(f)
@@ -598,7 +602,7 @@ local function ensureWindow()
     -- dragged size (the beat's draw, no meter read); the release stores it (resized). A size change the
     -- grip did not start is the HUD's own SetSize, already laid out, so `redraw` has nothing to do.
     NS.Sizing.MakeResizable(f, {
-        minWidth = Hud.MIN_WIDTH, minHeight = fixedHeightFor(Hud.MIN_BARS),
+        minWidth = Hud.MIN_WIDTH, minHeight = (heightBounds()),
         canResize = function() return canResize() end,
         size = trackSize, layout = function() render() end, redraw = function() end,
         done = function(w, h) resized(w, h) end,
@@ -790,12 +794,12 @@ local function fill()
     v.layout = setting("hud.layout") or {}
     v.clock = clockOf()
     v.hasPet = hasPet()
-    -- The rows' window (modules/Hud_States.lua): the bars, and a fixed window's room for the stack;
-    -- while the grip is held, the dragged size's.
+    -- The rows' window (modules/Hud_States.lua): the bars and the window's room for the stack; while
+    -- the grip is held, the dragged size's (its height the log's rows while the log takes it).
     local drag = sizing()
     v.width = (drag and ui.dragW or width()) - 2 * PAD
-    v.bars = drag and barsFor(ui.dragH) or bars()
-    v.fitH = fixedMode() and ((drag and ui.dragH or Hud.FixedHeight()) - chromeHeight()) or nil
+    v.bars = (drag and not logTakes()) and barsFor(ui.dragH) or bars()
+    v.fitH = (drag and ui.dragH or Hud.FixedHeight()) - chromeHeight()
     v.showSkipReason = setting("hud.showSkipReason") ~= false
     v.minLength = setting("history.minLength")
     fillExtras(v)
@@ -828,7 +832,7 @@ function render()
     body:Update(v)
     -- The grip owns the size while it is held.
     if not sizing() then
-        ui.height = fixedMode() and Hud.FixedHeight() or chromeHeight() + (body.height or 0)
+        ui.height = Hud.FixedHeight()
         ui.frame:SetSize(width(), ui.height)
     end
     footer(v)
@@ -838,15 +842,17 @@ function render()
 end
 
 -- The grip's release (or a hide while it was held): the window re-anchored where the drag left it,
--- the width and the whole bars the height holds stored through the seam, and the window snapped to
--- them by the redraw that follows.
+-- the width and the whole rows the height holds (the log's while it takes the height, else the bars)
+-- stored through the seam, and the window snapped to them by the redraw that follows.
 function resized(w, h)
     w = Secrets.PlainNumber(w) or ui.dragW
     h = Secrets.PlainNumber(h) or ui.dragH
     ui.dragW, ui.dragH = nil, nil
+    NS.HudLog.SetDragRows(nil)
     placeAfterDrag()
     if w then NS.SetByPath("hud.width", clamp(math.floor(w + 0.5), Hud.MIN_WIDTH, Hud.MAX_WIDTH)) end
-    if h and (setting("hud.layout") or {}).spells ~= false then NS.SetByPath("hud.bars", barsFor(h)) end
+    if h and logTakes() then NS.SetByPath("log.drawer.rows", logRowsFor(h))
+    elseif h and (setting("hud.layout") or {}).spells ~= false then NS.SetByPath("hud.bars", barsFor(h)) end
     if Hud.IsShown() then Hud.Refresh() end
 end
 
@@ -910,8 +916,8 @@ function Hud.Refresh()
     applyRace()
     applyGrip()   -- after the strip is placed: its height is in the bounds
     if not windowShown() then ui.frame:Show() end
-    -- A grow edge set while the window was unbuilt, or arriving with a profile: the stored point moved
-    -- onto it once the window is placed and sized (a no-op while it already sits on the edge).
+    -- A stored point off the top edge (arriving with a profile): moved onto it once the window is
+    -- placed and sized (a no-op while it already sits on the edge).
     normalizeAnchor(false)
     Hud.SyncBeat()
     NS.HudLog.Sync()
@@ -1353,8 +1359,6 @@ local function onSettings(path, value)
     if type(path) ~= "string" then return end
     if path == "hud.show" and value == "always" then wanted = true end
     if path == "profile" and setting("hud.show") == "always" and not isDown() then wanted = true end
-    -- A new mode or edge: the window re-anchored on the edge that now stays put, where it stands.
-    if (path == "hud.sizeMode" or path == "hud.grow") and ui then normalizeAnchor(false) end
     if path == "profile" or path:find("^hud%.") then Hud.Apply() end
     if (path == "race.enabled" or path == "profile") and ui then applyRace() end
     if path == "hud.refreshRate" or path == "profile" then Hud.SyncBeat() end

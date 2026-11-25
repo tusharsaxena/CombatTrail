@@ -2,8 +2,8 @@ local _, NS = ...
 -- settings/Log.lua — the Combat Log page (CombatTrail #11, plan item CL-11c2; the spec's addendum,
 -- *Settings*): eight tabs over every `log.*` key a player chooses, in strip order Combat Log (the
 -- master switch, the log open now, opened at each fight's start, where it lives), Docked drawer (its
--- filter chips, its rows), Detached window (its rows, where it stands, pinned, lock, scale,
--- opacity), Order and display (the sort, the display throttle, the rows' text size and height, the
+-- filter chips, its rows), Detached window (its rows, its lock, scale and opacity; a standalone
+-- window, owner feedback item 11, so no attach, side, HUD-height match or pin), Order and display (the sort, the display throttle, the rows' text size and height, the
 -- time, the columns), What to show (the live views' categories, the auto attacks, the least amount),
 -- Colors (school colors, row washes, the who colors), Storage (a log with each fight, the lines kept,
 -- the categories saved) and Results (the Log tab's chips, the jump to the Timeline). The keys are
@@ -46,7 +46,6 @@ local function choices(...)
 end
 
 local HOMES, HOME_OK = choices("docked", L["Docked in the DPS HUD"], "detached", L["In its own window"])
-local SIDES, SIDE_OK = choices("LEFT", L["Left"], "RIGHT", L["Right"], "TOP", L["Top"], "BOTTOM", L["Bottom"])
 local SORTS, SORT_OK = choices("newest", L["Newest first"], "oldest", L["Oldest first"])
 local THROTTLES, THROTTLE_OK = choices(
     "instant", L["Instant"], "every", L["At most one row every N ms"], "batch", L["In batches every N ms"])
@@ -94,7 +93,7 @@ row("drawer.chips", { type = "bool", label = L["Show the filter chips"], startsL
     tooltip = L["Show the Casts, Pet, Buffs, Debuffs, Taken and Heals chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] })
 row("drawer.rows", { type = "number", label = L["Rows shown"], min = NS.HudLog.MIN_ROWS, max = NS.HudLog.MAX_ROWS,
     step = 1, startsLine = true,
-    tooltip = L["How many events the drawer shows at a time. The DPS HUD grows by the drawer's height."] })
+    tooltip = L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] })
 
 -- Detached window
 at(TAB.window, L["Rows"])
@@ -104,22 +103,12 @@ row("window.rows", { type = "number", label = L["Rows shown"], min = NS.LogWindo
     step = 1, disabledIf = function() return on("log.window.fill") end,
     tooltip = L["How many events the window shows at a time. Needs Fill the window with rows off."] })
 at(TAB.window, L["Place"])
-row("window.attached", { type = "bool", label = L["Attach beside the DPS HUD"], startsLine = true,
-    tooltip = L["Stand the window flush beside the DPS HUD, moving with it. Off, it stands where you drag it. Its title bar's attach mark switches it too."] })
-row("window.side", { type = "string", label = L["Side of the DPS HUD"], values = SIDES, validate = SIDE_OK,
-    disabledIf = function() return not on("log.window.attached") end,
-    tooltip = L["Which side of the DPS HUD the attached window stands on. On the same side as the Race window, it stands beyond the Race window, so the two never overlap. Needs Attach beside the DPS HUD."] })
-row("window.matchHud", { type = "bool", label = L["Match the DPS HUD's height"], startsLine = true,
-    disabledIf = function() return not on("log.window.attached") end,
-    tooltip = L["Attached on the left or the right, take the DPS HUD's height, its drawer and its fold included. Off, the window keeps its own height."] })
-row("window.pinned", { type = "bool", label = L["Stay up while the HUD is hidden"],
-    tooltip = L["Keep the window up when the DPS HUD hides or fades. Off, it shows and hides with the HUD, as the Race window does."] })
 row("window.locked", { type = "bool", label = L["Lock the window"], startsLine = true,
     tooltip = L["Stop the window from being dragged or resized. General > Master controls' Lock frame locks it too."] })
 at(TAB.window, L["Look"])
 row("window.scale", { type = "number", label = L["Window scale"], min = 0.5, max = 2, step = 0.05, isPercent = true,
     startsLine = true,
-    tooltip = L["The size of the window standing on its own. Attached, it takes the DPS HUD's scale."] })
+    tooltip = L["The size of the window, its text included."] })
 row("window.alpha", { type = "number", label = L["Window opacity"], min = 0.1, max = 1, step = 0.05, isPercent = true,
     tooltip = L["How opaque the window is, its background and its text together, over the DPS HUD's own opacity."] })
 

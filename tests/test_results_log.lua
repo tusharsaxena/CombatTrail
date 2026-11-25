@@ -278,6 +278,28 @@ test("results log: the wheel scrolls the list and stays on it", function()
     assertEqual(shown, g.rows, "the last page is full")
 end)
 
+test("results log: the rows carry Spell breakdown's scroll indicator, a line a notch (owner feedback item 6)", function()
+    local NS = fresh()
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    local long = {}
+    for i = 1, 60 do long[#long + 1] = { t = i * 0.5, k = K.CAST, id = FIREBALL, u = U.player } end
+    save(NS, rec(NS, { id = "a", log = long }))
+    local _, g = logTab(NS, "a")
+    local view, S = g.table, NS.HudStates
+    assertEqual(NS.ResultsLog.SCROLL, 1, "one line a notch")
+    assertTrue(view.scroll.on and view.thumb:IsShown(), "60 lines past the page: shown")
+    local h = g.rows * NS.LogTable.RowH()
+    assertEqual(view.scroll.thumbH, math.max(S.THUMB_MIN, math.floor(h * g.rows / 60 + 0.5)))
+    assertEqual(view.scroll.dy, 0, "the top page")
+    assertEqual(view.scroll.x, g.tableW + S.THUMB_GAP, "in the gutter the table leaves")
+    assertTrue(view.scroll.x + S.THUMB_W <= g.tableW + NS.ResultsLog.GUTTER, "inside the tab's width")
+    for _ = 1, 100 do view:Wheel(-1) end
+    assertEqual(view.scroll.dy, h - view.scroll.thumbH, "the last page: at the bottom")
+    save(NS, rec(NS, { id = "b" }))
+    local _, g2 = logTab(NS, "b")
+    assertFalse(g2.table.scroll.on, "a log that fits: no indicator")
+end)
+
 test("results log: Damage by spell draws the record's breakdown in the HUD's rows and order", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
@@ -300,10 +322,10 @@ test("results log: the panel stands beside the table on a wide tab and under it 
     local pane, g = logTab(NS, "a")
     pane:Layout(800, 500, true)
     assertTrue(g.beside, "beside")
-    assertEqual(g.tableW, 800 - 2 * NS.ResultsDetail.PADX - RL.SIDE_W - RL.GAP)
+    assertEqual(g.tableW, 800 - 2 * NS.ResultsDetail.PADX - RL.SIDE_W - RL.GAP - RL.GUTTER)
     pane:Layout(440, 500, false)
     assertFalse(g.beside, "under")
-    assertEqual(g.tableW, 440 - 2 * NS.ResultsDetail.PADX, "the table takes the width")
+    assertEqual(g.tableW, 440 - 2 * NS.ResultsDetail.PADX - RL.GUTTER, "the table takes the width, less the scroll's gutter")
     assertTrue(#g.spells:Rows() <= RL.UNDER_ROWS)
 end)
 

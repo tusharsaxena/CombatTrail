@@ -95,10 +95,14 @@ local function loadInstance(opts)
     if opts.init ~= false then
         local AceAddon = mocks.LibStub("AceAddon-3.0")
         AceAddon:InitializeAddon(NS)                 -- OnInitialize: DB, migrations, latch
-        -- The suites start from a player who turned the Combat Log drawer's auto-open off, so a fight
-        -- leaves the DPS HUD at the height its own suites pin (modules/Hud_Log.lua); `logDrawer` keeps
-        -- the shipped default for the drawer's suite.
-        if not opts.logDrawer and NS.db then NS.db.profile.log.drawer.autoOpen = false end
+        -- The suites start from a player who closed the Combat Log drawer and turned its auto-open off
+        -- (both on by default, owner feedback item 1), so a fight leaves the DPS HUD at the height its
+        -- own suites pin (modules/Hud_Log.lua); `logDrawer` keeps the shipped defaults for the drawer's
+        -- suites.
+        if not opts.logDrawer and NS.db then
+            NS.db.profile.log.drawer.autoOpen = false
+            NS.db.profile.log.drawer.shown = false
+        end
         if opts.enable ~= false then
             -- The login fuse shows the skin picker (the account's one-time skin notice, else the
             -- first-run picker on an unseen profile), and the picker shown with the HUD hidden turns
@@ -167,6 +171,7 @@ local SUITES = {
     "test_hud_page",
     "test_hud_layout",
     "test_hud_sizing",
+    "test_hud_static",
     "test_hud_race_button",
     "test_log_table",
     "test_log_window",

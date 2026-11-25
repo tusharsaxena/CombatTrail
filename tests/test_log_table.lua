@@ -242,6 +242,48 @@ test("log table feed: instant reveals every line, newest first; a scroll pauses 
     assertFalse(LT.Paused(feed), "scrolled back to the newest: following")
 end)
 
+-- The scroll indicator's length (owner feedback item 6), kept on the feed: it must equal a full walk of
+-- the window every time, through new lines, a pause, the ring letting old lines go, a new filter and a
+-- new floor.
+test("log table feed: the view's count moves on with the ring and always equals a full walk", function()
+    local inst, NS = fresh()
+    local LT, CL = NS.LogTable, NS.CombatLog
+    begin(NS)
+    local feed = LT.NewFeed()
+    local function walk(from, accept)
+        local n = 0
+        for seq = math.min(feed.anchor or feed.shown, feed.shown), CL.First(), -1 do
+            local e = CL.Line(seq)
+            if not e or (from and e.at < from) then break end
+            if accept(e) then n = n + 1 end
+        end
+        return n
+    end
+    local odd = function(e) return e.n % 2 == 1 end
+    local filter = all
+    local function check(from, msg)
+        LT.Advance(feed, inst.mocks.__now, "instant", 0, filter)
+        assertEqual(LT.Count(feed, from, filter), walk(from, filter), msg)
+    end
+    casts(NS, 30)
+    check(99, "thirty lines")
+    casts(NS, 5, 104)
+    check(99, "five more, counted on")
+    LT.Scroll(feed, 3)
+    casts(NS, 7, 105)
+    check(99, "paused: the lines past the anchor are not in the view")
+    LT.Resume(feed)
+    check(99, "resumed")
+    filter = odd
+    LT.Refilter(feed)
+    check(99, "a new filter counts again")
+    for i = 1, NS.Constants.LOG.RING + 300 do NS.CombatLog.OnCast("player", FIREBALL, 106 + i * 0.001) end
+    check(99, "past the ring: the lines it let go come off")
+    check(106.5, "a new floor counts from it")
+    casts(NS, 3, 110)
+    check(106.5, "and on from there")
+end)
+
 test("log table feed: every N ms shows at most one line each N ms; batch shows them together", function()
     local _, NS = fresh()
     local LT, CL = NS.LogTable, NS.CombatLog
@@ -385,8 +427,8 @@ test("hud log: the title bar's Log control opens the drawer and the HUD grows by
     assertTrue(d ~= nil and d.frame:IsVisible(), "the drawer under the spell rows")
     assertEqual(NS.Hud.Height(), before + NS.HudLog.Height(), "the HUD grew by the drawer")
     local chips = NS.LogTable.ChipsHeight(NS.Hud.LogWidth()) + NS.LogTable.CHIP_GAP
-    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + chips + NS.LogTable.Height(8),
-        "eight rows by default, under the chips")
+    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + chips + NS.LogTable.Height(10),
+        "ten rows by default, under the chips (owner feedback item 16)")
     assertTrue(NS.HudLog.Ticking(), "its repaint timer runs while it shows")
     click(ui.log)
     assertFalse(d.frame:IsShown(), "closed again")
@@ -481,6 +523,39 @@ test("hud log: the wheel pauses it, Resume follows again", function()
     assertFalse(d.resume:IsShown())
 end)
 
+-- Owner feedback item 6: Spell breakdown's scroll indicator on the drawer's rows, the wheel moving it a
+-- line a notch, the thumb's share and place plain counts of the lines in view.
+test("hud log: the rows carry Spell breakdown's scroll indicator; the wheel moves it a line a notch", function()
+    local inst, NS = fresh()
+    hudUp(NS)
+    NS.HudLog.SetShown(true)
+    begin(NS, "f1", 100)
+    for i = 1, 4 do NS.CombatLog.OnCast("player", FIREBALL, 100 + i * 0.1) end
+    at(inst, 102)
+    NS.HudLog.Paint()
+    local view = NS.HudLog.__ui().table
+    local rows, S = NS.HudLog.Rows(), NS.HudStates
+    assertFalse(view.scroll.on, "every line in view: no indicator")
+    assertFalse(view.track:IsShown())
+    for i = 1, 36 do NS.CombatLog.OnCast("player", FIREBALL, 101 + i * 0.01) end
+    at(inst, 103)
+    NS.HudLog.Paint()
+    local h = rows * NS.LogTable.RowH()
+    assertTrue(view.scroll.on and view.track:IsShown() and view.thumb:IsShown(), "40 lines in 10 rows: shown")
+    assertEqual(view.scroll.h, h, "as tall as the rows")
+    assertEqual(view.scroll.thumbH, math.max(S.THUMB_MIN, math.floor(h * rows / 40 + 0.5)), "the share in view")
+    assertEqual(view.scroll.dy, 0, "newest first, following: at the top")
+    assertEqual(view.scroll.x, NS.Hud.LogWidth() + S.THUMB_GAP, "in the gutter right of the rows")
+    view.frame:GetScript("OnMouseWheel")(view.frame, -1)
+    assertEqual(NS.HudLog.__feed().offset, 1, "one line a notch, as Spell breakdown")
+    assertEqual(view.scroll.dy, math.floor((h - view.scroll.thumbH) * 1 / (40 - rows) + 0.5), "a line down")
+    for _ = 1, 60 do view.frame:GetScript("OnMouseWheel")(view.frame, -1) end
+    assertEqual(view.scroll.dy, h - view.scroll.thumbH, "the oldest page: at the bottom")
+    NS.SetByPath("log.view.sort", "oldest")
+    NS.HudLog.Paint()
+    assertEqual(view.scroll.dy, 0, "oldest first, the oldest page is the top")
+end)
+
 test("hud log: no fold: no chevron, no folded line, no key, no verb (item 14)", function()
     local _, NS = fresh()
     hudUp(NS)
@@ -554,6 +629,10 @@ end)
 test("hud log: a fight's start opens it when auto-open is on (the shipped default)", function()
     local _, NS = fresh({ logDrawer = true })
     assertTrue(NS.GetSetting("log.drawer.autoOpen"))
+    assertTrue(NS.GetSetting("log.drawer.shown"), "shown by default (owner feedback item 1)")
+    assertEqual(NS.defaults.profile.log.drawer.shown, true)
+    assertEqual(NS.defaults.profile.log.drawer.rows, 10, "ten rows by default (item 16)")
+    NS.HudLog.SetShown(false)
     assertFalse(NS.GetSetting("log.drawer.shown"))
     NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f9", startT = 100 })
     assertTrue(NS.GetSetting("log.drawer.shown"), "opened at the fight's start")
