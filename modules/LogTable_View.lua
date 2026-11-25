@@ -285,6 +285,24 @@ function View:Draw(seqs, n, lineOf, ctx, emptyText)
     self.empty:SetShown(none)
 end
 
+--- A live home's page: up to the laid rows' lines of `feed` (LogTable.Collect, none older than `from`,
+--- each `accept`ed), backed up to a full page when scrolled past the oldest (still paused), drawn in
+--- `sort`'s order with `ctx`. With no window (`from` nil) the empty text alone. Answers how many.
+--- @return number
+function View:DrawFeed(feed, from, accept, ctx, sort, emptyText)
+    local rows, n = self.nRows or 0, 0
+    if from then
+        n = LogTable.Collect(feed, rows, from, accept, self.seqs)
+        if n < rows and feed.offset > 0 then
+            feed.offset = math.max(0, feed.offset - (rows - n))
+            n = LogTable.Collect(feed, rows, from, accept, self.seqs)
+        end
+    end
+    self:SetSort(sort)
+    self:Draw(self.seqs, n, NS.CombatLog.Line, ctx, emptyText)
+    return n
+end
+
 --- The wheel: lines away from the newest, by the sort's direction (newest first: down is away).
 function View:Wheel(delta)
     if type(delta) ~= "number" or delta == 0 or not self.opts.onScroll then return end

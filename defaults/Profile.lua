@@ -236,10 +236,22 @@ NS.defaults = {
         -- newest event); the table (the sort, the display throttle "instant" | "every" | "batch" and its
         -- ms, 50-1000, the time from the pull or the clock, school colors, row washes, the optional
         -- columns); and what the live views show (each saved category, the auto attacks, the least
-        -- amount a hit or a heal shows at).
+        -- amount a hit or a heal shows at). Then where the log lives (CL-11b2): `home` "docked" in the
+        -- HUD or "detached" in its own window (modules/LogWindow.lua), whose keys are `window`: attached
+        -- beside the HUD on `side` (LEFT, the Race window's default being RIGHT, so the two stand on
+        -- either side of the HUD; RIGHT, TOP, BOTTOM) or at its own `position`, its height the HUD's
+        -- beside it (`matchHud`, LEFT or RIGHT), its rows filling its height (`fill`) or `rows` (3-40),
+        -- its `width` and `height` (0: its least) set by its grip, `pinned` (up while the HUD is
+        -- hidden), `locked`, its `scale` while it stands on its own and its `alpha` (0.1-1).
         log = {
             enabled = true,
+            home = "docked",
             drawer = { shown = false, collapsed = false, rows = 8, autoOpen = true, strip = true },
+            window = {
+                attached = true, side = "LEFT", matchHud = true, fill = true, rows = 12, width = 460, height = 0,
+                pinned = false, locked = false, scale = 1, alpha = 1,
+                position = { point = "CENTER", relPoint = "CENTER", x = -360, y = 0 },
+            },
             view = {
                 sort = "newest", throttle = "instant", throttleMs = 250, timeFormat = "pull",
                 schoolColors = true, washes = true,

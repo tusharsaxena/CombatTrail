@@ -175,7 +175,7 @@ function LogTable.LongCooldown(id)
 end
 
 -- The who colors, refilled on each read (a class color or the pet's swatch, never a copy of either).
-local youHue, petHue = { 1, 1, 1 }, { 1, 1, 1 }
+local youHue, petHue = {}, {}
 
 local function you()
     local r, g, b = NS.ClassColor("player")
@@ -282,6 +282,48 @@ function LogTable.Shows(e, show)
         if a and a < min then return false end
     end
     return true
+end
+
+-- ── the live homes' shared reads (the docked drawer and the detached window) ───────────────────
+
+local function setting(path)
+    return NS.GetSetting and NS.GetSetting(path)
+end
+
+--- The sort a live view draws in: `log.view.sort`, "newest" (the default) or "oldest".
+function LogTable.SortOf()
+    local s = setting("log.view.sort")
+    return LogTable.SORTS[s] and s or "newest"
+end
+
+--- `show` (a reused table) refilled from `log.show`, the What to show chips' defaults.
+function LogTable.ReadShow(show)
+    local s = setting("log.show")
+    for k in pairs(show) do show[k] = nil end
+    if type(s) == "table" then for k, v in pairs(s) do show[k] = v end end
+    return show
+end
+
+local function unitName(unit)
+    if type(UnitExists) == "function" and not Secrets.PlainTruth(UnitExists(unit)) then return nil end
+    local ok, name = pcall(UnitName, unit)
+    return ok and Secrets.PlainString(name) or nil
+end
+
+--- `ctx` (a reused table) refilled for a live view whose window starts at `startT` (GetTime()): the
+--- time format, the clock time of the start, the target's and the pet's names, the target's reaction
+--- (plain answers only) and the color switches.
+function LogTable.LiveContext(ctx, startT)
+    ctx.startT = startT
+    ctx.timeFormat = setting("log.view.timeFormat")
+    ctx.startClock = nil
+    if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
+    ctx.targetName, ctx.petName = unitName("target"), unitName("pet")
+    local ok, hostile = pcall(UnitCanAttack, "player", "target")
+    ctx.targetFriendly = type(UnitCanAttack) == "function" and ok and Secrets.PlainEquals(hostile, false) or false
+    ctx.schoolColors = setting("log.view.schoolColors") ~= false
+    ctx.washes = setting("log.view.washes") ~= false
+    return ctx
 end
 
 -- ── the feed ────────────────────────────────────────────────────────────────────────────────────

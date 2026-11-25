@@ -169,6 +169,7 @@ local SUITES = {
     "test_hud_sizing",
     "test_hud_race_button",
     "test_log_table",
+    "test_log_window",
     "test_sizing",
     "test_results_table",
     "test_results_detail",

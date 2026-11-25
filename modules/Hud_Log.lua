@@ -17,7 +17,11 @@ local _, NS = ...
 --                         (log.drawer.strip on, the default) or the header alone, and unfolds it.
 --   log.drawer.rows       the rows shown expanded, 3 to 20 (default 8).
 --   log.view.sort         newest first (default) or oldest first: the Time header's click flips it.
--- `log.drawer.shown`, `log.drawer.collapsed` and `log.view.sort` are written by the drawer's own
+--   log.home              "docked" (the default) or "detached": the header's detach control (the export
+--                         mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
+--                         dock control sends it back. `log.drawer.shown` is the log's one open, in either
+--                         home: detached, the HUD reserves nothing and this drawer stays hidden.
+-- `log.drawer.shown`, `log.drawer.collapsed`, `log.view.sort` and `log.home` are written by the
 -- controls through NS.SetByPath, as named non-setting state (settings/Schema.lua's write-through list)
 -- until the Combat Log page (CL-11c) gives them their rows. Every write's SETTINGS_CHANGED on a `log.`
 -- path redraws a shown HUD (Hud.Refresh), which re-insets its content and re-places the drawer.
@@ -61,9 +65,20 @@ function HudLog.Enabled()
     return setting("log.enabled") ~= false
 end
 
---- Whether the drawer is wanted open (the Combat Log on, `log.drawer.shown`).
-function HudLog.Wanted()
+--- Where the log lives: "docked" in the HUD (the default) or "detached" in its own window.
+--- @return string
+function HudLog.Home()
+    return setting("log.home") == "detached" and "detached" or "docked"
+end
+
+--- Whether the log is wanted open in either home (the Combat Log on, `log.drawer.shown`).
+function HudLog.Open()
     return HudLog.Enabled() and setting("log.drawer.shown") == true
+end
+
+--- Whether the drawer is wanted open: the log open and docked.
+function HudLog.Wanted()
+    return HudLog.Open() and HudLog.Home() == "docked"
 end
 
 --- Whether it is folded to its one line.
@@ -102,13 +117,8 @@ local function write(path, value)
     if NS.SetByPath then NS.SetByPath(path, value) end
 end
 
-local function sortOf()
-    local s = setting("log.view.sort")
-    return LogTable.SORTS[s] and s or "newest"
-end
-
 local function onSort()
-    write("log.view.sort", sortOf() == "newest" and "oldest" or "newest")
+    write("log.view.sort", LogTable.SortOf() == "newest" and "oldest" or "newest")
 end
 
 local function onScroll(away)
@@ -138,13 +148,17 @@ local function build(parent)
     d.resume.tipBody = true
     d.resume.tip = { L["Resume"], L["Follow the newest line again."] }
     d.resume:Hide()
+    d.detach = Style.ControlButton(f, "export", ">", L["Detach the Combat Log into its own window"], function()
+        HudLog.SetHome("detached")
+    end, "body")
     d.count = Style.Text(f, Style.FONT.CAPTION, nil, "RIGHT")
     d.table = LogTable.New(f, { onSort = onSort, onScroll = onScroll })
     d.strip = LogTable.New(f, { noHeader = true })
     return d
 end
 
--- The header's controls laid: the chevron left of the title, Resume and the count on the right.
+-- The header's controls laid: the chevron left of the title, the detach mark at the right edge, Resume
+-- and the count left of it.
 local function layHeader(w)
     local f = d.frame
     d.seam:ClearAllPoints()
@@ -156,10 +170,13 @@ local function layHeader(w)
     d.fold:SetPoint("LEFT", f, "TOPLEFT", -3, y)
     d.title:ClearAllPoints()
     d.title:SetPoint("LEFT", f, "TOPLEFT", Style.CONTROL - 2, y)
+    d.detach:ClearAllPoints()
+    d.detach:SetPoint("RIGHT", f, "TOPRIGHT", 3, y)
+    local x = -(Style.CONTROL - 2)
     d.resume:ClearAllPoints()
-    d.resume:SetPoint("RIGHT", f, "TOPRIGHT", 0, y)
+    d.resume:SetPoint("RIGHT", f, "TOPRIGHT", x, y)
     d.count:ClearAllPoints()
-    d.count:SetPoint("RIGHT", f, "TOPRIGHT", 0, y)
+    d.count:SetPoint("RIGHT", f, "TOPRIGHT", x, y)
     d.count:SetWidth(math.max(1, w / 2))
 end
 
@@ -214,31 +231,6 @@ local function accept(e)
     return LogTable.Shows(e, show)
 end
 
-local function readShow()
-    local s = setting("log.show")
-    for k in pairs(show) do show[k] = nil end
-    if type(s) == "table" then for k, v in pairs(s) do show[k] = v end end
-end
-
-local function unitName(unit)
-    if type(UnitExists) == "function" and not Secrets.PlainTruth(UnitExists(unit)) then return nil end
-    local ok, name = pcall(UnitName, unit)
-    return ok and Secrets.PlainString(name) or nil
-end
-
--- The context the cells read: the window's start, the time format, the names and the color switches.
-local function fillContext(startT)
-    ctx.startT = startT
-    ctx.timeFormat = setting("log.view.timeFormat")
-    ctx.startClock = nil
-    if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
-    ctx.targetName, ctx.petName = unitName("target"), unitName("pet")
-    local ok, hostile = pcall(UnitCanAttack, "player", "target")
-    ctx.targetFriendly = type(UnitCanAttack) == "function" and ok and Secrets.PlainEquals(hostile, false) or false
-    ctx.schoolColors = setting("log.view.schoolColors") ~= false
-    ctx.washes = setting("log.view.washes") ~= false
-end
-
 -- The paused view's Resume and the header's count.
 local function paintHeader(n, collapsed)
     local paused = feed ~= nil and LogTable.Paused(feed) and not collapsed
@@ -247,44 +239,28 @@ local function paintHeader(n, collapsed)
     d.count:SetText(n > 0 and L["%d shown"]:format(n) or "")
 end
 
-local function drawExpanded(from)
-    local rows = HudLog.Rows()
-    local n = LogTable.Collect(feed, rows, from, accept, d.table.seqs)
-    -- Scrolled past the oldest: back up to a full page (still paused).
-    if n < rows and feed.offset > 0 then
-        feed.offset = math.max(0, feed.offset - (rows - n))
-        n = LogTable.Collect(feed, rows, from, accept, d.table.seqs)
-    end
-    d.table:SetSort(sortOf())
-    d.table:Draw(d.table.seqs, n, CL.Line, ctx, L["No events yet."])
-    return n
-end
-
+-- The folded line: the newest shown line, whatever the expanded view is scrolled to.
 local function drawStrip(from)
     stripFeed.shown, stripFeed.offset, stripFeed.anchor = feed.shown, 0, nil
-    local n = LogTable.Collect(stripFeed, 1, from, accept, d.strip.seqs)
-    d.strip:SetSort("newest")
-    d.strip:Draw(d.strip.seqs, n, CL.Line, ctx, L["No events yet."])
-    return n
+    return d.strip:DrawFeed(stripFeed, from, accept, ctx, "newest", L["No events yet."])
 end
 
 --- Repaint the drawer now when anything moved (the repaint tick and the drawer's own controls).
 function HudLog.Paint()
     if not (d and d.frame:IsShown()) then return end
     if not feed then feed = LogTable.NewFeed() end
-    readShow()
+    LogTable.ReadShow(show)
     local moved = LogTable.Advance(feed, GetTime(), setting("log.view.throttle"), setting("log.view.throttleMs"), accept)
     if not (moved or dirty) then return end
     dirty = false
     local startT, from = CL.Window()
-    fillContext(startT)
+    LogTable.LiveContext(ctx, startT)
     local collapsed = HudLog.Collapsed()
-    local n = 0
-    if from then n = collapsed and drawStrip(from) or drawExpanded(from)
+    local n
+    if collapsed then
+        n = drawStrip(from)
     else
-        d.table:SetSort(sortOf())
-        d.table:Draw(d.table.seqs, 0, CL.Line, ctx, L["No events yet."])
-        d.strip:Draw(d.strip.seqs, 0, CL.Line, ctx, L["No events yet."])
+        n = d.table:DrawFeed(feed, from, accept, ctx, LogTable.SortOf(), L["No events yet."])
     end
     paintHeader(n, collapsed)
 end
@@ -300,7 +276,9 @@ local function tick()
     HudLog.Paint()
 end
 
---- The repaint timer on while the drawer shows on a shown HUD, else off.
+--- The repaint timer on while the drawer shows on a shown HUD, else off. The HUD's every Refresh
+--- calls this on both its paths, so it also tells the detached window the HUD may have hidden or come
+--- back (LogWindow.FollowHud, the way the Race window follows it).
 function HudLog.Sync()
     local want = onScreen()
     local addon = NS.addon
@@ -310,6 +288,8 @@ function HudLog.Sync()
     elseif want and not timer and addon and addon.ScheduleRepeatingTimer then
         timer = addon:ScheduleRepeatingTimer(tick, NS.Constants.LOG.REPAINT)
     end
+    local W = NS.LogWindow
+    if W and W.FollowHud then W.FollowHud() end
 end
 
 --- Whether the repaint timer runs (the suites).
@@ -317,9 +297,10 @@ function HudLog.Ticking() return timer ~= nil end
 
 -- ── the ways in ─────────────────────────────────────────────────────────────────────────────────
 
---- Open or close the drawer (`on` nil: toggle). Opening it opens the HUD too, as the player's open.
+--- Open or close the log in its home (`on` nil: toggle). Opening it opens the HUD too, as the
+--- player's open (a detached window follows the HUD unless pinned).
 function HudLog.SetShown(on)
-    if on == nil then on = not HudLog.Wanted() end
+    if on == nil then on = not HudLog.Open() end
     if on and not HudLog.Enabled() then return NS.Print(L["The Combat Log is off (log.enabled)."]) end
     write("log.drawer.shown", on == true)
     if on and NS.Hud and not NS.Hud.IsShown() then NS.Hud.Show() end
@@ -331,6 +312,19 @@ function HudLog.SetCollapsed(on)
     write("log.drawer.collapsed", on == true)
 end
 
+--- Move the log to `home`, "docked" or "detached" (the drawer's detach mark, the window's dock mark,
+--- `/ct log detach|dock`). The log stays open across the move.
+function HudLog.SetHome(home)
+    home = home == "detached" and "detached" or "docked"
+    if home == HudLog.Home() then return end
+    write("log.home", home)
+end
+
+-- Pin or unpin the detached window (`log.window.pinned`: it stays up while the HUD is hidden).
+local function pin(on)
+    write("log.window.pinned", on)
+end
+
 local VERBS = {
     [""] = function() HudLog.SetShown() end,
     toggle = function() HudLog.SetShown() end,
@@ -338,14 +332,18 @@ local VERBS = {
     hide = function() HudLog.SetShown(false) end,
     fold = function() HudLog.SetCollapsed(true) end,
     unfold = function() HudLog.SetCollapsed(false) end,
+    detach = function() HudLog.SetHome("detached") end,
+    dock = function() HudLog.SetHome("docked") end,
+    pin = function() pin(true) end,
+    unpin = function() pin(false) end,
 }
 
---- `/ct log [show|hide|toggle|fold|unfold]`.
+--- `/ct log [show|hide|toggle|fold|unfold|detach|dock|pin|unpin]`.
 function HudLog.OnVerb(rest)
     local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
     local fn = VERBS[word]
     if fn then return fn() end
-    NS.Print(L["Usage: /ct log show, hide, toggle, fold or unfold"])
+    NS.Print(L["Usage: /ct log show, hide, toggle, fold, unfold, detach, dock, pin or unpin"])
 end
 
 --- The title bar's log control: shown while the Combat Log is on (the HUD lays its strip by it).

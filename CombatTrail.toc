@@ -232,6 +232,9 @@ modules\Hud_States.lua
 modules\LogTable.lua
 modules\LogTable_View.lua
 modules\Hud_Log.lua
+# The detached log window (CL-11b2): captures NS.Style, NS.LogTable and NS.CombatLog and builds its bus
+# receiver at FILE SCOPE; reaches NS.Hud, NS.HudLog, NS.RaceWindow and NS.Sim at CALL time only.
+modules\LogWindow.lua
 # LOAD-BEARING: builds its bus receiver (FIGHT_* / SETTINGS_CHANGED) at FILE SCOPE through core\Bus.lua
 # and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.HudLog, NS.Meter, NS.Identity,
 # NS.Bests, NS.Recorder and NS.db at CALL time only.

@@ -60,7 +60,7 @@ NS.COMMANDS = {
     { "results",     L["Open the Results window, with your fight history"],
                                                                    feature(function(rest) doResults(rest) end) },
     { "hud",         L["The DPS HUD: /ct hud show or hide"],      feature(function(rest) doHud(rest) end) },
-    { "log",         L["The Combat Log in the DPS HUD: /ct log toggles it"],
+    { "log",         L["The Combat Log, in the DPS HUD or its own window: /ct log toggles it, detach and dock move it"],
                                                                    feature(function(rest) doLog(rest) end) },
     { "lock",        L["Lock the lanes and the DPS HUD in place"], feature(function() doLock(true) end) },
     { "unlock",      L["Unlock the lanes and the DPS HUD to move them"],

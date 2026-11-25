@@ -135,10 +135,12 @@ end
 -- LibKa0s-Callout-1.0's SchemaRows, settings/Race.lua): no control chooses it, so it has no row; the
 -- drag-stop and Reset position write it through NS.SetByPath (modules/Countdown.lua's write route).
 -- Read once, here at :New, so it is named here, not taken from the instance. The Combat Log drawer's
--- own controls write its open, its fold and the table's sort (modules/Hud_Log.lua, CL-11b) the same
+-- own controls write its open, its fold and the table's sort (modules/Hud_Log.lua, CL-11b), and the
+-- detach, dock, attach and pin controls the log's home (modules/LogWindow.lua, CL-11b2), the same
 -- way until the Combat Log page (CL-11c) gives them rows.
 NS.CALLOUT_POINT = "callout.point"
-local WRITE_THROUGH = { "general.enabled", "general.locked", "log.drawer.shown", "log.drawer.collapsed", "log.view.sort" }
+local WRITE_THROUGH = { "general.enabled", "general.locked", "log.drawer.shown", "log.drawer.collapsed", "log.view.sort",
+                        "log.home", "log.window.attached", "log.window.pinned" }
 if NS.Compat.ForClient({ "retail" }) then WRITE_THROUGH[#WRITE_THROUGH + 1] = NS.CALLOUT_POINT end
 NS.SCHEMA_WRITE_THROUGH = WRITE_THROUGH
 

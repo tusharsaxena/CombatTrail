@@ -62,6 +62,19 @@
   `log.drawer.autoOpen` off on each instance, so a fight leaves the HUD at the height its own
   suites pin; `T.load{ logDrawer = true }` keeps the shipped default (`tests/test_log_table.lua`).
 
+- **CL-11b2: the detached window and its keys.** `modules/LogWindow.lua` is home B. `log.home`
+  ("docked" | "detached"), `log.window.attached` and `log.window.pinned` are written by its marks
+  and `/ct log detach|dock|pin|unpin`, so they join the write-through list until CL-11c gives them
+  rows. `log.window.position`, `log.window.width` and `log.window.height` are geometry only the drag
+  and the grip determine, written raw as the Race window's `raceWindow.position` is. The other
+  `log.window.*` keys (`side` LEFT, `matchHud`, `fill`, `rows` 3-40, `locked`, `scale`, `alpha`) have
+  defaults and no rows yet. `log.drawer.shown` stays the log's one open switch in either home.
+- **CL-11b2: the Race window.** Its matched height already takes the drawer (CL-11b). Detached, the
+  HUD reserves no drawer and the Race window follows it back down. The two companions default to
+  opposite sides (log LEFT, Race RIGHT). On one side, the log stands beyond the Race window
+  (RaceWindow's redockSim tells it each time the Race window shows, hides or moves), and the sim
+  panel docks beside the outermost window on the right.
+
 **Resume:**
 1. Run `git log --format=%s master..feat/2026-11-25-log-level-buffs` in the clone to see which IDs are done.
 2. Read `git status` and either continue or stash any uncommitted work.

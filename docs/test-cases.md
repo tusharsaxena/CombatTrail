@@ -942,7 +942,7 @@ Total.
 - autoshow window: the player's open in a session closes on walking away and opens on coming back
 - autoshow window: a window the player opened before the session stays theirs
 
-### test_race_window.lua (52)
+### test_race_window.lua (54)
 
 - race window: absent on WoW Forever, with nothing of it loaded
 - race window: present on Retail, with its frame name and its hooks
@@ -981,6 +981,8 @@ Total.
 - race window: a HUD that drew once, hidden, is placed again for the window beside it
 - race window: docked LEFT or RIGHT it takes the DPS HUD's height
 - race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing
+- race window: the log detached, the HUD drops the drawer and the Race window follows it, armed and racing
+- race window: the detached log on the Race window's side stands beyond it, and back beside the HUD when it goes
 - race window: the matched height follows the HUD's resizes, its parts, the grip and the scale
 - race window: a HUD shorter than the window's minimum leaves the minimum
 - race window: TOP, BOTTOM, detached or the row off keep the window's own height
@@ -1350,6 +1352,23 @@ Total.
 - hud log: a fight's start opens it when auto-open is on (the shipped default)
 - hud log: /ct log toggles it and opens the HUD with it
 - hud log: with the Combat Log off there is no control and no drawer
+
+### test_log_window.lua (14)
+
+- log window: the drawer's detach mark moves the log into its own window, and the HUD gives the drawer's height back
+- log window: the dock mark sends it back to the HUD, still open
+- log window: wider than the drawer, with the Info column
+- log window: it follows the HUD, hidden and back with it, unless pinned
+- log window: Escape and its close mark close the log; the HUD's hide does not
+- log window: attached LEFT beside the HUD by default, at the HUD's scale and height
+- log window: its rows fill the height it has
+- log window: with fill off its rows are the rows setting, and the window is as tall as they are
+- log window: standing on its own it takes its saved place and scale; the attach mark lets it go
+- log window: a grip drag lays out cheaply and repaints nothing until its release, then stores the size
+- log window: it paints the newest fight's lines with their Info; the wheel pauses it, Resume follows
+- log window: /ct log detach and dock move it; the HUD's Log control opens and closes it
+- log window: with the Combat Log off it never shows
+- log window: on WoW Forever there is no Race window, and it stands beside the HUD the same way
 
 ### test_sizing.lua (7)
 
@@ -2035,7 +2054,7 @@ Total.
 | test_race_settings.lua | 25 |
 | test_report_verbs.lua | 12 |
 | test_autoarm.lua | 41 |
-| test_race_window.lua | 52 |
+| test_race_window.lua | 54 |
 | test_race_window_board.lua | 27 |
 | test_race_clock.lua | 13 |
 | test_countdown.lua | 43 |
@@ -2052,6 +2071,7 @@ Total.
 | test_hud_sizing.lua | 19 |
 | test_hud_race_button.lua | 31 |
 | test_log_table.lua | 22 |
+| test_log_window.lua | 14 |
 | test_sizing.lua | 7 |
 | test_results_table.lua | 43 |
 | test_results_detail.lua | 20 |
@@ -2091,4 +2111,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1713** |
+| **Total** | **1729** |

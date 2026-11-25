@@ -80,6 +80,9 @@ local function windows(out)
     if down(out) then return end
     local hud = NS.Hud.Diagnose()
     out:add("Diag", "hud state=%s body=%s pinned=%s locked=%s", hud.state, hud.body, hud.pinned, hud.locked)
+    local lw = NS.LogWindow.Diagnose()
+    out:add("Diag", "log home=%s window shown=%s attached=%s side=%s pinned=%s ticking=%s", NS.HudLog.Home(),
+        lw.shown, lw.attached, lw.side, lw.pinned, lw.ticking)
     local results = NS.Results.Diagnose()
     out:add("Diag", "results shown=%s rows=%s selected=%s detail=%s", results.shown, results.rows,
         results.selected, results.detailOpen)
