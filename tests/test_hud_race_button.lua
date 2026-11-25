@@ -255,7 +255,9 @@ end
 test("header art: every measured box is the vendored art's", function()
     local Style = T.NS.Style
     for name, box in pairs(Style.ART_BOX) do
-        local got = artBox(T.root .. "/libs/LibKa0s/media/icons/" .. name .. ".tga")
+        -- A Phosphor mark ("ph:list-bullets") is its set's subfolder.
+        local file = name:gsub("^ph:", "phosphor/")
+        local got = artBox(T.root .. "/libs/LibKa0s/media/icons/" .. file .. ".tga")
         assertEqual(table.concat(got, ","), table.concat(box, ","), name .. "'s box")
     end
 end)

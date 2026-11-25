@@ -33,8 +33,9 @@ local function pack(NS, list)
     return NS.CastCodec.Encode(casts)
 end
 
--- A saved log (oldest first): the pull, two casts of yours, the pet's, a buff, a debuff on the target,
--- two hits taken (one small, one sealed), a heal, a death, the end.
+-- A saved log (oldest first) as one saved before owner feedback item 10: the pull's line, two casts of
+-- yours, the pet's, a buff, a debuff on the target, two hits taken (one small, one sealed), a heal, a
+-- death, the end's line. The two boundary lines stay on disk and are dropped at read time.
 local function savedLog(NS)
     local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
     return {
@@ -162,7 +163,8 @@ test("results log: the saved log in the table, newest first, with the Info colum
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
-    assertEqual(events(g), "END,DIES,CAST,HEAL,HIT,HIT,DEBUFF+,CAST,BUFF+,CAST,PULL", "every line, newest at the top")
+    -- red under: the old PULL and END lines drawn (owner feedback item 10)
+    assertEqual(events(g), "DIES,CAST,HEAL,HIT,HIT,DEBUFF+,CAST,BUFF+,CAST", "every event, newest at the top")
     local keys = {}
     for _, col in ipairs(g.table.cols) do keys[#keys + 1] = col.key end
     assertTrue(table.concat(keys, ","):find("info", 1, true) ~= nil, "the Info column: " .. table.concat(keys, ","))
@@ -172,14 +174,14 @@ test("results log: the saved log in the table, newest first, with the Info colum
     end
     assertTrue(sealed, "a sealed amount reads sealed")
     assertEqual(g.title:GetText(), "Bluegill Raider \194\183 level 29 \194\183 1:00")
-    assertEqual(g.caption:GetText(), "11 lines")
+    assertEqual(g.caption:GetText(), "9 lines", "the boundaries are not counted")
 end)
 
 test("results log: the caption counts the lines the cap dropped", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a", logDropped = 40 }))
     local _, g = logTab(NS, "a")
-    assertEqual(g.caption:GetText(), "11 lines \194\183 40 not kept")
+    assertEqual(g.caption:GetText(), "9 lines \194\183 40 not kept")
 end)
 
 test("results log: the chips carry their counts and filter what is shown", function()
@@ -192,13 +194,13 @@ test("results log: the chips carry their counts and filter what is shown", funct
     for key in pairs(want) do assertEqual(g.chips[key].styleName, "primary", key .. " on") end
     click(g.chips.taken)
     assertEqual(g.chips.taken.styleName, "normal", "off")
-    assertEqual(events(g), "END,DIES,CAST,HEAL,DEBUFF+,CAST,BUFF+,CAST,PULL", "the hits are hidden")
+    assertEqual(events(g), "DIES,CAST,HEAL,DEBUFF+,CAST,BUFF+,CAST", "the hits are hidden")
     click(g.chips.casts)
     click(g.chips.pet)
-    assertEqual(events(g), "END,DIES,HEAL,DEBUFF+,BUFF+,PULL")
-    assertEqual(#NS.CombatLog.Of(NS.Recorder.Get("a")), 11, "a chip never changes what is saved")
+    assertEqual(events(g), "DIES,HEAL,DEBUFF+,BUFF+")
+    assertEqual(#NS.CombatLog.Of(NS.Recorder.Get("a")), 11, "a chip, or the read-time filter, never changes what is saved")
     click(g.chips.taken)
-    assertEqual(events(g), "END,DIES,HEAL,HIT,HIT,DEBUFF+,BUFF+,PULL")
+    assertEqual(events(g), "DIES,HEAL,HIT,HIT,DEBUFF+,BUFF+")
 end)
 
 test("results log: each fight opens on log.results.chips, the same fight drawn again keeps them", function()
@@ -226,32 +228,33 @@ test("results log: the pure halves: counts, the order, the page, the least amoun
     assertEqual(c.taken, 2)
     local chips = RL.DefaultChips({})
     local order = {}
-    assertEqual(RL.Order(log, chips, {}, "oldest", order), 11)
-    assertEqual(order[1], 1, "oldest first: the pull on top")
+    assertEqual(RL.Order(log, chips, {}, "oldest", order), 9, "the two old boundary lines left out")
+    assertEqual(order[1], 2, "oldest first: the first event on top, not the pull's line")
     local nNew = RL.Order(log, chips, {}, "newest", order)
-    assertEqual(order[1], 11)
+    assertEqual(order[1], 10)
     local page = {}
     assertEqual(RL.Page(order, nNew, 2, 3, "newest", page), 3)
-    assertEqual(table.concat(page, ","), "9,8,7")
+    assertEqual(table.concat(page, ","), "8,7,6")
     RL.Order(log, chips, {}, "oldest", order)
-    RL.Page(order, 11, 0, 3, "oldest", page)
-    assertEqual(table.concat(page, ","), "3,2,1", "handed over newest first, as View:Draw takes them")
-    assertEqual(RL.Order(log, chips, { minAmount = 50 }, "newest", order), 10, "the 42 hit is under the least")
+    RL.Page(order, 9, 0, 3, "oldest", page)
+    assertEqual(table.concat(page, ","), "4,3,2", "handed over newest first, as View:Draw takes them")
+    assertEqual(RL.Order(log, chips, { minAmount = 50 }, "newest", order), 8, "the 42 hit is under the least")
     local sealedShown
-    for i = 1, 10 do if log[order[i]].a == "s" then sealedShown = true end end
+    for i = 1, 8 do if log[order[i]].a == "s" then sealedShown = true end end
     assertTrue(sealedShown, "a sealed amount is never compared: it shows")
-    assertEqual(RL.Order(log, chips, { deaths = false }, "newest", order), 10, "deaths follow log.show.deaths")
+    assertEqual(RL.Order(log, chips, { deaths = false }, "newest", order), 8, "deaths follow log.show.deaths")
+    assertEqual(RL.Lines(log), 9, "the events, never the boundaries")
     assertEqual(RL.MaxOffset(11, 4), 7)
     assertEqual(RL.MaxOffset(2, 4), 0)
 end)
 
-test("results log: the Time header flips the sort, oldest first starting at the pull", function()
+test("results log: the Time header flips the sort, oldest first starting at the first event", function()
     local NS = fresh()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     g.table.sorter:GetScript("OnClick")(g.table.sorter)
     assertEqual(NS.GetSetting("log.view.sort"), "oldest")
-    assertEqual(events(g), "PULL,CAST,BUFF+,CAST,DEBUFF+,HIT,HIT,HEAL,CAST,DIES,END")
+    assertEqual(events(g), "CAST,BUFF+,CAST,DEBUFF+,HIT,HIT,HEAL,CAST,DIES")
 end)
 
 test("results log: the wheel scrolls the list and stays on it", function()
@@ -371,5 +374,5 @@ test("results log: a Combat Log setting redraws a shown Log tab", function()
     save(NS, rec(NS, { id = "a" }))
     local _, g = logTab(NS, "a")
     NS.SetByPath("log.view.sort", "oldest")
-    assertEqual(events(g):sub(1, 4), "PULL", "the write-through sort redrew it")
+    assertEqual(events(g):sub(1, 4), "CAST", "the write-through sort redrew it")
 end)

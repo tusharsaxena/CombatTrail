@@ -232,10 +232,11 @@ NS.defaults = {
         -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each fight
         -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
         -- modules/LogTable.lua; their rows are the Combat Log page's, settings/Log.lua, CL-11c2): the HUD's
-        -- docked drawer (open, folded, its rows 3-20, opened at each fight's start, the folded line showing
-        -- the newest event); the table (the sort, the display throttle "instant" | "every" | "batch" and
+        -- docked drawer (open, its rows 3-20, opened at each fight's start, its filter chips shown; owner
+        -- feedback items 9 and 14: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
-        -- their height in pixels, 12-28 (CL-11c2), school colors, row washes, the optional columns); the
+        -- their height in pixels, 12-28 (CL-11c2), school colors, row washes, the optional columns: no
+        -- Source or Target, item 3); the
         -- who colors (CL-11c2: "You" in the class color or its own swatch, the hostile and friendly target
         -- in the skin's `ct.log.hostile` / `ct.log.friendly` or their own); and what the live views show
         -- (each saved category, the auto attacks, the least amount a hit or a heal shows at). Then where
@@ -251,7 +252,7 @@ NS.defaults = {
         log = {
             enabled = true,
             home = "docked",
-            drawer = { shown = false, collapsed = false, rows = 8, autoOpen = true, strip = true },
+            drawer = { shown = false, rows = 8, autoOpen = true, chips = true },
             window = {
                 attached = true, side = "LEFT", matchHud = true, fill = true, rows = 12, width = 460, height = 0,
                 pinned = false, locked = false, scale = 1, alpha = 1,
@@ -260,7 +261,7 @@ NS.defaults = {
             view = {
                 sort = "newest", throttle = "instant", throttleMs = 250, timeFormat = "pull",
                 fontSize = 10, rowHeight = 14, schoolColors = true, washes = true,
-                columns = { source = true, target = true, spell = true, amount = true, info = true },
+                columns = { spell = true, amount = true, info = true },
             },
             colors = {
                 you = { r = 1, g = 1, b = 1, a = 1 }, useClassColorYou = true,

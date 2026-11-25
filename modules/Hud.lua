@@ -67,7 +67,7 @@ local _, NS = ...
 --
 -- THE TITLE BAR, left to right: Results, Log, Race, Lock, Settings, Close (LibKa0s#86 order). The Race control
 -- (Retail only, the flag) shows while Race mode is on, the strip closing up without it;
--- its click is `/ct race toggle` (NS.SetRaceWindowShown). The Log control (the chat mark, while
+-- its click is `/ct race toggle` (NS.SetRaceWindowShown). The Log control (Phosphor's list-bullets mark, item 13, while
 -- `log.enabled`) opens and closes the Combat Log drawer under the spell rows (modules/Hud_Log.lua,
 -- CombatTrail #11), whose height the content's bottom inset reserves. Like every title-bar control it rests in the
 -- skin's `icon.tint` and takes `text.link` only under the pointer (smoke round 1, SR-L3), with its
@@ -355,8 +355,11 @@ local function windowShown()
     return ui ~= nil and ui.frame:IsShown() == true
 end
 
+-- Through the schema's reader, which walks a row's path without allocating: the docked log reads the
+-- width on every beat (HudLog.Height's chips wrap at it, CLF-1), where this file's own `setting` makes a
+-- gmatch iterator per call.
 local function width()
-    return math.max(Hud.MIN_WIDTH, tonumber(setting("hud.width")) or Hud.MIN_WIDTH)
+    return math.max(Hud.MIN_WIDTH, tonumber(NS.GetSetting("hud.width")) or Hud.MIN_WIDTH)
 end
 
 -- The content's insets from the window's top and bottom: the title bar's and the footer's, each
@@ -506,7 +509,7 @@ local function buildHeader(f)
     f.title = f:CreateFontString(nil, "OVERLAY", Style.FONT.TITLE)
     f.title:SetText(L["Combat Trail"])
     local extras = { { key = "results", icon = "chart", glyph = "R", tip = L["Results"], onClick = function() Act.results() end },
-                     { key = "log", icon = "chat", glyph = "L", tip = L["Combat Log"], onClick = function() Act.log() end } }
+                     { key = "log", icon = "ph:list-bullets", glyph = "L", tip = L["Combat Log"], onClick = function() Act.log() end } }
     if NS.Compat.ForClient({ "retail" }) then
         extras[#extras + 1] = { key = "race", icon = "flag", glyph = "F", tip = L["Race window"], onClick = function() Act.race() end }
     end
@@ -829,7 +832,7 @@ function render()
         ui.frame:SetSize(width(), ui.height)
     end
     footer(v)
-    NS.HudLog.Place(ui.frame, PAD, footInset() - NS.HudLog.GAP, Hud.LogWidth())
+    NS.HudLog.Place(ui.frame, PAD, footInset(), Hud.LogWidth())
     tellHeight()
     return v
 end

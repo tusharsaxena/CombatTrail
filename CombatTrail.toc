@@ -225,10 +225,11 @@ modules\Hud_Chart.lua
 # The HUD's bodies: capture NS.Style and NS.Secrets at FILE SCOPE.
 modules\Hud_States.lua
 # The Combat Log's table (CombatTrail #11): its cells, filter and feed, then its frames. LOAD-BEARING:
-# modules\LogTable.lua captures NS.CombatLog's KIND, UNIT and FLAG and NS.L at FILE SCOPE, so it follows
+# modules\LogTable.lua captures NS.CombatLog's KIND and FLAG and NS.L at FILE SCOPE, so it follows
 # modules\CombatLog.lua; modules\LogTable_View.lua extends NS.LogTable and captures NS.Style there.
-# The HUD's docked drawer: captures NS.LogTable, NS.CombatLog and NS.Style and builds its bus receiver
-# at FILE SCOPE; reaches NS.Hud at CALL time only.
+# The HUD's docked drawer: captures NS.LogTable, NS.CombatLog, NS.Style and NS.HudStates (its section
+# heading's line and gap, so it follows modules\Hud_States.lua) and builds its bus receiver at FILE
+# SCOPE; reaches NS.Hud at CALL time only.
 modules\LogTable.lua
 modules\LogTable_View.lua
 modules\Hud_Log.lua

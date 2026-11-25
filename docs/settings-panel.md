@@ -12,7 +12,7 @@ page on the current profile. Every row is a schema row (`settings/*.lua` through
 | General | The master switches (enable, lock, debug console, minimap button, test mode, sim mode, the HUD in combat), the skin and its overrides, and the key bindings |
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
-| Combat Log | The log of your casts, auras, hits and heals taken and death (CombatTrail #11): on or off, open now and at each fight's start, docked in the DPS HUD or in its own window; the drawer's fold and rows; the window's rows, place, pin, lock, scale and opacity; the sort, the display throttle, the text size, the row height, the time and the columns; what the live views show; the colors; what each fight saves; the Results Log tab's chips |
+| Combat Log | The log of your casts, auras, hits and heals taken and death (CombatTrail #11): on or off, open now and at each fight's start, docked in the DPS HUD or in its own window; the drawer's filter chips and rows; the window's rows, place, pin, lock, scale and opacity; the sort, the display throttle, the text size, the row height, the time and the columns; what the live views show; the colors; what each fight saves; the Results Log tab's chips |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
 | Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock (how often it redraws is the DPS HUD page's *HUD refresh rate*), the countdown and the buzzer, the center call-out's look and voice (its one Callout tab: a preview, then Look and Sound), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
@@ -388,8 +388,7 @@ Defaults leaves them where they are. The window's gear opens this page.
 
 | Row | Key |
 |---|---|
-| Folded to one line | `log.drawer.collapsed` |
-| The folded line shows the newest event | `log.drawer.strip` |
+| Show the filter chips | `log.drawer.chips` |
 | Rows shown (3 to 20) | `log.drawer.rows` |
 
 ### Detached window
@@ -426,8 +425,6 @@ the drawer, the window and the Results Log tab all take their heights from it.
 | Row height (px) | `log.view.rowHeight` |
 | Time (From the pull, Clock time) | `log.view.timeFormat` |
 | Show the Info column | `log.view.columns.info` |
-| Show the Source column | `log.view.columns.source` |
-| Show the Target column | `log.view.columns.target` |
 | Show the Spell/School column | `log.view.columns.spell` |
 | Show the Amount column | `log.view.columns.amount` |
 

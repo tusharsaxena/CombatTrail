@@ -83,14 +83,19 @@ test("log page: no log.* key is left on the write-through list; the log's own co
     for _, p in ipairs(NS.SCHEMA_WRITE_THROUGH) do
         assertFalse(p:find("^log%.") ~= nil, p .. " has a row now")
     end
-    for _, p in ipairs({ "log.drawer.shown", "log.drawer.collapsed", "log.view.sort", "log.home",
+    for _, p in ipairs({ "log.drawer.shown", "log.drawer.chips", "log.view.sort", "log.home",
                          "log.window.attached", "log.window.pinned" }) do
         assertTrue(NS.FindSchemaRow(p) ~= nil, p .. " has a row")
     end
+    -- red under: the rows of the retired keys (owner feedback items 3 and 14)
+    for _, p in ipairs({ "log.drawer.collapsed", "log.drawer.strip", "log.view.columns.source",
+                         "log.view.columns.target" }) do
+        assertTrue(NS.FindSchemaRow(p) == nil, p .. " has no row")
+    end
     NS.HudLog.SetHome("detached")
     assertEqual(NS.GetSetting("log.home"), "detached", "the detach mark writes through its row")
-    NS.HudLog.SetCollapsed(true)
-    assertTrue(NS.GetSetting("log.drawer.collapsed"))
+    NS.HudLog.ToggleChipsRow()
+    assertFalse(NS.GetSetting("log.drawer.chips"), "the eye writes through its row")
 end)
 
 test("log page: the value checks refuse what the log cannot draw", function()
@@ -212,29 +217,23 @@ end)
 
 -- ── the who colors ──────────────────────────────────────────────────────────────────────────────
 
-test("log page: You takes its own swatch once Use class color is off; the targets theirs off the skin", function()
+test("log page: the who colors are still read into a view's context, and no cell draws them now", function()
     local NS = T.load().NS
     local LT, U, K = NS.LogTable, NS.CombatLog.UNIT, NS.CombatLog.KIND
-    local cast = { k = K.CAST, u = U.player, id = 133, at = 105 }
     local onTarget = { k = K.DEBUFF_ON, u = U.target, id = 118, at = 105 }
-    local ctx = LT.ReadColors({ startT = 100, targetName = "Boar" })
+    local ctx = LT.ReadColors({ startT = 100 })
     assertNil(ctx.youColor, "the class color by default")
     assertNil(ctx.hostileColor, "the skin's hostile color by default")
-    assertEqual(LT.Cells(onTarget, ctx).targetColor, "ct.log.hostile")
     NS.SetByPath("log.colors.you", { r = 0.1, g = 0.2, b = 0.3, a = 1 })
     NS.SetByPath("log.colors.useClassColorYou", false)
     NS.SetByPath("log.colors.hostile", { r = 0.4, g = 0.5, b = 0.6, a = 1 })
     NS.SetByPath("log.colors.hostileFromSkin", false)
     LT.ReadColors(ctx)
-    local c = LT.Cells(cast, ctx)
-    assertEqual(table.concat({ c.sourceColor[1], c.sourceColor[2], c.sourceColor[3] }, ","), "0.1,0.2,0.3")
-    c = LT.Cells(onTarget, ctx)
-    assertEqual(table.concat({ c.targetColor[1], c.targetColor[2], c.targetColor[3] }, ","), "0.4,0.5,0.6")
-    ctx.targetFriendly = true
-    assertEqual(LT.Cells(onTarget, ctx).targetColor, "ct.log.friendly", "the friendly color still the skin's")
-    NS.SetByPath("log.colors.friendlyFromSkin", false)
-    LT.ReadColors(ctx)
-    assertEqual(LT.Cells(onTarget, ctx).targetColor[3], 1.0, "the friendly swatch's blue")
+    assertEqual(table.concat({ ctx.youColor[1], ctx.youColor[2], ctx.youColor[3] }, ","), "0.1,0.2,0.3")
+    assertEqual(table.concat({ ctx.hostileColor[1], ctx.hostileColor[2], ctx.hostileColor[3] }, ","), "0.4,0.5,0.6")
+    local c = LT.Cells(onTarget, ctx)
+    assertNil(c.targetColor, "no Target column draws them (owner feedback item 3)")
+    assertNil(c.sourceColor)
 end)
 
 test("log page: You is a ColorPair with its class companion on; the targets are a palette, no class", function()

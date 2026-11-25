@@ -888,8 +888,9 @@ test("race window: docked LEFT or RIGHT it takes the DPS HUD's height", function
 end)
 
 -- The Combat Log drawer (CombatTrail #11, CL-11b) makes the HUD taller: docked beside it the Race window
--- takes the HUD's whole height, drawer included, and follows its fold, armed and racing alike.
-test("race window: the matched height takes the Combat Log drawer, open, folded and closed, armed and racing", function()
+-- takes the HUD's whole height, drawer included, and follows its chips row (the drawer has no fold since
+-- owner feedback item 14), armed and racing alike.
+test("race window: the matched height takes the Combat Log drawer, open, chips hidden and closed, armed and racing", function()
     if forever() then return end
     local S, hud, win = sized()
     local RW, NS = W(S), S.NS
@@ -898,20 +899,20 @@ test("race window: the matched height takes the Combat Log drawer, open, folded 
     assertTrue(NS.SetByPath("log.drawer.shown", true))
     assertEqual(hud.h, base + NS.HudLog.Height(), "the HUD grew by the drawer")
     assertEqual(win.h, hud.h, "the Race window beside it takes the whole height")
-    assertTrue(NS.SetByPath("log.drawer.collapsed", true))
-    assertTrue(hud.h < base + NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(8), "folded: shorter")
-    assertEqual(win.h, hud.h, "folded: it follows")
+    assertTrue(NS.SetByPath("log.drawer.chips", false))
+    assertEqual(hud.h, base + NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(8), "chips hidden: shorter")
+    assertEqual(win.h, hud.h, "chips hidden: it follows")
     assertTrue(F.arm(S, 30))
-    assertEqual(win.h, hud.h, "armed, folded")
-    assertTrue(NS.SetByPath("log.drawer.collapsed", false))
-    assertEqual(win.h, hud.h, "armed, unfolded")
+    assertEqual(win.h, hud.h, "armed, chips hidden")
+    assertTrue(NS.SetByPath("log.drawer.chips", true))
+    assertEqual(win.h, hud.h, "armed, chips shown")
     local start = F.pull(S)
     F.run(S, start + 0.5)
     assertTrue(NS.Race.State() ~= "idle", "racing")
-    assertTrue(NS.SetByPath("log.drawer.collapsed", true))
-    assertEqual(win.h, hud.h, "racing, folded")
-    assertTrue(NS.SetByPath("log.drawer.collapsed", false))
-    assertEqual(win.h, hud.h, "racing, unfolded")
+    assertTrue(NS.SetByPath("log.drawer.chips", false))
+    assertEqual(win.h, hud.h, "racing, chips hidden")
+    assertTrue(NS.SetByPath("log.drawer.chips", true))
+    assertEqual(win.h, hud.h, "racing, chips shown")
     assertTrue(NS.SetByPath("log.drawer.shown", false))
     assertEqual(win.h, hud.h, "racing, closed")
 end)

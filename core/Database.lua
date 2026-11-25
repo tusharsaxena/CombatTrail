@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 4
+NS.SCHEMA_VERSION = 5
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile.
@@ -110,8 +110,25 @@ local STEPS = {
     end },
     -- 3 -> 4, per profile: what the retired skin-defaults step wrote goes back (NS.RestoreOwnLooks).
     { to = 4, perProfile = true, run = function(_, profile) NS.RestoreOwnLooks(profile) end },
+    -- 4 -> 5, per profile: the Combat Log keys the owner's feedback retired (2026-11-25, CLF-1). The
+    -- Source and Target columns are gone (item 3), so their toggles `log.view.columns.source` and
+    -- `.target` go; the drawer's fold is gone (item 14), so `log.drawer.collapsed` and the folded line's
+    -- `log.drawer.strip` go. Nothing is carried across: each served only what was removed. Idempotent:
+    -- a fresh profile stores none of them.
+    { to = 5, perProfile = true, run = function(_, profile) NS.DropRetiredLogKeys(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
+
+--- Step 5's body: `profile.log`'s retired keys (the Source and Target column toggles, the drawer's
+--- fold and its folded line) dropped. A profile with no `log` table is left alone.
+function NS.DropRetiredLogKeys(profile)
+    local log = type(profile) == "table" and profile.log
+    if type(log) ~= "table" then return end
+    local view = log.view
+    local cols = type(view) == "table" and view.columns
+    if type(cols) == "table" then cols.source, cols.target = nil, nil end
+    if type(log.drawer) == "table" then log.drawer.collapsed, log.drawer.strip = nil, nil end
+end
 
 --- A profile switch, copy or reset replaces the whole profile wholesale: the stored `enabled` can
 --- flip, so re-take the hold and re-decide (slash-commands-§7: these callbacks are SETUP and stay live

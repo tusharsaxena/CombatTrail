@@ -1,8 +1,8 @@
 local _, NS = ...
 -- settings/Log.lua — the Combat Log page (CombatTrail #11, plan item CL-11c2; the spec's addendum,
 -- *Settings*): eight tabs over every `log.*` key a player chooses, in strip order Combat Log (the
--- master switch, the log open now, opened at each fight's start, where it lives), Docked drawer (the
--- fold, its rows, the folded line), Detached window (its rows, where it stands, pinned, lock, scale,
+-- master switch, the log open now, opened at each fight's start, where it lives), Docked drawer (its
+-- filter chips, its rows), Detached window (its rows, where it stands, pinned, lock, scale,
 -- opacity), Order and display (the sort, the display throttle, the rows' text size and height, the
 -- time, the columns), What to show (the live views' categories, the auto attacks, the least amount),
 -- Colors (school colors, row washes, the who colors), Storage (a log with each fight, the lines kept,
@@ -90,13 +90,11 @@ row("home", { type = "string", label = L["Where the log lives"], values = HOMES,
 
 -- Docked drawer
 at(TAB.drawer, L["Docked drawer"])
-row("drawer.collapsed", { type = "bool", label = L["Folded to one line"], startsLine = true,
-    tooltip = L["Fold the drawer to its header and one line. The chevron in the drawer's header folds and unfolds it too."] })
-row("drawer.strip", { type = "bool", label = L["The folded line shows the newest event"],
-    tooltip = L["While the drawer is folded, show the newest event under its header. Off, the folded drawer is its header alone."] })
+row("drawer.chips", { type = "bool", label = L["Show the filter chips"], startsLine = true,
+    tooltip = L["Show the Casts, Pet, Buffs, Debuffs, Taken and Heals chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] })
 row("drawer.rows", { type = "number", label = L["Rows shown"], min = NS.HudLog.MIN_ROWS, max = NS.HudLog.MAX_ROWS,
     step = 1, startsLine = true,
-    tooltip = L["How many events the unfolded drawer shows at a time. The DPS HUD grows by the drawer's height."] })
+    tooltip = L["How many events the drawer shows at a time. The DPS HUD grows by the drawer's height."] })
 
 -- Detached window
 at(TAB.window, L["Rows"])
@@ -148,12 +146,8 @@ row("view.timeFormat", { type = "string", label = L["Time"], values = TIMES, val
 at(TAB.display, L["Columns"])
 row("view.columns.info", { type = "bool", label = L["Show the Info column"], startsLine = true,
     tooltip = L["Show Critical, Glancing, Crushing and Interrupted in their own column, where there is room: the detached window and the Results fight detail."] })
-row("view.columns.source", { type = "bool", label = L["Show the Source column"], startsLine = true,
-    tooltip = L["Show who did it. Time and Event always show. A narrow log drops Source first."] })
-row("view.columns.target", { type = "bool", label = L["Show the Target column"],
-    tooltip = L["Show who it landed on. A narrow log drops Target after Source."] })
 row("view.columns.spell", { type = "bool", label = L["Show the Spell/School column"], startsLine = true,
-    tooltip = L["Show the spell and its icon, or the school of a hit or a heal."] })
+    tooltip = L["Show the spell and its icon, the school of a hit, or Healing for a heal. Time and Event always show."] })
 row("view.columns.amount", { type = "bool", label = L["Show the Amount column"],
     tooltip = L["Show the amount of each hit and heal."] })
 

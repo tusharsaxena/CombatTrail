@@ -349,7 +349,7 @@ test("callout settings: the migration rewrites a stored glow choice, drops the t
         },
     })
     local sv = _G.CombatTrailDB
-    assertEqual(NS.db.global.schemaVersion, 4, "stamped")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION, "stamped")
     local t = sv.profiles.Default.callout
     assertEqual(t.glow, true, "strong: on")
     assertEqual(t.glowIntensity, 0.7, "at 70%")
@@ -385,7 +385,7 @@ end)
 test("callout settings: a fresh profile is untouched by the migration and speaks with Arena John", function()
     if forever() then return end
     local NS = boot(nil)
-    assertEqual(NS.db.global.schemaVersion, 4)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(NS.Callout:Get("voice"), "male-arena-john")
     assertTrue(NS.Callout:Get("glow"))
     local sv = _G.CombatTrailDB
@@ -495,7 +495,7 @@ test("own looks: v4 takes back what the retired skin step wrote, in every profil
     end
     assertEqual(sv.Kept.hud.clock.fontFlags, "@skin", "a profile the step never reached keeps its pick")
     assertEqual(sv.Kept.hud.spells.borderColorFromSkin, true, "and its tick")
-    assertEqual(NS.db.global.schemaVersion, 4)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     NS.db:SetProfile("Kept")
     -- red under: the skin step still running from the profile events
     assertEqual(NS.GetSetting("hud.spells.borderStyleFromSkin"), false, "a switch moves nothing")

@@ -100,12 +100,12 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 4 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 4)
+test("load: the settings stamp is 5 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 5)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
-test("load: a schema 1 store loads empty at version 4, keeping the account's other state", function()
+test("load: a schema 1 store loads empty at the current version, keeping the account's other state", function()
     local old = { schema = 1, id = "f-old", t = 1000, duration = 60, status = "final", dps = 100 }
     local NS = boot({ global = {
         schemaVersion = 1,
@@ -114,7 +114,7 @@ test("load: a schema 1 store loads empty at version 4, keeping the account's oth
         usage = { hidden = "6948" }, minimap = { hide = true },
     } })
     local g = NS.db.global
-    assertEqual(g.schemaVersion, 4, "stamped")
+    assertEqual(g.schemaVersion, NS.SCHEMA_VERSION, "stamped")
     assertEqual(count(g.fights), 0, "fights emptied")
     assertEqual(#g.fightOrder, 0, "fightOrder emptied")
     assertEqual(count(g.loadouts), 0, "loadouts emptied")
@@ -137,8 +137,33 @@ end)
 test("load: a fresh install runs step 2 harmlessly", function()
     local NS = boot(nil)
     local g = NS.db.global
-    assertEqual(g.schemaVersion, 4)
+    assertEqual(g.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(type(g.fights), "table")
     assertEqual(type(g.fightOrder), "table")
     assertEqual(count(g.fights), 0)
+end)
+
+test("load: step 5 drops the Combat Log's retired keys in every profile, and keeps the rest", function()
+    local function stored()
+        return { log = { drawer = { shown = true, collapsed = true, strip = false, rows = 12 },
+                         view = { columns = { source = false, target = true, info = false } } } }
+    end
+    local NS = boot({ global = { schemaVersion = 4 }, profiles = { Default = stored(), Other = stored() } })
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Other" }) do
+        local log = sv[name].log
+        -- red under: no step, or one over the active profile alone
+        assertEqual(rawget(log.drawer, "collapsed"), nil, name .. ": the fold's key")
+        assertEqual(rawget(log.drawer, "strip"), nil, name .. ": the folded line's key")
+        assertEqual(rawget(log.view.columns, "source"), nil, name .. ": the Source toggle")
+        assertEqual(rawget(log.view.columns, "target"), nil, name .. ": the Target toggle")
+        assertEqual(log.drawer.shown, true, name .. ": the open kept")
+        assertEqual(log.drawer.rows, 12, name .. ": the rows kept")
+        assertEqual(log.view.columns.info, false, name .. ": the Info toggle kept")
+    end
+    assertEqual(NS.db.global.schemaVersion, 5)
+    -- Idempotent, and harmless on a profile with no log table.
+    NS.DropRetiredLogKeys(sv.Default)
+    NS.DropRetiredLogKeys({})
+    assertEqual(sv.Default.log.drawer.rows, 12)
 end)

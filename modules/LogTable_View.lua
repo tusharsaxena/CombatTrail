@@ -7,8 +7,10 @@ local _, NS = ...
 -- THE SHAPE. A column header (its own row, LogTable.HEAD_H, in the list header's gold; `opts.noHeader`
 -- leaves it out), then `rows` pooled rows LogTable.ROW_H apart. Each row is a stripe, a wash, one label
 -- per column and the spell's icon. The columns are laid by LogTable.Columns from the width the home
--- gives: fixed widths, Spell/School taking the rest, the optional columns dropped while it would be
--- narrower than SPELL_MIN. Laid only when the width or the columns change, never on a paint.
+-- gives: fixed widths, Spell/School taking the rest, Info dropped while it would be narrower than
+-- SPELL_MIN. Laid only when the width or the columns change, never on a paint. EVERY COLUMN IS
+-- CENTERED, its header and its cells (owner feedback item 8); Spell/School's icon stands at the
+-- column's start and its name is centered in the rest.
 --
 -- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `log.view.sort`), and
 -- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
@@ -44,13 +46,15 @@ LogTable.ICON = 12
 LogTable.COL_GAP = 4
 LogTable.SPELL_MIN = 70
 -- Each fixed column's width; Spell/School takes the rest.
-LogTable.WIDTH = { time = 38, event = 46, source = 46, target = 64, amount = 50, info = 86 }
-LogTable.ORDER = { "time", "event", "source", "target", "spell", "amount", "info" }
+LogTable.WIDTH = { time = 38, event = 46, amount = 50, info = 86 }
+LogTable.ORDER = { "time", "event", "spell", "amount", "info" }
 -- The optional columns a narrow home drops first.
-LogTable.DROP = { "source", "target", "info" }
-LogTable.HEADS = { time = L["Time"], event = L["Event"], source = L["Source"], target = L["Target"],
-                   spell = L["Spell/School"], amount = L["Amount"], info = L["Info"] }
-local JUSTIFY = { amount = "RIGHT" }
+LogTable.DROP = { "info" }
+LogTable.HEADS = { time = L["Time"], event = L["Event"], spell = L["Spell/School"], amount = L["Amount"],
+                   info = L["Info"] }
+-- Every column's justification: centered, header and cells (item 8).
+LogTable.JUSTIFY = "CENTER"
+local JUSTIFY = LogTable.JUSTIFY
 
 local function setting(path)
     return NS.GetSetting and NS.GetSetting(path)
@@ -78,7 +82,7 @@ function LogTable.IconSize(rowH, scale)
 end
 
 --- The columns for `width`: which show and where, as { { key, x, w }, ... } in ORDER. `want` is
---- `log.view.columns` (source, target, spell, amount on unless false); `info` whether the home has an
+--- `log.view.columns` (spell, amount on unless false); `info` whether the home has an
 --- Info column at all; `scale` the text size's factor (default 1), which widens the fixed columns.
 --- Time and Event always show.
 --- @return table
@@ -87,7 +91,7 @@ function LogTable.Columns(width, want, info, scale)
     scale = scale or 1
     local function wide(key) return math.floor(LogTable.WIDTH[key] * scale + 0.5) end
     local on = { time = true, event = true, info = info == true and want.info ~= false }
-    for _, key in ipairs({ "source", "target", "spell", "amount" }) do on[key] = want[key] ~= false end
+    for _, key in ipairs({ "spell", "amount" }) do on[key] = want[key] ~= false end
     local function fixed()
         local sum, n = 0, 0
         for _, key in ipairs(LogTable.ORDER) do
@@ -164,7 +168,7 @@ local function newRow(self)
     Style.CropIcon(r.icon)
     r.text = {}
     r.scale = self.scale or 1
-    for _, key in ipairs(LogTable.ORDER) do r.text[key] = rowText(r, r.scale, JUSTIFY[key]) end
+    for _, key in ipairs(LogTable.ORDER) do r.text[key] = rowText(r, r.scale, JUSTIFY) end
     r:EnableMouse(true)
     r:SetScript("OnEnter", rowEnter)
     r:SetScript("OnLeave", hideTip)
@@ -188,7 +192,7 @@ function LogTable.New(parent, opts)
     head:SetHeight(LogTable.HEAD_H)
     self.head, self.heads = head, {}
     for _, key in ipairs(LogTable.ORDER) do
-        self.heads[key] = Style.Text(head, Style.FONT.HEADER, "list.header.text", JUSTIFY[key])
+        self.heads[key] = Style.Text(head, Style.FONT.HEADER, "list.header.text", JUSTIFY)
         self.heads[key]:SetText(LogTable.HEADS[key])
     end
     local sorter = CreateFrame("Button", nil, head)
@@ -241,7 +245,7 @@ end
 local function layoutKey(width, rows, want, rowH, scale)
     want = want or {}
     local parts = { width, rows, rowH, scale }
-    for _, key in ipairs({ "source", "target", "spell", "amount", "info" }) do parts[#parts + 1] = tostring(want[key]) end
+    for _, key in ipairs({ "spell", "amount", "info" }) do parts[#parts + 1] = tostring(want[key]) end
     return table.concat(parts, ":")
 end
 
@@ -325,10 +329,6 @@ local function fill(r, c, index, line)
     Style.Paint(t.time, "ct.dim")
     t.event:SetText(c.tag)
     Style.Paint(t.event, c.tagColor)
-    t.source:SetText(c.source)
-    Style.Paint(t.source, c.sourceColor)
-    t.target:SetText(c.target)
-    Style.Paint(t.target, c.targetColor)
     t.spell:SetText(c.spell)
     Style.Paint(t.spell, c.spellColor)
     r.amountColor = c.amountColor or "ct.text"

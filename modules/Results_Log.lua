@@ -13,16 +13,16 @@ local _, NS = ...
 --
 -- THE CHIPS: Casts, Pet, Buffs, Debuffs, Taken (hits on you) and Heals (on you), each with the count of
 -- its lines in the saved log. They filter what is shown, never what is saved. Each fight opens on
--- `log.results.chips` (all on), and a click turns one on or off for the fight shown. The fight's
--- boundaries (PULL, END) always show; a death follows `log.show.deaths` and a hit or a heal under
--- `log.show.minAmount` (a plain amount only) is hidden, as in the live views.
+-- `log.results.chips` (all on), and a click turns one on or off for the fight shown. A death follows
+-- `log.show.deaths` and a hit or a heal under `log.show.minAmount` (a plain amount only) is hidden, as
+-- in the live views. A log saved before owner feedback item 10 may hold the fight's PULL and END lines:
+-- they are never shown or counted (CombatLog.IsBoundary), and the log on disk is left as it is.
 --
 -- THE TABLE is the live homes' component on a stored list: no feed, no follow. `log.view.sort` decides
 -- the order (newest first by default, the Time header flips it, as everywhere), and the first page is
 -- the top of that order. The wheel moves SCROLL lines at a time. The cells' context is the record's:
--- each line's own target from `record.logTargets` (its name and reaction when it was captured), the
--- pet's name, the pull's clock time (`record.t`); a line with no target of its own (a record saved
--- without `logTargets`) is drawn as the record's primary target, hostile.
+-- the pull's clock time (`record.t`). There is no Source or Target column (owner feedback item 3), so
+-- `record.logTargets` is kept on the record and not drawn.
 --
 -- A CLICK ON A CAST ROW opens the ability timeline on the fight (modules/Results_Timeline.lua) and
 -- jumps it to that cast (Timeline.FocusAt), while `log.results.jumpToCast` is on (the default) and the
@@ -79,7 +79,7 @@ end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────────
 
---- The chip line `e` falls under, or nil (a boundary, a death, an auto attack), and its category.
+--- The chip line `e` falls under, or nil (a retired boundary, a death, an auto attack), and its category.
 --- @return string|nil chip, string|nil category
 function ResultsLog.ChipOf(e)
     local cat = CL.CategoryOf(e.k, e.u, e.id)
@@ -107,11 +107,10 @@ function ResultsLog.DefaultChips(out)
 end
 
 --- Whether saved line `e` shows under the chips `chips` and `show` (`log.show`: its deaths and its
---- least amount). A boundary always shows.
+--- least amount). A retired boundary never shows.
 --- @return boolean
 function ResultsLog.Accept(e, chips, show)
     local key, cat = ResultsLog.ChipOf(e)
-    if cat == "boundary" then return true end
     if cat == "deaths" then return show.deaths ~= false end
     if not key or chips[key] == false then return false end
     local min = Secrets.PlainNumber(show.minAmount) or 0
@@ -154,25 +153,30 @@ function ResultsLog.MaxOffset(n, rows)
     return math.max(0, n - math.max(1, rows))
 end
 
---- `ctx` (a reused table) refilled for stored `record`: the time format, the pull's clock time, the
---- fight's target list (`logTargets`, each line's own target), the primary target's and the pet's
---- names, the color switches. A line with no target of its own is drawn as the primary, hostile.
+--- `ctx` (a reused table) refilled for stored `record`: the time format, the pull's clock time and the
+--- color switches.
 function ResultsLog.Context(record, ctx)
     ctx.startT = nil
     ctx.timeFormat = setting("log.view.timeFormat")
     ctx.startClock = Secrets.PlainNumber(record.t)
-    ctx.targets = select(3, CL.Of(record))
-    ctx.targetName = NS.ResultsFights.TargetName(record)
-    ctx.petName = type(record.who) == "table" and Secrets.PlainString(record.who.petName) or nil
-    ctx.targetFriendly = false
     ctx.schoolColors = setting("log.view.schoolColors") ~= false
     ctx.washes = setting("log.view.washes") ~= false
     return LogTable.ReadColors(ctx)
 end
 
+--- How many of a saved log's lines are events: a retired boundary is not one.
+--- @return number
+function ResultsLog.Lines(log)
+    local n = 0
+    for _, e in ipairs(type(log) == "table" and log or {}) do
+        if type(e) == "table" and not CL.IsBoundary(e) then n = n + 1 end
+    end
+    return n
+end
+
 --- The title line's right-hand caption: "212 lines" and, when the cap dropped some, "40 not kept".
 function ResultsLog.Caption(log, dropped)
-    local text = L["%d lines"]:format(#log)
+    local text = L["%d lines"]:format(ResultsLog.Lines(log))
     if (tonumber(dropped) or 0) > 0 then text = text .. " \194\183 " .. L["%d not kept"]:format(dropped) end
     return text
 end
@@ -276,7 +280,7 @@ function ResultsLog.Fill(p, same)
     local g, record = p.log, p.record
     if not g or not record then return end
     local log, dropped = CL.Of(record)
-    if log and #log == 0 then log = nil end
+    if log and ResultsLog.Lines(log) == 0 then log = nil end
     g.log, g.dropped = log, dropped
     if not same then
         ResultsLog.DefaultChips(g.chipOn)

@@ -1,13 +1,15 @@
 -- tests/test_log_table.lua — the Combat Log's table and the DPS HUD's docked drawer (CombatTrail #11,
--- plan item CL-11b; the spec's addendum): the cells each kind of line draws and their color tokens
--- (the player's class color and the HUD's pet color reused), the school names and colors, the time
--- column, the switches that turn school colors and row washes off; what is shown (the categories, the
--- auto attacks, the least amount, never a sealed one hidden); the feed (newest first, pause on a
--- scroll and Resume, the display throttle instant / every N ms / batch, which never touches the
--- capture or the saved log); the columns laid to a width; then the drawer: the Log control on the
--- title bar, the HUD growing by the drawer and back, the fold to one line with the newest event, the
--- rows setting, the Time header's sort, the auto-open at a fight's start, hidden and stopped with the
--- HUD, `/ct log`, and the Combat Log switched off. Runs under both kit profiles.
+-- plan item CL-11b; the spec's addendum; the owner's feedback of 2026-11-25, CLF-1): the cells each kind
+-- of line draws and their color tokens, the school names and colors, a heal's Healing (item 4), the
+-- time column, the switches that turn school colors and row washes off; what is shown (the categories,
+-- the auto attacks, the least amount, never a sealed one hidden, an old boundary never); the feed
+-- (newest first, pause on a scroll and Resume, the display throttle instant / every N ms / batch, which
+-- never touches the capture or the saved log); the live view reset at each pull (item 5); the columns
+-- laid to a width, no Source or Target, every one centered (items 3 and 8); then the drawer: the Log
+-- control on the title bar (item 13), the HUD growing by the drawer and back, its section look (items 17
+-- and 18), no fold (item 14), the chips on by default (item 9), the rows setting, the Time header's
+-- sort, the auto-open at a fight's start, hidden and stopped with the HUD, `/ct log`, and the Combat
+-- Log switched off. Runs under both kit profiles.
 
 local T = _G.CT_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertFalse,
@@ -51,27 +53,21 @@ end
 
 -- ── the cells ───────────────────────────────────────────────────────────────────────────────────
 
-test("log table: a cast is yours in your class color, a pet's in the HUD's pet color", function()
+test("log table: a cast is a plain row with its spell, and no cell names a source or a target", function()
     local _, NS = fresh()
     local LT, U = NS.LogTable, NS.CombatLog.UNIT
     local c = LT.Cells(line(NS, "CAST", { u = U.player, id = FIREBALL }), ctx())
     assertEqual(c.tag, "CAST")
     assertEqual(c.tagColor, "ct.text", "a cast row is plain")
-    assertEqual(c.source, "You")
-    local r, g, b = NS.ClassColor("player")
-    if r then
-        assertTrue(type(c.sourceColor) == "table" and c.sourceColor[1] == r and c.sourceColor[2] == g
-            and c.sourceColor[3] == b, "You: the class color the HUD's class rows draw")
-    end
-    assertEqual(c.target, NS.LogTable.DASH, "the client names no target for a cast")
     assertEqual(c.spellID, FIREBALL)
     assertNil(c.wash, "no wash for a short cooldown")
     assertEqual(c.time, "5.0", "five seconds from the pull")
+    -- red under: the Source and Target cells (owner feedback item 3)
     local p = LT.Cells(line(NS, "CAST", { u = U.pet, id = 17253 }), ctx())
-    local pet = NS.HudAppearance.PetColor()
-    assertEqual(p.source, "Pet")
-    assertTrue(p.sourceColor[1] == pet.r and p.sourceColor[2] == pet.g and p.sourceColor[3] == pet.b,
-        "the pet: the HUD's own pet color, not a copy")
+    for _, cell in ipairs({ c, p }) do
+        assertNil(cell.source, "no Source cell")
+        assertNil(cell.target, "no Target cell")
+    end
 end)
 
 test("log table: a long-cooldown cast wears the gold wash; washes off takes it away", function()
@@ -87,8 +83,6 @@ test("log table: buffs green (off dimmed), a debuff you put on orange with its w
     local on = LT.Cells(line(NS, "BUFF_ON", { u = U.player, id = INTELLECT }), ctx())
     assertEqual(on.tag, "BUFF+")
     assertEqual(on.tagColor, "ct.log.buff")
-    assertEqual(on.target, "You", "a buff on you")
-    assertEqual(on.source, LT.DASH)
     local off = LT.Cells(line(NS, "BUFF_OFF", { u = U.player, id = INTELLECT }), ctx())
     assertEqual(off.tag, "BUFF-")
     assertEqual(off.tagColor, "ct.log.buffOff", "dimmed")
@@ -97,26 +91,18 @@ test("log table: buffs green (off dimmed), a debuff you put on orange with its w
     assertEqual(deb.tag, "DEBUFF+")
     assertEqual(deb.tagColor, "ct.log.debuff")
     assertEqual(deb.wash, "ct.log.wash.debuff")
-    assertEqual(deb.source, "You", "a debuff on the target is one you put on")
-    assertEqual(deb.target, "Angry Boar")
-    assertEqual(deb.targetColor, "ct.log.hostile", "a target you can attack")
     local gone = LT.Cells(line(NS, "DEBUFF_OFF", { u = U.target, id = POLY }), ctx())
     assertEqual(gone.tagColor, "ct.log.debuffOff")
     assertNil(gone.wash, "DEBUFF- has no wash")
-    local friendly = ctx()
-    friendly.targetFriendly = true
-    assertEqual(LT.Cells(line(NS, "BUFF_ON", { u = U.target, id = 1126 }), friendly).targetColor, "ct.log.friendly")
 end)
 
-test("log table: a hit on you is red with its school and Info; a heal green with a plus", function()
+test("log table: a hit on you is red with its school and Info; a heal green with a plus, reading Healing", function()
     local _, NS = fresh()
     local LT, U, F = NS.LogTable, NS.CombatLog.UNIT, NS.CombatLog.FLAG
     local hit = LT.Cells(line(NS, "HIT", { u = U.player, a = 1234, s = 4, f = F.CRIT }), ctx())
     assertEqual(hit.tag, "HIT")
     assertEqual(hit.wash, "ct.log.wash.hit")
     assertEqual(hit.amountColor, "ct.log.hit")
-    assertEqual(hit.source, LT.DASH, "the client gives no source")
-    assertEqual(hit.target, "You")
     assertEqual(hit.spell, "Fire", "the school, the client giving no spell")
     assertEqual(hit.spellColor, "ct.school.fire")
     assertEqual(hit.info, "Critical")
@@ -127,7 +113,8 @@ test("log table: a hit on you is red with its school and Info; a heal green with
     assertEqual(heal.amountColor, "ct.log.heal")
     assertTrue(heal.amount:sub(1, 1) == "+", "a heal reads +: " .. heal.amount)
     assertNil(heal.wash, "a heal has no wash")
-    assertEqual(heal.spellColor, "ct.school.holy")
+    assertEqual(heal.spell, "Healing (Holy)", "a school other than Physical is named")
+    assertEqual(heal.spellColor, "ct.log.heal", "in the heal color, not the school's")
     local plain = LT.Cells(line(NS, "HIT", { u = U.player, a = 10, s = 4 }), ctx({ schoolColors = false }))
     assertEqual(plain.spellColor, "ct.text", "school colors off: the body text")
     local glance = LT.Cells(line(NS, "HIT", { u = U.player, a = 10, s = 1, f = F.GLANCING }), ctx())
@@ -156,14 +143,42 @@ test("log table: the time column from the pull, past a minute and before it, or 
     assertTrue(clock:match("^%d%d:%d%d:%d%d$") ~= nil, "clock time: " .. tostring(clock))
 end)
 
-test("log table: the boundaries are muted rows with their words", function()
+test("log table: a heal reads Healing, never Physical (item 4)", function()
+    -- THE CAUSE (read off the code, CLF-1): UNIT_COMBAT's HEAL reports school 1 (Physical) or nothing,
+    -- the capture keeps the client's school as given (CombatLog.OnCombat), and the view drew every HIT
+    -- and HEAL's school through LogTable.School, so an ordinary heal read "Physical". The fix is the view's.
+    local inst, NS = fresh()
+    local LT, U = NS.LogTable, NS.CombatLog.UNIT
+    for _, mask in ipairs({ 1, false }) do
+        local c = LT.Cells(line(NS, "HEAL", { u = U.player, a = 300, s = mask or nil }), ctx())
+        -- red under: "Physical" in the school's color
+        assertEqual(c.spell, "Healing", "school " .. tostring(mask))
+        assertEqual(c.spellColor, "ct.log.heal")
+    end
+    assertEqual(LT.Cells(line(NS, "HEAL", { u = U.player, a = 300, s = 1 }), ctx({ schoolColors = false })).spellColor,
+        "ct.log.heal", "a heal's color is its kind's, not a school color the switch turns off")
+    assertEqual(LT.Cells(line(NS, "HIT", { u = U.player, a = 300, s = 1 }), ctx()).spell, "Physical",
+        "a hit still names its school")
+    -- End to end: the client's HEAL, school 1, through the capture and into a cell.
+    begin(NS, "f1", 100)
+    at(inst, 101)
+    NS.CombatLog.OnCombat("player", "HEAL", "", 450, 1, 101)
+    local e = NS.CombatLog.Line(NS.CombatLog.Seq())
+    assertEqual(e.k, NS.CombatLog.KIND.HEAL)
+    assertEqual(LT.Cells(e, ctx()).spell, "Healing")
+    assertEqual(LT.Cells({ k = NS.CombatLog.KIND.HEAL, u = U.player, t = 2, a = 450, s = 1 }, ctx()).spell, "Healing",
+        "a saved heal too")
+end)
+
+test("log table: an old boundary line draws no tag and never shows (item 10)", function()
     local _, NS = fresh()
     local LT = NS.LogTable
-    local s = LT.Cells(line(NS, "START"), ctx())
-    assertEqual(s.tag, "PULL")
-    assertEqual(s.tagColor, "ct.dim")
-    assertEqual(s.spell, "Fight started")
-    assertEqual(LT.Cells(line(NS, "END"), ctx()).spell, "Combat ended")
+    assertEqual(LT.Cells(line(NS, "START"), ctx()).tag, "")
+    for _, k in ipairs({ "START", "END" }) do
+        assertTrue(NS.CombatLog.IsBoundary(line(NS, k)), k)
+        assertFalse(LT.Shows(line(NS, k), NS.GetSetting("log.show")), k .. " never shows")
+    end
+    assertFalse(NS.CombatLog.IsBoundary(line(NS, "CAST")))
 end)
 
 test("log table: a multi-school mask takes its lowest school's color", function()
@@ -183,7 +198,7 @@ test("log table: the categories, the auto attacks and the least amount decide wh
     assertFalse(LT.Shows(line(NS, "CAST", { u = U.player, id = AUTO_SHOT }), show), "auto attacks hidden by default")
     assertTrue(LT.Shows(line(NS, "CAST", { u = U.player, id = AUTO_SHOT }), { autoAttacks = true }))
     assertFalse(LT.Shows(line(NS, "CAST", { u = U.pet, id = 17253 }), { petCasts = false }))
-    assertTrue(LT.Shows(line(NS, "START"), { casts = false }), "a boundary always shows")
+    assertFalse(LT.Shows(line(NS, "START"), {}), "an old boundary never shows")
     local min = { minAmount = 100 }
     assertFalse(LT.Shows(line(NS, "HIT", { u = U.player, a = 50 }), min), "under the least amount")
     assertTrue(LT.Shows(line(NS, "HIT", { u = U.player, a = 150 }), min))
@@ -267,6 +282,48 @@ test("log table feed: the display throttle never drops a line from the saved log
     assertTrue(feed.shown < NS.CombatLog.Seq(), "the view was still behind")
 end)
 
+local function hudUp(NS)
+    NS.Hud.Show()
+    return NS.Hud.__ui()
+end
+
+local function click(b) b:GetScript("OnClick")(b, "LeftButton") end
+
+-- ── the live view resets at each pull (item 5) ──────────────────────────────────────────────────
+
+test("log table feed: each pull clears the live view to the new fight, keeping its pre-pull floor", function()
+    local inst, NS = fresh()
+    local LT, CL = NS.LogTable, NS.CombatLog
+    local fight1 = { id = "f1", startT = 100 }
+    CL.Begin("f1", 100, fight1)
+    CL.OnCast("player", FIREBALL, 101)
+    CL.OnCast("player", FIREBALL, 105)
+    fight1.combatEndT = 110
+    at(inst, 111)
+    CL.Finish("f1")
+    CL.OnCast("player", POLY, 112)     -- after the combat ended: still this fight's view
+    local feed, out = LT.NewFeed(), {}
+    feed.shown = 0
+    LT.Advance(feed, 112, "instant", 0, all)
+    local _, from = CL.Window()
+    assertEqual(LT.Collect(feed, 20, from, all, out), 3, "the fight's lines, and the one after its end")
+    CL.OnCast("player", INTELLECT, 118)  -- two seconds before the next pull: its pre-pull floor
+    at(inst, 120)
+    CL.Begin("f2", 120, { id = "f2", startT = 120 })
+    CL.OnCast("player", FIREBALL, 121)
+    LT.Advance(feed, 121, "instant", 0, all)
+    local startT
+    startT, from = CL.Window()
+    assertEqual(startT, 120)
+    assertEqual(from, 110, "the floor: PREPULL before the pull, never before the last fight's end")
+    local n = LT.Collect(feed, 20, from, all, out)
+    local times = {}
+    for i = 1, n do times[i] = CL.Line(out[i]).at end
+    -- red under: an earlier fight's line (or its END boundary) under the new pull
+    assertEqual(table.concat(times, ","), "121,118,112", "the new fight and its pre-pull floor only")
+    assertEqual(LT.Time(CL.Line(out[2]), { startT = startT }), "-2.0", "a pre-pull line at a negative time")
+end)
+
 -- ── the columns ─────────────────────────────────────────────────────────────────────────────────
 
 local function keys(cols)
@@ -275,35 +332,51 @@ local function keys(cols)
     return table.concat(out, ",")
 end
 
-test("log table columns: a narrow home drops Source first; a wide one with Info shows them all", function()
+test("log table columns: Time, Event, Spell/School, Amount and Info where there is room; no Source or Target", function()
     local _, NS = fresh()
     local LT = NS.LogTable
-    assertEqual(keys(LT.Columns(236, {}, false)), "time,event,spell,amount", "the default HUD's width")
-    assertEqual(keys(LT.Columns(296, {}, false)), "time,event,target,spell,amount", "a wider HUD keeps Target")
-    assertEqual(keys(LT.Columns(500, {}, false)), "time,event,source,target,spell,amount", "no Info in the drawer")
-    assertEqual(keys(LT.Columns(600, {}, true)), "time,event,source,target,spell,amount,info")
-    assertEqual(keys(LT.Columns(600, { source = false, amount = false }, true)), "time,event,target,spell,info",
-        "the columns' switches")
+    -- red under: Source and Target in the order (owner feedback item 3)
+    assertEqual(table.concat(LT.ORDER, ","), "time,event,spell,amount,info")
+    assertEqual(keys(LT.Columns(236, {}, false)), "time,event,spell,amount", "the old default HUD's width")
+    assertEqual(keys(LT.Columns(500, { source = true, target = true }, false)), "time,event,spell,amount",
+        "no Info in the drawer, and an old stored toggle shows nothing")
+    assertEqual(keys(LT.Columns(600, {}, true)), "time,event,spell,amount,info")
+    assertEqual(keys(LT.Columns(220, {}, true)), "time,event,spell,amount", "too narrow: Info dropped")
+    assertEqual(keys(LT.Columns(600, { amount = false }, true)), "time,event,spell,info", "the columns' switches")
+    -- The two columns' share is gone from the least width the fixed columns take.
+    local fixed = 0
+    for key, w in pairs(LT.WIDTH) do if key ~= "info" then fixed = fixed + w end end
+    assertEqual(fixed, 38 + 46 + 50, "Time, Event and Amount alone are fixed")
     local cols = LT.Columns(236, {}, false)
     for _, c in ipairs(cols) do
         if c.key == "spell" then assertTrue(c.w >= LT.SPELL_MIN, "Spell/School keeps its least width") end
     end
 end)
 
+test("log table columns: every column is centered, its header and its cells, in every home (item 8)", function()
+    local _, NS = fresh()
+    hudUp(NS)
+    NS.HudLog.SetShown(true)
+    local views = { NS.HudLog.__ui().table, NS.LogTable.New(NS.Hud.Frame(), { info = true }) }
+    for i, view in ipairs(views) do
+        view:Layout(600, 3, {})
+        for _, key in ipairs(NS.LogTable.ORDER) do
+            -- red under: the Amount column justified RIGHT, the others LEFT
+            assertEqual(view.heads[key]:GetJustifyH(), "CENTER", "view " .. i .. " header " .. key)
+            assertEqual(view:Rows()[1].text[key]:GetJustifyH(), "CENTER", "view " .. i .. " cell " .. key)
+        end
+    end
+end)
+
 -- ── the drawer ──────────────────────────────────────────────────────────────────────────────────
-
-local function hudUp(NS)
-    NS.Hud.Show()
-    return NS.Hud.__ui()
-end
-
-local function click(b) b:GetScript("OnClick")(b, "LeftButton") end
 
 test("hud log: the title bar's Log control opens the drawer and the HUD grows by its height", function()
     local _, NS = fresh()
     local ui = hudUp(NS)
     assertTrue(ui.log ~= nil and ui.log:IsShown(), "the Log control on the title bar")
-    assertEqual(ui.log.iconName, "chat")
+    -- red under: the chat mark, which read as chat (owner feedback item 13)
+    assertEqual(ui.log.iconName, "ph:list-bullets")
+    assertTrue(NS.Icon("ph:list-bullets") ~= nil, "vendored and declared")
     local before = NS.Hud.Height()
     assertEqual(NS.HudLog.Height(), 0, "closed: no room taken")
     click(ui.log)
@@ -311,8 +384,9 @@ test("hud log: the title bar's Log control opens the drawer and the HUD grows by
     local d = NS.HudLog.__ui()
     assertTrue(d ~= nil and d.frame:IsVisible(), "the drawer under the spell rows")
     assertEqual(NS.Hud.Height(), before + NS.HudLog.Height(), "the HUD grew by the drawer")
-    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.SEAM + NS.HudLog.HEAD_H + NS.LogTable.Height(8),
-        "eight rows by default")
+    local chips = NS.LogTable.ChipsHeight(NS.Hud.LogWidth()) + NS.LogTable.CHIP_GAP
+    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + chips + NS.LogTable.Height(8),
+        "eight rows by default, under the chips")
     assertTrue(NS.HudLog.Ticking(), "its repaint timer runs while it shows")
     click(ui.log)
     assertFalse(d.frame:IsShown(), "closed again")
@@ -345,29 +419,35 @@ test("hud log: the drawer paints the newest fight's lines, newest at the top, an
     local rows = NS.HudLog.__ui().table:Rows()
     assertEqual(rows[1].text.event:GetText(), "HIT", "the newest at the top")
     assertEqual(rows[2].text.event:GetText(), "CAST")
-    assertEqual(rows[3].text.event:GetText(), "PULL", "the fight's start under its first lines")
+    -- red under: the PULL row under the fight's first lines (owner feedback item 10)
+    assertFalse(rows[3]:IsShown(), "no boundary row")
     local t = NS.HudLog.__ui().table
     click(t.sorter)
     assertEqual(NS.GetSetting("log.view.sort"), "oldest", "the Time header writes the sort")
     NS.HudLog.Paint()
-    assertEqual(rows[1].text.event:GetText(), "PULL", "oldest first")
-    assertEqual(rows[3].text.event:GetText(), "HIT", "the newest at the bottom")
+    assertEqual(rows[1].text.event:GetText(), "CAST", "oldest first")
+    assertEqual(rows[2].text.event:GetText(), "HIT", "the newest at the bottom")
 end)
 
-test("hud log: the filter mark opens the drawer's chips, the HUD growing by them; a chip filters the drawer alone", function()
+test("hud log: the chips show by default; the filter mark hides them, the HUD shrinking; a chip filters the drawer alone", function()
     local inst, NS = fresh()
     hudUp(NS)
     NS.HudLog.SetShown(true)
     local d = NS.HudLog.__ui()
     assertEqual(d.filter.iconName, "eye", "the header carries the filter mark")
-    assertFalse(d.chips.buttons.casts:IsShown(), "the chips start hidden: the drawer keeps its height")
-    local h, hud = NS.HudLog.Height(), NS.Hud.Height()
-    click(d.filter)
+    -- red under: the chips hidden until the eye is clicked (owner feedback item 9)
+    assertTrue(NS.GetSetting("log.drawer.chips"), "on in a new profile")
     assertTrue(NS.HudLog.ChipsShown())
-    assertTrue(d.chips.buttons.casts:IsShown(), "the chips row under the header")
+    assertTrue(d.chips.buttons.casts:IsShown(), "the chips row under the heading")
+    local h, hud = NS.HudLog.Height(), NS.Hud.Height()
     local room = NS.LogTable.ChipsHeight(NS.Hud.LogWidth()) + NS.LogTable.CHIP_GAP
-    assertEqual(NS.HudLog.Height(), h + room, "the drawer grew by the chips")
-    assertEqual(NS.Hud.Height(), hud + room, "and the HUD with it")
+    click(d.filter)
+    assertFalse(NS.GetSetting("log.drawer.chips"), "the eye writes its key")
+    assertFalse(d.chips.buttons.casts:IsShown())
+    assertEqual(NS.HudLog.Height(), h - room, "the drawer shrank by the chips")
+    assertEqual(NS.Hud.Height(), hud - room, "and the HUD with it")
+    click(d.filter)
+    assertEqual(NS.HudLog.Height(), h, "the mark shows them again")
     begin(NS, "f1", 100)
     NS.CombatLog.OnCast("player", FIREBALL, 101)
     NS.CombatLog.OnCombat("player", "WOUND", "", 2000, 4, 102)
@@ -378,11 +458,6 @@ test("hud log: the filter mark opens the drawer's chips, the HUD growing by them
     click(d.chips.buttons.taken)
     assertEqual(rows[1].text.event:GetText(), "CAST", "hits hidden in the drawer")
     assertTrue(NS.GetSetting("log.show.hits"), "never in the settings")
-    NS.HudLog.SetCollapsed(true)
-    assertFalse(NS.HudLog.ChipsShown(), "folded: no chips row")
-    NS.HudLog.SetCollapsed(false)
-    click(d.filter)
-    assertEqual(NS.HudLog.Height(), h, "the mark hides them again")
     assertEqual(d.chips.buttons.taken.styleName, "normal", "the drawer keeps its chips for the session")
     NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f2", startT = 103 })
     NS.HudLog.Paint()
@@ -406,25 +481,60 @@ test("hud log: the wheel pauses it, Resume follows again", function()
     assertFalse(d.resume:IsShown())
 end)
 
-test("hud log: folded it is one line with the newest event, and the HUD shrinks to it", function()
-    local inst, NS = fresh()
+test("hud log: no fold: no chevron, no folded line, no key, no verb (item 14)", function()
+    local _, NS = fresh()
     hudUp(NS)
     NS.HudLog.SetShown(true)
-    local open = NS.Hud.Height()
+    local d = NS.HudLog.__ui()
+    -- red under: the header's chevron and the one-line strip
+    assertNil(d.fold, "no chevron on the heading")
+    assertNil(d.strip, "no folded line")
+    assertNil(NS.HudLog.Collapsed, "no fold state")
+    assertNil(NS.GetSetting("log.drawer.collapsed"), "no key")
+    assertNil(NS.GetSetting("log.drawer.strip"), "and none for the folded line")
+    local printed
+    local orig = NS.Print
+    NS.Print = function(msg) printed = msg end
+    NS.Slash:OnSlash("log fold")
+    NS.Print = orig
+    assertTrue(printed ~= nil and printed:find("Usage") ~= nil, "fold is no verb now: the usage")
+    assertTrue(printed:find("fold") == nil, "and the usage names no fold")
+    assertTrue(d.table.frame:IsShown(), "the table stays")
+end)
+
+test("hud log: the drawer is a section like Spell breakdown: its heading, its count and marks, no seam (items 17, 18)", function()
+    local inst, NS = fresh()
+    local Style = NS.Style
+    hudUp(NS)
+    NS.HudLog.SetShown(true)
     begin(NS, "f1", 100)
     NS.CombatLog.OnCast("player", FIREBALL, 101)
     at(inst, 101.5)
-    local d = NS.HudLog.__ui()
-    click(d.fold)
-    assertTrue(NS.GetSetting("log.drawer.collapsed"), "saved folded")
-    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.SEAM + NS.HudLog.HEAD_H + NS.LogTable.ROW_H)
-    assertTrue(NS.Hud.Height() < open, "the HUD shrank with it")
-    assertFalse(d.table.frame:IsShown(), "the table folded away")
     NS.HudLog.Paint()
-    assertEqual(d.strip:Rows()[1].text.event:GetText(), "CAST", "the one line: the newest event")
-    assertEqual(d.fold.iconName, "chevron-down")
-    click(d.fold)
-    assertEqual(NS.Hud.Height(), open, "unfolded: back to its height")
+    local d = NS.HudLog.__ui()
+    -- red under: the 10px list-header title and the gold seam above it
+    assertEqual(d.title.__template, Style.FONT.SECTION, "the sections' gold heading face")
+    assertEqual(d.title:GetText(), "Combat Log")
+    assertNil(d.seam, "no separator or seam")
+    assertEqual(NS.HudLog.HEAD_H, NS.HudStates.SECTION_H, "the sections' heading line")
+    assertEqual(NS.HudLog.GAP, NS.HudStates.HEAD_GAP, "the sections' clear space over the heading")
+    assertEqual(d.count.__template, Style.FONT.CAPTION, "the dim meta text")
+    assertEqual(d.count:GetText(), "1 shown")
+    local point, rel, relPoint = d.count:GetPoint(1)
+    assertEqual(point .. "/" .. relPoint, "BOTTOMRIGHT/BOTTOMLEFT", "on the heading's bottom edge, as Spell breakdown's note")
+    assertTrue(rel == d.title)
+    -- The marks rest in the title bar's tint and light in its hover color, at its size.
+    for _, b in ipairs({ d.filter, d.detach }) do
+        local r, g, bl = b.icon:GetVertexColor()
+        assertEqual(("%.2f,%.2f,%.2f"):format(r, g, bl), ("%.2f,%.2f,%.2f"):format(Style.REST[1], Style.REST[2], Style.REST[3]),
+            b.iconName .. " at rest")
+        b:GetScript("OnEnter")(b)
+        r, g, bl = b.icon:GetVertexColor()
+        assertEqual(("%.2f,%.2f,%.2f"):format(r, g, bl), ("%.2f,%.2f,%.2f"):format(Style.HOT[1], Style.HOT[2], Style.HOT[3]),
+            b.iconName .. " under the pointer")
+        b:GetScript("OnLeave")(b)
+    end
+    assertEqual(d.detach.iconName, "export")
 end)
 
 test("hud log: it hides and stops with the HUD, and comes back with it", function()
@@ -455,10 +565,6 @@ test("hud log: /ct log toggles it and opens the HUD with it", function()
     NS.Slash:OnSlash("log")
     assertTrue(NS.GetSetting("log.drawer.shown"))
     assertTrue(NS.Hud.IsShown(), "the HUD opened with it")
-    NS.Slash:OnSlash("log fold")
-    assertTrue(NS.HudLog.Collapsed())
-    NS.Slash:OnSlash("log unfold")
-    assertFalse(NS.HudLog.Collapsed())
     NS.Slash:OnSlash("log")
     assertFalse(NS.GetSetting("log.drawer.shown"), "toggled closed")
 end)
