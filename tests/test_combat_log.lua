@@ -576,6 +576,124 @@ test("combat log: the aura tally counts what UNIT_AURA brought and why each aura
     if not ok then error(err, 0) end
 end)
 
+-- R5-CT-05: the owner's WoW Forever fight (build 71139) counted only 5 UNIT_AURA, every one "full", and
+-- raised=280 (each walk raising at all AURA_LIMIT indices). The tally's blind spots closed: an event whose
+-- unit cannot be read plain is counted, a sealed isFullUpdate is told from a plain one, and a raise ends
+-- that filter's walk, so a refused unit costs one read and counts as one raised walk.
+test("combat log: the tally counts a sealed unit, tells a sealed full update, and a raise ends the walk", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst = fresh()
+        local CL = inst.NS.CombatLog
+        at(inst, 10)
+        CL.Begin("blind", 10)
+        aura(inst, 11, T.secret("player"), { addedAuras = { buff(5, INTELLECT) } })
+        aura(inst, 12, nil, nil)
+        aura(inst, 13, "player", { isFullUpdate = true })
+        inst.mocks.__auraRaise = { playerHELPFUL = 1, playerHARMFUL = 1 }
+        inst.mocks.__auraReads = {}
+        aura(inst, 14, "player", { isFullUpdate = T.secret(true) })
+        local a = CL.Diagnose().auras
+        assertEqual(a.evSealedUnit, 2, "a sealed unit and a missing one, each counted, neither read")
+        assertEqual(a.evPlayer, 2, "only the plain units reach the per-unit counts")
+        assertEqual(a.gainSeen, 0, "a sealed unit's update info is never read")
+        assertEqual(a.full, 1, "isFullUpdate plainly true")
+        assertEqual(a.sealedFull, 1, "isFullUpdate sealed")
+        -- red under: 80 reads (both filters raising at every index) and raised=80
+        assertEqual(table.concat(inst.mocks.__auraReads, ","), "player:HELPFUL,player:HARMFUL",
+            "one read per filter: the raise ends the filter's walk")
+        assertEqual(a.walkRaised, 2, "one per raising filter walk, never per read")
+        assertEqual(a.walkIncomplete, 1)
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
+-- R5-CT-06: on WoW Forever every in-combat UNIT_AURA read as a full update (isFullUpdate sealed or true)
+-- and every walk raised, so nothing was lined. A sealed isFullUpdate whose lists are readable has them
+-- taken, each aura guarded as ever; a plainly full update only diffs.
+test("combat log: a sealed full update's readable added and removed lists are lined; a plain one only diffs", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        -- The recorded shape: sealed isFullUpdate, the walks raising (WoW Forever in combat).
+        local inst, meter, saved = fresh()
+        local NS = inst.NS
+        local r = fightThrough(inst, meter, saved, 40, function(i)
+            i.mocks.__auraRaise = { playerHELPFUL = 1, playerHARMFUL = 1 }
+            aura(i, 12, "player", { isFullUpdate = T.secret(true), addedAuras = { buff(5, INTELLECT) } })
+            aura(i, 13, "player", { isFullUpdate = T.secret(true), addedAuras = {
+                { auraInstanceID = 6, spellId = T.secret(HASTE), isHelpful = true } } })
+            aura(i, 14, "player", { isFullUpdate = T.secret(true), removedAuraInstanceIDs = { 5 } })
+            -- A plainly full update with a list: diffed only (its walk raises, so no line).
+            aura(i, 15, "player", { isFullUpdate = true, addedAuras = { buff(7, MARK) } })
+        end)
+        -- red under: "" (every sealed full update only diffed, and every walk raised)
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "BUFF_ON:" .. INTELLECT .. ",BUFF_OFF:" .. INTELLECT,
+            "the plain added aura lined and its removal; the sealed one and the plain full update's list not")
+        local a = NS.CombatLog.Diagnose().auras
+        assertEqual(a.gainSealedSpell, 1, "the sealed added aura counted, no line")
+        assertEqual(a.sealedFull, 3)
+        assertEqual(a.full, 1)
+        -- The walks read (Retail's shape): the diff after the list finds the aura mapped, no line twice.
+        inst, meter, saved = fresh()
+        NS = inst.NS
+        r = fightThrough(inst, meter, saved, 40, function(i)
+            onUnit(i, "player", "HELPFUL", { buff(5, INTELLECT) })
+            aura(i, 12, "player", { isFullUpdate = T.secret(true), addedAuras = { buff(5, INTELLECT) } })
+        end)
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "BUFF_ON:" .. INTELLECT, "one line, not two")
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
+-- R5-REV: a silent walk the client refused (WoW Forever's in-combat raise at a target change, or a
+-- sealed aura) leaves a map short of auras that were already up. The next complete diff cannot tell
+-- those from gains, so it draws no gain, only the losses of what was mapped: never a burst at combat end.
+test("combat log: after an incomplete silent walk the next complete diff draws no gain, only losses", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        i.mocks.__unitGUIDs.target = TARGET_B
+        onUnit(i, "target", "HARMFUL", { debuff(71, CURSE, true) })
+        i.mocks.__auraRaise = { targetHARMFUL = 1 }
+        at(i, 12)
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        -- Combat over: the reads answer again, and the DoT up since the change is no gain.
+        i.mocks.__auraRaise = {}
+        aura(i, 13, "target", { isFullUpdate = true })
+        -- The map is whole now: the DoT's fade is a diff's loss.
+        onUnit(i, "target", "HARMFUL", {})
+        aura(i, 14, "target", { isFullUpdate = true })
+    end)
+    -- red under: DEBUFF_ON CURSE (a false gain at the first complete diff), then DEBUFF_OFF CURSE
+    assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE, "no false gain; the fade logged")
+end)
+
+-- R5-REV: a sealed full update's lists for a new target, before PLAYER_TARGET_CHANGED, are the new
+-- target's auras, not gains: the target's lists are taken only while its plain GUID is the walked one.
+test("combat log: a sealed full update's lists for a new target before the change draw no line", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst, meter, saved = fresh()
+        local NS = inst.NS
+        local r = fightThrough(inst, meter, saved, 40, function(i)
+            i.mocks.__unitGUIDs.target = TARGET_B
+            onUnit(i, "target", "HARMFUL", { debuff(71, CURSE, true) })
+            aura(i, 12, "target", { isFullUpdate = T.secret(true), addedAuras = { debuff(71, CURSE, true) } })
+            at(i, 13)
+            i.mocks.__fire("PLAYER_TARGET_CHANGED")
+            -- The same target's sealed full update: its list is taken (the fade lined once).
+            onUnit(i, "target", "HARMFUL", {})
+            aura(i, 14, "target", { isFullUpdate = T.secret(true), removedAuraInstanceIDs = { 71 } })
+        end)
+        -- red under: DEBUFF_ON CURSE (the new target's list lined as gains), then DEBUFF_OFF CURSE
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE, "no burst across the change")
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
 -- R5-REV: UNIT_AURA fires often in a group; the tally's shape and the diff decision are one read of the
 -- update info, so the tally adds no second pass of secret checks per event.
 test("combat log: one UNIT_AURA reads its update info's access once for the tally and the diff", function()

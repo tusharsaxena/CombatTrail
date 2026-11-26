@@ -33,6 +33,12 @@ NS.LOG_TABS = {
 }
 local TAB = NS.LOG_TABS
 
+-- An aura row's tooltip with WoW Forever's aura note after it (R5-CT-07); Retail's is the text alone.
+local function auraTip(text, key)
+    local note = NS.LogTable.AuraNote(key)
+    return note and (text .. " " .. note) or text
+end
+
 -- ── value lists ────────────────────────────────────────────────────────────────────────────────
 
 local function choices(...)
@@ -146,11 +152,11 @@ row("show.casts", { type = "bool", label = L["Your casts"], startsLine = true,
 row("show.petCasts", { type = "bool", label = L["Your pet's casts"],
     tooltip = L["Show the spells your pet casts."] })
 row("show.playerBuffs", { type = "bool", label = L["Buffs gained / lost on you"], startsLine = true,
-    tooltip = L["Show the buffs you gain, and when each one ends."] })
+    tooltip = auraTip(L["Show the buffs you gain, and when each one ends."], "playerBuffs") })
 row("show.playerDebuffs", { type = "bool", label = L["Debuffs on you"],
-    tooltip = L["Show the debuffs put on you, and when each one ends."] })
+    tooltip = auraTip(L["Show the debuffs put on you, and when each one ends."], "playerDebuffs") })
 row("show.targetDebuffs", { type = "bool", label = L["Your debuffs on your target"], startsLine = true,
-    tooltip = L["Show the debuffs you put on your target, and when each one ends."] })
+    tooltip = auraTip(L["Show the debuffs you put on your target, and when each one ends."], "targetDebuffs") })
 row("show.deaths", { type = "bool", label = L["Deaths"],
     tooltip = L["Show your death."] })
 at(TAB.show, L["Filters"])
@@ -180,7 +186,7 @@ local SAVED = {
 }
 for i, c in ipairs(SAVED) do
     row("store.categories." .. c[1], { type = "bool", label = c[2], startsLine = i % 2 == 1 or nil,
-        tooltip = L["Save these lines with each fight. Separate from What to show, which only filters the live views."] })
+        tooltip = auraTip(L["Save these lines with each fight. Separate from What to show, which only filters the live views."], c[1]) })
 end
 
 -- Results
@@ -190,7 +196,7 @@ row("results.jumpToCast", { type = "bool", label = L["Jump to the Timeline on cl
 at(TAB.results, L["Chips each fight opens on"])
 for i, chip in ipairs(NS.ResultsLog.CHIPS) do
     row("results.chips." .. chip.key, { type = "bool", label = L[chip.label], startsLine = i % 2 == 1 or nil,
-        tooltip = L["Turn this chip on when a fight's Combat Sequence section opens. A click on the chip still turns it on or off for the fight shown."] })
+        tooltip = auraTip(L["Turn this chip on when a fight's Combat Sequence section opens. A click on the chip still turns it on or off for the fight shown."], chip.key) })
 end
 
 -- One running order, so a composed block (which numbers its own rows) sorts where it is declared.

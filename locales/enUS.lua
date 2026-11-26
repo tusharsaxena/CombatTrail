@@ -1288,6 +1288,9 @@ L["Debuffs on you, and the debuffs you put on your target, gained and lost."] =
     "Debuffs on you, and the debuffs you put on your target, gained and lost."
 L["Click to show or hide them."] = "Click to show or hide them."
 L["Click to show or hide them in this view."] = "Click to show or hide them in this view."
+-- WoW Forever's aura note on the Buffs and Debuffs chips and settings (R5-CT-07, modules/LogTable.lua)
+L["WoW Forever hides buffs and debuffs from addons during combat, so these rows show only the changes read as combat ends, such as the buffs you lose when you die."] =
+    "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only the changes read as combat ends, such as the buffs you lose when you die."
 L["Show or hide the Combat Sequence's filter chips"] = "Show or hide the Combat Sequence's filter chips"
 L["Click a CAST row to see it on the Timeline."] = "Click a CAST row to see it on the Timeline."
 L["No combat sequence was saved for this fight"] = "No combat sequence was saved for this fight"

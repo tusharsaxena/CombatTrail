@@ -83,9 +83,13 @@ local function fight(out)
         #log.refused > 0 and table.concat(log.refused, ",") or "none", log.lines)
     -- Its aura tally since the last fight's capture began (R5-CT-03, CombatLog's THE AURA TALLY): what
     -- UNIT_AURA brought and why each aura drew no line. Run after a fight, before the next pull.
+    -- sealedUnit: events dropped because their unit could not be read plain; full: isFullUpdate plainly
+    -- true; sealedFull: isFullUpdate sealed (R5-CT-05); raised: the filter walks a raising read stopped
+    -- (each stops at its first raise), never the reads.
     local a = log.auras
-    out:add("Diag", "combat sequence aura events player=%s target=%s info=%s none=%s full=%s sealedInfo=%s",
-        a.evPlayer, a.evTarget, a.info, a.none, a.full, a.sealedInfo)
+    out:add("Diag", "combat sequence aura events player=%s target=%s sealedUnit=%s info=%s none=%s full=%s"
+        .. " sealedFull=%s sealedInfo=%s", a.evPlayer, a.evTarget, a.evSealedUnit, a.info, a.none, a.full,
+        a.sealedFull, a.sealedInfo)
     out:add("Diag", "combat sequence aura gains seen=%s lined=%s sealedTable=%s sealedInstance=%s sealedSpell=%s"
         .. " sealedSource=%s notYours=%s targetBuff=%s", a.gainSeen, a.gainLined, a.gainSealedTable,
         a.gainSealedInstance, a.gainSealedSpell, a.gainSealedSource, a.gainNotYours, a.gainTargetBuff)

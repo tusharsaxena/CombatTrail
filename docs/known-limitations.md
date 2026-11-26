@@ -26,6 +26,11 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   or ID, a raising read, or the aura limit reached), nothing is written, so a buff that ended during
   that stretch logs its BUFF- late, at the next complete diff, rather than a buff still up reading as
   gone.
+- **No in-combat buff or debuff rows on WoW Forever.** In combat the Forever client refuses an
+  addon's aura reads (`C_UnitAuras.GetAuraDataByIndex` raises; measured 2026-11-26, build 71139,
+  docs/forever-quirks.md), so every diff's walk is incomplete and draws nothing: the Buffs and Debuffs
+  rows hold only the changes read as combat ends, before the fight's capture closes. A sealed full update's readable lists
+  are still lined (R5-CT-06), and the chips and settings tell the player (R5-CT-07).
 - **No buffs on your target.** The Combat Sequence follows only your debuffs on your target (the
   owner's picks, CSEQ-1). A fight saved while it was still the Combat Log keeps its target-buff lines
   on disk, and every view leaves them out, with its hit and heal lines.
