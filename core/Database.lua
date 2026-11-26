@@ -74,10 +74,11 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 9
+NS.SCHEMA_VERSION = 12
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
--- `perProfile = true` and runs once for every stored profile.
+-- `perProfile = true` and runs once for every stored profile, handed `(sv, profile, fresh)`: `fresh`
+-- is true on a fresh install (no stamp when the runner started).
 local STEPS = {
     { to = 1, run = function() end },   -- 0 -> 1: the first release's shape, a no-op
     -- 1 -> 2: the v0.2 fight record (CT_SCHEMA 2: the target's level and NPC ID, the gear set). The
@@ -142,6 +143,29 @@ local STEPS = {
     -- the same way. Steps 5, 6 and 8 run before it, on `log`, so nothing retired is carried across.
     -- Idempotent: a second run finds no `log`, and a profile with neither is left alone.
     { to = 9, perProfile = true, run = function(_, profile) NS.MoveLogToSequence(profile) end },
+    -- 9 -> 10, per profile: the HUD's width default drops to its least, 260 (owner feedback round 4,
+    -- R4-CT-06: "start off with the window at min width for new profiles"). AceDB stores only what
+    -- differs from the default, so a profile that has been used and never changed its width stores none
+    -- and would shrink with the default; this step writes today's 390 into each one, so only a new profile
+    -- starts at 260. A fresh install (stamped 0 when the runner started: every install that ever loaded
+    -- was stamped at least 1) has no old profile and is left alone, and so is a profile table with
+    -- nothing stored. It reads each profile's width as stored before AceDB copied the new default into
+    -- the active one (NS:InitDB's snapshot), so a 260 the player chose under the old default is kept
+    -- (R4-REV). Idempotent: a width of its own is kept.
+    { to = 10, perProfile = true, run = function(_, profile, fresh)
+        if not fresh then NS.PinHudWidth(profile) end
+    end },
+    -- 10 -> 11, per profile: "Open when a fight starts" is the DPS HUD's (owner, 2026-11-26, SM-CT-LG22,
+    -- R4-CT-08). The Combat Sequence's `sequence.drawer.autoOpen` goes; a stored off is carried to
+    -- `hud.openOnPull`, and an on or nothing stored leaves the new default, on (the old default carried).
+    -- Idempotent: a second run finds no old key.
+    { to = 11, perProfile = true, run = function(_, profile) NS.MoveOpenOnPull(profile) end },
+    -- 11 -> 12, per profile: the Combat Sequence's who colors are removed (owner, 2026-11-26,
+    -- SM-CT-LG27, R4-CT-08): `sequence.colors` (you, useClassColorYou, hostile, hostileFromSkin, friendly,
+    -- friendlyFromSkin) goes whole; nothing drew them since the Source and Target columns went. The
+    -- skin tokens `ct.log.hostile` and `ct.log.friendly` go too, and LibKa0s stores no per-token
+    -- override, so no stored value names them. Idempotent: a fresh profile stores none.
+    { to = 12, perProfile = true, run = function(_, profile) NS.DropWhoColors(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -191,7 +215,9 @@ end
 local function mergeInto(into, from, dflt)
     for k, v in pairs(from) do
         local have = rawget(into, k)
-        local d = type(dflt) == "table" and dflt[k] or nil
+        -- Not `dflt[k] or nil`: a default of false is a default too (the drawer's chips, R4-CT-04).
+        local d = nil
+        if type(dflt) == "table" then d = dflt[k] end
         if have == nil then
             into[k] = v
         elseif type(have) == "table" then
@@ -219,6 +245,66 @@ function NS.MoveLogToSequence(profile)
     if type(folds) ~= "table" or rawget(folds, "log") == nil then return end
     if rawget(folds, "sequence") == nil then folds.sequence = folds.log end
     folds.log = nil
+end
+
+--- Step 10's body: `profile.hud.width` written as 390, the width before R4-CT-06, on a stored profile
+--- that keeps none (or only the default's copy). A profile with nothing stored, or with its own width,
+--- is left alone. A profile NS:InitDB snapshotted is judged on the width it stored before AceDB's copy
+--- (false: none); any other on the table as it is, a width equal to the default read as that copy.
+NS.PINNED_HUD_WIDTH = 390
+local storedHudWidth = setmetatable({}, { __mode = "k" })   -- profile table -> its raw width, or false
+function NS.PinHudWidth(profile)
+    if type(profile) ~= "table" or next(profile) == nil then return end
+    local hud = rawget(profile, "hud")
+    if type(hud) ~= "table" then
+        hud = {}
+        profile.hud = hud
+    end
+    local snap = storedHudWidth[profile]
+    storedHudWidth[profile] = nil   -- read once: a second run reads the table as it is
+    if snap ~= nil then
+        if snap == false then hud.width = NS.PINNED_HUD_WIDTH end
+        return
+    end
+    local w = rawget(hud, "width")
+    local D = NS.defaults and NS.defaults.profile and NS.defaults.profile.hud
+    if w == nil or (D and w == D.width) then hud.width = NS.PINNED_HUD_WIDTH end
+end
+
+-- Each stored profile's `hud.width` as saved, taken before AceDB-3.0:New copies the defaults into the
+-- active profile (where a stored 260 and the copied default would read the same). Step 10 reads it.
+local function snapshotHudWidths(sv)
+    local profiles = type(sv) == "table" and rawget(sv, "profiles")
+    if type(profiles) ~= "table" then return end
+    for _, profile in pairs(profiles) do
+        if type(profile) == "table" then
+            local hud = rawget(profile, "hud")
+            storedHudWidth[profile] = (type(hud) == "table" and rawget(hud, "width")) or false
+        end
+    end
+end
+
+--- Step 11's body: `profile.sequence.drawer.autoOpen` dropped, a stored false carried to
+--- `profile.hud.openOnPull`. A profile with no drawer table is left alone.
+function NS.MoveOpenOnPull(profile)
+    local seq = type(profile) == "table" and rawget(profile, "sequence")
+    local drawer = type(seq) == "table" and rawget(seq, "drawer")
+    if type(drawer) ~= "table" then return end
+    local old = rawget(drawer, "autoOpen")
+    drawer.autoOpen = nil
+    if old ~= false then return end
+    local hud = rawget(profile, "hud")
+    if type(hud) ~= "table" then
+        hud = {}
+        profile.hud = hud
+    end
+    hud.openOnPull = false
+end
+
+--- Step 12's body: `profile.sequence.colors` dropped. A profile with no `sequence` table is left alone.
+function NS.DropWhoColors(profile)
+    local seq = type(profile) == "table" and rawget(profile, "sequence")
+    if type(seq) == "table" then seq.colors = nil end
 end
 
 --- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where
@@ -251,6 +337,7 @@ function NS.OnProfileChanged(event, _db, key)
 end
 
 function NS:InitDB()
+    snapshotHudWidths(_G[addonName .. "DB"])
     NS.db = LibStub("AceDB-3.0"):New(addonName .. "DB", NS.defaults, true)
     local db = NS.db
     if db.RegisterCallback then
@@ -263,10 +350,13 @@ end
 function NS:RunMigrations()
     local db = NS.db
     local g, sv = db.global, _G[addonName .. "DB"]
+    -- A fresh install: no stamp yet (0, the default). Every install that ever ran this loop was stamped
+    -- at least 1 (the first release's step), so 0 means nothing was stored before this load.
+    local fresh = (tonumber(g.schemaVersion) or 0) == 0
     for _, step in ipairs(STEPS) do
         if (g.schemaVersion or 0) < step.to then
             if step.perProfile then
-                for _, profile in pairs(sv and sv.profiles or {}) do step.run(sv, profile) end
+                for _, profile in pairs(sv and sv.profiles or {}) do step.run(sv, profile, fresh) end
             else
                 step.run(sv)
             end

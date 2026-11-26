@@ -68,6 +68,14 @@ local _, NS = ...
 -- record counts the lines of saved categories that were not kept. `logTargets` on the record is the
 -- fight's own target list, { { name?, friendly? }, ... }, which a saved line's `g` indexes. A fight
 -- saved before CT_SCHEMA 6, or with saving off, has no `log`, and CombatLog.Of answers nil for it.
+--
+-- THE SAMPLE SEAM (owner feedback round 4, R4-CT-01). Test mode and the sim show a made-up sequence
+-- (modules/MockFights.lua SequenceOf, fed by modules/Preview.lua) in the live views: CombatLog.UseSample
+-- swaps what the views read (CombatLog.Seq, Line, First, Window and Targets) to a private sample ring,
+-- CombatLog.SampleAppend adds a line to it, and CombatLog.EndSample drops it and gives the views the
+-- real ring back. A sample line never reaches the real ring, a capture or a saved log: the captures
+-- read the real ring alone (their pre-pull too), and the real ring goes on filling meanwhile. Each swap
+-- tells the views (CombatLog.Watch), which start their feeds over, as a real fight's start does.
 
 local CombatLog = {}
 NS.CombatLog = CombatLog
@@ -118,6 +126,8 @@ local targetOf          -- the target's plain GUID when its map was last walked,
 local frame             -- the event frame (nil until a fight first opens one)
 local registered = false
 local refused = {}      -- [event] = true: the client refused it this session
+local sample            -- the sample seam's ring while it is up: { ring, seq, startT, from, targets }
+local watchers = {}     -- [key] = fn: the views told of each swap
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("CombatLog", fmt, ...) end
@@ -238,28 +248,37 @@ end
 --- this file's own: read it, never change it.
 --- @return table
 function CombatLog.Targets()
+    if sample then return sample.targets end
     return targets
 end
 
---- The newest line's sequence number (0 before any). A view redraws when it moves.
+-- Line `n` of ring `r`, whose newest is `top`, while it still holds it.
+local function lineOf(r, top, n)
+    if type(n) ~= "number" or n < 1 or n > top or n <= top - C.RING then return nil end
+    local e = r[(n - 1) % C.RING + 1]
+    return e and e.n == n and e or nil
+end
+
+--- The newest line's sequence number (0 before any). A view redraws when it moves. The sample's
+--- while the sample seam is up.
 --- @return number
 function CombatLog.Seq()
+    if sample then return sample.seq end
     return seq
 end
 
---- The line with sequence number `n`, while the ring still holds it, else nil. The table is the
---- ring's own and is reused: read it, never keep it.
+--- The line with sequence number `n`, while the ring still holds it, else nil (the sample's while the
+--- seam is up). The table is the ring's own and is reused: read it, never keep it.
 --- @return table|nil
 function CombatLog.Line(n)
-    if type(n) ~= "number" or n < 1 or n > seq or n <= seq - C.RING then return nil end
-    local e = ring[(n - 1) % C.RING + 1]
-    return e and e.n == n and e or nil
+    if sample then return lineOf(sample.ring, sample.seq, n) end
+    return lineOf(ring, seq, n)
 end
 
 --- The oldest sequence number the ring still holds (seq + 1 when it is empty).
 --- @return number
 function CombatLog.First()
-    return math.max(1, seq - C.RING + 1)
+    return math.max(1, CombatLog.Seq() - C.RING + 1)
 end
 
 --- How many lines the ring holds now (the suites' bound check).
@@ -601,16 +620,16 @@ local function floorAt()
     return f
 end
 
--- The pre-pull lines still in the ring, kept and counted toward the new capture, oldest first.
+-- The pre-pull lines still in the (real) ring, kept and counted toward the new capture, oldest first.
 local function countPrepull(cap)
     local oldest = seq + 1
-    for n = seq, CombatLog.First(), -1 do
-        local e = CombatLog.Line(n)
+    for n = seq, math.max(1, seq - C.RING + 1), -1 do
+        local e = lineOf(ring, seq, n)
         if not e or e.at < cap.from then break end
         oldest = n
     end
     for n = oldest, seq do
-        local e = CombatLog.Line(n)
+        local e = lineOf(ring, seq, n)
         if e and savedBy(cap, e) then
             if cap.store then keep(cap, e) end
             cap.n = cap.n + 1
@@ -743,7 +762,58 @@ end
 --- until the next pull moves it again. nil before any fight, and after a stand-down.
 --- @return number|nil startT, number|nil from
 function CombatLog.Window()
+    if sample then return sample.startT, sample.from end
     return viewStart, viewFrom
+end
+
+-- ── the sample seam (R4-CT-01) ──────────────────────────────────────────────────────────────────
+
+local function swapped()
+    for _, fn in pairs(watchers) do fn() end
+end
+
+--- A live view's hook, `fn()` on each swap of the sample seam (it starts its feed over). One per `key`.
+function CombatLog.Watch(key, fn)
+    watchers[key] = type(fn) == "function" and fn or nil
+end
+
+--- The views read a fresh, empty sample ring, its fight started at `startT` (GetTime()), its lines'
+--- `g` indexing `targetList` ({ { name?, friendly? }, ... }). A sample already up is replaced.
+function CombatLog.UseSample(startT, targetList)
+    if type(startT) ~= "number" then return end
+    sample = { ring = {}, seq = 0, startT = startT, from = startT,
+               targets = type(targetList) == "table" and targetList or {} }
+    swapped()
+end
+
+--- One line into the sample ring (none while the seam is down): `at` GetTime(), then the line's kind,
+--- unit, spell, marks and target as a ring line carries them. Answers whether it was added.
+--- @return boolean
+function CombatLog.SampleAppend(at, k, u, id, f, g)
+    if not sample or type(at) ~= "number" then return false end
+    local s = sample
+    s.seq = s.seq + 1
+    local slot = (s.seq - 1) % C.RING + 1
+    local e = s.ring[slot]
+    if e then
+        e.n, e.at, e.k, e.u, e.id, e.f, e.g = s.seq, at, k, u, id, f, g
+    else
+        s.ring[slot] = { n = s.seq, at = at, k = k, u = u, id = id, f = f, g = g }
+    end
+    return true
+end
+
+--- The sample ring dropped: the views read the real ring again.
+function CombatLog.EndSample()
+    if not sample then return end
+    sample = nil
+    swapped()
+end
+
+--- Whether the sample seam is up.
+--- @return boolean
+function CombatLog.SampleActive()
+    return sample ~= nil
 end
 
 -- ── a stored fight's log ────────────────────────────────────────────────────────────────────────
@@ -775,6 +845,7 @@ function CombatLog.Suspend()
     if frame then frame:UnregisterAllEvents() end
     registered = false
     clearMaps()
+    CombatLog.EndSample()
 end
 
 --- The stand-up: rebuilt from the current state (no fight is open after a stand-down).

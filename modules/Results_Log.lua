@@ -155,7 +155,7 @@ function ResultsLog.Context(record, ctx)
     ctx.timeFormat = setting("sequence.view.timeFormat")
     ctx.startClock = Secrets.PlainNumber(record.t)
     ctx.washes = setting("sequence.view.washes") ~= false
-    return LogTable.ReadColors(ctx)
+    return ctx
 end
 
 --- How many of a saved log's lines are events: a retired line is not one.

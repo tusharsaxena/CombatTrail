@@ -202,3 +202,134 @@ test("preview: the first-run skin picker shows the HUD's sample in the skin, and
     assertFalse(NS.Preview.IsActive(), "the picker's close ends what it turned on")
     assertFalse(NS.ResultsSource.IsMock())
 end)
+
+-- ── the sample Combat Sequence (owner feedback round 4, R4-CT-01) ───────────────────────────────
+
+-- The shown rows' Event cells of a table view, top down.
+local function events(view)
+    local out = {}
+    for _, r in ipairs(view:Rows()) do
+        if r:IsShown() then out[#out + 1] = r.text.event:GetText() end
+    end
+    return out
+end
+
+local function kinds(log)
+    local n = {}
+    for _, e in ipairs(log) do n[e.k] = (n[e.k] or 0) + 1 end
+    return n
+end
+
+test("preview: a sample record carries a Combat Sequence: every plan cast, and made-up buffs and debuffs", function()
+    local NS = fresh()
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    local record, plan = NS.MockFights.Record({ id = "seq", length = 60, dps = 1000, board = "vorasius",
+                                                who = NS.MockFights.Character("me") })
+    local log, dropped, targets = NS.CombatLog.Of(record)
+    assertTrue(log ~= nil, "Results finds a saved sequence on the sample record")
+    assertEqual(dropped, 0)
+    local n = kinds(log)
+    assertEqual(n[K.CAST], #plan.casts, "one CAST line per plan cast")
+    assertTrue((n[K.BUFF_ON] or 0) > 0 and (n[K.DEBUFF_ON] or 0) > 0, "buffs and debuffs gained")
+    assertTrue((n[K.DEBUFF_OFF] or 0) > 0, "and a debuff lost")
+    assertEqual(targets[1].name, "Vorasius", "the board's target is the sequence's target")
+    local last = -math.huge
+    for _, e in ipairs(log) do
+        assertTrue(e.t >= last, "oldest first")
+        assertTrue(e.t <= plan.length, "nothing past the fight")
+        last = e.t
+        if e.k == K.DEBUFF_ON or e.k == K.DEBUFF_OFF then
+            assertEqual(e.u, U.target, "a debuff is the target's")
+            assertEqual(e.g, 1, "on the sequence's one target")
+        elseif e.k == K.BUFF_ON or e.k == K.BUFF_OFF then
+            assertEqual(e.u, U.player, "a buff is the player's")
+        end
+    end
+    -- The auras are the client's own spells.
+    local want = NS.Compat.IsForever() and { [3045] = true, [25295] = true }
+        or { [19574] = true, [359844] = true, [217200] = true, [466930] = true }
+    for _, e in ipairs(log) do
+        if e.k ~= K.CAST then assertTrue(want[e.id], "an aura of the client's rotation: " .. tostring(e.id)) end
+    end
+    assertEqual(NS.MockFights.SequenceOf(plan), NS.MockFights.SequenceOf(plan), "pure: the same plan, the same lines")
+end)
+
+test("preview: a long sample fight keeps the newest lines a saved fight keeps, and counts the rest", function()
+    local NS = fresh()
+    local record = NS.MockFights.Record({ id = "long", length = 600, dps = 1000, board = "vorasius",
+                                          who = NS.MockFights.Character("me") })
+    local log, dropped = NS.CombatLog.Of(record)
+    assertEqual(#log, NS.Constants.LOG.MAX_PER_FIGHT, "the default lines kept")
+    assertTrue(dropped > 0, "the rest counted")
+end)
+
+test("preview: test mode's history has a sequence on every fight", function()
+    local NS = fresh()
+    for _, r in ipairs(NS.MockFights.Dataset().fights) do
+        assertTrue(NS.CombatLog.Of(r) ~= nil, "a sample fight with no sequence: " .. tostring(r.id))
+    end
+end)
+
+test("preview: test mode shows the sample sequence in the HUD drawer, and none of it reaches the real ring", function()
+    local NS, M = fresh()
+    local CL = NS.CombatLog
+    local seq0, ring0 = CL.Seq(), CL.__ringCount()
+    NS.SetByPath("sequence.drawer.shown", true)
+    NS.ToggleTestMode()
+    M.__fireTimers()
+    assertTrue(CL.SampleActive(), "the sample sequence is up")
+    local startT, from = CL.Window()
+    assertTrue(startT ~= nil and from ~= nil, "the views have a window")
+    assertTrue(CL.Seq() > 0, "sample lines up to the held moment")
+    local ui = NS.HudLog.__ui()
+    assertTrue(ui ~= nil and ui.frame:IsShown(), "the drawer is open")
+    local shown = events(ui.table)
+    assertTrue(#shown > 0, "the drawer draws the sample's rows")
+    assertFalse(ui.table.empty:IsShown(), "no empty text")
+    assertEqual(CL.__ringCount(), ring0, "no sample line in the real ring")
+    -- Time passes: the held moment stays still.
+    local held = CL.Seq()
+    for _ = 1, 8 do
+        M.__now = M.__now + 0.25
+        M.__fireTimers()
+    end
+    assertEqual(CL.Seq(), held, "test mode holds the sequence still")
+    NS.ToggleTestMode()
+    assertFalse(CL.SampleActive(), "test mode's end drops the sample")
+    assertEqual(CL.Seq(), seq0, "the real ring is as it was")
+    assertEqual(CL.Window(), nil, "no window after it: no fight was seen")
+    assertEqual(CL.__ringCount(), ring0)
+end)
+
+test("preview: test mode shows the sample sequence in the detached window too", function()
+    local NS, M = fresh()
+    NS.SetByPath("sequence.home", "detached")
+    NS.SetByPath("sequence.drawer.shown", true)
+    NS.ToggleTestMode()
+    M.__fireTimers()
+    local ui = NS.LogWindow.__ui()
+    assertTrue(ui ~= nil and ui.frame:IsShown(), "the detached window is up")
+    assertTrue(#events(ui.table) > 0, "it draws the sample's rows")
+    NS.ToggleTestMode()
+end)
+
+test("preview: a real fight's capture never takes a sample line", function()
+    local NS = fresh()
+    local CL = NS.CombatLog
+    CL.UseSample(990)
+    CL.SampleAppend(995, CL.KIND.CAST, CL.UNIT.player, 133)
+    CL.Begin("real", 1000)
+    CL.EndSample()
+    local log = CL.Finish("real")
+    assertEqual(#(log or {}), 0, "the capture's pre-pull is read from the real ring")
+end)
+
+test("preview: the Results window's Combat Sequence section draws a sample fight's sequence", function()
+    local NS = fresh()
+    NS.ToggleTestMode()
+    local id = NS.ResultsSource.All()[1].id
+    assertTrue(NS.Results.ShowFight(id))
+    local g = NS.Results.__ui().detail.log
+    assertTrue(#events(g.table) > 0, "rows, not 'No combat sequence was saved for this fight'")
+    NS.ToggleTestMode()
+end)

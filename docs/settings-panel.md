@@ -218,7 +218,8 @@ Hz"). Its tooltip names the Race window on Retail only. The Clock and figures ta
 (`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
 and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
 tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600), default
-390 (owner feedback item 2). At 260 the docked Combat Sequence's three columns still fit: Time and
+260, the least, so a new profile starts narrow (owner feedback round 4, R4-CT-06; it was 390, feedback
+item 2, and schema step 10 keeps 390 on every profile stored before). At 260 the docked Combat Sequence's three columns still fit: Time and
 Event take 84 px and two 4 px gaps, Spell at least 70, 162 in all against the 236 the narrowest HUD
 gives its content, so the Combat Sequence sets no width floor of its own (item 3; Amount's 50 px and
 its gap went with the column, CSEQ-1).
@@ -226,8 +227,13 @@ its gap went with the column, CSEQ-1).
 Layout's size rows: the window has one static height (owner feedback item 12), the sum of the parts the
 layout shows, Spell bars rows, and the docked Combat Sequence's rows while it is open; nothing a fight does moves
 it. The Window size row (Fixed or Auto-grow, `hud.sizeMode`) and Grow (`hud.grow`) are retired with
-schema step 6. Spell bars runs 1 to 15, default 5. The HUD's bottom-right grip sets the width and the
-rows: the Combat Sequence's (`sequence.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
+schema step 6. Spell bars runs 3 to 15, default 5 (at least 3 since R4-CT-07). The HUD's bottom-right
+grip sets the width and the rows: while the Combat Sequence is docked open it shares the height a row
+at a time between Spell bars and the Combat Sequence's *Rows shown* (`Hud.SplitFor`: shrinking takes
+from the larger side, the sequence on a tie, as 5/5, 5/4, 4/4, 4/3, 3/3; growing adds to the smaller,
+the spells on a tie, to 15 spell rows, then the sequence grows to 20), its least 3 and 3, and its
+release writes both; with Spell breakdown off, only the Combat Sequence's rows; with the Combat
+Sequence closed or detached, Spell bars alone. Spells past the rows
 scroll with the mouse wheel. The Spell rows tab's old "Spell rows shown" row (`hud.spells.rows`) is
 retired into Spell bars.
 
@@ -236,6 +242,7 @@ retired into Spell bars.
 | Row | Key |
 |---|---|
 | Show the HUD | `hud.show` |
+| Open when a fight starts (at the pull, even after a close in the last fight; it follows Show the HUD and Only in instances, so Only when you open it never opens it; on by default, owner 2026-11-26, SM-CT-LG22) | `hud.openOnPull` |
 | Only in instances (when Show the HUD is On each fight's first hit; Always ignores it) | `hud.instancesOnly` |
 | Fade after the fight (seconds, 0 = never) | `hud.fadeAfter` |
 | Stay open while the mouse is over it | `hud.holdOnMouse` |
@@ -387,7 +394,6 @@ Defaults leaves them where they are. The window's gear opens this page.
 |---|---|
 | Enable the Combat Sequence | `sequence.enabled` |
 | Show the Combat Sequence | `sequence.drawer.shown` |
-| Open it when a fight starts | `sequence.drawer.autoOpen` |
 | Where the Combat Sequence lives (Docked in the DPS HUD, In its own window) | `sequence.home` |
 
 ### Docked drawer
@@ -395,7 +401,7 @@ Defaults leaves them where they are. The window's gear opens this page.
 | Row | Key |
 |---|---|
 | Show the filter chips | `sequence.drawer.chips` |
-| Rows shown (3 to 20) | `sequence.drawer.rows` |
+| Rows shown (3 to 20; 5 by default, R4-CT-07) | `sequence.drawer.rows` |
 
 ### Detached window
 
@@ -404,6 +410,7 @@ standalone (owner feedback item 11): it has no attach, side, HUD-height or pin r
 
 | Row | Key |
 |---|---|
+| Show the filter chips | `sequence.window.chips` |
 | Fill the window with rows | `sequence.window.fill` |
 | Rows shown (3 to 40) | `sequence.window.rows` |
 | Lock the window | `sequence.window.locked` |
@@ -452,22 +459,14 @@ schema step 8).
 ### Colors
 
 The *Color-blind safety* group turns the row washes off; every event still differs by its tag. *School
-colors* went with the schools (CSEQ-1, schema step 8). *Your color* is a ColorPair whose *Use class color* is on by default (the log has drawn "You" in
-the class color since it shipped). The two target colors are a palette, one per reaction, so they carry
-no class companion (options-ui-§17's exemption); each has *Use the skin's color* on by default, which
-draws the skin's `ct.log.hostile` or `ct.log.friendly`. Since the Source and Target columns went
-(owner feedback item 3), no cell draws these three colors: the rows and keys are kept until the owner
-rules whether they go (with a schema step) or come back on another cell.
+colors* went with the schools (CSEQ-1, schema step 8). The who colors (*Your color*, *Hostile target
+color*, *Friendly target color* and their switches) drew nothing once the Source and Target columns went
+(owner feedback item 3), and the owner removed them (2026-11-26, SM-CT-LG27): schema step 12 drops the
+stored `sequence.colors`, and the skin tokens `ct.log.hostile` and `ct.log.friendly` went with them.
 
 | Row | Key |
 |---|---|
 | Row washes | `sequence.view.washes` |
-| Your color | `sequence.colors.you` |
-| Use class color | `sequence.colors.useClassColorYou` |
-| Hostile target color | `sequence.colors.hostile` |
-| Use the skin's color (hostile) | `sequence.colors.hostileFromSkin` |
-| Friendly target color | `sequence.colors.friendly` |
-| Use the skin's color (friendly) | `sequence.colors.friendlyFromSkin` |
 
 ### Storage
 

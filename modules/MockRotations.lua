@@ -15,7 +15,10 @@ local _, NS = ...
 -- cast and damage), echo (the pet's cast that carries this player cast's damage, a tenth of a second
 -- later: Kill Command), passive (damage with no cast of its own: the auto attacks, Beast Cleave),
 -- none (a cast that deals no damage of its own: Bestial Wrath), major (a long cooldown), use + item +
--- slot (an on-use trinket or a potion: the Usage section's sample) }.
+-- slot (an on-use trinket or a potion: the Usage section's sample), buff (a cast that puts a buff on
+-- the player for this many seconds) or debuff (one that puts a debuff on the target for this many
+-- seconds): the sample Combat Sequence's made-up aura lines (MockFights.SequenceOf, owner feedback
+-- round 4, R4-CT-01), never read for damage }.
 --
 -- The spell and item IDs are the clients' own as far as they are known. On WoW Forever (1.60.1 build
 -- 70938, /ct test and /ct sim, 2026-11-14) these drew their names in game: Bestial Wrath 19574, Rapid
@@ -28,12 +31,12 @@ local _, NS = ...
 
 NS.MockRotations = {
     Retail = {
-        { id = 19574, from = 0.4, every = 90, cd = 90000, none = true, major = true },     -- Bestial Wrath
-        { id = 359844, from = 0.9, every = 120, cd = 120000, none = true, major = true },  -- Call of the Wild
-        { id = 217200, hit = 0.9, from = 1.2, every = 6, cd = 12000, ticks = 4, gap = 2 },  -- Barbed Shot
+        { id = 19574, from = 0.4, every = 90, cd = 90000, none = true, major = true, buff = 15 },  -- Bestial Wrath
+        { id = 359844, from = 0.9, every = 120, cd = 120000, none = true, major = true, buff = 20 },  -- Call of the Wild
+        { id = 217200, hit = 0.9, from = 1.2, every = 6, cd = 12000, ticks = 4, gap = 2, debuff = 8 },  -- Barbed Shot
         { id = 34026, hit = 3.0, from = 1.6, every = 7.5, cd = 7500, echo = 83381 },       -- Kill Command
         { id = 193455, hit = 1.5, from = 2.4, every = 3, cd = 0 },                         -- Cobra Shot
-        { id = 466930, hit = 1.4, from = 3.2, every = 10, cd = 10000 },                    -- Black Arrow
+        { id = 466930, hit = 1.4, from = 3.2, every = 10, cd = 10000, debuff = 6 },        -- Black Arrow
         { id = 53351, hit = 2.2, from = 8.0, every = 10, cd = 10000 },                     -- Kill Shot
         { id = 2643, hit = 0.8, from = 5.0, every = 9, cd = 0 },                           -- Multi-Shot
         { id = 75, hit = 0.3, from = 1.0, every = 2.6, passive = true },                   -- Auto Shot
@@ -46,8 +49,8 @@ NS.MockRotations = {
     },
     Forever = {
         { id = 19574, from = 0.4, every = 120, cd = 120000, none = true, major = true },   -- Bestial Wrath
-        { id = 3045, from = 0.9, every = 300, cd = 300000, none = true, major = true },    -- Rapid Fire
-        { id = 25295, hit = 0.5, from = 1.2, every = 15, cd = 0, ticks = 5, gap = 3 },      -- Serpent Sting
+        { id = 3045, from = 0.9, every = 300, cd = 300000, none = true, major = true, buff = 15 },  -- Rapid Fire
+        { id = 25295, hit = 0.5, from = 1.2, every = 15, cd = 0, ticks = 5, gap = 3, debuff = 15 },  -- Serpent Sting
         { id = 20904, hit = 3.0, from = 1.8, every = 6, cd = 6000 },                       -- Aimed Shot
         { id = 2643, hit = 1.8, from = 3.0, every = 10, cd = 10000 },                      -- Multi-Shot
         { id = 14287, hit = 1.2, from = 4.2, every = 6, cd = 6000 },                       -- Arcane Shot

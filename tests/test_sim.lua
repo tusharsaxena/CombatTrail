@@ -234,3 +234,28 @@ test("sim: the window's own Start, a typed start after a close and a restart sho
     assertTrue(session:IsPanelShown(), "a restart shows it again")
     NS.Preview.Stop()
 end)
+
+test("sim: the fight plays a sample Combat Sequence as it goes, and its end leaves the real ring alone", function()
+    local NS, M = fresh()
+    local CL = NS.CombatLog
+    local seq0 = CL.Seq()
+    NS.SetByPath("sequence.drawer.shown", true)
+    sim(NS, "newbest")
+    assertTrue(CL.SampleActive(), "the sample sequence is up from the pull")
+    play(M, 2)
+    local early = CL.Seq()
+    assertTrue(early > 0, "the first casts are lines")
+    play(M, 8)
+    assertTrue(CL.Seq() > early, "lines keep coming as the fight plays")
+    local ui = NS.HudLog.__ui()
+    local n = 0
+    for _, r in ipairs(ui.table:Rows()) do if r:IsShown() then n = n + 1 end end
+    assertTrue(n > 0, "the drawer draws them")
+    play(M, NS.Sim.LENGTH - 10 + NS.Sim.SETTLE + NS.Sim.RESULT_HOLD + 1)
+    local record = NS.ResultsSource.Get("sim-newbest")
+    assertTrue(record ~= nil and CL.Of(record) ~= nil, "the saved sim fight carries its sequence for Results")
+    NS.Preview.Stop()
+    assertFalse(CL.SampleActive())
+    assertEqual(CL.Seq(), seq0, "the real ring is as it was")
+    assertEqual(CL.__ringCount(), 0, "no sample line reached it")
+end)

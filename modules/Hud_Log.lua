@@ -15,27 +15,29 @@ local _, NS = ...
 -- A SECTION LIKE SPELL BREAKDOWN (owner feedback items 17 and 18, 2026-11-25): HudLog.GAP (the HUD's
 -- HEAD_GAP) of clear space, then its heading on the HUD's section line (Hud_States' SECTION_H): the
 -- gold "Combat Sequence" in FONT.SECTION at the left, the dim count ("8 shown") right-aligned on the
--- heading's bottom edge, then its two marks (the filter eye and the detach arrow) at the right edge,
+-- heading's bottom edge, then its two marks (the filter eye and the detach chevron, `chevron-right`:
+-- out to its own window, as the Results window's unfold; owner feedback round 4, R4-CT-05) at the right edge,
 -- tinted and lit as the window's title-bar marks are (Style.NewStrip, Style.AddToStrip: the skin's
 -- `icon.tint` at rest, `text.link` under the pointer, the same 18 px slot and 12 px art). No separator
 -- or seam above it, and no fold: the title bar's Log mark alone opens and closes the log (item 14).
 --
 -- ITS STATE, each saved in the profile:
 --   sequence.drawer.shown      the title bar's log control (the list mark) and `/ct sequence` toggle it (on by
---                         default, owner feedback item 1); with
---                         sequence.drawer.autoOpen on (the default) each fight's start opens it. Off while
+--                         default, owner feedback item 1); a fight's start never opens it (the HUD's
+--                         `hud.openOnPull` opens the HUD, SM-CT-LG22, R4-CT-08). Off while
 --                         `sequence.enabled` is off, whatever it says, and the control is then hidden.
 --   sequence.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
 --                         under its heading (LogTable.NewChips: Casts, Pet, Buffs, Debuffs), the
---                         HUD growing by it; on by default (item 9). The chips themselves
+--                         HUD growing by it; hidden by default, an absent value hidden too (owner
+--                         feedback round 4, R4-CT-04, reversing item 9's default). The chips themselves
 --                         are the drawer's own, seeded from `sequence.show.*` (LogTable.Reseeds) and turned
 --                         for this session alone.
 --   sequence.drawer.rows       the rows shown, 3 to 20 (default 10, owner feedback item 16); the rows past
 --                         them scroll with the wheel, the Spell breakdown's indicator in the gutter
 --                         (item 6, LogTable's View:SetScroll).
 --   sequence.view.sort         newest first (default) or oldest first: the Time header's click flips it.
---   sequence.home              "docked" (the default) or "detached": the header's detach control (the export
---                         mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
+--   sequence.home              "docked" (the default) or "detached": the header's detach control (the
+--                         chevron-right mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
 --                         dock control sends it back. `sequence.drawer.shown` is the log's one open, in either
 --                         home: detached, the HUD reserves nothing and this drawer stays hidden.
 -- `sequence.drawer.shown`, `sequence.drawer.chips`, `sequence.view.sort` and `sequence.home` are written by the controls
@@ -124,15 +126,17 @@ function HudLog.RowsFit(h)
     return clamp(math.floor((tonumber(h) or 0) / LogTable.RowH()), HudLog.MIN_ROWS, HudLog.MAX_ROWS)
 end
 
--- The drawer's width (the HUD's, less its insets): its chips wrap at it.
+-- The drawer's width (the HUD's, less its insets): its chips wrap at it. Without the shell, the
+-- default width's (260, R4-CT-06) less the insets.
 local function drawerWidth()
     local H = NS.Hud
-    return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 366
+    return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 236
 end
 
---- Whether the chips row shows (`sequence.drawer.chips`, on by default; the header's filter mark).
+--- Whether the chips row shows (`sequence.drawer.chips`, the header's filter mark): only while it is
+--- on, so a new profile and an absent value both hide it (R4-CT-04).
 function HudLog.ChipsShown()
-    return setting("sequence.drawer.chips") ~= false
+    return setting("sequence.drawer.chips") == true
 end
 
 -- The chips row's height, its gap under it included; 0 while it is not shown.
@@ -188,7 +192,7 @@ local function build(parent)
     d.resume:Hide()
     d.filter = Style.AddToStrip(d.marks, Style.ControlButton(f, "eye", "F",
         L["Show or hide the Combat Sequence's filter chips"], function() HudLog.ToggleChipsRow() end, "body"))
-    d.detach = Style.AddToStrip(d.marks, Style.ControlButton(f, "export", ">",
+    d.detach = Style.AddToStrip(d.marks, Style.ControlButton(f, "chevron-right", ">",
         L["Detach the Combat Sequence into its own window"], function() HudLog.SetHome("detached") end, "body"))
     d.count = Style.Text(f, Style.FONT.CAPTION, nil, "RIGHT")
     d.chips = LogTable.NewChips(f, function(key) HudLog.ToggleChip(key) end)
@@ -396,15 +400,20 @@ end
 
 -- ── wiring ──────────────────────────────────────────────────────────────────────────────────────
 
+-- The sample seam swapped what the ring reads (test mode, the sim: CombatLog.UseSample and EndSample):
+-- the feed starts over on the ring it reads now, as at a fight's start.
+CL.Watch("drawer", function()
+    feed, dirty, seeded = nil, true, false
+    HudLog.Paint()
+end)
+
 local bus = NS.NewBusTarget()
 if bus then
     bus:RegisterMessage(NS.MSG.FIGHT_STARTED, function()
-        -- A new fight: the feed follows again from its first line, and the drawer opens when asked.
+        -- A new fight: the feed follows again from its first line. The drawer never opens itself: the
+        -- open at the pull is the HUD's (`hud.openOnPull`, SM-CT-LG22, R4-CT-08).
         if feed then LogTable.Resume(feed) end
         dirty, seeded = true, false
-        if HudLog.Enabled() and setting("sequence.drawer.autoOpen") ~= false and setting("sequence.drawer.shown") ~= true then
-            write("sequence.drawer.shown", true)
-        end
     end)
     bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
         if type(path) ~= "string" or not (path:find("^sequence%.") or path == "profile") then return end

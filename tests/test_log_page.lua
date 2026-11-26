@@ -77,7 +77,7 @@ end)
 test("log page: every sequence.* default but the window's geometry has a control", function()
     local NS = T.load().NS
     local paths = leaves(NS.defaults.profile.sequence, "sequence", {})
-    assertTrue(#paths > 45, "the log's leaves (47 since the Combat Sequence dropped eleven): " .. #paths)
+    assertTrue(#paths > 40, "the log's leaves (41 since LG22 and LG27 dropped seven): " .. #paths)
     local missing = {}
     for _, path in ipairs(paths) do
         local row = NS.FindSchemaRow(path)
@@ -125,7 +125,10 @@ test("log page: no log.* key is left on the write-through list; the log's own co
     NS.HudLog.SetHome("detached")
     assertEqual(NS.GetSetting("sequence.home"), "detached", "the detach mark writes through its row")
     NS.HudLog.ToggleChipsRow()
-    assertFalse(NS.GetSetting("sequence.drawer.chips"), "the eye writes through its row")
+    assertTrue(NS.GetSetting("sequence.drawer.chips"), "the eye writes through its row")
+    assertTrue(NS.FindSchemaRow("sequence.window.chips") ~= nil, "the detached window's chips have a row")
+    NS.LogWindow.ToggleChipsRow()
+    assertTrue(NS.GetSetting("sequence.window.chips"), "the window's eye writes through its row")
 end)
 
 test("log page: the value checks refuse what the log cannot draw", function()
@@ -242,34 +245,21 @@ end)
 
 -- ── the who colors ──────────────────────────────────────────────────────────────────────────────
 
-test("log page: the who colors are still read into a view's context, and no cell draws them now", function()
+test("log page: the who colors are gone, their rows, their reader and their skin tokens (LG27)", function()
     local NS = T.load().NS
-    local LT, U, K = NS.LogTable, NS.CombatLog.UNIT, NS.CombatLog.KIND
-    local onTarget = { k = K.DEBUFF_ON, u = U.target, id = 118, at = 105 }
-    local ctx = LT.ReadColors({ startT = 100 })
-    assertNil(ctx.youColor, "the class color by default")
-    assertNil(ctx.hostileColor, "the skin's hostile color by default")
-    NS.SetByPath("sequence.colors.you", { r = 0.1, g = 0.2, b = 0.3, a = 1 })
-    NS.SetByPath("sequence.colors.useClassColorYou", false)
-    NS.SetByPath("sequence.colors.hostile", { r = 0.4, g = 0.5, b = 0.6, a = 1 })
-    NS.SetByPath("sequence.colors.hostileFromSkin", false)
-    LT.ReadColors(ctx)
-    assertEqual(table.concat({ ctx.youColor[1], ctx.youColor[2], ctx.youColor[3] }, ","), "0.1,0.2,0.3")
-    assertEqual(table.concat({ ctx.hostileColor[1], ctx.hostileColor[2], ctx.hostileColor[3] }, ","), "0.4,0.5,0.6")
-    local c = LT.Cells(onTarget, ctx)
-    assertNil(c.targetColor, "no Target column draws them (owner feedback item 3)")
-    assertNil(c.sourceColor)
-end)
-
-test("log page: You is a ColorPair with its class companion on; the targets are a palette, no class", function()
-    local NS = T.load().NS
-    local you = NS.FindSchemaRow("sequence.colors.you")
-    assertEqual(you.type, "color")
-    assertEqual(you.classColorSource, "player")
-    assertEqual(NS.FindSchemaRow("sequence.colors.useClassColorYou").default, true, "the class color, as it shipped")
-    assertNil(NS.FindSchemaRow("sequence.colors.youFromSkin"), "a class color takes no skin companion")
-    assertNil(NS.FindSchemaRow("sequence.colors.useClassColorHostile"), "a reaction's color has no class")
-    assertEqual(NS.FindSchemaRow("sequence.colors.hostileFromSkin").default, true, "it starts on the skin")
+    for _, path in ipairs({ "you", "useClassColorYou", "hostile", "hostileFromSkin", "friendly", "friendlyFromSkin" }) do
+        assertNil(NS.FindSchemaRow("sequence.colors." .. path), "no row for sequence.colors." .. path)
+    end
+    assertNil(NS.defaults.profile.sequence.colors, "no defaults")
+    assertNil(NS.LogTable.ReadColors, "no reader")
+    local ctx = NS.LogTable.LiveContext({}, 100)
+    assertNil(ctx.youColor)
+    assertNil(ctx.hostileColor)
+    assertNil(ctx.friendlyColor)
+    assertNil(NS.SKIN_TOKENS["ct.log.hostile"], "no hostile token")
+    assertNil(NS.SKIN_TOKENS["ct.log.friendly"], "no friendly token")
+    assertTrue(NS.SKIN_TOKENS["ct.log.hit"] ~= nil, "the DIES tag's token stays")
+    assertEqual(NS.FindSchemaRow("sequence.view.washes").type, "bool", "the Colors tab keeps Row washes")
 end)
 
 -- ── the ways in and the reset ───────────────────────────────────────────────────────────────────
@@ -302,7 +292,7 @@ test("log page: the page's Defaults puts every log row back and leaves the geome
     NS.SetByPath("sequence.drawer.rows", 15)
     NS.SetByPath("sequence.view.sort", "oldest")
     NS.SetByPath("sequence.store.categories.playerBuffs", false)
-    NS.SetByPath("sequence.colors.hostile", { r = 0, g = 1, b = 0, a = 1 })
+    NS.SetByPath("sequence.view.washes", false)
     NS.db.profile.sequence.window.width = 600
     NS.SetByPath("general.locked", true)
     ctx.panel.defaultsOnClick()
@@ -310,7 +300,7 @@ test("log page: the page's Defaults puts every log row back and leaves the geome
     assertEqual(log.drawer.rows, D.drawer.rows)
     assertEqual(log.view.sort, "newest")
     assertEqual(log.store.categories.playerBuffs, true)
-    assertEqual(log.colors.hostile.g, D.colors.hostile.g)
+    assertEqual(log.view.washes, D.view.washes)
     assertEqual(log.window.width, 600, "the grip's width is no row's")
     assertEqual(NS.GetSetting("general.locked"), true, "another page's row is not this page's to reset")
 end)

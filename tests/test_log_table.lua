@@ -6,7 +6,7 @@
 -- order, with their categories and tips); the feed
 -- (newest first, pause on a scroll and Resume, the display throttle instant / every N ms / batch, which
 -- never touches the capture or the saved log); the live view reset at each pull (item 5); the columns
--- laid to a width, no Source, Target or Amount, every one centered (items 3 and 8); then the drawer: the Log
+-- laid to a width, no Source, Target or Amount, every one left-aligned (items 3 and round 4); then the drawer: the Log
 -- control on the title bar (item 13), the HUD growing by the drawer and back, its section look (items 17
 -- and 18), no fold (item 14), the chips on by default (item 9), the rows setting, the Time header's
 -- sort, the auto-open at a fight's start, hidden and stopped with the HUD, `/ct log`, and the Combat
@@ -404,7 +404,7 @@ test("log table columns: Time, Event, Spell and Info where there is room; no Sou
     end
 end)
 
-test("log table columns: every column is centered, its header and its cells, in every home (item 8)", function()
+test("log table columns: every column is left-aligned, its header and its cells, in every home (round 4)", function()
     local _, NS = fresh()
     hudUp(NS)
     NS.HudLog.SetShown(true)
@@ -412,11 +412,78 @@ test("log table columns: every column is centered, its header and its cells, in 
     for i, view in ipairs(views) do
         view:Layout(600, 3, {})
         for _, key in ipairs(NS.LogTable.ORDER) do
-            -- red under: a column justified LEFT or RIGHT
-            assertEqual(view.heads[key]:GetJustifyH(), "CENTER", "view " .. i .. " header " .. key)
-            assertEqual(view:Rows()[1].text[key]:GetJustifyH(), "CENTER", "view " .. i .. " cell " .. key)
+            -- red under: a column centered (owner feedback item 8 of the last round) or right-aligned
+            assertEqual(view.heads[key]:GetJustifyH(), "LEFT", "view " .. i .. " header " .. key)
+            assertEqual(view:Rows()[1].text[key]:GetJustifyH(), "LEFT", "view " .. i .. " cell " .. key)
         end
     end
+end)
+
+test("log table columns: the icon is part of the Spell column, its name one character after it (round 4)", function()
+    local _, NS = fresh()
+    local LT = NS.LogTable
+    hudUp(NS)
+    assertEqual(LT.IconGap(1), 5, "one character of the 10 pt row font")
+    assertEqual(LT.IconGap(1.6), 8, "scaled with the text size")
+    for _, size in ipairs({ 10, 16 }) do
+        NS.SetByPath("sequence.view.fontSize", size)
+        local scale = LT.FontScale()
+        local view = LT.New(NS.Hud.Frame(), { info = true })
+        view:Layout(600, 3, {})
+        local col
+        for _, c in ipairs(view.cols) do if c.key == "spell" then col = c end end
+        local r, icon = view:Rows()[1], LT.IconSize(view.rowH, scale)
+        local _, _, _, ix = r.icon:GetPoint(1)
+        local _, _, _, nx = r.text.spell:GetPoint(1)
+        assertEqual(ix, col.x, "the icon at the Spell column's left edge, size " .. size)
+        assertEqual(nx, col.x + icon + LT.IconGap(scale), "the name one character after the icon, size " .. size)
+        local _, _, _, hx = view.heads.spell:GetPoint(1)
+        assertEqual(hx, col.x, "the Spell header over the icon, at the column's left edge")
+    end
+end)
+
+test("log table header: LootHistory's header band, 20 px, in every home (round 4)", function()
+    local _, NS = fresh()
+    hudUp(NS)
+    local LT = NS.LogTable
+    -- red under: the 14 px header with no band, which read as plain text
+    assertEqual(LT.HEAD_H, 20, "the Results list's and LootHistory's header height")
+    local banded, orig = {}, NS.Skin.SortHeaderBar
+    NS.Skin.SortHeaderBar = function(bar, ...)
+        banded[bar] = true
+        return orig(bar, ...)
+    end
+    local view = LT.New(NS.Hud.Frame(), { info = true })
+    NS.Skin.SortHeaderBar = orig
+    assertTrue(banded[view.head], "the header frame wears the skin's sort-header band")
+    view:Layout(600, 3, {})
+    assertEqual(LT.Height(3), 20 + 3 * LT.RowH(), "every home's height counts the taller header")
+end)
+
+test("log table header: the Time sort triangle is the skin's arrow, rebuilt on a skin change (round 4)", function()
+    local inst, NS = fresh()
+    hudUp(NS)
+    local LT, Style = NS.LogTable, NS.Style
+    local view = LT.New(NS.Hud.Frame(), { info = true })
+    view:Layout(600, 3, {})
+    local function want(sort)
+        local c = Style.Tok("icon.arrow")
+        local up = sort == "oldest"
+        return LT.HEADS.time .. " " .. Style.IconMarkup(up and "sort-up" or "sort-down",
+            up and "Interface\\Buttons\\Arrow-Up-Up" or "Interface\\Buttons\\Arrow-Down-Up", c)
+    end
+    view:SetSort("newest")
+    assertEqual(view.heads.time:GetText(), want("newest"), "sort-down in the skin's icon.arrow")
+    view:SetSort("oldest")
+    assertEqual(view.heads.time:GetText(), want("oldest"), "sort-up")
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    local source, skin = Skin:GetChoice("CombatTrail")
+    local before = view.heads.time:GetText()
+    Skin:SetChoice("CombatTrail", "ka0s", "obsidian")
+    assertTrue(view.heads.time:GetText() ~= before, "Obsidian's arrow is not Ka0s Default's")
+    assertEqual(view.heads.time:GetText(), want("oldest"), "redrawn in the new skin's arrow")
+    Skin:SetChoice("CombatTrail", source, skin)
+    assertEqual(view.heads.time:GetText(), want("oldest"), "and back")
 end)
 
 -- ── the drawer ──────────────────────────────────────────────────────────────────────────────────
@@ -435,9 +502,8 @@ test("hud log: the title bar's Log control opens the drawer and the HUD grows by
     local d = NS.HudLog.__ui()
     assertTrue(d ~= nil and d.frame:IsVisible(), "the drawer under the spell rows")
     assertEqual(NS.Hud.Height(), before + NS.HudLog.Height(), "the HUD grew by the drawer")
-    local chips = NS.LogTable.ChipsHeight(NS.Hud.LogWidth()) + NS.LogTable.CHIP_GAP
-    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + chips + NS.LogTable.Height(10),
-        "ten rows by default, under the chips (owner feedback item 16)")
+    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(5),
+        "five rows by default (round 4's R4-CT-07), no chips row (R4-CT-04)")
     assertTrue(NS.HudLog.Ticking(), "its repaint timer runs while it shows")
     click(ui.log)
     assertFalse(d.frame:IsShown(), "closed again")
@@ -481,25 +547,26 @@ test("hud log: the drawer paints the newest fight's lines, newest at the top, an
     assertEqual(rows[2].text.event:GetText(), "BUFF+", "the newest at the bottom")
 end)
 
-test("hud log: the chips show by default; the filter mark hides them, the HUD shrinking; a chip filters the drawer alone", function()
+test("hud log: the chips are hidden by default; the filter mark shows them, the HUD growing; a chip filters the drawer alone", function()
     local inst, NS = fresh()
     hudUp(NS)
     NS.HudLog.SetShown(true)
     local d = NS.HudLog.__ui()
     assertEqual(d.filter.iconName, "eye", "the header carries the filter mark")
-    -- red under: the chips hidden until the eye is clicked (owner feedback item 9)
-    assertTrue(NS.GetSetting("sequence.drawer.chips"), "on in a new profile")
-    assertTrue(NS.HudLog.ChipsShown())
-    assertTrue(d.chips.buttons.casts:IsShown(), "the chips row under the heading")
+    -- red under: the chips shown in a new profile (owner feedback round 4, R4-CT-04)
+    assertFalse(NS.GetSetting("sequence.drawer.chips"), "off in a new profile")
+    assertFalse(NS.HudLog.ChipsShown())
+    assertFalse(d.chips.buttons.casts:IsShown(), "no chips row under the heading")
     local h, hud = NS.HudLog.Height(), NS.Hud.Height()
     local room = NS.LogTable.ChipsHeight(NS.Hud.LogWidth()) + NS.LogTable.CHIP_GAP
     click(d.filter)
-    assertFalse(NS.GetSetting("sequence.drawer.chips"), "the eye writes its key")
-    assertFalse(d.chips.buttons.casts:IsShown())
-    assertEqual(NS.HudLog.Height(), h - room, "the drawer shrank by the chips")
-    assertEqual(NS.Hud.Height(), hud - room, "and the HUD with it")
+    assertTrue(NS.GetSetting("sequence.drawer.chips"), "the eye writes its key")
+    assertTrue(d.chips.buttons.casts:IsShown(), "the chips row under the heading")
+    assertEqual(NS.HudLog.Height(), h + room, "the drawer grew by the chips")
+    assertEqual(NS.Hud.Height(), hud + room, "and the HUD with it")
     click(d.filter)
-    assertEqual(NS.HudLog.Height(), h, "the mark shows them again")
+    assertEqual(NS.HudLog.Height(), h, "the mark hides them again")
+    click(d.filter)
     begin(NS, "f1", 100)
     NS.CombatLog.OnCast("player", FIREBALL, 101)
     NS.CombatLog.OnAura("player", { addedAuras = { { auraInstanceID = 7, spellId = INTELLECT, isHelpful = true } } }, 102)
@@ -626,7 +693,7 @@ test("hud log: the drawer is a section like Spell breakdown: its heading, its co
             b.iconName .. " under the pointer")
         b:GetScript("OnLeave")(b)
     end
-    assertEqual(d.detach.iconName, "export")
+    assertEqual(d.detach.iconName, "chevron-right")
 end)
 
 test("hud log: it hides and stops with the HUD, and comes back with it", function()
@@ -643,16 +710,15 @@ test("hud log: it hides and stops with the HUD, and comes back with it", functio
     assertTrue(NS.HudLog.Ticking())
 end)
 
-test("hud log: a fight's start opens it when auto-open is on (the shipped default)", function()
+test("hud log: a fight's start leaves a closed drawer closed (LG22: the open at the pull is the HUD's)", function()
     local _, NS = fresh({ logDrawer = true })
-    assertTrue(NS.GetSetting("sequence.drawer.autoOpen"))
     assertTrue(NS.GetSetting("sequence.drawer.shown"), "shown by default (owner feedback item 1)")
     assertEqual(NS.defaults.profile.sequence.drawer.shown, true)
-    assertEqual(NS.defaults.profile.sequence.drawer.rows, 10, "ten rows by default (item 16)")
+    assertEqual(NS.defaults.profile.sequence.drawer.rows, 5, "five rows by default (R4-CT-07)")
     NS.HudLog.SetShown(false)
     assertFalse(NS.GetSetting("sequence.drawer.shown"))
     NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f9", startT = 100 })
-    assertTrue(NS.GetSetting("sequence.drawer.shown"), "opened at the fight's start")
+    assertFalse(NS.GetSetting("sequence.drawer.shown"), "the section no longer reopens itself")
 end)
 
 test("hud log: /ct sequence toggles it and opens the HUD with it", function()

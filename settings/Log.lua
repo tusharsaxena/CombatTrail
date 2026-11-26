@@ -1,11 +1,12 @@
 local _, NS = ...
 -- settings/Log.lua — the Combat Sequence page (CombatTrail #11, plan item CL-11c2; the spec's addendum,
 -- *Settings*; the Combat Log until CSEQ-2, page key `sequence`): eight tabs over every `sequence.*` key a
--- player chooses, in strip order Combat Sequence (the master switch, the sequence open now, opened at each fight's start, where it lives), Docked drawer (its
+-- player chooses, in strip order Combat Sequence (the master switch, the sequence open now, where it lives; the open
+-- at each fight's start is the DPS HUD's, LG22, R4-CT-08), Docked drawer (its
 -- filter chips, its rows), Detached window (its rows, its lock, scale and opacity; a standalone
 -- window, owner feedback item 11, so no attach, side, HUD-height match or pin), Order and display (the sort, the display throttle, the rows' text size and height, the
 -- time, the columns), What to show (the live views' categories, the auto attacks),
--- Colors (row washes, the who colors), Storage (a sequence with each fight, the lines kept,
+-- Colors (row washes; the who colors went, LG27, R4-CT-08), Storage (a sequence with each fight, the lines kept,
 -- the categories saved) and Results (the Combat Sequence section's chips, the jump to the Timeline). The keys are
 -- modules/CombatLog.lua's, modules/LogTable.lua's, modules/LogTable_View.lua's, modules/Hud_Log.lua's,
 -- modules/LogWindow.lua's and modules/Results_Log.lua's (defaults/Profile.lua).
@@ -19,7 +20,6 @@ local _, NS = ...
 -- change there takes hold from the next fight (CombatLog's capture).
 
 local L = NS.L
-local H = NS.Helpers
 local PAGE = "sequence"
 local D = NS.defaults.profile.sequence
 local LOG = NS.Constants.LOG
@@ -81,8 +81,6 @@ row("enabled", { type = "bool", label = L["Enable the Combat Sequence"], startsL
     tooltip = L["Record your casts, your pet's casts, the buffs you gain and lose, the debuffs on you and your target, and your death during each fight, in order, and show them in the DPS HUD's Combat Sequence section or its own window. Off, nothing is recorded and the HUD's Combat Sequence control is hidden."] })
 row("drawer.shown", { type = "bool", label = L["Show the Combat Sequence"],
     tooltip = L["Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."] })
-row("drawer.autoOpen", { type = "bool", label = L["Open it when a fight starts"], startsLine = true,
-    tooltip = L["Open the Combat Sequence at the start of each fight, even if you closed it during the last one."] })
 at(TAB.sequence, L["Where it lives"])
 row("home", { type = "string", label = L["Where the Combat Sequence lives"], values = HOMES, validate = HOME_OK, startsLine = true,
     tooltip = L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."] })
@@ -96,6 +94,9 @@ row("drawer.rows", { type = "number", label = L["Rows shown"], min = NS.HudLog.M
     tooltip = L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] })
 
 -- Detached window
+at(TAB.window, L["Filter chips"])
+row("window.chips", { type = "bool", label = L["Show the filter chips"], startsLine = true,
+    tooltip = L["Show the Casts, Pet, Buffs and Debuffs chips under the window's status line. The eye on the window's title bar shows and hides them too."] })
 at(TAB.window, L["Rows"])
 row("window.fill", { type = "bool", label = L["Fill the window with rows"], startsLine = true,
     tooltip = L["Show as many events as the window's height holds. Off, the window shows Rows shown and is as tall as they need."] })
@@ -160,25 +161,6 @@ row("show.autoAttacks", { type = "bool", label = L["Show auto attacks"], startsL
 at(TAB.colors, L["Color-blind safety"])
 row("view.washes", { type = "bool", label = L["Row washes"], startsLine = true,
     tooltip = L["Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."] })
-at(TAB.colors, L["You"])
-for _, r in ipairs(H.ColorPair({
-    prefix = "sequence.colors.", page = PAGE, group = group, subgroup = subgroup, classColor = { source = "player" },
-    key = "you", companionKey = "useClassColorYou", label = L["Your color"], colorFromSkin = false,
-    defaults = { you = D.colors.you, useClassColorYou = D.colors.useClassColorYou },
-    tooltips = { you = L["The color kept for \"You\". No part of the Combat Sequence draws it now."] },
-})) do
-    r.composed = true
-    out[#out + 1] = r
-end
-at(TAB.colors, L["Targets"])
-row("colors.hostile", { type = "color", hasAlpha = false, label = L["Hostile target color"], startsLine = true,
-    tooltip = L["The color kept for a target you can attack. No part of the Combat Sequence draws it now."] })
-row("colors.hostileFromSkin", { type = "bool", label = L["Use the skin's color"],
-    tooltip = L["Take the hostile target color from the skin. The swatch is not read while this is on."] })
-row("colors.friendly", { type = "color", hasAlpha = false, label = L["Friendly target color"], startsLine = true,
-    tooltip = L["The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."] })
-row("colors.friendlyFromSkin", { type = "bool", label = L["Use the skin's color"],
-    tooltip = L["Take the friendly target color from the skin. The swatch is not read while this is on."] })
 
 -- Storage
 at(TAB.store, L["Storage"])

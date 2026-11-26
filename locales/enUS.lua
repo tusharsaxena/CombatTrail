@@ -403,8 +403,11 @@ L["Draw this text with the skin's shadow. Font shadow is not read while this is 
     "Draw this text with the skin's shadow. Font shadow is not read while this is on."
 L["When it shows"] = "When it shows"
 L["Show the HUD"] = "Show the HUD"
-L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] =
-    "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."
+L["On each fight's first hit: it opens when your damage starts, or at the pull while Open when a fight starts is on (as it is by default), and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] =
+    "On each fight's first hit: it opens when your damage starts, or at the pull while Open when a fight starts is on (as it is by default), and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."
+L["Open when a fight starts"] = "Open when a fight starts"
+L["Open the DPS HUD as each fight starts, even if you closed it during the last one, rather than at your first hit. It follows Show the HUD and Only in instances: Only when you open it never opens it."] =
+    "Open the DPS HUD as each fight starts, even if you closed it during the last one, rather than at your first hit. It follows Show the HUD and Only in instances: Only when you open it never opens it."
 L["Only in instances"] = "Only in instances"
 L["When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."] =
     "When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."
@@ -448,8 +451,8 @@ L["Show spell rows"] = "Show spell rows"
 L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] =
     "Show your spells and your pet's, one row each, in the order the damage meter gives them."
 L["Spell bars"] = "Spell bars"
-L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."] =
-    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."
+L["How many spell rows the HUD shows, at least 3. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows, shared a row at a time with the Combat Sequence's while it is docked open."] =
+    "How many spell rows the HUD shows, at least 3. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows, shared a row at a time with the Combat Sequence's while it is docked open."
 L["HUD width (px)"] = "HUD width (px)"
 L["How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."] =
     "How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."
@@ -1315,9 +1318,6 @@ L["Record your casts, your pet's casts, the buffs you gain and lose, the debuffs
 L["Show the Combat Sequence"] = "Show the Combat Sequence"
 L["Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."] =
     "Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."
-L["Open it when a fight starts"] = "Open it when a fight starts"
-L["Open the Combat Sequence at the start of each fight, even if you closed it during the last one."] =
-    "Open the Combat Sequence at the start of each fight, even if you closed it during the last one."
 L["Where it lives"] = "Where it lives"
 L["Where the Combat Sequence lives"] = "Where the Combat Sequence lives"
 L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."] =
@@ -1325,6 +1325,9 @@ L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its o
 L["Show the filter chips"] = "Show the filter chips"
 L["Show the Casts, Pet, Buffs and Debuffs chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] =
     "Show the Casts, Pet, Buffs and Debuffs chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."
+L["Filter chips"] = "Filter chips"
+L["Show the Casts, Pet, Buffs and Debuffs chips under the window's status line. The eye on the window's title bar shows and hides them too."] =
+    "Show the Casts, Pet, Buffs and Debuffs chips under the window's status line. The eye on the window's title bar shows and hides them too."
 L["Rows shown"] = "Rows shown"
 L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] =
     "How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."
@@ -1388,18 +1391,6 @@ L["Color-blind safety"] = "Color-blind safety"
 L["Row washes"] = "Row washes"
 L["Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."] =
     "Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."
-L["Your color"] = "Your color"
-L["The color kept for \"You\". No part of the Combat Sequence draws it now."] = "The color kept for \"You\". No part of the Combat Sequence draws it now."
-L["Hostile target color"] = "Hostile target color"
-L["The color kept for a target you can attack. No part of the Combat Sequence draws it now."] =
-    "The color kept for a target you can attack. No part of the Combat Sequence draws it now."
-L["Take the hostile target color from the skin. The swatch is not read while this is on."] =
-    "Take the hostile target color from the skin. The swatch is not read while this is on."
-L["Friendly target color"] = "Friendly target color"
-L["The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."] =
-    "The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."
-L["Take the friendly target color from the skin. The swatch is not read while this is on."] =
-    "Take the friendly target color from the skin. The swatch is not read while this is on."
 L["Save a sequence with each fight"] = "Save a sequence with each fight"
 L["Keep each stored fight's Combat Sequence, for the Combat Sequence section of its Results detail. Takes hold from the next fight."] =
     "Keep each stored fight's Combat Sequence, for the Combat Sequence section of its Results detail. Takes hold from the next fight."

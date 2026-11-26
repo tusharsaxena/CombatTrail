@@ -70,8 +70,8 @@ Work is test-first: a failing case that pins the behavior, then the code. The wo
 
 - [`test-cases.md`](test-cases.md) is the generated inventory and the authoritative pass count. The
   README's Tests badge carries its Total, and `tests/test_docs.lua` fails when they differ. It is
-  listed under the Retail profile: 1815 cases at CSEQ-4 (2026-11-26), plus one declared skip.
-  `KA0S_KIT_CLIENT=forever lua tests/run.lua --list` lists 1805, without the Retail-only cases. In a
+  listed under the Retail profile: 1839 cases at R4-CT-09 (2026-11-26), plus one declared skip.
+  `KA0S_KIT_CLIENT=forever lua tests/run.lua --list` lists 1829, without the Retail-only cases. In a
   checkout with no sibling `../LibKa0s`, the two vendor-sync cases skip at run time, so the run reports
   two fewer passes.
 - [`smoke-tests.md`](smoke-tests.md) is the in-game suite the owner runs; an agent never marks a row

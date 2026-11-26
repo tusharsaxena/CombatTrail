@@ -95,12 +95,12 @@ local function loadInstance(opts)
     if opts.init ~= false then
         local AceAddon = mocks.LibStub("AceAddon-3.0")
         AceAddon:InitializeAddon(NS)                 -- OnInitialize: DB, migrations, latch
-        -- The suites start from a player who closed the Combat Log drawer and turned its auto-open off
-        -- (both on by default, owner feedback item 1), so a fight leaves the DPS HUD at the height its
-        -- own suites pin (modules/Hud_Log.lua); `logDrawer` keeps the shipped defaults for the drawer's
-        -- suites.
+        -- The suites start from a player who closed the Combat Sequence drawer and turned the HUD's Open
+        -- when a fight starts off (both on by default, owner feedback item 1 and SM-CT-LG22), so a fight
+        -- leaves the DPS HUD at the height its own suites pin and opens it at the first hit (modules/Hud.lua);
+        -- `logDrawer` keeps the shipped defaults for the drawer's suites.
         if not opts.logDrawer and NS.db then
-            NS.db.profile.sequence.drawer.autoOpen = false
+            NS.db.profile.hud.openOnPull = false
             NS.db.profile.sequence.drawer.shown = false
         end
         if opts.enable ~= false then

@@ -77,26 +77,26 @@ end
 
 -- ── the defaults and the rows ───────────────────────────────────────────────────────────────────
 
-test("hud sizing: the defaults are 5 bars and 390 wide; spells.rows, sizeMode and grow are retired", function()
+test("hud sizing: the defaults are 5 bars and 260 wide; spells.rows, sizeMode and grow are retired", function()
     local inst = H.fresh()
     local NS = inst.NS
     local d = NS.defaults.profile.hud
     assertEqual(d.bars, 5, "owner feedback item 16")
-    assertEqual(d.width, 390, "owner feedback item 2")
+    assertEqual(d.width, 260, "R4-CT-06: the least width")
     assertEqual(d.sizeMode, nil, "one static height: no size mode (item 12)")
     assertEqual(d.grow, nil, "and no grow edge")
     assertEqual(d.spells.rows, nil, "hud.spells.rows retired into hud.bars")
     assertEqual(NS.FindSchemaRow("hud.spells.rows"), nil)
     local bars = NS.FindSchemaRow("hud.bars")
     assertTrue(bars ~= nil, "the Spell bars row")
-    assertEqual(bars.min, 1)
+    assertEqual(bars.min, 3, "3 spell rows at the least (R4-CT-07)")
     assertEqual(bars.max, 15)
-    assertEqual(NS.Hud.MIN_BARS, 1)
+    assertEqual(NS.Hud.MIN_BARS, 3)
     assertEqual(NS.Hud.MAX_BARS, 15)
     assertEqual(NS.FindSchemaRow("hud.sizeMode"), nil, "no Window size row")
     assertEqual(NS.FindSchemaRow("hud.grow"), nil, "no Grow row")
     assertEqual(NS.FindSchemaRow("hud.width").max, NS.Hud.MAX_WIDTH)
-    assertEqual(NS.FindSchemaRow("hud.width").default, 390)
+    assertEqual(NS.FindSchemaRow("hud.width").default, 260)
 end)
 
 -- ── the one height ──────────────────────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ test("hud sizing: the fixed height is derived from the bars, the same with 0, 3 
         local f = Hud.Frame()
         assertEqual(f.__h, chrome(inst) + TOP + PROFILE + spellsBlock(5), n .. " spells: the stack for 5 bars")
         assertEqual(f.__h, Hud.FixedHeight())
-        assertEqual(f.__w, 390)
+        assertEqual(f.__w, 260)
         assertEqual(#rows(Hud), math.min(n, 5), n .. " spells: at most 5 rows")
         heights[#heights + 1] = f.__h
     end
@@ -187,9 +187,9 @@ test("hud sizing: a grip release stores the width and the rounded bars, and the 
     assertEqual(f.__w, 333)
     assertEqual(#rows(Hud), 7)
     gripTo(Hud, M, 100, 40)
-    assertEqual(NS.db.profile.hud.bars, 1, "a drag shorter than one bar keeps one")
+    assertEqual(NS.db.profile.hud.bars, 3, "a drag shorter than three bars keeps three (R4-CT-07)")
     assertEqual(NS.db.profile.hud.width, NS.Hud.MIN_WIDTH, "never under the minimum width")
-    assertEqual(#rows(Hud), 1)
+    assertEqual(#rows(Hud), 3)
     gripTo(Hud, M, 2000, 5000)
     assertEqual(NS.db.profile.hud.bars, 15, "a window taller than 15 bars stores 15")
     assertEqual(NS.db.profile.hud.width, NS.Hud.MAX_WIDTH)
@@ -227,11 +227,11 @@ test("hud sizing: the grip's bounds follow the parts shown", function()
     local f = Hud.Frame()
     local b = f.__resizeBounds
     assertEqual(b[1], inst.NS.Hud.MIN_WIDTH)
-    assertEqual(b[2], chrome(inst) + TOP + PROFILE + spellsBlock(1), "one bar at the least")
+    assertEqual(b[2], chrome(inst) + TOP + PROFILE + spellsBlock(3), "three bars at the least")
     assertEqual(b[4], chrome(inst) + TOP + PROFILE + spellsBlock(15), "fifteen at the most")
     H.setHud(inst, "layout.chart", false)
     H.setHud(inst, "layout.pace", false)
-    assertEqual(f.__resizeBounds[2], chrome(inst) + TOP + spellsBlock(1))
+    assertEqual(f.__resizeBounds[2], chrome(inst) + TOP + spellsBlock(3))
 end)
 
 test("hud sizing: the grip is hidden while locked, and refuses a drag", function()
