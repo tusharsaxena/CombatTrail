@@ -312,6 +312,17 @@ test("log page: on WoW Forever the aura settings' tooltips end with the note; Re
     end
 end)
 
+-- R5-REV: the smoke row the owner reads the note against quotes it as shipped (R5-CT-07's later
+-- rewording left the row on the earlier text).
+test("log table: smoke row R5-CT-SM5 quotes the WoW Forever aura note as shipped", function()
+    local f = assert(io.open(T.root .. "/docs/smoke-tests.md", "rb"))
+    local s = f:read("*a"):gsub("\r", "")
+    f:close()
+    local row = s:match("\n(| R5%-CT%-SM5 |[^\n]*)")
+    assertTrue(row ~= nil, "docs/smoke-tests.md lacks R5-CT-SM5")
+    assertTrue(row:find('"' .. AURA_NOTE .. '"', 1, true) ~= nil, "R5-CT-SM5 quotes the note: " .. row)
+end)
+
 -- ── the feed ────────────────────────────────────────────────────────────────────────────────────
 
 local function all() return true end
