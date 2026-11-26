@@ -57,6 +57,21 @@ test("diagnostics: the fight section names the Combat Sequence's capture and the
     assertFalse(table.concat(lines, "\n"):find("UNIT_COMBAT", 1, true) ~= nil, "UNIT_COMBAT is never named")
 end)
 
+-- R5-CT-03: the aura tally since the last fight's capture began, three lines the owner copies out.
+test("diagnostics: the fight section prints the Combat Sequence's aura tally", function()
+    local inst = T.load()
+    local CL = inst.NS.CombatLog
+    CL.Begin("diag-auras", 100, nil)
+    CL.OnAura("player", { addedAuras = { { auraInstanceID = 5, spellId = 1459, isHelpful = true } } }, 101)
+    CL.OnAura("player", { removedAuraInstanceIDs = { 5, 77 } }, 102)
+    local lines = report(inst)
+    assertTrue(has(lines, "combat sequence aura events player=2 target=0 info=2 none=0 full=0 sealedInfo=0"), dump(lines))
+    assertTrue(has(lines, "combat sequence aura gains seen=1 lined=1 sealedTable=0 sealedInstance=0 sealedSpell=0"
+        .. " sealedSource=0 notYours=0 targetBuff=0"), dump(lines))
+    assertTrue(has(lines, "combat sequence aura losses seen=2 lined=1 unknown=1 sealed=0 walks complete=2"
+        .. " incomplete=0 raised=0 unreadable=0"), dump(lines))
+end)
+
 test("diagnostics: a setting off its default is listed with its default", function()
     local inst = T.load()
     inst.NS.SetByPath("hud.width", 360)

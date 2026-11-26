@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_load.lua (22)
+### test_load.lua (23)
 
 - load: NS is the AceAddon object named CombatTrail
 - load: the identity constants
@@ -30,6 +30,7 @@ Total.
 - load: step 9 moves each profile's log to sequence, and its Results fold with it
 - load: a profile at schema 5 runs steps 6 to 10 in order and ends with no log
 - load: step 10 pins 390 wide on each stored profile that keeps no width, so only new profiles start at 260
+- load: step 10 keeps a 260 the player chose under the old default, active or not (R4-REV)
 - load: step 11 carries the Combat Sequence's Open when a fight starts to the DPS HUD's (LG22)
 - load: step 12 drops the Combat Sequence's who colors (LG27)
 
@@ -561,7 +562,7 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (34)
+### test_combat_log.lua (36)
 
 - combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
@@ -579,6 +580,8 @@ Total.
 - combat log: a target whose GUID cannot be read plain is never diffed
 - combat log: a target change is silent, and a new target is no burst of gains
 - combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key
+- combat log: the aura tally counts what UNIT_AURA brought and why each aura drew no line
+- combat log: one UNIT_AURA reads its update info's access once for the tally and the diff
 - combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown
 - combat log: past `log.store.lines` only the newest are kept and the record counts the rest
 - combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)
@@ -1188,13 +1191,15 @@ Total.
 - slices: Seed fills in the step, count and filled a store leaves out
 - slices: a saved fight's store keeps its record id, not the fight table
 
-### test_hud_states.lua (30)
+### test_hud_states.lua (32)
 
 - hud: the states and the defaults are the plan's
 - hud: Open when a fight starts is a DPS HUD row, on by default; the Combat Sequence's is gone
 - hud: Open when a fight starts opens a hidden HUD at the pull, before the first hit
 - hud: Open when a fight starts reopens a HUD the player closed in the last fight
 - hud: Open when a fight starts off waits for the first hit, and Only when you open it opens nothing
+- hud: Open when a fight starts lets go of a HUD the pull opened when the fight never hits
+- hud: a no-hit fight leaves a HUD the player opened alone
 - hud: Open when a fight starts never moves the Combat Sequence: a closed one stays closed
 - hud: auto: hidden -> live on FIGHT_STARTED's first hit
 - hud: the live figures are the meter's handles, copied and never inspected
@@ -1326,7 +1331,7 @@ Total.
 - hud sizing: a stored point already on the top edge is kept
 - hud sizing: a stored point off the top edge (an older profile) takes the top left at the first show
 
-### test_hud_static.lua (16)
+### test_hud_static.lua (20)
 
 - hud static: the chart stays on the card after a saved fight, the log closed
 - hud static: the chart stays on the card after a not saved fight, the log closed
@@ -1336,6 +1341,10 @@ Total.
 - hud static: the chart stays on the card after a not saved fight, the log detached
 - hud static: a skipped fight's slices are held for its card, and the next skip lets them go
 - hud static: the default window is 260 wide and exactly tall enough for 5 bars and 5 sequence rows
+- hud static: a height handed back a hair short of 5/5 (pixel snapping) still holds 5 and 5
+- hud static: a grip released a hair short of a pair keeps that pair
+- hud static: the HUD's own size echoed back is no drag, so Rows shown resizes the window at once
+- hud static: a rows setting wins over a size the grip dragged earlier; the grip still sizes it after
 - hud static: the status line is reserved, so the card's chips never move Damage profile
 - hud static: only the log's open and close, a rows setting or the grip move the height
 - hud static: Hud.SplitFor shrinks the larger side first, the sequence on a tie, never under 3 a side
@@ -1379,12 +1388,14 @@ Total.
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
 
-### test_log_table.lua (31)
+### test_log_table.lua (33)
 
 - log table: a cast is a plain row with its spell, and no cell names a source or a target
 - log table: a long-cooldown cast wears the gold wash; washes off takes it away
 - log table: buffs green (off dimmed), a debuff you put on orange with its wash, on the target
 - log table: a death is red with a blank spell; Info reads Interrupted and nothing else
+- log table: a pet's cast carries the paw and the pet color; the player's neither
+- hud log: a pet's row shows the paw after the icon and its name after the paw, in the pet color
 - log table: the six tags and their colors; a wash only on DEBUFF+ and a long-cooldown CAST
 - log table: the time column from the pull, past a minute and before it, or the clock
 - log table: an old saved HIT, HEAL, boundary or target BUFF line draws no tag and never shows
@@ -1946,10 +1957,11 @@ Total.
 - bindings: stood down, each key answers the refusal line and changes nothing
 - bindings: the General Defaults tooltip says it leaves key bindings alone
 
-### test_diagnostics.lua (10)
+### test_diagnostics.lua (11)
 
 - diagnostics: the report carries every section of this addon's own
 - diagnostics: the fight section names the Combat Sequence's capture and the events the client refused
+- diagnostics: the fight section prints the Combat Sequence's aura tally
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
 - diagnostics: Retail's race section names the race, the pending races, the boards and its windows
@@ -2137,7 +2149,7 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_load.lua | 22 |
+| test_load.lua | 23 |
 | test_loadorder.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
@@ -2156,7 +2168,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 34 |
+| test_combat_log.lua | 36 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2180,7 +2192,7 @@ Total.
 | test_callout_settings.lua | 19 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
-| test_hud_states.lua | 30 |
+| test_hud_states.lua | 32 |
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 16 |
@@ -2188,9 +2200,9 @@ Total.
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 17 |
-| test_hud_static.lua | 16 |
+| test_hud_static.lua | 20 |
 | test_hud_race_button.lua | 31 |
-| test_log_table.lua | 31 |
+| test_log_table.lua | 33 |
 | test_log_window.lua | 19 |
 | test_log_page.lua | 16 |
 | test_sizing.lua | 7 |
@@ -2221,7 +2233,7 @@ Total.
 | test_showcase.lua | 16 |
 | test_sample_names.lua | 2 |
 | test_bindings.lua | 14 |
-| test_diagnostics.lua | 10 |
+| test_diagnostics.lua | 11 |
 | test_skin_surfaces.lua | 5 |
 | test_docs.lua | 15 |
 | test_eol.lua | 2 |
@@ -2233,4 +2245,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1839** |
+| **Total** | **1851** |

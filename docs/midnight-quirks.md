@@ -326,4 +326,8 @@ and never guess a sealed aura's name or ID. After a fight, `/ct diagnostics` pri
 line in its fight section, `combat sequence registered=… refused=… lines=…` (`CombatLog.Diagnose`;
 `refused=none` is its delivery, and `UNIT_COMBAT` is never named), and lists any refused event under
 *rejected events*, and the smoke rows (SM-CT-SQ2 first, docs/smoke-tests.md) record what the sequence
-showed; until then this entry stays assumed. *Source:* this repo, `modules/CombatLog.lua`.
+showed; until then this entry stays assumed. Since owner feedback round 5 (R5-CT-03) the same report
+also prints the capture's aura tally, three `combat sequence aura …` lines counting what `UNIT_AURA`
+brought and why each aura drew no line (a sealed table, instance, spell ID or source), which is the
+measurement this entry waits on (WoW Forever's in-combat auras draw no line, docs/forever-quirks.md).
+*Source:* this repo, `modules/CombatLog.lua`.

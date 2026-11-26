@@ -203,6 +203,11 @@ local function newRow(self)
     r.icon = r:CreateTexture(nil, "ARTWORK")
     r.icon:SetSize(LogTable.ICON, LogTable.ICON)
     Style.CropIcon(r.icon)
+    -- Spell breakdown's paw on a pet's row (R5-CT-04): the white catalog mark in the skin's `icon.tint`.
+    r.paw = r:CreateTexture(nil, "ARTWORK")
+    r.paw:SetTexture(NS.Icon("ph:paw-print"))
+    Style.Vertex(r.paw, "icon.tint")
+    r.paw:Hide()
     r.text = {}
     r.scale = self.scale or 1
     for _, key in ipairs(LogTable.ORDER) do r.text[key] = rowText(r, r.scale, JUSTIFY) end
@@ -256,9 +261,22 @@ local function place(fs, row, col)
     fs:SetWidth(col.w)
 end
 
+-- The Spell column's name placed: after the icon, or after the paw too on a pet's row (R5-CT-04),
+-- moved only when that changes.
+local function placeName(r, paw)
+    if r.pawLaid == paw then return end
+    r.pawLaid = paw
+    local fs, shift = r.text.spell, paw and r.pawStep or 0
+    fs:ClearAllPoints()
+    fs:SetPoint("LEFT", r, "LEFT", r.nameX + shift, 0)
+    fs:SetWidth(math.max(1, r.nameW - shift))
+    r.paw:SetShown(paw)
+end
+
 -- One row's columns laid (and the icon, `icon` px, at Spell's start, its name `gap` px after it).
 local function layRow(r, cols, icon, gap)
     for _, fs in pairs(r.text) do fs:Hide() end
+    r.paw:Hide()
     r.icon:SetSize(icon, icon)
     for _, col in ipairs(cols) do
         local fs = r.text[col.key]
@@ -266,9 +284,12 @@ local function layRow(r, cols, icon, gap)
         if col.key == "spell" then
             r.icon:ClearAllPoints()
             r.icon:SetPoint("LEFT", r, "LEFT", col.x, 0)
-            fs:ClearAllPoints()
-            fs:SetPoint("LEFT", r, "LEFT", col.x + icon + gap, 0)
-            fs:SetWidth(math.max(1, col.w - icon - gap))
+            r.nameX, r.nameW, r.pawStep = col.x + icon + gap, col.w - icon - gap, icon + gap
+            r.paw:SetSize(icon, icon)
+            r.paw:ClearAllPoints()
+            r.paw:SetPoint("LEFT", r, "LEFT", r.nameX, 0)
+            r.pawLaid = nil
+            placeName(r, false)
         else
             place(fs, r, col)
         end
@@ -358,6 +379,7 @@ local function fill(r, c, index, line)
     Style.Paint(t.info, "ct.dim")
     r.icon:SetTexture(c.icon)
     r.icon:SetShown(r.hasSpell and c.icon ~= nil)
+    if r.hasSpell then placeName(r, c.paw == true) end
     r.spellID = c.spellID
     r.line = line
     Style.Stripe(r.stripe, index)

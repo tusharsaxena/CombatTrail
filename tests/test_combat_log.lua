@@ -517,6 +517,85 @@ test("combat log: a sealed aura and a sealed cast are no line; a sealed instance
     if not ok then error(err, 0) end
 end)
 
+-- R5-CT-03 (owner feedback round 5): on WoW Forever the owner's real fights show only CAST rows. The
+-- saved fights say UNIT_AURA arrives (a death's fades are logged) and the auras at the pull are read,
+-- but no gain or debuff in combat ever lands. Which read drops them cannot be told offline, so the
+-- capture counts every aura it hears and why each one drew no line, for `/ct diagnostics` after a fight.
+test("combat log: the aura tally counts what UNIT_AURA brought and why each aura drew no line", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst = fresh()
+        local CL = inst.NS.CombatLog
+        onUnit(inst, "player", "HELPFUL", { buff(1, MARK) })
+        at(inst, 10)
+        CL.Begin("tally", 10)
+        assertEqual(CL.Diagnose().auras.walkComplete, 2, "the pull's walks: the player and the target")
+        aura(inst, 11, "player", { addedAuras = {
+            buff(5, INTELLECT),
+            { auraInstanceID = 6, spellId = T.secret(HASTE), isHelpful = true },
+            { auraInstanceID = T.secret(7), spellId = HASTE, isHelpful = true },
+            T.secret({}),
+        } })
+        aura(inst, 12, "target", { addedAuras = {
+            { auraInstanceID = 20, spellId = IGNITE, isHarmful = true, isFromPlayerOrPlayerPet = T.secret(true) },
+            debuff(21, CURSE, false),
+            { auraInstanceID = 22, spellId = MARK, isHelpful = true },
+        } })
+        aura(inst, 13, "player", { removedAuraInstanceIDs = { 5, 99, T.secret(6) } })
+        aura(inst, 14, "player", nil)
+        aura(inst, 15, "player", { isFullUpdate = true })
+        inst.mocks.__auraRaise.playerHELPFUL = 1
+        aura(inst, 16, "player", T.secret({}))
+        local a = CL.Diagnose().auras
+        assertEqual(a.evPlayer, 5, "UNIT_AURA on the player")
+        assertEqual(a.evTarget, 1)
+        assertEqual(a.info, 3, "with usable update info")
+        assertEqual(a.none, 1, "with none")
+        assertEqual(a.full, 1, "a full update")
+        assertEqual(a.sealedInfo, 1, "sealed info")
+        assertEqual(a.gainSeen, 7, "every added aura read")
+        assertEqual(a.gainLined, 1, "the one plain buff")
+        assertEqual(a.gainSealedSpell, 1)
+        assertEqual(a.gainSealedInstance, 1)
+        assertEqual(a.gainSealedTable, 1)
+        assertEqual(a.gainSealedSource, 1, "a target debuff whose source cannot be read")
+        assertEqual(a.gainNotYours, 1, "a target debuff someone else put on")
+        assertEqual(a.gainTargetBuff, 1)
+        assertEqual(a.lossSeen, 3)
+        assertEqual(a.lossLined, 1)
+        assertEqual(a.lossUnknown, 1, "an instance never mapped")
+        assertEqual(a.lossSealed, 1)
+        assertEqual(a.walkComplete, 4, "the two diffs walked whole")
+        assertEqual(a.walkIncomplete, 1, "the diff whose read raised")
+        assertEqual(a.walkRaised, 1)
+        CL.Drop("tally")
+        CL.Begin("next", 30)
+        assertEqual(CL.Diagnose().auras.gainSeen, 0, "a new capture's registration starts the tally over")
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
+-- R5-REV: UNIT_AURA fires often in a group; the tally's shape and the diff decision are one read of the
+-- update info, so the tally adds no second pass of secret checks per event.
+test("combat log: one UNIT_AURA reads its update info's access once for the tally and the diff", function()
+    local inst = fresh()
+    local CL, S = inst.NS.CombatLog, inst.NS.Secrets
+    CL.Begin("once", 10)
+    local info = { addedAuras = { { auraInstanceID = 5, spellId = INTELLECT, isHelpful = true } } }
+    local real, reads = S.CanAccessTable, 0
+    S.CanAccessTable = function(t)
+        if t == info or t == info.addedAuras then reads = reads + 1 end
+        return real(t)
+    end
+    local ok, err = pcall(aura, inst, 11, "player", info)
+    S.CanAccessTable = real
+    if not ok then error(err, 0) end
+    assertEqual(reads, 3, "the info, its added list for the shape, its added list for the gains")
+    assertEqual(CL.Diagnose().auras.info, 1)
+    assertEqual(CL.Diagnose().auras.gainLined, 1)
+end)
+
 -- ── the retired lines ───────────────────────────────────────────────────────────────────────────
 
 test("combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown", function()
