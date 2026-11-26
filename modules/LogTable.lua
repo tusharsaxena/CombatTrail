@@ -24,8 +24,8 @@ local _, NS = ...
 -- Default value. A CAST row is plain, with the `ct.log.wash.cd` wash for a spell whose base cooldown is
 -- long (Casts.IsLong); BUFF± green (BUFF- dimmed), DEBUFF+ orange with its wash (DEBUFF- dimmed, no
 -- wash), DIES red. COLOR-BLIND SAFETY: every kind differs by its tag's text as well as its hue, and
--- `sequence.view.washes` off draws no wash. The who colors (`sequence.colors.*`, LogTable.ReadColors) are still
--- read into each view's ctx, but with no Source or Target column nothing draws them now.
+-- `sequence.view.washes` off draws no wash. No who colors: with no Source or Target column they drew
+-- nothing, and the owner removed them (SM-CT-LG27, R4-CT-08; schema step 12 drops `sequence.colors`).
 --
 -- WHAT IS SHOWN is a view's own `show` table, shaped as `sequence.show.*`: each category of
 -- CombatLog.CategoryOf on or off, and the auto attacks (Auto Shot, Shoot: no category) off by default.
@@ -256,27 +256,6 @@ function LogTable.ReadShow(show)
     return show
 end
 
--- A stored swatch `{ r, g, b }` into `hue` (a reused array), or nil when there is none.
-local function swatch(path, hue)
-    local c = setting(path)
-    if type(c) ~= "table" then return nil end
-    hue[1], hue[2], hue[3] = tonumber(c.r) or 1, tonumber(c.g) or 1, tonumber(c.b) or 1
-    return hue
-end
-
-local ownYou, ownHostile, ownFriendly = {}, {}, {}
-
---- `ctx`'s who colors refilled from `sequence.colors`: "You" in its own swatch while Use class color is off,
---- the hostile and friendly target in theirs while Use the skin's color is off; nil keeps the default
---- (the class color, the skin's `ct.log.hostile` and `ct.log.friendly`).
-function LogTable.ReadColors(ctx)
-    ctx.youColor = setting("sequence.colors.useClassColorYou") == false and swatch("sequence.colors.you", ownYou) or nil
-    ctx.hostileColor = setting("sequence.colors.hostileFromSkin") == false and swatch("sequence.colors.hostile", ownHostile) or nil
-    ctx.friendlyColor = setting("sequence.colors.friendlyFromSkin") == false
-        and swatch("sequence.colors.friendly", ownFriendly) or nil
-    return ctx
-end
-
 --- `ctx` (a reused table) refilled for a live view whose window starts at `startT` (GetTime()): the
 --- time format, the clock time of the start and the wash switch.
 function LogTable.LiveContext(ctx, startT)
@@ -285,7 +264,7 @@ function LogTable.LiveContext(ctx, startT)
     ctx.startClock = nil
     if startT and type(time) == "function" then ctx.startClock = time() - (GetTime() - startT) end
     ctx.washes = setting("sequence.view.washes") ~= false
-    return LogTable.ReadColors(ctx)
+    return ctx
 end
 
 -- ── the feed ────────────────────────────────────────────────────────────────────────────────────

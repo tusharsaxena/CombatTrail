@@ -74,7 +74,7 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 10
+NS.SCHEMA_VERSION = 12
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
 -- `perProfile = true` and runs once for every stored profile, handed `(sv, profile, fresh)`: `fresh`
@@ -155,6 +155,17 @@ local STEPS = {
     { to = 10, perProfile = true, run = function(_, profile, fresh)
         if not fresh then NS.PinHudWidth(profile) end
     end },
+    -- 10 -> 11, per profile: "Open when a fight starts" is the DPS HUD's (owner, 2026-11-26, SM-CT-LG22,
+    -- R4-CT-08). The Combat Sequence's `sequence.drawer.autoOpen` goes; a stored off is carried to
+    -- `hud.openOnPull`, and an on or nothing stored leaves the new default, on (the old default carried).
+    -- Idempotent: a second run finds no old key.
+    { to = 11, perProfile = true, run = function(_, profile) NS.MoveOpenOnPull(profile) end },
+    -- 11 -> 12, per profile: the Combat Sequence's who colors are removed (owner, 2026-11-26,
+    -- SM-CT-LG27, R4-CT-08): `sequence.colors` (you, useClassColorYou, hostile, hostileFromSkin, friendly,
+    -- friendlyFromSkin) goes whole; nothing drew them since the Source and Target columns went. The
+    -- skin tokens `ct.log.hostile` and `ct.log.friendly` go too, and LibKa0s stores no per-token
+    -- override, so no stored value names them. Idempotent: a fresh profile stores none.
+    { to = 12, perProfile = true, run = function(_, profile) NS.DropWhoColors(profile) end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -250,6 +261,29 @@ function NS.PinHudWidth(profile)
     local w = rawget(hud, "width")
     local D = NS.defaults and NS.defaults.profile and NS.defaults.profile.hud
     if w == nil or (D and w == D.width) then hud.width = NS.PINNED_HUD_WIDTH end
+end
+
+--- Step 11's body: `profile.sequence.drawer.autoOpen` dropped, a stored false carried to
+--- `profile.hud.openOnPull`. A profile with no drawer table is left alone.
+function NS.MoveOpenOnPull(profile)
+    local seq = type(profile) == "table" and rawget(profile, "sequence")
+    local drawer = type(seq) == "table" and rawget(seq, "drawer")
+    if type(drawer) ~= "table" then return end
+    local old = rawget(drawer, "autoOpen")
+    drawer.autoOpen = nil
+    if old ~= false then return end
+    local hud = rawget(profile, "hud")
+    if type(hud) ~= "table" then
+        hud = {}
+        profile.hud = hud
+    end
+    hud.openOnPull = false
+end
+
+--- Step 12's body: `profile.sequence.colors` dropped. A profile with no `sequence` table is left alone.
+function NS.DropWhoColors(profile)
+    local seq = type(profile) == "table" and rawget(profile, "sequence")
+    if type(seq) == "table" then seq.colors = nil end
 end
 
 --- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where

@@ -236,6 +236,7 @@ retired into Spell bars.
 | Row | Key |
 |---|---|
 | Show the HUD | `hud.show` |
+| Open when a fight starts (at the pull, even after a close in the last fight; it follows Show the HUD and Only in instances, so Only when you open it never opens it; on by default, owner 2026-11-26, SM-CT-LG22) | `hud.openOnPull` |
 | Only in instances (when Show the HUD is On each fight's first hit; Always ignores it) | `hud.instancesOnly` |
 | Fade after the fight (seconds, 0 = never) | `hud.fadeAfter` |
 | Stay open while the mouse is over it | `hud.holdOnMouse` |
@@ -387,7 +388,6 @@ Defaults leaves them where they are. The window's gear opens this page.
 |---|---|
 | Enable the Combat Sequence | `sequence.enabled` |
 | Show the Combat Sequence | `sequence.drawer.shown` |
-| Open it when a fight starts | `sequence.drawer.autoOpen` |
 | Where the Combat Sequence lives (Docked in the DPS HUD, In its own window) | `sequence.home` |
 
 ### Docked drawer
@@ -453,22 +453,14 @@ schema step 8).
 ### Colors
 
 The *Color-blind safety* group turns the row washes off; every event still differs by its tag. *School
-colors* went with the schools (CSEQ-1, schema step 8). *Your color* is a ColorPair whose *Use class color* is on by default (the log has drawn "You" in
-the class color since it shipped). The two target colors are a palette, one per reaction, so they carry
-no class companion (options-ui-§17's exemption); each has *Use the skin's color* on by default, which
-draws the skin's `ct.log.hostile` or `ct.log.friendly`. Since the Source and Target columns went
-(owner feedback item 3), no cell draws these three colors: the rows and keys are kept until the owner
-rules whether they go (with a schema step) or come back on another cell.
+colors* went with the schools (CSEQ-1, schema step 8). The who colors (*Your color*, *Hostile target
+color*, *Friendly target color* and their switches) drew nothing once the Source and Target columns went
+(owner feedback item 3), and the owner removed them (2026-11-26, SM-CT-LG27): schema step 12 drops the
+stored `sequence.colors`, and the skin tokens `ct.log.hostile` and `ct.log.friendly` went with them.
 
 | Row | Key |
 |---|---|
 | Row washes | `sequence.view.washes` |
-| Your color | `sequence.colors.you` |
-| Use class color | `sequence.colors.useClassColorYou` |
-| Hostile target color | `sequence.colors.hostile` |
-| Use the skin's color (hostile) | `sequence.colors.hostileFromSkin` |
-| Friendly target color | `sequence.colors.friendly` |
-| Use the skin's color (friendly) | `sequence.colors.friendlyFromSkin` |
 
 ### Storage
 

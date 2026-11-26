@@ -1202,6 +1202,9 @@ function Hud.OnFightStarted(fight)
     pending = fight
     -- The last fight's card stays until this one's first hit, and stops fading meanwhile.
     cancelFade()
+    -- Open when a fight starts (SM-CT-LG22, R4-CT-08): a closed or hidden HUD opens at the pull, an auto
+    -- open, where the show mode lets one (autoAllowed: never under "toggle"; the master row, instancesOnly).
+    if setting("hud.openOnPull") ~= false and not wanted and autoAllowed(fight) then Hud.Show("auto") end
     if fight.firstHitT then goLive(fight) end
 end
 

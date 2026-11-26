@@ -23,8 +23,8 @@ local _, NS = ...
 --
 -- ITS STATE, each saved in the profile:
 --   sequence.drawer.shown      the title bar's log control (the list mark) and `/ct sequence` toggle it (on by
---                         default, owner feedback item 1); with
---                         sequence.drawer.autoOpen on (the default) each fight's start opens it. Off while
+--                         default, owner feedback item 1); a fight's start never opens it (the HUD's
+--                         `hud.openOnPull` opens the HUD, SM-CT-LG22, R4-CT-08). Off while
 --                         `sequence.enabled` is off, whatever it says, and the control is then hidden.
 --   sequence.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
 --                         under its heading (LogTable.NewChips: Casts, Pet, Buffs, Debuffs), the
@@ -410,12 +410,10 @@ end)
 local bus = NS.NewBusTarget()
 if bus then
     bus:RegisterMessage(NS.MSG.FIGHT_STARTED, function()
-        -- A new fight: the feed follows again from its first line, and the drawer opens when asked.
+        -- A new fight: the feed follows again from its first line. The drawer never opens itself: the
+        -- open at the pull is the HUD's (`hud.openOnPull`, SM-CT-LG22, R4-CT-08).
         if feed then LogTable.Resume(feed) end
         dirty, seeded = true, false
-        if HudLog.Enabled() and setting("sequence.drawer.autoOpen") ~= false and setting("sequence.drawer.shown") ~= true then
-            write("sequence.drawer.shown", true)
-        end
     end)
     bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path)
         if type(path) ~= "string" or not (path:find("^sequence%.") or path == "profile") then return end

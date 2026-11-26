@@ -185,6 +185,10 @@ NS.defaults = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
             width = 260, scale = 1, bars = 5,
+            -- Open when a fight starts (owner, 2026-11-26, SM-CT-LG22, R4-CT-08): a closed or hidden HUD
+            -- opens at the pull where the show mode lets one; schema step 11 carries the Combat
+            -- Sequence's retired `sequence.drawer.autoOpen` across.
+            openOnPull = true,
             -- Both windows' live refreshes a second (modules/Hud.lua's beat, the race beat): 4, 5, 10 or 20.
             refreshRate = 10,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },
@@ -238,14 +242,14 @@ NS.defaults = {
         -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
         -- modules/LogTable.lua; their rows are the Combat Sequence page's, settings/Log.lua, CL-11c2): the HUD's
         -- docked drawer (open by default, its rows 3-20, 5 by default as the spell rows are (R4-CT-07; a
-        -- profile that never stored rows follows it, no step), opened at each fight's start, its
+        -- profile that never stored rows follows it, no step; it no longer opens itself at a fight's start,
+        -- LG22: that open is the HUD's `hud.openOnPull`), its
         -- filter chips hidden until its eye shows them, owner feedback round 4, R4-CT-04, an absent value
         -- hidden too; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
         -- their height in pixels, 12-28 (CL-11c2), row washes, the optional columns Spell and Info: no
-        -- Source or Target, item 3, and no Amount, the Combat Sequence, CSEQ-1); the
-        -- who colors (CL-11c2: "You" in the class color or its own swatch, the hostile and friendly target
-        -- in the skin's `ct.log.hostile` / `ct.log.friendly` or their own); and what the live views show
+        -- Source or Target, item 3, and no Amount, the Combat Sequence, CSEQ-1); no
+        -- who colors (owner, 2026-11-26, SM-CT-LG27: removed, schema step 12); and what the live views show
         -- (each saved category: casts, pet casts, buffs gained and lost on you, debuffs on you, your
         -- debuffs on your target, deaths; and the auto attacks; no hits, heals or target buffs, CSEQ-1,
         -- schema step 8). Then where
@@ -260,7 +264,7 @@ NS.defaults = {
         sequence = {
             enabled = true,
             home = "docked",
-            drawer = { shown = true, rows = 5, autoOpen = true, chips = false },
+            drawer = { shown = true, rows = 5, chips = false },
             window = {
                 chips = false, fill = true, rows = 12, width = 460, height = 0, locked = false, scale = 1, alpha = 1,
                 position = { point = "CENTER", relPoint = "CENTER", x = -360, y = 0 },
@@ -269,11 +273,6 @@ NS.defaults = {
                 sort = "newest", throttle = "instant", throttleMs = 250, timeFormat = "pull",
                 fontSize = 10, rowHeight = 14, washes = true,
                 columns = { spell = true, info = true },
-            },
-            colors = {
-                you = { r = 1, g = 1, b = 1, a = 1 }, useClassColorYou = true,
-                hostile = { r = 1, g = 0.32, b = 0.32, a = 1 }, hostileFromSkin = true,
-                friendly = { r = 0.56, g = 0.72, b = 1.0, a = 1 }, friendlyFromSkin = true,
             },
             show = { casts = true, petCasts = true, playerBuffs = true, playerDebuffs = true, targetDebuffs = true,
                      deaths = true, autoAttacks = false },

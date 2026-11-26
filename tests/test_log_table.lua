@@ -710,16 +710,15 @@ test("hud log: it hides and stops with the HUD, and comes back with it", functio
     assertTrue(NS.HudLog.Ticking())
 end)
 
-test("hud log: a fight's start opens it when auto-open is on (the shipped default)", function()
+test("hud log: a fight's start leaves a closed drawer closed (LG22: the open at the pull is the HUD's)", function()
     local _, NS = fresh({ logDrawer = true })
-    assertTrue(NS.GetSetting("sequence.drawer.autoOpen"))
     assertTrue(NS.GetSetting("sequence.drawer.shown"), "shown by default (owner feedback item 1)")
     assertEqual(NS.defaults.profile.sequence.drawer.shown, true)
     assertEqual(NS.defaults.profile.sequence.drawer.rows, 5, "five rows by default (R4-CT-07)")
     NS.HudLog.SetShown(false)
     assertFalse(NS.GetSetting("sequence.drawer.shown"))
     NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f9", startT = 100 })
-    assertTrue(NS.GetSetting("sequence.drawer.shown"), "opened at the fight's start")
+    assertFalse(NS.GetSetting("sequence.drawer.shown"), "the section no longer reopens itself")
 end)
 
 test("hud log: /ct sequence toggles it and opens the HUD with it", function()

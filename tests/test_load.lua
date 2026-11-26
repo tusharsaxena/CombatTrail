@@ -100,8 +100,8 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 10 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 10)
+test("load: the settings stamp is 12 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 12)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
@@ -279,7 +279,7 @@ test("load: step 9 moves each profile's log to sequence, and its Results fold wi
         Default = { log = { enabled = false, home = "detached", drawer = { rows = 14, chips = true },
                             store = { lines = 300 } },
                     results = { collapsedSections = { log = true, spells = true } } },
-        Both = { log = { home = "docked", drawer = { rows = 14, autoOpen = false, chips = true } },
+        Both = { log = { home = "docked", drawer = { rows = 14, shown = false, chips = true } },
                  sequence = { home = "detached", drawer = { rows = 6, chips = false } },
                  results = { collapsedSections = { log = true, sequence = false } } },
         Bare = { hud = { bars = 6 } },
@@ -305,7 +305,7 @@ test("load: step 9 moves each profile's log to sequence, and its Results fold wi
     local b = sv.Both.sequence
     assertEqual(b.home, "detached", "sequence's home wins")
     assertEqual(b.drawer.rows, 6, "sequence's rows win")
-    assertEqual(b.drawer.autoOpen, false, "log's own key copied in")
+    assertEqual(b.drawer.shown, false, "log's own key copied in")
     assertEqual(b.drawer.chips, true, "a default's copy under sequence yields to log's choice")
     assertEqual(sv.Both.results.collapsedSections.sequence, false, "sequence's fold wins")
     assertEqual(rawget(sv.Both.results.collapsedSections, "log"), nil)
@@ -361,4 +361,47 @@ test("load: step 10 pins 390 wide on each stored profile that keeps no width, so
     local fresh = boot(nil)
     assertEqual(fresh.GetSetting("hud.width"), 260, "a fresh install starts at the least width")
     assertEqual(fresh.GetSetting("hud.width"), fresh.Hud.MIN_WIDTH)
+end)
+
+test("load: step 11 carries the Combat Sequence's Open when a fight starts to the DPS HUD's (LG22)", function()
+    local NS = boot({ global = { schemaVersion = 10 }, profiles = {
+        Default = { sequence = { drawer = { autoOpen = false, rows = 7 } } },
+        On = { sequence = { drawer = { autoOpen = true } } },
+        Never = { hud = { bars = 6 } },
+    } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: no step 11, or one over the active profile alone
+    assertEqual(sv.Default.hud.openOnPull, false, "a stored off carried across")
+    assertEqual(rawget(sv.Default.sequence.drawer, "autoOpen"), nil, "the old key gone")
+    assertEqual(sv.Default.sequence.drawer.rows, 7, "the drawer's other keys kept")
+    assertEqual(NS.GetSetting("hud.openOnPull"), false, "the active profile reads it")
+    assertTrue(rawget(sv.On.hud or {}, "openOnPull") ~= false, "a stored on stays on")
+    assertEqual(rawget(sv.On.sequence.drawer, "autoOpen"), nil)
+    assertEqual(rawget(sv.Never.hud, "openOnPull"), nil, "nothing stored: the default, on (the old default)")
+    NS.MoveOpenOnPull(sv.Default)
+    NS.MoveOpenOnPull({})
+    NS.MoveOpenOnPull(nil)
+    assertEqual(sv.Default.hud.openOnPull, false, "a second run changes nothing")
+    assertEqual(boot(nil).GetSetting("hud.openOnPull"), true, "a fresh profile: on")
+end)
+
+test("load: step 12 drops the Combat Sequence's who colors (LG27)", function()
+    local function stored()
+        return { sequence = { colors = { you = { r = 1, g = 0, b = 0, a = 1 }, useClassColorYou = false,
+                                         hostile = { r = 0, g = 1, b = 0, a = 1 }, hostileFromSkin = false,
+                                         friendly = { r = 0, g = 0, b = 1, a = 1 }, friendlyFromSkin = false },
+                              view = { washes = false } } }
+    end
+    local NS = boot({ global = { schemaVersion = 11 }, profiles = { Default = stored(), Other = stored(), Bare = {} } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: no step 12, or one over the active profile alone
+    for _, name in ipairs({ "Default", "Other" }) do
+        assertEqual(rawget(sv[name].sequence, "colors"), nil, name .. ": sequence.colors gone")
+        assertEqual(sv[name].sequence.view.washes, false, name .. ": the washes kept")
+    end
+    assertEqual(rawget(sv.Bare, "sequence"), nil, "a profile with no sequence is left alone")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    NS.DropWhoColors(sv.Default)
+    NS.DropWhoColors({})
+    NS.DropWhoColors(nil)
 end)

@@ -146,6 +146,8 @@ end
 at(TAB.behavior, L["When it shows"])
 row("show", { type = "string", label = L["Show the HUD"], values = SHOWS, validate = SHOW_OK,
     tooltip = L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] })
+row("openOnPull", { type = "bool", label = L["Open when a fight starts"], startsLine = true,
+    tooltip = L["Open the DPS HUD as each fight starts, even if you closed it during the last one, rather than at your first hit. It follows Show the HUD and Only in instances: Only when you open it never opens it."] })
 row("instancesOnly", { type = "bool", label = L["Only in instances"], startsLine = true,
     tooltip = L["When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."] })
 row("fadeAfter", { type = "number", label = L["Fade after the fight (seconds, 0 = never)"], min = 0, max = 60, step = 1,

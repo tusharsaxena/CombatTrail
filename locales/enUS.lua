@@ -405,6 +405,9 @@ L["When it shows"] = "When it shows"
 L["Show the HUD"] = "Show the HUD"
 L["On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."] =
     "On each fight's first hit: it opens when your damage starts and fades after the fight. Always: it stays up. Only when you open it: from /ct hud, the launcher or its key binding."
+L["Open when a fight starts"] = "Open when a fight starts"
+L["Open the DPS HUD as each fight starts, even if you closed it during the last one, rather than at your first hit. It follows Show the HUD and Only in instances: Only when you open it never opens it."] =
+    "Open the DPS HUD as each fight starts, even if you closed it during the last one, rather than at your first hit. It follows Show the HUD and Only in instances: Only when you open it never opens it."
 L["Only in instances"] = "Only in instances"
 L["When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."] =
     "When Show the HUD is On each fight's first hit, open it only inside a dungeon, raid or other instance. Always keeps it up everywhere."
@@ -1315,9 +1318,6 @@ L["Record your casts, your pet's casts, the buffs you gain and lose, the debuffs
 L["Show the Combat Sequence"] = "Show the Combat Sequence"
 L["Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."] =
     "Open the Combat Sequence now, docked in the DPS HUD or in its own window. The HUD's Combat Sequence control and /ct sequence toggle it too."
-L["Open it when a fight starts"] = "Open it when a fight starts"
-L["Open the Combat Sequence at the start of each fight, even if you closed it during the last one."] =
-    "Open the Combat Sequence at the start of each fight, even if you closed it during the last one."
 L["Where it lives"] = "Where it lives"
 L["Where the Combat Sequence lives"] = "Where the Combat Sequence lives"
 L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its own window: a wider companion window with an Info column. The drawer's detach mark and the window's dock mark switch it too."] =
@@ -1391,18 +1391,6 @@ L["Color-blind safety"] = "Color-blind safety"
 L["Row washes"] = "Row washes"
 L["Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."] =
     "Tint the rows of debuffs going on and of long-cooldown casts. Off, every row has the plain stripe."
-L["Your color"] = "Your color"
-L["The color kept for \"You\". No part of the Combat Sequence draws it now."] = "The color kept for \"You\". No part of the Combat Sequence draws it now."
-L["Hostile target color"] = "Hostile target color"
-L["The color kept for a target you can attack. No part of the Combat Sequence draws it now."] =
-    "The color kept for a target you can attack. No part of the Combat Sequence draws it now."
-L["Take the hostile target color from the skin. The swatch is not read while this is on."] =
-    "Take the hostile target color from the skin. The swatch is not read while this is on."
-L["Friendly target color"] = "Friendly target color"
-L["The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."] =
-    "The color kept for a target you cannot attack. No part of the Combat Sequence draws it now."
-L["Take the friendly target color from the skin. The swatch is not read while this is on."] =
-    "Take the friendly target color from the skin. The swatch is not read while this is on."
 L["Save a sequence with each fight"] = "Save a sequence with each fight"
 L["Keep each stored fight's Combat Sequence, for the Combat Sequence section of its Results detail. Takes hold from the next fight."] =
     "Keep each stored fight's Combat Sequence, for the Combat Sequence section of its Results detail. Takes hold from the next fight."

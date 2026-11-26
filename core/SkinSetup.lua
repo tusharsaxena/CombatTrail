@@ -289,9 +289,8 @@ NS.SKIN_TOKENS = {
     ["ct.modal.divider"] = { default = opaque(NS.SKIN_FALLBACK["divider"], WIN_BG), follow = "divider",
                              skins = modal("divider") },
     -- The Combat Sequence's table (modules/LogTable.lua): the event tags (the off tags dimmed; DIES in
-    -- `ct.log.hit`), the who colors past the class and pet ones the HUD already draws (undrawn since the
-    -- Source and Target columns went, owner feedback item 3), and the two row washes (a debuff you put
-    -- on, a long-cooldown cast). The drawer has no seam (item 18). The heal color, the hit wash and the
+    -- `ct.log.hit`) and the two row washes (a debuff you put on, a long-cooldown cast). The who colors'
+    -- `ct.log.hostile` and `ct.log.friendly` went with their settings (SM-CT-LG27, R4-CT-08). The drawer has no seam (item 18). The heal color, the hit wash and the
     -- seven spell school colors went with the hits and heals (CSEQ-1): LibKa0s stores no per-token
     -- override (a skin's choice, the font and the texture only), so no stored value names them.
     ["ct.log.buff"]        = { default = rgba(GREEN, 1), follow = "sem.good" },
@@ -299,8 +298,6 @@ NS.SKIN_TOKENS = {
     ["ct.log.debuff"]      = { default = rgba(ORANGE, 1), follow = "sem.warn" },
     ["ct.log.debuffOff"]   = { default = rgba(ORANGE, 0.55), follow = "text.muted" },
     ["ct.log.hit"]         = { default = rgba(RED, 1), follow = "sem.statusBad" },
-    ["ct.log.hostile"]     = { default = rgba(RED, 1), follow = "sem.statusBad" },
-    ["ct.log.friendly"]    = { default = { 0.56, 0.72, 1.0, 1 }, follow = "sem.info" },
     ["ct.log.wash.debuff"] = { default = rgba(ORANGE, 0.10), follow = "list.hover", skins = wash("sem.warn", 0.10) },
     ["ct.log.wash.cd"]     = { default = rgba(GOLD, 0.07), follow = "list.stripe", skins = wash("text.accent", 0.07) },
 }
