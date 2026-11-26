@@ -27,7 +27,8 @@ local _, NS = ...
 --                         `sequence.enabled` is off, whatever it says, and the control is then hidden.
 --   sequence.drawer.chips      the header's filter mark (the eye) shows or hides the drawer's chips, a row
 --                         under its heading (LogTable.NewChips: Casts, Pet, Buffs, Debuffs), the
---                         HUD growing by it; on by default (item 9). The chips themselves
+--                         HUD growing by it; hidden by default, an absent value hidden too (owner
+--                         feedback round 4, R4-CT-04, reversing item 9's default). The chips themselves
 --                         are the drawer's own, seeded from `sequence.show.*` (LogTable.Reseeds) and turned
 --                         for this session alone.
 --   sequence.drawer.rows       the rows shown, 3 to 20 (default 10, owner feedback item 16); the rows past
@@ -130,9 +131,10 @@ local function drawerWidth()
     return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 366
 end
 
---- Whether the chips row shows (`sequence.drawer.chips`, on by default; the header's filter mark).
+--- Whether the chips row shows (`sequence.drawer.chips`, the header's filter mark): only while it is
+--- on, so a new profile and an absent value both hide it (R4-CT-04).
 function HudLog.ChipsShown()
-    return setting("sequence.drawer.chips") ~= false
+    return setting("sequence.drawer.chips") == true
 end
 
 -- The chips row's height, its gap under it included; 0 while it is not shown.

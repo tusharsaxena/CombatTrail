@@ -296,6 +296,7 @@ end)
 
 test("log window: its chips filter what it shows, for the session, seeded from What to show", function()
     local inst, NS = fresh()
+    NS.SetByPath("sequence.window.chips", true)
     local ui = detached(NS)
     local b = ui.chips.buttons
     for _, chip in ipairs(NS.LogTable.CHIPS) do
@@ -328,6 +329,7 @@ end)
 
 test("log window: the chips take their room above the table, wrapping when narrow", function()
     local _, NS = fresh()
+    NS.SetByPath("sequence.window.chips", true)
     local ui = detached(NS)
     local lt = NS.LogTable
     assertEqual(lt.ChipLines(NS.LogWindow.Width() - 24), 1, "one line at 460")
@@ -340,6 +342,40 @@ test("log window: the chips take their room above the table, wrapping when narro
     NS.LogWindow.Refresh()
     assertEqual(y, -(NS.LogWindow.LINE_H + lt.ChipsHeight(436) + lt.CHIP_GAP), "the table under the chips")
     assertTrue(lt.ChipLines(150) > 1, "a narrow width wraps them")
+end)
+
+test("log window: the chips are hidden by default; the title bar's eye shows them, the table moving under them (round 4)", function()
+    local _, NS = fresh()
+    local ui = detached(NS)
+    local lt, LW = NS.LogTable, NS.LogWindow
+    -- red under: the chips always shown under the status line, with no setting and no mark
+    assertEqual(NS.defaults.profile.sequence.window.chips, false, "off in a new profile")
+    assertFalse(LW.ChipsShown())
+    for _, chip in ipairs(lt.CHIPS) do assertFalse(ui.chips.buttons[chip.key]:IsShown(), chip.key .. " hidden") end
+    assertTrue(ui.filter ~= nil and ui.filter:IsShown(), "an eye on the title bar")
+    assertEqual(ui.filter.iconName, "eye", "the drawer's filter mark")
+    local f, y = ui.table.frame, nil
+    local setPoint = f.SetPoint
+    rawset(f, "SetPoint", function(self, p, rel, rp, x, yy)
+        if p == "TOPLEFT" then y = yy end
+        return setPoint(self, p, rel, rp, x, yy)
+    end)
+    local least = LW.MinHeight()
+    LW.Refresh()
+    assertEqual(y, -LW.LINE_H, "the table right under the status line")
+    click(ui.filter)
+    assertTrue(NS.GetSetting("sequence.window.chips"), "the eye writes its key")
+    for _, chip in ipairs(lt.CHIPS) do assertTrue(ui.chips.buttons[chip.key]:IsShown(), chip.key .. " shown") end
+    assertEqual(y, -(LW.LINE_H + lt.ChipsHeight(436) + lt.CHIP_GAP), "the table under the chips")
+    assertEqual(LW.MinHeight(), least + lt.ChipsHeight(436) + lt.CHIP_GAP, "the least height holds them")
+    click(ui.filter)
+    assertFalse(NS.GetSetting("sequence.window.chips"), "and hides them again")
+    assertEqual(y, -LW.LINE_H)
+    -- An absent value is hidden too.
+    NS.db.profile.sequence.window.chips = nil
+    assertFalse(LW.ChipsShown())
+    NS.db.profile.sequence.drawer.chips = nil
+    assertFalse(NS.HudLog.ChipsShown(), "the drawer's absent value is hidden too")
 end)
 
 test("log window: /ct sequence detach and dock move it; the HUD's Log control opens and closes it", function()

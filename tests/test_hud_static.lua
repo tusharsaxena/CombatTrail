@@ -140,8 +140,8 @@ test("hud static: the default window is 390 wide and exactly tall enough for 5 b
     local chrome = NS.Style.TITLE_BAR_H + 10 + NS.FOOTER_HEIGHT + 8
     local stack = NS.HudStates.FixedStack(NS.GetSetting("hud.layout"), 5, true)
     assertEqual(f.__h, chrome + stack + NS.HudLog.Height(), "the sum of the sections, nothing spare")
-    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H
-        + NS.LogTable.ChipsHeight(390 - 24) + NS.LogTable.CHIP_GAP + NS.LogTable.Height(10))
+    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(10),
+        "no chips row by default (R4-CT-04)")
 end)
 
 test("hud static: the status line is reserved, so the card's chips never move Damage profile", function()
@@ -159,8 +159,8 @@ test("hud static: only the log's open and close, a rows setting or the grip move
     local NS, f = inst.NS, Hud.Frame()
     local open = f.__h
     setLog(inst, "drawer.shown", false)
-    assertEqual(f.__h, open - (NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.ChipsHeight(366) + NS.LogTable.CHIP_GAP
-        + NS.LogTable.Height(10)), "closed: the log's sections given back")
+    assertEqual(f.__h, open - (NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(10)),
+        "closed: the log's sections given back")
     setLog(inst, "drawer.shown", true)
     assertEqual(f.__h, open, "open again")
     setLog(inst, "drawer.rows", 12)

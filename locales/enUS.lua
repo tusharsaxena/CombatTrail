@@ -1325,6 +1325,9 @@ L["Docked: a drawer under the DPS HUD's spell rows, at the HUD's width. In its o
 L["Show the filter chips"] = "Show the filter chips"
 L["Show the Casts, Pet, Buffs and Debuffs chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."] =
     "Show the Casts, Pet, Buffs and Debuffs chips under the drawer's heading. The eye in the drawer's heading shows and hides them too."
+L["Filter chips"] = "Filter chips"
+L["Show the Casts, Pet, Buffs and Debuffs chips under the window's status line. The eye on the window's title bar shows and hides them too."] =
+    "Show the Casts, Pet, Buffs and Debuffs chips under the window's status line. The eye on the window's title bar shows and hides them too."
 L["Rows shown"] = "Rows shown"
 L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] =
     "How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."

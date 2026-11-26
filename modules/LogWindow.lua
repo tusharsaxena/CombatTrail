@@ -32,12 +32,14 @@ local _, NS = ...
 -- width and the height and repaints once.
 --
 -- THE CHIPS (Casts, Pet, Buffs, Debuffs; LogTable.NewChips) stand under the status
--- line, wrapped at the window's width: the window's own What to show, seeded from `sequence.show.*` when it
+-- line, wrapped at the window's width, while `sequence.window.chips` is on: hidden by default, an absent
+-- value hidden too, and shown or hidden by the title bar's eye (the drawer's filter mark) or the
+-- Detached window tab's row (owner feedback round 4, R4-CT-04); hidden, they take no room. They are the window's own What to show, seeded from `sequence.show.*` when it
 -- is built, when the log is opened or moved here, at each FIGHT_STARTED and at a What to show write
 -- (LogTable.Reseeds); a click turns one on or off here alone, for the session, never in the settings.
 --
 -- THE LOOK is the DPS HUD's, as the Race window's is: the same shell (NS.ApplySkin, the title band,
--- NS.MakeHeader's marks: Dock, Settings, Close; the library footer) and the HUD's `hud.window.*`
+-- NS.MakeHeader's marks: the chips' eye, Dock, Settings, Close; the library footer) and the HUD's `hud.window.*`
 -- blocks, restyled once per Appearance stamp; its own opacity, `sequence.window.alpha`, over the HUD's.
 -- It keeps a saved position, so it is not a companion in the standard's sense (standalone-windows,
 -- *A companion window carries no settings mark*): it carries the settings mark.
@@ -127,8 +129,16 @@ function LW.Frame() return ui and ui.frame or nil end
 local function contentTop() return setting("hud.window.titleBar") ~= false and HEADER_H + 10 or PAD end
 local function contentBottom() return setting("hud.window.footer") ~= false and NS.FOOTER_HEIGHT + 8 or PAD end
 
--- The chips' room under the status line at the window's width, the gap under them included.
+--- Whether the chips show under the status line (`sequence.window.chips`, the title bar's eye): only
+--- while it is on, so a new profile and an absent value both hide them (R4-CT-04).
+function LW.ChipsShown()
+    return setting("sequence.window.chips") == true
+end
+
+-- The chips' room under the status line at the window's width, the gap under them included; none
+-- while they are hidden.
 local function chipsRoom()
+    if not LW.ChipsShown() then return 0 end
     return LogTable.ChipsHeight(LW.Width() - 2 * PAD) + LogTable.CHIP_GAP
 end
 
@@ -225,9 +235,11 @@ local function buildHeader(f)
         extras = {
             { key = "dock", icon = "arrow-left", glyph = "D", tip = L["Dock the Combat Sequence back in the DPS HUD"],
               onClick = function() Act.dock() end },
+            { key = "filter", icon = "eye", glyph = "F", tip = L["Show or hide the Combat Sequence's filter chips"],
+              onClick = function() LW.ToggleChipsRow() end },
         },
     })
-    ui.close, ui.settings, ui.dock = hb.close, hb.settings, hb.extras.dock
+    ui.close, ui.settings, ui.dock, ui.filter = hb.close, hb.settings, hb.extras.dock, hb.extras.filter
     local drag = CreateFrame("Frame", nil, f)
     drag:EnableMouse(true)
     drag:RegisterForDrag("LeftButton")
@@ -238,7 +250,7 @@ local function buildHeader(f)
     end)
     ui.drag = drag
     Style.Header(f, { title = f.title, align = "LEFT", drag = drag,
-        right = { ui.close, ui.settings, ui.dock }, n = 3 })
+        right = { ui.close, ui.settings, ui.dock, ui.filter }, n = 4 })
 end
 
 local function onSort()
@@ -310,7 +322,7 @@ local function applyWindow()
     ui.stamp = A.stamp
     local f = ui.frame
     local bar, foot = A.On("hud.window.titleBar"), A.On("hud.window.footer")
-    for _, part in ipairs({ ui.close, ui.settings, ui.dock, ui.drag, Style.Band(f) }) do
+    for _, part in ipairs({ ui.close, ui.settings, ui.dock, ui.filter, ui.drag, Style.Band(f) }) do
         if part then part:SetShown(bar) end
     end
     f.title:SetShown(bar and A.On("hud.window.title"))
@@ -356,7 +368,11 @@ end
 function layout()
     local w, h = LW.Width(), LW.WindowHeight()
     if not sizing() then ui.frame:SetSize(w, h) end
-    LogTable.LayChips(ui.chips, ui.content, 0, -LW.LINE_H, w - 2 * PAD)
+    if LW.ChipsShown() then
+        LogTable.LayChips(ui.chips, ui.content, 0, -LW.LINE_H, w - 2 * PAD)
+    else
+        LogTable.ShowChips(ui.chips, false)
+    end
     local top = -(LW.LINE_H + chipsRoom())
     ui.table.frame:ClearAllPoints()
     ui.table.frame:SetPoint("TOPLEFT", ui.content, "TOPLEFT", 0, top)
@@ -400,6 +416,12 @@ local function seed()
     seeded = true
     LogTable.Refilter(feed)
     if ui then LogTable.PaintChips(ui.chips, show) end
+end
+
+--- Show or hide the chips under the status line (the title bar's eye, `sequence.window.chips`): its
+--- write redraws the window.
+function LW.ToggleChipsRow()
+    write("sequence.window.chips", not LW.ChipsShown())
 end
 
 --- Turn chip `key` on or off in this window alone (never in the settings), and repaint.

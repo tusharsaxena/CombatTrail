@@ -404,6 +404,7 @@ standalone (owner feedback item 11): it has no attach, side, HUD-height or pin r
 
 | Row | Key |
 |---|---|
+| Show the filter chips | `sequence.window.chips` |
 | Fill the window with rows | `sequence.window.fill` |
 | Rows shown (3 to 40) | `sequence.window.rows` |
 | Lock the window | `sequence.window.locked` |

@@ -191,7 +191,9 @@ end
 local function mergeInto(into, from, dflt)
     for k, v in pairs(from) do
         local have = rawget(into, k)
-        local d = type(dflt) == "table" and dflt[k] or nil
+        -- Not `dflt[k] or nil`: a default of false is a default too (the drawer's chips, R4-CT-04).
+        local d = nil
+        if type(dflt) == "table" then d = dflt[k] end
         if have == nil then
             into[k] = v
         elseif type(have) == "table" then

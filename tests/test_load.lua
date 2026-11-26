@@ -276,11 +276,11 @@ end)
 
 test("load: step 9 moves each profile's log to sequence, and its Results fold with it", function()
     local NS = boot({ global = { schemaVersion = 8 }, profiles = {
-        Default = { log = { enabled = false, home = "detached", drawer = { rows = 14, chips = false },
+        Default = { log = { enabled = false, home = "detached", drawer = { rows = 14, chips = true },
                             store = { lines = 300 } },
                     results = { collapsedSections = { log = true, spells = true } } },
-        Both = { log = { home = "docked", drawer = { rows = 14, autoOpen = false, chips = false } },
-                 sequence = { home = "detached", drawer = { rows = 6, chips = true } },
+        Both = { log = { home = "docked", drawer = { rows = 14, autoOpen = false, chips = true } },
+                 sequence = { home = "detached", drawer = { rows = 6, chips = false } },
                  results = { collapsedSections = { log = true, sequence = false } } },
         Bare = { hud = { bars = 6 } },
     } })
@@ -293,7 +293,7 @@ test("load: step 9 moves each profile's log to sequence, and its Results fold wi
     assertEqual(d.enabled, false, "the switch moved")
     assertEqual(d.home, "detached", "the home moved")
     assertEqual(d.drawer.rows, 14, "the rows moved")
-    assertEqual(d.drawer.chips, false, "the chips moved")
+    assertEqual(d.drawer.chips, true, "the chips moved")
     assertEqual(d.store.lines, 300, "the lines kept moved")
     assertEqual(NS.GetSetting("sequence.home"), "detached", "the active profile reads them")
     local folds = sv.Default.results.collapsedSections
@@ -306,7 +306,7 @@ test("load: step 9 moves each profile's log to sequence, and its Results fold wi
     assertEqual(b.home, "detached", "sequence's home wins")
     assertEqual(b.drawer.rows, 6, "sequence's rows win")
     assertEqual(b.drawer.autoOpen, false, "log's own key copied in")
-    assertEqual(b.drawer.chips, false, "a default's copy under sequence yields to log's choice")
+    assertEqual(b.drawer.chips, true, "a default's copy under sequence yields to log's choice")
     assertEqual(sv.Both.results.collapsedSections.sequence, false, "sequence's fold wins")
     assertEqual(rawget(sv.Both.results.collapsedSections, "log"), nil)
     assertEqual(rawget(sv.Bare, "sequence"), nil, "a profile with no log is left alone")

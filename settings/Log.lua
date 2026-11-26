@@ -96,6 +96,9 @@ row("drawer.rows", { type = "number", label = L["Rows shown"], min = NS.HudLog.M
     tooltip = L["How many events the drawer shows at a time; older ones scroll with the mouse wheel. The DPS HUD keeps one height with the drawer in it, and dragging its corner sets these rows too."] })
 
 -- Detached window
+at(TAB.window, L["Filter chips"])
+row("window.chips", { type = "bool", label = L["Show the filter chips"], startsLine = true,
+    tooltip = L["Show the Casts, Pet, Buffs and Debuffs chips under the window's status line. The eye on the window's title bar shows and hides them too."] })
 at(TAB.window, L["Rows"])
 row("window.fill", { type = "bool", label = L["Fill the window with rows"], startsLine = true,
     tooltip = L["Show as many events as the window's height holds. Off, the window shows Rows shown and is as tall as they need."] })

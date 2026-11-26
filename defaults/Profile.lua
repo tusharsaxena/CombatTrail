@@ -237,7 +237,8 @@ NS.defaults = {
         -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
         -- modules/LogTable.lua; their rows are the Combat Sequence page's, settings/Log.lua, CL-11c2): the HUD's
         -- docked drawer (open by default, its rows 3-20, 10 by default, opened at each fight's start, its
-        -- filter chips shown; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
+        -- filter chips hidden until its eye shows them, owner feedback round 4, R4-CT-04, an absent value
+        -- hidden too; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
         -- their height in pixels, 12-28 (CL-11c2), row washes, the optional columns Spell and Info: no
         -- Source or Target, item 3, and no Amount, the Combat Sequence, CSEQ-1); the
@@ -249,16 +250,17 @@ NS.defaults = {
         -- the sequence lives (CL-11b2): `home` "docked" in the HUD or "detached" in its own window
         -- (modules/LogWindow.lua), whose keys are `window`: a standalone window at its own `position`
         -- (owner feedback item 11: no attached state, so no side, HUD-height match or pin, schema step 6),
-        -- its rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least)
+        -- its filter chips hidden until its title bar's eye or the row shows them (`chips`, as the
+        -- drawer's: owner feedback round 4, R4-CT-04), its rows filling its height (`fill`) or `rows` (3-40), its `width` and `height` (0: its least)
         -- set by its grip, `locked`, its `scale` and its `alpha` (0.1-1). Then the Results fight detail's Combat Sequence section (CL-11c,
         -- modules/Results_Log.lua): the chips each fight opens on, and whether a click on a CAST row jumps
         -- the ability timeline to that cast.
         sequence = {
             enabled = true,
             home = "docked",
-            drawer = { shown = true, rows = 10, autoOpen = true, chips = true },
+            drawer = { shown = true, rows = 10, autoOpen = true, chips = false },
             window = {
-                fill = true, rows = 12, width = 460, height = 0, locked = false, scale = 1, alpha = 1,
+                chips = false, fill = true, rows = 12, width = 460, height = 0, locked = false, scale = 1, alpha = 1,
                 position = { point = "CENTER", relPoint = "CENTER", x = -360, y = 0 },
             },
             view = {

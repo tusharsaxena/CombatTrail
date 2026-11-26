@@ -125,7 +125,10 @@ test("log page: no log.* key is left on the write-through list; the log's own co
     NS.HudLog.SetHome("detached")
     assertEqual(NS.GetSetting("sequence.home"), "detached", "the detach mark writes through its row")
     NS.HudLog.ToggleChipsRow()
-    assertFalse(NS.GetSetting("sequence.drawer.chips"), "the eye writes through its row")
+    assertTrue(NS.GetSetting("sequence.drawer.chips"), "the eye writes through its row")
+    assertTrue(NS.FindSchemaRow("sequence.window.chips") ~= nil, "the detached window's chips have a row")
+    NS.LogWindow.ToggleChipsRow()
+    assertTrue(NS.GetSetting("sequence.window.chips"), "the window's eye writes through its row")
 end)
 
 test("log page: the value checks refuse what the log cannot draw", function()
