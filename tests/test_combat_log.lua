@@ -647,6 +647,29 @@ test("combat log: a sealed full update's readable added and removed lists are li
     if not ok then error(err, 0) end
 end)
 
+-- R5-REV: a silent walk the client refused (WoW Forever's in-combat raise at a target change, or a
+-- sealed aura) leaves a map short of auras that were already up. The next complete diff cannot tell
+-- those from gains, so it draws no gain, only the losses of what was mapped: never a burst at combat end.
+test("combat log: after an incomplete silent walk the next complete diff draws no gain, only losses", function()
+    local inst, meter, saved = fresh()
+    local NS = inst.NS
+    local r = fightThrough(inst, meter, saved, 40, function(i)
+        i.mocks.__unitGUIDs.target = TARGET_B
+        onUnit(i, "target", "HARMFUL", { debuff(71, CURSE, true) })
+        i.mocks.__auraRaise = { targetHARMFUL = 1 }
+        at(i, 12)
+        i.mocks.__fire("PLAYER_TARGET_CHANGED")
+        -- Combat over: the reads answer again, and the DoT up since the change is no gain.
+        i.mocks.__auraRaise = {}
+        aura(i, 13, "target", { isFullUpdate = true })
+        -- The map is whole now: the DoT's fade is a diff's loss.
+        onUnit(i, "target", "HARMFUL", {})
+        aura(i, 14, "target", { isFullUpdate = true })
+    end)
+    -- red under: DEBUFF_ON CURSE (a false gain at the first complete diff), then DEBUFF_OFF CURSE
+    assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE, "no false gain; the fade logged")
+end)
+
 -- R5-REV: UNIT_AURA fires often in a group; the tally's shape and the diff decision are one read of the
 -- update info, so the tally adds no second pass of secret checks per event.
 test("combat log: one UNIT_AURA reads its update info's access once for the tally and the diff", function()

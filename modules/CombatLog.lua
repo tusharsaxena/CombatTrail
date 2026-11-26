@@ -25,7 +25,8 @@ local _, NS = ...
 --     AN INCOMPLETE WALK LOGS NOTHING (a sealed or unreadable aura, a raising read, AURA_LIMIT reached):
 --     an unreadable aura is skipped and the walk goes on (a raising read ends that filter's walk), its
 --     entries are added to the current map with no line, so neither a false loss nor, on the next
---     complete diff, a false gain is drawn. A
+--     complete diff, a false gain is drawn. An incomplete SILENT walk (the registration's, a target
+--     change's) leaves its map short, so the next complete diff draws only losses from it (R5-REV). A
 --     target change walks the new target silently, and the target is diffed only while its plain GUID
 --     is the one its map was walked for (a full update for a new target can come before the change).
 --   * DEATHS: the player's (PLAYER_DEAD). The addon knows no target's death, so none is logged.
@@ -133,6 +134,7 @@ local viewStart, viewFrom   -- the newest capture begun this session: its start 
 local auras = { player = {}, target = {} }   -- the current maps: [auraInstanceID] = spellID (a debuff's negated)
 local spare = { player = {}, target = {} }   -- the diff's scratch maps, swapped with the current ones
 local order, orderN = {}, 0                  -- the last walk's new instances, in walk order (reused)
+local partial = { player = false, target = false } -- [unit] = true: its map came from an incomplete silent walk
 local fades = {}                             -- a diff's lost instances, sorted (reused)
 local targetOf          -- the target's plain GUID when its map was last walked, or nil
 local frame             -- the event frame (nil until a fight first opens one)
@@ -436,9 +438,10 @@ local function walkInto(unit, map)
 end
 
 -- The unit's auras now, into its current map, without a line: the capture's registration and a
--- target change (a new target is not a burst of gains).
+-- target change (a new target is not a burst of gains). An incomplete one leaves the map short of auras
+-- already up, so the next complete diff draws no gain from it (R5-REV), only the losses of what it mapped.
 local function walk(unit)
-    walkInto(unit, auras[unit])
+    partial[unit] = not walkInto(unit, auras[unit])
 end
 
 -- The diff's gains: each instance of the new map the current one lacks, in walk order.
@@ -488,7 +491,7 @@ local function diff(unit, at)
         clear(new)
         return
     end
-    diffGains(unit, cur, new, at)
+    if partial[unit] then partial[unit] = false else diffGains(unit, cur, new, at) end
     diffFades(unit, cur, new, at)
     auras[unit], spare[unit] = new, cur
     clear(cur)
@@ -639,6 +642,7 @@ local function clearMaps()
     for _, unit in ipairs({ "player", "target" }) do
         clear(auras[unit])
         clear(spare[unit])
+        partial[unit] = false
     end
     targetOf = nil
 end
