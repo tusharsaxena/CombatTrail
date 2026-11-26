@@ -576,6 +576,39 @@ test("combat log: the aura tally counts what UNIT_AURA brought and why each aura
     if not ok then error(err, 0) end
 end)
 
+-- R5-CT-05: the owner's WoW Forever fight (build 71139) counted only 5 UNIT_AURA, every one "full", and
+-- raised=280 (each walk raising at all AURA_LIMIT indices). The tally's blind spots closed: an event whose
+-- unit cannot be read plain is counted, a sealed isFullUpdate is told from a plain one, and a raise ends
+-- that filter's walk, so a refused unit costs one read and counts as one raised walk.
+test("combat log: the tally counts a sealed unit, tells a sealed full update, and a raise ends the walk", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst = fresh()
+        local CL = inst.NS.CombatLog
+        at(inst, 10)
+        CL.Begin("blind", 10)
+        aura(inst, 11, T.secret("player"), { addedAuras = { buff(5, INTELLECT) } })
+        aura(inst, 12, nil, nil)
+        aura(inst, 13, "player", { isFullUpdate = true })
+        inst.mocks.__auraRaise = { playerHELPFUL = 1, playerHARMFUL = 1 }
+        inst.mocks.__auraReads = {}
+        aura(inst, 14, "player", { isFullUpdate = T.secret(true) })
+        local a = CL.Diagnose().auras
+        assertEqual(a.evSealedUnit, 2, "a sealed unit and a missing one, each counted, neither read")
+        assertEqual(a.evPlayer, 2, "only the plain units reach the per-unit counts")
+        assertEqual(a.gainSeen, 0, "a sealed unit's update info is never read")
+        assertEqual(a.full, 1, "isFullUpdate plainly true")
+        assertEqual(a.sealedFull, 1, "isFullUpdate sealed")
+        -- red under: 80 reads (both filters raising at every index) and raised=80
+        assertEqual(table.concat(inst.mocks.__auraReads, ","), "player:HELPFUL,player:HARMFUL",
+            "one read per filter: the raise ends the filter's walk")
+        assertEqual(a.walkRaised, 2, "one per raising filter walk, never per read")
+        assertEqual(a.walkIncomplete, 1)
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
 -- R5-REV: UNIT_AURA fires often in a group; the tally's shape and the diff decision are one read of the
 -- update info, so the tally adds no second pass of secret checks per event.
 test("combat log: one UNIT_AURA reads its update info's access once for the tally and the diff", function()

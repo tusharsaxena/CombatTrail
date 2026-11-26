@@ -65,7 +65,8 @@ test("diagnostics: the fight section prints the Combat Sequence's aura tally", f
     CL.OnAura("player", { addedAuras = { { auraInstanceID = 5, spellId = 1459, isHelpful = true } } }, 101)
     CL.OnAura("player", { removedAuraInstanceIDs = { 5, 77 } }, 102)
     local lines = report(inst)
-    assertTrue(has(lines, "combat sequence aura events player=2 target=0 info=2 none=0 full=0 sealedInfo=0"), dump(lines))
+    assertTrue(has(lines, "combat sequence aura events player=2 target=0 sealedUnit=0 info=2 none=0 full=0"
+        .. " sealedFull=0 sealedInfo=0"), dump(lines))
     assertTrue(has(lines, "combat sequence aura gains seen=1 lined=1 sealedTable=0 sealedInstance=0 sealedSpell=0"
         .. " sealedSource=0 notYours=0 targetBuff=0"), dump(lines))
     assertTrue(has(lines, "combat sequence aura losses seen=2 lined=1 unknown=1 sealed=0 walks complete=2"

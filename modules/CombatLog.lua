@@ -22,8 +22,9 @@ local _, NS = ...
 --     the current one (an instance only in the scratch map is a gain, one only in the current map a
 --     loss), gains first in walk order, then losses by ascending instance; then the two maps swap.
 --     AN INCOMPLETE WALK LOGS NOTHING (a sealed or unreadable aura, a raising read, AURA_LIMIT reached):
---     what it cannot read is skipped and the walk goes on, its entries are added to the current map
---     with no line, so neither a false loss nor, on the next complete diff, a false gain is drawn. A
+--     an unreadable aura is skipped and the walk goes on (a raising read ends that filter's walk), its
+--     entries are added to the current map with no line, so neither a false loss nor, on the next
+--     complete diff, a false gain is drawn. A
 --     target change walks the new target silently, and the target is diffed only while its plain GUID
 --     is the one its map was walked for (a full update for a new target can come before the change).
 --   * DEATHS: the player's (PLAYER_DEAD). The addon knows no target's death, so none is logged.
@@ -36,10 +37,11 @@ local _, NS = ...
 --
 -- THE AURA TALLY (owner feedback round 5, R5-CT-03). WoW Forever's real fights showed only CAST rows,
 -- and which read drops the auras cannot be told offline, so the capture counts what UNIT_AURA brings
--- (per unit; usable update info, none, a full update, sealed info), each added aura and why it drew no
--- line (its table, instance, spell ID or, on the target, its source sealed; a target debuff someone else
--- put on; a target buff), each removed instance (lined, never mapped, sealed), the walks (complete or
--- not, a raised read, an unreadable aura) and the lines drawn. Plain counts only, zeroed at each
+-- (per unit, and one whose unit cannot be read plain, which is dropped; usable update info, none, a
+-- plainly full update, a sealed isFullUpdate, sealed info), each added aura and why it drew no line (its
+-- table, instance, spell ID or, on the target, its source sealed; a target debuff someone else put on; a
+-- target buff), each removed instance (lined, never mapped, sealed), the walks (complete or not, the
+-- filter walks a raising read stopped, an unreadable aura) and the lines drawn. Plain counts only, zeroed at each
 -- registration (the first open capture), so after a fight they describe that fight: CombatLog.Diagnose's
 -- `auras`, printed by `/ct diagnostics` (modules/Diagnostics.lua).
 --
@@ -138,7 +140,10 @@ local refused = {}      -- [event] = true: the client refused it this session
 local sample            -- the sample seam's ring while it is up: { ring, seq, startT, from, targets }
 local watchers = {}     -- [key] = fn: the views told of each swap
 --- The aura tally's counters, in the order `/ct diagnostics` prints them (R5-CT-03).
-CombatLog.TALLY = { "evPlayer", "evTarget", "info", "none", "full", "sealedInfo", "gainSeen", "gainLined",
+--- `walkRaised` counts the filter walks a raising read stopped (R5-CT-05: a raise ends that filter's walk,
+--- so a refused unit costs one read, not AURA_LIMIT), never the reads.
+CombatLog.TALLY = { "evPlayer", "evTarget", "evSealedUnit", "info", "none", "full", "sealedFull", "sealedInfo",
+    "gainSeen", "gainLined",
     "gainSealedTable", "gainSealedInstance", "gainSealedSpell", "gainSealedSource", "gainNotYours",
     "gainTargetBuff", "lossSeen", "lossLined", "lossUnknown", "lossSealed", "walkComplete",
     "walkIncomplete", "walkRaised", "walkUnreadable" }
@@ -378,15 +383,19 @@ end
 
 -- One filter of the unit walked into `map`, each new instance noted in walk order. Answers whether the
 -- walk ran to the list's end (GetAuraDataByIndex answering nil) before AURA_LIMIT with every aura read.
--- A raise (WoW Forever's sealed read, docs/forever-quirks.md) or an unreadable aura is skipped and the
--- walk goes on, incomplete: every aura it can read is still mapped (a silent walk's map is whole but
--- for the skipped ones).
+-- An unreadable aura is skipped and the walk goes on, incomplete: every aura it can read is still mapped
+-- (a silent walk's map is whole but for the skipped ones). A raise (WoW Forever's in-combat read,
+-- docs/forever-quirks.md) ENDS the filter's walk, incomplete, counted once (R5-CT-05): the client refuses
+-- the unit's auras whole, so the rest of the indices would only raise too.
 local function walkFilter(unit, map, get, filter)
     local harmful, complete = filter == "HARMFUL", true
     for i = 1, CombatLog.AURA_LIMIT do
         local ok, aura = pcall(get, unit, i, filter)
-        if not ok or (aura ~= nil and not readable(unit, aura)) then
-            bump(ok and "walkUnreadable" or "walkRaised")
+        if not ok then
+            bump("walkRaised")
+            return false
+        elseif aura ~= nil and not readable(unit, aura) then
+            bump("walkUnreadable")
             complete = false
         elseif aura == nil then
             return complete
@@ -524,13 +533,14 @@ local function unreadable(list)
 end
 
 -- UNIT_AURA's update info named, for the tally and the diff alike (one read per event): none, sealed
--- (the table or a list), a full update (a sealed isFullUpdate is taken as one), or usable info. Anything
--- but usable info leaves the unit to be diffed.
+-- (the table or a list), a plainly full update, a sealed isFullUpdate (taken as a full one), or usable
+-- info. Anything but usable info leaves the unit to be diffed.
 local function shapeOf(info)
     if info == nil then return "none" end
     if Secrets.IsSealed(info) or not Secrets.CanAccessTable(info) then return "sealedInfo" end
     local full = info.isFullUpdate
-    if Secrets.IsSealed(full) or Secrets.PlainTruth(full) then return "full" end
+    if Secrets.IsSealed(full) then return "sealedFull" end
+    if Secrets.PlainTruth(full) then return "full" end
     if unreadable(info.addedAuras) or unreadable(info.removedAuraInstanceIDs) then return "sealedInfo" end
     return "info"
 end
@@ -555,7 +565,12 @@ end
 
 -- Each handler takes `at` (GetTime()) first, then the event's own arguments.
 local HANDLERS = {
-    UNIT_AURA = function(at, unit, info) CombatLog.OnAura(Secrets.PlainString(unit), info, at) end,
+    -- A unit that cannot be read plain is dropped, but counted (R5-CT-05): never silently.
+    UNIT_AURA = function(at, unit, info)
+        local u = Secrets.PlainString(unit)
+        if u == nil then return bump("evSealedUnit") end
+        CombatLog.OnAura(u, info, at)
+    end,
     PLAYER_DEAD = function(at) append(at, K.DIES, U.player, nil, nil) end,
     PLAYER_TARGET_CHANGED = function()
         curTarget = noteTarget()
