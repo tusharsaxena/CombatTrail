@@ -212,7 +212,7 @@ LogTable.CHIP_TIPS = {
 }
 --- The line the aura chips and settings add on WoW Forever (R5-CT-07, an L key): its client refuses an
 --- addon the auras in combat (docs/forever-quirks.md), so those rows hold only what changed out of it.
-LogTable.FOREVER_AURA_NOTE = "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only what changes before the pull and after combat."
+LogTable.FOREVER_AURA_NOTE = "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only the changes read as combat ends, such as the buffs you lose when you die."
 -- The chips and the saved categories that note belongs to.
 local AURA_KEYS = { buffs = true, debuffs = true, playerBuffs = true, playerDebuffs = true, targetDebuffs = true }
 

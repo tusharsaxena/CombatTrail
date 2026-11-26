@@ -332,7 +332,7 @@ tainted (addon) path, `C_UnitAuras.GetAuraDataByIndex` raises ("Auras cannot be 
 while tainted") instead of answering, so the diff's walk is always incomplete and, by design, an
 incomplete walk draws no line. This matches the saved fights: the auras on at the pull are read plain,
 and the only fades logged sit at a death (out of combat). *Cost:* the Buffs and Debuffs rows hold only
-what changes before the pull and after combat. *Do:* (R5-CT-05) the tally counts an event whose unit
+the changes read as combat ends, before the fight's capture closes. *Do:* (R5-CT-05) the tally counts an event whose unit
 cannot be read plain (`sealedUnit`), tells a plainly true `isFullUpdate` (`full`) from a sealed one
 (`sealedFull`), and a raise now ends that filter's walk, so a refused unit costs one read and `raised`
 counts raising walks, not reads (this fight would read `raised=7`); (R5-CT-06) a sealed `isFullUpdate`

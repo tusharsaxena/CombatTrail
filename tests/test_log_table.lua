@@ -267,9 +267,9 @@ test("log table: the chips are four, in order, with their categories and tips", 
 end)
 
 -- R5-CT-07: WoW Forever refuses an addon the auras in combat (docs/forever-quirks.md), so its Buffs and
--- Debuffs rows hold only what changed before the pull and after combat. The player is told so on the
+-- Debuffs rows hold only the changes read as combat ends. The player is told so on the
 -- chips and the settings that name them, on WoW Forever alone, in plain words.
-local AURA_NOTE = "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only what changes before the pull and after combat."
+local AURA_NOTE = "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only the changes read as combat ends, such as the buffs you lose when you die."
 
 test("log table: on WoW Forever the Buffs and Debuffs chips say what the client hides; Retail's say nothing", function()
     local inst, NS = fresh()
