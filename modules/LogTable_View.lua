@@ -5,7 +5,9 @@ local _, NS = ...
 -- modules/Results_Log.lua), drawing the cells modules/LogTable.lua works out.
 --
 -- THE SHAPE. A column header (its own row, LogTable.HEAD_H, in the list header's gold; `opts.noHeader`
--- leaves it out), then `rows` pooled rows LogTable.ROW_H apart. Each row is a stripe, a wash, one label
+-- leaves it out), LootHistory's and the Results list's (owner feedback round 4, R4-CT-03): 20 px, on
+-- the skin's sort-header band (NS.Skin.SortHeaderBar: `list.header.bg` behind `list.header.text`
+-- labels), then `rows` pooled rows LogTable.ROW_H apart. Each row is a stripe, a wash, one label
 -- per column and the spell's icon. The columns are laid by LogTable.Columns from the width the home
 -- gives: fixed widths, Spell taking the rest, Info dropped while it would be narrower than SPELL_MIN.
 -- No Amount column (the Combat Sequence: no line carries one), so the docked least width is Time's,
@@ -16,7 +18,9 @@ local _, NS = ...
 -- (LogTable.IconGap), so the two read as one cell.
 --
 -- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `sequence.view.sort`), and
--- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
+-- the header carries the sort's arrow (sort-down newest first, sort-up oldest first), the catalog's
+-- triangle inline after the label in the skin's `icon.arrow`, as the Results list's (Results_Table),
+-- built again on a skin change and every view's Time label redrawn with it (Style.OnLooks). THE WHEEL is the
 -- home's `opts.onScroll(away)`: lines away from the newest, by the sort's direction, one line a notch.
 -- THE SCROLL INDICATOR (owner feedback item 6) is Spell breakdown's (modules/Hud_States.lua): a thin
 -- track (`ct.scroll.track`) and thumb (`ct.scroll.thumb`) in the gutter right of the rows, shown while
@@ -48,7 +52,7 @@ LogTable.ROW_H = 14
 LogTable.ROW_H_MIN, LogTable.ROW_H_MAX = 12, 28
 LogTable.FONT_BASE = 10
 LogTable.FONT_MIN, LogTable.FONT_MAX = 8, 16
-LogTable.HEAD_H = 14
+LogTable.HEAD_H = 20
 LogTable.ICON = 12
 LogTable.COL_GAP = 4
 LogTable.SPELL_MIN = 70
@@ -132,6 +136,26 @@ end
 
 local View = {}
 View.__index = View
+local views = setmetatable({}, { __mode = "k" })   -- every view built, for the skin change's redraw
+
+-- The sort marks (R4-CT-03): the catalog's triangles in the skin's `icon.arrow` (an inline texture
+-- ignores its FontString's color), Blizzard's arrows beneath them, the Results list's own. Markup is
+-- a string, so both are built again on a skin change, and each view's Time label is redrawn.
+local ARROW_UP, ARROW_DOWN
+local function buildArrows()
+    local c = Style.Tok("icon.arrow")
+    ARROW_UP = Style.IconMarkup("sort-up", "Interface\\Buttons\\Arrow-Up-Up", c)
+    ARROW_DOWN = Style.IconMarkup("sort-down", "Interface\\Buttons\\Arrow-Down-Up", c)
+end
+buildArrows()
+Style.OnLooks(function()
+    buildArrows()
+    for view in pairs(views) do
+        local sort = view.sort
+        view.sort = nil
+        if sort then view:SetSort(sort) end
+    end
+end)
 
 --- The table's height with `rows` rows (its header too, unless `noHeader`), at LogTable.RowH().
 function LogTable.Height(rows, noHeader)
@@ -203,6 +227,8 @@ function LogTable.New(parent, opts)
     head:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
     head:SetPoint("TOPRIGHT", f, "TOPRIGHT", 0, 0)
     head:SetHeight(LogTable.HEAD_H)
+    -- The header band LootHistory's and the Results list's take (R4-CT-03).
+    NS.Skin.SortHeaderBar(head)
     self.head, self.heads = head, {}
     for _, key in ipairs(LogTable.ORDER) do
         self.heads[key] = Style.Text(head, Style.FONT.HEADER, "list.header.text", JUSTIFY)
@@ -213,6 +239,7 @@ function LogTable.New(parent, opts)
     self.sorter = sorter
     self.empty = Style.Text(f, Style.FONT.CAPTION, nil, "LEFT")
     head:SetShown(not self.opts.noHeader)
+    views[self] = true
     return self
 end
 
@@ -220,10 +247,7 @@ end
 function View:SetSort(sort)
     if self.sort == sort then return end
     self.sort = sort
-    local up = sort == "oldest"
-    local arrow = up and Style.IconMarkup("sort-up", "Interface\\Buttons\\Arrow-Up-Up", Style.GOLD)
-        or Style.IconMarkup("sort-down", "Interface\\Buttons\\Arrow-Down-Up", Style.GOLD)
-    self.heads.time:SetText(LogTable.HEADS.time .. " " .. arrow)
+    self.heads.time:SetText(LogTable.HEADS.time .. " " .. (sort == "oldest" and ARROW_UP or ARROW_DOWN))
 end
 
 local function place(fs, row, col)

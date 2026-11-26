@@ -442,6 +442,50 @@ test("log table columns: the icon is part of the Spell column, its name one char
     end
 end)
 
+test("log table header: LootHistory's header band, 20 px, in every home (round 4)", function()
+    local _, NS = fresh()
+    hudUp(NS)
+    local LT = NS.LogTable
+    -- red under: the 14 px header with no band, which read as plain text
+    assertEqual(LT.HEAD_H, 20, "the Results list's and LootHistory's header height")
+    local banded, orig = {}, NS.Skin.SortHeaderBar
+    NS.Skin.SortHeaderBar = function(bar, ...)
+        banded[bar] = true
+        return orig(bar, ...)
+    end
+    local view = LT.New(NS.Hud.Frame(), { info = true })
+    NS.Skin.SortHeaderBar = orig
+    assertTrue(banded[view.head], "the header frame wears the skin's sort-header band")
+    view:Layout(600, 3, {})
+    assertEqual(LT.Height(3), 20 + 3 * LT.RowH(), "every home's height counts the taller header")
+end)
+
+test("log table header: the Time sort triangle is the skin's arrow, rebuilt on a skin change (round 4)", function()
+    local inst, NS = fresh()
+    hudUp(NS)
+    local LT, Style = NS.LogTable, NS.Style
+    local view = LT.New(NS.Hud.Frame(), { info = true })
+    view:Layout(600, 3, {})
+    local function want(sort)
+        local c = Style.Tok("icon.arrow")
+        local up = sort == "oldest"
+        return LT.HEADS.time .. " " .. Style.IconMarkup(up and "sort-up" or "sort-down",
+            up and "Interface\\Buttons\\Arrow-Up-Up" or "Interface\\Buttons\\Arrow-Down-Up", c)
+    end
+    view:SetSort("newest")
+    assertEqual(view.heads.time:GetText(), want("newest"), "sort-down in the skin's icon.arrow")
+    view:SetSort("oldest")
+    assertEqual(view.heads.time:GetText(), want("oldest"), "sort-up")
+    local Skin = inst.mocks.LibStub("LibKa0s-Skin-1.0")
+    local source, skin = Skin:GetChoice("CombatTrail")
+    local before = view.heads.time:GetText()
+    Skin:SetChoice("CombatTrail", "ka0s", "obsidian")
+    assertTrue(view.heads.time:GetText() ~= before, "Obsidian's arrow is not Ka0s Default's")
+    assertEqual(view.heads.time:GetText(), want("oldest"), "redrawn in the new skin's arrow")
+    Skin:SetChoice("CombatTrail", source, skin)
+    assertEqual(view.heads.time:GetText(), want("oldest"), "and back")
+end)
+
 -- ── the drawer ──────────────────────────────────────────────────────────────────────────────────
 
 test("hud log: the title bar's Log control opens the drawer and the HUD grows by its height", function()
