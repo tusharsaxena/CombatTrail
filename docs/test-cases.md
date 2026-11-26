@@ -562,7 +562,7 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (34)
+### test_combat_log.lua (35)
 
 - combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
@@ -580,6 +580,7 @@ Total.
 - combat log: a target whose GUID cannot be read plain is never diffed
 - combat log: a target change is silent, and a new target is no burst of gains
 - combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key
+- combat log: the aura tally counts what UNIT_AURA brought and why each aura drew no line
 - combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown
 - combat log: past `log.store.lines` only the newest are kept and the record counts the rest
 - combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)
@@ -1955,10 +1956,11 @@ Total.
 - bindings: stood down, each key answers the refusal line and changes nothing
 - bindings: the General Defaults tooltip says it leaves key bindings alone
 
-### test_diagnostics.lua (10)
+### test_diagnostics.lua (11)
 
 - diagnostics: the report carries every section of this addon's own
 - diagnostics: the fight section names the Combat Sequence's capture and the events the client refused
+- diagnostics: the fight section prints the Combat Sequence's aura tally
 - diagnostics: a setting off its default is listed with its default
 - diagnostics: test mode shows in the preview line
 - diagnostics: Retail's race section names the race, the pending races, the boards and its windows
@@ -2165,7 +2167,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 34 |
+| test_combat_log.lua | 35 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2230,7 +2232,7 @@ Total.
 | test_showcase.lua | 16 |
 | test_sample_names.lua | 2 |
 | test_bindings.lua | 14 |
-| test_diagnostics.lua | 10 |
+| test_diagnostics.lua | 11 |
 | test_skin_surfaces.lua | 5 |
 | test_docs.lua | 15 |
 | test_eol.lua | 2 |
@@ -2242,4 +2244,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1848** |
+| **Total** | **1850** |

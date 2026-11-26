@@ -81,6 +81,17 @@ local function fight(out)
     local log = NS.CombatLog.Diagnose()
     out:add("Diag", "combat sequence registered=%s refused=%s lines=%s", log.registered,
         #log.refused > 0 and table.concat(log.refused, ",") or "none", log.lines)
+    -- Its aura tally since the last fight's capture began (R5-CT-03, CombatLog's THE AURA TALLY): what
+    -- UNIT_AURA brought and why each aura drew no line. Run after a fight, before the next pull.
+    local a = log.auras
+    out:add("Diag", "combat sequence aura events player=%s target=%s info=%s none=%s full=%s sealedInfo=%s",
+        a.evPlayer, a.evTarget, a.info, a.none, a.full, a.sealedInfo)
+    out:add("Diag", "combat sequence aura gains seen=%s lined=%s sealedTable=%s sealedInstance=%s sealedSpell=%s"
+        .. " sealedSource=%s notYours=%s targetBuff=%s", a.gainSeen, a.gainLined, a.gainSealedTable,
+        a.gainSealedInstance, a.gainSealedSpell, a.gainSealedSource, a.gainNotYours, a.gainTargetBuff)
+    out:add("Diag", "combat sequence aura losses seen=%s lined=%s unknown=%s sealed=%s walks complete=%s"
+        .. " incomplete=%s raised=%s unreadable=%s", a.lossSeen, a.lossLined, a.lossUnknown, a.lossSealed,
+        a.walkComplete, a.walkIncomplete, a.walkRaised, a.walkUnreadable)
 end
 
 local function windows(out)

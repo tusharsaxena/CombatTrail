@@ -34,6 +34,15 @@ local _, NS = ...
 -- own frame, and only while a fight is open and `sequence.enabled` is on: an event the client refuses
 -- costs only itself and is named by CombatLog.Diagnose.
 --
+-- THE AURA TALLY (owner feedback round 5, R5-CT-03). WoW Forever's real fights showed only CAST rows,
+-- and which read drops the auras cannot be told offline, so the capture counts what UNIT_AURA brings
+-- (per unit; usable update info, none, a full update, sealed info), each added aura and why it drew no
+-- line (its table, instance, spell ID or, on the target, its source sealed; a target debuff someone else
+-- put on; a target buff), each removed instance (lined, never mapped, sealed), the walks (complete or
+-- not, a raised read, an unreadable aura) and the lines drawn. Plain counts only, zeroed at each
+-- registration (the first open capture), so after a fight they describe that fight: CombatLog.Diagnose's
+-- `auras`, printed by `/ct diagnostics` (modules/Diagnostics.lua).
+--
 -- SECRETS. A sealed aura (its table, its spell ID or its instance) ends that aura's handling: its
 -- name or ID is never guessed, and it produces no line. A sealed spell ID on a cast produces no line.
 -- Only plain numbers are compared or used as keys: a map's key is an instance that passed
@@ -128,6 +137,21 @@ local registered = false
 local refused = {}      -- [event] = true: the client refused it this session
 local sample            -- the sample seam's ring while it is up: { ring, seq, startT, from, targets }
 local watchers = {}     -- [key] = fn: the views told of each swap
+--- The aura tally's counters, in the order `/ct diagnostics` prints them (R5-CT-03).
+CombatLog.TALLY = { "evPlayer", "evTarget", "info", "none", "full", "sealedInfo", "gainSeen", "gainLined",
+    "gainSealedTable", "gainSealedInstance", "gainSealedSpell", "gainSealedSource", "gainNotYours",
+    "gainTargetBuff", "lossSeen", "lossLined", "lossUnknown", "lossSealed", "walkComplete",
+    "walkIncomplete", "walkRaised", "walkUnreadable" }
+local tally = {}        -- [counter] = count since the last registration
+for _, key in ipairs(CombatLog.TALLY) do tally[key] = 0 end
+
+local function bump(key) tally[key] = tally[key] + 1 end
+-- An added aura's reason for no line, by mapped()'s second answer.
+local DROP = { table = "gainSealedTable", inst = "gainSealedInstance", spell = "gainSealedSpell",
+               source = "gainSealedSource", other = "gainNotYours", buff = "gainTargetBuff" }
+-- The tally's line count per kind.
+local LINED = { [CombatLog.KIND.BUFF_ON] = "gainLined", [CombatLog.KIND.DEBUFF_ON] = "gainLined",
+                [CombatLog.KIND.BUFF_OFF] = "lossLined", [CombatLog.KIND.DEBUFF_OFF] = "lossLined" }
 
 local function debug(fmt, ...)
     if NS.Debug then NS.Debug("CombatLog", fmt, ...) end
@@ -218,6 +242,7 @@ local function append(at, k, u, id, f)
         e = { n = seq, at = at, k = k, u = u, id = id, f = f, g = g }
         ring[slot] = e
     end
+    if LINED[k] then bump(LINED[k]) end
     count(e)
 end
 
@@ -313,18 +338,24 @@ local function fromMe(aura)
     return src == "player" or src == "pet"
 end
 
--- An aura's instance and map value (its spell ID, negated for a debuff), or nil when anything is
--- sealed, when it is a buff on the target, or when it is a target's debuff someone else put on.
+-- An aura's instance and map value (its spell ID, negated for a debuff), or nil and why (a DROP key)
+-- when anything is sealed, when it is a buff on the target, or when it is a target's debuff someone
+-- else put on ("source" when who put it on cannot be read plain).
 -- `harmful` is the walk's filter; an added aura says it itself (isHarmful, else a plain isHelpful of
 -- false).
 local function mapped(unit, aura, harmful)
-    if Secrets.IsSealed(aura) or not Secrets.CanAccessTable(aura) then return nil end
+    if Secrets.IsSealed(aura) or not Secrets.CanAccessTable(aura) then return nil, "table" end
     local inst, id = Secrets.PlainNumber(aura.auraInstanceID), Secrets.PlainNumber(aura.spellId)
-    if not inst or not id then return nil end
+    if not inst then return nil, "inst" end
+    if not id then return nil, "spell" end
     if harmful == nil then
         harmful = Secrets.PlainTruth(aura.isHarmful) or Secrets.PlainEquals(aura.isHelpful, false)
     end
-    if unit == "target" and not (harmful and fromMe(aura)) then return nil end
+    if unit == "target" and not harmful then return nil, "buff" end
+    if unit == "target" and not fromMe(aura) then
+        local sealed = Secrets.IsSealed(aura.isFromPlayerOrPlayerPet) or Secrets.IsSealed(aura.sourceUnit)
+        return nil, sealed and "source" or "other"
+    end
     return inst, harmful and -id or id
 end
 
@@ -355,6 +386,7 @@ local function walkFilter(unit, map, get, filter)
     for i = 1, CombatLog.AURA_LIMIT do
         local ok, aura = pcall(get, unit, i, filter)
         if not ok or (aura ~= nil and not readable(unit, aura)) then
+            bump(ok and "walkUnreadable" or "walkRaised")
             complete = false
         elseif aura == nil then
             return complete
@@ -389,6 +421,7 @@ local function walkInto(unit, map)
     for _, filter in ipairs(FILTERS[unit]) do
         if not walkFilter(unit, map, get, filter) then complete = false end
     end
+    bump(complete and "walkComplete" or "walkIncomplete")
     return complete
 end
 
@@ -457,7 +490,9 @@ local function added(unit, list, at)
     for i = 1, LIST_LIMIT do
         local aura = list[i]
         if aura == nil then break end
+        bump("gainSeen")
         local inst, v = mapped(unit, aura)
+        if not inst then bump(DROP[v]) end
         if inst and map[inst] == nil then
             map[inst] = v
             append(at, v < 0 and K.DEBUFF_ON or K.BUFF_ON, u, v < 0 and -v or v, nil)
@@ -471,8 +506,10 @@ local function removed(unit, list, at)
     for i = 1, LIST_LIMIT do
         local raw = list[i]
         if raw == nil then break end
+        bump("lossSeen")
         local inst = Secrets.PlainNumber(raw)
         local v = inst and map[inst]
+        if not v then bump(inst and "lossUnknown" or "lossSealed") end
         if v then
             map[inst] = nil
             append(at, v < 0 and K.DEBUFF_OFF or K.BUFF_OFF, u, v < 0 and -v or v, nil)
@@ -495,11 +532,24 @@ local function needsDiff(info)
     return unreadable(info.addedAuras) or unreadable(info.removedAuraInstanceIDs)
 end
 
+-- The tally's name for UNIT_AURA's update info: none, sealed (the table or a list), a full update, or
+-- usable info.
+local function shapeOf(info)
+    if info == nil then return "none" end
+    if Secrets.IsSealed(info) or not Secrets.CanAccessTable(info) then return "sealedInfo" end
+    local full = info.isFullUpdate
+    if Secrets.IsSealed(full) or Secrets.PlainTruth(full) then return "full" end
+    if unreadable(info.addedAuras) or unreadable(info.removedAuraInstanceIDs) then return "sealedInfo" end
+    return "info"
+end
+
 --- UNIT_AURA for `player` or `target`: its added auras are gains, its removed instances losses
 --- (`updatedAuraInstanceIDs`, a refresh, is no line). A full update or no usable update info diffs the
 --- unit while the capture is registered (else walks it silently).
 function CombatLog.OnAura(unit, info, at)
     if unit ~= "player" and unit ~= "target" then return end
+    bump(unit == "player" and "evPlayer" or "evTarget")
+    bump(shapeOf(info))
     if needsDiff(info) then
         if registered then return diff(unit, at) end
         return walk(unit)
@@ -555,6 +605,7 @@ local function register()
         end
     end
     registered = true
+    for key in pairs(tally) do tally[key] = 0 end
     curTarget = noteTarget()
     walk("player")
     walk("target")
@@ -579,12 +630,15 @@ function CombatLog.Sync()
 end
 
 --- What the capture registers and what the client refused (`/ct diagnostics`' fight section line).
---- @return table  { registered = boolean, refused = { event, ... } (sorted), lines = number }
+--- @return table  { registered = boolean, refused = { event, ... } (sorted), lines = number, auras = { [counter]
+---                = number } (the aura tally since the last registration, CombatLog.TALLY's keys) }
 function CombatLog.Diagnose()
     local out = {}
     for event in pairs(refused) do out[#out + 1] = event end
     table.sort(out)
-    return { registered = registered, refused = out, lines = seq }
+    local counts = {}
+    for key, n in pairs(tally) do counts[key] = n end
+    return { registered = registered, refused = out, lines = seq, auras = counts }
 end
 
 --- The event frame (nil until a fight first opened one), for the suites and the perf runner.

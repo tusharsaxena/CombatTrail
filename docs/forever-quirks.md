@@ -308,7 +308,7 @@ secret spell ID in combat, `curve:Evaluate` raises "Secret values are only allow
 execution". *Do:* issue #7's route is closed; live rows stay in the player color mid-combat.
 *Source:* this repo, `modules/ProbeCurve.lua`.
 
-**`UNIT_AURA`'s update info for the Combat Sequence is assumed, not yet probed.**
+**`UNIT_AURA`'s update info for the Combat Sequence is assumed, not yet probed; its in-combat auras draw no line.**
 *Client:* Forever (1.60.1). *Measured:* not measured; assumed, until the owner probes it (CombatTrail
 #11, plan item CL-11a, 2026-11-25; rewritten for the Combat Sequence, CSEQ-1 and CSEQ-3). The Combat
 Sequence registers `UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while
@@ -327,4 +327,19 @@ prints the capture's own line in its fight section, `combat sequence registered=
 (`CombatLog.Diagnose`; `refused=none` is this quirk's delivery, and `UNIT_COMBAT` is never named), and
 lists any refused event under *rejected events*. The smoke rows (SM-CT-SQ3 first, docs/smoke-tests.md)
 record whether BUFF+ and BUFF- rows appear on Forever, and this entry becomes a measured one or is
-corrected. *Source:* this repo, `modules/CombatLog.lua`.
+corrected. *Partly measured, 2026-11-26 (owner feedback round 5, R5-CT-03):* the owner reported that
+the Combat Sequence tracks no buffs or debuffs on Forever (a Beast Mastery hunter's fight showed CAST
+rows alone, the Buffs and Debuffs chips on). The owner's Forever saved fights bear it out: of about 70
+saved logs (some 1,170 CAST lines) only five BUFF+ lines appear, all one spell (1261483), and no
+DEBUFF+ or DEBUFF- line at all, though the fights cast Serpent Sting and the paladin's seals; every
+BUFF- line sits at the very moment of a death (DIES), the long buffs (Devotion Aura 465, Blessing of
+Might 19740, Find Herbs 2383) falling off together. So `UNIT_AURA` is delivered and the auras on at the
+pull are read plain (the fades at a death name them), but the gains and debuffs that arrive during
+combat draw no line. The likeliest cause is that the client hands those auras over with a sealed
+(secret) spell ID, instance or source in combat, which the capture refuses by design; it is not yet
+proven which. *Do:* the capture now counts what `UNIT_AURA` brings and why each aura drew no line
+(CombatLog's THE AURA TALLY): after a fight, before the next pull, `/ct diagnostics` prints three
+`combat sequence aura …` lines (events, gains, losses and walks), and smoke row R5-CT-SM3 records
+them. A high `sealedSpell`, `sealedInstance`, `sealedTable` or `sealedSource` against `gains seen`
+names the sealed field, and the entry is then rewritten as measured. *Source:* this repo,
+`modules/CombatLog.lua`; the owner's Forever `CombatTrail.lua` saved variables, 2026-11-26.
