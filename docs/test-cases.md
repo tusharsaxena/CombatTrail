@@ -562,7 +562,7 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (36)
+### test_combat_log.lua (40)
 
 - combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
@@ -581,6 +581,10 @@ Total.
 - combat log: a target change is silent, and a new target is no burst of gains
 - combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key
 - combat log: the aura tally counts what UNIT_AURA brought and why each aura drew no line
+- combat log: the tally counts a sealed unit, tells a sealed full update, and a raise ends the walk
+- combat log: a sealed full update's readable added and removed lists are lined; a plain one only diffs
+- combat log: after an incomplete silent walk the next complete diff draws no gain, only losses
+- combat log: a sealed full update's lists for a new target before the change draw no line
 - combat log: one UNIT_AURA reads its update info's access once for the tally and the diff
 - combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown
 - combat log: past `log.store.lines` only the newest are kept and the record counts the rest
@@ -1304,7 +1308,7 @@ Total.
 - hud layout: the live body stacks the top, Damage profile, the pace bar, the plot, Spell breakdown
 - hud layout: the fight-over card stacks the same, its chips in the reserved status line
 - hud layout: with the plot off the heading stays over the pace bar
-- hud layout: with nothing to pace against the plot sits right under its heading
+- hud layout: with nothing to pace against the pace line stays reserved over the plot (R6-CT-01)
 - hud layout: the defaults are DPS Race's sizes, 260 wide (its least, R4-CT-06)
 - hud layout: the window is 260 wide on DPS Race's insets, its height the stack's
 - hud layout: a spell row is 18 high in a 10 point face, its icon 16
@@ -1354,6 +1358,16 @@ Total.
 - hud static: with Spell breakdown off the grip moves only the sequence's rows
 - hud static: a whole fight with the log open, saved, then skipped, never moves the window
 
+### test_hud_idle_layout.lua (7)
+
+- hud idle layout: with no fight the stack sits where the paced live fight with a pet puts it
+- hud idle layout: the fight-over card lines up with the live body and the idle one
+- hud idle layout: a live fight with no pet and nothing to pace against keeps the same slots
+- hud idle layout: the idle placeholders are muted and say what is missing
+- hud idle layout: a fight that starts takes its placeholders away
+- hud idle layout: a part switched off stays off in both states, and both still line up
+- hud idle layout: the idle stack is the window's fixed stack exactly
+
 ### test_hud_race_button.lua (31)
 
 - hud race button: absent on WoW Forever
@@ -1388,7 +1402,7 @@ Total.
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
 
-### test_log_table.lua (33)
+### test_log_table.lua (36)
 
 - log table: a cast is a plain row with its spell, and no cell names a source or a target
 - log table: a long-cooldown cast wears the gold wash; washes off takes it away
@@ -1401,6 +1415,9 @@ Total.
 - log table: an old saved HIT, HEAL, boundary or target BUFF line draws no tag and never shows
 - log table: the categories and the auto attacks decide what shows; no amount test
 - log table: the chips are four, in order, with their categories and tips
+- log table: on WoW Forever the Buffs and Debuffs chips say what the client hides; Retail's say nothing
+- log page: on WoW Forever the aura settings' tooltips end with the note; Retail's do not
+- log table: smoke row R5-CT-SM5 quotes the WoW Forever aura note as shipped
 - log table feed: instant reveals every line, newest first; a scroll pauses and Resume follows
 - log table feed: the view's count moves on with the ring and always equals a full walk
 - log table feed: every N ms shows at most one line each N ms; batch shows them together
@@ -2168,7 +2185,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 36 |
+| test_combat_log.lua | 40 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2201,8 +2218,9 @@ Total.
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 17 |
 | test_hud_static.lua | 20 |
+| test_hud_idle_layout.lua | 7 |
 | test_hud_race_button.lua | 31 |
-| test_log_table.lua | 33 |
+| test_log_table.lua | 36 |
 | test_log_window.lua | 19 |
 | test_log_page.lua | 16 |
 | test_sizing.lua | 7 |
@@ -2245,4 +2263,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1851** |
+| **Total** | **1865** |

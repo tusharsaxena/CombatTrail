@@ -83,8 +83,9 @@ for _, log in ipairs({ "closed", "docked", "detached" }) do
             local NS = inst.NS
             local plot = NS.HudChart.PlotHeight()
             assertEqual(chart.plotH, plot, "the plot keeps its configured height")
-            assertEqual(chart.blockH, NS.HudChart.BlockHeight(plot, NS.HudChart.PACE_H + NS.HudStates.PACE_GAP)
-                - (v.pace == nil and (NS.HudChart.PACE_H + NS.HudStates.PACE_GAP) or 0), "the whole block")
+            -- The pace line is reserved whether or not this fight has a best (R6-CT-01).
+            assertEqual(chart.blockH, NS.HudChart.BlockHeight(plot, NS.HudChart.PACE_H + NS.HudStates.PACE_GAP),
+                "the whole block")
             allSame(heights, "the window's height never moved in or after the fight")
             assertEqual(Hud.Frame().__h, Hud.FixedHeight())
         end)
