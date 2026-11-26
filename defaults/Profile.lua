@@ -161,7 +161,8 @@ NS.defaults = {
         -- keeps the card up), whether the pointer holds it, whether it opens only inside an instance, what
         -- the pace compares against ("best" on the same board, the "last" fight there, or "none"), the pace
         -- bar's range (plan Task 3.2), whether the fight-over card shows and whether it says why a fight was
-        -- not saved. Layout: its width (390, the owner's own; feedback item 2), its scale, its `bars` spell
+        -- not saved. Layout: its width (260, its least, so a new profile starts narrow: owner feedback round 4,
+        -- R4-CT-06; schema step 10 pins 390, the old default, on every stored profile), its scale, its `bars` spell
         -- rows (the window is one static height, feedback item 12: the auto-grow `sizeMode` and its `grow`
         -- edge are retired, schema step 6), and one switch per part of the stack (the clock, the
         -- target line, the Damage and DPS boxes, the pace bar, the damage chart and the spell rows). Its
@@ -183,7 +184,7 @@ NS.defaults = {
         hud = {
             show = "auto", fadeAfter = 8, holdOnMouse = true, instancesOnly = false,
             paceAgainst = "best", paceRange = 1.5, overCard = true, showSkipReason = true,
-            width = 390, scale = 1, bars = 5,
+            width = 260, scale = 1, bars = 5,
             -- Both windows' live refreshes a second (modules/Hud.lua's beat, the race beat): 4, 5, 10 or 20.
             refreshRate = 10,
             layout = { clock = true, target = true, figures = true, pace = true, chart = true, spells = true },

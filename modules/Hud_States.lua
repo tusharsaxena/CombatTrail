@@ -81,8 +81,8 @@ local PACE_GAP = 4
 -- The clock draws its stored size scaled as DPS Race's single clock does (BIG / CLOCK_PAIR, 40 / 26):
 -- the composed Font size row tops out at 32, so the stored 26 is what draws DPS Race's 40.
 local CLOCK_SCALE = 40 / 26
--- The bodies' width when the shell hands none: the default 390 less PAD on both sides.
-local WIDTH = 366
+-- The bodies' width when the shell hands none: the default 260 (R4-CT-06) less PAD on both sides.
+local WIDTH = 236
 -- The scroll indicator in the gutter right of the rows: its width, its gap from them, its shortest thumb.
 local THUMB_W, THUMB_GAP, THUMB_MIN = 2, 4, 6
 -- Shared with the Combat Sequence's table (modules/LogTable_View.lua, owner feedback item 6): the same indicator.

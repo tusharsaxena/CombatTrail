@@ -100,8 +100,8 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 9 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 9)
+test("load: the settings stamp is 10 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 10)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
@@ -320,7 +320,7 @@ test("load: step 9 moves each profile's log to sequence, and its Results fold wi
     assertEqual(sv.Default.results.collapsedSections.sequence, true)
 end)
 
-test("load: a profile at schema 5 runs steps 6 to 9 in order and ends with no log", function()
+test("load: a profile at schema 5 runs steps 6 to 10 in order and ends with no log", function()
     local NS = boot({ global = { schemaVersion = 5 }, profiles = { Other = {
         general = { locked = true },
         log = { window = { attached = true, rows = 20 }, view = { columns = { amount = false, info = false } },
@@ -335,5 +335,30 @@ test("load: a profile at schema 5 runs steps 6 to 9 in order and ends with no lo
     assertEqual(rawget(p.sequence.show, "hits"), nil)
     assertEqual(p.sequence.view.columns.info, false, "a kept key moved")
     assertEqual(p.sequence.show.casts, false)
-    assertEqual(NS.db.global.schemaVersion, 9)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+end)
+
+test("load: step 10 pins 390 wide on each stored profile that keeps no width, so only new profiles start at 260", function()
+    local NS = boot({ global = { schemaVersion = 9 }, profiles = {
+        Default = { hud = { bars = 6 } },
+        Wide = { hud = { width = 480 } },
+        NoHud = { general = { locked = true } },
+        Empty = {},
+    } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: no step 10, or one over the active profile alone
+    assertEqual(sv.Default.hud.width, 390, "a stored profile with no width keeps today's 390")
+    assertEqual(sv.NoHud.hud.width, 390, "a profile with no hud table gets one")
+    assertEqual(sv.Wide.hud.width, 480, "a stored width is kept")
+    assertEqual(rawget(sv.Empty, "hud"), nil, "an empty profile stores nothing yet: it is a new one")
+    assertEqual(NS.GetSetting("hud.width"), 390, "the active profile reads the pin")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    -- Idempotent and harmless.
+    NS.PinHudWidth(sv.Default)
+    NS.PinHudWidth({})
+    NS.PinHudWidth(nil)
+    assertEqual(sv.Default.hud.width, 390, "a second run changes nothing")
+    local fresh = boot(nil)
+    assertEqual(fresh.GetSetting("hud.width"), 260, "a fresh install starts at the least width")
+    assertEqual(fresh.GetSetting("hud.width"), fresh.Hud.MIN_WIDTH)
 end)

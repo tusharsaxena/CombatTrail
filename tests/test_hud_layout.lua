@@ -151,11 +151,11 @@ end)
 
 -- ── the sizes ───────────────────────────────────────────────────────────────────────────────────
 
-test("hud layout: the defaults are DPS Race's sizes, 390 wide (the owner's)", function()
+test("hud layout: the defaults are DPS Race's sizes, 260 wide (its least, R4-CT-06)", function()
     local inst = H.fresh()
     local NS = inst.NS
     local d = NS.defaults.profile.hud
-    assertEqual(d.width, 390, "owner feedback item 2")
+    assertEqual(d.width, 260, "R4-CT-06: a new profile starts at the least width")
     assertEqual(NS.Hud.MIN_WIDTH, 260, "DPS Race's least")
     assertEqual(d.clock.fontFromSkin, true, "the clock in the skin's HUD face, as DPS Race's")
     assertEqual(d.clock.fontSize, 26, "DPS Race's stored clock size (the composed slider tops out at 32)")
@@ -169,7 +169,7 @@ test("hud layout: the defaults are DPS Race's sizes, 390 wide (the owner's)", fu
     assertEqual(NS.HudChart.PACE_H, 12)
 end)
 
-test("hud layout: the window is 390 wide on DPS Race's insets, its height the stack's", function()
+test("hud layout: the window is 260 wide on DPS Race's insets, its height the stack's", function()
     local inst, _, Hud = paced()
     local NS = inst.NS
     local f, ui = Hud.Frame(), Hud.__ui()
@@ -177,7 +177,7 @@ test("hud layout: the window is 390 wide on DPS Race's insets, its height the st
     track(f)
     track(ui.content)
     redraw(Hud, body)
-    assertEqual(f.__w, 390)
+    assertEqual(f.__w, 260)
     local headerH, footerH = NS.Style.TITLE_BAR_H, NS.FOOTER_HEIGHT   -- the library's footer, 24 (AD-89-CT)
     local tl, br = ui.content.__points[1], ui.content.__points[2]
     assertEqual(tl[1], "TOPLEFT")
@@ -186,7 +186,7 @@ test("hud layout: the window is 390 wide on DPS Race's insets, its height the st
     assertEqual(br[1], "BOTTOMRIGHT")
     assertEqual(br[4], -12)
     assertEqual(br[5], footerH + 8, "the content's bottom: the footer + 8")
-    assertEqual(Hud.View().width, 390 - 24, "the bodies' width: 366")
+    assertEqual(Hud.View().width, 260 - 24, "the bodies' width: 236")
     local rows = body.parts.spells.list:Rows()
     local drawn = #rows
     -- Two spells in five bars' room and no pet: the one height keeps the three empty rows and the

@@ -127,14 +127,14 @@ local function docked(n)
     return inst, meter, Hud
 end
 
-test("hud static: the default window is 390 wide and exactly tall enough for 5 bars and 10 log rows", function()
+test("hud static: the default window is 260 wide and exactly tall enough for 5 bars and 10 log rows", function()
     local inst, _, Hud = docked(8)
     local NS = inst.NS
     assertEqual(NS.defaults.profile.hud.bars, 5)
     assertEqual(NS.defaults.profile.sequence.drawer.rows, 10)
     assertEqual(NS.defaults.profile.sequence.drawer.shown, true, "the log shows by default (item 1)")
     local f = Hud.Frame()
-    assertEqual(f.__w, 390)
+    assertEqual(f.__w, 260)
     assertEqual(#H.body(Hud, "live").parts.spells.list:Rows(), 5, "five bars")
     assertEqual(NS.HudLog.__ui().table.nRows, 10, "ten log rows")
     local chrome = NS.Style.TITLE_BAR_H + 10 + NS.FOOTER_HEIGHT + 8

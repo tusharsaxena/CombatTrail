@@ -74,10 +74,11 @@ end
 -- format version (modules/Recorder.lua's CT_SCHEMA, spec §5), which never migrates settings. A
 -- CT_SCHEMA bump takes no step: CT_SCHEMA 3 -> 4 (Race mode's optional `race` part) leaves every stored
 -- record as it is, and an older one simply reads as a fight.
-NS.SCHEMA_VERSION = 9
+NS.SCHEMA_VERSION = 10
 
 -- Each step is idempotent against a fresh default profile. A profile-scoped step sets
--- `perProfile = true` and runs once for every stored profile.
+-- `perProfile = true` and runs once for every stored profile, handed `(sv, profile, fresh)`: `fresh`
+-- is true on a fresh install (no stamp when the runner started).
 local STEPS = {
     { to = 1, run = function() end },   -- 0 -> 1: the first release's shape, a no-op
     -- 1 -> 2: the v0.2 fight record (CT_SCHEMA 2: the target's level and NPC ID, the gear set). The
@@ -142,6 +143,18 @@ local STEPS = {
     -- the same way. Steps 5, 6 and 8 run before it, on `log`, so nothing retired is carried across.
     -- Idempotent: a second run finds no `log`, and a profile with neither is left alone.
     { to = 9, perProfile = true, run = function(_, profile) NS.MoveLogToSequence(profile) end },
+    -- 9 -> 10, per profile: the HUD's width default drops to its least, 260 (owner feedback round 4,
+    -- R4-CT-06: "start off with the window at min width for new profiles"). AceDB stores only what
+    -- differs from the default, so a profile that has been used and never changed its width stores none
+    -- and would shrink with the default; this step writes today's 390 into each one, so only a new profile
+    -- starts at 260. A fresh install (stamped 0 when the runner started: every install that ever loaded
+    -- was stamped at least 1) has no old profile and is left alone, and so is a profile table with
+    -- nothing stored. A width equal to the new default is AceDB's copy into the active profile, never a
+    -- choice (a 260 chosen under the old default reads the same, and is pinned too). Idempotent: a
+    -- width of its own is kept.
+    { to = 10, perProfile = true, run = function(_, profile, fresh)
+        if not fresh then NS.PinHudWidth(profile) end
+    end },
 }
 NS.__migrationSteps = STEPS   -- test seam only
 
@@ -223,6 +236,22 @@ function NS.MoveLogToSequence(profile)
     folds.log = nil
 end
 
+--- Step 10's body: `profile.hud.width` written as 390, the width before R4-CT-06, on a stored profile
+--- that keeps none (or only the default's copy). A profile with nothing stored, or with its own width,
+--- is left alone.
+NS.PINNED_HUD_WIDTH = 390
+function NS.PinHudWidth(profile)
+    if type(profile) ~= "table" or next(profile) == nil then return end
+    local hud = rawget(profile, "hud")
+    if type(hud) ~= "table" then
+        hud = {}
+        profile.hud = hud
+    end
+    local w = rawget(hud, "width")
+    local D = NS.defaults and NS.defaults.profile and NS.defaults.profile.hud
+    if w == nil or (D and w == D.width) then hud.width = NS.PINNED_HUD_WIDTH end
+end
+
 --- Step 7's body: `profile.general.locked`, when stored true, copied to `general.lanesLocked` where
 --- the profile stores no lanes lock yet. A profile with no `general` table is left alone.
 function NS.CarryLanesLock(profile)
@@ -265,10 +294,13 @@ end
 function NS:RunMigrations()
     local db = NS.db
     local g, sv = db.global, _G[addonName .. "DB"]
+    -- A fresh install: no stamp yet (0, the default). Every install that ever ran this loop was stamped
+    -- at least 1 (the first release's step), so 0 means nothing was stored before this load.
+    local fresh = (tonumber(g.schemaVersion) or 0) == 0
     for _, step in ipairs(STEPS) do
         if (g.schemaVersion or 0) < step.to then
             if step.perProfile then
-                for _, profile in pairs(sv and sv.profiles or {}) do step.run(sv, profile) end
+                for _, profile in pairs(sv and sv.profiles or {}) do step.run(sv, profile, fresh) end
             else
                 step.run(sv)
             end

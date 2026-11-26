@@ -126,10 +126,11 @@ function HudLog.RowsFit(h)
     return clamp(math.floor((tonumber(h) or 0) / LogTable.RowH()), HudLog.MIN_ROWS, HudLog.MAX_ROWS)
 end
 
--- The drawer's width (the HUD's, less its insets): its chips wrap at it.
+-- The drawer's width (the HUD's, less its insets): its chips wrap at it. Without the shell, the
+-- default width's (260, R4-CT-06) less the insets.
 local function drawerWidth()
     local H = NS.Hud
-    return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 366
+    return H and H.LogWidth and Secrets.PlainNumber(H.LogWidth()) or 236
 end
 
 --- Whether the chips row shows (`sequence.drawer.chips`, the header's filter mark): only while it is

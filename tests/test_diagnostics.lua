@@ -37,7 +37,7 @@ test("diagnostics: the report carries every section of this addon's own", functi
     local lines = report(inst)
     assertTrue(#lines > 0, "no report landed")
     for _, needle in ipairs({
-        "schema stored=9 code=9 fightFormat=6", "profile=", "fights stored=0",
+        "schema stored=10 code=10 fightFormat=6", "profile=", "fights stored=0",
         "lanes player=on pet=on", "cast events=", "fight state=idle",
         "hud state=", "results shown=false", "test active=false mode=none",
     }) do
@@ -61,7 +61,7 @@ test("diagnostics: a setting off its default is listed with its default", functi
     local inst = T.load()
     inst.NS.SetByPath("hud.width", 360)
     local lines = report(inst)
-    assertTrue(has(lines, "hud.width = 360 (390)"), dump(lines))
+    assertTrue(has(lines, "hud.width = 360 (260)"), dump(lines))
 end)
 
 test("diagnostics: test mode shows in the preview line", function()
@@ -132,7 +132,7 @@ test("diagnostics: stood down, the runtime sections say so and the stored ones s
     inst.NS.Slash:OnSlash("disable")
     local lines = report(inst)
     assertTrue(has(lines, "stood down: runtime state released"), dump(lines))
-    assertTrue(has(lines, "hud.width = 360 (390)"), "the settings still print:\n" .. dump(lines))
+    assertTrue(has(lines, "hud.width = 360 (260)"), "the settings still print:\n" .. dump(lines))
     assertTrue(has(lines, "fights stored=0"), "the store still prints:\n" .. dump(lines))
     assertFalse(has(lines, "fight state="), "no runtime fight line while stood down:\n" .. dump(lines))
 end)

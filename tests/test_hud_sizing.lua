@@ -77,12 +77,12 @@ end
 
 -- ── the defaults and the rows ───────────────────────────────────────────────────────────────────
 
-test("hud sizing: the defaults are 5 bars and 390 wide; spells.rows, sizeMode and grow are retired", function()
+test("hud sizing: the defaults are 5 bars and 260 wide; spells.rows, sizeMode and grow are retired", function()
     local inst = H.fresh()
     local NS = inst.NS
     local d = NS.defaults.profile.hud
     assertEqual(d.bars, 5, "owner feedback item 16")
-    assertEqual(d.width, 390, "owner feedback item 2")
+    assertEqual(d.width, 260, "R4-CT-06: the least width")
     assertEqual(d.sizeMode, nil, "one static height: no size mode (item 12)")
     assertEqual(d.grow, nil, "and no grow edge")
     assertEqual(d.spells.rows, nil, "hud.spells.rows retired into hud.bars")
@@ -96,7 +96,7 @@ test("hud sizing: the defaults are 5 bars and 390 wide; spells.rows, sizeMode an
     assertEqual(NS.FindSchemaRow("hud.sizeMode"), nil, "no Window size row")
     assertEqual(NS.FindSchemaRow("hud.grow"), nil, "no Grow row")
     assertEqual(NS.FindSchemaRow("hud.width").max, NS.Hud.MAX_WIDTH)
-    assertEqual(NS.FindSchemaRow("hud.width").default, 390)
+    assertEqual(NS.FindSchemaRow("hud.width").default, 260)
 end)
 
 -- ── the one height ──────────────────────────────────────────────────────────────────────────────
@@ -108,7 +108,7 @@ test("hud sizing: the fixed height is derived from the bars, the same with 0, 3 
         local f = Hud.Frame()
         assertEqual(f.__h, chrome(inst) + TOP + PROFILE + spellsBlock(5), n .. " spells: the stack for 5 bars")
         assertEqual(f.__h, Hud.FixedHeight())
-        assertEqual(f.__w, 390)
+        assertEqual(f.__w, 260)
         assertEqual(#rows(Hud), math.min(n, 5), n .. " spells: at most 5 rows")
         heights[#heights + 1] = f.__h
     end

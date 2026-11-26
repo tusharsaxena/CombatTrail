@@ -157,7 +157,7 @@ Hud.STATE = { HIDDEN = "hidden", LIVE = "live", OVER = "over", NO_BEST = "noBest
 -- Seconds between two reads of the fight's casts for the chart's cooldown icons.
 Hud.CAST_READ = 1
 Hud.FRAME_NAME = "CombatTrailHud"
-Hud.MIN_WIDTH = 260   -- DPS Race's (v0.2 Task B2); `hud.width` defaults to 390 (owner feedback item 2)
+Hud.MIN_WIDTH = 260   -- DPS Race's (v0.2 Task B2); `hud.width` defaults to it (R4-CT-06)
 Hud.MAX_WIDTH = 600   -- the width row's and the grip's
 Hud.MIN_BARS, Hud.MAX_BARS = 1, 15   -- the spell rows `hud.bars` holds (v0.2 Task B3)
 -- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade (and
