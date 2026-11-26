@@ -308,38 +308,37 @@ secret spell ID in combat, `curve:Evaluate` raises "Secret values are only allow
 execution". *Do:* issue #7's route is closed; live rows stay in the player color mid-combat.
 *Source:* this repo, `modules/ProbeCurve.lua`.
 
-**`UNIT_AURA`'s update info for the Combat Sequence is assumed, not yet probed; its in-combat auras draw no line.**
-*Client:* Forever (1.60.1). *Measured:* not measured; assumed, until the owner probes it (CombatTrail
-#11, plan item CL-11a, 2026-11-25; rewritten for the Combat Sequence, CSEQ-1 and CSEQ-3). The Combat
-Sequence registers `UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while
-a fight is open. It no longer registers `UNIT_COMBAT` at all: the hit and heal rows it fed went
-(CSEQ-1), so that event's shape on Forever no longer matters here. The assumption is that `UNIT_AURA`
-exists on Forever, as its client globals list `C_UnitAuras.GetAuraDataByIndex` and
-`GetAuraDataByAuraInstanceID`, with plain spell IDs and instances in combat, as the casts are. Whether
-it carries `addedAuras` and `removedAuraInstanceIDs` is not known, and no longer decides whether gains
-and fades are logged: on a full update, with no update info, or with sealed or unreadable info, the unit
-is walked into a scratch map and diffed against its map (gains in walk order, then fades by instance
-ID). *Cost, if wrong:* with no update info, every `UNIT_AURA` on the player is a diff of up to 80 reads,
-under the `combatLog` bracket. A raise from the aura reader (§3's `GetBuffDataByIndex` entry) or a
-sealed aura or ID makes the walk incomplete, and an incomplete walk writes no line, so a fade in that
-stretch is logged late, at the next complete diff, never falsely. *Do:* after a fight, `/ct diagnostics`
-prints the capture's own line in its fight section, `combat sequence registered=… refused=… lines=…`
-(`CombatLog.Diagnose`; `refused=none` is this quirk's delivery, and `UNIT_COMBAT` is never named), and
-lists any refused event under *rejected events*. The smoke rows (SM-CT-SQ3 first, docs/smoke-tests.md)
-record whether BUFF+ and BUFF- rows appear on Forever, and this entry becomes a measured one or is
-corrected. *Partly measured, 2026-11-26 (owner feedback round 5, R5-CT-03):* the owner reported that
-the Combat Sequence tracks no buffs or debuffs on Forever (a Beast Mastery hunter's fight showed CAST
-rows alone, the Buffs and Debuffs chips on). The owner's Forever saved fights bear it out: of about 70
-saved logs (some 1,170 CAST lines) only five BUFF+ lines appear, all one spell (1261483), and no
-DEBUFF+ or DEBUFF- line at all, though the fights cast Serpent Sting and the paladin's seals; every
-BUFF- line sits at the very moment of a death (DIES), the long buffs (Devotion Aura 465, Blessing of
-Might 19740, Find Herbs 2383) falling off together. So `UNIT_AURA` is delivered and the auras on at the
-pull are read plain (the fades at a death name them), but the gains and debuffs that arrive during
-combat draw no line. The likeliest cause is that the client hands those auras over with a sealed
-(secret) spell ID, instance or source in combat, which the capture refuses by design; it is not yet
-proven which. *Do:* the capture now counts what `UNIT_AURA` brings and why each aura drew no line
-(CombatLog's THE AURA TALLY): after a fight, before the next pull, `/ct diagnostics` prints three
-`combat sequence aura …` lines (events, gains, losses and walks), and smoke row R5-CT-SM3 records
-them. A high `sealedSpell`, `sealedInstance`, `sealedTable` or `sealedSource` against `gains seen`
-names the sealed field, and the entry is then rewritten as measured. *Source:* this repo,
-`modules/CombatLog.lua`; the owner's Forever `CombatTrail.lua` saved variables, 2026-11-26.
+**The Combat Sequence cannot read auras by index in combat, so its in-combat buff and debuff rows are lost.**
+*Client:* Forever (1.60.1, build 71139). *Measured:* the owner's `/ct diagnostics` after a Beast Mastery
+hunter's fight with the pet out and Serpent Sting on the target, 2026-11-26 (owner feedback round 5,
+R5-CT-03's aura tally, run on the build before R5-CT-05 split its counters):
+
+```
+combat sequence registered=false refused=none lines=50
+combat sequence aura events player=1 target=4 info=0 none=0 full=5 sealedInfo=0
+combat sequence aura gains seen=0 lined=0 sealedTable=0 sealedInstance=0 sealedSpell=0 sealedSource=0 notYours=0 targetBuff=0
+combat sequence aura losses seen=0 lined=0 unknown=0 sealed=0 walks complete=5 incomplete=6 raised=280 unreadable=0
+```
+
+`UNIT_AURA` is registered and never refused (`refused=none`), but every one the tally counted had the
+"full" shape (`isFullUpdate` plainly true or sealed; that build could not tell which), so none carried a
+list to read (`gains seen=0`, `losses seen=0`) and each was a diff. Every in-combat walk raised at every
+index: 280 is 7 filter walks times `AURA_LIMIT` 40 (the player's one event over its two filters, the
+target's four events, and one target-change walk). The 5 complete walks are the out-of-combat ones. Only
+5 `UNIT_AURA` reached the tally in a whole fight, suspiciously few: that build dropped an event whose unit
+argument could not be read plain before any counter, so the count may hide more (not yet measured). `COMBAT_LOG_EVENT_UNFILTERED` is
+forbidden on Forever, so there is no other source. *Cause:* §3's measured aura read: in combat, on a
+tainted (addon) path, `C_UnitAuras.GetAuraDataByIndex` raises ("Auras cannot be accessed when secret
+while tainted") instead of answering, so the diff's walk is always incomplete and, by design, an
+incomplete walk draws no line. This matches the saved fights: the auras on at the pull are read plain,
+and the only fades logged sit at a death (out of combat). *Cost:* the Buffs and Debuffs rows hold only
+what changes before the pull and after combat. *Do:* (R5-CT-05) the tally counts an event whose unit
+cannot be read plain (`sealedUnit`), tells a plainly true `isFullUpdate` (`full`) from a sealed one
+(`sealedFull`), and a raise now ends that filter's walk, so a refused unit costs one read and `raised`
+counts raising walks, not reads (this fight would read `raised=7`); (R5-CT-06) a sealed `isFullUpdate`
+whose `addedAuras` / `removedAuraInstanceIDs` can still be read has them lined (each aura still refused
+when any field is sealed) before the diff, in case the client hands a never-secret aura over in the
+update info; (R5-CT-07) on Forever the Buffs and Debuffs chips and their settings tell the player, in
+plain words, that WoW Forever hides buffs and debuffs from addons during combat. Smoke row R5-CT-SM3
+re-measures with the split counters. *Source:* this repo, `modules/CombatLog.lua`; the owner's
+`/ct diagnostics`, 2026-11-26.
