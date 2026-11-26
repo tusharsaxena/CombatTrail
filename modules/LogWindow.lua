@@ -5,8 +5,9 @@ local _, NS = ...
 -- window of its own, wider, with the Info column.
 --
 -- WHERE THE LOG LIVES. `sequence.home` "docked" (the default) puts it in the DPS HUD's drawer
--- (modules/Hud_Log.lua); "detached" puts it here. The drawer's detach mark (export) and `/ct sequence
--- detach` send it here; this window's dock mark (arrow-left) and `/ct sequence dock` send it back. The log's
+-- (modules/Hud_Log.lua); "detached" puts it here. The drawer's detach mark (chevron-right, "out") and
+-- `/ct sequence detach` send it here; this window's dock mark (chevron-left, "back in": the Results
+-- window's fold marks, owner feedback round 4, R4-CT-05) and `/ct sequence dock` send it back. The log's
 -- open is one switch in either home, `sequence.drawer.shown` (the HUD's Combat Sequence control, `/ct sequence`, the
 -- auto-open at a fight's start), so a move keeps it open. Detached, the HUD reserves no drawer height.
 --
@@ -233,7 +234,7 @@ local function buildHeader(f)
         close = function() Act.close() end, settings = function() Act.settings() end,
         settingsTip = L["Combat Sequence settings"],
         extras = {
-            { key = "dock", icon = "arrow-left", glyph = "D", tip = L["Dock the Combat Sequence back in the DPS HUD"],
+            { key = "dock", icon = "chevron-left", glyph = "<", tip = L["Dock the Combat Sequence back in the DPS HUD"],
               onClick = function() Act.dock() end },
             { key = "filter", icon = "eye", glyph = "F", tip = L["Show or hide the Combat Sequence's filter chips"],
               onClick = function() LW.ToggleChipsRow() end },

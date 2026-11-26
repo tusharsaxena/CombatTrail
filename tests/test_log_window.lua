@@ -63,7 +63,8 @@ test("log window: the drawer's detach mark moves the log into its own window, an
     NS.HudLog.SetShown(true)
     assertTrue(NS.Hud.Height() > bare, "docked: the HUD grew by the drawer")
     local d = NS.HudLog.__ui()
-    assertEqual(d.detach.iconName, "export", "the drawer's header carries the detach mark")
+    -- red under: the export mark, which read as a down arrow (owner feedback round 4, R4-CT-05)
+    assertEqual(d.detach.iconName, "chevron-right", "the drawer's header carries the detach mark: out, as Results' unfold")
     click(d.detach)
     assertEqual(NS.GetSetting("sequence.home"), "detached", "saved detached")
     assertTrue(NS.GetSetting("sequence.drawer.shown"), "still open")
@@ -80,10 +81,29 @@ test("log window: the drawer's detach mark moves the log into its own window, an
     assertEqual(tipOf(ui.settings), "Combat Sequence settings")
 end)
 
+test("log window: the old export and arrow-left marks leave the icon declaration and the vendored folder (R4-CT-05)", function()
+    local f = assert(io.open(T.root .. "/CLAUDE.md", "r"))
+    local text = f:read("*a")
+    f:close()
+    local line = text:match("\nLibKa0s icons: ([^\r\n]*)")
+    assertTrue(line ~= nil, "the icon declaration")
+    local declared = {}
+    for name in line:gsub("%.$", ""):gmatch("[^,%s]+") do declared[name] = true end
+    for _, name in ipairs({ "export", "arrow-left" }) do
+        assertFalse(declared[name], name .. " is declared")
+        local tga = io.open(T.root .. "/libs/LibKa0s/media/icons/" .. name .. ".tga", "rb")
+        if tga then tga:close() end
+        assertTrue(tga == nil, name .. ".tga is still vendored")
+    end
+    for _, name in ipairs({ "chevron-left", "chevron-right" }) do
+        assertTrue(declared[name], name .. " is declared")
+    end
+end)
+
 test("log window: the dock mark sends it back to the HUD, still open", function()
     local _, NS = fresh()
     local ui = detached(NS)
-    assertEqual(ui.dock.iconName, "arrow-left")
+    assertEqual(ui.dock.iconName, "chevron-left", "back in, as Results' fold (R4-CT-05)")
     assertTrue(ui.settings ~= nil, "it keeps a saved place, so it is no companion: it carries the settings mark")
     click(ui.dock)
     assertEqual(NS.GetSetting("sequence.home"), "docked")

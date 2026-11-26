@@ -693,7 +693,7 @@ test("hud log: the drawer is a section like Spell breakdown: its heading, its co
             b.iconName .. " under the pointer")
         b:GetScript("OnLeave")(b)
     end
-    assertEqual(d.detach.iconName, "export")
+    assertEqual(d.detach.iconName, "chevron-right")
 end)
 
 test("hud log: it hides and stops with the HUD, and comes back with it", function()

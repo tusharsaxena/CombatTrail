@@ -15,7 +15,8 @@ local _, NS = ...
 -- A SECTION LIKE SPELL BREAKDOWN (owner feedback items 17 and 18, 2026-11-25): HudLog.GAP (the HUD's
 -- HEAD_GAP) of clear space, then its heading on the HUD's section line (Hud_States' SECTION_H): the
 -- gold "Combat Sequence" in FONT.SECTION at the left, the dim count ("8 shown") right-aligned on the
--- heading's bottom edge, then its two marks (the filter eye and the detach arrow) at the right edge,
+-- heading's bottom edge, then its two marks (the filter eye and the detach chevron, `chevron-right`:
+-- out to its own window, as the Results window's unfold; owner feedback round 4, R4-CT-05) at the right edge,
 -- tinted and lit as the window's title-bar marks are (Style.NewStrip, Style.AddToStrip: the skin's
 -- `icon.tint` at rest, `text.link` under the pointer, the same 18 px slot and 12 px art). No separator
 -- or seam above it, and no fold: the title bar's Log mark alone opens and closes the log (item 14).
@@ -35,8 +36,8 @@ local _, NS = ...
 --                         them scroll with the wheel, the Spell breakdown's indicator in the gutter
 --                         (item 6, LogTable's View:SetScroll).
 --   sequence.view.sort         newest first (default) or oldest first: the Time header's click flips it.
---   sequence.home              "docked" (the default) or "detached": the header's detach control (the export
---                         mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
+--   sequence.home              "docked" (the default) or "detached": the header's detach control (the
+--                         chevron-right mark) moves the log into its own window (modules/LogWindow.lua, CL-11b2), whose
 --                         dock control sends it back. `sequence.drawer.shown` is the log's one open, in either
 --                         home: detached, the HUD reserves nothing and this drawer stays hidden.
 -- `sequence.drawer.shown`, `sequence.drawer.chips`, `sequence.view.sort` and `sequence.home` are written by the controls
@@ -190,7 +191,7 @@ local function build(parent)
     d.resume:Hide()
     d.filter = Style.AddToStrip(d.marks, Style.ControlButton(f, "eye", "F",
         L["Show or hide the Combat Sequence's filter chips"], function() HudLog.ToggleChipsRow() end, "body"))
-    d.detach = Style.AddToStrip(d.marks, Style.ControlButton(f, "export", ">",
+    d.detach = Style.AddToStrip(d.marks, Style.ControlButton(f, "chevron-right", ">",
         L["Detach the Combat Sequence into its own window"], function() HudLog.SetHome("detached") end, "body"))
     d.count = Style.Text(f, Style.FONT.CAPTION, nil, "RIGHT")
     d.chips = LogTable.NewChips(f, function(key) HudLog.ToggleChip(key) end)
