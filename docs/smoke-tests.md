@@ -282,6 +282,9 @@ Every row is written unrun.
 |---|---|---|---|
 | R6-CT-SM1 | Both | Same window size, Combat Sequence docked open, Layout defaults. Out of combat with no fight since login (or after `/ct test` ends), `/ct hud show` and screenshot the HUD; then `/ct test` and screenshot it; then pull a target dummy as a pet class, fight 20 s, stop, and screenshot the fight-over card; flick between the three. Then on DPS HUD → Layout untick *Damage chart*, then *Target line*, and compare idle against `/ct test` once more. | The three screenshots line up: the clock, the target line, the Damage and DPS boxes (the same height, a Pet line in each), the *Damage profile* heading, its pace line, the chart frame and its time labels, the *Spell breakdown* heading and its rows' area, the *Combat Sequence* heading and the footer sit at the same heights, and nothing jumps as the fight starts or ends. Idle reads *No target* (muted) in the target line, dashes in the boxes with a muted *Pet —*, an empty chart frame with *No fight yet* and *0:00* under it, *live order* over empty rows, *No events yet.* in the Combat Sequence and your spec and name with *waiting for a fight* in the footer. A part switched off is gone in both states, and the two still line up. A live fight with no best keeps the empty pace line under the heading. |
 
+**Owner result, 2026-11-27 (R6-CT-SM1, part):** the idle HUD and `/ct test` compared on Forever: "Looks good now" (the
+owner's two screenshots line up). Not yet reported: the fight-over card and the Layout switches.
+
 ## 5. Results
 
 | ID | Client | Check | Expect |
