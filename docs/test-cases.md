@@ -562,7 +562,7 @@ Total.
 - casts: a stand-down drops every capture and the buffer
 - casts: IsLong is 29 s or more; Group orders long cooldowns first, then by count
 
-### test_combat_log.lua (35)
+### test_combat_log.lua (36)
 
 - combat log: a fight's casts, auras and death are saved with its record: no hit, heal or boundary line
 - combat log: a pre-pull cast is kept at a negative time; an auto attack reaches the ring, never the log
@@ -581,6 +581,7 @@ Total.
 - combat log: a target change is silent, and a new target is no burst of gains
 - combat log: a sealed aura and a sealed cast are no line; a sealed instance is never a key
 - combat log: the aura tally counts what UNIT_AURA brought and why each aura drew no line
+- combat log: one UNIT_AURA reads its update info's access once for the tally and the diff
 - combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown
 - combat log: past `log.store.lines` only the newest are kept and the record counts the rest
 - combat log: heavy unsaved traffic never costs the saved log its lines (each capture keeps its own)
@@ -2167,7 +2168,7 @@ Total.
 | test_dummies.lua | 30 |
 | test_cast_codec.lua | 7 |
 | test_casts.lua | 17 |
-| test_combat_log.lua | 35 |
+| test_combat_log.lua | 36 |
 | test_usage.lua | 11 |
 | test_stats.lua | 9 |
 | test_loadouts.lua | 22 |
@@ -2244,4 +2245,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1850** |
+| **Total** | **1851** |

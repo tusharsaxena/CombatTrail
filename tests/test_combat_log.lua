@@ -576,6 +576,26 @@ test("combat log: the aura tally counts what UNIT_AURA brought and why each aura
     if not ok then error(err, 0) end
 end)
 
+-- R5-REV: UNIT_AURA fires often in a group; the tally's shape and the diff decision are one read of the
+-- update info, so the tally adds no second pass of secret checks per event.
+test("combat log: one UNIT_AURA reads its update info's access once for the tally and the diff", function()
+    local inst = fresh()
+    local CL, S = inst.NS.CombatLog, inst.NS.Secrets
+    CL.Begin("once", 10)
+    local info = { addedAuras = { { auraInstanceID = 5, spellId = INTELLECT, isHelpful = true } } }
+    local real, reads = S.CanAccessTable, 0
+    S.CanAccessTable = function(t)
+        if t == info or t == info.addedAuras then reads = reads + 1 end
+        return real(t)
+    end
+    local ok, err = pcall(aura, inst, 11, "player", info)
+    S.CanAccessTable = real
+    if not ok then error(err, 0) end
+    assertEqual(reads, 3, "the info, its added list for the shape, its added list for the gains")
+    assertEqual(CL.Diagnose().auras.info, 1)
+    assertEqual(CL.Diagnose().auras.gainLined, 1)
+end)
+
 -- ── the retired lines ───────────────────────────────────────────────────────────────────────────
 
 test("combat log: HIT, HEAL, START, END and a target BUFF are retired: no category, never saved or shown", function()

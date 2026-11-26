@@ -523,17 +523,9 @@ local function unreadable(list)
     return Secrets.IsSealed(list) or not Secrets.CanAccessTable(list)
 end
 
--- Whether UNIT_AURA's update info leaves the unit to be diffed: none at all, a sealed or unreadable
--- table or list, or a full update (a sealed isFullUpdate is taken as one).
-local function needsDiff(info)
-    if info == nil or Secrets.IsSealed(info) or not Secrets.CanAccessTable(info) then return true end
-    local full = info.isFullUpdate
-    if Secrets.IsSealed(full) or Secrets.PlainTruth(full) then return true end
-    return unreadable(info.addedAuras) or unreadable(info.removedAuraInstanceIDs)
-end
-
--- The tally's name for UNIT_AURA's update info: none, sealed (the table or a list), a full update, or
--- usable info.
+-- UNIT_AURA's update info named, for the tally and the diff alike (one read per event): none, sealed
+-- (the table or a list), a full update (a sealed isFullUpdate is taken as one), or usable info. Anything
+-- but usable info leaves the unit to be diffed.
 local function shapeOf(info)
     if info == nil then return "none" end
     if Secrets.IsSealed(info) or not Secrets.CanAccessTable(info) then return "sealedInfo" end
@@ -549,8 +541,9 @@ end
 function CombatLog.OnAura(unit, info, at)
     if unit ~= "player" and unit ~= "target" then return end
     bump(unit == "player" and "evPlayer" or "evTarget")
-    bump(shapeOf(info))
-    if needsDiff(info) then
+    local shape = shapeOf(info)
+    bump(shape)
+    if shape ~= "info" then
         if registered then return diff(unit, at) end
         return walk(unit)
     end
