@@ -1386,12 +1386,14 @@ Total.
 - w29 D2: a fade running when a race is armed is dropped; a HUD the race opened closes with it
 - w29 #7: a profile switch to one whose HUD is always up opens it
 
-### test_log_table.lua (31)
+### test_log_table.lua (33)
 
 - log table: a cast is a plain row with its spell, and no cell names a source or a target
 - log table: a long-cooldown cast wears the gold wash; washes off takes it away
 - log table: buffs green (off dimmed), a debuff you put on orange with its wash, on the target
 - log table: a death is red with a blank spell; Info reads Interrupted and nothing else
+- log table: a pet's cast carries the paw and the pet color; the player's neither
+- hud log: a pet's row shows the paw after the icon and its name after the paw, in the pet color
 - log table: the six tags and their colors; a wash only on DEBUFF+ and a long-cooldown CAST
 - log table: the time column from the pull, past a minute and before it, or the clock
 - log table: an old saved HIT, HEAL, boundary or target BUFF line draws no tag and never shows
@@ -2197,7 +2199,7 @@ Total.
 | test_hud_sizing.lua | 17 |
 | test_hud_static.lua | 20 |
 | test_hud_race_button.lua | 31 |
-| test_log_table.lua | 31 |
+| test_log_table.lua | 33 |
 | test_log_window.lua | 19 |
 | test_log_page.lua | 16 |
 | test_sizing.lua | 7 |
@@ -2240,4 +2242,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1846** |
+| **Total** | **1848** |

@@ -26,6 +26,9 @@ local _, NS = ...
 -- wash), DIES red. COLOR-BLIND SAFETY: every kind differs by its tag's text as well as its hue, and
 -- `sequence.view.washes` off draws no wash. No who colors: with no Source or Target column they drew
 -- nothing, and the owner removed them (SM-CT-LG27, R4-CT-08; schema step 12 drops `sequence.colors`).
+-- THE PET'S ROWS (owner feedback round 5, R5-CT-04) carry Spell breakdown's pet marks: a pet's cast names
+-- its spell in the pet color (`hud.spells.petColor`, a data hue) and, while `hud.spells.paw` is on, draws
+-- the paw between the icon and the name (LogTable_View), so the shape tells it as well as the hue.
 --
 -- WHAT IS SHOWN is a view's own `show` table, shaped as `sequence.show.*`: each category of
 -- CombatLog.CategoryOf on or off, and the auto attacks (Auto Shot, Shoot: no category) off by default.
@@ -139,6 +142,18 @@ function LogTable.LongCooldown(id)
 end
 
 local OFF = { [K.BUFF_OFF] = true, [K.DEBUFF_OFF] = true }
+local PET = CL.UNIT.pet
+local petHue = {}   -- the pet color as a data hue, refilled per pet row (reused)
+
+-- A pet's cast: Spell breakdown's pet marks (owner feedback round 5, R5-CT-04), the name in the pet
+-- color (`hud.spells.petColor`, NS.HudAppearance.Swatch) and the paw while `hud.spells.paw` is on.
+local function petMarks(c, e)
+    c.paw = false
+    if e.k ~= K.CAST or e.u ~= PET then return end
+    local A = NS.HudAppearance
+    petHue[1], petHue[2], petHue[3] = A.Swatch("spells", "petColor")
+    c.spellColor, c.paw = petHue, A.On("hud.spells.paw")
+end
 
 -- Spell: the spell's icon and name (blank for a line with no spell, a death).
 local function spell(c, e)
@@ -150,10 +165,11 @@ local function spell(c, e)
     else
         c.spell = ""
     end
+    petMarks(c, e)
 end
 
---- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, spell, spellColor, spellID,
---- icon, info, wash (a token or nil). `ctx`: startT, startClock, timeFormat, washes.
+--- Fill `c` (a reused table) with line `e`'s cells: time, tag, tagColor, spell, spellColor (a token, or the
+--- pet color's hue on a pet's cast), spellID, icon, paw, info, wash (a token or nil). `ctx`: startT, startClock, timeFormat, washes.
 --- @return table c
 function LogTable.Cells(e, ctx, c)
     c = c or {}

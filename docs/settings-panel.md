@@ -323,6 +323,9 @@ retired into Spell bars.
 
 ### Spell rows
 
+*Show pet paw* and *Pet bar color* also mark the pet's casts in the Combat Sequence (the paw between
+the icon and the name, the name in the pet color), in the drawer, the detached window and Results (R5-CT-04).
+
 | Row | Key |
 |---|---|
 | Row height (px) | `hud.spells.rowHeight` |

@@ -120,6 +120,66 @@ test("log table: a death is red with a blank spell; Info reads Interrupted and n
     assertNil(LT.HealWords)
 end)
 
+-- R5-CT-04 (owner feedback round 5): "Combat sequence also doesnt differentiate between player and
+-- pet." A pet's row carries Spell breakdown's pet marks: the paw (`hud.spells.paw`) and the pet color
+-- (`hud.spells.petColor`, NS.HudAppearance.Swatch).
+test("log table: a pet's cast carries the paw and the pet color; the player's neither", function()
+    local _, NS = fresh()
+    local LT, U = NS.LogTable, NS.CombatLog.UNIT
+    local pet = LT.Cells(line(NS, "CAST", { u = U.pet, id = 17253 }), ctx())
+    assertTrue(pet.paw, "the paw on the pet's row")
+    assertEqual(type(pet.spellColor), "table", "the pet color, a data hue")
+    local r, g, b = NS.HudAppearance.Swatch("spells", "petColor")
+    assertEqual(pet.spellColor[1], r)
+    assertEqual(pet.spellColor[2], g)
+    assertEqual(pet.spellColor[3], b)
+    local you = LT.Cells(line(NS, "CAST", { u = U.player, id = FIREBALL }), ctx())
+    assertFalse(you.paw, "no paw on the player's row")
+    assertEqual(you.spellColor, "ct.text", "the player's row is plain")
+    NS.SetByPath("hud.spells.paw", false)
+    local bare = LT.Cells(line(NS, "CAST", { u = U.pet, id = 17253 }), ctx())
+    assertFalse(bare.paw, "Show pet paw off: no paw")
+    assertEqual(type(bare.spellColor), "table", "the color still tells it")
+end)
+
+test("hud log: a pet's row shows the paw after the icon and its name after the paw, in the pet color", function()
+    local inst, NS = fresh()
+    NS.Hud.Show()
+    NS.HudLog.SetShown(true)
+    begin(NS, "f1", 100)
+    NS.CombatLog.OnCast("player", FIREBALL, 101)
+    NS.CombatLog.OnCast("pet", 17253, 102)
+    at(inst, 102.5)
+    NS.HudLog.Paint()
+    local view = NS.HudLog.__ui().table
+    local rows = view:Rows()
+    local petRow, youRow = rows[1], rows[2]
+    local col
+    for _, c in ipairs(view.cols) do if c.key == "spell" then col = c end end
+    local icon, gap = NS.LogTable.IconSize(view.rowH, 1), NS.LogTable.IconGap(1)
+    assertTrue(petRow.paw:IsShown(), "the paw on the pet's row")
+    assertEqual(petRow.paw:GetTexture(), NS.Icon("ph:paw-print"), "Spell breakdown's paw")
+    local _, _, _, px = petRow.paw:GetPoint(1)
+    assertEqual(px, col.x + icon + gap, "the paw one character after the icon")
+    local _, _, _, nx = petRow.text.spell:GetPoint(1)
+    assertEqual(nx, col.x + icon + gap + icon + gap, "the name one character after the paw")
+    local r, g, b = NS.HudAppearance.Swatch("spells", "petColor")
+    local tr, tg, tb = petRow.text.spell:GetTextColor()
+    assertEqual(tr .. "/" .. tg .. "/" .. tb, r .. "/" .. g .. "/" .. b, "the name in the pet color")
+    assertFalse(youRow.paw:IsShown(), "no paw on the player's row")
+    local _, _, _, yx = youRow.text.spell:GetPoint(1)
+    assertEqual(yx, col.x + icon + gap, "the player's name right after the icon")
+    -- a pooled row that drew the pet's line and now draws the player's gives the paw and the room back
+    NS.CombatLog.OnCast("player", FIREBALL, 103)
+    NS.CombatLog.OnCast("player", FIREBALL, 103.5)
+    at(inst, 104)
+    NS.HudLog.Paint()
+    assertFalse(rows[1].paw:IsShown(), "the newest is the player's")
+    local _, _, _, zx = rows[1].text.spell:GetPoint(1)
+    assertEqual(zx, col.x + icon + gap)
+    assertTrue(rows[3].paw:IsShown(), "the pet's line moved down a row, its paw with it")
+end)
+
 test("log table: the six tags and their colors; a wash only on DEBUFF+ and a long-cooldown CAST", function()
     local _, NS = fresh()
     local LT, U = NS.LogTable, NS.CombatLog.UNIT

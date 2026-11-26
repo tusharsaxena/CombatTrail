@@ -515,8 +515,8 @@ L["The texture your spell rows' bars and the pace bar's fills are drawn with."] 
     "The texture your spell rows' bars and the pace bar's fills are drawn with."
 L["Pet bars"] = "Pet bars"
 L["Pet bar color"] = "Pet bar color"
-L["The color of your pet's spell rows."] =
-    "The color of your pet's spell rows."
+L["The color of your pet's spell rows, and of its casts' names in the Combat Sequence."] =
+    "The color of your pet's spell rows, and of its casts' names in the Combat Sequence."
 L["Row font"] = "Row font"
 L["The face the spell names and amounts are drawn in."] = "The face the spell names and amounts are drawn in."
 L["Title bar and footer"] = "Title bar and footer"
