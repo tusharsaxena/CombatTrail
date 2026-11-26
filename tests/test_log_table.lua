@@ -6,7 +6,7 @@
 -- order, with their categories and tips); the feed
 -- (newest first, pause on a scroll and Resume, the display throttle instant / every N ms / batch, which
 -- never touches the capture or the saved log); the live view reset at each pull (item 5); the columns
--- laid to a width, no Source, Target or Amount, every one centered (items 3 and 8); then the drawer: the Log
+-- laid to a width, no Source, Target or Amount, every one left-aligned (items 3 and round 4); then the drawer: the Log
 -- control on the title bar (item 13), the HUD growing by the drawer and back, its section look (items 17
 -- and 18), no fold (item 14), the chips on by default (item 9), the rows setting, the Time header's
 -- sort, the auto-open at a fight's start, hidden and stopped with the HUD, `/ct log`, and the Combat
@@ -404,7 +404,7 @@ test("log table columns: Time, Event, Spell and Info where there is room; no Sou
     end
 end)
 
-test("log table columns: every column is centered, its header and its cells, in every home (item 8)", function()
+test("log table columns: every column is left-aligned, its header and its cells, in every home (round 4)", function()
     local _, NS = fresh()
     hudUp(NS)
     NS.HudLog.SetShown(true)
@@ -412,10 +412,33 @@ test("log table columns: every column is centered, its header and its cells, in 
     for i, view in ipairs(views) do
         view:Layout(600, 3, {})
         for _, key in ipairs(NS.LogTable.ORDER) do
-            -- red under: a column justified LEFT or RIGHT
-            assertEqual(view.heads[key]:GetJustifyH(), "CENTER", "view " .. i .. " header " .. key)
-            assertEqual(view:Rows()[1].text[key]:GetJustifyH(), "CENTER", "view " .. i .. " cell " .. key)
+            -- red under: a column centered (owner feedback item 8 of the last round) or right-aligned
+            assertEqual(view.heads[key]:GetJustifyH(), "LEFT", "view " .. i .. " header " .. key)
+            assertEqual(view:Rows()[1].text[key]:GetJustifyH(), "LEFT", "view " .. i .. " cell " .. key)
         end
+    end
+end)
+
+test("log table columns: the icon is part of the Spell column, its name one character after it (round 4)", function()
+    local _, NS = fresh()
+    local LT = NS.LogTable
+    hudUp(NS)
+    assertEqual(LT.IconGap(1), 5, "one character of the 10 pt row font")
+    assertEqual(LT.IconGap(1.6), 8, "scaled with the text size")
+    for _, size in ipairs({ 10, 16 }) do
+        NS.SetByPath("sequence.view.fontSize", size)
+        local scale = LT.FontScale()
+        local view = LT.New(NS.Hud.Frame(), { info = true })
+        view:Layout(600, 3, {})
+        local col
+        for _, c in ipairs(view.cols) do if c.key == "spell" then col = c end end
+        local r, icon = view:Rows()[1], LT.IconSize(view.rowH, scale)
+        local _, _, _, ix = r.icon:GetPoint(1)
+        local _, _, _, nx = r.text.spell:GetPoint(1)
+        assertEqual(ix, col.x, "the icon at the Spell column's left edge, size " .. size)
+        assertEqual(nx, col.x + icon + LT.IconGap(scale), "the name one character after the icon, size " .. size)
+        local _, _, _, hx = view.heads.spell:GetPoint(1)
+        assertEqual(hx, col.x, "the Spell header over the icon, at the column's left edge")
     end
 end)
 

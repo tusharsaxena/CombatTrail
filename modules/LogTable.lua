@@ -8,7 +8,7 @@ local _, NS = ...
 -- over this one component. Its settings are the Combat Sequence page's (settings/Log.lua).
 --
 -- THE COLUMNS. Time · Event · Spell, plus Info where the home has room (Columns: `opts.info`), every
--- one centered in its header and its cells. Time and Event always show; the others follow
+-- one left-aligned in its header and its cells (owner feedback round 4, R4-CT-02). Time and Event always show; the others follow
 -- `sequence.view.columns.*`, and a home too narrow for them drops Info, so Spell keeps SPELL_MIN. There is
 -- no Source or Target column (owner feedback item 3, 2026-11-25), and no Amount (the Combat Sequence:
 -- no line carries one): a line's `u` stays in the data, for the chips (Pet) and the categories.
@@ -17,7 +17,7 @@ local _, NS = ...
 --   Event  CAST, BUFF+, BUFF-, DEBUFF+, DEBUFF-, DIES. The fight's start and end, the hits and heals
 --          and a target's buffs are no lines; a saved log's old ones are dropped at read time
 --          (CombatLog.IsRetired).
---   Spell  the spell's icon and name (blank for a death)
+--   Spell  the spell's icon and name, one character apart (blank for a death)
 --   Info   Interrupted
 --
 -- THE COLORS (the spec's board D), each a skin token (core/SkinSetup.lua's `ct.log.*`) with its Ka0s

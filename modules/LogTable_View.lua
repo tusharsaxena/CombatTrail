@@ -10,8 +10,10 @@ local _, NS = ...
 -- gives: fixed widths, Spell taking the rest, Info dropped while it would be narrower than SPELL_MIN.
 -- No Amount column (the Combat Sequence: no line carries one), so the docked least width is Time's,
 -- Event's, SPELL_MIN and two gaps: 162 px at text size 10. Laid only when the width or the columns
--- change, never on a paint. EVERY COLUMN IS CENTERED, its header and its cells (owner feedback item 8);
--- Spell's icon stands at the column's start and its name is centered in the rest.
+-- change, never on a paint. EVERY COLUMN IS LEFT-ALIGNED, its header and its cells (owner feedback round
+-- 4, R4-CT-02, which replaced the centering of item 8): the icon is part of the Spell column, at its left
+-- edge under the Spell header, and the name follows one character of the row font after it
+-- (LogTable.IconGap), so the two read as one cell.
 --
 -- THE TIME HEADER is a button: a click is the home's `opts.onSort` (it writes `sequence.view.sort`), and
 -- the header carries the sort's arrow (sort-down newest first, sort-up oldest first). THE WHEEL is the
@@ -56,8 +58,10 @@ LogTable.ORDER = { "time", "event", "spell", "info" }
 -- The optional columns a narrow home drops first.
 LogTable.DROP = { "info" }
 LogTable.HEADS = { time = L["Time"], event = L["Event"], spell = L["Spell"], info = L["Info"] }
--- Every column's justification: centered, header and cells (item 8).
-LogTable.JUSTIFY = "CENTER"
+-- Every column's justification: left, header and cells (round 4, R4-CT-02).
+LogTable.JUSTIFY = "LEFT"
+-- One character of the row font at 10 pt (px): the gap between the Spell column's icon and its name.
+LogTable.CHAR_W = 5
 local JUSTIFY = LogTable.JUSTIFY
 
 local function setting(path)
@@ -78,6 +82,13 @@ end
 function LogTable.FontScale()
     local v = NS.Secrets.PlainNumber(setting("sequence.view.fontSize")) or LogTable.FONT_BASE
     return clamp(math.floor(v + 0.5), LogTable.FONT_MIN, LogTable.FONT_MAX) / LogTable.FONT_BASE
+end
+
+--- The gap between the Spell column's icon and its name at text scale `scale`: one character of the row
+--- font (CHAR_W scaled, whole pixels).
+--- @return number
+function LogTable.IconGap(scale)
+    return math.floor(LogTable.CHAR_W * (scale or 1) + 0.5)
 end
 
 --- The spell icon's size at `rowH` and `scale`: ICON scaled, never taller than the row.
@@ -221,8 +232,8 @@ local function place(fs, row, col)
     fs:SetWidth(col.w)
 end
 
--- One row's columns laid (and the icon, `icon` px, at Spell's start, its name after it).
-local function layRow(r, cols, icon)
+-- One row's columns laid (and the icon, `icon` px, at Spell's start, its name `gap` px after it).
+local function layRow(r, cols, icon, gap)
     for _, fs in pairs(r.text) do fs:Hide() end
     r.icon:SetSize(icon, icon)
     for _, col in ipairs(cols) do
@@ -232,8 +243,8 @@ local function layRow(r, cols, icon)
             r.icon:ClearAllPoints()
             r.icon:SetPoint("LEFT", r, "LEFT", col.x, 0)
             fs:ClearAllPoints()
-            fs:SetPoint("LEFT", r, "LEFT", col.x + icon + 2, 0)
-            fs:SetWidth(math.max(1, col.w - icon - 2))
+            fs:SetPoint("LEFT", r, "LEFT", col.x + icon + gap, 0)
+            fs:SetWidth(math.max(1, col.w - icon - gap))
         else
             place(fs, r, col)
         end
@@ -278,7 +289,7 @@ function View:layRows(rows)
             r:SetPoint("TOPLEFT", self.frame, "TOPLEFT", 0, y)
             r:SetPoint("TOPRIGHT", self.frame, "TOPRIGHT", 0, y)
             r:SetHeight(self.rowH)
-            layRow(r, self.cols, LogTable.IconSize(self.rowH, self.scale))
+            layRow(r, self.cols, LogTable.IconSize(self.rowH, self.scale), LogTable.IconGap(self.scale))
         elseif r then
             r:Hide()
         end
