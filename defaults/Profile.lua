@@ -237,7 +237,8 @@ NS.defaults = {
         -- MIN_PER_FIGHT to MAX_LINES) and the categories saved, apart from what a view shows. Each fight
         -- freezes these at its start. Then the views' keys (CL-11b, modules/Hud_Log.lua and
         -- modules/LogTable.lua; their rows are the Combat Sequence page's, settings/Log.lua, CL-11c2): the HUD's
-        -- docked drawer (open by default, its rows 3-20, 10 by default, opened at each fight's start, its
+        -- docked drawer (open by default, its rows 3-20, 5 by default as the spell rows are (R4-CT-07; a
+        -- profile that never stored rows follows it, no step), opened at each fight's start, its
         -- filter chips hidden until its eye shows them, owner feedback round 4, R4-CT-04, an absent value
         -- hidden too; owner feedback items 1, 9, 14 and 16: no fold); the table (the sort, the display throttle "instant" | "every" | "batch" and
         -- its ms, 50-1000, the time from the pull or the clock, the rows' text size in points, 8-16, and
@@ -259,7 +260,7 @@ NS.defaults = {
         sequence = {
             enabled = true,
             home = "docked",
-            drawer = { shown = true, rows = 10, autoOpen = true, chips = false },
+            drawer = { shown = true, rows = 5, autoOpen = true, chips = false },
             window = {
                 chips = false, fill = true, rows = 12, width = 460, height = 0, locked = false, scale = 1, alpha = 1,
                 position = { point = "CENTER", relPoint = "CENTER", x = -360, y = 0 },

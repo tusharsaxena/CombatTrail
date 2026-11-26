@@ -191,7 +191,7 @@ row("layout.spells", { type = "bool", label = L["Show spell rows"],
 at(TAB.layout, L["Size"])
 row("bars", { type = "number", label = L["Spell bars"], min = NS.Hud.MIN_BARS, max = NS.Hud.MAX_BARS, step = 1,
     startsLine = true,
-    tooltip = L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."] })
+    tooltip = L["How many spell rows the HUD shows, at least 3. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows, shared a row at a time with the Combat Sequence's while it is docked open."] })
 row("width", { type = "number", label = L["HUD width (px)"], min = NS.Hud.MIN_WIDTH, max = NS.Hud.MAX_WIDTH, step = 10,
     startsLine = true,
     tooltip = L["How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."] })

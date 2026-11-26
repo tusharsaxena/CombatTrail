@@ -233,6 +233,9 @@ modules\Hud_States.lua
 modules\LogTable.lua
 modules\LogTable_View.lua
 modules\Hud_Log.lua
+# The grip's split of the HUD's height between the spell rows and the sequence rows (R4-CT-07):
+# pure, no capture; reached by modules\Hud.lua at CALL time only.
+modules\Hud_Split.lua
 # The detached log window (CL-11b2): captures NS.Style, NS.LogTable and NS.CombatLog and builds its bus
 # receiver at FILE SCOPE; reaches NS.Hud, NS.HudLog, NS.RaceWindow and NS.Sim at CALL time only.
 modules\LogWindow.lua
@@ -240,6 +243,9 @@ modules\LogWindow.lua
 # and captures NS.Perf and NS.Secrets there; reaches NS.HudStates, NS.HudLog, NS.Meter, NS.Identity,
 # NS.Bests, NS.Recorder and NS.db at CALL time only.
 modules\Hud.lua
+# The HUD's wiring (peeled from modules\Hud.lua, R4-CT-07): builds its bus receiver at FILE SCOPE
+# through core\Bus.lua and captures NS.Hud and NS.L there, so it follows modules\Hud.lua.
+modules\Hud_Wiring.lua
 # The Race window (Race mode, race plan Task C1; Retail only: each file returns at once on WoW Forever).
 # Its Your best card, the board's figures and its six bodies, then the shell. LOAD-BEARING:
 # modules\RaceWindow_Board.lua reads NS.HudStates.COLORS and NS.Style at FILE SCOPE, so it follows

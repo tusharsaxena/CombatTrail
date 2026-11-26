@@ -448,8 +448,8 @@ L["Show spell rows"] = "Show spell rows"
 L["Show your spells and your pet's, one row each, in the order the damage meter gives them."] =
     "Show your spells and your pet's, one row each, in the order the damage meter gives them."
 L["Spell bars"] = "Spell bars"
-L["How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."] =
-    "How many spell rows the HUD shows. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows while the Combat Sequence is closed or detached, its own rows while it is docked open."
+L["How many spell rows the HUD shows, at least 3. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows, shared a row at a time with the Combat Sequence's while it is docked open."] =
+    "How many spell rows the HUD shows, at least 3. More spells than this scroll with the mouse wheel. The HUD keeps one height, so a fight never moves it; dragging its bottom-right corner sets the width, and the height sets these rows, shared a row at a time with the Combat Sequence's while it is docked open."
 L["HUD width (px)"] = "HUD width (px)"
 L["How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."] =
     "How wide the HUD is, in pixels. Dragging its bottom-right corner sets it too."

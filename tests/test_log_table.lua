@@ -502,8 +502,8 @@ test("hud log: the title bar's Log control opens the drawer and the HUD grows by
     local d = NS.HudLog.__ui()
     assertTrue(d ~= nil and d.frame:IsVisible(), "the drawer under the spell rows")
     assertEqual(NS.Hud.Height(), before + NS.HudLog.Height(), "the HUD grew by the drawer")
-    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(10),
-        "ten rows by default, no chips row (owner feedback item 16, round 4's R4-CT-04)")
+    assertEqual(NS.HudLog.Height(), NS.HudLog.GAP + NS.HudLog.HEAD_H + NS.LogTable.Height(5),
+        "five rows by default (round 4's R4-CT-07), no chips row (R4-CT-04)")
     assertTrue(NS.HudLog.Ticking(), "its repaint timer runs while it shows")
     click(ui.log)
     assertFalse(d.frame:IsShown(), "closed again")
@@ -715,7 +715,7 @@ test("hud log: a fight's start opens it when auto-open is on (the shipped defaul
     assertTrue(NS.GetSetting("sequence.drawer.autoOpen"))
     assertTrue(NS.GetSetting("sequence.drawer.shown"), "shown by default (owner feedback item 1)")
     assertEqual(NS.defaults.profile.sequence.drawer.shown, true)
-    assertEqual(NS.defaults.profile.sequence.drawer.rows, 10, "ten rows by default (item 16)")
+    assertEqual(NS.defaults.profile.sequence.drawer.rows, 5, "five rows by default (R4-CT-07)")
     NS.HudLog.SetShown(false)
     assertFalse(NS.GetSetting("sequence.drawer.shown"))
     NS.SendBus(NS.MSG.FIGHT_STARTED, { id = "f9", startT = 100 })

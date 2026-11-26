@@ -131,8 +131,10 @@ local _, NS = ...
 -- fight holds or does moves it: only the log opening or closing, a rows setting, or the grip. The
 -- library's grip (modules/Sizing.lua), hidden while locked, sizes it: while it is held the sections
 -- lay out at the dragged size, and the release stores `hud.width` (MIN_WIDTH-MAX_WIDTH) and the whole
--- rows the height holds, the log's (`sequence.drawer.rows`) while the log is docked open, else the spell
--- rows' (`hud.bars`, MIN_BARS-MAX_BARS), and the window snaps to them. Spells past the rows scroll
+-- rows the height holds, and the window snaps to them. While the log is docked open the height is split
+-- between the spell rows and the log's (Hud.SplitFor, modules/Hud_Split.lua, R4-CT-07) and both
+-- `hud.bars` and `sequence.drawer.rows` are stored; with Spell breakdown off only the log's; with the log
+-- closed or detached only the spell rows' (MIN_BARS-MAX_BARS). Spells past the rows scroll
 -- with the wheel (modules/Hud_States.lua). The top left holds because the stored anchor is on it: a
 -- drag of the title bar or the grip, and any Refresh that finds the stored point off the top edge (a
 -- profile switch), re-anchor the window (normalizeAnchor) to TOPLEFT on UIParent's BOTTOMLEFT, from
@@ -159,7 +161,7 @@ Hud.CAST_READ = 1
 Hud.FRAME_NAME = "CombatTrailHud"
 Hud.MIN_WIDTH = 260   -- DPS Race's (v0.2 Task B2); `hud.width` defaults to it (R4-CT-06)
 Hud.MAX_WIDTH = 600   -- the width row's and the grip's
-Hud.MIN_BARS, Hud.MAX_BARS = 1, 15   -- the spell rows `hud.bars` holds (v0.2 Task B3)
+Hud.MIN_BARS, Hud.MAX_BARS = 3, 15   -- the spell rows `hud.bars` holds (v0.2 Task B3; at least 3, R4-CT-07)
 -- Seconds the card stays after the pointer leaves it, once the pointer held it past its fade (and
 -- how often a held card looks again whether the pointer is still on it).
 Hud.LEAVE_DELAY = 2
@@ -389,9 +391,19 @@ local function heightFor(n, r)
         + NS.HudStates.FixedStack(setting("hud.layout"), n, setting("hud.paceAgainst") ~= "none")
 end
 
+Hud.HeightFor = heightFor   -- the same, for the suites
+
 --- The window's one height: `hud.bars` spell rows and the docked log's rows (the grip's while held).
 --- @return number
 function Hud.FixedHeight() return heightFor(bars(), NS.HudLog.Rows()) end
+
+--- The spell rows and log rows a window `h` high holds, walked from (b0, l0) (modules/Hud_Split.lua).
+--- @return number, number
+function Hud.SplitFor(h, b0, l0)
+    local HL = NS.HudLog
+    return NS.HudSplit.Walk(h, b0, l0, heightFor,
+        { minB = Hud.MIN_BARS, maxB = Hud.MAX_BARS, minL = HL.MIN_ROWS, maxL = HL.MAX_ROWS })
+end
 
 -- The whole bars a window `h` high holds, in range, the log's rows kept.
 local function barsFor(h)
@@ -403,14 +415,25 @@ local function logRowsFor(h)
     return NS.HudLog.RowsFit(h - heightFor(bars(), 0))
 end
 
--- Whether the grip's height goes to the log's rows (the log docked open) rather than the bars.
+-- Whether the grip's height goes to the log's rows (the log docked open), and whether to the spell rows.
 local function logTakes() return NS.HudLog.Wanted() end
+local function barsTake() return (setting("hud.layout") or {}).spells ~= false end
 
--- The grip's least and most heights: the log's MIN_ROWS to MAX_ROWS while it takes the height, else
--- MIN_BARS to MAX_BARS spell rows, of the stack configured now.
+-- The grip's least and most heights of the stack configured now: 3/3 to 15/20 while both take it, the
+-- log's MIN_ROWS to MAX_ROWS with the spells off, else MIN_BARS to MAX_BARS spell rows.
 local function heightBounds()
-    if logTakes() then return heightFor(bars(), NS.HudLog.MIN_ROWS), heightFor(bars(), NS.HudLog.MAX_ROWS) end
+    local HL = NS.HudLog
+    if logTakes() and barsTake() then return heightFor(Hud.MIN_BARS, HL.MIN_ROWS), heightFor(Hud.MAX_BARS, HL.MAX_ROWS) end
+    if logTakes() then return heightFor(bars(), HL.MIN_ROWS), heightFor(bars(), HL.MAX_ROWS) end
     return heightFor(Hud.MIN_BARS, 0), heightFor(Hud.MAX_BARS, 0)
+end
+
+-- The spell rows and log rows (nil: the log takes none) a height `h` holds, from the grip-down pair.
+local function dragPair(h)
+    local b0, l0 = ui.down and ui.down[1] or bars(), ui.down and ui.down[2] or NS.HudLog.RowsSetting()
+    if not logTakes() then return barsFor(h), nil end
+    if not barsTake() then return b0, logRowsFor(h) end
+    return Hud.SplitFor(h, b0, l0)
 end
 
 -- Whether the grip is being dragged now and has handed on a size.
@@ -560,12 +583,14 @@ local function applyRace()
 end
 
 -- Every size change: the grip's size, in range, that a drag lays out from (plain numbers only), and
--- the log's rows it holds while the log takes the height.
+-- the rows it holds (dragPair, from the pair the grip went down on, noted at its first change).
 local function trackSize(w, h)
     w, h = Secrets.PlainNumber(w), Secrets.PlainNumber(h)
+    if not ui.down and NS.Sizing.IsSizing(ui.frame) then ui.down = { bars(), NS.HudLog.RowsSetting() } end
     if w then ui.dragW = clamp(w, Hud.MIN_WIDTH, Hud.MAX_WIDTH) end
     if h then ui.dragH = clamp(h, heightBounds()) end
-    NS.HudLog.SetDragRows(ui.dragH and logTakes() and logRowsFor(ui.dragH) or nil)
+    if ui.dragH then ui.dragBars, ui.dragRows = dragPair(ui.dragH) end
+    NS.HudLog.SetDragRows(ui.dragH and ui.dragRows or nil)
 end
 
 local function hookPointer(f)
@@ -795,10 +820,10 @@ local function fill()
     v.clock = clockOf()
     v.hasPet = hasPet()
     -- The rows' window (modules/Hud_States.lua): the bars and the window's room for the stack; while
-    -- the grip is held, the dragged size's (its height the log's rows while the log takes it).
+    -- the grip is held, the dragged size's (its rows the pair dragPair walked to).
     local drag = sizing()
     v.width = (drag and ui.dragW or width()) - 2 * PAD
-    v.bars = (drag and not logTakes()) and barsFor(ui.dragH) or bars()
+    v.bars = drag and ui.dragBars or bars()
     v.fitH = (drag and ui.dragH or Hud.FixedHeight()) - chromeHeight()
     v.showSkipReason = setting("hud.showSkipReason") ~= false
     v.minLength = setting("history.minLength")
@@ -842,17 +867,19 @@ function render()
 end
 
 -- The grip's release (or a hide while it was held): the window re-anchored where the drag left it,
--- the width and the whole rows the height holds (the log's while it takes the height, else the bars)
+-- the width and the whole rows the height holds (dragPair: both counts while both take the height)
 -- stored through the seam, and the window snapped to them by the redraw that follows.
 function resized(w, h)
     w = Secrets.PlainNumber(w) or ui.dragW
     h = Secrets.PlainNumber(h) or ui.dragH
-    ui.dragW, ui.dragH = nil, nil
+    local b, l
+    if h then b, l = dragPair(clamp(h, heightBounds())) end
+    ui.dragW, ui.dragH, ui.down, ui.dragBars, ui.dragRows = nil, nil, nil, nil, nil
     NS.HudLog.SetDragRows(nil)
     placeAfterDrag()
     if w then NS.SetByPath("hud.width", clamp(math.floor(w + 0.5), Hud.MIN_WIDTH, Hud.MAX_WIDTH)) end
-    if h and logTakes() then NS.SetByPath("sequence.drawer.rows", logRowsFor(h))
-    elseif h and (setting("hud.layout") or {}).spells ~= false then NS.SetByPath("hud.bars", barsFor(h)) end
+    if b and barsTake() then NS.SetByPath("hud.bars", b) end
+    if l then NS.SetByPath("sequence.drawer.rows", l) end
     if Hud.IsShown() then Hud.Refresh() end
 end
 
@@ -1355,29 +1382,14 @@ function Hud.OnFightSkipped(fight, reason)
     if key == "over" then Hud.Refresh() end
 end
 
-local function onSettings(path, value)
+--- A setting changed (SETTINGS_CHANGED, wired by modules/Hud_Wiring.lua): the window re-decided.
+function Hud.OnSettings(path, value)
     if type(path) ~= "string" then return end
     if path == "hud.show" and value == "always" then wanted = true end
     if path == "profile" and setting("hud.show") == "always" and not isDown() then wanted = true end
     if path == "profile" or path:find("^hud%.") then Hud.Apply() end
     if (path == "race.enabled" or path == "profile") and ui then applyRace() end
     if path == "hud.refreshRate" or path == "profile" then Hud.SyncBeat() end
-end
-
-do
-    local bus = NS.NewBusTarget()
-    if bus then
-        bus:RegisterMessage(NS.MSG.FIGHT_STARTED, function(_, fight) Hud.OnFightStarted(fight) end)
-        bus:RegisterMessage(NS.MSG.FIGHT_TICK, function(_, fight) Hud.OnFightTick(fight) end)
-        bus:RegisterMessage(NS.MSG.FIGHT_ENDED, function(_, fight, final, reason) Hud.OnFightEnded(fight, final, reason) end)
-        bus:RegisterMessage(NS.MSG.FIGHT_SAVED, function(_, record) Hud.OnFightSaved(record) end)
-        bus:RegisterMessage(NS.MSG.FIGHT_SKIPPED, function(_, fight, reason) Hud.OnFightSkipped(fight, reason) end)
-        bus:RegisterMessage(NS.MSG.RACE_ARMED, function() Hud.OnRaceArmed() end)
-        bus:RegisterMessage(NS.MSG.RACE_STARTED, function(_, _, fight) Hud.OnRaceStarted(fight) end)
-        bus:RegisterMessage(NS.MSG.RACE_CANCELED, function() Hud.OnRaceCanceled() end)
-        bus:RegisterMessage(NS.MSG.RACE_STATE_CHANGED, function(_, _, from, to) Hud.OnRaceStateChanged(from, to) end)
-        bus:RegisterMessage(NS.MSG.SETTINGS_CHANGED, function(_, path, value) onSettings(path, value) end)
-    end
 end
 
 -- ── the fade's check ────────────────────────────────────────────────────────────────────────────
@@ -1401,7 +1413,7 @@ function fadeCheck()
     Hud.Refresh()
 end
 
--- ── the title bar's acts and the verb ───────────────────────────────────────────────────────────
+-- ── the title bar's acts ───────────────────────────────────────────────────────────────────
 
 -- The close control (not Escape: the Race window hides with the HUD, still wanted, W29).
 function Act.close()
@@ -1426,22 +1438,6 @@ function Act.results()
     if R and record and type(R.ShowFight) == "function" then return R.ShowFight(record.id) end
     if R and type(R.Toggle) == "function" then return R.Toggle() end
     NS.Print(L["That part of Combat Trail is not built yet."])
-end
-
-local VERBS = {
-    show = function() Hud.Show() end,
-    hide = function() Hud.HideWithRace() end,
-    toggle = function() Hud.Toggle() end,
-    pin = function() Hud.Pin(true) end,
-    unpin = function() Hud.Pin(false) end,
-}
-
---- `/ct hud show|hide|toggle|pin|unpin`.
-function Hud.OnVerb(rest)
-    local word = tostring(rest or ""):match("^%s*(%S*)"):lower()
-    local fn = VERBS[word]
-    if fn then return fn() end
-    NS.Print(L["Usage: /ct hud show, hide, toggle, pin or unpin"])
 end
 
 --- What the HUD is doing, for the diagnostics report.
