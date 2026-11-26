@@ -526,7 +526,7 @@ function LogTable.NewChips(parent, onToggle, chrome)
         local b = Style.Button(parent, text, function() onToggle(chip.key) end)
         b:SetHeight(LogTable.CHIP_H)
         b:SetWidth(LogTable.ChipWidth(text))
-        b.tip, b.tipBody = { text, L[LogTable.CHIP_TIPS[chip.key]], L["Click to show or hide them in this view."] }, not chrome
+        b.tip, b.tipBody = LogTable.ChipTip(text, chip.key, "Click to show or hide them in this view."), not chrome
         strip.buttons[chip.key] = b
     end
     return strip

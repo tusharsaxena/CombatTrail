@@ -210,6 +210,29 @@ LogTable.CHIP_TIPS = {
     buffs = "Buffs gained and lost on you.",
     debuffs = "Debuffs on you, and the debuffs you put on your target, gained and lost.",
 }
+--- The line the aura chips and settings add on WoW Forever (R5-CT-07, an L key): its client refuses an
+--- addon the auras in combat (docs/forever-quirks.md), so those rows hold only what changed out of it.
+LogTable.FOREVER_AURA_NOTE = "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only what changes before the pull and after combat."
+-- The chips and the saved categories that note belongs to.
+local AURA_KEYS = { buffs = true, debuffs = true, playerBuffs = true, playerDebuffs = true, targetDebuffs = true }
+
+--- The WoW Forever aura note for chip or category `key`, or nil (another key, or Retail).
+--- @return string|nil
+function LogTable.AuraNote(key)
+    if not AURA_KEYS[key] or not NS.Compat.IsForever() then return nil end
+    return L[LogTable.FOREVER_AURA_NOTE]
+end
+
+--- A chip's tooltip lines after its title: its own line, the WoW Forever aura note where it applies,
+--- then `click` (the view's click hint, an L key), into a new table.
+--- @return table
+function LogTable.ChipTip(title, key, click)
+    local tip = { title, L[LogTable.CHIP_TIPS[key]] }
+    local note = LogTable.AuraNote(key)
+    if note then tip[#tip + 1] = note end
+    tip[#tip + 1] = L[click]
+    return tip
+end
 LogTable.CHIP_PAD = 14     -- a chip's width past its text's
 LogTable.CHIP_CHAR_W = 5.6 -- the chip label's width per character (estimated: nothing is read back)
 

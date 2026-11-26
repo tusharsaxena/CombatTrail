@@ -266,6 +266,52 @@ test("log table: the chips are four, in order, with their categories and tips", 
     assertNil(LT.CHIP_TIPS.heals)
 end)
 
+-- R5-CT-07: WoW Forever refuses an addon the auras in combat (docs/forever-quirks.md), so its Buffs and
+-- Debuffs rows hold only what changed before the pull and after combat. The player is told so on the
+-- chips and the settings that name them, on WoW Forever alone, in plain words.
+local AURA_NOTE = "WoW Forever hides buffs and debuffs from addons during combat, so these rows show only what changes before the pull and after combat."
+
+test("log table: on WoW Forever the Buffs and Debuffs chips say what the client hides; Retail's say nothing", function()
+    local inst, NS = fresh()
+    local LT, forever = NS.LogTable, NS.Compat.IsForever()
+    assertEqual(LT.FOREVER_AURA_NOTE, AURA_NOTE)
+    for _, word in ipairs({ "secret", "taint", "UNIT_AURA" }) do
+        assertNil(AURA_NOTE:lower():find(word:lower(), 1, true), "no jargon: " .. word)
+    end
+    for _, key in ipairs({ "buffs", "debuffs", "playerBuffs", "playerDebuffs", "targetDebuffs" }) do
+        assertEqual(LT.AuraNote(key), forever and AURA_NOTE or nil, key)
+    end
+    for _, key in ipairs({ "casts", "pet", "petCasts", "deaths" }) do assertNil(LT.AuraNote(key), key) end
+    local strip = LT.NewChips(inst.mocks.CreateFrame("Frame"), function() end)
+    local function tip(key) return table.concat(strip.buttons[key].tip, "|") end
+    assertEqual(tip("casts"), "Casts|Your casts.|Click to show or hide them in this view.")
+    if forever then
+        assertEqual(tip("buffs"), "Buffs|Buffs gained and lost on you.|" .. AURA_NOTE
+            .. "|Click to show or hide them in this view.")
+        assertTrue(tip("debuffs"):find(AURA_NOTE, 1, true) ~= nil)
+    else
+        assertEqual(tip("buffs"), "Buffs|Buffs gained and lost on you.|Click to show or hide them in this view.")
+        assertNil(tip("debuffs"):find(AURA_NOTE, 1, true))
+    end
+end)
+
+test("log page: on WoW Forever the aura settings' tooltips end with the note; Retail's do not", function()
+    local _, NS = fresh()
+    local forever = NS.Compat.IsForever()
+    local paths = { "show.playerBuffs", "show.playerDebuffs", "show.targetDebuffs", "store.categories.playerBuffs",
+                    "store.categories.playerDebuffs", "store.categories.targetDebuffs", "results.chips.buffs",
+                    "results.chips.debuffs" }
+    for _, path in ipairs(paths) do
+        local tip = NS.FindSchemaRow("sequence." .. path).tooltip
+        local has = tip:find(AURA_NOTE, 1, true) ~= nil
+        assertEqual(has, forever, path)
+        if forever then assertEqual(tip:sub(-#AURA_NOTE), AURA_NOTE, path .. ": the note last") end
+    end
+    for _, path in ipairs({ "show.casts", "show.deaths", "store.categories.casts", "results.chips.casts" }) do
+        assertNil(NS.FindSchemaRow("sequence." .. path).tooltip:find(AURA_NOTE, 1, true), path)
+    end
+end)
+
 -- ── the feed ────────────────────────────────────────────────────────────────────────────────────
 
 local function all() return true end

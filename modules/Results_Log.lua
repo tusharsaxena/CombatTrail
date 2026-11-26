@@ -66,8 +66,6 @@ ResultsLog.SCROLL = 1        -- lines a wheel notch moves: Spell breakdown's one
 --- shared table's, LogTable.CHIPS, which the live views' chips use too).
 ResultsLog.CHIPS = LogTable.CHIPS
 
-local CHIP_TIPS = LogTable.CHIP_TIPS
-
 local CHIP_OF = {}   -- [category] = chip key
 for _, chip in ipairs(ResultsLog.CHIPS) do
     for _, cat in ipairs(chip.cats) do CHIP_OF[cat] = chip.key end
@@ -217,7 +215,7 @@ local function buildChips(p, f)
     for _, chip in ipairs(ResultsLog.CHIPS) do
         local b = Style.Button(f, chipText(chip, 0), function() ResultsLog.ToggleChip(p, chip.key) end)
         b:SetHeight(ResultsLog.CHIP_H)
-        b.tip, b.tipBody = { L[chip.label], L[CHIP_TIPS[chip.key]], L["Click to show or hide them."] }, true
+        b.tip, b.tipBody = LogTable.ChipTip(L[chip.label], chip.key, "Click to show or hide them."), true
         g.chips[chip.key] = b
     end
 end
