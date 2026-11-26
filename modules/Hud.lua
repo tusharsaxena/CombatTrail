@@ -187,6 +187,7 @@ local dismissed                  -- the id of the fight the player closed the wi
 local closes = 0                 -- the player's closes, for the dummy session's manual-close rule
 local dummyShown = false         -- opened near a training dummy (Hud.ShowNearDummy), still that open
 local raceShown = false          -- opened for the Race window by a race (Hud.ShowForRace), still that open
+local pullShown = false          -- opened at the pull (`hud.openOnPull`), no hit since: its fight's end lets go
 local closing = false            -- the close control is hiding the frame (Act.close), not Escape
 local fadeAt, fadeTimer, held    -- the fade's deadline, its timer, held by the pointer
 local beatTimer, beatEvery       -- the HUD's own beat (Hud.SyncBeat) and its interval
@@ -905,7 +906,7 @@ end
 function onHide()
     if hiding or (ui and ui.frame:IsShown()) then return end
     if wanted then closes = closes + 1 end
-    wanted, byPlayer, pinned, hovering, dummyShown, raceShown = false, false, false, false, false, false
+    wanted, byPlayer, pinned, hovering, dummyShown, raceShown, pullShown = false, false, false, false, false, false, false
     cancelFade()
     if cur then dismissed = cur.id end
     syncRace(not closing)
@@ -958,7 +959,7 @@ function Hud.Show(reason)
     wanted = true
     byPlayer = reason ~= "auto"
     if byPlayer then
-        dummyShown, raceShown = false, false
+        dummyShown, raceShown, pullShown = false, false, false
         cancelFade()
     end
     Hud.Refresh()
@@ -978,7 +979,7 @@ end
 --- Close the window (the player's close): it stays closed for the rest of the fight on screen.
 function Hud.Hide()
     if wanted then closes = closes + 1 end
-    wanted, byPlayer, pinned, dummyShown, raceShown = false, false, false, false, false
+    wanted, byPlayer, pinned, dummyShown, raceShown, pullShown = false, false, false, false, false, false
     cancelFade()
     if cur then dismissed = cur.id end
     Hud.Refresh()
@@ -1181,7 +1182,7 @@ end
 
 -- The first hit: the fight goes on screen (opening the window when the mode allows it).
 local function goLive(fight)
-    pending, cur, key, live, dismissed = nil, fight, "live", nil, nil
+    pending, cur, key, live, dismissed, pullShown = nil, fight, "live", nil, nil, false
     view = newView(fight)
     -- A new fight's rows start at the top.
     if ui then for _, body in pairs(ui.body) do body.offset = 0 end end
@@ -1204,7 +1205,10 @@ function Hud.OnFightStarted(fight)
     cancelFade()
     -- Open when a fight starts (SM-CT-LG22, R4-CT-08): a closed or hidden HUD opens at the pull, an auto
     -- open, where the show mode lets one (autoAllowed: never under "toggle"; the master row, instancesOnly).
-    if setting("hud.openOnPull") ~= false and not wanted and autoAllowed(fight) then Hud.Show("auto") end
+    if setting("hud.openOnPull") ~= false and not wanted and autoAllowed(fight) then
+        Hud.Show("auto")
+        pullShown = true
+    end
     if fight.firstHitT then goLive(fight) end
 end
 
@@ -1294,9 +1298,13 @@ end
 function Hud.OnFightEnded(fight, final, reason)
     if isDown() then return end
     if fight == pending then
-        -- A fight with no hit never reached the screen: the card still up may fade now.
-        pending = nil
-        if key == "over" then startFade() end
+        -- A fight with no hit never reached the screen: the card still up may fade now, and so may a
+        -- HUD the pull opened with no card behind it (key nil: the first fight since login, an arm or
+        -- a sample's end), as an over card would (overCard off: its close, LEAVE_DELAY on). R4-REV.
+        local mine = pullShown
+        pending, pullShown = nil, false
+        if key == "over" then startFade()
+        elseif mine then startFade(closesWithFight() and Hud.LEAVE_DELAY or nil) end
         return
     end
     if fight ~= cur then return end
@@ -1411,7 +1419,7 @@ function fadeCheck()
         return schedule(Hud.LEAVE_DELAY)
     end
     fadeAt = nil
-    wanted, raceShown = false, false
+    wanted, raceShown, pullShown = false, false, false
     debug("faded")
     Hud.Refresh()
 end

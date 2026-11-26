@@ -188,6 +188,37 @@ test("hud: Open when a fight starts off waits for the first hit, and Only when y
     assertFalse(Hud2.IsShown(), "and Only in instances, outside one")
 end)
 
+test("hud: Open when a fight starts lets go of a HUD the pull opened when the fight never hits", function()
+    -- R4-REV: no previous card (key nil, the first fight after login) and no hit: the pull's open fades
+    -- at the fight's end as an over card does, rather than staying up until the player closes it.
+    local inst, meter, Hud = fresh()
+    setHud(inst, "openOnPull", true)
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    run(inst, 10.25)
+    assertTrue(Hud.IsShown(), "open at the pull")
+    leave(inst, 20)
+    run(inst, 25)
+    run(inst, 27)
+    assertNil(inst.NS.Fight.Current(), "the fight ended with no hit")
+    run(inst, 27 + 8 + 2 + 1)
+    assertFalse(Hud.IsShown(), "faded after hud.fadeAfter")
+    assertFalse(shown(Hud))
+end)
+
+test("hud: a no-hit fight leaves a HUD the player opened alone", function()
+    local inst, meter, Hud = fresh()
+    setHud(inst, "openOnPull", true)
+    Hud.Show()
+    meter.SetSession(1, FIGHT)
+    enter(inst, 10)
+    run(inst, 10.25)
+    leave(inst, 20)
+    run(inst, 25)
+    run(inst, 200)
+    assertTrue(Hud.IsShown(), "the player's open never fades")
+end)
+
 test("hud: Open when a fight starts never moves the Combat Sequence: a closed one stays closed", function()
     local inst, meter, Hud = fresh()
     local NS = inst.NS
