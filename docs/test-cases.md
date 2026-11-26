@@ -1329,7 +1329,7 @@ Total.
 - hud sizing: a stored point already on the top edge is kept
 - hud sizing: a stored point off the top edge (an older profile) takes the top left at the first show
 
-### test_hud_static.lua (18)
+### test_hud_static.lua (20)
 
 - hud static: the chart stays on the card after a saved fight, the log closed
 - hud static: the chart stays on the card after a not saved fight, the log closed
@@ -1341,6 +1341,8 @@ Total.
 - hud static: the default window is 260 wide and exactly tall enough for 5 bars and 5 sequence rows
 - hud static: a height handed back a hair short of 5/5 (pixel snapping) still holds 5 and 5
 - hud static: a grip released a hair short of a pair keeps that pair
+- hud static: the HUD's own size echoed back is no drag, so Rows shown resizes the window at once
+- hud static: a rows setting wins over a size the grip dragged earlier; the grip still sizes it after
 - hud static: the status line is reserved, so the card's chips never move Damage profile
 - hud static: only the log's open and close, a rows setting or the grip move the height
 - hud static: Hud.SplitFor shrinks the larger side first, the sequence on a tie, never under 3 a side
@@ -2193,7 +2195,7 @@ Total.
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 17 |
-| test_hud_static.lua | 18 |
+| test_hud_static.lua | 20 |
 | test_hud_race_button.lua | 31 |
 | test_log_table.lua | 31 |
 | test_log_window.lua | 19 |
@@ -2238,4 +2240,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1844** |
+| **Total** | **1846** |

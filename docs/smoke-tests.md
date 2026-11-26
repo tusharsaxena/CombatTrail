@@ -21,6 +21,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 | (not run yet) | 0.1.0, branch `feat/2026-11-25-combat-log-feedback` (the owner's Combat Log feedback, items 1 to 20: new SM-CT-LG21 to SM-CT-LG27 and SM-CT-N27; amended SM-CT-N6, N25, H12, H13, H16, LG1, LG2, LG4, LG5, LG7, LG8, LG9, LG14, LG17, LG18, LG19, S13, RM50 and R40 to R44, with the Log tab read as the Log section in LG6, LG11 to LG13, LG15, LG16 and LG20; SM-CT-N25's 2026-11-24 pass withdrawn) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-25-combat-sequence` (the owner's Combat Sequence ruling of 2026-11-25: new SM-CT-SQ1 to SM-CT-SQ11; superseded wholly or in part, and amended to say so: SM-CT-LG3, LG13, LG14, LG15, LG16, LG17 and LG25, and in their HIT, HEAL, Amount, chip or name wording SM-CT-LG2, LG7, LG19, R40, R41, R43, R44, S13 and L3; no row carried a pass mark to withdraw) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-26-owner-feedback-round4` (the owner's fourth feedback round: new R4-CT-SM1 to R4-CT-SM9; the rulings recorded on SM-CT-LG22 and SM-CT-LG27; superseded in part, and amended to say so: SM-CT-H12, LG1, LG11, LG14, LG17, LG21, LG22 and SQ9) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-26-owner-feedback-round5` (the owner's fifth feedback round: new R5-CT-SM1 to R5-CT-SM4) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15; the sim window beside the Race window: SM-CT-M4; the Forever Multi-Shot ID: SM-CT-M5; LibKa0s v1.102.0's call-out look and the one tab with no sample line: SM-CT-RM82, RM84, RM85, RM91, RM92) | |
 
 ## How to run it
@@ -257,6 +258,17 @@ written unrun.
 | R4-CT-SM9 | Both | The ruling on SM-CT-LG27. Read Combat Sequence → Colors on a profile that had set *Your color* or a target color; then `/ct skin` to Obsidian and back to Ka0s Default with `/ct test` on. | Colors holds *Color-blind safety* → *Row washes* alone: no *You* or *Targets* group, no *Your color*, *Hostile target color* or *Friendly target color*, none of their switches. Every Combat Sequence row draws as before under both skins, with no Lua error (`/console scriptErrors 1`). |
 | R4-REV-SM2 | Both | With *Open when a fight starts* on (the default) and *Show the HUD* on *On each fight's first hit*: `/reload`, then pull an enemy and leave combat without hitting it (or walk out of a pull); wait out *Fade after the fight*. Then open the HUD yourself (`/ct hud show`) and do the same. | The HUD the pull opened shows its empty look and fades about *Fade after the fight* seconds after the fight ends (with *Show fight-over card* off, about 2 s), as an over card does; it never stays up waiting for you to close it. The HUD you opened yourself stays up. |
 | R4-REV-SM1 | Both | Before updating to this branch, set DPS HUD → Layout → *HUD width (px)* to 260 on the active profile and on a second one; update, `/reload`, read the width on each. | Both keep 260: a width you set yourself is kept even though it now equals the default (schema step 10 reads the width as saved). A profile that never set one opens at 390. |
+
+### Owner feedback round 5 (2026-11-26)
+
+The DPS HUD's height and the Combat Sequence after the owner's fifth feedback round: the default 5 and 5
+rows, *Rows shown* resizing the HUD, the buff and debuff rows on WoW Forever, and the pet's rows told
+apart. Branch `feat/2026-11-26-owner-feedback-round5`. Every row is written unrun.
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| R5-CT-SM1 | Both | On a new profile (or after DPS HUD → Defaults and Combat Sequence → Defaults), with the Combat Sequence docked open, `/ct test`; read the rows; `/reload` and read them again; then at UI scale 0.64 (System → Graphics → UI scale) read them once more. | Five Spell breakdown rows and five Combat Sequence rows, each time, with no gap under the fifth sequence row (it may be empty when the sample has fewer lines than rows; the count reads how many it draws). Settings → DPS HUD → Layout → *Spell bars* reads 5 and Combat Sequence → Docked drawer → *Rows shown* reads 5. |
+| R5-CT-SM2 | Both | With the HUD from R5-CT-SM1 up, unlocked, open Settings → Combat Sequence → Docked drawer and move *Rows shown* to 10, then 3; then drag the HUD's corner down a few rows and release; then set *Rows shown* to 8; then DPS HUD → Layout → *Spell bars* to 7. | Each change resizes the HUD at once, its top left held: 10 rows, then 3, the Race window beside it level on Retail. The drag sizes it and writes both counts (the two sliders follow); the next *Rows shown* change wins over the drag and the HUD shows 8 sequence rows; *Spell bars* 7 adds two spell rows. No row count sticks at what an earlier drag left. |
 
 ## 5. Results
 

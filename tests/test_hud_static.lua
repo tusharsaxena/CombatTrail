@@ -166,6 +166,35 @@ test("hud static: a grip released a hair short of a pair keeps that pair", funct
     assertEqual(NS.db.profile.hud.bars .. "/" .. NS.db.profile.sequence.drawer.rows, "6/6")
 end)
 
+-- R5-CT-02 (owner feedback round 5): "Changing Rows shown here does not resize the window - this
+-- setting should override drag handle resizing." The client echoes the HUD's own SetSize back through
+-- OnSizeChanged; that echo was tracked as a drag, so its rows stuck and every later rows setting was
+-- ignored until the next grip release.
+test("hud static: the HUD's own size echoed back is no drag, so Rows shown resizes the window at once", function()
+    local inst, _, Hud = docked(8)
+    local NS, f = inst.NS, Hud.Frame()
+    f:__fire("OnSizeChanged", f.__w, Hud.HeightFor(5, 4))
+    Hud.Refresh()
+    setLog(inst, "drawer.rows", 10)
+    assertEqual(NS.HudLog.Rows(), 10, "the setting's rows")
+    assertEqual(f.__h, Hud.HeightFor(5, 10), "the window grown to ten sequence rows")
+    assertEqual(NS.HudLog.__ui().table.nRows, 10)
+    H.setHud(inst, "bars", 7)
+    assertEqual(f.__h, Hud.HeightFor(7, 10), "Spell bars resizes it too")
+end)
+
+test("hud static: a rows setting wins over a size the grip dragged earlier; the grip still sizes it after", function()
+    local inst, _, Hud = docked(8)
+    local NS, M, f = inst.NS, inst.mocks, Hud.Frame()
+    gripTo(Hud, M, 300, Hud.HeightFor(6, 6))
+    assertEqual(f.__h, Hud.HeightFor(6, 6))
+    setLog(inst, "drawer.rows", 3)
+    assertEqual(f.__h, Hud.HeightFor(6, 3), "the setting wins over the drag")
+    gripTo(Hud, M, 300, Hud.HeightFor(6, 6))
+    assertEqual(f.__h, Hud.HeightFor(6, 6), "the grip sizes it again")
+    assertEqual(NS.db.profile.sequence.drawer.rows, 6, "and writes the rows it holds")
+end)
+
 test("hud static: the status line is reserved, so the card's chips never move Damage profile", function()
     local inst, _, Hud = docked(8)
     local live = H.body(Hud, "live").stackTop

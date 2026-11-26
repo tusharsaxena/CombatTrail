@@ -235,7 +235,10 @@ the spells on a tie, to 15 spell rows, then the sequence grows to 20), its least
 release writes both; with Spell breakdown off, only the Combat Sequence's rows; with the Combat
 Sequence closed or detached, Spell bars alone. A height the client hands back up to half a pixel short
 of a pair still holds it (`HudSplit.SLACK`, owner feedback round 5, R5-CT-01: the client snaps a frame's
-size to its pixels, and the default 5/5 had been read as 5/4). Spells past the rows
+size to its pixels, and the default 5/5 had been read as 5/4). Spell bars and *Rows shown* resize the
+window the moment they change, over whatever the grip set before, and the grip sizes it again from
+there (R5-CT-02: the client's echo of the HUD's own size had been taken for a drag, its rows held until
+the next release). Spells past the rows
 scroll with the mouse wheel. The Spell rows tab's old "Spell rows shown" row (`hud.spells.rows`) is
 retired into Spell bars.
 

@@ -583,11 +583,12 @@ local function applyRace()
     ui.log:SetShown(log and bar)
 end
 
--- Every size change: the grip's size, in range, that a drag lays out from (plain numbers only), and
--- the rows it holds (dragPair, from the pair the grip went down on, noted at its first change).
+-- Every size change the grip makes: its size, in range, that a drag lays out from (plain numbers only),
+-- and the rows it holds (dragPair, from the pair the grip went down on, noted at its first change).
 local function trackSize(w, h)
     w, h = Secrets.PlainNumber(w), Secrets.PlainNumber(h)
-    if not ui.down and NS.Sizing.IsSizing(ui.frame) then ui.down = { bars(), NS.HudLog.RowsSetting() } end
+    if not NS.Sizing.IsSizing(ui.frame) then return end   -- the HUD's own SetSize echoed back: no drag (R5-CT-02)
+    ui.down = ui.down or { bars(), NS.HudLog.RowsSetting() }
     if w then ui.dragW = clamp(w, Hud.MIN_WIDTH, Hud.MAX_WIDTH) end
     if h then ui.dragH = clamp(h, heightBounds()) end
     if ui.dragH then ui.dragBars, ui.dragRows = dragPair(NS.HudSplit.Forgive(ui.dragH)) end   -- snapping forgiven (R5-CT-01)
