@@ -7,23 +7,27 @@
 -- measured loop isolated by a full collect on either side with the collector stopped inside it.
 -- Timings are printed for orientation only: compare scenarios within a run, never across machines.
 --
--- WHY THESE SCENARIOS. The Combat Log (CombatTrail #11, modules/CombatLog.lua) is the path that runs on
--- the most events in a busy fight: every aura gained or lost on the player and the target, every hit
--- and heal on the player and every cast. Its contract (spec #11, *Performance*) is constant work per
--- event, one ring line each and no allocation beyond the line's table, which the ring reuses once it
--- is full. Each scenario runs inside an open fight, the frame's handler called as the client calls it
--- (its OnEvent script, with the event's own arguments):
---   logHit     one UNIT_COMBAT WOUND on the player, with an amount, a school and a critical mark
---   logAura    one UNIT_AURA gain and the matching loss on the target (two lines)
---   logCast    one cast handed in by the lanes' listener (inside laneCast, so no bracket of its own)
---   busyFight  a busy fight's beat: two casts, two hits, a heal and an aura gained and lost
+-- WHY THESE SCENARIOS. The Combat Sequence (CombatTrail #11, modules/CombatLog.lua) is the path that
+-- runs on the most events in a busy fight: every aura gained or lost on the player and every debuff of
+-- yours on the target, and every cast (no UNIT_COMBAT since CSEQ-1: no hits or heals). Its contract
+-- (spec #11, *Performance*) is constant work per event, one ring line each and no allocation beyond the
+-- line's table, which the ring reuses once it is full. Each scenario runs inside an open fight, the
+-- frame's handler called as the client calls it (its OnEvent script, with the event's own arguments):
+--   logAura      one UNIT_AURA gain and the matching loss on the target (two lines)
+--   logAuraDiff  (CSEQ-1) one UNIT_AURA on the player with no update info (WoW Forever's shape), the
+--                unit's aura list alternating between holding one buff and not, so each pair of
+--                iterations is one gain and one loss from the diff (a walk into the scratch map, the
+--                compare, the swap): the maps and the order and loss arrays are reused
+--   logCast      one cast handed in by the lanes' listener (inside laneCast, so no bracket of its own)
+--   busyFight    a busy fight's beat: two casts, a buff on you gained and lost (update info) and a debuff
+--                of yours on the target gained and lost
 --   logPaint      (CL-11b) the DPS HUD's docked Combat Log drawer open: a busy beat, then one repaint
 --                 tick (modules/Hud_Log.lua's HudLog.Paint), ten rows painted (the default since
 --                 owner feedback item 16) and the scroll indicator's count moved on by the new lines
 --   logPaintIdle  one repaint tick with nothing new: no paint at all
 --   logPlaceIdle  (CL-REV) the drawer's place at a HUD beat that moved nothing (HudLog.Place, which
 --                 the HUD's render calls on every live beat): compared field by field, no allocation
--- logHit and logAura are each measured with capture OFF and ON: the pair is the zero-overhead
+-- logAura and logAuraDiff are each measured with capture OFF and ON: the pair is the zero-overhead
 -- evidence performance-§2 asks for (capture off may allocate nothing over capture on, and capture on
 -- no more than one note's PAIR_SLACK over off).
 --
@@ -36,6 +40,11 @@
 -- Re-measured 2026-11-25 (CLF-2): 6,992 bytes with ten rows (5,696 with eight, at adbef0d): the two
 -- rows' recorder bytes; the scroll indicator's count (LogTable.Count) allocates nothing once its slots
 -- are reused, and an indicator that did not move places nothing. The ceiling holds.
+-- CSEQ-1 (2026-11-25): logHit gone with UNIT_COMBAT; logAuraDiff added under the capture scenarios' 8-byte
+-- ceiling; busyFight's beat is two casts and two auras each gained and lost (its ceiling stays 16); no
+-- ceiling raised. Measured on both kit profiles: logAuraDiff 0.2 bytes per iteration off and on (1 note on),
+-- busyFight 0.2. logPaint keeps its 10,240 ceiling and fell from 6,992 to 5,376 bytes, each row painting
+-- one label fewer (no Amount).
 
 local root = (arg and arg[0] and arg[0]:match("^(.*)/tests/perf%.lua$")) or "."
 package.path = root .. "/tests/?.lua;" .. package.path
@@ -50,20 +59,20 @@ local N = 4000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
 
 local BYTE_CEILING = {
-    logHitCaptureOff = 8, logHitCaptureOn = 8,
     logAuraCaptureOff = 8, logAuraCaptureOn = 8,
+    logAuraDiffCaptureOff = 8, logAuraDiffCaptureOn = 8,
     logCast = 8,
     busyFight = 16,
     logPaint = 10240, logPaintIdle = 8, logPlaceIdle = 8,
 }
 local NOTES_PER_ITER = {
-    logHitCaptureOff = 0, logHitCaptureOn = 1,
     logAuraCaptureOff = 0, logAuraCaptureOn = 2,
+    logAuraDiffCaptureOff = 0, logAuraDiffCaptureOn = 1,
     logCast = 0,
     busyFight = 0,
     logPaint = 0, logPaintIdle = 0, logPlaceIdle = 0,
 }
-local PAIRS = { logHitCaptureOff = "logHitCaptureOn", logAuraCaptureOff = "logAuraCaptureOn" }
+local PAIRS = { logAuraCaptureOff = "logAuraCaptureOn", logAuraDiffCaptureOff = "logAuraDiffCaptureOn" }
 local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 
@@ -170,7 +179,7 @@ local function pair(base, fn)
     NS.Perf.on = false
 end
 
--- ── the scene: a fight open on session 1, the Combat Log capturing ──────────────────────────────
+-- ── the scene: a fight open on session 1, the Combat Sequence capturing ─────────────────────────
 
 M.__now = 100
 meter.SetSession(1, { damage = 1000, dps = 100, duration = 10, spells = { { id = 133, dmg = 1000, dps = 100 } } })
@@ -188,8 +197,23 @@ local onEvent = frame and frame.__scripts and frame.__scripts.OnEvent or functio
 local GAIN = { addedAuras = { { auraInstanceID = 501, spellId = 12654, isHarmful = true,
                                 isFromPlayerOrPlayerPet = true } } }
 local LOSS = { removedAuraInstanceIDs = { 501 } }
+local BUFF_GAIN = { addedAuras = { { auraInstanceID = 502, spellId = 1459, isHelpful = true } } }
+local BUFF_LOSS = { removedAuraInstanceIDs = { 502 } }
 
-local function logHit() onEvent(frame, "UNIT_COMBAT", "player", "WOUND", "CRITICAL", 1234, 4) end
+-- The player's aura list for the diff: one buff, or none, by `diffHeld` (the table built once).
+local DIFF_BUFF = { auraInstanceID = 601, spellId = 2825, isHelpful = true }
+local diffHeld = false
+local readAura = M.C_UnitAuras.GetAuraDataByIndex
+M.C_UnitAuras.GetAuraDataByIndex = function(unit, i, filter)
+    if unit == "player" and filter == "HELPFUL" and i == 1 and diffHeld then return DIFF_BUFF end
+    if unit == "player" then return nil end
+    return readAura(unit, i, filter)
+end
+
+local function logAuraDiff()
+    diffHeld = not diffHeld
+    onEvent(frame, "UNIT_AURA", "player", nil)
+end
 local function logAura()
     onEvent(frame, "UNIT_AURA", "target", GAIN)
     onEvent(frame, "UNIT_AURA", "target", LOSS)
@@ -198,21 +222,25 @@ local function logCast() CL.OnCast("player", 133, M.__now, false) end
 local function busyFight()
     CL.OnCast("player", 133, M.__now, false)
     CL.OnCast("pet", 17253, M.__now, false)
-    onEvent(frame, "UNIT_COMBAT", "player", "WOUND", "", 900, 1)
-    onEvent(frame, "UNIT_COMBAT", "player", "WOUND", "GLANCING", 400, 1)
-    onEvent(frame, "UNIT_COMBAT", "player", "HEAL", "", 700, 2)
+    onEvent(frame, "UNIT_AURA", "player", BUFF_GAIN)
+    onEvent(frame, "UNIT_AURA", "player", BUFF_LOSS)
     onEvent(frame, "UNIT_AURA", "target", GAIN)
     onEvent(frame, "UNIT_AURA", "target", LOSS)
 end
 
 local before = CL.Seq()
-pair("logHit", logHit)
 pair("logAura", logAura)
+do
+    local s0 = CL.Seq()
+    for _ = 1, 10 do logAuraDiff() end
+    check(CL.Seq() - s0 == 10, "the diff scenario drew no line each event: it would measure a silent walk")
+end
+pair("logAuraDiff", logAuraDiff)
 NS.Perf.on = false
 measure("logCast", N, logCast)
 measure("busyFight", N, busyFight)
 -- The DPS HUD's docked drawer open (CL-11b, modules/Hud_Log.lua): one repaint tick after a busy beat
--- (seven new lines, ten rows painted), and one with nothing new, which repaints nothing at all.
+-- (six new lines, ten rows painted), and one with nothing new, which repaints nothing at all.
 NS.Hud.Show()
 NS.HudLog.SetShown(true)
 local drawer = NS.HudLog.__ui()

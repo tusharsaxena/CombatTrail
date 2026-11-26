@@ -12,7 +12,7 @@ page on the current profile. Every row is a schema row (`settings/*.lua` through
 | General | The master switches (enable, lock, debug console, minimap button, test mode, sim mode, the HUD in combat), the skin and its overrides, and the key bindings |
 | Lanes | The Player and Pet lanes, one lane at a time through the picker in the page's band: size and anchoring, icons, background and border, ticks and the label, visibility, ignored spells |
 | DPS HUD | When the HUD opens and fades, what it paces against, which parts it shows, how often its clock redraws, and the look of each part |
-| Combat Log | The log of your casts, auras, hits and heals taken and death (CombatTrail #11): on or off, open now and at each fight's start, docked in the DPS HUD or in its own window; the drawer's filter chips and rows; the window's rows, place, pin, lock, scale and opacity; the sort, the display throttle, the text size, the row height, the time and the columns; what the live views show; the colors; what each fight saves; the Results Log section's chips |
+| Combat Sequence | The order of your casts and your pet's, the buffs gained and lost on you, the debuffs on you and your target, and your death, with no amounts (CombatTrail #11; the Combat Log until CSEQ-2, page key `sequence`, panel `CombatTrailSequencePanel`): on or off, open now and at each fight's start, docked in the DPS HUD or in its own window; the drawer's filter chips and rows; the window's rows, place, pin, lock, scale and opacity; the sort, the display throttle, the text size, the row height, the time and the columns; what the live views show; the colors; what each fight saves; the Results Combat Sequence section's chips |
 | History | What a fight must pass to be stored, how long it is kept, the Results window's scale and rows, the items Usage never lists, the training dummies (both clients) and the new-best toast (a fight's on both clients, a race's on Retail) |
 | Race mode | Retail only: the Race mode switch, the length a race arms at, auto-show (the Race window and the DPS HUD with it) and auto-arm near a training dummy, the race clock (how often it redraws is the DPS HUD page's *HUD refresh rate*), the countdown and the buzzer, the center call-out's look and voice (its one Callout tab: a preview, then Look and Sound), the scoring rules, the late-cast ignore list, and where the Race window stands and how tall it is (its size is the grip's) |
 | Profiles | AceDB's own profile controls |
@@ -65,7 +65,7 @@ never reaches them; the same bindings show under Options → Keybindings → Ka0
 
 Master controls also carries *Reset position* (the lanes, the HUD and the Results window back to their
 starting places, and with them the detached Race window's place on Retail, the new-best toast's
-dragged place and the detached Combat Log window's place: `NS.ResetPositions`, core/CombatTrail.lua) and *Reset all settings*, which asks first.
+dragged place and the detached Combat Sequence window's place: `NS.ResetPositions`, core/CombatTrail.lua) and *Reset all settings*, which asks first.
 Race mode adds one key binding on Retail, *Toggle Race window*, after *Toggle Results window* (the
 owner's decision of 2026-11-13, superseding ruling X18; its row is built under `ForClient` and its
 binding lives in Retail's `Bindings_Mainline.xml`, a documented deviation). WoW Forever's tab keeps
@@ -218,15 +218,16 @@ Hz"). Its tooltip names the Race window on Retail only. The Clock and figures ta
 (`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
 and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
 tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600), default
-390 (owner feedback item 2). At 260 the docked log's four columns still fit: Time, Event and Amount
-take 134 px and three 4 px gaps, Spell / School at least 70, 216 in all against the 236 the narrowest
-HUD gives its content, so the log sets no width floor of its own (item 3).
+390 (owner feedback item 2). At 260 the docked Combat Sequence's three columns still fit: Time and
+Event take 84 px and two 4 px gaps, Spell at least 70, 162 in all against the 236 the narrowest HUD
+gives its content, so the Combat Sequence sets no width floor of its own (item 3; Amount's 50 px and
+its gap went with the column, CSEQ-1).
 
 Layout's size rows: the window has one static height (owner feedback item 12), the sum of the parts the
-layout shows, Spell bars rows, and the docked log's rows while it is open; nothing a fight does moves
+layout shows, Spell bars rows, and the docked Combat Sequence's rows while it is open; nothing a fight does moves
 it. The Window size row (Fixed or Auto-grow, `hud.sizeMode`) and Grow (`hud.grow`) are retired with
 schema step 6. Spell bars runs 1 to 15, default 5. The HUD's bottom-right grip sets the width and the
-rows: the log's (`log.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
+rows: the Combat Sequence's (`sequence.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
 scroll with the mouse wheel. The Spell rows tab's old "Spell rows shown" row (`hud.spells.rows`) is
 retired into Spell bars.
 
@@ -365,35 +366,36 @@ have no texture row and always draw the skin's (AF-CT-TEX).
 | Frame strata | `hud.window.strata` |
 | HUD opacity | `hud.window.alpha` |
 
-## Combat Log
+## Combat Sequence
 
-Tabs: *Combat Log*, *Docked drawer*, *Detached window*, *Order and display*, *What to show*, *Colors*,
+Tabs: *Combat Sequence*, *Docked drawer*, *Detached window*, *Order and display*, *What to show*, *Colors*,
 *Storage*, *Results* (settings/Log.lua, `NS.LOG_TAB_ORDER`; CombatTrail #11, CL-11c2). Every row writes
 through `NS.SetByPath`, and its SETTINGS_CHANGED redraws whichever home is up: the DPS HUD's drawer (the
 HUD's one height changes with its rows and chips, owner feedback item 12), the detached window, and the
-Results fight detail's Log section. The log's own controls write the same rows: the HUD's Log control
-(the list mark) and `/ct log` (*Show the Combat Log*), the drawer's eye (*Show the filter chips*), its
-detach mark and the window's dock mark (*Where the log lives*), and a click on the Time header (*Sort
+Results fight detail's Combat Sequence section. Its own controls write the same rows: the HUD's
+Combat Sequence control (the list mark) and `/ct sequence` or its alias `/ct log` (*Show the Combat
+Sequence*), the drawer's eye (*Show the filter chips*), its detach mark and the window's dock mark
+(*Where the Combat Sequence lives*), and a click on the Time header (*Sort
 order*). The drawer has no fold (item 14) and the window no attach or pin (item 11): their rows and
 keys went with schema steps 5 and 6. The detached window's place and size are
-its drag's and its grip's (`log.window.position`, `width`, `height`), with no row, so the page's
+its drag's and its grip's (`sequence.window.position`, `width`, `height`), with no row, so the page's
 Defaults leaves them where they are. The window's gear opens this page.
 
-### Combat Log (tab)
+### Combat Sequence (tab)
 
 | Row | Key |
 |---|---|
-| Enable the Combat Log | `log.enabled` |
-| Show the Combat Log | `log.drawer.shown` |
-| Open it when a fight starts | `log.drawer.autoOpen` |
-| Where the log lives (Docked in the DPS HUD, In its own window) | `log.home` |
+| Enable the Combat Sequence | `sequence.enabled` |
+| Show the Combat Sequence | `sequence.drawer.shown` |
+| Open it when a fight starts | `sequence.drawer.autoOpen` |
+| Where the Combat Sequence lives (Docked in the DPS HUD, In its own window) | `sequence.home` |
 
 ### Docked drawer
 
 | Row | Key |
 |---|---|
-| Show the filter chips | `log.drawer.chips` |
-| Rows shown (3 to 20) | `log.drawer.rows` |
+| Show the filter chips | `sequence.drawer.chips` |
+| Rows shown (3 to 20) | `sequence.drawer.rows` |
 
 ### Detached window
 
@@ -402,59 +404,55 @@ standalone (owner feedback item 11): it has no attach, side, HUD-height or pin r
 
 | Row | Key |
 |---|---|
-| Fill the window with rows | `log.window.fill` |
-| Rows shown (3 to 40) | `log.window.rows` |
-| Lock the window | `log.window.locked` |
-| Window scale | `log.window.scale` |
-| Window opacity | `log.window.alpha` |
+| Fill the window with rows | `sequence.window.fill` |
+| Rows shown (3 to 40) | `sequence.window.rows` |
+| Lock the window | `sequence.window.locked` |
+| Window scale | `sequence.window.scale` |
+| Window opacity | `sequence.window.alpha` |
 
 ### Order and display
 
 *N (ms)* is drawn disabled while *Show new rows* is Instant. The throttle delays only what the drawer and
 the window show; every event is still captured and saved. *Text size* runs 8 to 16 points (10, the body
 text's own) and widens the fixed columns and the icon with it; *Row height (px)* runs 12 to 28 (14), and
-the drawer, the window and the Results Log section all take their heights from it.
+the drawer, the window and the Results Combat Sequence section all take their heights from it.
 
 | Row | Key |
 |---|---|
-| Sort order (Newest first, Oldest first) | `log.view.sort` |
-| Show new rows (Instant, At most one row every N ms, In batches every N ms) | `log.view.throttle` |
-| N (ms) | `log.view.throttleMs` |
-| Text size | `log.view.fontSize` |
-| Row height (px) | `log.view.rowHeight` |
-| Time (From the pull, Clock time) | `log.view.timeFormat` |
-| Show the Info column | `log.view.columns.info` |
-| Show the Spell/School column | `log.view.columns.spell` |
-| Show the Amount column | `log.view.columns.amount` |
+| Sort order (Newest first, Oldest first) | `sequence.view.sort` |
+| Show new rows (Instant, At most one row every N ms, In batches every N ms) | `sequence.view.throttle` |
+| N (ms) | `sequence.view.throttleMs` |
+| Text size | `sequence.view.fontSize` |
+| Row height (px) | `sequence.view.rowHeight` |
+| Time (From the pull, Clock time) | `sequence.view.timeFormat` |
+| Show the Info column | `sequence.view.columns.info` |
+| Show the Spell column | `sequence.view.columns.spell` |
 
 ### What to show
 
 The live views' filter: the drawer and the window. These rows are the defaults of each view's chips
-(Casts, Pet, Buffs, Debuffs, Taken, Heals: the window's under its status line, the drawer's under its
-heading while *Show the filter chips* is on, the default). Each view seeds its chips from them when it is built, when the log is opened or
+(Casts, Pet, Buffs, Debuffs: the window's under its status line, the drawer's under its
+heading while *Show the filter chips* is on, the default). Each view seeds its chips from them when it is built, when the Combat Sequence is opened or
 moved, at each fight's start and at a write here; a click on a chip turns it in that view alone, for the
-session, and is never stored. What is saved is the Storage tab's, apart from it.
-A hit or a heal whose amount the client keeps secret is never compared, so *Least amount shown* never
-hides it.
+session, and is never stored. What is saved is the Storage tab's, apart from it. A buff or debuff row
+covers both ends: the gain (BUFF+, DEBUFF+) and the fade (BUFF-, DEBUFF-). The *Hits taken*, *Heals
+taken*, *Buffs on your target* and *Least amount shown* rows went with the hit and heal rows (CSEQ-1,
+schema step 8).
 
 | Row | Key |
 |---|---|
-| Your casts | `log.show.casts` |
-| Your pet's casts | `log.show.petCasts` |
-| Buffs on you | `log.show.playerBuffs` |
-| Debuffs on you | `log.show.playerDebuffs` |
-| Your debuffs on your target | `log.show.targetDebuffs` |
-| Buffs on your target | `log.show.targetBuffs` |
-| Hits taken | `log.show.hits` |
-| Heals taken | `log.show.heals` |
-| Deaths | `log.show.deaths` |
-| Show auto attacks | `log.show.autoAttacks` |
-| Least amount shown | `log.show.minAmount` |
+| Your casts | `sequence.show.casts` |
+| Your pet's casts | `sequence.show.petCasts` |
+| Buffs gained / lost on you | `sequence.show.playerBuffs` |
+| Debuffs on you | `sequence.show.playerDebuffs` |
+| Your debuffs on your target | `sequence.show.targetDebuffs` |
+| Deaths | `sequence.show.deaths` |
+| Show auto attacks | `sequence.show.autoAttacks` |
 
 ### Colors
 
-The *Color-blind safety* group turns school colors and row washes off; every event still differs by
-its tag. *Your color* is a ColorPair whose *Use class color* is on by default (the log has drawn "You" in
+The *Color-blind safety* group turns the row washes off; every event still differs by its tag. *School
+colors* went with the schools (CSEQ-1, schema step 8). *Your color* is a ColorPair whose *Use class color* is on by default (the log has drawn "You" in
 the class color since it shipped). The two target colors are a palette, one per reaction, so they carry
 no class companion (options-ui-§17's exemption); each has *Use the skin's color* on by default, which
 draws the skin's `ct.log.hostile` or `ct.log.friendly`. Since the Source and Target columns went
@@ -463,47 +461,43 @@ rules whether they go (with a schema step) or come back on another cell.
 
 | Row | Key |
 |---|---|
-| School colors | `log.view.schoolColors` |
-| Row washes | `log.view.washes` |
-| Your color | `log.colors.you` |
-| Use class color | `log.colors.useClassColorYou` |
-| Hostile target color | `log.colors.hostile` |
-| Use the skin's color (hostile) | `log.colors.hostileFromSkin` |
-| Friendly target color | `log.colors.friendly` |
-| Use the skin's color (friendly) | `log.colors.friendlyFromSkin` |
+| Row washes | `sequence.view.washes` |
+| Your color | `sequence.colors.you` |
+| Use class color | `sequence.colors.useClassColorYou` |
+| Hostile target color | `sequence.colors.hostile` |
+| Use the skin's color (hostile) | `sequence.colors.hostileFromSkin` |
+| Friendly target color | `sequence.colors.friendly` |
+| Use the skin's color (friendly) | `sequence.colors.friendlyFromSkin` |
 
 ### Storage
 
 Each fight freezes these at its start, so a change takes hold from the next fight. *Fights that keep
-their log* is the store's own bound instead (modules/Retention.lua): each purge run (login, daily,
-`/ct purge`) strips the log from every stored fight but the newest that many carrying one.
+their sequence* is the store's own bound instead (modules/Retention.lua): each purge run (login, daily,
+`/ct purge`) strips the saved sequence from every stored fight but the newest that many carrying one.
 
 | Row | Key |
 |---|---|
-| Save a log with each fight | `log.store.enabled` |
-| Lines kept per fight (100 to 1000) | `log.store.lines` |
-| Fights that keep their log (0 = all; 0 to 500) | `log.store.fights` |
-| Your casts | `log.store.categories.casts` |
-| Your pet's casts | `log.store.categories.petCasts` |
-| Buffs on you | `log.store.categories.playerBuffs` |
-| Debuffs on you | `log.store.categories.playerDebuffs` |
-| Your debuffs on your target | `log.store.categories.targetDebuffs` |
-| Buffs on your target | `log.store.categories.targetBuffs` |
-| Hits taken | `log.store.categories.hits` |
-| Heals taken | `log.store.categories.heals` |
-| Deaths | `log.store.categories.deaths` |
+| Save a sequence with each fight | `sequence.store.enabled` |
+| Lines kept per fight (100 to 1000) | `sequence.store.lines` |
+| Fights that keep their sequence (0 = all; 0 to 500) | `sequence.store.fights` |
+| Your casts | `sequence.store.categories.casts` |
+| Your pet's casts | `sequence.store.categories.petCasts` |
+| Buffs gained / lost on you | `sequence.store.categories.playerBuffs` |
+| Debuffs on you | `sequence.store.categories.playerDebuffs` |
+| Your debuffs on your target | `sequence.store.categories.targetDebuffs` |
+| Deaths | `sequence.store.categories.deaths` |
 
 ### Results
 
+Two subgroups: *Combat Sequence section* and *Chips each fight opens on*.
+
 | Row | Key |
 |---|---|
-| Jump to the Timeline on clicking a cast | `log.results.jumpToCast` |
-| Casts | `log.results.chips.casts` |
-| Pet | `log.results.chips.pet` |
-| Buffs | `log.results.chips.buffs` |
-| Debuffs | `log.results.chips.debuffs` |
-| Taken | `log.results.chips.taken` |
-| Heals | `log.results.chips.heals` |
+| Jump to the Timeline on clicking a cast | `sequence.results.jumpToCast` |
+| Casts | `sequence.results.chips.casts` |
+| Pet | `sequence.results.chips.pet` |
+| Buffs | `sequence.results.chips.buffs` |
+| Debuffs | `sequence.results.chips.debuffs` |
 
 ## History
 
@@ -721,7 +715,7 @@ X takes one off; 8690 says it stands for every hearthstone), then *Reset list* (
 Attached (on), the Race window stands flush against the DPS HUD on the side picked (right by default),
 its top or left edge level with the HUD's, and moves with it; off, it stands where its title bar was
 dragged to, and General's *Lock frame* holds it. *Match the DPS HUD's height* (on) applies on the left
-or right: the Race window takes the HUD's height and follows each HUD resize (the grip, the docked Combat Log opened or closed, a
+or right: the Race window takes the HUD's height and follows each HUD resize (the grip, the docked Combat Sequence opened or closed, a
 part or the title bar or footer shown or hidden), never shorter than the height its tallest screen
 needs. Above or below the HUD, detached, or with the row off, it keeps its own height. Both windows
 take the DPS HUD's scale, so equal heights line up.

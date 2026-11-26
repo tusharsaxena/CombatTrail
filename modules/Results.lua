@@ -287,7 +287,7 @@ local function buildDetail()
             local TL = NS.ResultsTimeline
             if TL and type(TL.Open) == "function" then TL.Open(p) end
         end,
-        -- The Log section's click on a cast (CL-11c): the timeline opened on the fight, at that cast.
+        -- The Combat Sequence section's click on a cast (CL-11c): the timeline opened on the fight, at that cast.
         timelineAt = function(p, t)
             local TL = NS.ResultsTimeline
             if TL and type(TL.Open) == "function" and TL.Open(p) then TL.FocusAt(t) end
@@ -1120,9 +1120,9 @@ local function onProfile()
     if windowShown() then render() end
 end
 
--- A Combat Log setting (the sort, the colors, the columns, what is shown): an open Log section redraws.
+-- A Combat Sequence setting (the sort, the colors, the columns, what is shown): an open Combat Sequence section redraws.
 local function onLogSetting(path)
-    if type(path) == "string" and path:sub(1, 4) == "log." and windowShown() then ui.detail:RefreshLog() end
+    if type(path) == "string" and path:sub(1, 9) == "sequence." and windowShown() then ui.detail:RefreshLog() end
 end
 
 local function onSettings(path)

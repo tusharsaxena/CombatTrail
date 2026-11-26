@@ -308,18 +308,23 @@ secret spell ID in combat, `curve:Evaluate` raises "Secret values are only allow
 execution". *Do:* issue #7's route is closed; live rows stay in the player color mid-combat.
 *Source:* this repo, `modules/ProbeCurve.lua`.
 
-**`UNIT_COMBAT` and `UNIT_AURA`'s update info for the Combat Log are assumed, not yet probed.**
+**`UNIT_AURA`'s update info for the Combat Sequence is assumed, not yet probed.**
 *Client:* Forever (1.60.1). *Measured:* not measured; assumed, until the owner probes it (CombatTrail
-#11, plan item CL-11a, 2026-11-25). The Combat Log registers `UNIT_COMBAT` for `player` and
-`UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while a fight is open.
-The assumption is that both events exist on Forever, as its client globals list
-`C_UnitAuras.GetAuraDataByIndex` and `GetAuraDataByAuraInstanceID`, and that `UNIT_AURA` carries
-`addedAuras` and `removedAuraInstanceIDs`, with plain amounts and spell IDs in combat, as the casts are.
-*Cost, if wrong:* a refused `UNIT_COMBAT` means no hits or heals in the log, and the rest still
-works. Missing update info means aura gains and losses are not logged: each update is a full walk and
-writes no line. A raise from the aura reader (§3's `GetBuffDataByIndex` entry) ends that walk. *Do:*
-after a fight, `/ct diagnostics` prints the capture's own line in its fight section,
-`combat log registered=… refused=… lines=…` (`CombatLog.Diagnose`: `refused=UNIT_COMBAT` is this
-quirk's refusal, `refused=none` its delivery), and lists any refused event under *rejected events*. The smoke rows for
-#11 (SM-CT-LG3 first, docs/smoke-tests.md) record what the log showed, and this entry becomes a measured one or is corrected. *Source:* this
-repo, `modules/CombatLog.lua`.
+#11, plan item CL-11a, 2026-11-25; rewritten for the Combat Sequence, CSEQ-1 and CSEQ-3). The Combat
+Sequence registers `UNIT_AURA` for `player` and `target` through `NS.SafeRegisterUnitEvent`, only while
+a fight is open. It no longer registers `UNIT_COMBAT` at all: the hit and heal rows it fed went
+(CSEQ-1), so that event's shape on Forever no longer matters here. The assumption is that `UNIT_AURA`
+exists on Forever, as its client globals list `C_UnitAuras.GetAuraDataByIndex` and
+`GetAuraDataByAuraInstanceID`, with plain spell IDs and instances in combat, as the casts are. Whether
+it carries `addedAuras` and `removedAuraInstanceIDs` is not known, and no longer decides whether gains
+and fades are logged: on a full update, with no update info, or with sealed or unreadable info, the unit
+is walked into a scratch map and diffed against its map (gains in walk order, then fades by instance
+ID). *Cost, if wrong:* with no update info, every `UNIT_AURA` on the player is a diff of up to 80 reads,
+under the `combatLog` bracket. A raise from the aura reader (§3's `GetBuffDataByIndex` entry) or a
+sealed aura or ID makes the walk incomplete, and an incomplete walk writes no line, so a fade in that
+stretch is logged late, at the next complete diff, never falsely. *Do:* after a fight, `/ct diagnostics`
+prints the capture's own line in its fight section, `combat sequence registered=… refused=… lines=…`
+(`CombatLog.Diagnose`; `refused=none` is this quirk's delivery, and `UNIT_COMBAT` is never named), and
+lists any refused event under *rejected events*. The smoke rows (SM-CT-SQ3 first, docs/smoke-tests.md)
+record whether BUFF+ and BUFF- rows appear on Forever, and this entry becomes a measured one or is
+corrected. *Source:* this repo, `modules/CombatLog.lua`.

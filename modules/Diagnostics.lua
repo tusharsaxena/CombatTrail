@@ -74,11 +74,12 @@ local function fight(out)
     out:add("Diag", "fight state=%s id=%s session=%s meter=%s chart fights=%s", NS.Fight.State(),
         cur and cur.id, cur and cur.sessionID, (NS.Meter.IsAvailable()), NS.Slices.Held())
     out:add("Diag", "probe armed=%s", NS.Probe.IsArmed())
-    -- The Combat Log's capture (#11): whether its events are registered now (only while a fight is
-    -- open), the events the client refused this session (the assumed UNIT_COMBAT quirk's readout,
-    -- docs/midnight-quirks.md and docs/forever-quirks.md) and the lines heard this session.
+    -- The Combat Sequence's capture (#11, CSEQ-1): whether its events are registered now (only while a
+    -- fight is open), the events the client refused this session (UNIT_AURA, PLAYER_DEAD and
+    -- PLAYER_TARGET_CHANGED; never UNIT_COMBAT; docs/midnight-quirks.md and docs/forever-quirks.md) and
+    -- the lines heard this session.
     local log = NS.CombatLog.Diagnose()
-    out:add("Diag", "combat log registered=%s refused=%s lines=%s", log.registered,
+    out:add("Diag", "combat sequence registered=%s refused=%s lines=%s", log.registered,
         #log.refused > 0 and table.concat(log.refused, ",") or "none", log.lines)
 end
 

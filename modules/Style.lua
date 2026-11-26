@@ -435,7 +435,7 @@ end
 
 --- The named copy of `font` at `scale` times its Style.FONT_SIZE height, or nil where the client has
 --- no CreateFont or the font has no size here: for a surface that sets a label's face again at its own
---- size (the Combat Log's rows, modules/LogTable_View.lua, `log.view.fontSize`).
+--- size (the Combat Sequence's rows, modules/LogTable_View.lua, `sequence.view.fontSize`).
 --- @param font string  a Style.FONT value that Style.FONT_SIZE names
 --- @param scale number
 --- @return string|nil

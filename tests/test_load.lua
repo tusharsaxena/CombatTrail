@@ -100,8 +100,8 @@ local function count(t)
     return c
 end
 
-test("load: the settings stamp is 7 and the fight record's format is 6", function()
-    assertEqual(T.NS.SCHEMA_VERSION, 7)
+test("load: the settings stamp is 9 and the fight record's format is 6", function()
+    assertEqual(T.NS.SCHEMA_VERSION, 9)
     assertEqual(T.NS.Recorder.CT_SCHEMA, 6)
 end)
 
@@ -151,7 +151,8 @@ test("load: step 5 drops the Combat Log's retired keys in every profile, and kee
     local NS = boot({ global = { schemaVersion = 4 }, profiles = { Default = stored(), Other = stored() } })
     local sv = _G.CombatTrailDB.profiles
     for _, name in ipairs({ "Default", "Other" }) do
-        local log = sv[name].log
+        -- Steps 5 to 8 ran on `log`; step 9 then moved it to `sequence`.
+        local log = sv[name].sequence
         -- red under: no step, or one over the active profile alone
         assertEqual(rawget(log.drawer, "collapsed"), nil, name .. ": the fold's key")
         assertEqual(rawget(log.drawer, "strip"), nil, name .. ": the folded line's key")
@@ -163,9 +164,9 @@ test("load: step 5 drops the Combat Log's retired keys in every profile, and kee
     end
     assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     -- Idempotent, and harmless on a profile with no log table.
-    NS.DropRetiredLogKeys(sv.Default)
+    NS.DropRetiredLogKeys({ log = sv.Default.sequence })
     NS.DropRetiredLogKeys({})
-    assertEqual(sv.Default.log.drawer.rows, 12)
+    assertEqual(sv.Default.sequence.drawer.rows, 12)
 end)
 
 test("load: step 6 drops the HUD's auto-grow and the log window's attached state in every profile", function()
@@ -177,12 +178,12 @@ test("load: step 6 drops the HUD's auto-grow and the log window's attached state
     local NS = boot({ global = { schemaVersion = 5 }, profiles = { Default = stored(), Other = stored() } })
     local sv = _G.CombatTrailDB.profiles
     for _, name in ipairs({ "Default", "Other" }) do
-        local hud, w = sv[name].hud, sv[name].log.window
+        local hud, w = sv[name].hud, sv[name].sequence.window
         -- red under: no step, or one over the active profile alone
         assertEqual(rawget(hud, "sizeMode"), nil, name .. ": the size mode")
         assertEqual(rawget(hud, "grow"), nil, name .. ": the grow edge")
         for _, key in ipairs({ "attached", "side", "matchHud", "pinned" }) do
-            assertEqual(rawget(w, key), nil, name .. ": log.window." .. key)
+            assertEqual(rawget(w, key), nil, name .. ": sequence.window." .. key)
         end
         assertEqual(hud.bars, 7, name .. ": the bars kept")
         assertEqual(hud.width, 390, name .. ": the width kept")
@@ -211,9 +212,128 @@ test("load: step 7 carries each profile's lock to the lanes' own, so no lanes un
     assertEqual(rawget(sv.Open.general, "lanesLocked"), nil, "an unlocked one stores nothing")
     assertEqual(rawget(sv.Bare, "general"), nil, "a profile with no lock is left alone")
     assertEqual(sv.Own.general.lanesLocked, false, "a lanes lock already stored is kept")
-    assertEqual(NS.db.global.schemaVersion, 7)
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
     NS.CarryLanesLock(sv.Locked)
     NS.CarryLanesLock({})
     NS.CarryLanesLock(nil)
     assertEqual(sv.Locked.general.lanesLocked, true, "idempotent")
+end)
+
+-- The keys the Combat Sequence retired (CSEQ-1), as a profile stored them.
+local RETIRED_SEQUENCE = {
+    "view.columns.amount", "view.schoolColors", "show.hits", "show.heals", "show.minAmount", "show.targetBuffs",
+    "store.categories.hits", "store.categories.heals", "store.categories.targetBuffs",
+    "results.chips.taken", "results.chips.heals",
+}
+
+local function at(t, path)
+    for part in path:gmatch("[^.]+") do
+        if type(t) ~= "table" then return nil end
+        t = rawget(t, part)
+    end
+    return t
+end
+
+test("load: step 8 drops the Combat Sequence's retired keys in every profile, and keeps the rest", function()
+    local function stored()
+        return { log = {
+            view = { columns = { amount = false, info = false, spell = true }, schoolColors = false, washes = false },
+            show = { hits = false, heals = true, minAmount = 500, targetBuffs = false, casts = false, deaths = false },
+            store = { categories = { hits = false, heals = false, targetBuffs = true, playerBuffs = false }, lines = 300 },
+            results = { chips = { taken = false, heals = false, buffs = false } },
+        } }
+    end
+    local NS = boot({ global = { schemaVersion = 7 }, profiles = { Default = stored(), Other = stored(), Bare = {} } })
+    local sv = _G.CombatTrailDB.profiles
+    for _, name in ipairs({ "Default", "Other" }) do
+        local log = sv[name].sequence
+        -- red under: no step 8, or one over the active profile alone
+        for _, path in ipairs(RETIRED_SEQUENCE) do
+            assertEqual(at(log, path), nil, name .. ": sequence." .. path)
+        end
+        assertEqual(log.view.columns.info, false, name .. ": the Info toggle kept")
+        assertEqual(log.view.washes, false, name .. ": the washes kept")
+        assertEqual(log.show.casts, false, name .. ": a live category kept")
+        assertEqual(log.show.deaths, false, name .. ": the deaths kept")
+        assertEqual(log.store.categories.playerBuffs, false, name .. ": a saved category kept")
+        assertEqual(log.store.lines, 300, name .. ": the lines kept")
+        assertEqual(log.results.chips.buffs, false, name .. ": a chip kept")
+    end
+    assertEqual(rawget(sv.Bare, "log"), nil, "a profile with no log is left alone")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    -- Idempotent, harmless on a fresh profile or one with no log table.
+    NS.DropRetiredSequenceKeys({ log = sv.Default.sequence })
+    NS.DropRetiredSequenceKeys({})
+    NS.DropRetiredSequenceKeys({ log = {} })
+    NS.DropRetiredSequenceKeys({ log = { view = {}, show = {}, store = {}, results = {} } })
+    NS.DropRetiredSequenceKeys(nil)
+    assertEqual(sv.Default.sequence.store.lines, 300, "a second run changes nothing")
+    local fresh = boot(nil)
+    for _, path in ipairs(RETIRED_SEQUENCE) do
+        assertEqual(fresh.GetSetting("sequence." .. path), nil, "a fresh profile has no sequence." .. path)
+    end
+end)
+
+test("load: step 9 moves each profile's log to sequence, and its Results fold with it", function()
+    local NS = boot({ global = { schemaVersion = 8 }, profiles = {
+        Default = { log = { enabled = false, home = "detached", drawer = { rows = 14, chips = false },
+                            store = { lines = 300 } },
+                    results = { collapsedSections = { log = true, spells = true } } },
+        Both = { log = { home = "docked", drawer = { rows = 14, autoOpen = false, chips = false } },
+                 sequence = { home = "detached", drawer = { rows = 6, chips = true } },
+                 results = { collapsedSections = { log = true, sequence = false } } },
+        Bare = { hud = { bars = 6 } },
+    } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: no step 9, or one over the active profile alone
+    for _, name in ipairs({ "Default", "Both", "Bare" }) do
+        assertEqual(rawget(sv[name], "log"), nil, name .. ": no log left")
+    end
+    local d = sv.Default.sequence
+    assertEqual(d.enabled, false, "the switch moved")
+    assertEqual(d.home, "detached", "the home moved")
+    assertEqual(d.drawer.rows, 14, "the rows moved")
+    assertEqual(d.drawer.chips, false, "the chips moved")
+    assertEqual(d.store.lines, 300, "the lines kept moved")
+    assertEqual(NS.GetSetting("sequence.home"), "detached", "the active profile reads them")
+    local folds = sv.Default.results.collapsedSections
+    assertEqual(rawget(folds, "sequence"), true, "the fold moved")
+    assertEqual(rawget(folds, "log"), nil, "the old fold key gone")
+    assertEqual(folds.spells, true, "another fold kept")
+    -- Both stored: a key already under sequence wins, a key only under log is copied, and a sequence
+    -- value equal to its default (AceDB's copy into the active profile, as Default's is here) yields.
+    local b = sv.Both.sequence
+    assertEqual(b.home, "detached", "sequence's home wins")
+    assertEqual(b.drawer.rows, 6, "sequence's rows win")
+    assertEqual(b.drawer.autoOpen, false, "log's own key copied in")
+    assertEqual(b.drawer.chips, false, "a default's copy under sequence yields to log's choice")
+    assertEqual(sv.Both.results.collapsedSections.sequence, false, "sequence's fold wins")
+    assertEqual(rawget(sv.Both.results.collapsedSections, "log"), nil)
+    assertEqual(rawget(sv.Bare, "sequence"), nil, "a profile with no log is left alone")
+    assertEqual(NS.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    -- Idempotent: a second run finds no log; harmless on a fresh or empty profile.
+    NS.MoveLogToSequence(sv.Default)
+    NS.MoveLogToSequence({})
+    NS.MoveLogToSequence({ results = {} })
+    NS.MoveLogToSequence(nil)
+    assertEqual(sv.Default.sequence.drawer.rows, 14, "a second run changes nothing")
+    assertEqual(sv.Default.results.collapsedSections.sequence, true)
+end)
+
+test("load: a profile at schema 5 runs steps 6 to 9 in order and ends with no log", function()
+    local NS = boot({ global = { schemaVersion = 5 }, profiles = { Other = {
+        general = { locked = true },
+        log = { window = { attached = true, rows = 20 }, view = { columns = { amount = false, info = false } },
+                show = { hits = false, casts = false } },
+    } } })
+    local p = _G.CombatTrailDB.profiles.Other
+    assertEqual(rawget(p, "log"), nil, "step 9 moved it")
+    assertEqual(rawget(p.sequence.window, "attached"), nil, "step 6 ran on it first")
+    assertEqual(p.sequence.window.rows, 20)
+    assertEqual(p.general.lanesLocked, true, "step 7 ran")
+    assertEqual(rawget(p.sequence.view.columns, "amount"), nil, "step 8 ran on it first")
+    assertEqual(rawget(p.sequence.show, "hits"), nil)
+    assertEqual(p.sequence.view.columns.info, false, "a kept key moved")
+    assertEqual(p.sequence.show.casts, false)
+    assertEqual(NS.db.global.schemaVersion, 9)
 end)

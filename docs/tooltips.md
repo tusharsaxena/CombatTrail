@@ -14,6 +14,10 @@ cursor, and none is offset from a corner of its control.
   are:
   - on the DPS HUD: the clock, the KPI boxes, the chips, the pace bar, the chart and its cast icons
     and cooldown marks, and the spell breakdown rows;
+  - on the Combat Sequence (CSEQ-4, the audit in the Combat Sequence spec's section 12): every row
+    with a spell, in all three homes; in the HUD's drawer, its heading marks (the filter eye, the
+    detach arrow), its Resume and its chips; in the Results fight detail's section, its chips and
+    its heading's fold arrow;
   - on the cast lanes: each cast icon (the lane's group: the lane alone, or both lanes while one is
     docked on the other);
   - on the Race window (Retail): every body's chips, cards, labels, captions and buttons, the lengths,
@@ -33,9 +37,11 @@ cursor, and none is offset from a corner of its control.
 - **Chrome elements** (`Style.PlaceChrome`, the library's `PlaceAttached`) are centered on the
   control, 2 px above it, and below it only when the screen has no room above. Chrome elements are:
   the fight list's and the Insights tab's filter-bar buttons (*Save*, *Reset*, *Clear*, the view
-  buttons); the fight detail's top toolbar, *Back* above the scrolled detail; and the compare's *Clear pick*
-  on its fixed legend band under the title bar. The title-bar marks (`W.HeaderButtons`) and the test
-  and sim strips are the library's, attached above by the library.
+  buttons); the fight detail's top toolbar, *Back* above the scrolled detail; and the compare's
+  *Clear pick* on its fixed legend band under the title bar; and the detached Combat Sequence
+  window's *Resume* and chips, on the band between its title bar and its table, its filter bar
+  (CSEQ-4). The title-bar marks (`W.HeaderButtons`) and the test and sim strips are the library's,
+  attached above by the library.
 - **The window group** (`Style.TipGroup`) is the hovered element's top-level window. The one
   exception is the DPS HUD with the Race window attached to it: the two are one group, the HUD its
   main frame, with the library's sim window added while it is docked to either. A HUD row's tooltip

@@ -29,16 +29,22 @@ events listed in ARCHITECTURE's *Event Subscriptions*.
 PLAYER_REGEN_DISABLED / ENCOUNTER_START (idle set, modules/Watchers.lua)
   -> modules/Fight.lua  IDLE -> COMBAT; snapshots who and the target (modules/Identity.lua),
        sends FIGHT_STARTED(fight): Stats, Loadouts and Usage take their snapshots, Casts opens the
-       fight's cast list, the Combat Log opens the fight's capture and registers its events and
+       fight's cast list, the Combat Sequence opens the fight's capture and registers its events and
        moves its live window to the new fight (CombatLog.Window: from max(start - Casts.PREPULL,
        the last fight's end) on, so the docked drawer and the detached window clear at each pull,
        owner feedback item 5), Slices opens the chart store, the HUD opens
-  UNIT_AURA (player, target) / UNIT_COMBAT (player) / PLAYER_DEAD
+  UNIT_AURA (player: HELPFUL and HARMFUL; target: HARMFUL from you or your pet) / PLAYER_DEAD
+  (never UNIT_COMBAT, so no hit or heal and no amount, CSEQ-1)
   -> modules/CombatLog.lua  one line each into its ring (NS.Constants.LOG.RING, slots reused): an
-       aura gained (added) or lost (its instance, mapped to its spell), a hit or heal with its school
-       and mark, a death; no PULL or END line (owner feedback item 10: the pull is time 0.0, and an
-       old saved log's boundary lines are dropped at read time, CombatLog.IsBoundary); a sealed aura
-       or cast ID is no line, a sealed amount "s"
+       aura gained (addedAuras) or lost (removedAuraInstanceIDs, its instance mapped to its spell);
+       on a full update, with no update info, or with sealed or unreadable info, the unit is walked
+       into a scratch map and diffed against its map: gains in walk order, then fades by ascending
+       instance ID, the maps swapped (Forever-safe); an incomplete walk (a sealed aura or ID, a
+       raising read, AURA_LIMIT) skips what it cannot read, writes no line and merges what it read;
+       the target is diffed only while its plain GUID is the one its map was walked for (else it is
+       walked silently); a target change and the pull's walk stay silent; a death; no PULL or END line (owner feedback item 10: the pull is
+       time 0.0, and an old saved log's retired kinds and target-buff lines are dropped at read
+       time, CombatLog.IsRetired); a sealed aura or cast ID is no line
   DAMAGE_METER_COMBAT_SESSION_UPDATED / _CURRENT_SESSION_UPDATED (combat set)
   -> Fight binds the fight to the meter session that appeared after combat entry
        (Meter.SessionAfter), and merges a second session of the same encounter
@@ -96,8 +102,8 @@ FIGHT_ENDED
        no readable character -> FIGHT_SKIPPED "unknown"; lost -> FIGHT_SKIPPED "lost"
        else Recorder.Build: identity and board key (Identity), casts packed (CastCodec), the gear set
        taken at the pull and the loadout interned (Loadouts), stats completed (Stats.Fill), usage
-       (Usage), the Combat Log's saved lines (CombatLog.Finish: the categories saved, the newest
-       log.store.lines, logDropped for the rest), every value copied through plainCopy so nothing
+       (Usage), the Combat Sequence's saved lines (CombatLog.Finish: the categories saved, the newest
+       sequence.store.lines, logDropped for the rest), every value copied through plainCopy so nothing
        sealed survives
   -> db.global.fights[id], fightOrder; FIGHT_SAVED(record)
   -> Bests recomputes the board; Slices adopts the record id for the chart; the HUD's card shows

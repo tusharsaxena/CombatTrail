@@ -1,5 +1,5 @@
 local _, NS = ...
--- modules/Results_Log.lua — the Results fight detail's Log section (CombatTrail #11, plan item CL-11c; the
+-- modules/Results_Log.lua — the Results fight detail's Combat Sequence section (CombatTrail #11, plan item CL-11c; the
 -- spec's addendum, home C; owner feedback item 19): the fight's saved log (modules/CombatLog.lua's
 -- `record.log`) in the shared table (modules/LogTable.lua, modules/LogTable_View.lua) and the chips
 -- that filter it with each one's count. Built, filled and laid out by the detail pane
@@ -12,14 +12,15 @@ local _, NS = ...
 -- then the table with the Info column, its rows a page of the detail's viewport (ROWS_MIN at the
 -- least); then a hint naming the cast click. A fight with no log keeps the heading and says so.
 --
--- THE CHIPS: Casts, Pet, Buffs, Debuffs, Taken (hits on you) and Heals (on you), each with the count of
--- its lines in the saved log. They filter what is shown, never what is saved. Each fight opens on
--- `log.results.chips` (all on), and a click turns one on or off for the fight shown. A death follows
--- `log.show.deaths` and a hit or a heal under `log.show.minAmount` (a plain amount only) is hidden, as
--- in the live views. A log saved before owner feedback item 10 may hold the fight's PULL and END lines:
--- they are never shown or counted (CombatLog.IsBoundary), and the log on disk is left as it is.
+-- THE CHIPS: Casts, Pet, Buffs (on you) and Debuffs (on you and the ones you put on your target), each
+-- with the count of its lines in the saved log. They filter what is shown, never what is saved. Each
+-- fight opens on `sequence.results.chips` (all on), and a click turns one on or off for the fight shown. A
+-- death follows `sequence.show.deaths`, as in the live views. A log saved earlier may hold lines nothing
+-- captures now (the fight's PULL and END, owner feedback item 10; the hits, heals and target buffs, the
+-- Combat Sequence): they are never shown or counted (CombatLog.IsRetired), and the log on disk is left
+-- as it is.
 --
--- THE TABLE is the live homes' component on a stored list: no feed, no follow. `log.view.sort` decides
+-- THE TABLE is the live homes' component on a stored list: no feed, no follow. `sequence.view.sort` decides
 -- the order (newest first by default, the Time header flips it, as everywhere), and the first page is
 -- the top of that order. The wheel over the rows moves SCROLL lines at a time, and the rows carry
 -- Spell breakdown's scroll indicator in the gutter right of them (owner feedback item 6; the table
@@ -28,17 +29,17 @@ local _, NS = ...
 -- `record.logTargets` is kept on the record and not drawn.
 --
 -- A CLICK ON A CAST ROW opens the ability timeline on the fight (modules/Results_Timeline.lua) and
--- jumps it to that cast (Timeline.FocusAt), while `log.results.jumpToCast` is on (the default) and the
+-- jumps it to that cast (Timeline.FocusAt), while `sequence.results.jumpToCast` is on (the default) and the
 -- fight has casts to draw. The Timeline is otherwise reached by the footer's Timeline button.
 --
 -- NO DAMAGE BY SPELL (owner feedback item 20): the log's old side panel copied the Overview's Spell
 -- breakdown, which is the one spell list the detail draws.
 --
 -- A FIGHT SAVED BEFORE THE LOG (CT_SCHEMA 5 and older), or with saving off, has no `log`: the section
--- says "No log was saved for this fight" and draws nothing else.
+-- says "No combat sequence was saved for this fight" and draws nothing else.
 --
--- PLAIN DATA ONLY. A saved line holds plain numbers and "s" for a sealed amount, which LogTable.Cells
--- draws as "sealed". The counts count lines, never amounts.
+-- PLAIN DATA ONLY. A saved line holds plain numbers (an old one's amount, if any, is never read). The
+-- counts count lines.
 
 local ResultsLog = {}
 NS.ResultsLog = ResultsLog
@@ -78,14 +79,15 @@ end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────────
 
---- The chip line `e` falls under, or nil (a retired boundary, a death, an auto attack), and its category.
+--- The chip line `e` falls under, or nil (a retired line, a death, an auto attack), and its category.
 --- @return string|nil chip, string|nil category
 function ResultsLog.ChipOf(e)
     local cat = CL.CategoryOf(e.k, e.u, e.id)
     return cat and CHIP_OF[cat] or nil, cat
 end
 
---- Each chip's count of lines in `log` (a saved log), into `out` (a reused table): lines, never amounts.
+--- Each chip's count of lines in `log` (a saved log), into `out` (a reused table): a retired line has
+--- no chip, so it is never counted.
 --- @return table out  [chip key] = count
 function ResultsLog.Counts(log, out)
     out = out or {}
@@ -97,27 +99,21 @@ function ResultsLog.Counts(log, out)
     return out
 end
 
---- The chips a fight opens on (`log.results.chips`, each on unless false), into `out`.
+--- The chips a fight opens on (`sequence.results.chips`, each on unless false), into `out`.
 --- @return table out  [chip key] = boolean
 function ResultsLog.DefaultChips(out)
     out = out or {}
-    for _, chip in ipairs(ResultsLog.CHIPS) do out[chip.key] = setting("log.results.chips." .. chip.key) ~= false end
+    for _, chip in ipairs(ResultsLog.CHIPS) do out[chip.key] = setting("sequence.results.chips." .. chip.key) ~= false end
     return out
 end
 
---- Whether saved line `e` shows under the chips `chips` and `show` (`log.show`: its deaths and its
---- least amount). A retired boundary never shows.
+--- Whether saved line `e` shows under the chips `chips` and `show` (`sequence.show`: its deaths). A retired
+--- line never shows.
 --- @return boolean
 function ResultsLog.Accept(e, chips, show)
     local key, cat = ResultsLog.ChipOf(e)
     if cat == "deaths" then return show.deaths ~= false end
-    if not key or chips[key] == false then return false end
-    local min = Secrets.PlainNumber(show.minAmount) or 0
-    if min > 0 and (e.k == K.HIT or e.k == K.HEAL) then
-        local a = Secrets.PlainNumber(e.a)
-        if a and a < min then return false end
-    end
-    return true
+    return key ~= nil and chips[key] ~= false
 end
 
 --- The indices of `log`'s shown lines, in the order the table draws them top down (`sort` "newest":
@@ -153,22 +149,21 @@ function ResultsLog.MaxOffset(n, rows)
 end
 
 --- `ctx` (a reused table) refilled for stored `record`: the time format, the pull's clock time and the
---- color switches.
+--- wash switch.
 function ResultsLog.Context(record, ctx)
     ctx.startT = nil
-    ctx.timeFormat = setting("log.view.timeFormat")
+    ctx.timeFormat = setting("sequence.view.timeFormat")
     ctx.startClock = Secrets.PlainNumber(record.t)
-    ctx.schoolColors = setting("log.view.schoolColors") ~= false
-    ctx.washes = setting("log.view.washes") ~= false
+    ctx.washes = setting("sequence.view.washes") ~= false
     return LogTable.ReadColors(ctx)
 end
 
---- How many of a saved log's lines are events: a retired boundary is not one.
+--- How many of a saved log's lines are events: a retired line is not one.
 --- @return number
 function ResultsLog.Lines(log)
     local n = 0
     for _, e in ipairs(type(log) == "table" and log or {}) do
-        if type(e) == "table" and not CL.IsBoundary(e) then n = n + 1 end
+        if type(e) == "table" and not CL.IsRetired(e) then n = n + 1 end
     end
     return n
 end
@@ -199,7 +194,7 @@ end
 
 local function canJump(p)
     local g = p.log
-    return setting("log.results.jumpToCast") ~= false and g.hasCasts and p.hooks.timelineAt ~= nil
+    return setting("sequence.results.jumpToCast") ~= false and g.hasCasts and p.hooks.timelineAt ~= nil
 end
 
 -- A click on a row: a CAST row opens the timeline on its moment.
@@ -227,7 +222,7 @@ local function buildChips(p, f)
     end
 end
 
---- Build the Log section into pane `p`'s scrolled content `c`, as `p.log`: its heading (with the
+--- Build the Combat Sequence section into pane `p`'s scrolled content `c`, as `p.log`: its heading (with the
 --- pane's fold arrow) and its body frame.
 function ResultsLog.Build(p, c)
     local f = CreateFrame("Frame", nil, c)
@@ -237,13 +232,13 @@ function ResultsLog.Build(p, c)
     p.log = g
     g.lineOf = function(i) return g.log and g.log[i] or nil end
     g.title = Style.Text(c, FONT.SECTION)
-    g.title:SetText(L["Log"])
+    g.title:SetText(L["Combat Sequence"])
     g.caption = Style.Text(c, FONT.CAPTION, nil, "RIGHT")
-    g.titleHover = p:AddHeading("log", g.title).click
+    g.titleHover = p:AddHeading("sequence", g.title).click
     buildChips(p, f)
     g.table = LogTable.New(f, {
         info = true,
-        onSort = function() write("log.view.sort", LogTable.SortOf() == "newest" and "oldest" or "newest") end,
+        onSort = function() write("sequence.view.sort", LogTable.SortOf() == "newest" and "oldest" or "newest") end,
         onScroll = function(away) ResultsLog.Scroll(p, away) end,
         onClick = function(e) onClick(p, e) end,
     })
@@ -251,11 +246,11 @@ function ResultsLog.Build(p, c)
     g.hint:SetText(L["Click a CAST row to see it on the Timeline."])
     g.none = Style.Text(f, FONT.EMPTY)
     g.none:SetPoint("TOPLEFT", f, "TOPLEFT", 0, 0)
-    g.none:SetText(L["No log was saved for this fight"])
+    g.none:SetText(L["No combat sequence was saved for this fight"])
     return g
 end
 
--- The shown lines again from the log, the chips and `log.show`, the scroll kept in range.
+-- The shown lines again from the log, the chips and `sequence.show`, the scroll kept in range.
 local function reorder(g)
     if not g.log then g.n = 0; return end
     g.sort = LogTable.SortOf()
@@ -264,7 +259,7 @@ local function reorder(g)
 end
 
 --- Fill the section for the pane's fight. The same fight drawn again (`same`) keeps its chips and
---- scroll; another opens on `log.results.chips` at the top.
+--- scroll; another opens on `sequence.results.chips` at the top.
 function ResultsLog.Fill(p, same)
     local g, record = p.log, p.record
     if not g or not record then return end
@@ -333,7 +328,7 @@ local function layBody(p, y, cw)
     g.table.frame:ClearAllPoints()
     g.table.frame:SetPoint("TOPLEFT", f, "TOPLEFT", 0, top)
     g.table.frame:SetWidth(tableW)
-    g.table:Layout(tableW, g.rows, setting("log.view.columns"))
+    g.table:Layout(tableW, g.rows, setting("sequence.view.columns"))
     local h = -top + LogTable.Height(g.rows)
     local jump = canJump(p)
     g.hint:SetShown(jump)
@@ -352,7 +347,7 @@ end
 function ResultsLog.Layout(p, y, cw)
     local g = p.log
     y = p:heading(g.title, g.caption, y, cw)
-    local folded = p:Heading("log", true)
+    local folded = p:Heading("sequence", true)
     if folded then
         g.frame:Hide()
         return y
@@ -396,7 +391,7 @@ function ResultsLog.Scroll(p, away)
     ResultsLog.Draw(p)
 end
 
---- A `log.` setting moved (the sort, the colors, the columns, what is shown): the open section laid
+--- A `sequence.` setting moved (the sort, the colors, the columns, what is shown): the open section laid
 --- out and drawn again with the pane, its chips and scroll kept.
 function ResultsLog.Refresh(p)
     local g = p.log

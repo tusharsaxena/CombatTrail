@@ -41,7 +41,7 @@ Work is test-first: a failing case that pins the behavior, then the code. The wo
 |---|---|---|---|
 | `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | yes | yes |
 | `tests` | `lua tests/run.lua` (both profiles) | yes | yes |
-| `perf` | `lua tests/perf.lua` (not written yet, so a skip) | no, recorded only | yes, at `pass`; a skip is not evaluated |
+| `perf` | `lua tests/perf.lua` (both profiles; the Combat Sequence's capture and paint scenarios, [`performance.md`](performance.md), *Offline*) | no, recorded only | yes, at `pass`; a skip is not evaluated |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` | no, recorded only (the commit gate runs lizard directly) | yes, at `pass` with zero functions above CCN 15 |
 
 ## How the harness works
@@ -55,9 +55,10 @@ Work is test-first: a failing case that pins the behavior, then the code. The wo
   (`tests/mock_meter.lua`). `tests/mock_formatter.lua` scripts the client's number formatters (a
   truncating one, and one that passes a fraction through raw) and `AbbreviateNumbers`.
 - The suites start from a player who has seen the skin picker; `T.load({ loginPicker = true })`
-  keeps it unseen. They also start with the Combat Log closed and its auto-open off (the shipped
-  defaults are open and on, owner feedback item 1), so the HUD suites keep their pinned heights;
-  `T.load({ logDrawer = true })` keeps the shipped log (the drawer's suites).
+  keeps it unseen. They also start with the Combat Sequence closed and its auto-open off (the shipped
+  defaults are open and on, owner feedback item 1; the fixture writes `sequence.drawer.*`), so the HUD
+  suites keep their pinned heights; `T.load({ logDrawer = true })` keeps the shipped Combat Sequence
+  (the drawer's suites).
 - `KA0S_KIT_CLIENT=forever` loads the kit's WoW Forever client globals, so `NS.Compat.IsForever()`
   answers true and every Retail-only feature must be absent. Each per-client feature has a present
   test and an absent test.
@@ -68,7 +69,11 @@ Work is test-first: a failing case that pins the behavior, then the code. The wo
 ## Where the counts live
 
 - [`test-cases.md`](test-cases.md) is the generated inventory and the authoritative pass count. The
-  README's Tests badge carries its Total, and `tests/test_docs.lua` fails when they differ.
+  README's Tests badge carries its Total, and `tests/test_docs.lua` fails when they differ. It is
+  listed under the Retail profile: 1815 cases at CSEQ-4 (2026-11-26), plus one declared skip.
+  `KA0S_KIT_CLIENT=forever lua tests/run.lua --list` lists 1805, without the Retail-only cases. In a
+  checkout with no sibling `../LibKa0s`, the two vendor-sync cases skip at run time, so the run reports
+  two fewer passes.
 - [`smoke-tests.md`](smoke-tests.md) is the in-game suite the owner runs; an agent never marks a row
   passed.
 - [`automated-tests/README.md`](automated-tests/README.md) is the record of the four suites over time.

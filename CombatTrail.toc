@@ -184,8 +184,8 @@ modules\CastCodec.lua
 # Each fight's cast list. LOAD-BEARING: calls NS.LaneCasts.Listen and registers its bus receiver at FILE
 # SCOPE, so it follows modules\LaneCasts.lua; captures NS.Secrets and NS.Perf there too.
 modules\Casts.lua
-# The Combat Log's capture and store (CombatTrail #11): the casts from the lanes' listener, the auras,
-# hits and heals on its own frame while a fight is open. LOAD-BEARING: calls NS.LaneCasts.Listen and
+# The Combat Sequence's capture and store (CombatTrail #11): the casts from the lanes' listener, and the
+# auras gained and lost and the player's death on its own frame while a fight is open (no hits or heals). LOAD-BEARING: calls NS.LaneCasts.Listen and
 # registers its bus receiver at FILE SCOPE, and captures NS.Secrets, NS.Perf and NS.Constants.LOG
 # there; reaches NS.Casts and NS.db at CALL time only. Before modules\Recorder.lua, which takes each
 # fight's log with NS.CombatLog.Finish at CALL time.
@@ -224,7 +224,7 @@ modules\Hud_Breakdown.lua
 modules\Hud_Chart.lua
 # The HUD's bodies: capture NS.Style and NS.Secrets at FILE SCOPE.
 modules\Hud_States.lua
-# The Combat Log's table (CombatTrail #11): its cells, filter and feed, then its frames. LOAD-BEARING:
+# The Combat Sequence's table (CombatTrail #11): its cells, filter and feed, then its frames. LOAD-BEARING:
 # modules\LogTable.lua captures NS.CombatLog's KIND and FLAG and NS.L at FILE SCOPE, so it follows
 # modules\CombatLog.lua; modules\LogTable_View.lua extends NS.LogTable and captures NS.Style there.
 # The HUD's docked drawer: captures NS.LogTable, NS.CombatLog, NS.Style and NS.HudStates (its section
@@ -327,11 +327,11 @@ settings\Slash.lua
 # NS.RegisterTabbedPage, which settings\Lanes.lua, Hud.lua, Log.lua and History.lua call at FILE SCOPE.
 settings\OptionsSetup.lua
 # LOAD-BEARING: General registers FIRST and Profiles LAST -- the page order IS the registration order
-# (General, Lanes, DPS HUD, Combat Log, History, Race mode on Retail, Profiles).
+# (General, Lanes, DPS HUD, Combat Sequence, History, Race mode on Retail, Profiles).
 settings\General.lua
 settings\Lanes.lua
 settings\Hud.lua
-# The Combat Log page (CL-11c2). LOAD-BEARING: reads NS.HudLog, NS.LogWindow, NS.LogTable and
+# The Combat Sequence page (CL-11c2). LOAD-BEARING: reads NS.HudLog, NS.LogWindow, NS.LogTable and
 # NS.ResultsLog (their row bounds and the chips) at FILE SCOPE.
 settings\Log.lua
 settings\History.lua

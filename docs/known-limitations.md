@@ -14,6 +14,21 @@ owner's open decisions are listed in the plan's *Owner decisions*.
   or logout. The rest of the record is the after-combat plain read and is kept.
 - **No combat log.** `COMBAT_LOG_EVENT_UNFILTERED` is protected for addons on both clients, so nothing
   a combat log would give (damage taken, per-target damage in combat, absorbs) is read.
+- **The Combat Sequence shows no damage.** No event an addon may hear gives your own hits, each with
+  its amount, so the Combat Sequence lists the order of your casts, your buffs and debuffs and your
+  death, with no Amount column. `UNIT_COMBAT` reports only what you take, and the hit and heal rows it
+  fed went with the rename (CSEQ-1), because they read as your own hits.
+- **The Combat Sequence records only while a fight's capture is open.** Its aura and death rows run
+  from the pull to the fight's end (its casts from a few seconds before the pull). A buff that ends after combat and before the next pull is not a
+  row. The casts the lanes hand in after combat still show in the live view.
+- **A missed fade over a false one.** On a full aura update, or a `UNIT_AURA` with no update info, the
+  unit is walked and diffed against the auras already known. When the walk stops early (a sealed aura
+  or ID, a raising read, or the aura limit reached), nothing is written, so a buff that ended during
+  that stretch logs its BUFF- late, at the next complete diff, rather than a buff still up reading as
+  gone.
+- **No buffs on your target.** The Combat Sequence follows only your debuffs on your target (the
+  owner's picks, CSEQ-1). A fight saved while it was still the Combat Log keeps its target-buff lines
+  on disk, and every view leaves them out, with its hit and heal lines.
 - **A secret castGUID costs the dedupe and some interrupt marks.** While castGUIDs are secret, the lane
   cannot match a cast's START to its end, so an off-GCD instant cast closes the cast in flight and a
   later interrupt of that cast is not marked.

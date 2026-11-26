@@ -28,7 +28,7 @@ local function track(f)
 end
 
 local function setLog(inst, key, value)
-    inst.NS.SetByPath("log." .. key, value)
+    inst.NS.SetByPath("sequence." .. key, value)
 end
 
 -- A fight live from t0, its window tracked, with `heights` noting the window's height at each step.
@@ -131,8 +131,8 @@ test("hud static: the default window is 390 wide and exactly tall enough for 5 b
     local inst, _, Hud = docked(8)
     local NS = inst.NS
     assertEqual(NS.defaults.profile.hud.bars, 5)
-    assertEqual(NS.defaults.profile.log.drawer.rows, 10)
-    assertEqual(NS.defaults.profile.log.drawer.shown, true, "the log shows by default (item 1)")
+    assertEqual(NS.defaults.profile.sequence.drawer.rows, 10)
+    assertEqual(NS.defaults.profile.sequence.drawer.shown, true, "the log shows by default (item 1)")
     local f = Hud.Frame()
     assertEqual(f.__w, 390)
     assertEqual(#H.body(Hud, "live").parts.spells.list:Rows(), 5, "five bars")
@@ -183,7 +183,7 @@ test("hud static: with the log docked open the grip's extra height goes to the l
     assertEqual(#H.body(Hud, "live").parts.spells.list:Rows(), 5, "the bars stay")
     f:__setGeom(420, h + 3 * rowH + 5)
     f.resizeGrip:__fire("OnMouseUp")
-    assertEqual(NS.db.profile.log.drawer.rows, 13, "stored on release")
+    assertEqual(NS.db.profile.sequence.drawer.rows, 13, "stored on release")
     assertEqual(NS.db.profile.hud.bars, 5, "the bars untouched")
     assertEqual(NS.db.profile.hud.width, 420, "the width to every section")
     assertEqual(f.__h, h + 3 * rowH, "snapped to whole rows")
@@ -192,7 +192,7 @@ test("hud static: with the log docked open the grip's extra height goes to the l
     local closed = f.__h
     gripTo(Hud, M, 420, closed + 2 * 20 + 3)
     assertEqual(NS.db.profile.hud.bars, 7, "closed: the height goes to the bars")
-    assertEqual(NS.db.profile.log.drawer.rows, 13)
+    assertEqual(NS.db.profile.sequence.drawer.rows, 13)
 end)
 
 test("hud static: a whole fight with the log open, saved, then skipped, never moves the window", function()

@@ -85,7 +85,7 @@ local CLOCK_SCALE = 40 / 26
 local WIDTH = 366
 -- The scroll indicator in the gutter right of the rows: its width, its gap from them, its shortest thumb.
 local THUMB_W, THUMB_GAP, THUMB_MIN = 2, 4, 6
--- Shared with the Combat Log's table (modules/LogTable_View.lua, owner feedback item 6): the same indicator.
+-- Shared with the Combat Sequence's table (modules/LogTable_View.lua, owner feedback item 6): the same indicator.
 States.THUMB_W, States.THUMB_GAP, States.THUMB_MIN = THUMB_W, THUMB_GAP, THUMB_MIN
 States.GAP = GAP
 -- The reserved status line under the boxes: one line of chips and the GAP under it (Chips:Height's one line).

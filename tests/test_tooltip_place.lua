@@ -15,7 +15,7 @@
 --     or corner anchor) and placed by a placer or the fallback, and each named surface by its rule.
 
 local T = _G.CT_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
 local installScreen = dofile(T.root .. "/tests/_kit/mock_screen.lua")
 
@@ -427,6 +427,130 @@ test("tooltip surfaces: the Insights charts place through the context's PlaceTip
     assertEqual(anchors[1][2], "ANCHOR_NONE", "the legacy cursor anchor is not read")
     assertTrue(placedTip ~= nil and placedTip[1] == M.GameTooltip and placedTip[2] == owner, "ctx:PlaceTip places it")
     rawset(M.GameTooltip, "SetOwner", nil)
+end)
+
+-- ── the Combat Sequence (CSEQ-4, the tooltip anchor audit) ────────────────────────────────────
+-- Every tooltip the Combat Sequence shows, by its home: the HUD drawer (a section of the HUD's body:
+-- its heading marks, Resume, chips and rows are body elements, beside the HUD's group), the detached
+-- window (its title-bar marks, and Resume and the chips on the band between the title bar and the
+-- table, its filter bar, are chrome, attached above; its rows are body, beside the window) and the
+-- Results fight detail's section (its chips and rows are body, beside the Results window). Each is
+-- owned at ANCHOR_NONE first, never at the client's default anchor.
+
+local FIREBALL = 133
+
+local function click(b) b:GetScript("OnClick")(b, "LeftButton") end
+
+-- Hover `f` and check its owner and its placer: answers the placement record.
+local function placedAs(M, log, f, want, what)
+    local h = hover(M, log, f)
+    assertTrue(h ~= nil, what .. " shows a tooltip")
+    assertEqual(h.owners[1][1], f, what .. ": owned by the hovered element")
+    assertEqual(h.owners[1][2], "ANCHOR_NONE", what .. ": owned at ANCHOR_NONE, never the default anchor")
+    local p = h.placed[1] or {}
+    assertEqual(p[1], want, what .. " placed " .. want)
+    assertTrue(p[2] == f, what .. ": placed on the hovered element")
+    return p
+end
+
+-- A fight's casts in the live feed, so the rows carry a spell (its tooltip is the client's spell's).
+local function liveCasts(NS, M)
+    rawset(M.GameTooltip, "SetSpellByID", function() end)
+    NS.CombatLog.Begin("f1", 100)
+    for i = 1, 3 do NS.CombatLog.OnCast("player", FIREBALL, 100 + i * 0.1) end
+    M.__now = 103
+end
+
+test("tooltip surfaces: the Combat Sequence drawer's marks, Resume, chips and rows open beside the HUD", function()
+    local NS, M = fresh()
+    NS.Hud.Show()
+    NS.HudLog.SetShown(true)
+    local d = NS.HudLog.__ui()
+    liveCasts(NS, M)
+    NS.HudLog.Paint()
+    local log = spy(M)
+    local hud = NS.Hud.Frame()
+    local function inHud(p, what)
+        local g = p[3]
+        assertTrue(g == hud or (type(g) == "table" and g.main == hud), what .. " beside the HUD's group")
+    end
+    -- red under: a heading mark placed by the chrome rule, or a chip or Resume made chrome in the drawer
+    inHud(placedAs(M, log, d.filter, "beside", "the drawer's filter mark"), "the filter mark")
+    inHud(placedAs(M, log, d.detach, "beside", "the drawer's detach mark"), "the detach mark")
+    inHud(placedAs(M, log, d.resume, "beside", "the drawer's Resume"), "Resume")
+    for key, b in pairs(d.chips.buttons) do inHud(placedAs(M, log, b, "beside", "the drawer's " .. key .. " chip"), key) end
+    local row = d.table:Rows()[1]
+    assertEqual(row.spellID, FIREBALL, "the newest row carries its spell")
+    inHud(placedAs(M, log, row, "beside", "a drawer row"), "a drawer row")
+    log.restore()
+end)
+
+test("tooltip surfaces: the Combat Sequence window's filter bar is chrome, above; its rows open beside it", function()
+    local NS, M = fresh()
+    NS.Hud.Show()
+    NS.HudLog.SetShown(true)
+    click(NS.HudLog.__ui().detach)
+    local ui = NS.LogWindow.__ui()
+    liveCasts(NS, M)
+    NS.LogWindow.Paint()
+    ui.resume:Show()
+    local log = spy(M)
+    -- red under: the window's chips or Resume placed beside the window, as the drawer's are
+    placedAs(M, log, ui.resume, "attached", "the window's Resume")
+    for key, b in pairs(ui.chips.buttons) do placedAs(M, log, b, "attached", "the window's " .. key .. " chip") end
+    placedAs(M, log, ui.dock, "attached", "the title bar's dock mark")
+    placedAs(M, log, ui.settings, "attached", "the title bar's settings mark")
+    local row = ui.table:Rows()[1]
+    assertEqual(row.spellID, FIREBALL, "the newest row carries its spell")
+    local p = placedAs(M, log, row, "beside", "a window row")
+    assertTrue(p[3] == ui.frame, "a window row's tooltip beside the Combat Sequence window, its own group")
+    log.restore()
+end)
+
+test("tooltip surfaces: a chrome chip's tooltip is centered 2 px above it on the fake screen", function()
+    local NS, M = fresh()
+    NS.Hud.Show()
+    NS.HudLog.SetShown(true)
+    click(NS.HudLog.__ui().detach)
+    local chip = NS.LogWindow.__ui().chips.buttons.casts
+    local scr = installScreen(M, { width = 1920, height = 1080 })
+    local win = scr.frame{ left = 300, bottom = 300, width = 460, height = 400 }
+    local at = scr.frame{ left = 310, bottom = 640, width = 60, height = 18, parent = win }
+    local tip = scr.tooltip{ width = 200, height = 60 }
+    rawset(M, "GameTooltip", tip)
+    -- The chip's own hover, on a stand-in with the chip's tip and the fake screen's geometry.
+    rawset(at, "tip", chip.tip)
+    rawset(at, "tipBody", chip.tipBody)
+    assertFalse(chip.tipBody, "a window chip is chrome")
+    chip:GetScript("OnEnter")(at)
+    assertEqual(tip.__anchor, "ANCHOR_NONE", "owned at ANCHOR_NONE")
+    local l, b, r = scr.rectOf(tip)
+    assertTrue(near(b, 658 + GAP), "its bottom 2 px above the chip: " .. tostring(b))
+    assertTrue(near((l + r) / 2, 340), "centered on the chip")
+    scr.restore()
+end)
+
+test("tooltip surfaces: the Results Combat Sequence section's chips and rows open beside the Results window", function()
+    local NS, M = fresh()
+    openAll(NS)
+    local pane = NS.Results.__ui().detail
+    local g = pane.log
+    assertTrue(g ~= nil, "the detail's Combat Sequence section")
+    rawset(M.GameTooltip, "SetSpellByID", function() end)
+    local log = spy(M)
+    local R = NS.Results.__ui()
+    for key, b in pairs(g.chips) do
+        local p = placedAs(M, log, b, "beside", "the section's " .. key .. " chip")
+        assertTrue(p[3] == R.frame, "beside the Results window")
+    end
+    -- A sample fight keeps no saved sequence, so the section's table is laid and its first row handed a spell.
+    g.table:Layout(400, 3, NS.GetSetting("sequence.view.columns"))
+    local row = g.table:Rows()[1]
+    assertTrue(row ~= nil, "the section's table has its rows")
+    row.spellID = FIREBALL
+    local p = placedAs(M, log, row, "beside", "a section row")
+    assertTrue(p[3] == R.frame, "a section row beside the Results window")
+    log.restore()
 end)
 
 -- ── the guard ───────────────────────────────────────────────────────────────────────────────────

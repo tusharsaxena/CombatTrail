@@ -1,7 +1,8 @@
--- tests/test_log_page.lua — the Combat Log settings page (CombatTrail #11, plan item CL-11c2; the spec's
--- addendum, *Settings*): the eight tabs, a row for every `log.*` default a player chooses (the detached
+-- tests/test_log_page.lua — the Combat Sequence settings page (CombatTrail #11, plan item CL-11c2; the spec's
+-- addendum, *Settings*; the Combat Log until CSEQ-2): the page key `sequence`, its title and panel name,
+-- the eight tabs, a row for every `sequence.*` default a player chooses (the detached
 -- window's drag-and-grip geometry the only keys without one), every row's default the profile's, the
--- drawer's and the window's own controls writing through rows now (no `log.*` key left on the
+-- drawer's and the window's own controls writing through rows now (no `sequence.*` key left on the
 -- write-through list), the value checks, the rows' height and text size reaching all three homes, the
 -- who colors' overrides, the detached window's gear opening this page, and the page's Defaults. Runs
 -- under both kit profiles.
@@ -12,12 +13,12 @@ local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEq
 local installPaint = dofile(T.root .. "/tests/_kit/mock_paint.lua")
 
 -- The detached window's geometry: chosen by its drag and its grip alone, written raw (settings/Log.lua).
-local GEOMETRY = { ["log.window.position"] = true, ["log.window.width"] = true, ["log.window.height"] = true }
+local GEOMETRY = { ["sequence.window.position"] = true, ["sequence.window.width"] = true, ["sequence.window.height"] = true }
 
 local function shownPage(opts)
     local inst = T.load(opts)
-    inst.mocks.__subcategories["Combat Log"]:__fire("OnShow")
-    local ctx = inst.NS.pageCtx.log
+    inst.mocks.__subcategories["Combat Sequence"]:__fire("OnShow")
+    local ctx = inst.NS.pageCtx.sequence
     ctx.panel:Show()
     return inst, ctx
 end
@@ -32,33 +33,62 @@ local function leaves(t, prefix, out)
     return out
 end
 
-test("log page: eight tabs, Combat Log first and Results last", function()
+test("log page: eight tabs, Combat Sequence first and Results last", function()
     local inst, ctx = shownPage()
     local NS = inst.NS
-    assertEqual(table.concat(NS.LOG_TAB_ORDER, ","), "log,drawer,window,display,show,colors,store,results")
+    assertEqual(table.concat(NS.LOG_TAB_ORDER, ","), "sequence,drawer,window,display,show,colors,store,results")
     local want = {}
     for i, key in ipairs(NS.LOG_TAB_ORDER) do want[i] = NS.LOG_TABS[key] end
-    local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "log")
+    local _, keys = NS.Helpers.RenderTabbedSchema(ctx, "sequence")
     assertEqual(table.concat(keys or {}, ","), table.concat(want, ","))
     assertEqual(table.concat(want, ","),
-        "Combat Log,Docked drawer,Detached window,Order and display,What to show,Colors,Storage,Results")
+        "Combat Sequence,Docked drawer,Detached window,Order and display,What to show,Colors,Storage,Results")
 end)
 
-test("log page: every log.* default but the window's geometry has a control", function()
+test("log page: the page key is sequence, under the Combat Sequence title and its own panel name", function()
+    local inst, ctx = shownPage()
+    assertTrue(ctx ~= nil, "the page's ctx under the key sequence")
+    assertNil(inst.NS.pageCtx.log, "no page under the old key")
+    assertNil(inst.mocks.__subcategories["Combat Log"], "no page under the old title")
+    assertEqual(ctx.panel.__name, "CombatTrailSequencePanel")
+    for _, r in ipairs(inst.NS.SchemaForPage("sequence")) do
+        assertTrue(r.path:find("^sequence%.") ~= nil, r.path .. " is under sequence.")
+    end
+end)
+
+test("log page: no row for a key the Combat Sequence retired, and the six categories' labels", function()
     local NS = T.load().NS
-    local paths = leaves(NS.defaults.profile.log, "log", {})
-    assertTrue(#paths > 55, "the log's leaves: " .. #paths)
+    for _, key in ipairs({ "show.hits", "show.heals", "show.targetBuffs", "show.minAmount", "view.columns.amount",
+                           "view.schoolColors", "store.categories.hits", "store.categories.heals",
+                           "store.categories.targetBuffs", "results.chips.taken", "results.chips.heals" }) do
+        assertNil(NS.FindSchemaRow("sequence." .. key), key .. " has no row")
+    end
+    local want = { casts = "Your casts", petCasts = "Your pet's casts", playerBuffs = "Buffs gained / lost on you",
+                   playerDebuffs = "Debuffs on you", targetDebuffs = "Your debuffs on your target", deaths = "Deaths" }
+    for key, label in pairs(want) do
+        assertEqual(NS.FindSchemaRow("sequence.show." .. key).label, label, "What to show: " .. key)
+        assertEqual(NS.FindSchemaRow("sequence.store.categories." .. key).label, label, "Saved: " .. key)
+    end
+    local first = NS.FindSchemaRow("sequence.enabled")
+    assertEqual(first.label, "Enable the Combat Sequence")
+    assertEqual(first.group, "Combat Sequence", "the first tab")
+end)
+
+test("log page: every sequence.* default but the window's geometry has a control", function()
+    local NS = T.load().NS
+    local paths = leaves(NS.defaults.profile.sequence, "sequence", {})
+    assertTrue(#paths > 45, "the log's leaves (47 since the Combat Sequence dropped eleven): " .. #paths)
     local missing = {}
     for _, path in ipairs(paths) do
         local row = NS.FindSchemaRow(path)
         if not row then missing[#missing + 1] = path
         else
-            assertEqual(row.page, "log", path)
+            assertEqual(row.page, "sequence", path)
             assertTrue(type(row.group) == "string" and row.group ~= "", path .. " has a tab")
         end
     end
     table.sort(missing)
-    assertEqual(table.concat(missing, ", "), "", "log keys with no row")
+    assertEqual(table.concat(missing, ", "), "", "sequence keys with no row")
     for path in pairs(GEOMETRY) do assertNil(NS.FindSchemaRow(path), path .. " is the drag's and the grip's") end
     local errors, _, unresolved = NS.ValidateSchema()
     assertEqual(errors, 0)
@@ -67,7 +97,7 @@ end)
 
 test("log page: every row's default is the profile's (defaults/Profile.lua is the only source)", function()
     local NS = T.load().NS
-    for _, row in ipairs(NS.SchemaForPage("log")) do
+    for _, row in ipairs(NS.SchemaForPage("sequence")) do
         local want = NS.defaults.profile
         for part in row.path:gmatch("[^.]+") do want = want[part] end
         if type(want) == "table" then
@@ -81,52 +111,52 @@ end)
 test("log page: no log.* key is left on the write-through list; the log's own controls write rows", function()
     local NS = T.load().NS
     for _, p in ipairs(NS.SCHEMA_WRITE_THROUGH) do
-        assertFalse(p:find("^log%.") ~= nil, p .. " has a row now")
+        assertFalse(p:find("^sequence%.") ~= nil, p .. " has a row now")
     end
-    for _, p in ipairs({ "log.drawer.shown", "log.drawer.chips", "log.view.sort", "log.home" }) do
+    for _, p in ipairs({ "sequence.drawer.shown", "sequence.drawer.chips", "sequence.view.sort", "sequence.home" }) do
         assertTrue(NS.FindSchemaRow(p) ~= nil, p .. " has a row")
     end
     -- red under: the rows of the retired keys (owner feedback items 3, 11 and 14)
-    for _, p in ipairs({ "log.drawer.collapsed", "log.drawer.strip", "log.view.columns.source",
-                         "log.view.columns.target", "log.window.attached", "log.window.pinned",
-                         "log.window.side", "log.window.matchHud" }) do
+    for _, p in ipairs({ "sequence.drawer.collapsed", "sequence.drawer.strip", "sequence.view.columns.source",
+                         "sequence.view.columns.target", "sequence.window.attached", "sequence.window.pinned",
+                         "sequence.window.side", "sequence.window.matchHud" }) do
         assertTrue(NS.FindSchemaRow(p) == nil, p .. " has no row")
     end
     NS.HudLog.SetHome("detached")
-    assertEqual(NS.GetSetting("log.home"), "detached", "the detach mark writes through its row")
+    assertEqual(NS.GetSetting("sequence.home"), "detached", "the detach mark writes through its row")
     NS.HudLog.ToggleChipsRow()
-    assertFalse(NS.GetSetting("log.drawer.chips"), "the eye writes through its row")
+    assertFalse(NS.GetSetting("sequence.drawer.chips"), "the eye writes through its row")
 end)
 
 test("log page: the value checks refuse what the log cannot draw", function()
     local NS = T.load().NS
-    assertFalse(NS.SetByPath("log.home", "floating"))
-    assertTrue(NS.SetByPath("log.home", "detached"))
-    assertFalse(NS.SetByPath("log.view.sort", "random"))
-    assertTrue(NS.SetByPath("log.view.sort", "oldest"))
-    assertFalse(NS.SetByPath("log.view.throttle", "sometimes"))
-    assertTrue(NS.SetByPath("log.view.throttle", "batch"))
-    assertFalse(NS.SetByPath("log.view.timeFormat", "server"))
-    assertTrue(NS.SetByPath("log.view.timeFormat", "clock"))
+    assertFalse(NS.SetByPath("sequence.home", "floating"))
+    assertTrue(NS.SetByPath("sequence.home", "detached"))
+    assertFalse(NS.SetByPath("sequence.view.sort", "random"))
+    assertTrue(NS.SetByPath("sequence.view.sort", "oldest"))
+    assertFalse(NS.SetByPath("sequence.view.throttle", "sometimes"))
+    assertTrue(NS.SetByPath("sequence.view.throttle", "batch"))
+    assertFalse(NS.SetByPath("sequence.view.timeFormat", "server"))
+    assertTrue(NS.SetByPath("sequence.view.timeFormat", "clock"))
     local function range(p) local r = NS.FindSchemaRow(p); return r.min .. "-" .. r.max end
-    assertEqual(range("log.drawer.rows"), "3-20")
-    assertEqual(range("log.window.rows"), "3-40")
-    assertEqual(range("log.view.throttleMs"), "50-1000")
-    assertEqual(range("log.store.lines"), "100-1000")
-    assertEqual(range("log.view.fontSize"), "8-16")
-    assertEqual(range("log.view.rowHeight"), "12-28")
+    assertEqual(range("sequence.drawer.rows"), "3-20")
+    assertEqual(range("sequence.window.rows"), "3-40")
+    assertEqual(range("sequence.view.throttleMs"), "50-1000")
+    assertEqual(range("sequence.store.lines"), "100-1000")
+    assertEqual(range("sequence.view.fontSize"), "8-16")
+    assertEqual(range("sequence.view.rowHeight"), "12-28")
 end)
 
 test("log page: the dependent rows gray out on what they need, and no color row ever does", function()
     local NS = T.load().NS
     local function off(p) return NS.FindSchemaRow(p).disabledIf() end
-    assertTrue(off("log.window.rows"), "fill on: the rows are the height's")
-    NS.SetByPath("log.window.fill", false)
-    assertFalse(off("log.window.rows"))
-    assertTrue(off("log.view.throttleMs"), "instant: no N")
-    NS.SetByPath("log.view.throttle", "every")
-    assertFalse(off("log.view.throttleMs"))
-    for _, r in ipairs(NS.SchemaForPage("log")) do
+    assertTrue(off("sequence.window.rows"), "fill on: the rows are the height's")
+    NS.SetByPath("sequence.window.fill", false)
+    assertFalse(off("sequence.window.rows"))
+    assertTrue(off("sequence.view.throttleMs"), "instant: no N")
+    NS.SetByPath("sequence.view.throttle", "every")
+    assertFalse(off("sequence.view.throttleMs"))
+    for _, r in ipairs(NS.SchemaForPage("sequence")) do
         if r.type == "color" then assertNil(r.disabledIf, r.path .. " is never disabled (options-ui-§17)") end
     end
 end)
@@ -136,7 +166,7 @@ test("log page: every tab renders without printing", function()
     local NS, M = inst.NS, inst.mocks
     M.__resetPrinted()
     for _, key in ipairs(NS.LOG_TAB_ORDER) do
-        NS.Helpers.SelectTab("log", NS.LOG_TABS[key])
+        NS.Helpers.SelectTab("sequence", NS.LOG_TABS[key])
         assertEqual(ctx.activeTab, NS.LOG_TABS[key])
     end
     assertEqual(#M.__printed(), 0, "a render printed: " .. tostring(M.__printed()[1]))
@@ -156,7 +186,7 @@ test("log page: the row height sizes the drawer, the HUD grows with it, and each
     local d = hudUp(NS)
     local before, hud = NS.HudLog.Height(), NS.Hud.Height()
     assertEqual(NS.LogTable.RowH(), 14, "14 px by default")
-    assertTrue(NS.SetByPath("log.view.rowHeight", 20))
+    assertTrue(NS.SetByPath("sequence.view.rowHeight", 20))
     assertEqual(NS.LogTable.RowH(), 20)
     assertEqual(NS.HudLog.Height(), before + 6 * NS.HudLog.Rows(), "six more pixels a row")
     assertEqual(NS.Hud.Height(), hud + 6 * NS.HudLog.Rows(), "the HUD grew by them")
@@ -165,12 +195,12 @@ test("log page: the row height sizes the drawer, the HUD grows with it, and each
     local second = d.table:Rows()[2]
     local sized
     for _, r in ipairs(d.table:Rows()) do rawset(r, "SetHeight", function(_, h) sized = h end) end
-    NS.SetByPath("log.view.rowHeight", 22)
+    NS.SetByPath("sequence.view.rowHeight", 22)
     assertEqual(sized, 22, "each row is drawn at the height")
     assertTrue(second ~= nil, "a second row")
-    NS.db.profile.log.view.rowHeight = 99
+    NS.db.profile.sequence.view.rowHeight = 99
     assertEqual(NS.LogTable.RowH(), 28, "held to 28")
-    NS.db.profile.log.view.rowHeight = 2
+    NS.db.profile.sequence.view.rowHeight = 2
     assertEqual(NS.LogTable.RowH(), 12, "and to 12")
 end)
 
@@ -183,7 +213,7 @@ test("log page: the text size sets the rows' face, widens the fixed columns and 
     assertEqual(LT.FontScale(), 1, "10 points: the body text's own")
     local _, size = first.text.time:GetFont()
     assertTrue(size ~= 14, "not yet 14")
-    assertTrue(NS.SetByPath("log.view.fontSize", 14))
+    assertTrue(NS.SetByPath("sequence.view.fontSize", 14))
     assertEqual(LT.FontScale(), 1.4)
     local row = d.table:Rows()[1]
     assertTrue(row ~= first, "a new size is a new pool of rows")
@@ -196,7 +226,7 @@ test("log page: the text size sets the rows' face, widens the fixed columns and 
     assertEqual(LT.IconSize(14, 1), 12, "the icon at its own size")
     assertEqual(LT.IconSize(14, 1.4), 12, "never taller than the row")
     assertEqual(LT.IconSize(24, 1.4), 17)
-    assertTrue(NS.SetByPath("log.view.fontSize", 10))
+    assertTrue(NS.SetByPath("sequence.view.fontSize", 10))
     assertTrue(d.table:Rows()[1] == first, "back on the first pool, its labels at their own size")
     assertFalse(row:IsShown(), "the 14-point rows hidden")
 end)
@@ -204,9 +234,9 @@ end)
 test("log page: the detached window's rows follow the row height", function()
     local inst = T.load{ mutate = installPaint }
     local NS = inst.NS
-    NS.SetByPath("log.window.fill", false)
+    NS.SetByPath("sequence.window.fill", false)
     local short = NS.LogWindow.WindowHeight()
-    NS.SetByPath("log.view.rowHeight", 20)
+    NS.SetByPath("sequence.view.rowHeight", 20)
     assertEqual(NS.LogWindow.WindowHeight(), short + 6 * NS.LogWindow.RowsSetting(), "its height is its rows'")
 end)
 
@@ -219,10 +249,10 @@ test("log page: the who colors are still read into a view's context, and no cell
     local ctx = LT.ReadColors({ startT = 100 })
     assertNil(ctx.youColor, "the class color by default")
     assertNil(ctx.hostileColor, "the skin's hostile color by default")
-    NS.SetByPath("log.colors.you", { r = 0.1, g = 0.2, b = 0.3, a = 1 })
-    NS.SetByPath("log.colors.useClassColorYou", false)
-    NS.SetByPath("log.colors.hostile", { r = 0.4, g = 0.5, b = 0.6, a = 1 })
-    NS.SetByPath("log.colors.hostileFromSkin", false)
+    NS.SetByPath("sequence.colors.you", { r = 0.1, g = 0.2, b = 0.3, a = 1 })
+    NS.SetByPath("sequence.colors.useClassColorYou", false)
+    NS.SetByPath("sequence.colors.hostile", { r = 0.4, g = 0.5, b = 0.6, a = 1 })
+    NS.SetByPath("sequence.colors.hostileFromSkin", false)
     LT.ReadColors(ctx)
     assertEqual(table.concat({ ctx.youColor[1], ctx.youColor[2], ctx.youColor[3] }, ","), "0.1,0.2,0.3")
     assertEqual(table.concat({ ctx.hostileColor[1], ctx.hostileColor[2], ctx.hostileColor[3] }, ","), "0.4,0.5,0.6")
@@ -233,13 +263,13 @@ end)
 
 test("log page: You is a ColorPair with its class companion on; the targets are a palette, no class", function()
     local NS = T.load().NS
-    local you = NS.FindSchemaRow("log.colors.you")
+    local you = NS.FindSchemaRow("sequence.colors.you")
     assertEqual(you.type, "color")
     assertEqual(you.classColorSource, "player")
-    assertEqual(NS.FindSchemaRow("log.colors.useClassColorYou").default, true, "the class color, as it shipped")
-    assertNil(NS.FindSchemaRow("log.colors.youFromSkin"), "a class color takes no skin companion")
-    assertNil(NS.FindSchemaRow("log.colors.useClassColorHostile"), "a reaction's color has no class")
-    assertEqual(NS.FindSchemaRow("log.colors.hostileFromSkin").default, true, "it starts on the skin")
+    assertEqual(NS.FindSchemaRow("sequence.colors.useClassColorYou").default, true, "the class color, as it shipped")
+    assertNil(NS.FindSchemaRow("sequence.colors.youFromSkin"), "a class color takes no skin companion")
+    assertNil(NS.FindSchemaRow("sequence.colors.useClassColorHostile"), "a reaction's color has no class")
+    assertEqual(NS.FindSchemaRow("sequence.colors.hostileFromSkin").default, true, "it starts on the skin")
 end)
 
 -- ── the ways in and the reset ───────────────────────────────────────────────────────────────────
@@ -255,31 +285,31 @@ test("log page: the detached window's gear opens the settings on this page", fun
     local ui = NS.LogWindow.__ui()
     assertTrue(ui ~= nil and ui.settings ~= nil, "the window's gear")
     ui.settings:GetScript("OnClick")(ui.settings, "LeftButton")
-    assertEqual(opened, "log")
+    assertEqual(opened, "sequence")
 end)
 
-test("log page: /ct set reaches a log path", function()
+test("log page: /ct set reaches a sequence path", function()
     local NS = T.load().NS
-    NS.Slash:OnSlash("set log.drawer.rows 12")
-    assertEqual(NS.GetSetting("log.drawer.rows"), 12)
-    NS.Slash:OnSlash("set log.view.throttle every")
-    assertEqual(NS.GetSetting("log.view.throttle"), "every")
+    NS.Slash:OnSlash("set sequence.drawer.rows 12")
+    assertEqual(NS.GetSetting("sequence.drawer.rows"), 12)
+    NS.Slash:OnSlash("set sequence.view.throttle every")
+    assertEqual(NS.GetSetting("sequence.view.throttle"), "every")
 end)
 
 test("log page: the page's Defaults puts every log row back and leaves the geometry", function()
     local inst, ctx = shownPage()
     local NS = inst.NS
-    NS.SetByPath("log.drawer.rows", 15)
-    NS.SetByPath("log.view.sort", "oldest")
-    NS.SetByPath("log.store.categories.hits", false)
-    NS.SetByPath("log.colors.hostile", { r = 0, g = 1, b = 0, a = 1 })
-    NS.db.profile.log.window.width = 600
+    NS.SetByPath("sequence.drawer.rows", 15)
+    NS.SetByPath("sequence.view.sort", "oldest")
+    NS.SetByPath("sequence.store.categories.playerBuffs", false)
+    NS.SetByPath("sequence.colors.hostile", { r = 0, g = 1, b = 0, a = 1 })
+    NS.db.profile.sequence.window.width = 600
     NS.SetByPath("general.locked", true)
     ctx.panel.defaultsOnClick()
-    local log, D = NS.db.profile.log, NS.defaults.profile.log
+    local log, D = NS.db.profile.sequence, NS.defaults.profile.sequence
     assertEqual(log.drawer.rows, D.drawer.rows)
     assertEqual(log.view.sort, "newest")
-    assertEqual(log.store.categories.hits, true)
+    assertEqual(log.store.categories.playerBuffs, true)
     assertEqual(log.colors.hostile.g, D.colors.hostile.g)
     assertEqual(log.window.width, 600, "the grip's width is no row's")
     assertEqual(NS.GetSetting("general.locked"), true, "another page's row is not this page's to reset")

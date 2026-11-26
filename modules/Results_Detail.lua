@@ -36,9 +36,9 @@ local _, NS = ...
 -- shell's (the note box and the delete's confirmation).
 --
 -- NO TABS (owner feedback item 19, 2026-11-25): the detail is one scrolling page. The fight's saved
--- log (CombatTrail #11, modules/Results_Log.lua) is its Log section, under Targets and open by
+-- log (CombatTrail #11, modules/Results_Log.lua) is its Combat Sequence section, under Targets and open by
 -- default; the Timeline keeps its own window (modules/Results_Timeline.lua), reached by the footer's
--- Timeline button, or by a click on a CAST row of the Log section, which opens it at that cast.
+-- Timeline button, or by a click on a CAST row of the Combat Sequence section, which opens it at that cast.
 --
 -- LAYOUT FROM CONFIG. Every block is placed from the constants here and the widths the shell hands
 -- it; nothing reads a size back. The content scrolls (the mouse wheel); the buttons stay put.
@@ -71,7 +71,7 @@ Detail.BUTTON_GAP = 6
 Detail.DELETE_W = 78
 -- The folding sections, in the pane's order, and their heading's arrow: ARROW px square, the text
 -- INDENT in from the left edge (the arrow and 2 px).
-Detail.SECTIONS = { "chart", "timing", "spells", "loadout", "usage", "targets", "log", "flags", "note" }
+Detail.SECTIONS = { "chart", "timing", "spells", "loadout", "usage", "targets", "sequence", "flags", "note" }
 Detail.ARROW = 14
 Detail.INDENT = Detail.ARROW + 2
 
@@ -565,7 +565,7 @@ end
 
 local PARTS = { "timeline", "compare", "addNote", "share", "delete" }
 
---- A `log.` setting moved: an open Log section draws again (modules/Results_Log.lua Refresh).
+--- A `sequence.` setting moved: an open Combat Sequence section draws again (modules/Results_Log.lua Refresh).
 function Pane:RefreshLog()
     NS.ResultsLog.Refresh(self)
 end
