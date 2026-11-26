@@ -197,12 +197,12 @@ stored leaves the new key's default, on, which is the old key's default carried.
 run finds no old key.
 
 Step 10 (9 → 10, per profile, `NS.PinHudWidth`, owner feedback round 4, R4-CT-06) writes
-`hud.width = 390`, the default until then, into every stored profile that keeps no width (or only the
-default's copy AceDB puts into the active profile), so only a new profile starts at the new default,
-260. It skips a fresh install (no stamp when the runner started: every install that ever loaded was
-stamped at least 1, so the runner hands each per-profile step `fresh`) and a profile table with nothing
-stored. A 260 chosen under the old default reads the same as the copy, and is pinned too. Idempotent: a
-width of its own is kept.
+`hud.width = 390`, the default until then, into every stored profile that keeps no width, so only a
+new profile starts at the new default, 260. It skips a fresh install (no stamp when the runner started:
+every install that ever loaded was stamped at least 1, so the runner hands each per-profile step
+`fresh`) and a profile table with nothing stored. It reads each profile's width as saved, snapshotted by
+`NS:InitDB` before AceDB copies the new default into the active profile, so a 260 the player chose
+under the old default is kept (R4-REV). Idempotent: a width of its own is kept.
 
 Step 9 (8 → 9, per profile, `NS.MoveLogToSequence`, the Combat Sequence, 2026-11-25, CSEQ-2) moves the
 stored `log` table to `sequence`, since the Combat Log is the Combat Sequence everywhere, its keys

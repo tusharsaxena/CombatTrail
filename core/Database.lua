@@ -149,9 +149,9 @@ local STEPS = {
     -- and would shrink with the default; this step writes today's 390 into each one, so only a new profile
     -- starts at 260. A fresh install (stamped 0 when the runner started: every install that ever loaded
     -- was stamped at least 1) has no old profile and is left alone, and so is a profile table with
-    -- nothing stored. A width equal to the new default is AceDB's copy into the active profile, never a
-    -- choice (a 260 chosen under the old default reads the same, and is pinned too). Idempotent: a
-    -- width of its own is kept.
+    -- nothing stored. It reads each profile's width as stored before AceDB copied the new default into
+    -- the active one (NS:InitDB's snapshot), so a 260 the player chose under the old default is kept
+    -- (R4-REV). Idempotent: a width of its own is kept.
     { to = 10, perProfile = true, run = function(_, profile, fresh)
         if not fresh then NS.PinHudWidth(profile) end
     end },
@@ -249,8 +249,10 @@ end
 
 --- Step 10's body: `profile.hud.width` written as 390, the width before R4-CT-06, on a stored profile
 --- that keeps none (or only the default's copy). A profile with nothing stored, or with its own width,
---- is left alone.
+--- is left alone. A profile NS:InitDB snapshotted is judged on the width it stored before AceDB's copy
+--- (false: none); any other on the table as it is, a width equal to the default read as that copy.
 NS.PINNED_HUD_WIDTH = 390
+local storedHudWidth = setmetatable({}, { __mode = "k" })   -- profile table -> its raw width, or false
 function NS.PinHudWidth(profile)
     if type(profile) ~= "table" or next(profile) == nil then return end
     local hud = rawget(profile, "hud")
@@ -258,9 +260,28 @@ function NS.PinHudWidth(profile)
         hud = {}
         profile.hud = hud
     end
+    local snap = storedHudWidth[profile]
+    storedHudWidth[profile] = nil   -- read once: a second run reads the table as it is
+    if snap ~= nil then
+        if snap == false then hud.width = NS.PINNED_HUD_WIDTH end
+        return
+    end
     local w = rawget(hud, "width")
     local D = NS.defaults and NS.defaults.profile and NS.defaults.profile.hud
     if w == nil or (D and w == D.width) then hud.width = NS.PINNED_HUD_WIDTH end
+end
+
+-- Each stored profile's `hud.width` as saved, taken before AceDB-3.0:New copies the defaults into the
+-- active profile (where a stored 260 and the copied default would read the same). Step 10 reads it.
+local function snapshotHudWidths(sv)
+    local profiles = type(sv) == "table" and rawget(sv, "profiles")
+    if type(profiles) ~= "table" then return end
+    for _, profile in pairs(profiles) do
+        if type(profile) == "table" then
+            local hud = rawget(profile, "hud")
+            storedHudWidth[profile] = (type(hud) == "table" and rawget(hud, "width")) or false
+        end
+    end
 end
 
 --- Step 11's body: `profile.sequence.drawer.autoOpen` dropped, a stored false carried to
@@ -316,6 +337,7 @@ function NS.OnProfileChanged(event, _db, key)
 end
 
 function NS:InitDB()
+    snapshotHudWidths(_G[addonName .. "DB"])
     NS.db = LibStub("AceDB-3.0"):New(addonName .. "DB", NS.defaults, true)
     local db = NS.db
     if db.RegisterCallback then

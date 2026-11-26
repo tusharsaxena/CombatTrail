@@ -363,6 +363,22 @@ test("load: step 10 pins 390 wide on each stored profile that keeps no width, so
     assertEqual(fresh.GetSetting("hud.width"), fresh.Hud.MIN_WIDTH)
 end)
 
+test("load: step 10 keeps a 260 the player chose under the old default, active or not (R4-REV)", function()
+    -- A 260 stored before this load is the player's: AceDB strips only what equals the default it ran
+    -- under, 390. Step 10 reads the widths as they were before AceDB copied the new default in.
+    local NS = boot({ global = { schemaVersion = 9 }, profileKeys = {}, profiles = {
+        Default = { hud = { width = 260, bars = 6 } },
+        Other = { hud = { width = 260 } },
+        Plain = { hud = { bars = 4 } },
+    } })
+    local sv = _G.CombatTrailDB.profiles
+    -- red under: a stored width equal to the new default read as AceDB's copy and pinned to 390
+    assertEqual(sv.Default.hud.width, 260, "the active profile's own 260 is kept")
+    assertEqual(sv.Other.hud.width, 260, "another profile's own 260 is kept")
+    assertEqual(sv.Plain.hud.width, 390, "a profile that stored no width is still pinned")
+    assertEqual(NS.GetSetting("hud.width"), 260)
+end)
+
 test("load: step 11 carries the Combat Sequence's Open when a fight starts to the DPS HUD's (LG22)", function()
     local NS = boot({ global = { schemaVersion = 10 }, profiles = {
         Default = { sequence = { drawer = { autoOpen = false, rows = 7 } } },
