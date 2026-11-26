@@ -142,6 +142,9 @@ test("hud idle layout: the idle placeholders are muted and say what is missing",
     assertTrue(w.damage.petLabel:IsShown() and w.damage.petValue:IsShown(), "the pet row's slot is kept")
     assertEqual(w.damage.petValue.__text, "\226\128\148", "a dash for the pet")
     assertEqual(w.dps.petValue.__text, "\226\128\148")
+    -- Muted: the pet's dash in the target line's dim, not the pet figure's own hue.
+    local function rgb(fs) local r, g, b = fs:GetTextColor(); return ("%.3f %.3f %.3f"):format(r, g, b) end
+    assertEqual(rgb(w.damage.petValue), rgb(w.target), "the idle pet dash is dim")
     assertEqual(w.damage.value.__text, "\226\128\148")
     assertTrue(chart.title:IsShown() and chart.plot:IsShown() and chart.axis[1]:IsShown())
     assertEqual(chart.note.__text, "No fight yet")
@@ -159,6 +162,11 @@ test("hud idle layout: the idle placeholders are muted and say what is missing",
 end)
 
 test("hud idle layout: a fight that starts takes its placeholders away", function()
+    local _, _, PetHud = liveOn(fightOf(4, true), { pet = true })
+    local _, petBody = geometry(PetHud, "live")
+    local function rgb(fs) local r, g, b = fs:GetTextColor(); return ("%.3f %.3f %.3f"):format(r, g, b) end
+    assertTrue(petBody.w.damage.petValue:IsShown(), "the pet's figure in its slot")
+    assertTrue(rgb(petBody.w.damage.petValue) ~= rgb(petBody.w.target), "in the pet figure's own hue, not dim")
     local _, _, Hud = liveOn(fightOf(4))
     local _, body = geometry(Hud, "live")
     local w = body.w
