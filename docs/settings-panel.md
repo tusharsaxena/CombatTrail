@@ -218,7 +218,8 @@ Hz"). Its tooltip names the Race window on Retail only. The Clock and figures ta
 (`hud.clock.*`) and the figures' (`hud.figures.*`). The clock's Font size row is the composed one (6 to 32),
 and the clock draws its value scaled to DPS Race's single clock (× 40/26: the default 26 draws 40 points high); its
 tooltip says so. HUD width runs from `Hud.MIN_WIDTH` (260, DPS Race's) to `Hud.MAX_WIDTH` (600), default
-390 (owner feedback item 2). At 260 the docked Combat Sequence's three columns still fit: Time and
+260, the least, so a new profile starts narrow (owner feedback round 4, R4-CT-06; it was 390, feedback
+item 2, and schema step 10 keeps 390 on every profile stored before). At 260 the docked Combat Sequence's three columns still fit: Time and
 Event take 84 px and two 4 px gaps, Spell at least 70, 162 in all against the 236 the narrowest HUD
 gives its content, so the Combat Sequence sets no width floor of its own (item 3; Amount's 50 px and
 its gap went with the column, CSEQ-1).
@@ -226,8 +227,13 @@ its gap went with the column, CSEQ-1).
 Layout's size rows: the window has one static height (owner feedback item 12), the sum of the parts the
 layout shows, Spell bars rows, and the docked Combat Sequence's rows while it is open; nothing a fight does moves
 it. The Window size row (Fixed or Auto-grow, `hud.sizeMode`) and Grow (`hud.grow`) are retired with
-schema step 6. Spell bars runs 1 to 15, default 5. The HUD's bottom-right grip sets the width and the
-rows: the Combat Sequence's (`sequence.drawer.rows`) while it is docked open, else Spell bars. Spells past the rows
+schema step 6. Spell bars runs 3 to 15, default 5 (at least 3 since R4-CT-07). The HUD's bottom-right
+grip sets the width and the rows: while the Combat Sequence is docked open it shares the height a row
+at a time between Spell bars and the Combat Sequence's *Rows shown* (`Hud.SplitFor`: shrinking takes
+from the larger side, the sequence on a tie, as 5/5, 5/4, 4/4, 4/3, 3/3; growing adds to the smaller,
+the spells on a tie, to 15 spell rows, then the sequence grows to 20), its least 3 and 3, and its
+release writes both; with Spell breakdown off, only the Combat Sequence's rows; with the Combat
+Sequence closed or detached, Spell bars alone. Spells past the rows
 scroll with the mouse wheel. The Spell rows tab's old "Spell rows shown" row (`hud.spells.rows`) is
 retired into Spell bars.
 
@@ -395,7 +401,7 @@ Defaults leaves them where they are. The window's gear opens this page.
 | Row | Key |
 |---|---|
 | Show the filter chips | `sequence.drawer.chips` |
-| Rows shown (3 to 20) | `sequence.drawer.rows` |
+| Rows shown (3 to 20; 5 by default, R4-CT-07) | `sequence.drawer.rows` |
 
 ### Detached window
 

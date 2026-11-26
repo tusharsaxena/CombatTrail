@@ -91,8 +91,9 @@ Nested buckets are reported as their own lines; the outer bucket's figure includ
   move is not placed again. With the chips shown by default (item 9) the drawer's height reads the
   HUD's width on every beat, so the HUD's `width()` reads through `NS.GetSetting` rather than the
   local path walker, whose iterator cost 88 bytes a call (`logPlaceIdle` back to 0.2 bytes a beat).
-  `logPaint` is 5,376 bytes a repaint at the default ten rows (CSEQ-1: each row paints one label fewer
-  with Amount gone; it was 6,992 at CLF-2, 5,696 at eight rows); its ceiling is still 10,240.
+  `logPaint` is 2,736 bytes a repaint at the default five rows (R4-CT-07, 2026-11-26; 5,376 at the
+  old default of ten, CSEQ-1: each row paints one label fewer with Amount gone; it was 6,992 at CLF-2,
+  5,696 at eight rows); its ceiling is still 10,240.
 - The settle read, the record build and the purge run out of combat. A daily purge that falls due
   in combat or while a fight is open waits (`Retention.RETRY`, 60 s) and is asked again.
 - When the HUD's beat and a slices boundary tick land in one frame they share one `Meter.ReadLive` of
