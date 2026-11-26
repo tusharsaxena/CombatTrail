@@ -30,6 +30,8 @@ such rather than listed as a requirement.
 | `ka0s-bounded` | from the dev-copilot plugin | every lint and long Lua run, `~/.claude/dev-copilot/bin/ka0s-bounded` | `luacheck` loads no kit, so the commit gate runs it through this runner (`CLAUDE.md`, testing-§15) |
 | POSIX shell | any | the suite's `-j` workers and the kit's bounds | `tests/_kit/framework.lua` shells out through `os.execute` and `io.popen` |
 | `lizard` | any recent (verified with 1.24.0) | the `complexity` suite of `tests/_kit/run-automated-tests.sh` | the runner calls `lizard` over the sighted shadow `tests/_kit/lizard_sighted.lua` builds, because `lizard` alone is blind in places in Lua (automated-tests-§3) |
+| `python3` | **3.7** or newer | the seed tool, `tools/seeds/seeds.py` (`docs/validate-seeds.md`), and its tests, `python3 -m pytest -q -p no:cacheprovider tools/seeds`, part of the commit gate | the gate in `CLAUDE.md` and `docs/testing.md`; both files open with `from __future__ import annotations` (3.7+) and use only the standard library |
+| `pytest` | any recent (verified with 9.1.1) | running the seed tool's tests as the gate writes them | `CLAUDE.md`'s green gate; without it, `python3 -m unittest discover -s tools/seeds` runs the same `unittest` cases (`docs/testing.md`) |
 | `bash` | **4.x or later** | `tests/_kit/run-automated-tests.sh`, the automated-test bundle | its shebang is `#!/usr/bin/env bash` and it declares `declare -A ST DUR NOTE`, which POSIX `sh` cannot parse |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
@@ -48,10 +50,14 @@ sudo apt-get install -y pipx
 pipx ensurepath          # then open a new shell, or: source ~/.bashrc
 pipx install lizard
 
+# python3 and pytest for the seed tool's tests (apt's python3-pytest avoids the PEP 668 pip refusal)
+sudo apt-get install -y python3 python3-pytest
+
 # verify: each of these must print a version
 lua5.1 -v                # Lua 5.1.5 ...   (if `lua` is not 5.1, use lua5.1 explicitly)
 luacheck --version
 lizard --version
+python3 -m pytest --version
 git --version
 bash --version           # GNU bash 4.x or 5.x; Ubuntu ships one
 ```
@@ -87,6 +93,7 @@ lua tests/run.lua                                             # the suite: must 
 KA0S_KIT_CLIENT=forever lua tests/run.lua                     # the same under the WoW Forever profile
 lua tests/run.lua -j auto                                     # the same, across CPUs (testing-§14)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .      # must be 0 warnings / 0 errors (bounded: luacheck loads no kit)
+python3 -m pytest -q -p no:cacheprovider tools/seeds          # the seed tool's tests: must be green
 bash tests/_kit/run-automated-tests.sh --suite complexity     # the sighted complexity report (release-time)
 ```
 
