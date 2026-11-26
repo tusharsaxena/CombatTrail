@@ -590,7 +590,7 @@ local function trackSize(w, h)
     if not ui.down and NS.Sizing.IsSizing(ui.frame) then ui.down = { bars(), NS.HudLog.RowsSetting() } end
     if w then ui.dragW = clamp(w, Hud.MIN_WIDTH, Hud.MAX_WIDTH) end
     if h then ui.dragH = clamp(h, heightBounds()) end
-    if ui.dragH then ui.dragBars, ui.dragRows = dragPair(ui.dragH) end
+    if ui.dragH then ui.dragBars, ui.dragRows = dragPair(NS.HudSplit.Forgive(ui.dragH)) end   -- snapping forgiven (R5-CT-01)
     NS.HudLog.SetDragRows(ui.dragH and ui.dragRows or nil)
 end
 
@@ -874,7 +874,7 @@ function resized(w, h)
     w = Secrets.PlainNumber(w) or ui.dragW
     h = Secrets.PlainNumber(h) or ui.dragH
     local b, l
-    if h then b, l = dragPair(clamp(h, heightBounds())) end
+    if h then b, l = dragPair(NS.HudSplit.Forgive(clamp(h, heightBounds()))) end
     ui.dragW, ui.dragH, ui.down, ui.dragBars, ui.dragRows = nil, nil, nil, nil, nil
     NS.HudLog.SetDragRows(nil)
     placeAfterDrag()

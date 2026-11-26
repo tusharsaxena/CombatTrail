@@ -14,6 +14,18 @@ NS.HudSplit = Split
 
 local function clamp(n, lo, hi) return math.max(lo, math.min(hi, n)) end
 
+--- How far short of a pair's height a height the client hands back may fall and still hold it: the
+--- client snaps a frame's size to its pixels, so the HUD's own height can come back a hair short and
+--- a grip's release lands a hair off (owner feedback round 5, R5-CT-01: the default 5/5 was read as 5/4).
+Split.SLACK = 0.5
+
+--- A height the client handed back, with Split.SLACK forgiven (nil passes through).
+--- @param h number|nil
+--- @return number|nil
+function Split.Forgive(h)
+    return h and h + Split.SLACK
+end
+
 -- The next pair up, or nil at the most.
 local function grow(b, l, lim)
     if b <= l and b < lim.maxB then return b + 1, l end

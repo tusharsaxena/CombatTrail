@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_load.lua (22)
+### test_load.lua (23)
 
 - load: NS is the AceAddon object named CombatTrail
 - load: the identity constants
@@ -30,6 +30,7 @@ Total.
 - load: step 9 moves each profile's log to sequence, and its Results fold with it
 - load: a profile at schema 5 runs steps 6 to 10 in order and ends with no log
 - load: step 10 pins 390 wide on each stored profile that keeps no width, so only new profiles start at 260
+- load: step 10 keeps a 260 the player chose under the old default, active or not (R4-REV)
 - load: step 11 carries the Combat Sequence's Open when a fight starts to the DPS HUD's (LG22)
 - load: step 12 drops the Combat Sequence's who colors (LG27)
 
@@ -1188,13 +1189,15 @@ Total.
 - slices: Seed fills in the step, count and filled a store leaves out
 - slices: a saved fight's store keeps its record id, not the fight table
 
-### test_hud_states.lua (30)
+### test_hud_states.lua (32)
 
 - hud: the states and the defaults are the plan's
 - hud: Open when a fight starts is a DPS HUD row, on by default; the Combat Sequence's is gone
 - hud: Open when a fight starts opens a hidden HUD at the pull, before the first hit
 - hud: Open when a fight starts reopens a HUD the player closed in the last fight
 - hud: Open when a fight starts off waits for the first hit, and Only when you open it opens nothing
+- hud: Open when a fight starts lets go of a HUD the pull opened when the fight never hits
+- hud: a no-hit fight leaves a HUD the player opened alone
 - hud: Open when a fight starts never moves the Combat Sequence: a closed one stays closed
 - hud: auto: hidden -> live on FIGHT_STARTED's first hit
 - hud: the live figures are the meter's handles, copied and never inspected
@@ -1326,7 +1329,7 @@ Total.
 - hud sizing: a stored point already on the top edge is kept
 - hud sizing: a stored point off the top edge (an older profile) takes the top left at the first show
 
-### test_hud_static.lua (16)
+### test_hud_static.lua (18)
 
 - hud static: the chart stays on the card after a saved fight, the log closed
 - hud static: the chart stays on the card after a not saved fight, the log closed
@@ -1336,6 +1339,8 @@ Total.
 - hud static: the chart stays on the card after a not saved fight, the log detached
 - hud static: a skipped fight's slices are held for its card, and the next skip lets them go
 - hud static: the default window is 260 wide and exactly tall enough for 5 bars and 5 sequence rows
+- hud static: a height handed back a hair short of 5/5 (pixel snapping) still holds 5 and 5
+- hud static: a grip released a hair short of a pair keeps that pair
 - hud static: the status line is reserved, so the card's chips never move Damage profile
 - hud static: only the log's open and close, a rows setting or the grip move the height
 - hud static: Hud.SplitFor shrinks the larger side first, the sequence on a tie, never under 3 a side
@@ -2137,7 +2142,7 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_load.lua | 22 |
+| test_load.lua | 23 |
 | test_loadorder.lua | 5 |
 | test_vendor_sync.lua | 3 |
 | test_settings.lua | 19 |
@@ -2180,7 +2185,7 @@ Total.
 | test_callout_settings.lua | 19 |
 | test_toast.lua | 21 |
 | test_slices.lua | 19 |
-| test_hud_states.lua | 30 |
+| test_hud_states.lua | 32 |
 | test_hud_pace.lua | 12 |
 | test_hud_chart.lua | 7 |
 | test_hud_breakdown.lua | 16 |
@@ -2188,7 +2193,7 @@ Total.
 | test_hud_page.lua | 14 |
 | test_hud_layout.lua | 9 |
 | test_hud_sizing.lua | 17 |
-| test_hud_static.lua | 16 |
+| test_hud_static.lua | 18 |
 | test_hud_race_button.lua | 31 |
 | test_log_table.lua | 31 |
 | test_log_window.lua | 19 |
@@ -2233,4 +2238,4 @@ Total.
 | test_skin_switch.lua | 71 |
 | test_skin_values.lua | 3 |
 | Skipped | 1 |
-| **Total** | **1839** |
+| **Total** | **1844** |
