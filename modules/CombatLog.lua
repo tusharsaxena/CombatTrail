@@ -421,6 +421,14 @@ local function targetGUID()
     return ok and Secrets.PlainString(g) or nil
 end
 
+-- Whether the unit's map is for the unit now: always the player's; the target's only while its plain
+-- GUID is the one its map was walked for.
+local function current(unit)
+    if unit ~= "target" then return true end
+    local g = targetGUID()
+    return g ~= nil and g == targetOf
+end
+
 -- The unit's auras now into `map` (emptied first), every filter walked. Answers whether every filter's
 -- walk was complete.
 local function walkInto(unit, map)
@@ -481,10 +489,7 @@ end
 -- plain GUID is the one its map was walked for; else (a new target whose PLAYER_TARGET_CHANGED has not
 -- come yet, or a GUID that cannot be read plain) it is walked silently.
 local function diff(unit, at)
-    if unit == "target" then
-        local g = targetGUID()
-        if g == nil or g ~= targetOf then return walk(unit) end
-    end
+    if not current(unit) then return walk(unit) end
     local cur, new = auras[unit], spare[unit]
     if not walkInto(unit, new) then
         for inst, v in pairs(new) do cur[inst] = v end
@@ -562,14 +567,15 @@ end
 --- still be read (R5-CT-06) has them taken first, each aura guarded as usual (a sealed one is no line),
 --- then the unit diffed as well: WoW Forever may hand over an aura that is never secret in the update info
 --- while its index read raises in combat, and a complete diff after finds those already mapped (no line
---- twice). A plainly full update only diffs.
+--- twice). A new target's lists (before its PLAYER_TARGET_CHANGED) are not taken: it is walked silently
+--- (R5-REV). A plainly full update only diffs.
 function CombatLog.OnAura(unit, info, at)
     if unit ~= "player" and unit ~= "target" then return end
     bump(unit == "player" and "evPlayer" or "evTarget")
     local shape = shapeOf(info)
     bump(shape)
     if shape ~= "info" then
-        if shape == "sealedFull" and listsUsable(info) then
+        if shape == "sealedFull" and listsUsable(info) and current(unit) then
             added(unit, info.addedAuras, at)
             removed(unit, info.removedAuraInstanceIDs, at)
         end

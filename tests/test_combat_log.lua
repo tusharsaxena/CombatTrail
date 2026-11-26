@@ -670,6 +670,30 @@ test("combat log: after an incomplete silent walk the next complete diff draws n
     assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE, "no false gain; the fade logged")
 end)
 
+-- R5-REV: a sealed full update's lists for a new target, before PLAYER_TARGET_CHANGED, are the new
+-- target's auras, not gains: the target's lists are taken only while its plain GUID is the walked one.
+test("combat log: a sealed full update's lists for a new target before the change draw no line", function()
+    local restore = T.installSecretValue()
+    local ok, err = pcall(function()
+        local inst, meter, saved = fresh()
+        local NS = inst.NS
+        local r = fightThrough(inst, meter, saved, 40, function(i)
+            i.mocks.__unitGUIDs.target = TARGET_B
+            onUnit(i, "target", "HARMFUL", { debuff(71, CURSE, true) })
+            aura(i, 12, "target", { isFullUpdate = T.secret(true), addedAuras = { debuff(71, CURSE, true) } })
+            at(i, 13)
+            i.mocks.__fire("PLAYER_TARGET_CHANGED")
+            -- The same target's sealed full update: its list is taken (the fade lined once).
+            onUnit(i, "target", "HARMFUL", {})
+            aura(i, 14, "target", { isFullUpdate = T.secret(true), removedAuraInstanceIDs = { 71 } })
+        end)
+        -- red under: DEBUFF_ON CURSE (the new target's list lined as gains), then DEBUFF_OFF CURSE
+        assertEqual(lines(NS, NS.CombatLog.Of(r)), "DEBUFF_OFF:" .. CURSE, "no burst across the change")
+    end)
+    restore()
+    if not ok then error(err, 0) end
+end)
+
 -- R5-REV: UNIT_AURA fires often in a group; the tally's shape and the diff decision are one read of the
 -- update info, so the tally adds no second pass of secret checks per event.
 test("combat log: one UNIT_AURA reads its update info's access once for the tally and the diff", function()
