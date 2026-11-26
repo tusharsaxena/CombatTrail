@@ -96,8 +96,8 @@ test("hud layout: the live body stacks the top, Damage profile, the pace bar, th
     local body = H.body(Hud, "live")
     assertTrue(body.paceShown == true and body.chartShown == true)
     redraw(Hud, body)
-    assertEqual(body.stackTop, 52 + 18 + 46 + GAP + STATUS,
-        "the clock's 40 + 12, the target line, the boxes, the gap, the empty status line")
+    assertEqual(body.stackTop, 52 + 18 + 46 + 14 + GAP + STATUS,
+        "the clock's 40 + 12, the target line, the boxes with their pet row's slot, the gap, the empty status line")
     assertStack(inst, body)
     assertEqual(body.parts.chart.note.__text, "vs best pace")
 end)
@@ -110,7 +110,7 @@ test("hud layout: the fight-over card stacks the same, its chips in the reserved
     assertTrue(body.paceShown == true and body.chartShown == true)
     redraw(Hud, body)
     assertEqual(body.w.chips:Height(), STATUS, "one line of chips")
-    assertEqual(body.stackTop, 52 + 18 + 46 + GAP + STATUS, "under the chips, where the live body is")
+    assertEqual(body.stackTop, 52 + 18 + 46 + 14 + GAP + STATUS, "under the chips, where the live body is")
     assertStack(inst, body)
 end)
 
@@ -135,7 +135,7 @@ test("hud layout: with the plot off the heading stays over the pace bar", functi
     assertEqual(y(spells.title), -(body.stackTop + HEAD_GAP), "Spell breakdown right under the boxes")
 end)
 
-test("hud layout: with nothing to pace against the plot sits right under its heading", function()
+test("hud layout: with nothing to pace against the pace line stays reserved over the plot (R6-CT-01)", function()
     local inst, meter, Hud = H.fresh()
     H.start(inst, meter, 1, FIGHT, 10)
     H.tick(inst, 11.25, 14)
@@ -145,7 +145,8 @@ test("hud layout: with nothing to pace against the plot sits right under its hea
     assertFalse(body.paceShown == true)
     assertTrue(chart.title:IsShown() and chart.plot:IsShown())
     assertEqual(y(chart.title), -(body.stackTop + HEAD_GAP))
-    assertEqual(y(chart.plot), y(chart.title) - SECTION_H, "no pace line under the heading")
+    assertFalse(body.parts.pace.bar:IsShown(), "no pace bar drawn")
+    assertEqual(y(chart.plot), y(chart.title) - SECTION_H - PACE_LINE, "its line kept empty under the heading")
     assertEqual(chart.note.__text, "no best yet")
 end)
 
@@ -187,14 +188,12 @@ test("hud layout: the window is 260 wide on DPS Race's insets, its height the st
     assertEqual(br[4], -12)
     assertEqual(br[5], footerH + 8, "the content's bottom: the footer + 8")
     assertEqual(Hud.View().width, 260 - 24, "the bodies' width: 236")
-    local rows = body.parts.spells.list:Rows()
-    local drawn = #rows
-    -- Two spells in five bars' room and no pet: the one height keeps the three empty rows and the
-    -- boxes' pet row (owner feedback item 12).
-    local empty = NS.HudBreakdown.Height(5) - NS.HudBreakdown.Height(drawn) + 14
-    assertEqual(f.__h, headerH + 10 + body.height + empty + footerH + 8)
+    assertEqual(#body.parts.spells.list:Rows(), 2)
+    -- Two spells in five bars' room and no pet: the stack keeps the three empty rows and the boxes'
+    -- pet row (owner feedback item 12), so it fills the one height in every state (R6-CT-01).
+    assertEqual(f.__h, headerH + 10 + body.height + footerH + 8)
     local profile = HEAD_GAP + SECTION_H + PACE_LINE + PLOT_H + RESERVE + 2 + AXIS_H + GAP
-    local spells = HEAD_GAP + SECTION_H + NS.HudBreakdown.Height(drawn) + GAP
+    local spells = HEAD_GAP + SECTION_H + NS.HudBreakdown.Height(5) + GAP
     assertEqual(body.height, body.stackTop + profile + spells, "the stack, part by part")
 end)
 

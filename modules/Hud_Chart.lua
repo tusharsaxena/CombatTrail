@@ -458,7 +458,8 @@ function Strip:drawBuzzer(at)
 end
 
 --- Draw `view` (Chart.LiveView's or OverView's). Its `max` may be secret (live with no best): it, as
---- each column's value, only reaches SetMinMaxValues and SetValue.
+--- each column's value, only reaches SetMinMaxValues and SetValue. A nil view draws the empty frame
+--- (the HUD with no fight yet, R6-CT-01): no columns, line or icons, the axis's 0:00 alone.
 function Strip:Draw(view)
     self:restyle()
     local count = view and view.count or 0
@@ -471,8 +472,8 @@ function Strip:Draw(view)
     self:drawIcons(view and view.cooldowns or nil, span)
     self.note:SetText(view and view.note or "")
     self.axis[1]:SetText(NS.Format.Length(0))
-    self.axis[2]:SetText(NS.Format.Length(math.floor(span / 2)))
-    self.axis[3]:SetText(NS.Format.Length(span))
+    self.axis[2]:SetText(view and NS.Format.Length(math.floor(span / 2)) or "")
+    self.axis[3]:SetText(view and NS.Format.Length(span) or "")
 end
 
 local function newIcon(over)

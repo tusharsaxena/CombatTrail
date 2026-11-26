@@ -16,11 +16,15 @@ local _, NS = ...
 -- DPS Race's (v0.2 Task B2): each heading in FONT.SECTION on Style.SECTION_H with HEAD_GAP of clear
 -- space over it, the pace bar on its PACE_H line under the profile heading, and the clock at DPS
 -- Race's single-clock size (ClockSize).
--- Every position is a constant offset worked out from the parts shown and the configured sizes
--- (modules/Hud_Appearance.lua); Update answers the stack's height (body.height), which the suites
--- check against the window's one height. No body reads the size or position of anything that has displayed
--- a meter value; the chips measure their own text (GetStringWidth on a label that only ever holds
--- plain copy), never a value.
+-- Every position is a constant offset worked out from the parts the layout shows and the configured
+-- sizes (modules/Hud_Appearance.lua), never from what the fight has (R6-CT-01, owner feedback round 6):
+-- the target line's slot, the boxes' pet row, the pace line, the plot frame and the rows' whole window
+-- are kept with no fight yet, live and on the card, so no section moves when a fight starts or ends.
+-- With no fight yet (the view's `idle`) the slots hold muted placeholders: "No target", a dash for the
+-- pet, the empty plot with "No fight yet". Update answers the stack's height (body.height), which is
+-- States.FixedStack's in every state but a card whose chips wrap past the status line. No body reads
+-- the size or position of anything that has displayed a meter value; the chips measure their own
+-- text (GetStringWidth on a label that only ever holds plain copy), never a value.
 --
 -- THE ROWS' WINDOW (v0.2 Task B3, plan decision D9). The view carries `bars` (`hud.bars`, or the
 -- grip's count while it is dragged) and `fitH`: the content's height. The rows shown are `bars`,
@@ -122,12 +126,13 @@ local function textWidth(fs, s)
 end
 
 --- A figure in a box: a small caption over a large value (LootHistory's Insights card), and a row
---- under the value for the pet's figure, shown only while there is one: a "Pet" label and the
---- value beside it, two strings, so a secret value is never joined to text. The value's face is
---- the `hud.figures` block's.
+--- under the value for the pet's figure: a "Pet" label and the value beside it, two strings, so a
+--- secret value is never joined to text. The row's slot is always kept (R6-CT-01); its text shows
+--- while there is a pet figure, and with no fight yet as a muted dash. The value's face is the
+--- `hud.figures` block's.
 local function kpi(parent, label, tip)
     local f = card(parent)
-    local k = { frame = f, petRow = false }
+    local k = { frame = f }
     k.label = Style.Text(f, FONT.CAPTION, nil, "CENTER")
     k.label:SetPoint("TOPLEFT", f, "TOPLEFT", 8, -7)
     k.label:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -7)
@@ -142,14 +147,17 @@ local function kpi(parent, label, tip)
     return k
 end
 
--- Show or hide the box's pet row; the value moves up over it and the box grows by its height.
-local function setPetRow(k, on)
-    on = on and true or false
-    k.petLabel:SetShown(on)
-    k.petValue:SetShown(on)
-    if k.petRow == on and k.placed then return end
-    k.petRow, k.placed = on, true
-    local y = KPI_PAD + (on and KPI_CAPTION_H or 0)
+-- The box's pet row: its text shown while there is a pet figure (`on`), or muted with no fight yet
+-- (`idle`: the live body's dash); its slot and the value over it never move (R6-CT-01), so the box is
+-- one height in every state.
+local function setPetRow(k, on, idle)
+    local shown = (on or idle) and true or false
+    k.petLabel:SetShown(shown)
+    k.petValue:SetShown(shown)
+    Style.Paint(k.petValue, on and C.pet or C.dim)
+    if k.placed then return end
+    k.placed = true
+    local y = KPI_PAD + KPI_CAPTION_H
     k.value:ClearAllPoints()
     k.value:SetPoint("BOTTOMLEFT", k.frame, "BOTTOMLEFT", 8, y)
     k.value:SetPoint("BOTTOMRIGHT", k.frame, "BOTTOMRIGHT", -8, y)
@@ -351,7 +359,7 @@ local function placeTop(body, v)
     w.damage.frame:SetShown(figures)
     w.dps.frame:SetShown(figures)
     if figures then
-        local h = body.kpiH + (v.hasPet and KPI_CAPTION_H or 0)
+        local h = body.kpiH + KPI_CAPTION_H   -- the pet row's slot kept, pet or none (R6-CT-01)
         placePair(w.damage, w.dps, f, -y, h)
         y = y + h + GAP
     end
@@ -378,37 +386,50 @@ local function profileParts(body)
     return parts.chart, parts.pace
 end
 
--- Whether the view's pace bar and chart show (each by its layout switch and the view carrying it).
-local function profileShown(v)
+-- The profile's slots, from the configuration alone (R6-CT-01: the stack States.FixedStack reserves,
+-- so the section sits where it does in every state): the pace line while the layout shows it and the
+-- HUD paces (`v.paceable`; a hand-built view carrying a pace counts), the plot while the layout shows
+-- it. Then what is drawn in them: the pace bar while the view carries one, the chart's columns while
+-- it carries a chart view.
+local function profileSlots(v)
     local layout = v.layout or {}
-    return layout.pace ~= false and v.pace ~= nil and v.paceView ~= nil,
-           layout.chart ~= false and v.chartView ~= nil
+    local paceSlot = layout.pace ~= false and (v.paceable == true or v.pace ~= nil)
+    local chartSlot = layout.chart ~= false
+    return paceSlot, chartSlot, paceSlot and v.pace ~= nil and v.paceView ~= nil, chartSlot and v.chartView ~= nil
 end
 
+-- The heading's note over a plot with nothing to draw: no fight yet (muted), else none (a shared
+-- session's, which draws no chart, DPS Race's rule).
+local function emptyNote(v) return v.idle and L["No fight yet"] or "" end
+
 -- The "Damage profile" section at `y` (DPS Race's placeStack): HEAD_GAP of clear space, the heading,
--- the pace bar directly under it when the view carries one (and the layout shows it), then the plot
--- and its time labels when the view carries a chart. The heading stays over the pace bar with the
--- plot off, and goes with both off. Answers the y under the section.
+-- the pace bar's line directly under it while the layout shows it and the HUD paces, then the plot
+-- frame and its time labels while the layout shows the chart. Each slot is kept whether or not the
+-- view has anything to draw in it, so nothing moves when a fight starts or ends (R6-CT-01). The
+-- heading stays over the pace line with the plot off, and goes with both off. Answers the y under it.
 local function placeProfile(body, v, y)
     local pv, view = v.paceView, v.chartView
-    local paceOn, chartOn = profileShown(v)
+    local paceSlot, chartSlot, paceOn, chartOn = profileSlots(v)
     body.paceShown, body.chartShown = paceOn, chartOn
-    if not (paceOn or chartOn) then
+    if not (paceSlot or chartSlot) then
         if body.parts.chart then body.parts.chart:SetShown(false) end
         if body.parts.pace then body.parts.pace:SetShown(false) end
         return y
     end
     local chart, pace = profileParts(body)
     local width = v.width or WIDTH
-    local paceLine = paceOn and (NS.HudChart.PACE_H + PACE_GAP) or 0
+    local paceLine = paceSlot and (NS.HudChart.PACE_H + PACE_GAP) or 0
     local top = y + HEAD_GAP
-    chart:SetParts(true, chartOn)
+    chart:SetParts(true, chartSlot)
     local h = chart:Place(body.frame, -top, width, paceLine)
     if chartOn then
         chart:Draw(view)
+    elseif chartSlot then
+        chart:Draw(nil)   -- the empty frame: no columns, no line, no icons, the axis at 0:00
+        chart:SetNote(emptyNote(v))
     else
         -- No plot, no Draw: the note names the pace bar alone (it has no caption of its own).
-        chart:SetNote(L["vs best pace"])
+        chart:SetNote(paceOn and L["vs best pace"] or v.idle and L["No fight yet"] or L["no best yet"])
         h = SECTION_H + paceLine
     end
     pace:SetShown(paceOn)
@@ -528,7 +549,8 @@ local function placeSpells(body, v, y)
         drawn, base = s.list:ShowLive(v.live, n, offset), L["live order"]
     end
     s.note:SetText(spellsNote(body, base, drawn))
-    local h = Breakdown.Height(drawn)
+    -- The rows' whole window, drawn or not (R6-CT-01): the section is one height in every state.
+    local h = Breakdown.Height(body.visible)
     s.frame:ClearAllPoints()
     s.frame:SetPoint("TOPLEFT", body.frame, "TOPLEFT", 0, -(y + SECTION_H))
     s.frame:SetSize(width, math.max(1, h))
@@ -559,7 +581,7 @@ end
 --- chrome and the docked log): every part `layout` shows, the boxes' pet row and the status line
 --- always, the pace line whenever the layout shows it and the HUD paces (`paceable`), and the spell
 --- section's heading over `bars` rows.
---- The live body with a pet, a pace and at least `bars` spells fills it exactly.
+--- Every body fills it exactly (R6-CT-01): idle, live and the card (its chips on one line).
 --- @param layout table|nil  `hud.layout`
 --- @param bars number
 --- @param paceable boolean  `hud.paceAgainst` is not "none"
@@ -587,11 +609,12 @@ function Builders.live(parent)
     buildTop(body, L["DPS \194\183 Live"], { "liveDamage", "liveDps" })
 
     function body.Update(self, v)
-        setPetRow(self.w.damage, v.hasPet)
-        setPetRow(self.w.dps, v.hasPet)
+        setPetRow(self.w.damage, v.hasPet, v.idle)
+        setPetRow(self.w.dps, v.hasPet, v.idle)
         local y = placeTop(self, v) + STATUS_H   -- the status line, empty while the fight is live
         self:SetClock(v.clock)
-        self.w.target:SetText(v.targetLine or "")
+        -- No fight yet: the target line's slot says so, muted as the line itself (R6-CT-01).
+        self.w.target:SetText(v.targetLine or v.idle and L["No target"] or "")
         self:SetLive(v.live)
         self.height = placeExtras(self, v, y)
     end

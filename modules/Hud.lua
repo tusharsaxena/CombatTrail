@@ -829,20 +829,21 @@ local function fill()
     v.fitH = (drag and ui.dragH or Hud.FixedHeight()) - chromeHeight()
     v.showSkipReason = setting("hud.showSkipReason") ~= false
     v.minLength = setting("history.minLength")
+    v.paceable, v.idle = setting("hud.paceAgainst") ~= "none", cur == nil   -- the slots, no fight yet (R6-CT-01)
     fillExtras(v)
     return v
 end
 
 local function footer(v)
     local snap = cur and cur.snapshot
-    local who = type(snap) == "table" and snap.who or {}
+    local who = type(snap) == "table" and snap.who or v.idle and NS.Identity.Who() or {}   -- idle: you now
     local parts = {}
     for _, s in ipairs({ Secrets.PlainString(who.specName), Secrets.PlainString(who.name) }) do
         if s then parts[#parts + 1] = s end
     end
     ui.footLeft:SetText(table.concat(parts, " \194\183 "))
     local right = ""
-    if v.key == "live" and cur then right = L["live \194\183 %d Hz"]:format(Hud.RefreshRate()) end
+    if v.key == "live" then right = cur and L["live \194\183 %d Hz"]:format(Hud.RefreshRate()) or L["waiting for a fight"] end
     if v.key == "over" then
         if pinned then right = L["Pinned open"]
         elseif fadeAt and not held then right = L["Fades %d s after the fight"]:format(tonumber(setting("hud.fadeAfter")) or 0) end
