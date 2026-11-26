@@ -551,6 +551,12 @@ function LW.__feed() return feed end
 
 -- ── wiring ──────────────────────────────────────────────────────────────────────────────────────
 
+-- The sample seam swapped what the ring reads (test mode, the sim): the feed starts over on it.
+CL.Watch("window", function()
+    feed, dirty, seeded = nil, true, false
+    LW.Paint()
+end)
+
 local bus = NS.NewBusTarget()
 if bus then
     bus:RegisterMessage(NS.MSG.FIGHT_STARTED, function()

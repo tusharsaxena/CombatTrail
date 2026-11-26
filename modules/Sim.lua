@@ -117,6 +117,7 @@ local function fightBeat(fight, at, now)
     local MF = NS.MockFights
     if not fight.firstHitT and at >= MF.FIRST_HIT then fight.firstHitT = fight.startT + MF.FIRST_HIT end
     NS.Preview.FeedLanes(sample.plan, lastAt, at, now)
+    NS.Preview.FeedSequence(sample.plan, lastAt, at)
     lastAt = at
     local player, pet = MF.TotalAt(sample.plan, at)
     NS.Slices.Record(fight.id, at, player, pet)
@@ -179,6 +180,7 @@ function Sim.Unpark()
     if rec then rec.fight = fight end
     phase, lastAt = "fight", 0
     NS.Hud.OnFightStarted(fight)
+    NS.Preview.BeginSequence(fight, 0)
     if NS.addon and NS.addon.ScheduleRepeatingTimer then
         timer = NS.addon:ScheduleRepeatingTimer(function() Sim.Beat() end, Sim.TICK)
     end

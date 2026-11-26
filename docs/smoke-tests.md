@@ -20,6 +20,7 @@ owner runs them; an agent never marks a row passed. Every check names its client
 | (not run yet) | 0.1.0, branch `feat/2026-11-25-log-level-buffs` (CombatTrail #11, #12, #13: the Combat Log SM-CT-LG1 to SM-CT-LG16, its Results tabs SM-CT-R40 to SM-CT-R44, its settings page SM-CT-S13) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-25-combat-log-feedback` (the owner's Combat Log feedback, items 1 to 20: new SM-CT-LG21 to SM-CT-LG27 and SM-CT-N27; amended SM-CT-N6, N25, H12, H13, H16, LG1, LG2, LG4, LG5, LG7, LG8, LG9, LG14, LG17, LG18, LG19, S13, RM50 and R40 to R44, with the Log tab read as the Log section in LG6, LG11 to LG13, LG15, LG16 and LG20; SM-CT-N25's 2026-11-24 pass withdrawn) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-25-combat-sequence` (the owner's Combat Sequence ruling of 2026-11-25: new SM-CT-SQ1 to SM-CT-SQ11; superseded wholly or in part, and amended to say so: SM-CT-LG3, LG13, LG14, LG15, LG16, LG17 and LG25, and in their HIT, HEAL, Amount, chip or name wording SM-CT-LG2, LG7, LG19, R40, R41, R43, R44, S13 and L3; no row carried a pass mark to withdraw) | |
+| (not run yet) | 0.1.0, branch `feat/2026-11-26-owner-feedback-round4` (the owner's fourth feedback round: new R4-CT-SM1 onward) | |
 | (not run yet) | 0.1.0, branch `feat/2026-11-13-callout` (the center call-out: SM-CT-RM12, RM14, RM31, RM77 to RM92; the showcase and the samples' alerts: SM-CT-M6, M7; WoW Forever's live Pet figure: SM-CT-P8, SM-CT-H15; the sim window beside the Race window: SM-CT-M4; the Forever Multi-Shot ID: SM-CT-M5; LibKa0s v1.102.0's call-out look and the one tab with no sample line: SM-CT-RM82, RM84, RM85, RM91, RM92) | |
 
 ## How to run it
@@ -235,6 +236,15 @@ through schema steps 8 and 9 (`log.*` to `sequence.*`), and `/ct log` still work
 | SM-CT-SQ9 | Both | Docked at the default 390 width, read the columns; then detach and read them again. | Docked: Time, Event, Spell. Detached: Time, Event, Spell, Info. Every column is centered. An interrupted cast reads Interrupted under Info. |
 | SM-CT-SQ10 | Both | Have the debuff fall off you while the section is scrolled away (paused); then Resume. | The DEBUFF- row is there in order. Pausing did not drop it. |
 | SM-CT-SQ11 | Both | The tooltip anchor audit (CSEQ-4). Hover a row with a spell, a chip, the filter eye and the detach arrow in the docked section. Detach, then hover a row, a chip, *Resume* (scroll away first) and the Dock mark. In Results, hover a chip, a row and the section's arrow. Do each with the window near the screen's right edge and again near its left. | No tooltip opens at the screen's top right or on the cursor. A row, the docked section's chips and marks, and the Results section's chips and arrow open beside their window, right of it, or left of it near the right edge, top level with the element. In the detached window the chips, *Resume* and the title-bar marks open centered just above the control. |
+
+### Owner feedback round 4 (2026-11-26)
+
+The Combat Sequence after the owner's fourth feedback round: sample rows in test mode and the sim.
+Branch `feat/2026-11-26-owner-feedback-round4`. Every row is written unrun.
+
+| ID | Client | Check | Expect |
+|---|---|---|---|
+| R4-CT-SM1 | Both | `/ct test` with the Combat Sequence docked open; then detach it (`/ct sequence detach`); then open the first fight of the sample history in Results. Then `/ct test` off and `/ct sim`, Start *New best*, and watch the section through the fight. | Test mode: the drawer and the detached window show sample rows up to the held moment (CAST rows for the hunter and the pet, and made-up BUFF+, DEBUFF+ and DEBUFF- rows: Bestial Wrath, Call of the Wild, Barbed Shot and Black Arrow on Retail; Rapid Fire and Serpent Sting on Forever), never *No events yet.*; the Results section shows the sample fight's rows and chip counts, never *No combat sequence was saved for this fight*. The sim: rows arrive as the fight plays, and the saved sim fight's Results section shows them. Turning either off empties the live views again (*No events yet.* until a real fight), and a real fight afterwards shows only its own rows. |
 
 ## 5. Results
 

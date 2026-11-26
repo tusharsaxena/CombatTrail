@@ -396,6 +396,13 @@ end
 
 -- ── wiring ──────────────────────────────────────────────────────────────────────────────────────
 
+-- The sample seam swapped what the ring reads (test mode, the sim: CombatLog.UseSample and EndSample):
+-- the feed starts over on the ring it reads now, as at a fight's start.
+CL.Watch("drawer", function()
+    feed, dirty, seeded = nil, true, false
+    HudLog.Paint()
+end)
+
 local bus = NS.NewBusTarget()
 if bus then
     bus:RegisterMessage(NS.MSG.FIGHT_STARTED, function()

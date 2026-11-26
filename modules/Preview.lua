@@ -13,7 +13,11 @@ local _, NS = ...
 --
 -- Both run the views' own paths with made-up input: a sample fight (flagged `sample`) is handed to
 -- the HUD's fight receivers (modules/Hud.lua's OnFight* functions) directly, never sent on the bus,
--- so the recorder, the cast list, the chart's reader and the bests never hear it. The HUD reads a
+-- so the recorder, the cast list, the chart's reader and the bests never hear it. Its Combat Sequence
+-- (owner feedback round 4, R4-CT-01) is the plan's (MockFights.SequenceOf), shown in the HUD's drawer
+-- and the detached window through CombatLog's sample seam (UseSample, SampleAppend, EndSample): test
+-- mode loads it up to the held moment, the sim adds each beat's lines as they fall due, and every
+-- stop drops it, so no sample line reaches the real ring or a capture. The HUD reads a
 -- sample fight's figures from its plan and paces it against the sample history; the Results window
 -- reads its source seam (modules/Results_Source.lua), routed to the sample history while either is
 -- on and back to the store when it ends; the HUD and the Results window each lay their strip over
@@ -129,6 +133,41 @@ function Preview.FeedLanes(plan, from, to, now)
     return n
 end
 
+-- ── the Combat Sequence (R4-CT-01) ──────────────────────────────────────────────────────────────
+
+local seqStart   -- the sample sequence's fight start (GetTime()), while it is up
+
+--- Feed `plan`'s sequence lines with from < t <= to into the sample ring, timed from the fight's
+--- start. Nothing while no sample sequence is up.
+--- @return number fed
+function Preview.FeedSequence(plan, from, to)
+    local CL = NS.CombatLog
+    if not (seqStart and CL and plan) then return 0 end
+    local n = 0
+    for _, e in ipairs(NS.MockFights.SequenceOf(plan)) do
+        if e.t > to then break end
+        if e.t > from and CL.SampleAppend(seqStart + e.t, e.k, e.u, e.id, e.f, e.g) then n = n + 1 end
+    end
+    return n
+end
+
+--- The live views on sample fight `fight`'s sequence (its plan's), fed up to `upto` seconds in.
+function Preview.BeginSequence(fight, upto)
+    local CL = NS.CombatLog
+    if not (CL and type(fight) == "table" and fight.plan and type(fight.startT) == "number") then return end
+    local target = type(fight.snapshot) == "table" and type(fight.snapshot.target) == "table"
+        and fight.snapshot.target.name or nil
+    seqStart = fight.startT
+    CL.UseSample(seqStart, { { name = target } })
+    Preview.FeedSequence(fight.plan, -math.huge, upto or 0)
+end
+
+--- The sample sequence dropped: the live views read the real ring again.
+function Preview.EndSequence()
+    seqStart = nil
+    if NS.CombatLog then NS.CombatLog.EndSample() end
+end
+
 local function clearLanes()
     local R = NS.LaneRender
     if R then
@@ -180,6 +219,7 @@ local function holdLive(sample, at)
     if rec then rec.fight = fight end
     MF.FillSlices(fight.id, still.plan, at + MF.FIRST_HIT)
     NS.Hud.OnFightStarted(fight)
+    Preview.BeginSequence(fight, at + MF.FIRST_HIT)
     startLanes(still.plan, at + MF.FIRST_HIT)
 end
 
@@ -208,6 +248,7 @@ local function holdResult(sample)
     MF.FillSlices(fight.id, plan, plan.length)
     NS.Slices.Close(fight.id)
     NS.Hud.OnFightStarted(fight)
+    Preview.BeginSequence(fight, plan.length)
     NS.Hud.OnFightEnded(fight, MF.FinalOf(plan, plan.length), "final")
     NS.ResultsSource.Put(sample.record)
     NS.Hud.OnFightSaved(sample.record)
@@ -271,6 +312,7 @@ local function stopRun(keepSession)
     if NS.Sim then NS.Sim.Cancel(keepSession) end
     stopTest()
     endAlerts()
+    Preview.EndSequence()
     if NS.Hud then NS.Hud.EndSample(false) end
     clearLanes()
 end
@@ -335,6 +377,7 @@ function Preview.SetRace(word)
     if Preview.Mode() ~= "test" or not isRaceWord(word) or not NS.RaceSample then return false end
     stopTest()
     endAlerts()
+    Preview.EndSequence()
     if NS.Hud then NS.Hud.EndSample(false) end
     clearLanes()
     dataset = NS.MockFights.Dataset()

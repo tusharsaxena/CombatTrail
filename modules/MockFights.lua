@@ -456,6 +456,91 @@ function MockFights.FillSlices(fightID, plan, t)
     end
 end
 
+-- ── the sample Combat Sequence (owner feedback round 4, R4-CT-01) ──────────────────────────────
+-- What a real fight's capture would have heard of the plan (modules/CombatLog.lua's saved line
+-- shape): each plan cast a CAST line (the player's or the pet's, an interrupted one marked), and the
+-- made-up auras of the rotation's `buff` and `debuff` rows: a buff on the player, a debuff the player
+-- put on the target (the sequence's one target, `g` 1). A cast whose aura is still up refreshes it,
+-- which is no line (as UNIT_AURA's refresh is none); an aura that runs out inside the fight is its
+-- loss line, one that would outlast it has none. Pure: read from the plan alone, no generator.
+
+-- [spellID] = { kind, seconds } from the client's rotation (an interrupted cast puts on nothing),
+-- read at the first call.
+local auraOf
+local function auras()
+    if auraOf then return auraOf end
+    auraOf = {}
+    for _, row in ipairs(NS.MOCK_ROTATION) do
+        if row.buff then auraOf[row.id] = { "buff", row.buff }
+        elseif row.debuff then auraOf[row.id] = { "debuff", row.debuff } end
+    end
+    return auraOf
+end
+
+local function line(out, t, k, u, id, f, g)
+    out[#out + 1] = { t = round1(t), k = k, u = u, id = id, f = f, g = g, o = #out + 1 }
+end
+
+local function auraLine(out, aura, on, t)
+    local K, U = NS.CombatLog.KIND, NS.CombatLog.UNIT
+    if aura.kind == "buff" then return line(out, t, on and K.BUFF_ON or K.BUFF_OFF, U.player, aura.id) end
+    line(out, t, on and K.DEBUFF_ON or K.DEBUFF_OFF, U.target, aura.id, nil, 1)
+end
+
+-- One cast's aura: gained, or refreshed while it is still up (an earlier one that ran out is lost).
+local function castAura(out, up, c)
+    local a = auras()[c.spellID]
+    if not a or c.interrupted then return end
+    local cur = up[c.spellID]
+    if cur and cur.till >= c.t then
+        cur.till = c.t + a[2]
+        return
+    end
+    if cur then auraLine(out, cur, false, cur.till) end
+    cur = { id = c.spellID, kind = a[1], till = c.t + a[2] }
+    if not up[c.spellID] then up[#up + 1] = c.spellID end
+    up[c.spellID] = cur
+    auraLine(out, cur, true, c.t)
+end
+
+local function byLine(a, b)
+    if a.t ~= b.t then return a.t < b.t end
+    return a.o < b.o
+end
+
+--- The plan's Combat Sequence, oldest first, in the saved log's shape ({ t, k, u, id?, f?, g? }),
+--- every line of the plan (MockFights.Record keeps the newest a saved fight keeps). Made once per
+--- plan and kept on it (`plan.sequence`): read it, never change it.
+--- @return table lines
+function MockFights.SequenceOf(plan)
+    if plan.sequence then return plan.sequence end
+    local K, U, F = NS.CombatLog.KIND, NS.CombatLog.UNIT, NS.CombatLog.FLAG
+    local out, up = {}, {}
+    for _, c in ipairs(plan.casts) do
+        line(out, c.t, K.CAST, c.unit == "pet" and U.pet or U.player, c.spellID, c.interrupted and F.INTERRUPTED or nil)
+        castAura(out, up, c)
+    end
+    for _, id in ipairs(up) do
+        local cur = up[id]
+        if cur.till <= plan.length then auraLine(out, cur, false, cur.till) end
+    end
+    table.sort(out, byLine)
+    for _, e in ipairs(out) do e.o = nil end
+    plan.sequence = out
+    return out
+end
+
+-- The record's saved log: the newest lines a saved fight keeps by default, and how many were not.
+local function logOf(plan)
+    local all, keep = MockFights.SequenceOf(plan), NS.Constants.LOG.MAX_PER_FIGHT
+    local first, log = math.max(1, #all - keep + 1), {}
+    for i = first, #all do
+        local e = all[i]
+        log[#log + 1] = { t = e.t, k = e.k, u = e.u, id = e.id, f = e.f, g = e.g }
+    end
+    return log, first - 1
+end
+
 -- ── the record ──────────────────────────────────────────────────────────────────────────────────
 
 -- What the plan used (modules/Usage.lua's record shape): the trinket and the potion it cast, the
@@ -519,9 +604,11 @@ function MockFights.Record(o, plan)
         spells = NS.CastCodec.EncodeSpells(final.merged.spells), casts = NS.CastCodec.Encode(plan.casts),
         cooldowns = plan.cooldowns, gear = copy(CLIENT.gear), stats = copy(CLIENT.stats), usage = usageOf(plan),
         targets = targetsOf(ident, merged),
+        logTargets = { { name = ident and ident.targetName or nil } },
         note = o.note, client = NS.Compat.ClientKey(), build = buildOf(), version = NS.version,
         status = "final", sample = true,
     }
+    record.log, record.logDropped = logOf(plan)
     return record, plan
 end
 
