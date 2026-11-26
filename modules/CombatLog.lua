@@ -21,6 +21,7 @@ local _, NS = ...
 --     none: docs/forever-quirks.md), is a DIFF: the unit is walked into a scratch map and compared with
 --     the current one (an instance only in the scratch map is a gain, one only in the current map a
 --     loss), gains first in walk order, then losses by ascending instance; then the two maps swap.
+--     A sealed isFullUpdate whose lists can be read has them taken first, then is diffed (R5-CT-06).
 --     AN INCOMPLETE WALK LOGS NOTHING (a sealed or unreadable aura, a raising read, AURA_LIMIT reached):
 --     an unreadable aura is skipped and the walk goes on (a raising read ends that filter's walk), its
 --     entries are added to the current map with no line, so neither a false loss nor, on the next
@@ -545,15 +546,30 @@ local function shapeOf(info)
     return "info"
 end
 
+-- Whether a sealedFull update still hands over lists to read: at least one there, none sealed.
+local function listsUsable(info)
+    local add, rem = info.addedAuras, info.removedAuraInstanceIDs
+    if add == nil and rem == nil then return false end
+    return not unreadable(add) and not unreadable(rem)
+end
+
 --- UNIT_AURA for `player` or `target`: its added auras are gains, its removed instances losses
 --- (`updatedAuraInstanceIDs`, a refresh, is no line). A full update or no usable update info diffs the
---- unit while the capture is registered (else walks it silently).
+--- unit while the capture is registered (else walks it silently). A SEALED isFullUpdate whose lists can
+--- still be read (R5-CT-06) has them taken first, each aura guarded as usual (a sealed one is no line),
+--- then the unit diffed as well: WoW Forever may hand over an aura that is never secret in the update info
+--- while its index read raises in combat, and a complete diff after finds those already mapped (no line
+--- twice). A plainly full update only diffs.
 function CombatLog.OnAura(unit, info, at)
     if unit ~= "player" and unit ~= "target" then return end
     bump(unit == "player" and "evPlayer" or "evTarget")
     local shape = shapeOf(info)
     bump(shape)
     if shape ~= "info" then
+        if shape == "sealedFull" and listsUsable(info) then
+            added(unit, info.addedAuras, at)
+            removed(unit, info.removedAuraInstanceIDs, at)
+        end
         if registered then return diff(unit, at) end
         return walk(unit)
     end
