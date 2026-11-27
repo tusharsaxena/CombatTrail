@@ -410,7 +410,7 @@ local function emptyNote(v) return v.idle and L["No fight yet"] or "" end
 local function placeProfile(body, v, y)
     local pv, view = v.paceView, v.chartView
     local paceSlot, chartSlot, paceOn, chartOn = profileSlots(v)
-    body.paceShown, body.chartShown = paceOn, chartOn
+    body.paceShown, body.chartShown, body.chartSlot = paceOn, chartOn, chartSlot
     if not (paceSlot or chartSlot) then
         if body.parts.chart then body.parts.chart:SetShown(false) end
         if body.parts.pace then body.parts.pace:SetShown(false) end
@@ -425,7 +425,11 @@ local function placeProfile(body, v, y)
     if chartOn then
         chart:Draw(view)
     elseif chartSlot then
-        chart:Draw(nil)   -- the empty frame: no columns, no line, no icons, the axis at 0:00
+        -- Nothing to draw (no fight yet): the plot and its time labels hidden, their slot kept, so
+        -- nothing below moves when a fight starts (R7-CT-01, the owner: "Remove the empty graph when
+        -- empty - but keep the spacing as it is"). The next Place shows them again (SetParts above).
+        chart:Draw(nil)
+        chart:SetParts(true, false)
         chart:SetNote(emptyNote(v))
     else
         -- No plot, no Draw: the note names the pace bar alone (it has no caption of its own).

@@ -62,8 +62,10 @@ local function geometry(Hud, key)
         box = y(w.damage.frame), boxH = w.damage.frame.__h, dpsBox = y(w.dps.frame), dpsBoxH = w.dps.frame.__h,
         stackTop = body.stackTop, height = body.height, window = Hud.Frame().__h,
         profile = chart and chart.title:IsShown() and y(chart.title) or "hidden",
-        plot = chart and chart.plot:IsShown() and y(chart.plot) or "hidden",
-        axis = chart and chart.axis[1]:IsShown() and y(chart.axis[1]) or "hidden",
+        -- the plot's and the axis's slots, drawn or not (R7-CT-01: the empty plot is hidden, its slot kept)
+        plot = chart and (chart.plot:IsShown() or body.chartSlot) and y(chart.plot) or "hidden",
+        axis = chart and (chart.axis[1]:IsShown() or body.chartSlot) and y(chart.axis[1]) or "hidden",
+        plotShown = chart and chart.plot:IsShown(),
         spells = spells and spells.title:IsShown() and y(spells.title) or "hidden",
         rows = spells and spells.frame:IsShown() and y(spells.frame) or "hidden",
         rowsH = spells and spells.frame:IsShown() and spells.frame.__h or "hidden",
@@ -108,7 +110,11 @@ test("hud idle layout: with no fight the stack sits where the paced live fight w
     assertTrue(liveBody.paceShown == true and liveBody.chartShown == true, "the live fight paces and charts")
     assertSame(live, still, "idle vs live")
     assertTrue(still.profile ~= "hidden", "the Damage profile section is there with no fight")
-    assertTrue(still.plot ~= "hidden", "its plot frame too")
+    assertTrue(still.plot ~= "hidden", "its plot's slot too")
+    -- red under (R7-CT-01, the owner: "Remove the empty graph when empty - but keep the spacing")
+    assertFalse(still.plotShown, "the empty plot is not drawn")
+    assertFalse(idleBody.parts.chart.axis[1]:IsShown(), "nor its 0:00")
+    assertTrue(live.plotShown, "a fight's plot is drawn")
     assertEqual(idleBody.height, LiveHud.FixedHeight() - (LiveHud.Frame().__h - liveBody.height),
         "the idle stack fills the one window")
 end)
@@ -146,7 +152,8 @@ test("hud idle layout: the idle placeholders are muted and say what is missing",
     local function rgb(fs) local r, g, b = fs:GetTextColor(); return ("%.3f %.3f %.3f"):format(r, g, b) end
     assertEqual(rgb(w.damage.petValue), rgb(w.target), "the idle pet dash is dim")
     assertEqual(w.damage.value.__text, "\226\128\148")
-    assertTrue(chart.title:IsShown() and chart.plot:IsShown() and chart.axis[1]:IsShown())
+    -- the heading stays; the empty plot and its time labels are hidden, their slot kept (R7-CT-01)
+    assertTrue(chart.title:IsShown() and not chart.plot:IsShown() and not chart.axis[1]:IsShown())
     assertEqual(chart.note.__text, "No fight yet")
     assertEqual(chart.axis[1].__text, "0:00")
     assertEqual(chart.axis[2].__text, "", "no span to mark")
