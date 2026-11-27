@@ -96,7 +96,7 @@ local _, NS = ...
 -- beat redraws from the last read, the clock moving on. A sample's read is its plan's. FIGHT_TICK
 -- (4 Hz, modules/Fight.lua) stays the fight's own rhythm for its other receivers (the chart's slices,
 -- the unbound scan); for the HUD it only brings a fight live, and redraws it only while no beat runs
--- (no timer API). The footer says the rate ("live · 10 Hz").
+-- (no timer API). The footer says "live" (the rate left off since R7-CT-02, the owner: "Remove the 10 Hz").
 --
 -- THE RACE WINDOW BESIDE IT (Task W4) takes its height when docked LEFT or RIGHT (`raceWindow.matchHud`):
 -- every redraw that leaves the window at a new height (Hud.Height: the one static height, the grip's
@@ -843,7 +843,7 @@ local function footer(v)
     end
     ui.footLeft:SetText(table.concat(parts, " \194\183 "))
     local right = ""
-    if v.key == "live" then right = cur and L["live \194\183 %d Hz"]:format(Hud.RefreshRate()) or L["waiting for a fight"] end
+    if v.key == "live" then right = cur and L["live"] or L["waiting for a fight"] end
     if v.key == "over" then
         if pinned then right = L["Pinned open"]
         elseif fadeAt and not held then right = L["Fades %d s after the fight"]:format(tonumber(setting("hud.fadeAfter")) or 0) end

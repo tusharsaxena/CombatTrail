@@ -169,7 +169,8 @@ test("hud beat: a plain fight reads and redraws 10 times a second by default, FI
     assertEqual(NS.defaults.profile.hud.refreshRate, 10, "the default")
     assertEqual(NS.Hud.BeatEvery(), 0.1, "the beat runs at 0.1 s")
     assertTrue(hudBeat(S) ~= nil, "one repeating AceTimer queued")
-    assertEqual(NS.Hud.__ui().footRight:GetText(), "live \194\183 10 Hz", "the footer says the rate")
+    -- red under (R7-CT-02, the owner: "Remove the 10 Hz from CombatTrail footer"): "live · 10 Hz"
+    assertEqual(NS.Hud.__ui().footRight:GetText(), "live", "the footer says live, no rate")
     local reads, restore = countReads(NS)
     local clock = hudClock(NS)
     clock:SetText("held")
@@ -210,7 +211,7 @@ test("hud beat: each rate, and a switch mid-fight", function()
         assertTrue(NS.SetByPath("hud.refreshRate", rate))
         assertEqual(NS.Hud.BeatEvery(), 1 / rate, rate .. " a second, mid-fight")
         assertTrue(hudBeat(S) ~= nil, "re-armed at " .. rate)
-        assertEqual(NS.Hud.__ui().footRight:GetText(), ("live \194\183 %d Hz"):format(rate))
+        assertEqual(NS.Hud.__ui().footRight:GetText(), "live", "no rate in the footer")
     end
     assertFalse(NS.SetByPath("hud.refreshRate", 7), "a rate the row does not offer")
     NS.db.profile.hud.refreshRate = nil

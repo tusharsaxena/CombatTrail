@@ -126,7 +126,7 @@ FIGHT_ENDED
   and draws no chart (Race mode plan Task C3). Every live part (the clock, Damage and DPS, the pace
   bar, the chart, the spell rows) reads and redraws on one beat at `hud.refreshRate` (default 10 a
   second): the race beat's direct call during a race, the HUD's own `Hud.SyncBeat` otherwise. The
-  footer names the rate ("live · 10 Hz").
+  footer reads "live" (the rate left off, R7-CT-02).
   RACE_ARMED lets go a fight still on screen (never a live one) and draws the HUD's pre-fight look. After
   FIGHT_ENDED the card draws the plain read: shares, the New best chip from `Bests`, and Saved or the
   skip reason.
