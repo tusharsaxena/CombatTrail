@@ -180,7 +180,7 @@ test("hud idle layout: a fight that starts takes its placeholders away", functio
     assertTrue(w.target.__text:find("Angry Boar", 1, true) == 1, "the fight's own target line")
     assertFalse(w.damage.petLabel:IsShown(), "no pet: the slot stays, empty")
     assertTrue(body.parts.chart.note.__text ~= "No fight yet")
-    assertTrue(Hud.__ui().footRight.__text:find("Hz") ~= nil)
+    assertEqual(Hud.__ui().footRight.__text, "live", "the footer says live (R7-CT-02: no rate)")
 end)
 
 -- ── the switches ────────────────────────────────────────────────────────────────────────────────
